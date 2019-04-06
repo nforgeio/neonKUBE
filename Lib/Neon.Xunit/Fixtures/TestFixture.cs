@@ -147,9 +147,9 @@ namespace Neon.Xunit
                 EnsureReset();
             }
 
-            this.IsDisposed    = false;
-            this.InAction      = false;
-            this.IsInitialized = false;
+            this.IsDisposed = false;
+            this.InAction   = false;
+            this.IsRunning  = false;
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace Neon.Xunit
         protected bool IsDisposed { get; set; }
 
         /// <summary>
-        /// Returns <c>true</c> if the <see cref="Initialize(Action)"/> method
+        /// Returns <c>true</c> if the <see cref="Start(Action)"/> method
         /// is running.
         /// </summary>
         protected bool InAction { get; set; }
@@ -174,7 +174,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns <c>true</c> if the fixture has been initialized.
         /// </summary>
-        public bool IsInitialized { get; set; }
+        public bool IsRunning { get; set; }
 
         /// <summary>
         /// Verifies that the fixture instance has not been disposed.
@@ -188,7 +188,7 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Verifies that the fixture instance's <see cref="Initialize(Action)"/>
+        /// Verifies that the fixture instance's <see cref="Start(Action)"/>
         /// method is executing.
         /// </summary>
         protected void CheckWithinAction()
@@ -200,28 +200,29 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Initializes the fixture if it hasn't already been intialized
-        /// including invoking the optional <see cref="Action"/>.
+        /// Starts the fixture if it hasn't already been started including invoking the optional
+        /// <see cref="Action"/> when the first time <see cref="Start(Action)"/> is called for
+        /// a fixture instance.
         /// </summary>
-        /// <param name="action">The optional initialization action.</param>
+        /// <param name="action">The optional custom start action.</param>
         /// <returns>
-        /// <c>true</c> if the fixture wasn't previously initialized and
-        /// this method call initialized it or <c>false</c> if the fixture
-        /// was already initialized.
+        /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
+        /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
+        /// fixture was already running.
         /// </returns>
         /// <exception cref="InvalidOperationException">Thrown if this is called from within the <see cref="Action"/>.</exception>
-        public virtual bool Initialize(Action action = null)
+        public virtual TestFixtureStatus Start(Action action = null)
         {
             CheckDisposed();
 
             if (InAction)
             {
-                throw new InvalidOperationException($"[{nameof(Initialize)}()] cannot be called recursively from within the fixture initialization action.");
+                throw new InvalidOperationException($"[{nameof(Start)}()] cannot be called recursively from within the fixture initialization action.");
             }
 
-            if (IsInitialized)
+            if (IsRunning)
             {
-                return false;
+                return TestFixtureStatus.AlreadyRunning;
             }
 
             try
@@ -232,10 +233,10 @@ namespace Neon.Xunit
             finally
             {
                 InAction      = false;
-                IsInitialized = true;       // Setting this even if the action failed.
+                IsRunning = true;       // Setting this even if the action failed.
             }
 
-            return true;
+            return TestFixtureStatus.Started;
         }
 
         /// <inheritdoc/>

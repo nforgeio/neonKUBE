@@ -41,7 +41,7 @@ namespace TestCommon
         {
             this.fixture = fixture;
 
-            fixture.Initialize(
+            fixture.Start(
                 () =>
                 {
                     // Add some entries using deferred commit.

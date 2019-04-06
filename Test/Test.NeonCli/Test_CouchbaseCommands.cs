@@ -58,7 +58,7 @@ namespace Test.NeonCli
         {
             this.couchbase = couchbase;
 
-            if (!couchbase.Start())
+            if (couchbase.Start() == TestFixtureStatus.AlreadyRunning)
             {
                 couchbase.Clear();
             }

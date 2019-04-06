@@ -79,18 +79,18 @@ namespace Neon.Xunit
     /// The test runner creates a new instance of the test class for each
     /// test method to be invoked.  The test class constructor must accept
     /// a single parameter with type <c>TFixture</c>.  The test class 
-    /// constructor should call <see cref="ITestFixture.Initialize(Action)"/>
+    /// constructor should call <see cref="ITestFixture.Start(Action)"/>
     /// to initialize the fixture, passing an optional <see cref="Action"/>
     /// that does any custom initialization for the test.
     /// </para>
     /// <para>
     /// The <see cref="Action"/> parameter is generally intended for internal
-    /// use for implementing custom test fixtures.
+    /// use when implementing custom test fixtures.
     /// </para>
     /// <para>
     /// Test fixtures are designed to be aware of whether they've been
     /// initialized or not such that only the first call to
-    /// <see cref="ITestFixture.Initialize(Action)"/> will perform any
+    /// <see cref="ITestFixture.Start(Action)"/> will perform any
     /// necessary initialization (including calling the custom action)
     /// and any subsequent calls will do nothing.
     /// </para>
@@ -115,28 +115,29 @@ namespace Neon.Xunit
     public interface ITestFixture : IDisposable
     {
         /// <summary>
-        /// Invokes a parameterless <see cref="Action"/> when the fixture
-        /// is not already initialized.
+        /// Starts the fixture if it hasn't already been started including invoking the optional
+        /// <see cref="Action"/> when the first time <see cref="Start(Action)"/> is called for
+        /// a fixture instance.
         /// </summary>
         /// <param name="action">
         /// <para>
-        /// The optional initialization action.
+        /// The optional custom start action.
         /// </para>
         /// <note>
-        /// This is generally intended for internal use.
+        /// This is generally intended for use when developing custom test fixtures.
         /// </note>
         /// </param>
         /// <returns>
-        /// <c>true</c> if the fixture wasn't previously initialized and
-        /// this method call initialized it or <c>false</c> if the fixture
-        /// was already initialized.
+        /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
+        /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
+        /// fixture was already running.
         /// </returns>
-        bool Initialize(Action action = null);
+        TestFixtureStatus Start(Action action = null);
 
         /// <summary>
-        /// Returns <c>true</c> if the fixture has been initialized.
+        /// Returns <c>true</c> if the fixture has been started.
         /// </summary>
-        bool IsInitialized { get; }
+        bool IsRunning { get; }
 
         /// <summary>
         /// Resets the fixture state.

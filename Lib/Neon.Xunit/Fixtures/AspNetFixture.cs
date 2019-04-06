@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AspNetCoreFixture.cs
+// FILE:	    AspNetFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,7 +31,7 @@ namespace Neon.Xunit
     /// <summary>
     /// Fixture for testing ASP.NET Core based websites and services.
     /// </summary>
-    public class AspNetCoreFixture : TestFixture 
+    public class AspNetFixture : TestFixture 
     {
         /// <summary>
         /// Constructor.
@@ -40,7 +40,7 @@ namespace Neon.Xunit
         /// Optional action that will be called before the server is started to handle things
         /// like initializing the <see cref="TestContext"/>.
         /// </param>
-        public AspNetCoreFixture(Action initializeAction = null)
+        public AspNetFixture(Action initializeAction = null)
         {
         }
 
@@ -77,7 +77,7 @@ namespace Neon.Xunit
         {
             base.CheckWithinAction();
 
-            if (IsInitialized)
+            if (IsRunning)
             {
                 return;
             }

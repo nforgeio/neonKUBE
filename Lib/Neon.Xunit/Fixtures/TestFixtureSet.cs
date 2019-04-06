@@ -87,44 +87,47 @@ namespace Neon.Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(subFixture != null);
-            Covenant.Requires<InvalidOperationException>(!subFixture.IsInitialized, "A subfixture cannot be added after it has already been initialized.");
+            Covenant.Requires<InvalidOperationException>(!subFixture.IsRunning, "A subfixture cannot be added after it has already been initialized.");
 
             CheckDisposed();
             CheckWithinAction();
 
-            subFixture.Initialize(() => action?.Invoke(subFixture));
+            subFixture.Start(() => action?.Invoke(subFixture));
             nameToFixture.Add(name, subFixture);
             fixtureList.Add(subFixture);
         }
 
         /// <summary>
-        /// Initializes the fixture if it hasn't already been intialized
-        /// including invoking the optional <see cref="Action"/>.
+        /// Starts the fixture if it hasn't already been started including invoking the optional
+        /// <see cref="Action"/> when the first time <see cref="Start(Action)"/> is called for
+        /// a fixture instance.
         /// </summary>
-        /// <param name="action">The optional initialization action.</param>
+        /// <param name="action">
+        /// <para>
+        /// The optional custom start action.
+        /// </para>
+        /// <note>
+        /// This is generally intended for use when developing custom test fixtures.
+        /// </note>
+        /// </param>
         /// <returns>
-        /// <c>true</c> if the fixture wasn't previously initialized and
-        /// this method call initialized it or <c>false</c> if the fixture
-        /// was already initialized.
+        /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
+        /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
+        /// fixture was already running.
         /// </returns>
         /// <exception cref="InvalidOperationException">Thrown if this is called from within the <see cref="Action"/>.</exception>
-        /// <remarks>
-        /// This method works by calling the initialization methods for each
-        /// of the subfixtures in the order they were added and then calling 
-        /// the optional <see cref="Action"/> afterwards.
-        /// </remarks>
-        public override bool Initialize(Action action = null)
+        public override TestFixtureStatus Start(Action action = null)
         {
             CheckDisposed();
 
             if (InAction)
             {
-                throw new InvalidOperationException($"[{nameof(Initialize)}()] cannot be called recursively from within the fixture initialization action.");
+                throw new InvalidOperationException($"[{nameof(Start)}()] cannot be called recursively from within the fixture initialization action.");
             }
 
-            if (IsInitialized)
+            if (IsRunning)
             {
-                return false;
+                return TestFixtureStatus.AlreadyRunning;
             }
 
             // Initialize this fixture.
@@ -138,10 +141,10 @@ namespace Neon.Xunit
             finally
             {
                 InAction      = false;
-                IsInitialized = true;       // Setting this even if the action failed.
+                IsRunning = true;       // Setting this even if the action failed.
             }
 
-            return true;
+            return TestFixtureStatus.Started;
         }
 
         /// <summary>

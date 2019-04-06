@@ -75,7 +75,7 @@ namespace Neon.Xunit
     /// This fixture is pretty easy to use.  Simply have your test class inherit
     /// from <see cref="IClassFixture{DockerFixture}"/> and add a public constructor
     /// that accepts a <see cref="DockerFixture"/> as the only argument.  Then
-    /// you can call it's <see cref="TestFixture.Initialize(Action)"/> method
+    /// you can call it's <see cref="TestFixture.Start(Action)"/> method
     /// within the constructor and optionally have your custom <see cref="Action"/>
     /// use the fixture to initialize swarm services, networks, secrets, etc.
     /// </para>

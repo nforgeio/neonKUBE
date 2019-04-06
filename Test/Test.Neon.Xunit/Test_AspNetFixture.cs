@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_AspNetCoreFixture.cs
+// FILE:	    Test_AspNetFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -74,8 +74,8 @@ namespace TestXunit.AspNetFixture
         }
     }
 
-    [Route("/TestAspCoreFixture")]
-    public class TestAspCoreFixtureController : NeonController
+    [Route("/TestAspNetFixture")]
+    public class TestAspNetFixtureController : NeonController
     {
         [HttpGet]
         public string Hello()
@@ -108,11 +108,11 @@ namespace TestXunit.AspNetFixture
         }
     }
 
-    public class Test_AspNetCoreFixture : AspNetCoreFixture
+    public class Test_AspNetCoreFixture : Neon.Xunit.AspNetFixture
     {
         private TestAspCoreFixtureClient client;
 
-        public Test_AspNetCoreFixture(AspNetCoreFixture fixture)
+        public Test_AspNetCoreFixture(Neon.Xunit.AspNetFixture fixture)
         {
             fixture.Start<Startup>();
 

@@ -89,7 +89,7 @@ namespace Neon.Xunit
 
         /// <summary>
         /// Starts the container.  This must be called only from within the 
-        /// <see cref="Action"/> passed to <see cref="ITestFixture.Initialize(Action)"/>.
+        /// <see cref="Action"/> passed to <see cref="ITestFixture.Start(Action)"/>.
         /// </summary>
         /// <param name="name">Specifies the container name.</param>
         /// <param name="image">Specifies the container Docker image.</param>
@@ -99,7 +99,7 @@ namespace Neon.Xunit
         /// <param name="noRemove">Optionally indicates that the <b>--rm</b> option should not be included when creating the container.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this is not called from  within the <see cref="Action"/> method 
-        /// passed <see cref="ITestFixture.Initialize(Action)"/>
+        /// passed <see cref="ITestFixture.Start(Action)"/>
         /// </exception>
         /// <remarks>
         /// <note>
@@ -116,7 +116,7 @@ namespace Neon.Xunit
 
             base.CheckWithinAction();
 
-            if (IsInitialized)
+            if (IsRunning)
             {
                 return;
             }

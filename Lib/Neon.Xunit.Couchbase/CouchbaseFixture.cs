@@ -73,7 +73,7 @@ namespace Neon.Xunit.Couchbase
 
         /// <summary>
         /// Starts a Couchbase container if it's not already running.  You'll generally want
-        /// to call this in your test class constructor instead of <see cref="ITestFixture.Initialize(Action)"/>.
+        /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
@@ -83,9 +83,9 @@ namespace Neon.Xunit.Couchbase
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
         /// <param name="noPrimary">Optionally disable creation of the primary bucket index.</param>
         /// <returns>
-        /// <c>true</c> if the fixture wasn't previously initialized and
-        /// this method call initialized it or <c>false</c> if the fixture
-        /// was already initialized.
+        /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
+        /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
+        /// fixture was already running.
         /// </returns>
         /// <remarks>
         /// <note>
@@ -137,7 +137,7 @@ namespace Neon.Xunit.Couchbase
         /// </item>
         /// </list>
         /// </remarks>
-        public bool Start(
+        public TestFixtureStatus Start(
             CouchbaseSettings   settings  = null,
             string              image     = "nkubeio/couchbase-test:latest",
             string              name      = "cb-test",
@@ -148,7 +148,7 @@ namespace Neon.Xunit.Couchbase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
-            return base.Initialize(
+            return base.Start(
                 () =>
                 {
                     StartInAction(settings, image, name, env, username, password, noPrimary);
@@ -187,7 +187,7 @@ namespace Neon.Xunit.Couchbase
 
             createPrimaryIndex = !noPrimary;
 
-            if (!IsInitialized)
+            if (!IsRunning)
             {
                 RunContainer(name, image,
                     new string[]

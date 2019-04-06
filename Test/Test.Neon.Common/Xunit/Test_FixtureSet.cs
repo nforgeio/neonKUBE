@@ -63,7 +63,7 @@ namespace TestCommon
         {
             this.fixture = fixture;
 
-            fixture.Initialize(
+            fixture.Start(
                 () =>
                 {
                     fixture.AddFixture("zero", fixture0 = new Fixture0(),
