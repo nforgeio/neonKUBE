@@ -65,7 +65,7 @@ namespace TestXunit.AspNet
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             {
-                // This is a simple test that replys to all reqiests with: "World!"
+                // This is a simple test that replies to all reqiests with: "World!"
 
                 app.Run(
                     async context =>
