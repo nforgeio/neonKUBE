@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RoundTripOutputFormatter.cs
+// FILE:	    RoundTripJsonOutputFormatter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,12 +40,12 @@ namespace Neon.Web
     /// assembly that implement <see cref=" IGeneratedType"/>.
     /// </para>
     /// </summary>
-    public sealed class RoundTripOutputFormatter : TextOutputFormatter
+    public sealed class RoundTripJsonOutputFormatter : TextOutputFormatter
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public RoundTripOutputFormatter()
+        public RoundTripJsonOutputFormatter()
         {
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
             SupportedEncodings.Add(Encoding.UTF8);
@@ -54,7 +54,7 @@ namespace Neon.Web
         /// <inheritdoc/>
         protected override bool CanWriteType(Type type)
         {
-            return type.Implements< IGeneratedType>();
+            return type.Implements<IGeneratedType>();
         }
 
         /// <inheritdoc/>

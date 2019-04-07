@@ -43,73 +43,73 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace TestCodeGen.AspNet
 {
+    [Route("/TestAspNetFixture")]
+    public class TestAspNetFixtureController : NeonController
+    {
+        [HttpGet]
+        [Route("Hello")]
+        public string Hello()
+        {
+            return "World!";
+        }
+
+        [HttpGet]
+        [Route("person/{id}/{name}/{age}")]
+        public Person CreatePerson(int id, string name, int age)
+        {
+            return new Person()
+            {
+                Id = id,
+                Name = name,
+                Age = age
+            };
+        }
+
+        [HttpPut]
+        public Person IncrementAge([FromBody] Person person)
+        {
+            if (person == null)
+            {
+                return null;
+            }
+
+            person.Age++;
+
+            return person;
+        }
+    }
+
+    public class Startup
+    {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddMvc(
+                options =>
+                {
+                    options.EnableEndpointRouting = true;
+                    options.AddNeonRoundTripJsonFormatters();
+                });
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            app.UseMvc();
+        }
+    }
+
     /// <summary>
     /// This tests end-to-end integration of generated data models and service clients as well as
     /// their integration with the an MVC based backend service controller.
     /// </summary>
     public class Test_EndToEnd : IClassFixture<AspNetFixture>
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        [Route("/TestAspNetFixture")]
-        public class TestAspNetFixtureController : NeonController
-        {
-            [HttpGet]
-            public string Hello()
-            {
-                return "World!";
-            }
-
-            [HttpGet]
-            [Route("person/{id}/{name}/{age}")]
-            public Person CreatePerson(int id, string name, int age)
-            {
-                return new Person()
-                {
-                    Id   = id,
-                    Name = name,
-                    Age  = age
-                };
-            }
-
-            [HttpPut]
-            public Person IncrementAge([FromBody] Person person)
-            {
-                if (person == null)
-                {
-                    return null;
-                }
-
-                person.Age++;
-
-                return person;
-            }
-        }
-
-        public class Startup
-        {
-            public Startup(IConfiguration configuration)
-            {
-                Configuration = configuration;
-            }
-
-            public IConfiguration Configuration { get; }
-
-            public void ConfigureServices(IServiceCollection services)
-            {
-                services.AddMvc(options => options.EnableEndpointRouting = true);
-                services.AddNeonSingletonController<TestAspNetFixtureController>();
-            }
-
-            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-            {
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private AspNetFixture           fixture;
         private TestAspNetFixtureClient client;
 
@@ -117,18 +117,7 @@ namespace TestCodeGen.AspNet
         {
             this.fixture = fixture;
 
-            // Uncomment this and comment the fixture.Start() line that follows
-            // to enable ASP.NET TRACE logging.
-
-            fixture.Start<Startup>(
-                builder =>
-                {
-                    builder
-                        .ConfigureAppConfiguration(config => { })
-                        .ConfigureLogging(logging => logging.AddFilter(level => true));
-                });
-            
-            //fixture.Start<Startup>();
+            fixture.Start<Startup>();
 
             client = new TestAspNetFixtureClient()
             {
@@ -140,8 +129,6 @@ namespace TestCodeGen.AspNet
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
         public async Task Hello()
         {
-            await Task.Delay(10000000);
-
             // Verify that we can communicate with the service by calling 
             // a very simply API.
 

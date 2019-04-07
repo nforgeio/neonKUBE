@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RoundTripInputFormatter.cs
+// FILE:	    RoundTripJsonInputFormatter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -42,12 +42,12 @@ namespace Neon.Web
     /// assembly that implement <see cref=" IGeneratedType"/>.
     /// </para>
     /// </summary>
-    public sealed class RoundTripInputFormatter : TextInputFormatter
+    public sealed class RoundTripJsonInputFormatter : TextInputFormatter
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public RoundTripInputFormatter()
+        public RoundTripJsonInputFormatter()
         {
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
             SupportedEncodings.Add(Encoding.UTF8);
@@ -56,7 +56,7 @@ namespace Neon.Web
         /// <inheritdoc/>
         protected override bool CanReadType(Type type)
         {
-            return type.Implements< IGeneratedType>();
+            return type.Implements<IGeneratedType>();
         }
 
         /// <inheritdoc/>
