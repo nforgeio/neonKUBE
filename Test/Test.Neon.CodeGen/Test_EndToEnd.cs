@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_AspNet.cs
+// FILE:	    Test_EndToEnd.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -39,6 +39,7 @@ using Neon.Xunit;
 using Test.Neon.Models;
 
 using Xunit;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace TestCodeGen.AspNet
 {
@@ -46,13 +47,13 @@ namespace TestCodeGen.AspNet
     /// This tests end-to-end integration of generated data models and service clients as well as
     /// their integration with the an MVC based backend service controller.
     /// </summary>
-    public class Test_AspNetFixture : IClassFixture<AspNetFixture>
+    public class Test_EndToEnd : IClassFixture<AspNetFixture>
     {
         //---------------------------------------------------------------------
         // Private types
 
         [Route("/TestAspNetFixture")]
-        private class TestAspNetFixtureController
+        public class TestAspNetFixtureController : NeonController
         {
             [HttpGet]
             public string Hello()
@@ -97,13 +98,12 @@ namespace TestCodeGen.AspNet
 
             public void ConfigureServices(IServiceCollection services)
             {
-                services.AddMvc();
-                services.AddScoped<TestAspNetFixtureController>();
+                services.AddMvc(options => options.EnableEndpointRouting = true);
+                services.AddNeonSingletonController<TestAspNetFixtureController>();
             }
 
             public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             {
-                app.
             }
         }
 
@@ -113,11 +113,22 @@ namespace TestCodeGen.AspNet
         private AspNetFixture           fixture;
         private TestAspNetFixtureClient client;
 
-        public Test_AspNetFixture(AspNetFixture fixture)
+        public Test_EndToEnd(AspNetFixture fixture)
         {
             this.fixture = fixture;
 
-            fixture.Start<Startup>();
+            // Uncomment this and comment the fixture.Start() line that follows
+            // to enable ASP.NET TRACE logging.
+
+            fixture.Start<Startup>(
+                builder =>
+                {
+                    builder
+                        .ConfigureAppConfiguration(config => { })
+                        .ConfigureLogging(logging => logging.AddFilter(level => true));
+                });
+            
+            //fixture.Start<Startup>();
 
             client = new TestAspNetFixtureClient()
             {

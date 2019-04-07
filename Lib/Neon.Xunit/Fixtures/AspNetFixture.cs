@@ -24,7 +24,7 @@ using System.Net.Http;
 
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-
+using Microsoft.AspNetCore.Mvc;
 using Neon.Common;
 using Neon.Data;
 using Neon.Net;
@@ -74,7 +74,7 @@ namespace Neon.Xunit
         public IWebHost WebHost { get; private set; }
 
         /// <summary>
-        /// Constructor.
+        /// Starts the ASP.NET service using the default controller factory.
         /// </summary>
         /// <typeparam name="TStartup">The startup class for the service.</typeparam>
         /// <param name="hostConfigurator">Optional action providing for customization of the hosting environment.</param>
@@ -106,7 +106,7 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Starts the web service.
+        /// Starts the service using the default controller factory.
         /// </summary>
         /// <param name="port">The port where the server will listen.</param>
         private void StartServer<TStartup>(int port)

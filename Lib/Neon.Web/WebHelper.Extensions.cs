@@ -24,6 +24,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -41,7 +42,7 @@ namespace Neon.Web
         /// Adds the services from an <see cref="IServiceContainer"/> to the <see cref="IServiceCollection"/>.
         /// This is commonly used when configuring services for an ASP.NET application pipeline.
         /// </summary>
-        /// <param name="services">The target collection.</param>
+        /// <param name="services">The target service collection.</param>
         /// <param name="source">The service source container or <c>null</c> to copy from <see cref="NeonHelper.ServiceContainer"/>.</param>
         public static void AddNeon(this IServiceCollection services, IServiceContainer source = null)
         {
@@ -51,6 +52,28 @@ namespace Neon.Web
             {
                 services.Add(service);
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// This method adds a custom <see cref="IControllerFactory"/> that resolves every 
+        /// request to the <typeparamref name="TController"/> controller type.
+        /// </para>
+        /// <note>
+        /// This method works only for one <typeparamref name="TController"/> type within
+        /// the ASP.NET request pipeline.  You should not call this more than once.
+        /// </note>
+        /// </summary>
+        /// <typeparam name="TController">The controller type.</typeparam>
+        /// <param name="services">The target service collection.</param>
+        /// <remarks>
+        /// This is handy for unit tests that want to constrain the active controller
+        /// to a specific class being tested.
+        /// </remarks>
+        public static void AddNeonSingletonController<TController>(this IServiceCollection services)
+            where TController : ControllerBase
+        {
+            services.AddSingleton<IControllerFactory, SingletonControllerFactory<TController>>();
         }
 
         //---------------------------------------------------------------------
