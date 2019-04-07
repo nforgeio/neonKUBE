@@ -36,6 +36,8 @@ namespace Neon.Xunit
     /// </summary>
     public class AspNetFixture : TestFixture
     {
+        private Action<IWebHostBuilder> hostConfigurator;
+
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
@@ -75,13 +77,16 @@ namespace Neon.Xunit
         /// Constructor.
         /// </summary>
         /// <typeparam name="TStartup">The startup class for the service.</typeparam>
+        /// <param name="hostConfigurator">Optional action providing for customization of the hosting environment.</param>
         /// <param name="port">The port where the server will listen or zero to allow the operating system to select a free port.</param>
-        public void Start<TStartup>(int port = 0)
+        public void Start<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0)
             where TStartup : class
         {
             // $todo(jeff.lill): DELETE THIS!
             port = 5555;
             //-------------------------------
+
+            this.hostConfigurator = hostConfigurator;
 
             if (IsRunning)
             {
@@ -109,15 +114,16 @@ namespace Neon.Xunit
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(port));
 
-            WebHost = new WebHostBuilder()
+            var builder = new WebHostBuilder()
                 .UseStartup<TStartup>()
                 .UseKestrel(
                     options =>
                     {
                         options.Listen(IPAddress.Loopback, port);
-                    })
-                .Build();
+                    });
 
+            hostConfigurator?.Invoke(builder);
+            WebHost = builder.Build();
             WebHost.Start();
         }
 
