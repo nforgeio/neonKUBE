@@ -302,5 +302,42 @@ namespace TestCodeGen.Couchbase
             Assert.False(CustomPerson.SameTypeAs(city));
             Assert.False(CustomPerson.SameTypeAs(null));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task RoundTrip()
+        {
+            // Ensure that the database starts out empty.
+
+            Assert.Empty(from doc in context.Query<object>() select doc);
+
+            // Ensure that object properties that ARE NOT defined in the data model
+            // interface are retained when persisted and then read from the database.
+
+            var jack = new Person()
+            {
+                Id   = 0,
+                Name = "Jack",
+                Age  = 10,
+                Data = new byte[] { 0, 1, 2, 3, 4 }
+            };
+
+            var jObject = jack.ToJObject(noClone: true);
+
+            jObject["Height"] = 182;
+
+            await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
+
+            var jackRead = await bucket.GetSafeAsync<Person>(Person.CreateKey(0));
+
+            jObject = jackRead.ToJObject(noClone: true);
+
+            Assert.Equal(jack.Id, jackRead.Id);
+            Assert.Equal(jack.Name, jackRead.Name);
+            Assert.Equal(jack.Age, jackRead.Age);
+            Assert.Equal(jack.Data, jackRead.Data);
+            Assert.Equal(182, (int)jObject["Height"]);
+            Assert.Equal(jack, jackRead);
+        }
     }
 }
