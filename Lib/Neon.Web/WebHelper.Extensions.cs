@@ -72,9 +72,6 @@ namespace Neon.Web
         ///     Sets the pipeline's <see cref="IApplicationBuilder.ApplicationServices"/> dependency injection
         ///     container to <see cref="NeonHelper.ServiceContainer"/>, the default Neon root container.
         ///     </item>
-        ///     <item>
-        ///     Adds a handler that logs unhandled exceptions.
-        ///     </item>
         /// </list>
         /// </remarks>
         public static IApplicationBuilder UseNeon(this IApplicationBuilder app, ILoggerFactory loggerFactory)
