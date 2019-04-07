@@ -146,7 +146,7 @@ namespace TestCodeGen.ServiceModel
     }
 
     [ServiceModel]
-    [RoutePrefix("/api/v1/service2")]
+    [Route("/api/v1/service2")]
     public interface RouteService2
     {
         /// <summary>
@@ -163,7 +163,7 @@ namespace TestCodeGen.ServiceModel
     }
 
     [ServiceModel(name: "MyRouteService")]
-    [RoutePrefix("/api/v1/service3")]
+    [Route("/api/v1/service3")]
     public interface RouteService3
     {
         /// <summary>
@@ -191,7 +191,7 @@ namespace TestCodeGen.ServiceModel
     /// Used for testing [FromBody] method parameters.
     /// </summary>
     [ServiceModel]
-    [RoutePrefix("/api/v1/frombody")]
+    [Route("/api/v1/frombody")]
     public interface FromBodyService
     {
         /// <summary>
@@ -223,7 +223,7 @@ namespace TestCodeGen.ServiceModel
     /// Used for testing a service client composed of multiple controllers.
     /// </summary>
     [ServiceModel(name: "Composed", group: "User")]
-    [RoutePrefix("/api/v1/user")]
+    [Route("/api/v1/user")]
     public interface ComposedUserController
     {
         [HttpGet]
@@ -238,7 +238,7 @@ namespace TestCodeGen.ServiceModel
     /// Used for testing a service client composed of multiple controllers.
     /// </summary>
     [ServiceModel(name: "Composed", group: "Delivery")]
-    [RoutePrefix("/api/v1/delivery")]
+    [Route("/api/v1/delivery")]
     public interface ComposedDeliveryController
     {
         [HttpGet]
@@ -253,7 +253,7 @@ namespace TestCodeGen.ServiceModel
     /// Used for testing a service client composed of multiple controllers.
     /// </summary>
     [ServiceModel(name: "Composed")]
-    [RoutePrefix("/api/v1")]
+    [Route("/api/v1")]
     public interface ComposedController
     {
         [HttpGet]

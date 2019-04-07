@@ -432,20 +432,18 @@ namespace Neon.CodeGen
                 }
             }
 
-            // Handle any [Route] or [RoutePrefix] tags.
+            // Handle any [Route] tags.
 
             var serviceRouteAttribute = serviceModelType.GetCustomAttribute<RouteAttribute>();
 
             if (serviceRouteAttribute != null)
             {
-                Output.Error($"[{serviceModelType.FullName}]: This data model defines method is tagged with the [Route] attribute.  This is not currently supported.");
-            }
+                if (serviceRouteAttribute.Template.Contains("{"))
+                {
+                    Output.Error($"[{serviceModelType.FullName}]: The [Route] attribute defines a template with argument references.  This is not currently supported by [Neon.CodeGen].");
+                }
 
-            var serviceRoutePrefixAttribute = serviceModelType.GetCustomAttribute<RoutePrefixAttribute>();
-
-            if (serviceRoutePrefixAttribute != null && !string.IsNullOrEmpty(serviceRoutePrefixAttribute.Prefix))
-            {
-                serviceModel.RouteTemplate = serviceRoutePrefixAttribute.Prefix;
+                serviceModel.RouteTemplate = serviceRouteAttribute.Template;
             }
 
             // Walk the service methods to load their metadata.

@@ -95,17 +95,17 @@ namespace Test.NeonCli
 
             var jack = new Person()
             {
-                Id = 0,
+                Id   = 0,
                 Name = "Jack",
-                Age = 10,
+                Age  = 10,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
             var jill = new Person()
             {
-                Id = 1,
+                Id   = 1,
                 Name = "Jill",
-                Age = 11,
+                Age  = 11,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
@@ -192,17 +192,17 @@ namespace Test.NeonCli
 
             var jack = new Person()
             {
-                Id = 0,
+                Id   = 0,
                 Name = "Jack",
-                Age = 10,
+                Age  = 10,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
             var jill = new Person()
             {
-                Id = 1,
+                Id   = 1,
                 Name = "Jill",
-                Age = 11,
+                Age  = 11,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
@@ -247,17 +247,17 @@ namespace Test.NeonCli
 
                 var howard = new Person()
                 {
-                    Id = 2,
+                    Id   = 2,
                     Name = "Howard",
-                    Age = 10,
+                    Age  = 10,
                     Data = new byte[] { 0, 1, 2, 3, 4 }
                 };
 
                 var john = new Person()
                 {
-                    Id = 3,
+                    Id   = 3,
                     Name = "John",
-                    Age = 11,
+                    Age  = 11,
                     Data = new byte[] { 5, 6, 7, 8, 9 }
                 };
 

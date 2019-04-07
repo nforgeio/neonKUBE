@@ -79,12 +79,16 @@ namespace Neon.Xunit
         public void Start<TStartup>(int port = 0)
             where TStartup : class
         {
+            // $todo(jeff.lill): DELETE THIS!
+            port = 5555;
+            //-------------------------------
+
             if (IsRunning)
             {
                 return;
             }
 
-            StartServer<TStartup>();
+            StartServer<TStartup>(port);
 
             // Get the address where the server is listening and create the client.
 
@@ -99,10 +103,12 @@ namespace Neon.Xunit
         /// <summary>
         /// Starts the web service.
         /// </summary>
-        /// <param name="port">The port where the server will listen or zero to allow the operating system to select a free port.</param>
-        private void StartServer<TStartup>(int port = 0)
+        /// <param name="port">The port where the server will listen.</param>
+        private void StartServer<TStartup>(int port)
             where TStartup : class
         {
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(port));
+
             WebHost = new WebHostBuilder()
                 .UseStartup<TStartup>()
                 .UseKestrel(
