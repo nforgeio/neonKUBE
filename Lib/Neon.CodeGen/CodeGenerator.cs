@@ -1201,6 +1201,17 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        public const string PersistedType = \"{dataModel.PersistedType}\";");
 
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Static constructor.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        static {className}()");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            // You need to add a reference to the [Neon.Common] assembly if the following line doesn't compile.");
+                    writer.WriteLine();
+                    writer.WriteLine($"            NeonHelper.PackageReferenceToNeonCommonIsRequired();");
+                    writer.WriteLine($"        }}");
+
                     if (genPersistence)
                     {
                         writer.WriteLine();
