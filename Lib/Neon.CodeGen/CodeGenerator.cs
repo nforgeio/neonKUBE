@@ -957,7 +957,7 @@ namespace Neon.CodeGen
             foreach (var dataModel in nameToDataModel.Values
                 .OrderBy(dm => dm.SourceType.Name.ToLowerInvariant()))
             {
-                GenerateDataModel(dataModel, genEntity: Settings.Persisted && dataModel.IsPersistable != null);
+                GenerateDataModel(dataModel, genPersistence: Settings.Persisted && dataModel.IsPersistable != null);
             }
 
             // Generate the service clients (if enabled).
@@ -1051,20 +1051,21 @@ namespace Neon.CodeGen
         /// Generates source code for a data model.
         /// </summary>
         /// <param name="dataModel">The data model.</param>
-        /// <param name="genEntity">Optionally enables the generation of database persistence related code for this data model.</param>
-        private void GenerateDataModel(DataModel dataModel, bool genEntity)
+        /// <param name="genPersistence">Optionally enables the generation of database persistence related code for this data model.</param>
+        private void GenerateDataModel(DataModel dataModel, bool genPersistence)
         {
             string          defaultValueExpression;
+            string          virtualModifier      = dataModel.IsDerived ? "override" : "virtual";
             PropertyInfo    persistedKeyProperty = null;
 
-            if (genEntity && (dataModel.IsPersistable == null || dataModel.IsEnum))
+            if (genPersistence && (dataModel.IsPersistable == null || dataModel.IsEnum))
             {
                 // Nothing needs to be generated.
 
                 return;
             }
 
-            if (genEntity && !dataModel.IsEnum)
+            if (genPersistence && !dataModel.IsEnum)
             {
                 // We need to identify the data model property that acts as the
                 // database key.
@@ -1139,7 +1140,7 @@ namespace Neon.CodeGen
                     baseTypeRef = " : __NotifyPropertyChanged";
                 }
 
-                if (genEntity)
+                if (genPersistence)
                 {
                     baseTypeRef += $", IPersistableType<{dataModel.SourceType.Name}>";
                 }
@@ -1152,7 +1153,7 @@ namespace Neon.CodeGen
 
                 if (Settings.RoundTrip)
                 {
-                    if (genEntity)
+                    if (genPersistence)
                     {
                         // We need to generate a custom Linq2Couchbase document filter attribute for
                         // each persisted data model.
@@ -1200,7 +1201,7 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        public const string PersistedType = \"{dataModel.PersistedType}\";");
 
-                    if (genEntity)
+                    if (genPersistence)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
@@ -1313,13 +1314,13 @@ namespace Neon.CodeGen
 
                     // For data models tagged with [Persistable], we need to generate the static GetKey(...) method.
 
-                    if (genEntity)
+                    if (genPersistence)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Creates a key for an entity.");
+                        writer.WriteLine($"        /// Creates a persistence key.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
+                        writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the item.</param>");
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(\"{dataModel.PersistedType}\", args);");
@@ -1506,7 +1507,6 @@ namespace Neon.CodeGen
                     //---------------------------------------------------------
                     // Generate the __Load() method.
 
-                    var virtualModifier      = dataModel.IsDerived ? "override" : "virtual";
                     var serializedProperties = dataModel.Properties.Where(p => !p.Ignore);
 
                     writer.WriteLine();
@@ -1849,11 +1849,11 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
-                    // Generate the entity type property.
+                    // Generate the persisted type property.
 
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
-                    writer.WriteLine($"        /// Identifies the entity type.");
+                    writer.WriteLine($"        /// Identifies the persisted type.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        public string __T");
                     writer.WriteLine($"        {{");
@@ -1878,15 +1878,14 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
-                    // Generate any entity related members.
+                    // Generate any persistance related members.
 
-                    if (genEntity)
+                    if (genPersistence)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Returns the database key for an entity.");
+                        writer.WriteLine($"        /// Returns the object's persistence key.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the entity.</param>");
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
 
@@ -1902,7 +1901,7 @@ namespace Neon.CodeGen
                         {
                             writer.WriteLine($"            if ({persistedKeyProperty.Name} == null)");
                             writer.WriteLine($"            {{");
-                            writer.WriteLine($"                throw new InvalidOperationException(\"Entity key property [{persistedKeyProperty.Name}] cannot be NULL.\");");
+                            writer.WriteLine($"                throw new InvalidOperationException(\"Persistence key property [{persistedKeyProperty.Name}] cannot be NULL.\");");
                             writer.WriteLine($"            }}");
                             writer.WriteLine();
 
@@ -1918,6 +1917,34 @@ namespace Neon.CodeGen
 
                         writer.WriteLine($"        }}");
                     }
+
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Writes the instance as JSON to a <see cref=\"Stream\"/>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        public {virtualModifier} void WriteJsonTo(Stream stream)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            __Save();");
+                    writer.WriteLine();
+                    writer.WriteLine($"            using (var writer = new JsonTextWriter(new StreamWriter(stream)))");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                __JObject.WriteTo(writer);");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Asynchronously writes the instance as JSON to a <see cref=\"Stream\"/>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <returns>The tracking <see cref=\"Task\"/>.</returns>");
+                    writer.WriteLine($"        public {virtualModifier} async Task WriteJsonToAsync(Stream stream)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            __Save();");
+                    writer.WriteLine();
+                    writer.WriteLine($"            using (var writer = new JsonTextWriter(new StreamWriter(stream)))");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                await __JObject.WriteToAsync(writer);");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine($"        }}");
 
                     // Close the generated model class definition.
 
