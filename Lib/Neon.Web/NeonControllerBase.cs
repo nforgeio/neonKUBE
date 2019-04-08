@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonController.cs
+// FILE:	    NeonControllerBase.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,7 +31,7 @@ using Neon.Net;
 namespace Neon.Web
 {
     /// <summary>
-    /// Enhances the <see cref="Controller"/> class to simplify and enhance web application logging.
+    /// Enhances the <see cref="ControllerBase"/> class to simplify and enhance web service logging.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -74,7 +74,7 @@ namespace Neon.Web
     /// this easy.
     /// </para>
     /// </remarks>
-    public abstract class NeonController : Controller, INeonLogger
+    public abstract class NeonControllerBase : ControllerBase, INeonLogger
     {
         private INeonLogger     log;
         private string          activityId;
@@ -82,7 +82,7 @@ namespace Neon.Web
         /// <summary>
         /// Constructor.
         /// </summary>
-        protected NeonController()
+        protected NeonControllerBase()
         {
         }
 
