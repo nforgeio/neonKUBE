@@ -2608,10 +2608,10 @@ namespace Neon.CodeGen
 
             // $hack(jeff.lill): 
             //
-            // This is a bit of a hack which may not work as expected when ]
-            // users have customized the Json Converters.
+            // This is a bit of a hack which may not work as expected when
+            // users have customized the standard JSON converters.
 
-            foreach (var converter in NeonHelper.JsonRelaxedSerializerSettings.Value.Converters)
+            foreach (var converter in NeonHelper.JsonConverters)
             {
                 var enhancedConverter = converter as IEnhancedJsonConverter;
 

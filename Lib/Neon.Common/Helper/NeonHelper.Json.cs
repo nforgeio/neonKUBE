@@ -102,15 +102,43 @@ namespace Neon.Common
                     return settings;
                 });
 
+        // $todo(jeff.lill):
+        //
+        // It would be nice to have a way to detect when the [JsonConverters] is modified
+        // after it's too late.  Perhaps using an [ObservableCollection].
+
+        /// <summary>
+        /// <para>
+        /// Returns the list of <see cref="JsonConverter"/> instances that will be automatically
+        /// recognized by the JSON deserializers.  This is initialized with converters for some
+        /// common types like <see cref="SemanticVersion"/>, <see cref="TimeSpan"/>, and 
+        /// <see cref="Version"/>.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> You may customize this list but for that to have any impact,
+        /// you must make the modifications <b>very early</b> in your application startup sequence,
+        /// <b>before any JSON serialization operations</b> have been performed.  Any changes
+        /// made after this will be ignored.
+        /// </note>
+        /// </summary>
+        public static List<JsonConverter> JsonConverters { get; private set; } =
+            new List<JsonConverter>()
+            {
+                new SemanticVersionJsonConverter(),
+                new TimeSpanJsonConverter(),
+                new VersionJsonConverter()
+            };
+
         /// <summary>
         /// Adds the standard type converters to serializer settings.
         /// </summary>
         /// <param name="settings">The target settings.</param>
         private static void AddTypeConverters(JsonSerializerSettings settings)
         {
-            settings.Converters.Add(new SemanticVersionJsonConverter());
-            settings.Converters.Add(new TimeSpanJsonConverter());
-            settings.Converters.Add(new VersionJsonConverter());
+            foreach (var converter in JsonConverters)
+            {
+                settings.Converters.Add(converter);
+            }
         }
 
         /// <summary>

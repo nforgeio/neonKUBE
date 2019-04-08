@@ -72,7 +72,7 @@ namespace Neon.Web
             // The formatters also automatically support types
             // with extended Neon JSON type converters.
 
-            foreach (var converter in NeonHelper.JsonStrictSerializerSettings.Value.Converters)
+            foreach (var converter in NeonHelper.JsonConverters)
             {
                 var enhancedConverter = converter as IEnhancedJsonConverter;
 
