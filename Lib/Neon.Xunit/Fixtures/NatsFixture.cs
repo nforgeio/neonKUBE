@@ -28,6 +28,9 @@ using Neon.Net;
 
 namespace Neon.Xunit.Couchbase
 {
+    /// <summary>
+    /// Stubbed.
+    /// </summary>
     public class NatsSettings
     {
     }
