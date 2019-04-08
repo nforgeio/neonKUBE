@@ -29,7 +29,7 @@ using Neon.Net;
 namespace Neon.Xunit.Couchbase
 {
     /// <summary>
-    /// Used to run the Docker <b>nhive.couchbase-test</b> container on 
+    /// Used to run the Docker <b>nkubeio.couchbase-test</b> container on 
     /// the current machine as a test fixture while tests are being performed 
     /// and then deletes the container when the fixture is disposed.
     /// </summary>
@@ -167,11 +167,6 @@ namespace Neon.Xunit.Couchbase
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
         /// <param name="noPrimary">Optionally disable creation of thea primary bucket index.</param>
-        /// <returns>
-        /// <c>true</c> if the fixture wasn't previously initialized and
-        /// this method call initialized it or <c>false</c> if the fixture
-        /// was already initialized.
-        /// </returns>
         public void StartInAction(
             CouchbaseSettings   settings  = null,
             string              image     = "nkubeio/couchbase-test:latest",
