@@ -56,7 +56,18 @@ namespace Neon.Web
         /// <inheritdoc/>
         protected override bool CanReadType(Type type)
         {
-            return type.Implements<IGeneratedType>();
+            if (WebHelper.IsRoundTripType(type))
+            {
+                return true;
+            }
+
+            if (type.Implements<IGeneratedType>())
+            {
+                WebHelper.RegisterRoundTripType(type);
+                return true;
+            }
+
+            return false;
         }
 
         /// <inheritdoc/>
@@ -70,6 +81,15 @@ namespace Neon.Web
             }
             else
             {
+                // Hardcoded types:
+
+                if (context.ModelType == typeof(TimeSpan))
+                {
+                    var timespan = TimeSpan.ParseExact(Encoding.UTF8.GetString(await request.Body.ReadToEndAsync()), "c", null);
+
+                    return await InputFormatterResult.SuccessAsync(timespan);
+                }
+
                 return await InputFormatterResult.SuccessAsync(GeneratedTypeFactory.CreateFrom(context.ModelType, request.Body));
             }
         }

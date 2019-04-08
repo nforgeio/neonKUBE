@@ -54,7 +54,18 @@ namespace Neon.Web
         /// <inheritdoc/>
         protected override bool CanWriteType(Type type)
         {
-            return type.Implements<IGeneratedType>();
+            if (WebHelper.IsRoundTripType(type))
+            {
+                return true;
+            }
+
+            if (type.Implements<IGeneratedType>())
+            {
+                WebHelper.RegisterRoundTripType(type);
+                return true;
+            }
+
+            return false;
         }
 
         /// <inheritdoc/>
@@ -68,6 +79,14 @@ namespace Neon.Web
             }
             else
             {
+                // Hardcoded types:
+
+                if (context.ObjectType == typeof(TimeSpan))
+                {
+                    await response.WriteAsync(((TimeSpan)context.Object).ToString("c"));
+                    return;
+                }
+
                 // $todo(jeff.lill):
                 //
                 // Rendering the object to a JSON first before writing it is really 
