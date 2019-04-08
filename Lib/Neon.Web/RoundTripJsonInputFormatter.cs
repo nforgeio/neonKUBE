@@ -81,16 +81,14 @@ namespace Neon.Web
             }
             else
             {
-                // Hardcoded types:
-
-                if (context.ModelType == typeof(TimeSpan))
+                if (GeneratedTypeFactory.TryCreateFrom(context.ModelType, request.Body, Encoding.UTF8, out var item))
                 {
-                    var timespan = TimeSpan.ParseExact(Encoding.UTF8.GetString(await request.Body.ReadToEndAsync()), "c", null);
-
-                    return await InputFormatterResult.SuccessAsync(timespan);
+                    return await InputFormatterResult.SuccessAsync(item);
                 }
-
-                return await InputFormatterResult.SuccessAsync(GeneratedTypeFactory.CreateFrom(context.ModelType, request.Body));
+                else
+                {
+                    return await InputFormatterResult.SuccessAsync(NeonHelper.JsonDeserialize(context.ModelType, Encoding.UTF8.GetString(await request.Body.ReadToEndAsync())));
+                }
             }
         }
     }

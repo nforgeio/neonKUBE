@@ -73,5 +73,16 @@ namespace Neon.Data
         /// </summary>
         /// <returns>The backing <see cref="JObject"/>.</returns>
         JObject __Save();
+
+        /// <summary>
+        /// Writes the instance as JSON to a <see cref="Stream"/>.
+        /// </summary>
+        void WriteJsonTo(Stream stream);
+
+        /// <summary>
+        /// Asynchronously writes the instance as JSON to a <see cref="Stream"/>.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        Task WriteJsonToAsync(Stream stream);
     }
 }

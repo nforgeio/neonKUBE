@@ -79,23 +79,16 @@ namespace Neon.Web
             }
             else
             {
-                // Hardcoded types:
+                var generated = context.Object as IGeneratedType;
 
-                if (context.ObjectType == typeof(TimeSpan))
+                if (generated != null)
                 {
-                    await response.WriteAsync(((TimeSpan)context.Object).ToString("c"));
-                    return;
+                    await generated.WriteJsonToAsync(response.Body);
                 }
-
-                // $todo(jeff.lill):
-                //
-                // Rendering the object to a JSON first before writing it is really 
-                // bad from a performance perspective.  We need to modify the generated
-                // object code to expose the JSON.NET stream serialization capabilities:
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/471
-
-                await response.WriteAsync(context.Object.ToString());
+                else
+                {
+                    await response.WriteAsync(NeonHelper.JsonSerialize(context.Object));
+                }
             }
         }
     }
