@@ -147,5 +147,35 @@ namespace TestCommon
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ExtendedConverters()
+        {
+            // Verify that the extended type converters work.
+
+            string value;
+
+            //------------------------------------------------------------------
+
+            var semanticVersion = SemanticVersion.Create(1, 2, 3, "build-0", "alpha");
+
+            value = NeonHelper.JsonSerialize(semanticVersion);
+            Assert.Equal(semanticVersion, NeonHelper.JsonDeserialize<SemanticVersion>(value));
+
+            //------------------------------------------------------------------
+
+            var timespan = TimeSpan.FromDays(2.1234567);
+
+            value = NeonHelper.JsonSerialize(timespan);
+            Assert.Equal(timespan, NeonHelper.JsonDeserialize<TimeSpan>(value));
+
+            //------------------------------------------------------------------
+
+            var version = new Version(1, 2, 3);
+
+            value = NeonHelper.JsonSerialize(version);
+            Assert.Equal(version, NeonHelper.JsonDeserialize<Version>(value));
+        }
     }
 }
