@@ -63,6 +63,10 @@ namespace Neon.Common
                     settings.DateFormatHandling   = DateFormatHandling.IsoDateFormat;
                     settings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
 
+                    // Add standard type converters.
+
+                    AddTypeConverters(settings);
+
                     return settings;
                 });
 
@@ -91,8 +95,23 @@ namespace Neon.Common
                     settings.DateFormatHandling   = DateFormatHandling.IsoDateFormat;
                     settings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
 
+                    // Add standard type converters.
+
+                    AddTypeConverters(settings);
+
                     return settings;
                 });
+
+        /// <summary>
+        /// Adds the standard type converters to serializer settings.
+        /// </summary>
+        /// <param name="settings">The target settings.</param>
+        private static void AddTypeConverters(JsonSerializerSettings settings)
+        {
+            settings.Converters.Add(new SemanticVersionJsonConverter());
+            settings.Converters.Add(new TimeSpanJsonConverter());
+            settings.Converters.Add(new VersionJsonConverter());
+        }
 
         /// <summary>
         /// Serializes an object to JSON text.
