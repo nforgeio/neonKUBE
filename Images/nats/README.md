@@ -5,3 +5,6 @@ NATS images are tagged with the version plus the image build date and the latest
 # Description
 
 This is the official [NATS](https://hub.docker.com/_/nats) image in our own repository so we can control releases and archive.
+
+This image is intended for production use.
+

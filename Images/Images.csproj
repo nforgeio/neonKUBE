@@ -87,6 +87,15 @@
     <Content Include="nats\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="nats-test\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="nats-test\build.ps1" />
+    <None Include="nats-test\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="nats-test\publish.ps1" />
+    <None Include="nats-test\README.md" />
     <None Include="nats\build.ps1" />
     <None Include="nats\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

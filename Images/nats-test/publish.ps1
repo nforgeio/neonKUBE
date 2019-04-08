@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the NATS images and pushes them to Docker Hub.
+# Builds the NATS-TEST images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -41,7 +41,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = GetRegistry "nats"
+	$registry = GetRegistry "nats-test"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"
