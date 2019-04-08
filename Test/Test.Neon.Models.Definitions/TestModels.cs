@@ -93,7 +93,25 @@ namespace Test.Neon.Models.Definitions
     public interface TestAspNetFixtureController
     {
         [HttpGet]
-        string Hello();
+        string GetString(string input);
+
+        [HttpGet]
+        bool GetBool(bool input);
+
+        [HttpGet]
+        int GetInt(int input);
+
+        [HttpGet]
+        double GetDouble(double input);
+
+        [HttpGet]
+        TimeSpan GetTimeSpan(TimeSpan timespan);
+
+        [HttpGet]
+        Version GetVersion(Version version);
+
+        [HttpGet]
+        SemanticVersion GetSemanticVersion(SemanticVersion version);
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]

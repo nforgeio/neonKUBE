@@ -47,10 +47,52 @@ namespace TestCodeGen.AspNet
     public class TestAspNetFixtureController : NeonController
     {
         [HttpGet]
-        [Route("Hello")]
-        public string Hello()
+        [Route("GetString")]
+        public string GetString(string input)
         {
-            return "World!";
+            return input;
+        }
+
+        [HttpGet]
+        [Route("GetBool")]
+        public bool GetBool(bool input)
+        {
+            return input;
+        }
+
+        [HttpGet]
+        [Route("GetInt")]
+        public int GetInt(int input)
+        {
+            return input;
+        }
+
+        [HttpGet]
+        [Route("GetDouble")]
+        public double GetDouble(double input)
+        {
+            return input;
+        }
+
+        [HttpGet]
+        [Route("GetTimeSpan")]
+        public TimeSpan GetTimeSpan(TimeSpan timespan)
+        {
+            return timespan;
+        }
+
+        [HttpGet]
+        [Route("GetVersion")]
+        public Version GetVersion(Version version)
+        {
+            return version;
+        }
+
+        [HttpGet]
+        [Route("GetSemanticVersion")]
+        public SemanticVersion GetSemanticVersion(SemanticVersion version)
+        {
+            return version;
         }
 
         [HttpGet]
@@ -66,6 +108,7 @@ namespace TestCodeGen.AspNet
         }
 
         [HttpPut]
+        [Route("IncrementAge")]
         public Person IncrementAge([FromBody] Person person)
         {
             if (person == null)
@@ -110,7 +153,7 @@ namespace TestCodeGen.AspNet
     /// </summary>
     public class Test_EndToEnd : IClassFixture<AspNetFixture>
     {
-        private AspNetFixture           fixture;
+        private AspNetFixture fixture;
         private TestAspNetFixtureClient client;
 
         public Test_EndToEnd(AspNetFixture fixture)
@@ -126,13 +169,109 @@ namespace TestCodeGen.AspNet
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public async Task Hello()
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetString()
         {
-            // Verify that we can communicate with the service by calling 
-            // a very simply API.
+            Assert.Equal("Hello World!", await client.GetStringAsync("Hello World!"));
+            Assert.Equal("Goodbye World!", await client.GetStringAsync("Goodbye World!"));
+            Assert.Null(await client.GetStringAsync(null));
 
-            Assert.Equal("World!", await client.HelloAsync());
+            // $todo(jeff.lill):
+            //
+            // This one is a bit strange.  I expected an empty string to be persented to
+            // the service endpoint as an empty string but it's showing up as NULL.  I
+            // verified that I'm setting the query string properly to:
+            //
+            //      ...?input=
+            //
+            // This is probably expected ASP.NET behavior but perhaps worth further
+            // investgation at some point.
+            //
+            //      Assert.Equal("", await client.GetStringAsync(""));
+
+            Assert.Null(await client.GetStringAsync(""));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetBool()
+        {
+            Assert.True(await client.GetBoolAsync(true));
+            Assert.False(await client.GetBoolAsync(false));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetInt()
+        {
+            Assert.Equal(0, await client.GetIntAsync(0));
+            Assert.Equal(100, await client.GetIntAsync(100));
+            Assert.Equal(-100, await client.GetIntAsync(-100));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetDouble()
+        {
+            Assert.Equal(0, await client.GetDoubleAsync(0));
+            Assert.Equal(1.234, await client.GetDoubleAsync(1.234));
+            Assert.Equal(-1.234, await client.GetDoubleAsync(-1.234));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetTimeSpan()
+        {
+            Assert.Equal(TimeSpan.Zero, await client.GetTimeSpanAsync(TimeSpan.Zero));
+            Assert.Equal(TimeSpan.FromDays(2.3456), await client.GetTimeSpanAsync(TimeSpan.FromDays(2.3456)));
+            Assert.Equal(TimeSpan.FromDays(-2.3456), await client.GetTimeSpanAsync(TimeSpan.FromDays(-2.3456)));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetVersion()
+        {
+            var version = new Version(1, 2, 3);
+
+            Assert.Equal(version, await client.GetVersionAsync(version));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetSemanticVersion()
+        {
+            var version = SemanticVersion.Create(1, 2, 3, "build", "alpha");
+
+            Assert.Equal(version, await client.GetSemanticVersionAsync(version));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task ReturnPerson()
+        {
+            var person = await client.CreatePersonAsync(10, "Jeff", 58);
+
+            Assert.Equal(10, person.Id);
+            Assert.Equal("Jeff", person.Name);
+            Assert.Equal(58, person.Age);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task PutPerson()
+        {
+            var person = new Person()
+            {
+                Id = 10,
+                Name = "Jeff",
+                Age = 58
+            };
+
+            var modified = await client.IncrementAgeAsync(person);
+
+            Assert.Equal(10, modified.Id);
+            Assert.Equal("Jeff", modified.Name);
+            Assert.Equal(59, modified.Age);
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Neon.Common
     public class VersionJsonConverter : JsonConverter<Version>, IEnhancedJsonConverter
     {
         /// <inheritdoc/>
-        public Type Type => typeof(VersionJsonConverter);
+        public Type Type => typeof(Version);
 
         /// <inheritdoc/>
         public override Version ReadJson(JsonReader reader, Type objectType, Version existingValue, bool hasExistingValue, JsonSerializer serializer)

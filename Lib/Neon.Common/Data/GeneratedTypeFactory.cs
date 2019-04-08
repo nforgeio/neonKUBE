@@ -95,7 +95,7 @@ namespace Neon.Data
         /// <param name="stream">The source <see cref="Stream"/>.</param>
         /// <param name="encoding">Optionally specifies the encoding (defaults to UTF-8).</param>
         /// <returns>The new instance as an <see cref="object"/>.</returns>
-        public static object CreateFrom(Type resultType, Stream stream, Encoding encoding = null)
+        public static async Task<object> CreateFromAsync(Type resultType, Stream stream, Encoding encoding = null)
         {
             Covenant.Requires(resultType != null);
             Covenant.Requires(stream != null);
@@ -116,15 +116,15 @@ namespace Neon.Data
                         throw new InvalidOperationException($"Type [{resultType.FullName}] does not implement [{nameof(IGeneratedType)}].");
                     }
 
-                    createMethod = resultType.GetMethod("CreateFrom", BindingFlags.Public | BindingFlags.Static, null, createFromStreamArgTypes, null);
+                    createMethod = resultType.GetMethod("CreateFromAsync", BindingFlags.Public | BindingFlags.Static, null, createFromStreamArgTypes, null);
 #if DEBUG
-                    Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFrom(Stream, Encoding)] method.");
+                    Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFromAsync(Stream, Encoding)] method.");
 #endif
                     nameToCreateMethod.Add(resultType.FullName, createMethod);
                 }
             }
 
-            return createMethod.Invoke(null, new object[] { stream, encoding });
+            return await (Task<object>)createMethod.Invoke(null, new object[] { stream, encoding });
         }
 
         /// <summary>
@@ -133,12 +133,11 @@ namespace Neon.Data
         /// <param name="resultType">The result type.</param>
         /// <param name="stream">The source <see cref="Stream"/>.</param>
         /// <param name="encoding">Optionally specifies the encoding (defaults to UTF-8).</param>
-        /// <param name="output">Returns as the deserialized instance on success.</param>
         /// <returns>
         /// <c>true</c> if the object type implements <see cref="IGeneratedType"/> and the 
         /// object was successfully deserialized.
         /// </returns>
-        public static bool TryCreateFrom(Type resultType, Stream stream, Encoding encoding, out object output )
+        public static async Task<Tuple<bool, object>> TryCreateFromAsync(Type resultType, Stream stream, Encoding encoding )
         {
             Covenant.Requires(resultType != null);
             Covenant.Requires(stream != null);
@@ -156,21 +155,18 @@ namespace Neon.Data
                 {
                     if (!resultType.Implements<IGeneratedType>())
                     {
-                        output = null;
-                        return false;
+                        return Tuple.Create<bool, object>(false, null);
                     }
 
-                    createMethod = resultType.GetMethod("CreateFrom", BindingFlags.Public | BindingFlags.Static, null, createFromStreamArgTypes, null);
+                    createMethod = resultType.GetMethod("CreateFromAsync", BindingFlags.Public | BindingFlags.Static, null, createFromStreamArgTypes, null);
 #if DEBUG
-                    Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFrom(Stream, Encoding)] method.");
+                    Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFromAsync(Stream, Encoding)] method.");
 #endif
                     nameToCreateMethod.Add(resultType.FullName, createMethod);
                 }
             }
 
-            output = createMethod.Invoke(null, new object[] { stream, encoding });
-
-            return true;
+            return Tuple.Create<bool, object>(true, await (Task<object>)createMethod.Invoke(null, new object[] { stream, encoding }));
         }
     }
 }

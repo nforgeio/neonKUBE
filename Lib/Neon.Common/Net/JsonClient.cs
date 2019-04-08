@@ -278,7 +278,10 @@ namespace Neon.Net
 
                 if (arg.Value == null)
                 {
-                    value = "null";
+                    // Don't serialize NULL values.  Their absence
+                    // will indicate their NULL-ness.
+
+                    continue;
                 }
                 else if (arg.Value is bool)
                 {

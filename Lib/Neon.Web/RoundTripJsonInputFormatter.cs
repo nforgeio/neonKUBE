@@ -81,9 +81,11 @@ namespace Neon.Web
             }
             else
             {
-                if (GeneratedTypeFactory.TryCreateFrom(context.ModelType, request.Body, Encoding.UTF8, out var item))
+                var result = await GeneratedTypeFactory.TryCreateFromAsync(context.ModelType, request.Body, Encoding.UTF8);
+
+                if (result.Item1)
                 {
-                    return await InputFormatterResult.SuccessAsync(item);
+                    return await InputFormatterResult.SuccessAsync(result.Item2);
                 }
                 else
                 {

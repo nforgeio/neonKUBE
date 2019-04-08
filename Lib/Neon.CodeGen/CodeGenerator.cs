@@ -610,7 +610,7 @@ namespace Neon.CodeGen
 
                     if (!IsValidMethodType(methodParameter.ParameterInfo.ParameterType, methodParameter.Pass))
                     {
-                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with complex type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody].");
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with complex type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody] or implementing a custom JSON type converter.");
                     }
 
                     serviceMethod.Parameters.Add(methodParameter);
@@ -1280,6 +1280,32 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Asynchronously deserializes an instance from a <see cref=\"Stream\"/>.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"stream\">The input <see cref=\"Stream\"/>.</param>");
+                    writer.WriteLine($"        /// <param name=\"encoding\">Optionally specifies the inout encoding.  This defaults to <see cref=\"Encoding.UTF8\"/>.</param>");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+                    writer.WriteLine($"        public static async Task<object> CreateFromAsync(Stream stream, Encoding encoding = null)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            if (stream == null)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(stream));");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            {className} model;");
+                    writer.WriteLine();
+                    writer.WriteLine($"            using (var reader = new StreamReader(stream, encoding, detectEncodingFromByteOrderMarks: false, bufferSize: 8192, leaveOpen: true))");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                model = {className}.CreateFrom(await reader.ReadToEndAsync());");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            model.__Load();");
+                    writer.WriteLine($"            return model;");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Deserializes an instance from a <see cref=\"JsonResponse\"/>.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"response\">The input <see cref=\"JsonResponse\"/>.</param>");
@@ -1940,10 +1966,19 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine();
-                    writer.WriteLine($"            using (var writer = new JsonTextWriter(new StreamWriter(stream)))");
-                    writer.WriteLine($"            {{");
-                    writer.WriteLine($"                await __JObject.WriteToAsync(writer);");
-                    writer.WriteLine($"            }}");
+
+                    // ASP.NET copmplains about this being a synchronous operation???  We'll revert
+                    // back to the inefficient ToString() method and revisit this later.
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/485
+
+                    //writer.WriteLine($"            using (var writer = new JsonTextWriter(new StreamWriter(stream)))");
+                    //writer.WriteLine($"            {{");
+                    //writer.WriteLine($"                await __JObject.WriteToAsync(writer);");
+                    //writer.WriteLine($"            }}");
+
+                    writer.WriteLine($"            await stream.WriteAsync(Encoding.UTF8.GetBytes(__JObject.ToString()));");
+
                     writer.WriteLine($"        }}");
 
                     // Close the generated model class definition.
@@ -2557,17 +2592,36 @@ namespace Neon.CodeGen
                 return ResolveTypeReference(type, isResultType: true) != null;
             }
 
-            // By default, parameters may only be a primitive type, a string, or an enum.
+            // By default, parameters may only be a primitive type, a string, an enum,
+            // or a type with a registered type converter.
+            //
             // The only exception is for parameters passed as the request body.
 
             if (pass == Pass.AsBody)
             {
                 return ResolveTypeReference(type) != null;
             }
-            else
+            else if (type.IsPrimitive || type == typeof(string) || type.IsEnum)
             {
-                return type.IsPrimitive || type == typeof(string) || type.IsEnum;
+                return true;
             }
+
+            // $hack(jeff.lill): 
+            //
+            // This is a bit of a hack which may not work as expected when ]
+            // users have customized the Json Converters.
+
+            foreach (var converter in NeonHelper.JsonRelaxedSerializerSettings.Value.Converters)
+            {
+                var enhancedConverter = converter as IEnhancedJsonConverter;
+
+                if (enhancedConverter?.Type == type)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -2614,10 +2668,13 @@ namespace Neon.CodeGen
             {
                 // Strip the namespace off of local data model types.
 
-                typeName = StripNamespace(typeName);
+                return StripNamespace(typeName);
             }
 
-            return typeName;
+            // We're going to use the global namespace to avoid namespace conflicts
+            // for types that 
+
+            return $"global::{typeName}";
         }
 
         /// <summary>
