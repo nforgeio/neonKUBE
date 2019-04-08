@@ -28,7 +28,7 @@ param
 
 "   "
 "======================================="
-"* NATS:" + $tag
+"* NATS-STREAMING:" + $tag
 "======================================="
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }

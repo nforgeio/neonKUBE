@@ -15,13 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Base NATS image.
+# Base NATS-STREAMING image.
 #
 # ARGUMENTS:
 #
-#   VERSION         - The base NATS image tag (e.g. "1.4.1")
+#   VERSION         - The base NATS-STREAMING image tag (e.g. "0.12.2")
 
 ARG         VERSION
-FROM        nats:${VERSION}-linux
+FROM        nats-streaming:${VERSION}-linux
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
