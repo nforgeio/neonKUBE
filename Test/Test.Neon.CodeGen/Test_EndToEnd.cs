@@ -39,7 +39,7 @@ using Neon.Xunit;
 using Test.Neon.Models;
 
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Controllers;
+using Xunit.Abstractions;
 
 namespace TestCodeGen.AspNet
 {
@@ -153,14 +153,16 @@ namespace TestCodeGen.AspNet
     /// </summary>
     public class Test_EndToEnd : IClassFixture<AspNetFixture>
     {
-        private AspNetFixture fixture;
-        private TestAspNetFixtureClient client;
+        private AspNetFixture               fixture;
+        private TestAspNetFixtureClient     client;
+        private TestOutputWriter            testWriter;
 
-        public Test_EndToEnd(AspNetFixture fixture)
+        public Test_EndToEnd(AspNetFixture fixture, ITestOutputHelper outputHelper)
         {
-            this.fixture = fixture;
+            this.fixture    = fixture;
+            this.testWriter = new TestOutputWriter(outputHelper);
 
-            fixture.Start<Startup>();
+            fixture.Start<Startup>(logWriter: testWriter, logLevel: Neon.Diagnostics.LogLevel.Debug);
 
             client = new TestAspNetFixtureClient()
             {
