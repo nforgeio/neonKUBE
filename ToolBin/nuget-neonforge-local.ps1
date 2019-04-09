@@ -69,6 +69,7 @@ SetVersion Neon.Kube.XenServer
 SetVersion Neon.Web
 SetVersion Neon.XenServer
 SetVersion Neon.Xunit
+# SetVersion Neon.Xunit.Cadence
 SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
 
@@ -94,6 +95,7 @@ Publish Neon.Kube.XenServer
 Publish Neon.Web
 Publish Neon.XenServer
 Publish Neon.Xunit
+# Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
 pause
