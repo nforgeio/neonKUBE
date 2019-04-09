@@ -83,6 +83,12 @@ namespace TestCodeGen.Couchbase
 
             Assert.Empty(from doc in context.Query<object>() select doc);
 
+            // Verify that the generated CreateKey() methods return the
+            // correct values.
+
+            Assert.Equal($"{Person.PersistedType}::0", Person.CreateKey("0"));
+            Assert.Equal($"{City.PersistedType}::Woodinville", City.CreateKey("Woodinville"));
+
             // Verify that we can write generated entity models.
 
             var jack = new Person()
@@ -338,6 +344,48 @@ namespace TestCodeGen.Couchbase
             Assert.Equal(jack.Data, jackRead.Data);
             Assert.Equal(182, (int)jObject["Height"]);
             Assert.Equal(jack, jackRead);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task Find()
+        {
+            // Ensure that the database starts out empty.
+
+            Assert.Empty(from doc in context.Query<object>() select doc);
+
+            // Verify that finding a document that doesn't exist returns NULL.
+
+            Assert.Null(await bucket.FindSafeAsync<Person>(Person.CreateKey("0")));
+            Assert.Null(await bucket.FindDocumentSafeAsync<Person>(Person.CreateKey("0")));
+
+            // Verify that finding a document that does exist works.
+
+            var jack = new Person()
+            {
+                Id   = 0,
+                Name = "Jack",
+                Age  = 10,
+                Data = new byte[] { 0, 1, 2, 3, 4 }
+            };
+
+            await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
+
+            var person = await bucket.FindSafeAsync<Person>(Person.CreateKey("0"));
+
+            Assert.NotNull(person);
+            Assert.Equal(jack.Id, person.Id);
+            Assert.Equal(jack.Name, person.Name);
+            Assert.Equal(jack.Age, person.Age);
+            Assert.Equal(jack.Data, person.Data);
+
+            var personDoc = await bucket.FindDocumentSafeAsync<Person>(Person.CreateKey("0"));
+
+            Assert.NotNull(personDoc);
+            Assert.Equal(jack.Id, personDoc.Content.Id);
+            Assert.Equal(jack.Name, personDoc.Content.Name);
+            Assert.Equal(jack.Age, personDoc.Content.Age);
+            Assert.Equal(jack.Data, personDoc.Content.Data);
         }
     }
 }

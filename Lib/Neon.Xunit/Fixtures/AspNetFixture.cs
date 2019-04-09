@@ -25,9 +25,16 @@ using System.Net.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
 using Neon.Common;
 using Neon.Data;
+using Neon.Diagnostics;
 using Neon.Net;
+
+using Xunit.Abstractions;
+
+using LogLevel = Neon.Diagnostics.LogLevel;
 
 namespace Neon.Xunit
 {
@@ -36,7 +43,45 @@ namespace Neon.Xunit
     /// </summary>
     public class AspNetFixture : TestFixture
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Handles site logging if enabled below.
+        /// </summary>
+        private class LoggingProvider : ILoggerProvider
+        {
+            private LogManager  logManager;
+
+            public LoggingProvider(TextWriter logWriter, LogLevel logLevel)
+            {
+                this.logManager = new LogManager(writer: logWriter)
+                {
+                    LogLevel = logLevel
+                };
+            }
+
+            public ILogger CreateLogger(string categoryName)
+            {
+                return (ILogger)logManager.GetLogger(categoryName);
+            }
+
+            public void Dispose()
+            {
+                if (logManager != null)
+                {
+                    logManager.Dispose();
+                    logManager = null;
+                }
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private Action<IWebHostBuilder> hostConfigurator;
+        private TextWriter              logWriter = null;
+        private LogLevel                logLevel  = LogLevel.None;
 
         /// <summary>
         /// Constructs the fixture.
@@ -79,14 +124,43 @@ namespace Neon.Xunit
         /// <typeparam name="TStartup">The startup class for the service.</typeparam>
         /// <param name="hostConfigurator">Optional action providing for customization of the hosting environment.</param>
         /// <param name="port">The port where the server will listen or zero to allow the operating system to select a free port.</param>
-        public void Start<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0)
+        /// <param name="logWriter">Optionally specifies a test output writer.</param>
+        /// <param name="logLevel">Optionally specifies the log level.  This defaults to <see cref="LogLevel.None"/>.</param>
+        /// <remarks>
+        /// <para>
+        /// You can capture ASP.NET and service logs into your unit test logs by passing <paramref name="logWriter"/> as 
+        /// non-null and <paramref name="logLevel"/> as something other than <see cref="LogLevel.None"/>.  You'll need
+        /// to obtain a <see cref="ITestOutputHelper"/> instance from Xunit via dependency injection by adding a parameter
+        /// to your test constructor and then creating a <see cref="TestOutputWriter"/> from it, like:
+        /// </para>
+        /// <code language="c#">
+        /// public class MyTest : IClassFixture&lt;AspNetFixture&gt;
+        /// {
+        ///     private AspNetFixture               fixture;
+        ///     private TestAspNetFixtureClient     client;
+        ///     private TestOutputWriter            testWriter;
+        ///
+        ///     public Test_EndToEnd(AspNetFixture fixture, ITestOutputHelper outputHelper)
+        ///     {
+        ///         this.fixture    = fixture;
+        ///         this.testWriter = new TestOutputWriter(outputHelper);
+        ///
+        ///         fixture.Start&lt;Startup&gt;(logWriter: testWriter, logLevel: Neon.Diagnostics.LogLevel.Debug);
+        ///
+        ///         client = new TestAspNetFixtureClient()
+        ///         {
+        ///             BaseAddress = fixture.BaseAddress
+        ///         };
+        ///      }
+        /// }
+        /// </code>
+        /// </remarks>
+        public void Start<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0, TestOutputWriter logWriter = null, LogLevel logLevel = LogLevel.None)
             where TStartup : class
         {
-            // $todo(jeff.lill): DELETE THIS!
-            port = 5555;
-            //-------------------------------
-
             this.hostConfigurator = hostConfigurator;
+            this.logWriter        = logWriter;
+            this.logLevel         = logLevel;
 
             if (IsRunning)
             {
@@ -112,9 +186,9 @@ namespace Neon.Xunit
         private void StartServer<TStartup>(int port)
             where TStartup : class
         {
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(port));
+            Covenant.Requires<ArgumentException>(port == 0 || NetHelper.IsValidPort(port));
 
-            var builder = new WebHostBuilder()
+            var app = new WebHostBuilder()
                 .UseStartup<TStartup>()
                 .UseKestrel(
                     options =>
@@ -122,8 +196,17 @@ namespace Neon.Xunit
                         options.Listen(IPAddress.Loopback, port);
                     });
 
-            hostConfigurator?.Invoke(builder);
-            WebHost = builder.Build();
+            if (logWriter != null && logLevel != LogLevel.None)
+            {
+                app.ConfigureLogging(
+                    (hostingContext, logging) =>
+                    {
+                        logging.AddProvider(new LoggingProvider(logWriter, logLevel));
+                    });
+            }
+
+            hostConfigurator?.Invoke(app);
+            WebHost = app.Build();
             WebHost.Start();
         }
 

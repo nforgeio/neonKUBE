@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -111,6 +112,7 @@ namespace Neon.Diagnostics
 
         private Dictionary<string, INeonLogger> nameToLogger = new Dictionary<string, INeonLogger>();
         private LogLevel                        logLevel     = LogLevel.Info;
+        private TextWriter                      writer       = null;
 
         // $todo(jeff.lill)
         //
@@ -123,12 +125,15 @@ namespace Neon.Diagnostics
         /// Default constructor.
         /// </summary>
         /// <param name="parseLogLevel">Indicates that the <b>LOG-LEVEL</b> environment variable should be parsed (defaults to <c>true</c>).</param>
-        public LogManager(bool parseLogLevel = true)
+        /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
+        public LogManager(bool parseLogLevel = true, TextWriter writer = null)
         {
             if (parseLogLevel && !Enum.TryParse<LogLevel>(Environment.GetEnvironmentVariable("LOG_LEVEL"), true, out logLevel))
             {
                 logLevel = LogLevel.Info;
             }
+
+            this.writer = writer;
         }
 
         /// <summary>
@@ -219,8 +224,9 @@ namespace Neon.Diagnostics
         /// Returns the logger for the existing name.
         /// </summary>
         /// <param name="name">The case sensitive logger name.</param>
+        /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        private INeonLogger InternalGetLogger(string name)
+        private INeonLogger InternalGetLogger(string name, TextWriter writer = null)
         {
             name = name ?? string.Empty;
 
@@ -228,7 +234,7 @@ namespace Neon.Diagnostics
             {
                 if (!nameToLogger.TryGetValue(name, out var logger))
                 {
-                    logger = new NeonLogger(this, name);
+                    logger = new NeonLogger(this, name, writer: writer);
                     nameToLogger.Add(name, logger);
                 }
 
@@ -239,19 +245,19 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public INeonLogger GetLogger(string sourceModule = null)
         {
-            return InternalGetLogger(sourceModule);
+            return InternalGetLogger(sourceModule, writer);
         }
 
         /// <inheritdoc/>
         public INeonLogger GetLogger(Type type)
         {
-            return InternalGetLogger(type.FullName);
+            return InternalGetLogger(type.FullName, writer);
         }
 
         /// <inheritdoc/>
         public INeonLogger GetLogger<T>()
         {
-            return InternalGetLogger(typeof(T).FullName);
+            return InternalGetLogger(typeof(T).FullName, writer);
         }
 
         //---------------------------------------------------------------------
