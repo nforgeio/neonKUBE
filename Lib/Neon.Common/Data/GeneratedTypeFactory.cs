@@ -43,9 +43,11 @@ namespace Neon.Data
     /// </summary>
     public static class GeneratedTypeFactory
     {
-        private static Dictionary<string, MethodInfo>   nameToCreateMethod        = new Dictionary<string, MethodInfo>();
-        private static Type[]                           createFromJObjectArgTypes = new Type[] { typeof(JObject) };
-        private static Type[]                           createFromStreamArgTypes  = new Type[] { typeof(Stream), typeof(Encoding) };
+        private static Dictionary<string, MethodInfo>   classNameToJObjectCreateMethod     = new Dictionary<string, MethodInfo>();
+        private static Dictionary<string, MethodInfo>   classNameToStreamCreateMethod      = new Dictionary<string, MethodInfo>();
+        private static Dictionary<string, MethodInfo>   classNameToStreamAsyncCreateMethod = new Dictionary<string, MethodInfo>();
+        private static Type[]                           createFromJObjectArgTypes          = new Type[] { typeof(JObject) };
+        private static Type[]                           createFromStreamArgTypes           = new Type[] { typeof(Stream), typeof(Encoding) };
 
         /// <summary>
         /// Constructs an instance of <typeparamref name="TResult"/> from a <see cref="JObject"/>.
@@ -73,15 +75,15 @@ namespace Neon.Data
 #endif
             MethodInfo createMethod;
 
-            lock (nameToCreateMethod)
+            lock (classNameToJObjectCreateMethod)
             {
-                if (!nameToCreateMethod.TryGetValue(resultType.FullName, out createMethod))
+                if (!classNameToJObjectCreateMethod.TryGetValue(resultType.FullName, out createMethod))
                 {
                     createMethod = resultType.GetMethod("CreateFrom", BindingFlags.Public | BindingFlags.Static, null, createFromJObjectArgTypes, null);
 #if DEBUG
                     Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFrom(JObject)] method.");
 #endif
-                    nameToCreateMethod.Add(resultType.FullName, createMethod);
+                    classNameToJObjectCreateMethod.Add(resultType.FullName, createMethod);
                 }
             }
 
@@ -107,9 +109,9 @@ namespace Neon.Data
 
             MethodInfo createMethod;
 
-            lock (nameToCreateMethod)
+            lock (classNameToStreamCreateMethod)
             {
-                if (!nameToCreateMethod.TryGetValue(resultType.FullName, out createMethod))
+                if (!classNameToStreamCreateMethod.TryGetValue(resultType.FullName, out createMethod))
                 {
                     if (!resultType.Implements<IGeneratedType>())
                     {
@@ -120,7 +122,7 @@ namespace Neon.Data
 #if DEBUG
                     Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFromAsync(Stream, Encoding)] method.");
 #endif
-                    nameToCreateMethod.Add(resultType.FullName, createMethod);
+                    classNameToStreamCreateMethod.Add(resultType.FullName, createMethod);
                 }
             }
 
@@ -149,9 +151,9 @@ namespace Neon.Data
 
             MethodInfo createMethod;
 
-            lock (nameToCreateMethod)
+            lock (classNameToStreamAsyncCreateMethod)
             {
-                if (!nameToCreateMethod.TryGetValue(resultType.FullName, out createMethod))
+                if (!classNameToStreamAsyncCreateMethod.TryGetValue(resultType.FullName, out createMethod))
                 {
                     if (!resultType.Implements<IGeneratedType>())
                     {
@@ -162,7 +164,7 @@ namespace Neon.Data
 #if DEBUG
                     Covenant.Assert(createMethod != null, $"Cannot locate generated [{resultType.FullName}.CreateFromAsync(Stream, Encoding)] method.");
 #endif
-                    nameToCreateMethod.Add(resultType.FullName, createMethod);
+                    classNameToStreamAsyncCreateMethod.Add(resultType.FullName, createMethod);
                 }
             }
 
