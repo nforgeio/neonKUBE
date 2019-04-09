@@ -121,6 +121,7 @@ namespace Neon.Diagnostics
         /// <param name="logManager">The parent log manager or <c>null</c>.</param>
         /// <param name="sourceModule">Optionally identifies the event source module or <c>null</c>.</param>
         /// <param name="noisyAspNet">Optionally enables normal (noisy) logging of ASP.NET <b>INFO</b> events (see note in remarks).</param>
+        /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
         /// <remarks>
         /// <para>
         /// The instances returned will log nothing if <paramref name="logManager"/>
@@ -139,10 +140,11 @@ namespace Neon.Diagnostics
         /// </para>
         /// </note>
         /// </remarks>
-        public NeonLogger(ILogManager logManager, string sourceModule = null, bool noisyAspNet = false)
+        public NeonLogger(ILogManager logManager, string sourceModule = null, bool noisyAspNet = false, TextWriter writer = null)
         {
             this.logManager   = logManager ?? LogManager.Disabled;
             this.sourceModule = sourceModule ?? string.Empty;
+            this.writer       = writer ?? Console.Error;
 
             // $hack(jeff.lill):
             //
@@ -150,16 +152,6 @@ namespace Neon.Diagnostics
             // prefixed by: [Microsoft.AspNetCore]
 
             this.infoAsDebug = !noisyAspNet && sourceModule != null && sourceModule.StartsWith("Microsoft.AspNetCore.");
-
-            // We're going to write logs to STDERR to avoid conflicting with
-            // standard application output.
-
-            // $todo(jeff.lill):
-            //
-            // We might want to allow specification of the writer in user code in the
-            // future (perhaps in ILogManager?)
-
-            writer = Console.Error;
         }
 
         /// <inheritdoc/>

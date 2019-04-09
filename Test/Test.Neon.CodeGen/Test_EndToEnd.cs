@@ -39,7 +39,7 @@ using Neon.Xunit;
 using Test.Neon.Models;
 
 using Xunit;
-using Microsoft.AspNetCore.Mvc.Controllers;
+using Xunit.Abstractions;
 
 namespace TestCodeGen.AspNet
 {
@@ -48,6 +48,7 @@ namespace TestCodeGen.AspNet
     {
         [HttpGet]
         [Route("GetString")]
+        [Produces("application/json")]
         public string GetString(string input)
         {
             return input;
@@ -55,6 +56,7 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetBool")]
+        [Produces("application/json")]
         public bool GetBool(bool input)
         {
             return input;
@@ -62,6 +64,7 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetInt")]
+        [Produces("application/json")]
         public int GetInt(int input)
         {
             return input;
@@ -69,6 +72,7 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetDouble")]
+        [Produces("application/json")]
         public double GetDouble(double input)
         {
             return input;
@@ -76,6 +80,7 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetTimeSpan")]
+        [Produces("application/json")]
         public TimeSpan GetTimeSpan(TimeSpan timespan)
         {
             return timespan;
@@ -83,6 +88,7 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetVersion")]
+        [Produces("application/json")]
         public Version GetVersion(Version version)
         {
             return version;
@@ -90,6 +96,7 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetSemanticVersion")]
+        [Produces("application/json")]
         public SemanticVersion GetSemanticVersion(SemanticVersion version)
         {
             return version;
@@ -97,6 +104,7 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
+        [Produces("application/json")]
         public Person CreatePerson(int id, string name, int age)
         {
             return new Person()
@@ -109,6 +117,7 @@ namespace TestCodeGen.AspNet
 
         [HttpPut]
         [Route("IncrementAge")]
+        [Produces("application/json")]
         public Person IncrementAge([FromBody] Person person)
         {
             if (person == null)
@@ -153,14 +162,19 @@ namespace TestCodeGen.AspNet
     /// </summary>
     public class Test_EndToEnd : IClassFixture<AspNetFixture>
     {
-        private AspNetFixture fixture;
-        private TestAspNetFixtureClient client;
+        private AspNetFixture               fixture;
+        private TestAspNetFixtureClient     client;
+        private TestOutputWriter            testWriter;
 
-        public Test_EndToEnd(AspNetFixture fixture)
+        public Test_EndToEnd(AspNetFixture fixture, ITestOutputHelper outputHelper)
         {
-            this.fixture = fixture;
+            var testPort = 0;
+            var logLevel = Neon.Diagnostics.LogLevel.None;
 
-            fixture.Start<Startup>();
+            this.fixture    = fixture;
+            this.testWriter = new TestOutputWriter(outputHelper);
+
+            fixture.Start<Startup>(port: testPort, logWriter: testWriter, logLevel: logLevel);
 
             client = new TestAspNetFixtureClient()
             {

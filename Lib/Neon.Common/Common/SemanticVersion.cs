@@ -147,19 +147,19 @@ namespace Neon.Common
                 {
                     case 0:
 
-                        version.Major      = (int)v;
+                        version.major      = (int)v;
                         version.majorValue = verParts[i];
                         break;
 
                     case 1:
 
-                        version.Minor      = (int)v;
+                        version.minor      = (int)v;
                         version.minorValue = verParts[i];
                         break;
 
                     case 2:
 
-                        version.Patch      = (int)v;
+                        version.patch      = (int)v;
                         version.patchValue = verParts[i];
                         break;
                 }
@@ -455,41 +455,72 @@ namespace Neon.Common
         // we want to retain the leading 0 in the minor version of "1.01.0" and
         // also render "1.1" back as "1.0" rather than "1.0.0".
 
-        private string majorValue;
-        private string minorValue;
-        private string patchValue;
+        private int     major;
+        private int     minor;
+        private int     patch;
+        private string  majorValue;
+        private string  minorValue;
+        private string  patchValue;
 
         /// <summary>
-        /// Private constructor.
+        /// Default constuctor.
         /// </summary>
-        private SemanticVersion()
+        public SemanticVersion()
         {
         }
 
         /// <summary>
-        /// Returns the major version number.
+        /// The major version number.
         /// </summary>
-        public int Major { get; private set; }
+        public int Major
+        {
+            get => major;
+
+            set
+            {
+                major      = value;
+                majorValue = value.ToString();
+            }
+        }
 
         /// <summary>
-        /// Returns the minor version number.
+        /// The minor version number.
         /// </summary>
-        public int Minor { get; private set; }
+        public int Minor
+        {
+            get => minor;
+
+            set
+            {
+                minor      = value;
+                minorValue = value.ToString();
+            }
+        }
 
         /// <summary>
-        /// Returns the patch version number.
+        /// The patch version number.
         /// </summary>
-        public int Patch { get; private set; }
+        public int Patch
+        {
+            get => patch;
+
+            set
+            {
+                patch      = value;
+                patchValue = value.ToString();
+            }
+        }
+
 
         /// <summary>
-        /// Returns the prerelease identifer or <c>null</c>.
+        /// The prerelease identifer or <c>null</c>.
         /// </summary>
-        public string Prerelease { get; private set; }
+        public string Prerelease { get; set; }
 
         /// <summary>
-        /// Returns the build information or <c>null</c>.
+        /// The build information or <c>null</c>.
         /// </summary>
-        public string Build { get; private set; }
+        public string Build { get; set; }
 
         /// <inheritdoc/>
         public override string ToString()
