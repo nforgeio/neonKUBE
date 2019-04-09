@@ -49,6 +49,7 @@ function Publish
 
 # Update the project versions first.
 
+# SetVersion Neon.Cadence
 SetVersion Neon.CodeGen
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
@@ -73,6 +74,7 @@ SetVersion Neon.Xunit.Kube
 
 # Build and publish the projects.
 
+# Publish Neon.Cadence
 Publish Neon.CodeGen
 Publish Neon.Common
 Publish Neon.Couchbase
