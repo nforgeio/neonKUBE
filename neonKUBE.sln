@@ -207,8 +207,70 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Couchbase", "Test\Test.Neon.Couchbase\Test.Neon.Couchbase.csproj", "{D3AA09B8-9C4D-42DC-83CE-E2F319EB6287}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Go", "Go", "{F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}"
+	ProjectSection(SolutionItems) = preProject
+		Go\build-proxy.sh = Go\build-proxy.sh
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoBuilder", "Go\GoBuilder\GoBuilder.csproj", "{C2071335-AFDF-4643-93A2-EAC482E90E73}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoBuilder", "Go\GoBuilder\GoBuilder.csproj", "{C2071335-AFDF-4643-93A2-EAC482E90E73}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bin", "bin", "{B811096C-2648-4156-A7E4-05E9A5C69297}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{EAA2C7EE-0B01-4B2B-80FA-7BF3D03552BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pkg", "pkg", "{07791873-FCCD-4506-B192-A61509724BD6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github.com", "github.com", "{DFFBE94F-8C0E-4592-AF14-7B47A41AE2C9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "loopieio", "loopieio", "{E9FD3B67-A9B5-4ACB-A365-93C19F8D80C6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "go-cadence-proxy", "go-cadence-proxy", "{1AC4355E-DE34-4AFC-BCE8-131A48542426}"
+	ProjectSection(SolutionItems) = preProject
+		Go\src\github.com\loopieio\go-cadence-proxy\Gopkg.toml = Go\src\github.com\loopieio\go-cadence-proxy\Gopkg.toml
+		Go\src\github.com\loopieio\go-cadence-proxy\Makefile = Go\src\github.com\loopieio\go-cadence-proxy\Makefile
+		Go\src\github.com\loopieio\go-cadence-proxy\README.md = Go\src\github.com\loopieio\go-cadence-proxy\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cmd", "cmd", "{831351B0-2F4E-471B-969A-A86938D1FCE5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{D626CA98-0336-4B7A-BD8A-5680F509F8CB}"
+	ProjectSection(SolutionItems) = preProject
+		Go\src\github.com\loopieio\go-cadence-proxy\test\.keep = Go\src\github.com\loopieio\go-cadence-proxy\test\.keep
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vendor", "vendor", "{AAC5D4B1-BA2C-45FF-8922-74190A115A82}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cadenceproxy", "cadenceproxy", "{CB826765-7AAA-463D-9364-EBF6814DC075}"
+	ProjectSection(SolutionItems) = preProject
+		Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\main.go = Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\main.go
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{F88A20FB-645E-45CB-9C79-3B70D63C82FE}"
+	ProjectSection(SolutionItems) = preProject
+		Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\common\payload.go = Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\common\payload.go
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "endpoints", "endpoints", "{14CAEDE1-CF97-4127-A123-1D520FC2E97E}"
+	ProjectSection(SolutionItems) = preProject
+		Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\endpoints\cadence.go = Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\endpoints\cadence.go
+		Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\endpoints\test_endpoints.go = Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\endpoints\test_endpoints.go
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "server", "server", "{44E0FFBF-DD67-44AD-8C13-DACD028B41C7}"
+	ProjectSection(SolutionItems) = preProject
+		Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\server\instance.go = Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\server\instance.go
+		Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\server\router.go = Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\server\router.go
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{AFDC3D9C-F0B3-4D70-88CC-796CEF0922BF}"
+	ProjectSection(SolutionItems) = preProject
+		Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\test\payload_test.go = Go\src\github.com\loopieio\go-cadence-proxy\cmd\cadenceproxy\test\payload_test.go
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logs", "logs", "{578F6958-24DE-4985-ADBA-4CC834FC3948}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github.com", "github.com", "{035F513E-B23C-437E-8203-EEEB3D5CE1E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "go.uber.org", "go.uber.org", "{E4F6AFFE-0C33-4B98-B94C-B07885444291}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -783,6 +845,23 @@ Global
 		{12283401-E727-4771-A24E-E9B873AD44BB} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{D3AA09B8-9C4D-42DC-83CE-E2F319EB6287} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}
+		{B811096C-2648-4156-A7E4-05E9A5C69297} = {F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}
+		{EAA2C7EE-0B01-4B2B-80FA-7BF3D03552BA} = {F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}
+		{07791873-FCCD-4506-B192-A61509724BD6} = {F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}
+		{DFFBE94F-8C0E-4592-AF14-7B47A41AE2C9} = {EAA2C7EE-0B01-4B2B-80FA-7BF3D03552BA}
+		{E9FD3B67-A9B5-4ACB-A365-93C19F8D80C6} = {DFFBE94F-8C0E-4592-AF14-7B47A41AE2C9}
+		{1AC4355E-DE34-4AFC-BCE8-131A48542426} = {E9FD3B67-A9B5-4ACB-A365-93C19F8D80C6}
+		{831351B0-2F4E-471B-969A-A86938D1FCE5} = {1AC4355E-DE34-4AFC-BCE8-131A48542426}
+		{D626CA98-0336-4B7A-BD8A-5680F509F8CB} = {1AC4355E-DE34-4AFC-BCE8-131A48542426}
+		{AAC5D4B1-BA2C-45FF-8922-74190A115A82} = {1AC4355E-DE34-4AFC-BCE8-131A48542426}
+		{CB826765-7AAA-463D-9364-EBF6814DC075} = {831351B0-2F4E-471B-969A-A86938D1FCE5}
+		{F88A20FB-645E-45CB-9C79-3B70D63C82FE} = {CB826765-7AAA-463D-9364-EBF6814DC075}
+		{14CAEDE1-CF97-4127-A123-1D520FC2E97E} = {CB826765-7AAA-463D-9364-EBF6814DC075}
+		{44E0FFBF-DD67-44AD-8C13-DACD028B41C7} = {CB826765-7AAA-463D-9364-EBF6814DC075}
+		{AFDC3D9C-F0B3-4D70-88CC-796CEF0922BF} = {CB826765-7AAA-463D-9364-EBF6814DC075}
+		{578F6958-24DE-4985-ADBA-4CC834FC3948} = {D626CA98-0336-4B7A-BD8A-5680F509F8CB}
+		{035F513E-B23C-437E-8203-EEEB3D5CE1E8} = {AAC5D4B1-BA2C-45FF-8922-74190A115A82}
+		{E4F6AFFE-0C33-4B98-B94C-B07885444291} = {AAC5D4B1-BA2C-45FF-8922-74190A115A82}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

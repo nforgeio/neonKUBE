@@ -20,9 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-RF=${RF:-1}
-SKIP_SCHEMA_SETUP=${SKIP_SCHEMA_SETUP:-false}
-
 setup_schema() {
     SCHEMA_DIR=$CADENCE_HOME/schema/cassandra/cadence/versioned
     ./cadence-cassandra-tool --ep $CASSANDRA_SEEDS create -k $KEYSPACE --rf $RF
@@ -112,6 +109,8 @@ init_env() {
     fi
 }
 
+RF=${RF:-1}
+SKIP_SCHEMA_SETUP=${SKIP_SCHEMA_SETUP:-false}
 CADENCE_HOME=$1
 
 if [ -z "$RF" ]; then

@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Base golang image.
+# Builder is base golang image (version 1.12.3)
+# Image is Debian:jessie image
 #
 # ARGUMENTS:
 #
@@ -26,11 +27,12 @@
 #   GIT_BRANCH      - Specify the cadence version to be built into this docker image (See https://github.com/uber/cadence/tags)
 
 # Build cadence binaries
-FROM golang:latest as builder
+FROM golang:1.12.3 as builder
 
 ARG GIT_BRANCH
 ARG VERSION
-RUN if [ -z "$GIT_BRANCH" ]; then echo "ERROR: git_branch NOT SET. Usage: docker build . --build-arg git_branch=YOUR_CHECKOUT_BRANCH"; exit 1; else : ; fi
+RUN if [ -z "$GIT_BRANCH" ]; then echo "ERROR: GIT_BRANCH NOT SET. Usage: docker build . --build-arg GIT_BRANCH=YOUR_CHECKOUT_BRANCH"; exit 1; else : ; fi
+RUN if [ -z "$VERSION" ]; then echo "ERROR: VERSION NOT SET. Usage: docker build . --build-arg VERSION=YOUR_BUILD_VERSION"; exit 1; else : ; fi
 
 # get and compile cadence-server
 RUN go get -u github.com/golang/dep/cmd/dep \
@@ -72,7 +74,7 @@ RUN apt-get update \
 RUN apt-get update \
     && echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
     && curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
-    && apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA \
+    #&& apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA \
     && apt-get update \
     && apt-get install cassandra -y
 
@@ -85,7 +87,7 @@ RUN mkdir /cadence \
 ENV CADENCE_HOME /cadence
 
 # Tell to expose ports
-EXPOSE 7933 7934 7935 7939
+EXPOSE 7933 7934 7935 7939 9042
 
 COPY ./entrypoint.sh $CADENCE_HOME/entrypoint.sh
 COPY ./config_template.yaml $CADENCE_HOME/config/docker_template_cassandra.yaml
@@ -103,5 +105,5 @@ COPY --from=builder /go/src/github.com/uber/cadence/schema/ /cadence/schema/
 # change working dir to /cadence
 WORKDIR $CADENCE_HOME
 
-# execute start script
-CMD /bin/bash entrypoint.sh $CADENCE_HOME
+# Docker entrypiont
+ENTRYPOINT ./entrypoint.sh $CADENCE_HOME

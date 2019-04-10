@@ -80,4 +80,4 @@ if ($allVersions)
 {
 }
 
-Build master-0.5.5 -latest
+Build 0.5.6 -latest

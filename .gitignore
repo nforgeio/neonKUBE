@@ -87,3 +87,10 @@ wwwroot/
 GeneratedModels.cs
 GeneratedEntities.cs
 GeneratedTypes.cs
+
+##################
+### Go Project ###
+##################
+/Go/pkg
+/Go/bin
+/Go/src/github.com/loopieio/*/vendor/*
