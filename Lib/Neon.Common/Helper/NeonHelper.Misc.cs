@@ -1758,5 +1758,20 @@ namespace Neon.Common
                 Execute("vim", new object[] { path });
             }
         }
+
+        /// <summary>
+        /// <para>
+        /// This method may be called to ensure that the <b>Neon.Common</b> assembly
+        /// is required at compile in a project that doesn't reference <b>Neon.Common</b>.
+        /// The method does nothing.
+        /// </para>
+        /// <note>
+        /// A call to this is currently included by <b>Neon.CodeGen</b> to ensure that
+        /// the enclosing project references <b>Neon.Common</b>.
+        /// </note>
+        /// </summary>
+        public static void PackageReferenceToNeonCommonIsRequired()
+        {
+        }
     }
 }

@@ -134,6 +134,7 @@ if ($dotnetBase)
 
 if ($other)
 {
+	Publish "$image_root\\cadence-test"
 	Publish "$image_root\\couchbase-test"
 	Publish "$image_root\\test"
 }
