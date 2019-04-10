@@ -32,7 +32,7 @@ param
 "======================================="
 
 # git branch
-$git_branch = "master"
+$git_branch = "0.5.6"
 
 # Copy the common scripts.
 DeleteFolder _common
@@ -45,5 +45,4 @@ copy ..\_common\*.* .\_common
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GIT_BRANCH=$git_branch" . }
 
 # Clean up
-
 DeleteFolder _common
