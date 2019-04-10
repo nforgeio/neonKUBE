@@ -46,6 +46,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cadence-test\build.ps1" />
+    <None Include="cadence-test\cassandra.yaml" />
+    <None Include="cadence-test\config_template.yaml" />
+    <None Include="cadence-test\Dockerfile" />
+    <None Include="cadence-test\entrypoint.sh" />
+    <None Include="cadence-test\publish.ps1" />
+    <None Include="cadence-test\README.md" />
     <None Include="couchbase-test\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -67,6 +74,8 @@
     <None Include="haproxy\Dockerfile" />
     <None Include="haproxy\publish.ps1" />
     <None Include="haproxy\README.md" />
+    <Content Include="bin\Debug\ImageFiles.dll" />
+    <Content Include="bin\Debug\ImageFiles.pdb" />
     <Content Include="golang\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -164,7 +173,9 @@
     <None Include="ubuntu-16.04\publish.ps1" />
     <None Include="ubuntu-16.04\README.md" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="bin\Release\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

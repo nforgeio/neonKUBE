@@ -18,19 +18,19 @@ You can override these settings and other settings by passing one or more of the
 
 * `CLUSTER_NAME` (*optional*) - cluster name (defaults to `test`
 
-* `USERNAME` (*optional*) - cluster administrator username (defaults to `Administrator`
+* `USERNAME` (*optional*) - cluster administrator username (defaults to `Administrator`)
 
-* `PASSWORD` (*optional*) - cluster administrator password (defaults to `password`
+* `PASSWORD` (*optional*) - cluster administrator password (defaults to `password`)
 
 * `BUCKET_NAME` (*optional*) - the bucket name (defaults to `test`
 
-* `CLUSTER_RAM_MB` (*optional*) - data services RAM quota in MB (defaults to `256`
+* `CLUSTER_RAM_MB` (*optional*) - data services RAM quota in MB (defaults to `256`)
 
-* `FTS_RAM_MB` (*optional*) - full-text indexing service RAM quota in MB (defaults to `256`
+* `FTS_RAM_MB` (*optional*) - full-text indexing service RAM quota in MB (defaults to `256`)
 
-* `INDEX_RAM_MB` (*optional*) - index service RAM quota in MB (defaults to `256`
+* `INDEX_RAM_MB` (*optional*) - index service RAM quota in MB (defaults to `256`)
 
-* `BUCKET_RAM_MB` (*optional*) - bucket cache RAM in mMB (defaults to `256`
+* `BUCKET_RAM_MB` (*optional*) - bucket cache RAM in mMB (defaults to `256`)
 
 # Deployment
 
