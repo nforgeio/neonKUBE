@@ -36,7 +36,7 @@ RUN go get -u github.com/golang/dep/cmd/dep \
     && go get -u golang.org/x/lint/golint \
     && git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence \
     && cd /go/src/github.com/uber/cadence \
-    && git checkout $GIT_BRANCH && make bins_nothrift
+    && git checkout $VERSION && make bins_nothrift
 
 # Final Cadence image
 FROM debian:jessie
@@ -51,7 +51,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python-pip \
         mysql-client \
         curl \
-        software-properties-common -y \
     && rm -rf /var/lib/apt/lists/*
 
 # CQLSH INSTALLATION
@@ -70,7 +69,6 @@ RUN apt-get update \
 RUN apt-get update \
     && echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
     && curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
-    #&& apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA \
     && apt-get update \
     && apt-get install cassandra -y
 

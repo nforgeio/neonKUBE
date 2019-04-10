@@ -30,6 +30,8 @@ param
 "   "
 "======================================="
 "* CADENCE-TEST:" + $tag
+"* GO_VERSION:" + $goVersion
+"* CADENCE_VERSION:" + $version
 "======================================="
 
 # Copy the common scripts.
