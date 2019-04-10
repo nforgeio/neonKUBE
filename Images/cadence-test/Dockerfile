@@ -36,7 +36,7 @@ RUN go get -u github.com/golang/dep/cmd/dep \
     && go get -u golang.org/x/lint/golint \
     && git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence \
     && cd /go/src/github.com/uber/cadence \
-    && git checkout $GIT_BRANCH && make bins_nothrift
+    && git checkout $VERSION && make bins_nothrift
 
 # Final Cadence image
 FROM debian:jessie

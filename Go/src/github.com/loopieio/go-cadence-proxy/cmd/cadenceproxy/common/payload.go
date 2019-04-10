@@ -22,6 +22,7 @@ type (
 
 const (
 	int32ByteSize = 4
+	nilValueSize  = -1
 )
 
 // OperationToString is a method for cleanly
@@ -46,6 +47,21 @@ func (op *Operation) OperationToString() {
 	}
 
 	log.Print("}\n\n")
+}
+
+// PrettyByteSlice takes a []byte and formats it
+// array format to be passed as an argument
+// in .NET
+func PrettyByteSlice(b []byte) {
+	fmt.Print("\n{ ")
+	for i := 0; i < len(b); i++ {
+		fmt.Print(b[i])
+		if i == (len(b) - 1) {
+			fmt.Print(" }")
+		} else {
+			fmt.Print(", ")
+		}
+	}
 }
 
 // Int32ToByteSlice takes an int32
@@ -146,29 +162,39 @@ func ArgumentsToByteSlice(m map[string]*string) []byte {
 			b = AppendByte(b, keyBytes[i])
 		}
 
-		// Catch any nil pointers and change them
-		// to -1 value
-		var str string
+		// Next the size of the value
+		//
+		// catch any nil values and set
+		// their length to -1 to indicate nil
+		var valueSize int32
 		if v == nil {
-			str = "-1"
+			valueSize = int32(nilValueSize)
 		} else {
-			str = *v
+			valueSize = int32(binary.Size([]byte(*v)))
 		}
 
-		// Next the size of the value
-		valueSize := int32(binary.Size([]byte(str)))
+		// cast the []byte into an int representing
+		// the size of the valueSize []byte
 		valueSizeBytes, err := Int32ToByteSlice(valueSize)
 		if err != nil {
 			log.Println("Could not convert int32 to []byte: ", err)
 		}
+
+		// append the value size bytes to the []byte
 		for i := 0; i < len(valueSizeBytes); i++ {
 			b = AppendByte(b, valueSizeBytes[i])
 		}
 
 		// Finally Append the value itself
-		valueBytes := []byte(str)
-		for i := 0; i < len(valueBytes); i++ {
-			b = AppendByte(b, valueBytes[i])
+		//
+		// if the value is nil then do not append any bytes
+		if valueSize == nilValueSize {
+			continue
+		} else {
+			valueBytes := []byte(*v)
+			for i := 0; i < len(valueBytes); i++ {
+				b = AppendByte(b, valueBytes[i])
+			}
 		}
 	}
 
@@ -188,19 +214,37 @@ func AttachmentsToByteSlice(bb [][]byte) []byte {
 	for i := 0; i < len(bb); i++ {
 		row := bb[i]
 
+		// check for nil Attachments.
+		// If there are any then set the size to -1
+		var rowSize int32
+		if row == nil {
+			rowSize = int32(nilValueSize)
+		} else {
+			rowSize = int32(binary.Size(row))
+		}
+
 		// append the size of the attachment
-		rowSize := int32(binary.Size(row))
+		//
+		// If the Attachment is nil set size to -1
 		rowSizeBytes, err := Int32ToByteSlice(rowSize)
 		if err != nil {
 			log.Println("Could not convert int32 to []byte: ", err)
 		}
+
+		// append the size bytes
 		for j := 0; j < len(rowSizeBytes); j++ {
 			b = AppendByte(b, rowSizeBytes[j])
 		}
 
 		// apend the attachment itself
-		for j := 0; j < len(row); j++ {
-			b = AppendByte(b, row[j])
+		//
+		// If the Attachment is nil, do not append anything
+		if rowSize == nilValueSize {
+			continue
+		} else {
+			for j := 0; j < len(row); j++ {
+				b = AppendByte(b, row[j])
+			}
 		}
 	}
 
@@ -240,32 +284,40 @@ func DecodeArguments(b []byte, count int) map[string]*string {
 		}
 
 		// increase the slice index to now
-		// slice at the start of the key or value
 		sliceIndex = sliceIndex + int32ByteSize
-		str := string(b[sliceIndex : sliceIndex+int(sliceSize)])
+		var str string
 
 		// if we are on an even pass,
 		// a key is being read,
 		// on an odd pass, a value is
 		// being read
 		if i%2 == 0 {
+			// slice at the start of the key or value
+			// increase the slice index to the next key:value pair
+			str = string(b[sliceIndex : sliceIndex+int(sliceSize)])
+			sliceIndex = sliceIndex + int(sliceSize)
 			key = str
 		} else {
-
-			// must catch nil pointers
 			var strPtr *string
-			if str == "-1" {
+
+			// catch nil values by checking if sliceSize is -1
+			// if so, the map value will be a nil pointer
+			if sliceSize == nilValueSize {
 				strPtr = nil
+				sliceSize = 0
 			} else {
+				// slice at the start of the key or value
+				// increase the slice index to the next key:value pair
+				str = string(b[sliceIndex : sliceIndex+int(sliceSize)])
 				strPtr = &str
 			}
 
-			// set the key:value pair in the map
+			// set the map key/value pair
+			// Iterate the slice index
+			sliceIndex = sliceIndex + int(sliceSize)
 			m[key] = strPtr
-		}
 
-		// increase the slice index to the next key:value pair
-		sliceIndex = sliceIndex + int(sliceSize)
+		}
 	}
 
 	return m
@@ -299,9 +351,16 @@ func DecodeAttachments(b []byte, count int) [][]byte {
 		// increase the index to slice on the Operation.Attachments itself
 		sliceIndex = sliceIndex + int32ByteSize
 
-		// slice to get the row and set that in the [][]byte
-		row := b[sliceIndex : sliceIndex+int(sliceSize)]
-		bb[i] = row
+		// check if slice size is -1
+		// i.e. if the row is nil
+		if sliceSize == nilValueSize {
+			bb[i] = nil
+			sliceSize = 0
+		} else {
+			// slice to get the row and set that in the [][]byte
+			row := b[sliceIndex : sliceIndex+int(sliceSize)]
+			bb[i] = row
+		}
 
 		// increase the index for the next pass
 		sliceIndex = sliceIndex + int(sliceSize)
@@ -408,8 +467,17 @@ func GetAttachmentsSliceSize(b []byte, count int, startIndex int) int {
 			log.Println("Could not convert []byte to int32: ", err)
 		}
 
+		// check for nil slice size
+		// this indicates a nil value for the
+		// attachment and no attachment
+		// bytes should be counted
+		var sliceSize int
+		if n == nilValueSize {
+			sliceSize = 0
+		} else {
+			sliceSize = int(n)
+		}
 		// increment the size and the sliceIndex for the next pass
-		sliceSize := int(n)
 		size = size + sliceSize + int32ByteSize
 		sliceIndex = sliceIndex + sliceSize + int32ByteSize
 	}
@@ -449,8 +517,18 @@ func GetArgumentsSliceSize(b []byte, count int, startIndex int) int {
 			log.Println("Could not convert []byte to int32: ", err)
 		}
 
+		// check for nil slice size
+		// this indicates a nil value for the
+		// argument and no argument
+		// bytes should be counted
+		var sliceSize int
+		if n == nilValueSize {
+			sliceSize = 0
+		} else {
+			sliceSize = int(n)
+		}
+
 		// increment the size and the sliceIndex for the next pass
-		sliceSize := int(n)
 		size = size + sliceSize + int32ByteSize
 		sliceIndex = sliceIndex + sliceSize + int32ByteSize
 	}
