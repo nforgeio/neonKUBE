@@ -40,6 +40,11 @@ namespace Neon.Xunit
         public const string Sample = "Sample";
 
         /// <summary>
+        /// Identifies <b>Neon.Cadence</b> tests.
+        /// </summary>
+        public const string NeonCadence = "Neon.Cadence";
+
+        /// <summary>
         /// Identifies <b>Neon.CodeGen</b> tests.
         /// </summary>
         public const string NeonCodeGen = "Neon.CodeGen";
