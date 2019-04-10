@@ -21,9 +21,9 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag
+	[parameter(Mandatory=$true,Position=1)][string] $registry,
+	[parameter(Mandatory=$true,Position=2)][string] $version,
+	[parameter(Mandatory=$true,Position=3)][string] $tag
 )
 
 "   "

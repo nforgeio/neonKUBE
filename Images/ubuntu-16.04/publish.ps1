@@ -23,8 +23,8 @@
 
 param 
 (
-	[switch]$allVersions = $False,
-    [switch]$nopush = $False
+	[switch]$allVersions = $false,
+    [switch]$nopush = $false
 )
 
 #----------------------------------------------------------
@@ -37,7 +37,7 @@ function Build
 {
 	param
 	(
-		[switch]$latest = $False
+		[switch]$latest = $false
 	)
 
 	$registry = GetRegistry "ubuntu-16.04"
@@ -52,7 +52,7 @@ function Build
 
 	if ($latest)
 	{
-		if (IsRelease)
+		if (TagAsLatest)
 		{
 			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 			PushImage "${registry}:latest"
