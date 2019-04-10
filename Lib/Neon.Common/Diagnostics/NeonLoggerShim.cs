@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -45,15 +46,16 @@ namespace Neon.Diagnostics
         /// wrapping the instance passed with a <see cref="NeonLoggerShim"/> if required.
         /// </summary>
         /// <param name="logger">The <see cref="ILogger"/> to be converted.</param>
+        /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
         /// <returns>The <see cref="INeonLogger"/>.</returns>
         /// <remarks>
         /// This method will return a <b>log-nothing</b> instance is <paramref name="logger"/> is <c>null</c>.
         /// </remarks>
-        public static INeonLogger WrapLogger(ILogger logger)
+        public static INeonLogger WrapLogger(ILogger logger, TextWriter writer = null)
         {
             if (logger == null)
             {
-                return new NeonLogger(null);
+                return new NeonLogger(null, writer: writer);
             }
 
             return new NeonLoggerShim(logger);

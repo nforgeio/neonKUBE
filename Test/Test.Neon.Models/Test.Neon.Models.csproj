@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <Target Name="ModelGen" AfterTargets="BeforeCompile">
-    <Exec Command="&quot;%NF_ROOT%\Tools\neon-cli\bin\$(Configuration)\netcoreapp3.0\neon&quot; version --minimum=0.3.5-alpha" />
+    <Exec Command="&quot;%NF_ROOT%\Tools\neon-cli\bin\$(Configuration)\netcoreapp3.0\neon&quot; version --minimum=0.3.8-alpha" />
     <Exec Command="&quot;%NF_ROOT%\Tools\neon-cli\bin\$(Configuration)\netcoreapp3.0\neon&quot; generate models --target-namespace=Test.Neon.Models --persisted &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\$(OutDir)Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedTypes.cs&quot;" />
   </Target>
 

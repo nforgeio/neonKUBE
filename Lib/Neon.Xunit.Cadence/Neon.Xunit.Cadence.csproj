@@ -1,17 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Neon.Xunit.Kube</RootNamespace>
-    <PackageId>Neon.Xunit.Kube</PackageId>
+    <RootNamespace>Neon.Xunit.Cadence</RootNamespace>
     <Version>0.3.8-alpha</Version>
     <Authors>Jeff Lill</Authors>
-    <Product>neonKUBE</Product>
-    <Description>neonKUBE Xunit testing helpers.</Description>
-    <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Company>neonFORGE, LLC</Company>
+    <Description>neonKUBE Xunit related extensions for Uber Cadence.</Description>
     <PackageReleaseNotes>Development release.</PackageReleaseNotes>
+    <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
+    <Product>neonKUBE</Product>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
@@ -21,23 +21,19 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Xunit.Cluster.xml</DocumentationFile>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\Neon.Xunit.Cluster.xml</DocumentationFile>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0;</DefineConstants>
+    <DocumentationFile>bin\Debug\Neon.Xunit.Cadence.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>bin\Release\Neon.Xunit.Cadence.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="YamlDotNet" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\Neon.Cadence\Neon.Cadence.csproj" />
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>
 
