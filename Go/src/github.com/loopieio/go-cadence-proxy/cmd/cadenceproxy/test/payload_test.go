@@ -45,8 +45,8 @@ func TestPayload(t *testing.T) {
 
 	att1 := [][]byte{[]byte(strs[6]), []byte(strs[7]), int1, int2}
 	att2 := [][]byte{}
-	att3 := [][]byte{[]byte(strs[8])}
-	att4 := [][]byte{[]byte(strs[9]), int3}
+	att3 := [][]byte{[]byte(strs[8]), nil}
+	att4 := [][]byte{[]byte(strs[9]), int3, nil}
 
 	op1 := common.Operation{
 		OpCode:      1,

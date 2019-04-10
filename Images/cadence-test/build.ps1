@@ -21,15 +21,17 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $version,       # Cadence version
-    [parameter(Mandatory=$True,Position=3)][string] $goVersion,     # Go version
-	[parameter(Mandatory=$True,Position=4)][string] $tag
+	[parameter(Mandatory=$true,Position=1)][string] $registry,
+	[parameter(Mandatory=$true,Position=2)][string] $version,       # Cadence version
+    [parameter(Mandatory=$true,Position=3)][string] $goVersion,     # Go version
+	[parameter(Mandatory=$true,Position=4)][string] $tag
 )
 
 "   "
 "======================================="
 "* CADENCE-TEST:" + $tag
+"* GO_VERSION:" + $goVersion
+"* CADENCE_VERSION:" + $version
 "======================================="
 
 # Copy the common scripts.
