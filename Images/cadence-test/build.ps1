@@ -1,6 +1,6 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
-# CONTRIBUTOR:  Jeff Lill
+# CONTRIBUTOR:  John C Burns
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,22 +17,20 @@
 
 # Builds the cluster Alpine base images.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# Usage: powershell -file build.ps1 REGISTRY VERSION TAG GO-VERSION
 
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag
+	[parameter(Mandatory=$True,Position=2)][string] $version,       # Cadence version
+    [parameter(Mandatory=$True,Position=3)][string] $goVersion,     # Go version
+	[parameter(Mandatory=$True,Position=4)][string] $tag
 )
 
 "   "
 "======================================="
-"* CADENCE-test:" + $tag
+"* CADENCE-TEST:" + $tag
 "======================================="
-
-# git branch
-$git_branch = "0.5.6"
 
 # Copy the common scripts.
 DeleteFolder _common
@@ -42,7 +40,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GIT_BRANCH=$git_branch" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GO_VERSION=$goVersion" . }
 
 # Clean up
 DeleteFolder _common

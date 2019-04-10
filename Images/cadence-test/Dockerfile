@@ -1,4 +1,5 @@
-# Copyright (c) 2017 Uber Technologies, Inc.
+# Original code: Copyright (c) 2017 Uber Technologies, Inc.
+# Modifications: Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,21 +19,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Builder is base golang image (version 1.12.3)
 # Image is Debian:jessie image
 #
 # ARGUMENTS:
 #
-#   VERSION         - The base golang image tag (e.g. "latest")
-#   GIT_BRANCH      - Specify the cadence version to be built into this docker image (See https://github.com/uber/cadence/tags)
+#   VERSION         - The Cadence version to be built (AKA its GitHub branch)
+#   GO_VERSION      - The Go version required
 
 # Build cadence binaries
-FROM golang:1.12.3 as builder
-
-ARG GIT_BRANCH
+ARG GO_VERSION
 ARG VERSION
-RUN if [ -z "$GIT_BRANCH" ]; then echo "ERROR: GIT_BRANCH NOT SET. Usage: docker build . --build-arg GIT_BRANCH=YOUR_CHECKOUT_BRANCH"; exit 1; else : ; fi
-RUN if [ -z "$VERSION" ]; then echo "ERROR: VERSION NOT SET. Usage: docker build . --build-arg VERSION=YOUR_BUILD_VERSION"; exit 1; else : ; fi
+FROM golang:$GO_VERSION as builder
 
 # get and compile cadence-server
 RUN go get -u github.com/golang/dep/cmd/dep \
@@ -40,7 +37,6 @@ RUN go get -u github.com/golang/dep/cmd/dep \
     && git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence \
     && cd /go/src/github.com/uber/cadence \
     && git checkout $GIT_BRANCH && make bins_nothrift
-
 
 # Final Cadence image
 FROM debian:jessie

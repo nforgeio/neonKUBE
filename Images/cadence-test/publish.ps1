@@ -1,6 +1,6 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
-# CONTRIBUTOR:  Jeff Lill
+# CONTRIBUTOR:  John C Burns
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,6 +39,7 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$True, Position=1)][string] $version,
+		[parameter(Mandatory=$True, Position=2)][string] $goVersion,
 		[switch]$latest = $False
 	)
 
@@ -49,7 +50,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -version $version -goVersion $goVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsRelease)
@@ -80,4 +81,4 @@ if ($allVersions)
 {
 }
 
-Build 0.5.6 -latest
+Build 0.5.6 -goVersion 1.12.3 -latest
