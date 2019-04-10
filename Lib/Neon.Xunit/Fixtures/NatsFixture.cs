@@ -23,6 +23,7 @@ using Xunit;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Kube;
 using Neon.Retry;
 using Neon.Net;
 
@@ -36,9 +37,9 @@ namespace Neon.Xunit.Couchbase
     }
 
     /// <summary>
-    /// Used to run the Docker <b>nkubeio/nats-test</b> container on 
-    /// the current machine as a test fixture while tests are being performed 
-    /// and then deletes the container when the fixture is disposed.
+    /// Used to run the Docker <b>nats-test</b> container on the current 
+    /// machine as a test fixture while tests are being performed and 
+    /// then deletes the container when the fixture is disposed.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -70,7 +71,12 @@ namespace Neon.Xunit.Couchbase
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </summary>
         /// <param name="settings">Optional NATS settings.</param>
-        /// <param name="image">Optionally specifies the NATS container image (defaults to <b>nkubeio/nats-test:latest</b>).</param>
+        /// <param name="image">
+        /// Optionally specifies the NATS container image.  This defaults to 
+        /// <b>nkubeio/nats-test:latest</b> or <b>nkubedev/nats-test:latest</b>
+        /// depending on whether the assembly was built from a git release branch
+        /// or not.
+        /// </param>
         /// <param name="name">Optionally specifies the NATS container name (defaults to <c>nats-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional NATS username (defaults to <b>Administrator</b>).</param>
@@ -127,14 +133,12 @@ namespace Neon.Xunit.Couchbase
         /// </remarks>
         public TestFixtureStatus Start(
             NatsSettings        settings  = null,
-            string              image     = "nkubeio/nats-test:latest",
+            string              image     = null,
             string              name      = "nats-test",
             string[]            env       = null,
             string              username  = "Administrator",
             string              password  = "password")
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
-
             return base.Start(
                 () =>
                 {
@@ -148,20 +152,25 @@ namespace Neon.Xunit.Couchbase
         /// but this method is used internally or for special situations.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
-        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
+        /// <param name="image">
+        /// Optionally specifies the NATS container image.  This defaults to 
+        /// <b>nkubeio/nats-test:latest</b> or <b>nkubedev/nats-test:latest</b>
+        /// depending on whether the assembly was built from a git release branch
+        /// or not.
+        /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
         public void StartInAction(
             NatsSettings        settings  = null,
-            string              image     = "nkubeio/nats-test:latest",
+            string              image     = null,
             string              name      = "nats-test",
             string[]            env       = null,
             string              username  = "Administrator",
             string              password  = "password")
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
+            image = image ?? $"{KubeConst.NeonBranchRegistry}/nats-test:latest";
 
             base.CheckWithinAction();
         }

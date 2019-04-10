@@ -23,15 +23,16 @@ using Xunit;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Kube;
 using Neon.Retry;
 using Neon.Net;
 
 namespace Neon.Xunit.Couchbase
 {
     /// <summary>
-    /// Used to run the Docker <b>nkubeio.couchbase-test</b> container on 
-    /// the current machine as a test fixture while tests are being performed 
-    /// and then deletes the container when the fixture is disposed.
+    /// Used to run the Docker <b>couchbase-test</b> container on the current 
+    /// machine as a test fixture while tests are being performed and then 
+    /// deletes the container when the fixture is disposed.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -76,7 +77,11 @@ namespace Neon.Xunit.Couchbase
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
-        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
+        /// <param name="image">
+        /// Optionally specifies the Couchbase container image.  This defaults to 
+        /// <b>nkubeio/couchbase-test:latest</b> or <b>nkubedev/couchbase-test:latest</b>
+        /// depending on whether the assembly was built from a git release branch or not.
+        /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
@@ -139,15 +144,13 @@ namespace Neon.Xunit.Couchbase
         /// </remarks>
         public TestFixtureStatus Start(
             CouchbaseSettings   settings  = null,
-            string              image     = "nkubeio/couchbase-test:latest",
+            string              image     = null,
             string              name      = "cb-test",
             string[]            env       = null,
             string              username  = "Administrator",
             string              password  = "password",
             bool                noPrimary = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
-
             return base.Start(
                 () =>
                 {
@@ -161,7 +164,11 @@ namespace Neon.Xunit.Couchbase
         /// but this method is used internally or for special situations.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
-        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
+        /// <param name="image">
+        /// Optionally specifies the Couchbase container image.  This defaults to 
+        /// <b>nkubeio/couchbase-test:latest</b> or <b>nkubedev/couchbase-test:latest</b>
+        /// depending on whether the assembly was built from a git release branch or not.
+        /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
@@ -169,14 +176,14 @@ namespace Neon.Xunit.Couchbase
         /// <param name="noPrimary">Optionally disable creation of thea primary bucket index.</param>
         public void StartInAction(
             CouchbaseSettings   settings  = null,
-            string              image     = "nkubeio/couchbase-test:latest",
+            string              image     = null,
             string              name      = "cb-test",
             string[]            env       = null,
             string              username  = "Administrator",
             string              password  = "password",
             bool                noPrimary = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
+            image = image ?? $"{KubeConst.NeonBranchRegistry}/couchbase-test:latest";
 
             base.CheckWithinAction();
 

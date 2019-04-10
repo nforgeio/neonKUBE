@@ -212,13 +212,17 @@ function ImageTag
 }
 
 #------------------------------------------------------------------------------
-# Returns $True if the current Git branch is a release (starts with "release-").
+# Returns $True if the current Git branch is considered to be a release branch.
+# Branches with names starting with "release-" are always considered to be a
+# RELEASE branch and the MASTER branch is as well.  This works because all
+# images built from "release-" branches are published to the production [nkubeio] 
+# GitHub organization and all other branches publish to [nkubedev].
 
 function IsRelease
 {
 	$branch = git rev-parse --abbrev-ref HEAD
 
-	return $branch -like "release-*"
+	return ($branch -like "release-*") -or ($branch -eq "master")
 }
 
 #------------------------------------------------------------------------------

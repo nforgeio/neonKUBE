@@ -37,6 +37,10 @@
 
   <ItemGroup>
     <PackageReference Include="DNS" Version="5.0.0" />
+    <PackageReference Include="GitInfo" Version="2.0.20">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0-preview3.19153.1" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="2.0.1" />
