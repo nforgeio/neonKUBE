@@ -15,8 +15,7 @@
 # set PROXYPATH
 # cd into PROXYPATH
 PROJECTPATH="/src/github.com/loopieio/go-cadence-proxy"
-NF_ROOT_BSLASH=${NF_ROOT}
-NF_ROOT_FSLASH="${NF_ROOT_BSLASH//\\//}"
+NF_ROOT_FSLASH="${NF_ROOT//\\//}"
 GOPATH="${NF_ROOT_FSLASH}/Go"
 BUILDLOGSPATH="${NF_ROOT_FSLASH}/Build/go-logs"
 PROXYPATH="${GOPATH}${PROJECTPATH}" && cd ${PROXYPATH}
