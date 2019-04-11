@@ -387,5 +387,191 @@ namespace TestCodeGen.Couchbase
             Assert.Equal(jack.Age, personDoc.Content.Age);
             Assert.Equal(jack.Data, personDoc.Content.Data);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task Query()
+        {
+            // Ensure that the database starts out empty.
+
+            Assert.Empty(from doc in context.Query<object>() select doc);
+
+            // Persist some documents for querying.
+
+            var jack = new Person()
+            {
+                Id   = 0,
+                Name = "Jack",
+                Age  = 10
+            };
+
+            await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
+
+            var jill = new Person()
+            {
+                Id   = 1,
+                Name = "Jill",
+                Age  = 11
+            };
+
+            await bucket.UpsertSafeAsync(jill, persistTo: PersistTo.One);
+
+            var john = new Person()
+            {
+                Id   = 2,
+                Name = "John",
+                Age  = 12
+            };
+
+            await bucket.UpsertSafeAsync(john, persistTo: PersistTo.One);
+
+            // Wait for the indexer to catch up.
+
+            await bucket.WaitForIndexerAsync();
+
+            //-----------------------------------------------------------------
+
+            var gotJack = false;
+            var gotJill = false;
+            var gotJohn = false;
+
+            foreach (var person in (from item in context.Query<Person>() select item))
+            {
+                gotJack = gotJack || person.Name == jack.Name;
+                gotJill = gotJill || person.Name == jill.Name;
+                gotJohn = gotJohn || person.Name == john.Name;
+            }
+
+            Assert.True(gotJack);
+            Assert.True(gotJill);
+            Assert.True(gotJohn);
+
+            //-----------------------------------------------------------------
+
+            gotJack = false;
+            gotJill = false;
+            gotJohn = false;
+
+            foreach (var person in (from item in context.Query<Person>() where item.Name == "Jack" select item))
+            {
+                gotJack = gotJack || person.Name == jack.Name;
+                gotJill = gotJill || person.Name == jill.Name;
+                gotJohn = gotJohn || person.Name == john.Name;
+            }
+
+            Assert.True(gotJack);
+            Assert.False(gotJill);
+            Assert.False(gotJohn);
+
+            //-----------------------------------------------------------------
+
+            gotJack = false;
+            gotJill = false;
+            gotJohn = false;
+
+            foreach (var person in (from item in context.Query<Person>() where item.Age >= 11 select item))
+            {
+                gotJack = gotJack || person.Name == jack.Name;
+                gotJill = gotJill || person.Name == jill.Name;
+                gotJohn = gotJohn || person.Name == john.Name;
+            }
+
+            Assert.False(gotJack);
+            Assert.True(gotJill);
+            Assert.True(gotJohn);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task QueryCustom()
+        {
+            // Ensure that the database starts out empty.
+
+            Assert.Empty(from doc in context.Query<object>() select doc);
+
+            // Persist some documents for querying.
+
+            var jack = new CustomPerson()
+            {
+                Id   = 0,
+                Name = "Jack-Custom",
+                Age  = 10
+            };
+
+            await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
+
+            var jill = new CustomPerson()
+            {
+                Id   = 1,
+                Name = "Jill-Custom",
+                Age  = 11
+            };
+
+            await bucket.UpsertSafeAsync(jill, persistTo: PersistTo.One);
+
+            var john = new CustomPerson()
+            {
+                Id   = 2,
+                Name = "John-Custom",
+                Age  = 12
+            };
+
+            await bucket.UpsertSafeAsync(john, persistTo: PersistTo.One);
+
+            // Wait for the indexer to catch up.
+
+            await bucket.WaitForIndexerAsync();
+
+            //-----------------------------------------------------------------
+
+            var gotJack = false;
+            var gotJill = false;
+            var gotJohn = false;
+
+            foreach (var person in (from item in context.Query<CustomPerson>() select item))
+            {
+                gotJack = gotJack || person.Name == jack.Name;
+                gotJill = gotJill || person.Name == jill.Name;
+                gotJohn = gotJohn || person.Name == john.Name;
+            }
+
+            Assert.True(gotJack);
+            Assert.True(gotJill);
+            Assert.True(gotJohn);
+
+            //-----------------------------------------------------------------
+
+            gotJack = false;
+            gotJill = false;
+            gotJohn = false;
+
+            foreach (var person in (from item in context.Query<CustomPerson>() where item.Name == "Jack-Custom" select item))
+            {
+                gotJack = gotJack || person.Name == jack.Name;
+                gotJill = gotJill || person.Name == jill.Name;
+                gotJohn = gotJohn || person.Name == john.Name;
+            }
+
+            Assert.True(gotJack);
+            Assert.False(gotJill);
+            Assert.False(gotJohn);
+
+            //-----------------------------------------------------------------
+
+            gotJack = false;
+            gotJill = false;
+            gotJohn = false;
+
+            foreach (var person in (from item in context.Query<CustomPerson>() where item.Age >= 11 select item))
+            {
+                gotJack = gotJack || person.Name == jack.Name;
+                gotJill = gotJill || person.Name == jill.Name;
+                gotJohn = gotJohn || person.Name == john.Name;
+            }
+
+            Assert.False(gotJack);
+            Assert.True(gotJill);
+            Assert.True(gotJohn);
+        }
     }
 }
