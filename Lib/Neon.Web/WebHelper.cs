@@ -46,41 +46,6 @@ namespace Neon.Web
         /// </summary>
         static WebHelper()
         {
-            // Initialize the round-trip types hashset with the low-level .NET types
-            // we'll support.  Note that the [IGeneratedTypes] will be registered
-            // by the round-trip formatters dynamically.  These are the same primitive
-            // types that JSON.NET supports:
-            //
-            //      https://www.newtonsoft.com/json/help/html/SerializationGuide.htm
-
-            RegisterRoundTripType(typeof(string));
-            RegisterRoundTripType(typeof(byte));
-            RegisterRoundTripType(typeof(sbyte));
-            RegisterRoundTripType(typeof(ushort));
-            RegisterRoundTripType(typeof(short));
-            RegisterRoundTripType(typeof(uint));
-            RegisterRoundTripType(typeof(int));
-            RegisterRoundTripType(typeof(ulong));
-            RegisterRoundTripType(typeof(long));
-            RegisterRoundTripType(typeof(float));
-            RegisterRoundTripType(typeof(double));
-            RegisterRoundTripType(typeof(decimal));
-            RegisterRoundTripType(typeof(DateTime));
-            RegisterRoundTripType(typeof(byte[]));
-            RegisterRoundTripType(typeof(Guid));
-
-            // The formatters also automatically support types
-            // with extended Neon JSON type converters.
-
-            foreach (var converter in NeonHelper.JsonConverters)
-            {
-                var enhancedConverter = converter as IEnhancedJsonConverter;
-
-                if (enhancedConverter != null)
-                {
-                    RegisterRoundTripType(enhancedConverter.Type);
-                }
-            }
         }
 
         /// <summary>
