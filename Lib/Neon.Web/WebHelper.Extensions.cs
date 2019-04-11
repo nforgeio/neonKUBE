@@ -41,17 +41,24 @@ namespace Neon.Web
 
         /// <summary>
         /// Adds the services from an <see cref="IServiceContainer"/> to the <see cref="IServiceCollection"/>.
-        /// This is commonly used when configuring services for an ASP.NET application pipeline.
+        /// This is commonly used when configuring services for an ASP.NET application pipeline.  This also
+        /// calls <see cref="AddNewtonsoftJson(Action{MvcNewtonsoftJsonOptions})"/> by default.
         /// </summary>
         /// <param name="services">The target service collection.</param>
         /// <param name="source">The service source container or <c>null</c> to copy from <see cref="NeonHelper.ServiceContainer"/>.</param>
-        public static void AddNeon(this IServiceCollection services, IServiceContainer source = null)
+        /// <param name="disableNewtonsoft">Optionally disable adding the Newtonsoft JSON handler.</param>
+        public static void AddNeon(this IServiceCollection services, IServiceContainer source = null, bool disableNewtonsoft = false)
         {
             source = source ?? NeonHelper.ServiceContainer;
 
             foreach (var service in source)
             {
                 services.Add(service);
+            }
+
+            if (disableNewtonsoft)
+            {
+                //services.AddNewtonsoftJson(options => options.SerializerSettings = NeonHelper.JsonRelaxedSerializerSettings.Value);
             }
         }
 
