@@ -23,8 +23,8 @@
 
 param 
 (
-	[switch]$all = $False,
-    [switch]$nopush = $False
+	[switch]$all = $false,
+    [switch]$nopush = $false
 )
 
 #----------------------------------------------------------
@@ -37,8 +37,8 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,
-		[switch]$latest = $False
+		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[switch]$latest = $false
 	)
 
 	$registry = GetRegistry "test"
@@ -59,7 +59,7 @@ function Build
 
 	if ($latest)
 	{
-		if (IsRelease)
+		if (TagAsLatest)
 		{
 			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 			PushImage "${registry}:latest"

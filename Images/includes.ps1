@@ -90,10 +90,10 @@ function DeleteFolder
 # Pushes a Docker image to the public registry with retry as an attempt to handle
 # transient registry issues.
 #
-# Note that you may set [$noImagePush=$True] to disable image pushing for debugging
+# Note that you may set [$noImagePush=$true] to disable image pushing for debugging
 # purposes.  The [publish.ps1] scripts accept the [--nopush] switchto control this.
 
-$noImagePush = $False
+$noImagePush = $false
 
 function PushImage
 {
@@ -212,17 +212,34 @@ function ImageTag
 }
 
 #------------------------------------------------------------------------------
-# Returns $True if the current Git branch is a release (starts with "release-").
+# Returns $true if the current Git branch is considered to be a release branch.
+# Branches with names starting with "release-" are always considered to be a
+# RELEASE branch.
 
 function IsRelease
 {
-	$branch = git rev-parse --abbrev-ref HEAD
+    $branch = GitBranch
 
 	return $branch -like "release-*"
 }
 
 #------------------------------------------------------------------------------
-# Prefixes the image name passed with the correct Docker Hub organization 
+# Returns $true if images build from the current Git branch should be tagged
+# with [:latest] when pushed to Docker Hub.  This will return $true for any
+# release branch starting with "release-" as well as the MASTER branch.
+#
+# This has the effect of tagging release builds with [:latest] in [nkubeio]
+# for release branches and MASTER branch builds with [:lasest] in [nkubedev].
+
+function TagAsLatest
+{
+	$branch = GitBranch
+
+	return ($branch -like "release-*") -or ($branch -eq "master")
+}
+
+#------------------------------------------------------------------------------
+# Prefixes the image name passed with the target Docker Hub organization 
 # for the current Git branch.
 
 function GetRegistry($image)
@@ -253,7 +270,7 @@ function DockerOrg
 }
 
 #------------------------------------------------------------------------------
-# Returns $True if the current Git branch is includes uncommited changes or 
+# Returns $true if the current Git branch is includes uncommited changes or 
 # untracked files.  This was inspired by this article:
 #
 #	http://remarkablemark.org/blog/2017/10/12/check-git-dirty/
@@ -264,16 +281,16 @@ function IsDirty
 
 	if (!$check)
 	{
-		return $False
+		return $false
 	}
 
 	if ($check.Trim() -ne "")
 	{
-		return $True
+		return $true
 	}
 	else
 	{
-		return $False
+		return $false
 	}
 }
 
@@ -290,4 +307,3 @@ exec { unix-text --recursive .\*.md }
 exec { unix-text --recursive .\*.json }
 exec { unix-text --recursive .\*.rb }
 exec { unix-text --recursive .\*.py }
-

@@ -30,10 +30,10 @@
 
 param 
 (
-	[switch]$debug     = $False,
-	[switch]$release   = $False,
-	[switch]$nobuild   = $False,
-	[switch]$installer = $False
+	[switch]$debug     = $false,
+	[switch]$release   = $false,
+	[switch]$nobuild   = $false,
+	[switch]$installer = $false
 )
 
 $msbuild   = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"

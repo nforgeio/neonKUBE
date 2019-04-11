@@ -23,14 +23,14 @@
 
 param 
 (
-	[switch]$all         = $False,        # Rebuild all images
-	[switch]$base        = $False,        # Rebuild base images
-	[switch]$dotnetBase  = $False,        # Rebuild base .NET images
-	[switch]$dotnet      = $False,        # Rebuild .NET based images
-	[switch]$other       = $False,        # Rebuild all other images (usually script based)
-    [switch]$nopush      = $False,        # Don't push to the registry
-    [switch]$noprune     = $False,        # Don't prune the local Docker state
-	[switch]$allVersions = $False         # Rebuild all image versions
+	[switch]$all         = $false,        # Rebuild all images
+	[switch]$base        = $false,        # Rebuild base images
+	[switch]$dotnetBase  = $false,        # Rebuild base .NET images
+	[switch]$dotnet      = $false,        # Rebuild .NET based images
+	[switch]$other       = $false,        # Rebuild all other images (usually script based)
+    [switch]$nopush      = $false,        # Don't push to the registry
+    [switch]$noprune     = $false,        # Don't prune the local Docker state
+	[switch]$allVersions = $false         # Rebuild all image versions
 )
 
 #----------------------------------------------------------
@@ -80,18 +80,18 @@ function Publish
 
 if ($all)
 {
-	$base       = $True
-	$dotnetBase = $True
-	$dotnet     = $True
-	$other      = $True
+	$base       = $true
+	$dotnetBase = $true
+	$dotnet     = $true
+	$other      = $true
 }
 elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 {
 	# Build .NET and other images, but not base images, 
 	# by default.
 
-	$dotnet = $True
-	$other  = $True
+	$dotnet = $true
+	$other  = $true
 }
 
 # Purge any local Docker images as well as the image build cache.
@@ -110,7 +110,7 @@ if (-not $noprune)
 
 if ($base)
 {
-	$dotnetBase = $True
+	$dotnetBase = $true
 
 	# Base OS images:
 

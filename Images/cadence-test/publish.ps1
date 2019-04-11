@@ -24,8 +24,8 @@
 
 param 
 (
-	[switch]$allVersions = $False,
-    [switch]$nopush = $False
+	[switch]$allVersions = $false,
+    [switch]$nopush = $false
 )
 
 #----------------------------------------------------------
@@ -38,9 +38,9 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,
-		[parameter(Mandatory=$True, Position=2)][string] $goVersion,
-		[switch]$latest = $False
+		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true, Position=2)][string] $goVersion,
+		[switch]$latest = $false
 	)
 
 	$registry = GetRegistry "cadence-test"
@@ -64,7 +64,7 @@ function Build
 
 	if ($latest)
 	{
-		if (IsRelease)
+		if (TagAsLatest)
 		{
 			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 			PushImage "${registry}:latest"
