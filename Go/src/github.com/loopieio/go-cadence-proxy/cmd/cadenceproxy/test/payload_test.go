@@ -13,7 +13,6 @@ const (
 )
 
 func TestPayload(t *testing.T) {
-
 	strs := randStrings(50, 8)
 
 	args1 := map[string]*string{

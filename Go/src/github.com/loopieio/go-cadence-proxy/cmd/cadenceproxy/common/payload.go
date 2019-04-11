@@ -2,8 +2,8 @@ package common
 
 import (
 	"bytes"
-	"log"
 	"fmt"
+	"log"
 
 	binary "encoding/binary"
 )
