@@ -5,21 +5,30 @@
 # Bash script when run makes the go-cadence-proxy golang project.  It will build
 # both a windows and linux amd64 Go executables.  The executables can be found in
 # $NF_ROOT/Build.
-# Logs for the build can be found in NF_ROOT/Go/logs
+# Logs for the build can be found in NF_ROOT\Build\go-logs
 
-#  Set PROJECTPATH, set GOPATH, take blackslashes out, set PROXYPATH and then cd into it
-PROJECT_PATH="/src/github.com/loopieio/go-cadence-proxy"
-GOPATH_BACKSLASH="${NF_ROOT}\Go"
-GOPATH="${GOPATH_BACKSLASH//\\//}"
-PROXYPATH="${GOPATH}${PROJECT_PATH}" && cd ${PROXYPATH}
+#  Set PROJECTPATH
+# set NF_ROOT
+# take blackslashes out
+# set GOPATH
+# set BUILDLOGSPATH
+# set PROXYPATH
+# cd into PROXYPATH
+PROJECTPATH="/src/github.com/loopieio/go-cadence-proxy"
+NF_ROOT_BSLASH=${NF_ROOT}
+NF_ROOT_FSLASH="${NF_ROOT_BSLASH//\\//}"
+GOPATH="${NF_ROOT_FSLASH}/Go"
+BUILDLOGSPATH="${NF_ROOT_FSLASH}/Build/go-logs"
+PROXYPATH="${GOPATH}${PROJECTPATH}" && cd ${PROXYPATH}
+
 
 # execute the makefile and log the output into a logs folder
 {
-    rm -f "${GOPATH}/logs/build-proxy.log"
-    make -f Makefile >> "${GOPATH}/logs/build-proxy.log" && echo "***GO-CADENCE-PROXY BUILD SUCCESSFUL!!!***: Go executables in ${NF_ROOT}\Build"
+    rm -f "${BUILDLOGSPATH}/build-proxy.log"
+    make -f Makefile >> "${BUILDLOGSPATH}/build-proxy.log" && echo "***GO-CADENCE-PROXY BUILD SUCCESSFUL!!!***: Go executables in ${NF_ROOT}\Build"
 } || {
     exit
-    echo "***ERROR: GO-CADENCE-PROXY BUILD FAILED: Check build logs in ${GOPATH_BACKSLASH}\logs***"
+    echo "***ERROR: GO-CADENCE-PROXY BUILD FAILED***: Check build logs in ${NF_ROOT}\Build\go-logs"
 }
 
 # cd back to NF_ROOT

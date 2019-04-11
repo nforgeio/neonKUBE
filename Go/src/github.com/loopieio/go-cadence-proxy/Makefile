@@ -43,8 +43,8 @@ test: bins
 	done;
 
 clean:
-	rm -f $(GOPATH)/logs/build-proxy.log
-	rm -f $(TEST)/gocadenceproxy.test
+	rm -f $(BIN)/go-logs/build-proxy.log
 	rm -f $(BIN)/gocadenceproxy-windows
 	rm -f $(BIN)/gocadenceproxy-linux
+	rm -f $(TEST)/gocadenceproxy.test
 	rm -Rf $(BUILD)
