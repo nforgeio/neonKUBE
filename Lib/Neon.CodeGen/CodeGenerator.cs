@@ -203,21 +203,22 @@ namespace Neon.CodeGen
             // $todo(jeff.lill):
             //
             // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
-            // it might be nice if we could handle user generated converters as well.
+            // it might be nice if we could handle user provided converters as well.
 
-            var neonAssembly = typeof(NeonHelper)
-                .GetType()
-                .Assembly;
+            var helperAssembly = typeof(NeonHelper).Assembly;
 
             convertableTypes = new HashSet<Type>();
 
-            foreach (var enhancedConverterType in neonAssembly
-                .GetTypes()
-                .Where(t => t.Implements<IEnhancedJsonConverter>()))
-            {
-                var converter = (IEnhancedJsonConverter)neonAssembly.CreateInstance(enhancedConverterType.FullName);
+            var types = helperAssembly.GetTypes();
 
-                convertableTypes.Add(converter.Type);
+            foreach (var type in helperAssembly.GetTypes())
+            {
+                if (type.Implements<IEnhancedJsonConverter>())
+                {
+                    var converter = (IEnhancedJsonConverter)helperAssembly.CreateInstance(type.FullName);
+
+                    convertableTypes.Add(converter.Type);
+                }
             }
         }
 
@@ -842,7 +843,7 @@ namespace Neon.CodeGen
                     }
                     else
                     {
-                        property.Order = int.MaxValue;
+                        property.Order = 0;
                     }
 
                     var defaultValueAttribute = member.GetCustomAttribute<DefaultValueAttribute>();
