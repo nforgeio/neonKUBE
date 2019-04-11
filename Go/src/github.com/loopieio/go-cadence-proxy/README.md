@@ -1,3 +1,5 @@
+# Go-Cadence-Proxy
+
 This issue describes how we're going to implement a .NET Cadence Client.  Currently, Cadence has golang and Java clients, but .NET isn't supported due to the lack of a Thrift library for .NET.  There's been some talk by the Cadence folks about adding HTTP and/or gRPC support to Cadence server but actually doing that doesn't seem to be a priority.
 
 The essential idea here is to write a .NET client library that starts a golang app that acts as a proxy to Cadence server and use HTTP to communicate between the .NET library and the golang app.  The .NET library will embed Windows, Linux, and OSX versions of the golang proxy binary as resources and will write it to disk first and then launch it when a .NET application establishes the first connection for an application.  The golang process started will continue to run and handle any new connections.  The .NET client will terminate the golang process when the last connection is closed by the application.
