@@ -816,10 +816,7 @@ namespace Neon.CodeGen
                     }
                     else
                     {
-                        // Properties without a specific order should be rendered 
-                        // after any properties with a specifc order.
-
-                        property.Order = int.MaxValue;
+                        property.Order = 0;
                     }
 
                     var defaultValueAttribute = member.GetCustomAttribute<DefaultValueAttribute>();
@@ -1413,7 +1410,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Instance members:");
                     writer.WriteLine();
-                    writer.WriteLine($"        private string cachedET;");
+                    writer.WriteLine($"        private string cachedT;");
 
                     // Generate the backing __JObject property.
 
@@ -1896,22 +1893,22 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            get");
                     writer.WriteLine($"            {{");
-                    writer.WriteLine($"                 if (cachedET != null)");
+                    writer.WriteLine($"                 if (cachedT != null)");
                     writer.WriteLine($"                 {{");
-                    writer.WriteLine($"                     return cachedET;");
+                    writer.WriteLine($"                     return cachedT;");
                     writer.WriteLine($"                 }}");
                     writer.WriteLine();
-                    writer.WriteLine($"                 cachedET = (string)__JObject[\"__T\"];");
+                    writer.WriteLine($"                 cachedT = (string)__JObject[\"__T\"];");
                     writer.WriteLine();
-                    writer.WriteLine($"                 if (cachedET != null)");
+                    writer.WriteLine($"                 if (cachedT != null)");
                     writer.WriteLine($"                 {{");
-                    writer.WriteLine($"                     return cachedET;");
+                    writer.WriteLine($"                     return cachedT;");
                     writer.WriteLine($"                 }}");
                     writer.WriteLine();
                     writer.WriteLine($"                 return PersistedType;");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            set => cachedET = value;");
+                    writer.WriteLine($"            set => cachedT = value;");
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
