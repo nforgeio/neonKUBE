@@ -7,3 +7,12 @@ CADENCE-TEST images are tagged with the Uber Cadence version version plus the im
 # Description
 
 This image combines Uber Cadence and its backing Cassendra database and is intended for local Cadence unit and integration testing.
+
+# Notes
+
+Exposed Ports: 
+	* Cadence Ports: `7933`,`7934`,`7935`,`7939`
+	* Cassandra Ports: `9042`
+
+Host: By default the host is set to the Docker Host (usually `172.xx.x.x`).  This configuration can be found in `entrypoint.sh`
+
