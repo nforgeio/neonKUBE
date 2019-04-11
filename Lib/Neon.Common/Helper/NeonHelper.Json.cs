@@ -124,7 +124,6 @@ namespace Neon.Common
         public static List<JsonConverter> JsonConverters { get; private set; } =
             new List<JsonConverter>()
             {
-                new BoolJsonConverter(),
                 new SemanticVersionJsonConverter(),
                 new TimeSpanJsonConverter(),
                 new VersionJsonConverter()

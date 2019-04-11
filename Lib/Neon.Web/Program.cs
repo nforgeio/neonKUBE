@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    BoolJsonConverter.cs
+// FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,38 +17,26 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
-namespace Neon.Common
+namespace Neon.Web
 {
     /// <summary>
-    /// Implements a type converter for <c>bool</c>.
+    /// We apparently need a main program entry when building with the 
+    /// <b>Microsoft.NET.Sdk.Web</b> SDK.  We'll fake one here.
     /// </summary>
-    public class BoolJsonConverter : JsonConverter<bool>, IEnhancedJsonConverter
+    internal static class Program
     {
-        /// <inheritdoc/>
-        public Type Type => typeof(TimeSpan);
-
-        /// <inheritdoc/>
-        public override bool ReadJson(JsonReader reader, Type objectType, bool existingValue, bool hasExistingValue, JsonSerializer serializer)
+        /// <summary>
+        /// Fake program entry point.
+        /// </summary>
+        /// <param name="args">Command line arguments.</param>
+        /// <returns>The exit code.</returns>
+        public static int Main(string[] args)
         {
-            return true;
-        }
-
-        /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, bool value, JsonSerializer serializer)
-        {
-            writer.WriteValue(NeonHelper.ToBoolString(value));
+            return 0;
         }
     }
 }

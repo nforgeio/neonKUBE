@@ -170,6 +170,7 @@ namespace Neon.CodeGen
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
         private bool                                firstItemGenerated = true;
         private StringWriter                        writer;
+        private HashSet<Type>                       convertableTypes;
 
         /// <summary>
         /// Constructs a code generator.
@@ -193,6 +194,32 @@ namespace Neon.CodeGen
             }
 
             Settings.TargetNamespace = Settings.TargetNamespace ?? "Neon.CodeGen.Output";
+
+            // Scan the [Neon.Common] assembly for JSON converters that implement [IEnhancedJsonConverter]
+            // and initialize the [convertableTypes] hashset with the convertable types.  We'll need
+            // this to be able pass "complex" types like [TimeSpan] to web services via route or the
+            // query string.
+
+            // $todo(jeff.lill):
+            //
+            // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
+            // it might be nice if we could handle user provided converters as well.
+
+            var helperAssembly = typeof(NeonHelper).Assembly;
+
+            convertableTypes = new HashSet<Type>();
+
+            var types = helperAssembly.GetTypes();
+
+            foreach (var type in helperAssembly.GetTypes())
+            {
+                if (type.Implements<IEnhancedJsonConverter>())
+                {
+                    var converter = (IEnhancedJsonConverter)helperAssembly.CreateInstance(type.FullName);
+
+                    convertableTypes.Add(converter.Type);
+                }
+            }
         }
 
         /// <summary>
@@ -610,7 +637,7 @@ namespace Neon.CodeGen
 
                     if (!IsValidMethodType(methodParameter.ParameterInfo.ParameterType, methodParameter.Pass))
                     {
-                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with complex type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody] or implementing a custom JSON type converter.");
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with complex type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody] or implementing a JSON type converter that implements [IEnhancedJsonConverter].");
                     }
 
                     serviceMethod.Parameters.Add(methodParameter);
@@ -816,10 +843,7 @@ namespace Neon.CodeGen
                     }
                     else
                     {
-                        // Properties without a specific order should be rendered 
-                        // after any properties with a specifc order.
-
-                        property.Order = int.MaxValue;
+                        property.Order = 0;
                     }
 
                     var defaultValueAttribute = member.GetCustomAttribute<DefaultValueAttribute>();
@@ -1413,7 +1437,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Instance members:");
                     writer.WriteLine();
-                    writer.WriteLine($"        private string cachedET;");
+                    writer.WriteLine($"        private string cachedT;");
 
                     // Generate the backing __JObject property.
 
@@ -1896,22 +1920,22 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            get");
                     writer.WriteLine($"            {{");
-                    writer.WriteLine($"                 if (cachedET != null)");
+                    writer.WriteLine($"                 if (cachedT != null)");
                     writer.WriteLine($"                 {{");
-                    writer.WriteLine($"                     return cachedET;");
+                    writer.WriteLine($"                     return cachedT;");
                     writer.WriteLine($"                 }}");
                     writer.WriteLine();
-                    writer.WriteLine($"                 cachedET = (string)__JObject[\"__T\"];");
+                    writer.WriteLine($"                 cachedT = (string)__JObject[\"__T\"];");
                     writer.WriteLine();
-                    writer.WriteLine($"                 if (cachedET != null)");
+                    writer.WriteLine($"                 if (cachedT != null)");
                     writer.WriteLine($"                 {{");
-                    writer.WriteLine($"                     return cachedET;");
+                    writer.WriteLine($"                     return cachedT;");
                     writer.WriteLine($"                 }}");
                     writer.WriteLine();
                     writer.WriteLine($"                 return PersistedType;");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            set => cachedET = value;");
+                    writer.WriteLine($"            set => cachedT = value;");
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
@@ -2604,7 +2628,7 @@ namespace Neon.CodeGen
             }
 
             // By default, parameters may only be a primitive type, a string, an enum,
-            // or a type with a registered type converter.
+            // or a type with an [IEnhancedJsonConverter].
             //
             // The only exception is for parameters passed as the request body.
 
@@ -2612,24 +2636,9 @@ namespace Neon.CodeGen
             {
                 return ResolveTypeReference(type) != null;
             }
-            else if (type.IsPrimitive || type == typeof(string) || type.IsEnum)
+            else if (type.IsPrimitive || type == typeof(string) || type.IsEnum || convertableTypes.Contains(type))
             {
                 return true;
-            }
-
-            // $hack(jeff.lill): 
-            //
-            // This is a bit of a hack which may not work as expected when
-            // users have customized the standard JSON converters.
-
-            foreach (var converter in NeonHelper.JsonConverters)
-            {
-                var enhancedConverter = converter as IEnhancedJsonConverter;
-
-                if (enhancedConverter?.Type == type)
-                {
-                    return true;
-                }
             }
 
             return false;

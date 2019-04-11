@@ -109,9 +109,9 @@ namespace TestCodeGen.AspNet
         {
             return new Person()
             {
-                Id = id,
+                Id   = id,
                 Name = name,
-                Age = age
+                Age  = age
             };
         }
 
@@ -146,8 +146,8 @@ namespace TestCodeGen.AspNet
                 options =>
                 {
                     options.EnableEndpointRouting = true;
-                    options.AddNeonRoundTripJsonFormatters();
-                });
+                })
+                .AddNeon();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

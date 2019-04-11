@@ -1,5 +1,6 @@
 neonkube-build -release
 neonkube-build -release -installer
+powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-local.ps1
 
 # HOME: tiny
 neon login rm --force root@home-tiny
