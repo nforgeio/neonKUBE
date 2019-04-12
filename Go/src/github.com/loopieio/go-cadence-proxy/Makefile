@@ -7,15 +7,20 @@ NF_ROOT := $(subst \,/,$(NF_ROOT))
 export GOPATH := $(NF_ROOT)/Go
 export PATH := $(GOPATH)/bin:$(PATH)
 export BIN := $(NF_ROOT)/Build
+export TEST :=./test
 
 PROJECT_ROOT = github.com/loopieio/go-cadence-proxy
 PROGS = cadenceproxy
-BUILD := ./build
-APP_DIR=./cmd/cadenceproxy
-TEST_DIRS=./cmd/cadenceproxy/test
+BUILD = ./build
+APP_DIR = ./cmd/cadenceproxy
+TEST_DIRS = ./cmd/cadenceproxy/test
 ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
 
 dep-ensured:
+	@printf "\n\n"
+	@echo "Date/Time:" `date +'%y.%m.%d %H:%M:%S'`
+	@printf "\n"
+	
 	dep ensure
 
 cadenceproxywindows: dep-ensured $(ALL_SRC)
@@ -30,14 +35,16 @@ cadenceproxy: cadenceproxylinux \
 bins: cadenceproxy \
 
 test: bins
-	@rm -f test/gocadenceproxy.test
-	@rm -f test/logs/test.log
+	@rm -f $(TEST)/gocadenceproxy.test
 	@echo $(TEST_DIRS)
+	@printf "\n"
 	@for dir in $(TEST_DIRS); do \
-		go test -v -o test/gocadenceproxy.test "$$dir" | tee -a test/logs/test.log; \
+		go test -v -o $(TEST)/gocadenceproxy.test "$$dir"; \
 	done;
 
 clean:
+	rm -f $(BIN)/go-logs/build-proxy.log
 	rm -f $(BIN)/gocadenceproxy-windows
 	rm -f $(BIN)/gocadenceproxy-linux
+	rm -f $(TEST)/gocadenceproxy.test
 	rm -Rf $(BUILD)

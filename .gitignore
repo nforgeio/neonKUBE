@@ -93,4 +93,5 @@ GeneratedTypes.cs
 ##################
 /Go/pkg
 /Go/bin
-/Go/src/github.com/loopieio/*/vendor/*
+/Go/src/github.com/*/*/vendor/*
+*.test

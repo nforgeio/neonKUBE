@@ -12,6 +12,7 @@ import (
 // CadenceRouter holds http request methods
 // for cadence requests and returns an http.Handler
 // to be mounted to the primary route tree
+//
 // Returns http.Handler -> handler to be mounted to the
 // main route tree
 func CadenceRouter() http.Handler {
@@ -62,4 +63,29 @@ func PayloadHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Panicln("No content in request body")
 	}
+}
+
+// ConfigureCadenceClientHelper takes an Operation and
+// creates a new cadence Helper instance.  The Helper is used to make
+// calls to the cadence client and holds all of the configurations
+// for actually building a cadence client instance, building a
+// cadence domain client, and configuring the TChannels on which calls
+// to the cadence server from the client will be made
+//
+// Param args map[string]*string -> the operation arguments
+// holding the configuration data to used to initialize the
+// cadence common.Helper and construct the cadence client
+// and the cadence domain client
+//
+// Returns *common.Helper -> a pointer to a new common.Helper which can be used
+// to make cadence client calls to the cadence server
+// Returns err -> any errors that might be thrown during the initialization of cadence
+// Helper
+func ConfigureCadenceClientHelper(args map[string]*string) (*common.Helper, error) {
+
+	var h *common.Helper
+	var err error
+
+	return h, err
+
 }
