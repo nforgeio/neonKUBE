@@ -33,9 +33,9 @@ namespace Neon.Xunit.Cadence
     /// <remarks>
     /// <para>
     /// This fixture assumes that Cadence is not currently running on the
-    /// local workstation or as a container that is named <b>cadence-test</b>.
-    /// You may see port conflict errors if either of these assumptions are
-    /// not true.
+    /// local workstation or as a container named <b>cadence-test</b>.
+    /// You may see port conflict errors if either of these conditions
+    /// are not true.
     /// </para>
     /// <para>
     /// A somewhat safer but slower alternative, is to use the <see cref="DockerFixture"/>
