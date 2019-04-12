@@ -54,9 +54,7 @@ namespace TestXunit
 
         public Test_NatsStreamingFixture(NatsFixture fixture)
         {
-            // $todo(jeff.lill): DELETE THIS! (remove the "jeff-latest" tag)
-
-            if (fixture.Start(image: "nkubedev/nats-streaming:jeff-latest") == TestFixtureStatus.AlreadyRunning)
+            if (fixture.Start(image: "nkubedev/nats-streaming:latest") == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();
             }

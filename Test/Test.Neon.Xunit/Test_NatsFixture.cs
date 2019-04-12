@@ -54,9 +54,7 @@ namespace TestXunit
 
         public Test_NatsFixture(NatsFixture fixture)
         {
-            // $todo(jeff.lill): DELETE THIS! (remove the "jeff-latest" tag)
-
-            if (fixture.Start(image: "nkubedev/nats:jeff-latest") == TestFixtureStatus.AlreadyRunning)
+            if (fixture.Start(image: "nkubedev/nats") == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();
             }
