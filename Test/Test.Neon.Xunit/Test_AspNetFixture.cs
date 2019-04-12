@@ -43,7 +43,7 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestXunit.AspNet
+namespace TestXunit
 {
     public class Test_AspNetFixture : IClassFixture<AspNetFixture>
     {

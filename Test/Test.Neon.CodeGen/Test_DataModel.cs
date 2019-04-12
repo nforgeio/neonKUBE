@@ -688,40 +688,6 @@ namespace TestCodeGen.DataModel
             }
         }
 
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void OrderedProperties()
-        {
-            // Verify that data models that specify a property order
-            // are rendered correctly.  Note that properties that
-            // aren't tagged with [JsonProperty()] should be rendered
-            // after all of the properties that are tagged.
-
-            var settings = new CodeGeneratorSettings()
-            {
-                SourceNamespace = typeof(Test_DataModel).Namespace,
-            };
-
-            var generator = new CodeGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
-
-            Assert.False(output.HasErrors);
-
-            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
-
-            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
-            {
-                var data = context.CreateDataWrapper<OrderedProperties>();
-
-                data["Field1"] = "one";
-                data["Field2"] = "two";
-                data["Field3"] = "three";
-                data["Field4"] = "four";
-
-                Assert.Equal("{\"Field3\":\"three\",\"Field4\":\"four\",\"Field1\":\"one\",\"Field2\":\"two\",\"__T\":\"TestCodeGen.DataModel.OrderedProperties\"}", data.ToString());
-            }
-        }
-
         [Fact(Skip = "Manually testing required")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public void NullableProperties()

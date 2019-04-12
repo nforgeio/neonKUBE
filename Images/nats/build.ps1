@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the NATS-STREAMING image.
+# Builds the NATS image.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -28,7 +28,7 @@ param
 
 "   "
 "======================================="
-"* NATS-STREAMING:" + $tag
+"* NATS:" + $tag
 "======================================="
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }

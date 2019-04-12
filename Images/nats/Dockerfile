@@ -1,5 +1,5 @@
-﻿#------------------------------------------------------------------------------
-# FILE:         build.ps1
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
@@ -15,20 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the NATS-STREAMING image.
+# Base NATS-STREAMING image.
 #
-# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
+# ARGUMENTS:
+#
+#   VERSION         - The source NATS image version (e.g. "1.4.1")
 
-param 
-(
-	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,
-	[parameter(Mandatory=$true,Position=3)][string] $tag
-)
+ARG         VERSION
+FROM        nats:${VERSION}-linux
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
 
-"   "
-"======================================="
-"* NATS-STREAMING:" + $tag
-"======================================="
-
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
+# Expose client, management, and cluster ports
+EXPOSE 4222 8222 6222

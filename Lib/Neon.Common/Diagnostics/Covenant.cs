@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Covenant.cs
-// CONTRIBUTOR:	JEFFLI
+// CONTRIBUTOR:	Jeff Lill
 // COPYRIGHT:   Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
 using System;
