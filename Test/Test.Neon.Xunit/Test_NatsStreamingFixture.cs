@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_NatsFixture.cs
+// FILE:	    Test_NatsStreamingFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -47,22 +47,22 @@ using Xunit;
 
 namespace TestXunit
 {
-    public class Test_NatsFixture : IClassFixture<NatsFixture>
+    public class Test_NatsStreamingFixture : IClassFixture<NatsFixture>
     {
-        private NatsFixture     fixture;
-        private IConnection     client;
+        private NatsFixture fixture;
+        private IConnection client;
 
-        public Test_NatsFixture(NatsFixture fixture)
+        public Test_NatsStreamingFixture(NatsFixture fixture)
         {
             // $todo(jeff.lill): DELETE THIS! (remove the "jeff-latest" tag)
 
-            if (fixture.Start(image: "nkubedev/nats:jeff-latest") == TestFixtureStatus.AlreadyRunning)
+            if (fixture.Start(image: "nkubedev/nats-streaming:jeff-latest") == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();
             }
 
             this.fixture = fixture;
-            this.client  = fixture.Client;
+            this.client = fixture.Client;
         }
 
         [Fact]
