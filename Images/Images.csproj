@@ -93,6 +93,9 @@
     <None Include="couchbase-test\entrypoint.sh" />
     <None Include="couchbase-test\publish.ps1" />
     <None Include="couchbase-test\README.md" />
+    <Content Include="nats\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="nats-streaming\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -102,6 +105,12 @@
     </None>
     <None Include="nats-streaming\publish.ps1" />
     <None Include="nats-streaming\README.md" />
+    <None Include="nats\build.ps1" />
+    <None Include="nats\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="nats\publish.ps1" />
+    <None Include="nats\README.md" />
     <None Include="test\docker-entrypoint.sh" />
     <None Include="test\Dockerfile" />
     <Content Include="alpine\.dockerignore">

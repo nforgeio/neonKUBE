@@ -19,9 +19,12 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The base NATS-STREAMING image tag (e.g. "0.12.2")
+#   VERSION         - The source NATS image version (e.g. "0.12.2")
 
 ARG         VERSION
 FROM        nats-streaming:${VERSION}-linux
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+
+# Expose client and management ports
+EXPOSE 4222 8222
