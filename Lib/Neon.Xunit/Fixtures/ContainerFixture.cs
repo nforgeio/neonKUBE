@@ -178,7 +178,7 @@ namespace Neon.Xunit
             // retry the pull a few times to handle transitent issues. 
 
             var argsString = NeonHelper.NormalizeExecArgs("pull", image);
-            var pullRetry = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
+            var pullRetry  = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
 
             pullRetry.InvokeAsync(
                 async () =>
@@ -194,31 +194,35 @@ namespace Neon.Xunit
 
                 }).Wait();
 
-            var extraArgs = new List<string>();
+            var dockerArgs = new List<string>();
+
+            foreach (var arg in this.dockerArgs)
+            {
+                dockerArgs.Add(arg);
+            }
 
             if (!string.IsNullOrEmpty(name))
             {
-                extraArgs.Add("--name");
-                extraArgs.Add(name);
+                dockerArgs.Add("--name");
+                dockerArgs.Add(name);
             }
 
             if (env != null)
             {
                 foreach (var variable in env)
                 {
-                    extraArgs.Add("--env");
-                    extraArgs.Add(variable);
+                    dockerArgs.Add("--env");
+                    dockerArgs.Add(variable);
                 }
             }
 
             if (!noRemove)
             {
-                extraArgs.Add("--rm");
+                dockerArgs.Add("--rm");
             }
 
-            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
-
-            result = NeonHelper.ExecuteCapture($"docker", argsString);
+            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, containerArgs);
+            result     = NeonHelper.ExecuteCapture($"docker", argsString);
 
             if (result.ExitCode != 0)
             {

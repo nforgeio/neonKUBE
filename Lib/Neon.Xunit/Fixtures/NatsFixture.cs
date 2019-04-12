@@ -14,9 +14,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Couchbase;
-using Couchbase.Linq;
-using Couchbase.N1QL;
+using NATS.Client;
 
 using Newtonsoft.Json.Linq;
 using Xunit;
@@ -27,33 +25,30 @@ using Neon.Kube;
 using Neon.Retry;
 using Neon.Net;
 
-namespace Neon.Xunit.Couchbase
+namespace Neon.Xunit
 {
     /// <summary>
-    /// Stubbed.
-    /// </summary>
-    public class NatsSettings
-    {
-    }
-
-    /// <summary>
-    /// Used to run the Docker <b>nats-test</b> container on the current 
+    /// Used to run a Docker <b>nats</b> container on the current 
     /// machine as a test fixture while tests are being performed and 
     /// then deletes the container when the fixture is disposed.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This fixture assumes that NATS is not currently running on the
-    /// local workstation or as a container that is named <b>nats-test</b>.
-    /// You may see port conflict errors if either of these assumptions are
-    /// not true.
+    /// local workstation or as a container named <b>nats-test</b>.
+    /// You may see port conflict errors if either of these conditions 
+    /// are not true.
     /// </para>
     /// <para>
     /// A somewhat safer but slower alternative, is to use the <see cref="DockerFixture"/>
     /// instead and add <see cref="NatsFixture"/> as a subfixture.  The 
     /// advantage is that <see cref="DockerFixture"/> will ensure that all
-    /// (potentially conflicting) containers are removed before the Couchbase
+    /// (potentially conflicting) containers are removed before the NatsFixture
     /// fixture is started.
+    /// </para>
+    /// <para>
+    /// Use <see cref="Restart"/> to clear the NATS server state by restarting
+    /// its Docker container.  This also returns the new client connection.
     /// </para>
     /// </remarks>
     /// <threadsafety instance="true"/>
@@ -67,10 +62,14 @@ namespace Neon.Xunit.Couchbase
         }
 
         /// <summary>
-        /// Starts a Couchbase container if it's not already running.  You'll generally want
+        /// Returns a connected NATS client.
+        /// </summary>
+        public IConnection Client { get; private set; }
+
+        /// <summary>
+        /// Starts a NATS container if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </summary>
-        /// <param name="settings">Optional NATS settings.</param>
         /// <param name="image">
         /// Optionally specifies the NATS container image.  This defaults to 
         /// <b>nkubeio/nats-test:latest</b> or <b>nkubedev/nats-test:latest</b>
@@ -78,80 +77,29 @@ namespace Neon.Xunit.Couchbase
         /// or not.
         /// </param>
         /// <param name="name">Optionally specifies the NATS container name (defaults to <c>nats-test</c>).</param>
-        /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <param name="username">Optional NATS username (defaults to <b>Administrator</b>).</param>
-        /// <param name="password">Optional NATS password (defaults to <b>password</b>).</param>
+        /// <param name="args">Optional NATS server command line arguments.</param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
         /// fixture was already running.
         /// </returns>
-        /// <remarks>
-        /// <note>
-        /// Some of the <paramref name="settings"/> properties will be ignored including 
-        /// <see cref="CouchbaseSettings.Servers"/>.  This will be replaced by the local
-        /// endpoint for the Couchbase container.  Also, the fixture will connect to the 
-        /// <b>test</b> bucket by default (unless another is specified).
-        /// </note>
-        /// <para>
-        /// There are three basic patterns for using this fixture.
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        /// <term><b>initialize once</b></term>
-        /// <description>
-        /// <para>
-        /// The basic idea here is to have your test class initialize NATS
-        /// once within the test class constructor inside of the initialize action
-        /// with common state that all of the tests can access.
-        /// </para>
-        /// <para>
-        /// This will be quite a bit faster than reconfiguring Couchbase at the
-        /// beginning of every test and can work well for many situations.
-        /// </para>
-        /// </description>
-        /// </item>
-        /// <item>
-        /// <term><b>initialize every test</b></term>
-        /// <description>
-        /// For scenarios where NATS must be cleared before every test,
-        /// you can use the <see cref="Clear()"/> method to reset its
-        /// state within each test method, populate the database as necessary,
-        /// and then perform your tests.
-        /// </description>
-        /// </item>
-        /// <item>
-        /// <term><b>docker integrated</b></term>
-        /// <description>
-        /// The <see cref="NatsFixture"/> can also be added to the <see cref="DockerFixture"/>
-        /// and used within a swarm.  This is useful for testing multiple services and
-        /// also has the advantage of ensure that swarm/node state is fully reset
-        /// before the database container is started.
-        /// </description>
-        /// </item>
-        /// </list>
-        /// </remarks>
         public TestFixtureStatus Start(
-            NatsSettings        settings  = null,
-            string              image     = null,
-            string              name      = "nats-test",
-            string[]            env       = null,
-            string              username  = "Administrator",
-            string              password  = "password")
+            string   image = null,
+            string   name  = "nats-test",
+            string[] args  = null)
         {
             return base.Start(
                 () =>
                 {
-                    StartInAction(settings, image, name, env, username, password);
+                    StartInAction(image, name, args);
                 });
         }
 
         /// <summary>
         /// Actually starts NATS within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(NatsSettings, string, string, string[], string, string)"/>
+        /// generally want to use <see cref="Start(string, string, string[])"/>
         /// but this method is used internally or for special situations.
         /// </summary>
-        /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">
         /// Optionally specifies the NATS container image.  This defaults to 
         /// <b>nkubeio/nats-test:latest</b> or <b>nkubedev/nats-test:latest</b>
@@ -159,37 +107,82 @@ namespace Neon.Xunit.Couchbase
         /// or not.
         /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
-        /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
-        /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
+        /// <param name="args">Optional NATS server command line arguments.</param>
         public void StartInAction(
-            NatsSettings        settings  = null,
-            string              image     = null,
-            string              name      = "nats-test",
-            string[]            env       = null,
-            string              username  = "Administrator",
-            string              password  = "password")
+            string   image = null,
+            string   name  = "nats-test",
+            string[] args  = null)
         {
-            image = image ?? $"{KubeConst.NeonBranchRegistry}/nats-test:latest";
+            image = image ?? $"{KubeConst.NeonBranchRegistry}/nats:latest";
 
             base.CheckWithinAction();
+
+            var dockerArgs =
+                new string[]
+                {
+                    "--detach",
+                    "-p", "4222:4222",
+                    "-p", "8222-8222",
+                    "-p", "6222-6222"
+                };
+
+            if (!IsRunning)
+            {
+                RunContainer(name, image, dockerArgs, args);
+            }
+
+            var factory = new ConnectionFactory();
+            var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
+
+            retry.InvokeAsync(
+                async () =>
+                {
+                    Client = factory.CreateConnection();
+                    await Task.CompletedTask;
+
+                }).Wait();
         }
-        
+
         /// <summary>
-        /// Restores NATS to its initial vigin state.
+        /// Restarts the NATS container to clear any previous state and returns the 
+        /// new client connection.
         /// </summary>
-        public void Clear()
+        public new IConnection Restart()
         {
-            CheckDisposed();
+            base.Restart();
+
+            if (Client != null)
+            {
+                Client.Dispose();
+                Client = null;
+            }
+
+            var factory = new ConnectionFactory();
+            var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
+
+            retry.InvokeAsync(
+                async () =>
+                {
+                    Client = factory.CreateConnection();
+                    await Task.CompletedTask;
+
+                }).Wait();
+
+            return Client;
         }
 
         /// <summary>
         /// This method completely resets the fixture by removing the NATS 
-        /// container from Docker.  Use <see cref="Clear"/> if you just want to 
-        /// clear the database.
+        /// container from Docker.
         /// </summary>
         public override void Reset()
         {
+            if (Client != null)
+            {
+                Client.Dispose();
+                Client = null;
+            }
+
             base.Reset();
         }
     }
