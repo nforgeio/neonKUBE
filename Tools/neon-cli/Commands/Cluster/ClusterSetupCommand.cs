@@ -43,6 +43,7 @@ using Neon.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
+using System.Text.RegularExpressions;
 
 namespace NeonCli
 {
@@ -111,6 +112,7 @@ OPTIONS:
         private const string logBeginMarker = "# CLUSTER-BEGIN-SETUP ############################################################";
         private const string logEndMarker = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
         private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
+        private const string joinCommandMarker = "kubeadm join";
 
         private KubeConfigContext       kubeContext;
         private KubeContextExtension    kubeContextExtension;
@@ -968,22 +970,22 @@ networking:
                             // other nodes to the cluster.
 
                             var output = response.OutputText;
-                            var pStart = output.IndexOf("kubeadm join");
+                            var pStart = output.IndexOf(joinCommandMarker, output.IndexOf(joinCommandMarker) + 1);
 
                             if (pStart == -1)
                             {
                                 throw new KubeException("Cannot locate the [kubadm join ...] command in the [kubeadm init ...] response.");
                             }
 
-                            var pEnd = output.IndexOf('\n', pStart);
+                            var pEnd = output.Length;
 
                             if (pEnd == -1)
                             {
-                                kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart).Trim();
+                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\", "");
                             }
                             else
                             {
-                                kubeContextExtension.SetupDetails.ClusterJoinCommand = output.Substring(pStart, pEnd - pStart).Trim();
+                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart, pEnd - pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
                         });
 
