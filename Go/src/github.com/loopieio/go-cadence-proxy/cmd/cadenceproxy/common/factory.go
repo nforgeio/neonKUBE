@@ -2,8 +2,9 @@ package common
 
 import (
 	"errors"
+	"fmt"
 
-	"github.com/uber-go/tally"
+	"github.com/google/uuid"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/client"
 	"go.uber.org/yarpc"
@@ -18,12 +19,12 @@ const (
 
 // WorkflowClientBuilder build client to cadence service
 type WorkflowClientBuilder struct {
-	hostPort       string
-	dispatcher     *yarpc.Dispatcher
-	domain         string
-	clientIdentity string
-	metricsScope   tally.Scope
-	Logger         *zap.Logger
+	hostPort      string
+	domain        string
+	serviceName   string
+	dispatcher    *yarpc.Dispatcher
+	Logger        *zap.Logger
+	clientOptions *client.Options
 }
 
 // NewBuilder creates a new WorkflowClientBuilder
@@ -45,21 +46,41 @@ func (b *WorkflowClientBuilder) SetDomain(domain string) *WorkflowClientBuilder 
 	return b
 }
 
-// SetClientIdentity sets the identity for the builder
-func (b *WorkflowClientBuilder) SetClientIdentity(identity string) *WorkflowClientBuilder {
-	b.clientIdentity = identity
-	return b
-}
-
-// SetMetricsScope sets the metrics scope for the builder
-func (b *WorkflowClientBuilder) SetMetricsScope(metricsScope tally.Scope) *WorkflowClientBuilder {
-	b.metricsScope = metricsScope
-	return b
-}
-
 // SetDispatcher sets the dispatcher for the builder
-func (b *WorkflowClientBuilder) SetDispatcher(dispatcher *yarpc.Dispatcher) *WorkflowClientBuilder {
-	b.dispatcher = dispatcher
+func (b *WorkflowClientBuilder) SetDispatcher(dispatcherConfig *yarpc.Config) *WorkflowClientBuilder {
+	if dispatcherConfig == nil {
+		b.dispatcher = nil
+	} else {
+		b.dispatcher = yarpc.NewDispatcher(*dispatcherConfig)
+	}
+
+	return b
+}
+
+// SetClientOptions set the options for builder Cadence domain client
+// and Cadence service client
+func (b *WorkflowClientBuilder) SetClientOptions(opts *client.Options) *WorkflowClientBuilder {
+
+	// set defaults for client options
+	if opts == nil {
+
+		// setup test scope
+		tags := map[string]string{
+			"dc":   "west-2",
+			"type": "dev",
+		}
+
+		b.clientOptions.MetricsScope = CreateTestScope(b.serviceName+":"+b.domain, tags)
+		b.clientOptions.Identity = fmt.Sprintf("%s__%s", b.serviceName, uuid.New().String())
+	}
+	b.clientOptions = opts
+
+	return b
+}
+
+// SetServiceName sets the service name for the builder
+func (b *WorkflowClientBuilder) SetServiceName(serviceName string) *WorkflowClientBuilder {
+	b.serviceName = serviceName
 	return b
 }
 
@@ -71,7 +92,7 @@ func (b *WorkflowClientBuilder) BuildCadenceClient() (client.Client, error) {
 	}
 
 	return client.NewClient(
-		service, b.domain, &client.Options{Identity: b.clientIdentity, MetricsScope: b.metricsScope}), nil
+		service, b.domain, b.clientOptions), nil
 }
 
 // BuildCadenceDomainClient builds a domain client to cadence service
@@ -82,7 +103,7 @@ func (b *WorkflowClientBuilder) BuildCadenceDomainClient() (client.DomainClient,
 	}
 
 	return client.NewDomainClient(
-		service, &client.Options{Identity: b.clientIdentity, MetricsScope: b.metricsScope}), nil
+		service, b.clientOptions), nil
 }
 
 // BuildServiceClient builds a rpc service client to cadence service
@@ -95,7 +116,7 @@ func (b *WorkflowClientBuilder) BuildServiceClient() (workflowserviceclient.Inte
 		b.Logger.Fatal("No RPC dispatcher provided to create a connection to Cadence Service")
 	}
 
-	return workflowserviceclient.New(b.dispatcher.ClientConfig(_cadenceFrontendService)), nil
+	return workflowserviceclient.New(b.dispatcher.ClientConfig(b.serviceName)), nil
 }
 
 func (b *WorkflowClientBuilder) build() error {
@@ -108,21 +129,26 @@ func (b *WorkflowClientBuilder) build() error {
 	}
 
 	ch, err := tchannel.NewChannelTransport(
-		tchannel.ServiceName(_cadenceClientName))
+		tchannel.ServiceName(_cadenceClientName),
+		tchannel.ListenAddr(b.hostPort),
+		tchannel.Logger(b.Logger))
+
 	if err != nil {
 		b.Logger.Fatal("Failed to create transport channel", zap.Error(err))
 	}
 
 	b.Logger.Debug("Creating RPC dispatcher outbound",
-		zap.String("ServiceName", _cadenceFrontendService),
+		zap.String("ServiceName", b.serviceName),
 		zap.String("HostPort", b.hostPort))
 
-	b.dispatcher = yarpc.NewDispatcher(yarpc.Config{
-		Name: _cadenceClientName,
-		Outbounds: yarpc.Outbounds{
-			_cadenceFrontendService: {Unary: ch.NewSingleOutbound(b.hostPort)},
-		},
-	})
+	if b.dispatcher == nil {
+		b.dispatcher = yarpc.NewDispatcher(yarpc.Config{
+			Name: _cadenceClientName,
+			Outbounds: yarpc.Outbounds{
+				b.serviceName: {Unary: ch.NewSingleOutbound(b.hostPort)},
+			},
+		})
+	}
 
 	if b.dispatcher != nil {
 		if err := b.dispatcher.Start(); err != nil {

@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	s "go.uber.org/cadence/.gen/go/shared"
@@ -22,22 +23,20 @@ type (
 	// Helper for configuring cadence-client and stoping/starting workflows
 	// and cadence workers
 	Helper struct {
-		Service workflowserviceclient.Interface
-		Scope   tally.Scope
-		Logger  *zap.Logger
-		Config  Configuration
-		Builder *WorkflowClientBuilder
+		Service               workflowserviceclient.Interface
+		Logger                *zap.Logger
+		Config                Configuration
+		Builder               *WorkflowClientBuilder
+		registerDomainRequest *s.RegisterDomainRequest
 	}
 
 	// Configuration for running samples.
 	Configuration struct {
-		DomainName            string
-		ServiceName           string
-		HostName              string
-		Port                  string
-		RegisterDomainRequest *s.RegisterDomainRequest
-		DispatcherConfig      *yarpc.Config
-		ClientOptions         *client.Options
+		domainName       string
+		serviceName      string
+		hostPort         string
+		dispatcherConfig *yarpc.Config
+		clientOptions    *client.Options
 	}
 )
 
@@ -55,15 +54,18 @@ func (h *Helper) SetupServiceConfig() {
 		panic(err)
 	}
 	logger.Info("Logger created.")
-	logger.Info(fmt.Sprintf("Domain:%s, HostPort:%s, Port:%s, Service:%s", h.Config.DomainName, h.Config.HostName, h.Config.Port, h.Config.ServiceName))
+	logger.Info(fmt.Sprintf("Domain:%s, HostPort:%s, Service:%s", h.Config.domainName, h.Config.hostPort, h.Config.serviceName))
 
 	// set helper logger, scope and cadence client builder
 	h.Logger = logger
-	h.Scope = tally.NoopScope
 	h.Builder = NewBuilder(logger).
-		SetHostPort(fmt.Sprintf("%s:%s", h.Config.HostName, h.Config.Port)).
-		SetDomain(h.Config.DomainName).
-		SetMetricsScope(h.Scope)
+		SetHostPort(h.Config.hostPort).
+		SetDomain(h.Config.domainName).
+		SetServiceName(h.Config.serviceName).
+		SetClientOptions(h.Config.clientOptions).
+		SetDispatcher(h.Config.dispatcherConfig)
+
+	// set service
 	service, err := h.Builder.BuildServiceClient()
 	if err != nil {
 		panic(err)
@@ -76,20 +78,20 @@ func (h *Helper) SetupServiceConfig() {
 
 	// create the domain client and register the domain
 	domainClient, _ := h.Builder.BuildCadenceDomainClient()
-	rDROpts := h.Config.RegisterDomainRequest
-	request := &s.RegisterDomainRequest{
-		Name:                                   &h.Config.DomainName,
-		Description:                            rDROpts.Description,
-		WorkflowExecutionRetentionPeriodInDays: rDROpts.WorkflowExecutionRetentionPeriodInDays,
-		OwnerEmail:                             rDROpts.OwnerEmail,
-		EmitMetric:                             rDROpts.EmitMetric,
-		Clusters:                               rDROpts.Clusters,
-		ActiveClusterName:                      rDROpts.ActiveClusterName,
-		ArchivalBucketName:                     rDROpts.ArchivalBucketName,
-		ArchivalStatus:                         rDROpts.ArchivalStatus,
-		Data:                                   rDROpts.Data,
-		SecurityToken:                          rDROpts.SecurityToken,
+
+	// Set RegisterDomainRequest
+	if h.registerDomainRequest == nil {
+
+		// set defaults
+		description := fmt.Sprintf("default domain description for domain: %s", h.Config.domainName)
+		wrd := int32(workflowRetentionDays)
+
+		// set default name, description, and workflow retention (3)
+		h.registerDomainRequest.Name = &h.Config.domainName
+		h.registerDomainRequest.Description = &description
+		h.registerDomainRequest.WorkflowExecutionRetentionPeriodInDays = &wrd
 	}
+	request := h.registerDomainRequest
 
 	// check if the registration returned any errors other than
 	// DomainAlreadyExistsError
@@ -98,9 +100,9 @@ func (h *Helper) SetupServiceConfig() {
 		if _, ok := err.(*s.DomainAlreadyExistsError); !ok {
 			panic(err)
 		}
-		logger.Info("Domain already registered.", zap.String("Domain", h.Config.DomainName))
+		logger.Info("Domain already registered.", zap.String("Domain", h.Config.domainName))
 	} else {
-		logger.Info("Domain succeesfully registered.", zap.String("Domain", h.Config.DomainName))
+		logger.Info("Domain succeesfully registered.", zap.String("Domain", h.Config.domainName))
 	}
 	domainCreated = true
 }
@@ -132,4 +134,21 @@ func (h *Helper) StartWorkers(domainName, groupName string, options worker.Optio
 		h.Logger.Error("Failed to start workers.", zap.Error(err))
 		panic("Failed to start workers")
 	}
+}
+
+// CreateScope takes a map of tags, a stats reporter, and a duration
+// It creates a new tally root scope from the parameters and returns it
+func CreateScope(tags map[string]string, reporter tally.StatsReporter, reportEvery time.Duration) tally.Scope {
+	scope, _ := tally.NewRootScope(tally.ScopeOptions{
+		Tags:     tags,
+		Reporter: reporter,
+	}, reportEvery)
+
+	return scope
+}
+
+// CreateTestScope takes a map of tags and a string prefix and
+// creates a new tally test scope from the parameters and returns it
+func CreateTestScope(prefix string, tags map[string]string) tally.Scope {
+	return tally.NewTestScope(prefix, tags)
 }
