@@ -60,13 +60,13 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
 ## Kubernetes Components
 
-1. **Kubernetes:** [releases](https://github.com/kubernetes/kubernetes/releases) - current: **1.13.2**
+1. **Kubernetes:** [releases](https://github.com/kubernetes/kubernetes/releases) - current: **1.14.1**
 
 2. **Kubernetes Dashboard:** [releases](https://github.com/kubernetes/dashboard/releases) - current: **1.10.1**
 
 3. **Helm:** [releases](https://github.com/helm/helm/releases) - current: **2.12.3**
 
-4. **Istio:** [releases](https://github.com/istio/istio/releases) - current: **1.0.5**
+4. **Istio:** [releases](https://github.com/istio/istio/releases) - current: **1.1.2**
 
 5. **Calico**: [releases](https://github.com/projectcalico/calico/releases) - current: **3.4.0**
 

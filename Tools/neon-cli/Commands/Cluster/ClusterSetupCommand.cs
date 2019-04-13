@@ -863,7 +863,7 @@ safe-apt-get update
                     node.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
 
-echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 "));
@@ -1395,13 +1395,17 @@ rm /tmp/calico.yaml
             // We're going to split the bash script into two parts and download
             // and edit the file in the middle.
 
-            var istioConfigPath = cluster.Definition.Network.MutualPodTLS ? "install/kubernetes/istio-demo-auth.yaml" : "install/kubernetes/istio-demo.yaml";
+            //var istioConfigPath = cluster.Definition.Network.MutualPodTLS ? "install/kubernetes/istio-demo-auth.yaml" : "install/kubernetes/istio-demo.yaml";
             var istioScript1 =
 $@"#!/bin/bash
 
 # Enable sidecar injection.
 
 kubectl label namespace default istio-injection=enabled
+
+# Create istio-system namespace:
+
+kubectl create namespace istio-system
 
 # Download and extract the Istio binaries:
 
@@ -1416,10 +1420,15 @@ cd istio
 chmod 330 bin/*
 cp bin/* /usr/local/bin
 
+#Install the Istio CNI:
+
+helm template install/kubernetes/helm/istio-cni --name=istio-cni --namespace=istio-system | kubectl apply -f -
+
+
 # Install Istio's CRDs:
 
-kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
-sleep 10
+helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
+sleep 15
 ";
 
             var istioScript2 =
@@ -1429,50 +1438,10 @@ cd /tmp/istio
 
 # Install Istio:
 
-kubectl apply -f {istioConfigPath}
-
-# Cleanup:
-
-# rm istio.tar.gz
-# rm -r istio
-# rm istio.yaml
+helm template install/kubernetes/helm/istio --name istio --namespace istio-system \
+    --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml --set istio_cni.enabled=true | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
-
-            var installYampPath = "/tmp/istio/" + istioConfigPath;
-            var installYaml     = master.DownloadText(installYampPath);
-            var sbYaml          = new StringBuilder();
-
-            using (var reader = new StringReader(installYaml))
-            {
-                // We're going to scan for the first trimmed line starting with "securityContext:",
-                // insert the two additional lines, and then copy the remaining lines.
-
-                var modified = false;
-
-                foreach (var line in reader.Lines())
-                {
-                    if (!modified && line.TrimStart().StartsWith("securityContext:"))
-                    {
-                        sbYaml.AppendLineLinux(line);
-                        sbYaml.AppendLineLinux("          runAsUser: 0");
-                        sbYaml.AppendLineLinux("          runAsNonRoot: false");
-
-                        modified = true;
-                    }
-                    else
-                    {
-                        sbYaml.AppendLineLinux(line);
-                    }
-                }
-
-                if (!modified)
-                {
-                    throw new KubeException("Istio setup YAML moodification failed.");
-                }
-            }
-
-            master.UploadText(installYampPath, sbYaml);
 
             master.SudoCommand(CommandBundle.FromScript(istioScript2));
         }
