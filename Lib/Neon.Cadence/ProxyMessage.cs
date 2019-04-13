@@ -44,7 +44,7 @@ namespace Neon.Cadence
     /// This class is designed to be a very simple and flexible way of communicating
     /// operations and status between the Cadence client and proxy.  The specific 
     /// message type is identified via the <see cref="Type"/> property (one of the 
-    /// <see cref="MessageType"/> values.  The <see cref="Arguments"/> dictionary will be
+    /// <see cref="MessageType"/> values.  The <see cref="Properties"/> dictionary will be
     /// used to pass named values.  Binary attachments may be passed using the 
     /// <see cref="Attachments"/> property, a list of binary arrays.
     /// </para>
@@ -73,7 +73,7 @@ namespace Neon.Cadence
     /// +------------------+
     /// |   MESSAGE-TYPE   |   32-bit
     /// +------------------+
-    /// |    ARG-COUNT     |   32-bit
+    /// |   PROPERTY-COUNT |   32-bit
     /// +------------------+
     /// |                  |
     /// |  +------------+  |
@@ -102,11 +102,11 @@ namespace Neon.Cadence
     /// </code>
     /// <para>
     /// The message starts out with the 32-bit message type followed by the
-    /// number of arguments to follow.  Each argument consists of an encoded
+    /// number of properties to follow.  Each argument consists of an encoded
     /// string for the argument name followed by an encoded string for the value.
     /// </para>
     /// <para>
-    /// After the arguments will be a 32-bit integer specifying the
+    /// After the properties will be a 32-bit integer specifying the
     /// number of binary attachment with each encoded as its length in bytes
     /// followed by that actual attachment bytes.  An attachment with length
     /// set to -1 will be considered to be NULL.
@@ -155,7 +155,7 @@ namespace Neon.Cadence
                         throw new NotImplementedException($"Unexpected message type [{messageType}].");
                 }
 
-                // Read the arguments.
+                // Read the properties.
 
                 var argCount = reader.ReadInt32();
 
@@ -164,7 +164,7 @@ namespace Neon.Cadence
                     var name  = ReadString(reader);
                     var value = ReadString(reader);
 
-                    message.Arguments.Add(name, value);
+                    message.Properties.Add(name, value);
                 }
 
                 // Read the attachments.
@@ -252,7 +252,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns a case insensitive dictionary that maps argument names to value strings.
         /// </summary>
-        public Dictionary<string, string> Arguments { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Properties { get; private set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Returns the list of binary attachments.
@@ -271,11 +271,11 @@ namespace Neon.Cadence
                 {
                     writer.Write(Type);
 
-                    // Write the arguments.
+                    // Write the properties.
 
-                    writer.Write(Arguments.Count);
+                    writer.Write(Properties.Count);
 
-                    foreach (var arg in Arguments)
+                    foreach (var arg in Properties)
                     {
                         WriteString(writer, arg.Key);
                         WriteString(writer, arg.Value);

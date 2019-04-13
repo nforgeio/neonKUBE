@@ -55,17 +55,17 @@ namespace TestCryptography
 
                 message = ProxyMessage.Deserialize(stream);
                 Assert.Equal(MessageType.Unknown, message.Type);
-                Assert.Empty(message.Arguments);
+                Assert.Empty(message.Properties);
                 Assert.Empty(message.Attachments);
 
                 // Message with args and attachments.
 
                 message = new ProxyMessage();
 
-                message.Arguments.Add("One", "1");
-                message.Arguments.Add("Two", "2");
-                message.Arguments.Add("Empty", string.Empty);
-                message.Arguments.Add("Null", null);
+                message.Properties.Add("One", "1");
+                message.Properties.Add("Two", "2");
+                message.Properties.Add("Empty", string.Empty);
+                message.Properties.Add("Null", null);
 
                 message.Attachments.Add(new byte[] { 0, 1, 2, 3, 4 });
                 message.Attachments.Add(new byte[0]);
@@ -77,11 +77,11 @@ namespace TestCryptography
 
                 message = ProxyMessage.Deserialize(stream);
                 Assert.Equal(MessageType.Unknown, message.Type);
-                Assert.Equal(4, message.Arguments.Count);
-                Assert.Equal("1", message.Arguments["One"]);
-                Assert.Equal("2", message.Arguments["Two"]);
-                Assert.Empty(message.Arguments["Empty"]);
-                Assert.Null(message.Arguments["Null"]);
+                Assert.Equal(4, message.Properties.Count);
+                Assert.Equal("1", message.Properties["One"]);
+                Assert.Equal("2", message.Properties["Two"]);
+                Assert.Empty(message.Properties["Empty"]);
+                Assert.Null(message.Properties["Null"]);
 
                 Assert.Equal(3, message.Attachments.Count);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Attachments[0]);
