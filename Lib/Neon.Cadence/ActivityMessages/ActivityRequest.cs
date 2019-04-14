@@ -44,5 +44,25 @@ namespace Neon.Cadence
             get => GetLongProperty("ActivityContextId");
             set => SetLongProperty("ActivityContextId", value);
         }
+
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new ActivityRequest();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+
+            var typedTarget = (ActivityRequest)target;
+
+            typedTarget.ActivityContextId = this.ActivityContextId;
+        }
     }
 }

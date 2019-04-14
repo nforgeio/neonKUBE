@@ -43,4 +43,8 @@
     <Folder Include="OtherMessages\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+  </ItemGroup>
+
 </Project>

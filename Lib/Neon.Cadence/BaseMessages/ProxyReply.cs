@@ -99,5 +99,27 @@ namespace Neon.Cadence
             get => GetStringProperty("ErrorMessage");
             set => SetStringProperty("ErrorMessage", value);
         }
+
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new ProxyReply();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+
+            var typedTarget = (ProxyReply)target;
+
+            typedTarget.RequestId    = this.RequestId;
+            typedTarget.ErrorType    = this.ErrorType;
+            typedTarget.ErrorMessage = this.ErrorMessage;
+        }
     }
 }

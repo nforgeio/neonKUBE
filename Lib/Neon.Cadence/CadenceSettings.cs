@@ -54,5 +54,12 @@ namespace Neon.Cadence
         [YamlMember(Alias = "Servers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Uri> Servers { get; set; } = new List<Uri>();
+
+        /// <summary>
+        /// The port where the client will listen for traffic from the associated Cadency Proxy.
+        /// This default to 0 which specifies that we'll let the operating system choose an
+        /// unused ephermal port.
+        /// </summary>
+        public int ListenPort { get; set; }
     }
 }

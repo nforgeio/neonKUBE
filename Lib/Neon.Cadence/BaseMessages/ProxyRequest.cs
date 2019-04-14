@@ -44,5 +44,25 @@ namespace Neon.Cadence
             get => GetLongProperty("RequestId");
             set => SetLongProperty("RequestId", value);
         }
+
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new ProxyRequest();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+
+            var typedTarget = (ProxyRequest)target;
+
+            typedTarget.RequestId = this.RequestId;
+        }
     }
 }

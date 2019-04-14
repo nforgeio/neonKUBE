@@ -163,7 +163,7 @@ namespace Neon.Cadence
 
                 if (attribute != null)
                 {
-                    var typeCode  = (int)attribute.Type;
+                    var typeCode = (int)attribute.Type;
 
                     if (typeCode <= 0)
                     {
@@ -202,7 +202,7 @@ namespace Neon.Cadence
                 {
                     if (!intToMessageClass.TryGetValue((int)messageType, out messageClass))
                     {
-                        throw new NotImplementedException($"Unexpected message type [{messageType}].");
+                        throw new FormatException($"Unexpected message type [{messageType}].");
                     }
                 }
                 else
@@ -210,40 +210,49 @@ namespace Neon.Cadence
                     messageClass = typeof(TMessage);
                 }
 
-                var message = (ProxyMessage)Activator.CreateInstance(messageClass, null);
+                ProxyMessage message;
 
-                // Read the properties.
-
-                var argCount = reader.ReadInt32();
-
-                for (int i = 0; i < argCount; i++)
+                try
                 {
-                    var name  = ReadString(reader);
-                    var value = ReadString(reader);
+                    message = (ProxyMessage)Activator.CreateInstance(messageClass, null);
 
-                    message.Properties.Add(name, value);
+                    // Read the properties.
+
+                    var argCount = reader.ReadInt32();
+
+                    for (int i = 0; i < argCount; i++)
+                    {
+                        var name  = ReadString(reader);
+                        var value = ReadString(reader);
+
+                        message.Properties.Add(name, value);
+                    }
+
+                    // Read the attachments.
+
+                    var attachCount = reader.ReadInt32();
+
+                    for (int i = 0; i < attachCount; i++)
+                    {
+                        var length = reader.ReadInt32();
+
+                        if (length == -1)
+                        {
+                            message.Attachments.Add(null);
+                        }
+                        else if (length == 0)
+                        {
+                            message.Attachments.Add(new byte[0]);
+                        }
+                        else
+                        {
+                            message.Attachments.Add(reader.ReadBytes(length));
+                        }
+                    }
                 }
-
-                // Read the attachments.
-
-                var attachCount = reader.ReadInt32();
-
-                for (int i = 0; i < attachCount; i++)
+                catch (Exception e)
                 {
-                    var length = reader.ReadInt32();
-
-                    if (length == -1)
-                    {
-                        message.Attachments.Add(null);
-                    }
-                    else if (length == 0)
-                    {
-                        message.Attachments.Add(new byte[0]);
-                    }
-                    else
-                    {
-                        message.Attachments.Add(reader.ReadBytes(length));
-                    }
+                    throw new FormatException("Message deserialzation failed", e);
                 }
 
                 var result = message as TMessage;
@@ -364,6 +373,33 @@ namespace Neon.Cadence
 
                 return output.ToArray();
             }
+        }
+
+        /// <summary>
+        /// Implemented by derived classes to make a copy of themselves for echo testing
+        /// purposes.  Note that this is not implemented for the base <see cref="ProxyMessage"/>
+        /// class.
+        /// </summary>
+        /// <returns>The cloned message.</returns>
+        /// <exception cref="NotImplementedException">Thrown by this base class.</exception>
+        internal virtual ProxyMessage Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Implemented by derived classes to copy message properties to another
+        /// message instance during a <see cref="Clone()"/> operation.
+        /// </summary>
+        /// <param name="target">The target message.</param>
+        /// <remarks>
+        /// <note>
+        /// The method implementation can safely assume that the <paramref name="target"/>
+        /// message can be cast into the implementation's message type.
+        /// </note>
+        /// </remarks>
+        protected virtual void CopyTo(ProxyMessage target)
+        {
         }
 
         //---------------------------------------------------------------------
