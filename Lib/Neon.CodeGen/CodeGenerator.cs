@@ -2151,7 +2151,7 @@ namespace Neon.CodeGen
 
             writer.WriteLine($"        }}");
             writer.WriteLine();
-            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Finalizer.");
             writer.WriteLine($"        /// </summary");
             writer.WriteLine($"        ~{clientTypeName}()");
