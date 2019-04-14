@@ -164,12 +164,12 @@ namespace TestCryptography
 
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
-                Assert.Null(message.RequestId);
+                Assert.Equal(0, message.RequestId);
 
                 // Round-trip
 
-                message.RequestId = "555";
-                Assert.Equal("555", message.RequestId);
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -177,7 +177,208 @@ namespace TestCryptography
 
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
-                Assert.Equal("555", message.RequestId);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestProxyReply()
+        {
+            // Ensures that we can serialize and deserialize reply messages.
+
+            ProxyReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new ProxyReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestActivityRequest()
+        {
+            // Ensures that we can serialize and deserialize activity request messages.
+
+            ActivityRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new ActivityRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ActivityContextId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.ActivityContextId = 666;
+                Assert.Equal(666, message.ActivityContextId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityContextId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestActivityReply()
+        {
+            // Ensures that we can serialize and deserialize activity reply messages.
+
+            ActivityReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new ActivityReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ActivityContextId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.ActivityContextId = 666;
+                Assert.Equal(666, message.ActivityContextId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityContextId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestWorkflowRequest()
+        {
+            // Ensures that we can serialize and deserialize workflow request messages.
+
+            WorkflowRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new WorkflowRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.WorkflowContextId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.WorkflowContextId = 666;
+                Assert.Equal(666, message.WorkflowContextId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkflowContextId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestWorkflowReply()
+        {
+            // Ensures that we can serialize and deserialize workflow reply messages.
+
+            WorkflowReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new WorkflowReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.WorkflowContextId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.WorkflowContextId = 666;
+                Assert.Equal(666, message.WorkflowContextId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkflowContextId);
             }
         }
     }

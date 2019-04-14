@@ -39,10 +39,10 @@ namespace Neon.Cadence
         /// <summary>
         /// Uniquely identifies the workflow context associated with this request.
         /// </summary>
-        public string WorkflowContextId
+        public long WorkflowContextId
         {
-            get => GetStringProperty("WorkflowContextId");
-            set => SetStringProperty("WorkflowContextId", value);
+            get => GetLongProperty("WorkflowContextId");
+            set => SetLongProperty("WorkflowContextId", value);
         }
     }
 }

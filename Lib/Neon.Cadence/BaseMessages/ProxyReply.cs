@@ -39,10 +39,10 @@ namespace Neon.Cadence
         /// <summary>
         /// Uniquely identifies the request this reply answers.
         /// </summary>
-        public string RequestId
+        public long RequestId
         {
-            get => GetStringProperty("RequestId");
-            set => SetStringProperty("RequestId", value);
+            get => GetLongProperty("RequestId");
+            set => SetLongProperty("RequestId", value);
         }
 
         /// <summary>
