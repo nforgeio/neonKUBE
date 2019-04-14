@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ArgDictionary.cs
+// FILE:	    CadenceErrorTypes.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,30 +17,57 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
+using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
-using Newtonsoft;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.Retry;
 
-namespace Neon.Collections
+namespace Neon.Cadence
 {
     /// <summary>
-    /// A dictionary of objects keyed by case sensitive strings.
+    /// Enumerates the Cadence error types.
     /// </summary>
-    public class ArgDictionary : Dictionary<string, object>
+    public enum CadenceErrorTypes
     {
+        /// <summary>
+        /// Indicates that there was no error.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// An operation was cancelled.
+        /// </summary>
+        Cancelled,
+
+        /// <summary>
+        /// Custom error.
+        /// </summary>
+        Custom,
+
+        /// <summary>
+        /// Generic error.
+        /// </summary>
+        Generic,
+
+        /// <summary>
+        /// Panic error.
+        /// </summary>
+        Panic,
+
+        /// <summary>
+        /// Terminated error.
+        /// </summary>
+        Terminated,
+
+        /// <summary>
+        /// Timeout error.
+        /// </summary>
+        Timeout
     }
 }

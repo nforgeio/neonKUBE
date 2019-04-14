@@ -39,4 +39,8 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="OtherMessages\" />
+  </ItemGroup>
+
 </Project>

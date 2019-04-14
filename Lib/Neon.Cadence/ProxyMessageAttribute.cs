@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ArgDictionary.cs
+// FILE:	    ProxyMessage.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,30 +17,43 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
+using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
-using Newtonsoft;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.Retry;
 
-namespace Neon.Collections
+// $todo(jeff.lill)
+//
+// Performance could be improved by maintaining output stream and buffer pools
+// rather than allocating these every time.
+
+namespace Neon.Cadence
 {
     /// <summary>
-    /// A dictionary of objects keyed by case sensitive strings.
+    /// Used to tag proxy message class implementations and also associate
+    /// the message class with the message type code.
     /// </summary>
-    public class ArgDictionary : Dictionary<string, object>
+    [AttributeUsage(AttributeTargets.Class)]
+    internal class ProxyMessageAttribute : Attribute
     {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="type">Specifies the message type to be used when serializing the tagged message.</param>
+        public ProxyMessageAttribute(MessageType type)
+        {
+            this.Type = type;
+        }
+
+        /// <summary>
+        /// Returns the associated message type code.
+        /// </summary>
+        public MessageType Type { get; private set; }
     }
 }

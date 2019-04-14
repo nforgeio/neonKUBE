@@ -3,7 +3,7 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
+// Licensed under the Apache License, Version 2.0 (the "License"),
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -32,12 +32,12 @@ namespace Neon.Cadence
     /// <summary>
     /// Enumerates the possible message types.
     /// </summary>
-    internal static class MessageType
+    internal enum MessageType
     {
         /// <summary>
-        /// Indicates an unspecified operation.
+        /// Indicates a message with an unspecified type.  This normally indicates an error.
         /// </summary>
-        public const int Unknown = 0;
+        Unspecified = 0,
 
         /// <summary>
         /// library --> proxy: Informs the proxy of the network endpoint it should transmit
@@ -46,24 +46,24 @@ namespace Neon.Cadence
         /// connection and send a <see cref="ConnectReply"/> message back to the libary
         /// indicating success or failure.
         /// </summary>
-        public const int ConnectRequest = 1;
+        ConnectRequest = 1,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="ConnectRequest"/> message.
         /// </summary>
-        public const int ConnectReply = 2;
+        ConnectReply = 2,
 
         /// <summary>
         /// library --> proxy: Signals the proxy that it should terminate gracefully.  The
         /// proxy should send a <see cref="TerminateReply"/> back to the library and
         /// then exit, terminating the process.
         /// </summary>
-        public const int TerminateRequest = 3;
+        TerminateRequest = 3,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="ConnectRequest"/> message.
         /// </summary>
-        public const int TerminateReply = 4;
+        TerminateReply = 4,
 
         //---------------------------------------------------------------------
         // Workflow messages
@@ -74,217 +74,217 @@ namespace Neon.Cadence
         /// <summary>
         /// library --> proxy: Registers a workflow handler.
         /// </summary>
-        public const int Workflow_RegisterRequest = 100;
+        Workflow_RegisterRequest = 100,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_RegisterRequest"/> message.
         /// </summary>
-        public const int Workflow_RegisterflowReply = 101;
+        Workflow_RegisterflowReply = 101,
 
         /// <summary>
         /// library --> proxy: Starts a workflow.
         /// </summary>
-        public const int Workflow_StartWorkflowRequest = 102;
+        Workflow_StartWorkflowRequest = 102,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_StartWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_StartWorkflowReply = 103;
+        Workflow_StartWorkflowReply = 103,
 
         /// <summary>
         /// library --> proxy: Executes a workflow.
         /// </summary>
-        public const int Workflow_ExecuteWorkflowRequest = 104;
+        Workflow_ExecuteWorkflowRequest = 104,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_ExecuteWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_ExecuteWorkflowReply = 105;
+        Workflow_ExecuteWorkflowReply = 105,
 
         /// <summary>
         /// library --> proxy: Signals a workflow.
         /// </summary>
-        public const int Workflow_SignalWorkflowRequest = 106;
+        Workflow_SignalWorkflowRequest = 106,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_SignalWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_SignalWorkslowReply = 107;
+        Workflow_SignalWorkslowReply = 107,
 
         /// <summary>
         /// library --> proxy: Signals a workflow, starting it if necessary.
         /// </summary>
-        public const int Workflow_SignalWorkflowWithStartRequest = 108;
+        Workflow_SignalWorkflowWithStartRequest = 108,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_SignalWorkflowWithStartRequest"/> message.
         /// </summary>
-        public const int Workflow_SignalWorkflowWithStartReply = 109;
+        Workflow_SignalWorkflowWithStartReply = 109,
 
         /// <summary>
         /// library --> proxy: Cancels a workflow.
         /// </summary>
-        public const int Workflow_CancelWorkflowRequest = 110;
+        Workflow_CancelWorkflowRequest = 110,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_CancelWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_CancelWorkflowReply = 111;
+        Workflow_CancelWorkflowReply = 111,
 
         /// <summary>
         /// library --> proxy: Terminates a workflow.
         /// </summary>
-        public const int Workflow_TerminateWorkflowRequest = 112;
+        Workflow_TerminateWorkflowRequest = 112,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_TerminateWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_TerminateWorkflowReply = 113;
+        Workflow_TerminateWorkflowReply = 113,
 
         /// <summary>
         /// library --> proxy: Requests the a workflow's history.
         /// </summary>
-        public const int Workflow_GetWorkflowHistoryRequest = 114;
+        Workflow_GetWorkflowHistoryRequest = 114,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_GetWorkflowHistoryRequest"/> message.
         /// </summary>
-        public const int Workflow_GetWorkflowHistoryReply = 115;
+        Workflow_GetWorkflowHistoryReply = 115,
 
         /// <summary>
         /// library --> proxy: Indicates that an activity has completed.
         /// </summary>
-        public const int Workflow_CompleteActivityRequest = 116;
+        Workflow_CompleteActivityRequest = 116,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_CompleteActivityRequest"/> message.
         /// </summary>
-        public const int Workflow_CompleteActivityReply = 117;
+        Workflow_CompleteActivityReply = 117,
 
         /// <summary>
         /// library --> proxy: Indicates that the activity with a specified ID as completed has completed.
         /// </summary>
-        public const int Workflow_CompleteActivityByIdRequest = 118;
+        Workflow_CompleteActivityByIdRequest = 118,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_CompleteActivityByIdRequest"/> message.
         /// </summary>
-        public const int Workflow_CompleteActivityByIdReply = 119;
+        Workflow_CompleteActivityByIdReply = 119,
 
         /// <summary>
         /// library --> proxy: Records an activity heartbeat.
         /// </summary>
-        public const int Workflow_RecordActivityHeartbeatRequest = 120;
+        Workflow_RecordActivityHeartbeatRequest = 120,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_RecordActivityHeartbeatRequest"/> message.
         /// </summary>
-        public const int Workflow_RecordActivityHeartbeatReply = 121;
+        Workflow_RecordActivityHeartbeatReply = 121,
 
         /// <summary>
         /// library --> proxy: Records a heartbeat for an activity specified by ID.
         /// </summary>
-        public const int Workflow_RecordActivityHeartbeatByIdRequest = 122;
+        Workflow_RecordActivityHeartbeatByIdRequest = 122,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_RecordActivityHeartbeatByIdRequest"/> message.
         /// </summary>
-        public const int Workflow_RecordActivityHeartbeatByIdReply = 123;
+        Workflow_RecordActivityHeartbeatByIdReply = 123,
 
         /// <summary>
         /// library --> proxy: Requests the list of closed workflows.
         /// </summary>
-        public const int Workflow_ListClosedWorkflowRequest = 124;
+        Workflow_ListClosedWorkflowRequest = 124,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_ListClosedWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_ListClosedWorkflowReply = 125;
+        Workflow_ListClosedWorkflowReply = 125,
 
         /// <summary>
         /// library --> proxy: Requests the list of open workflows.
         /// </summary>
-        public const int Workflow_ListOpenWorkflowRequest = 126;
+        Workflow_ListOpenWorkflowRequest = 126,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_ListOpenWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_ListOpenWorkflowReply = 127;
+        Workflow_ListOpenWorkflowReply = 127,
 
         /// <summary>
         /// library --> proxy: Queries a workflow's last execution.
         /// </summary>
-        public const int Workflow_QueryWorkflowRequest = 128;
+        Workflow_QueryWorkflowRequest = 128,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_QueryWorkflowRequest"/> message.
         /// </summary>
-        public const int Workflow_QueryWorkflowReply = 129;
+        Workflow_QueryWorkflowReply = 129,
 
         /// <summary>
         /// library --> proxy: Returns information about a worflow execution.
         /// </summary>
-        public const int Workflow_DescribeWorkflowExecutionRequest = 130;
+        Workflow_DescribeWorkflowExecutionRequest = 130,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_DescribeWorkflowExecutionRequest"/> message.
         /// </summary>
-        public const int Workflow_DescribeWorkflowExecutionReply = 131;
+        Workflow_DescribeWorkflowExecutionReply = 131,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
         [Obsolete("RESERVED but not implemented.")]
-        public const int Workflow_DescribeTaskListRequest = 132;
+        Workflow_DescribeTaskListRequest = 132,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
         [Obsolete("RESERVED but not implemented.")]
-        public const int Workflow_DescribeTaskListReply = 133;
+        Workflow_DescribeTaskListReply = 133,
 
         /// <summary>
         /// proxy --> library: Commands the client library and associated .NET application
         /// to process a workflow instance.
         /// </summary>
-        public const int Workflow_InvokeRequest = 134;
+        Workflow_InvokeRequest = 134,
 
         /// <summary>
         /// library --> proxy: Sent in response to a <see cref="Workflow_InvokeRequest"/> message.
         /// </summary>
-        public const int Workflow_InvokeReply = 135;
+        Workflow_InvokeReply = 135,
 
         /// <summary>
         /// proxy --> library: Initiates execution of a child workflow.
         /// </summary>
-        public const int Workflow_ExecuteChildRequest = 136;
+        Workflow_ExecuteChildRequest = 136,
 
         /// <summary>
         /// library --> proxy: Sent in response to a <see cref="Workflow_InvokeRequest"/> message.
         /// </summary>
-        public const int Workflow_ExecuteChildReply = 137;
+        Workflow_ExecuteChildReply = 137,
 
         /// <summary>
         /// library --> proxy: Indicates that .NET application wishes to consume signals from
         /// a named channel.  Any signals received by the proxy will be forwarded to the
         /// library via <see cref="Workflow_SignalReceivedRequest"/> messages.
         /// </summary>
-        public const int Workflow_SignalSubscribeRequest = 138;
+        Workflow_SignalSubscribeRequest = 138,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Workflow_SignalSubscribeRequest"/> message.
         /// </summary>
-        public const int Workflow_SignalSubscribeReply = 139;
+        Workflow_SignalSubscribeReply = 139,
 
         /// <summary>
         /// proxy --> library: Send when a signal is received by the proxy on a subscribed channel.
         /// </summary>
-        public const int Workflow_SignalReceivedRequest = 140;
+        Workflow_SignalReceivedRequest = 140,
 
         /// <summary>
         /// library --> proxy: Sent in response to a <see cref="Workflow_SignalReceivedRequest"/> message.
         /// </summary>
-        public const int Workflow_SignalReceivedReply = 141;
+        Workflow_SignalReceivedReply = 141,
 
         /// <summary>
         /// <para>
@@ -301,12 +301,12 @@ namespace Neon.Cadence
         /// value from the execution history.
         /// </para>
         /// </summary>
-        public const int Workflow_SideEffectRequest = 142;
+        Workflow_SideEffectRequest = 142,
 
         /// <summary>
         /// library --> proxy: Sent in response to a <see cref="Workflow_SignalReceivedRequest"/> message.
         /// </summary>
-        public const int Workflow_SideEffectReply = 143;
+        Workflow_SideEffectReply = 143,
 
         /// <summary>
         /// proxy --> library: Sent by the proxy to the library the first time a side effect
@@ -314,12 +314,12 @@ namespace Neon.Cadence
         /// side effect value to be persisted in the workflow history and returned back to
         /// the the .NET workflow application.
         /// </summary>
-        public const int Workflow_SideEffectInvokeRequest = 144;
+        Workflow_SideEffectInvokeRequest = 144,
 
         /// <summary>
         /// library --> proxy: Sent in response to a <see cref="Workflow_SignalReceivedRequest"/> message.
         /// </summary>
-        public const int Workflow_SideEffectInvokeReply = 145;
+        Workflow_SideEffectInvokeReply = 145,
 
         //---------------------------------------------------------------------
         // Domain messages
@@ -330,32 +330,32 @@ namespace Neon.Cadence
         /// <summary>
         /// library --> proxy: Registers a Cadence domain.
         /// </summary>
-        public const int Domain_RegisterRequest = 200;
+        Domain_RegisterRequest = 200,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Domain_RegisterRequest"/> message.
         /// </summary>
-        public const int Domain_RegisterReply = 201;
+        Domain_RegisterReply = 201,
 
         /// <summary>
         /// library --> proxy: Describes a Cadence domain.
         /// </summary>
-        public const int Domain_DescribeRequest = 202;
+        Domain_DescribeRequest = 202,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Domain_DescribeRequest"/> message.
         /// </summary>
-        public const int Domain_DescribeReply = 203;
+        Domain_DescribeReply = 203,
 
         /// <summary>
         /// library --> proxy: Updates a Cadence domain.
         /// </summary>
-        public const int Domain_UpdateRequest = 204;
+        Domain_UpdateRequest = 204,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Domain_UpdateRequest"/> message.
         /// </summary>
-        public const int Domain_UpdateReply = 205;
+        Domain_UpdateReply = 205,
 
         //---------------------------------------------------------------------
         // Activity messages
@@ -364,62 +364,62 @@ namespace Neon.Cadence
         /// proxy --> library: Commands the client library and associated .NET application
         /// to process an activity instance.
         /// </summary>
-        public const int Activity_InvokeRequest = 300;
+        Activity_InvokeRequest = 300,
 
         /// <summary>
         /// library --> proxy: Sent in response to a <see cref="Activity_InvokeRequest"/> message.
         /// </summary>
-        public const int Activity_InvokeReply = 301;
+        Activity_InvokeReply = 301,
 
         /// <summary>
         /// library --> proxy: Requests the heartbeat details from the last failed attempt.
         /// </summary>
-        public const int Activity_GetHeartbeatDetailsRequest = 302;
+        Activity_GetHeartbeatDetailsRequest = 302,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Activity_GetHeartbeatDetailsRequest"/> message.
         /// </summary>
-        public const int Activity_GetHeartbeatDetailsReply = 303;
+        Activity_GetHeartbeatDetailsReply = 303,
 
         /// <summary>
         /// library --> proxy: Logs a message for an activity.
         /// </summary>
-        public const int Activity_LogRequest = 304;
+        Activity_LogRequest = 304,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Activity_LogRequest"/> message.
         /// </summary>
-        public const int Activity_LogReply = 305;
+        Activity_LogReply = 305,
 
         /// <summary>
         /// library --> proxy: Records a heartbeat message for an activity.
         /// </summary>
-        public const int Activity_RecordHeartbeatRequest = 306;
+        Activity_RecordHeartbeatRequest = 306,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Activity_RecordHeartbeatRequest"/> message.
         /// </summary>
-        public const int Activity_RecordHeartbeatReply = 307;
+        Activity_RecordHeartbeatReply = 307,
 
         /// <summary>
         /// library --> proxy: Determines whether an activity execution has any heartbeat details.
         /// </summary>
-        public const int Activity_HasHeartbeatDetailsRequest = 308;
+        Activity_HasHeartbeatDetailsRequest = 308,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Activity_HasHeartbeatDetailsRequest"/> message.
         /// </summary>
-        public const int Activity_HasHeartbeatDetailsReply = 309;
+        Activity_HasHeartbeatDetailsReply = 309,
 
         /// <summary>
         /// library --> proxy: Signals that the application executing an activity is terminating,
         /// giving the the proxy a chance to gracefully inform Cadence and then terminate the activity.
         /// </summary>
-        public const int Activity_StopRequest = 310;
+        Activity_StopRequest = 310,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="Activity_StopRequest"/> message.
         /// </summary>
-        public const int Activity_StopReply = 311;
+        Activity_StopReply = 311,
     }
 }

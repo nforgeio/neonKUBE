@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ArgDictionary.cs
+// FILE:	    NiceDictionary.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -38,9 +38,36 @@ using Neon.Retry;
 namespace Neon.Collections
 {
     /// <summary>
-    /// A dictionary of objects keyed by case sensitive strings.
+    /// A dictionary of values where the indexer will return the default value
+    /// for keys that don't map to an item.
     /// </summary>
-    public class ArgDictionary : Dictionary<string, object>
+    /// <typeparam name="TKey">The key type.</typeparam>
+    /// <typeparam name="TValue">The value type.</typeparam>
+    public class NiceDictionary<TKey, TValue> : Dictionary<TKey, TValue>
     {
+        /// <summary>
+        /// Accesses the value associated with a specified key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>
+        /// The associated value or the <c>default</c> value for the
+        /// type when there's no associated value.
+        /// </returns>
+        public new TValue this[TKey key]
+        {
+            get
+            {
+                if (base.TryGetValue(key, out TValue value))
+                {
+                    return value;
+                }
+                else
+                {
+                    return default(TValue);
+                }
+            }
+
+            set => base[key] = value;
+        }
     }
 }

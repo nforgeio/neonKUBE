@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ArgDictionary.cs
+// FILE:	    ProxyRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,30 +17,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
+using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
-using Newtonsoft;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.Retry;
 
-namespace Neon.Collections
+namespace Neon.Cadence
 {
     /// <summary>
-    /// A dictionary of objects keyed by case sensitive strings.
+    /// Base class for all proxy requests.
     /// </summary>
-    public class ArgDictionary : Dictionary<string, object>
+    [ProxyMessage(MessageType.Unspecified)]
+    internal class ProxyRequest : ProxyMessage
     {
+        /// <summary>
+        /// Uniquely identifies this request.
+        /// </summary>
+        public string RequestId
+        {
+            get => GetStringProperty("RequestId");
+            set => SetStringProperty("RequestId", value);
+        }
     }
 }
