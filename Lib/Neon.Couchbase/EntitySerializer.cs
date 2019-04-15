@@ -39,15 +39,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
 using Neon.Time;
-
-// $todo(jeff.lill):
-//
-// This code is going to generate a some GC activity.  In the distant
-// future, we should investigate this:
-//
-//      https://blog.couchbase.com/using-jil-for-custom-json-serialization-in-the-couchbase-net-sdk/
-//
-// or perhaps the new Microsoft serializer shipping with .NET CORE 3.0.
+using System.Reflection;
 
 namespace Couchbase
 {
@@ -55,9 +47,9 @@ namespace Couchbase
     /// Implements a Couchbase serializer that's capable of handling <see cref="IPersistableType"/>
     /// based objects in addition to plain-old-objects.
     /// </summary>
-    internal class EntitySerializer : ITypeSerializer
+    internal class EntitySerializer : ITypeSerializer, IExtendedTypeSerializer
     {
-        private ITypeSerializer     defaultSerializer;
+        private DefaultSerializer   defaultSerializer;
 
         /// <summary>
         /// Constructor.
@@ -72,6 +64,10 @@ namespace Couchbase
 
             this.defaultSerializer = new DefaultSerializer(NeonHelper.JsonRelaxedSerializerSettings.Value, NeonHelper.JsonRelaxedSerializerSettings.Value);
         }
+
+        public SupportedDeserializationOptions SupportedDeserializationOptions => throw new NotImplementedException();
+
+        public DeserializationOptions DeserializationOptions { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         public T Deserialize<T>(byte[] buffer, int offset, int length)
@@ -114,6 +110,12 @@ namespace Couchbase
 
                 return defaultSerializer.Deserialize<T>(stream);
             }
+        }
+
+        /// <inheritdoc/>
+        public string GetMemberName(MemberInfo member)
+        {
+            return defaultSerializer.GetMemberName(member);
         }
 
         /// <inheritdoc/>
