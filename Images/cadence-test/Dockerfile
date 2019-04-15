@@ -28,8 +28,8 @@
 
 # Build cadence binaries
 ARG GO_VERSION
-ARG VERSION
 FROM golang:$GO_VERSION as builder
+ARG VERSION
 
 # get and compile cadence-server
 RUN go get -u github.com/golang/dep/cmd/dep \
@@ -86,9 +86,11 @@ EXPOSE 7933 7934 7935 7939 9042
 COPY ./entrypoint.sh $CADENCE_HOME/entrypoint.sh
 COPY ./config_template.yaml $CADENCE_HOME/config/docker_template_cassandra.yaml
 COPY ./cassandra.yaml /etc/cassandra/cassandra_template.yaml
+COPY ./cassandra_setup.sh $CADENCE_HOME/cassandra_setup.sh
 
 # Change permissions of start script
-RUN chmod a+x $CADENCE_HOME/entrypoint.sh
+RUN chmod a+x $CADENCE_HOME/entrypoint.sh \
+    && chmod a+x $CADENCE_HOME/cassandra_setup.sh
 
 # copy over necessary cadence files and schemas from the builder
 COPY --from=builder /go/src/github.com/uber/cadence/cadence-cassandra-tool /cadence
@@ -98,6 +100,9 @@ COPY --from=builder /go/src/github.com/uber/cadence/schema/ /cadence/schema/
 
 # change working dir to /cadence
 WORKDIR $CADENCE_HOME
+
+# Start cassandra and setup schema
+RUN /bin/bash cassandra_setup.sh $CADENCE_HOME
 
 # Docker entrypiont
 ENTRYPOINT ./entrypoint.sh $CADENCE_HOME
