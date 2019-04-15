@@ -71,7 +71,7 @@ namespace Neon.Data
             Covenant.Requires(resultType != null);
             Covenant.Requires(jObject != null);
 #if DEBUG
-            Covenant.Requires<ArgumentException>(resultType.Implements< IGeneratedType>());
+            Covenant.Requires<ArgumentException>(resultType.Implements<IGeneratedType>());
 #endif
             MethodInfo createMethod;
 

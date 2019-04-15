@@ -78,7 +78,7 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements< IGeneratedType>())
+            if (entityType.Implements<IGeneratedType>())
             {
                 var jObject = defaultSerializer.Deserialize<JObject>(buffer, offset, length);
 
@@ -100,9 +100,9 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements< IGeneratedType>())
+            if (entityType.Implements<IGeneratedType>())
             {
-                // Custom  IGeneratedType
+                // Custom IGeneratedType
 
                 var jObject = defaultSerializer.Deserialize<JObject>(stream);
 
@@ -121,11 +121,11 @@ namespace Couchbase
         {
             var entityType = obj.GetType();
 
-            var generatedDataModel = obj as  IGeneratedType;
+            var generatedDataModel = obj as IGeneratedType;
 
             if (generatedDataModel != null)
             {
-                // Custom  IGeneratedType
+                // Custom IGeneratedType
 
                 var jObject = generatedDataModel.__Save();
 
