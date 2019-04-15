@@ -161,6 +161,25 @@ namespace TestCodeGen
         }
 
         /// <summary>
+        /// Creates a data wrapper from UTF-8 encoded JSON.
+        /// </summary>
+        /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>
+        /// <param name="bytes">The JSON bytes.</param>
+        /// <returns>The new <see cref="DataWrapper"/>.</returns>
+        public DataWrapper CreateDataWrapperFrom<T>(byte[] bytes)
+        {
+            var sourceType = typeof(T);
+            var targetType = LoadedAssembly.GetType($"{DefaultNamespace}.{sourceType.Name}");
+
+            if (targetType == null)
+            {
+                throw new TypeLoadException($"Cannot find type: {DefaultNamespace}.{sourceType.Name}");
+            }
+
+            return new DataWrapper(targetType, bytes);
+        }
+
+        /// <summary>
         /// Creates a data wrapper from a <see cref="JObject"/>.
         /// </summary>
         /// <typeparam name="T">The source data type as defined in the within the unit test assembly.</typeparam>

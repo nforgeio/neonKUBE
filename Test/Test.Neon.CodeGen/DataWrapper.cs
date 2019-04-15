@@ -76,17 +76,52 @@ namespace TestCodeGen
         /// Constructs an instance initialized from JSON text.
         /// </summary>
         /// <param name="instanceType">The target type.</param>
-        /// <param name="jsonText">The JSON text.</param>
-        public DataWrapper(Type instanceType, string jsonText)
+        /// <param name="bytes">The JSON text.</param>
+        public DataWrapper(Type instanceType, string bytes)
         {
             Covenant.Requires<ArgumentNullException>(instanceType != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(jsonText));
+            Covenant.Requires<ArgumentNullException>(bytes != null);
 
             try
             {
                 var createFromMethod = instanceType.GetMethod("CreateFrom", new Type[] { typeof(string) });
 
-                this.instance     = createFromMethod.Invoke(null, new object[] { jsonText });
+                this.instance     = createFromMethod.Invoke(null, new object[] { bytes });
+                this.instanceType = instanceType;
+
+                if (this.instance == null)
+                {
+                    throw new TypeLoadException($"Cannot instantiate type: {instanceType.FullName}");
+                }
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Constructs an instance initialized from UTF-8 encoded JSON bytes.
+        /// </summary>
+        /// <param name="instanceType">The target type.</param>
+        /// <param name="bytes">The JSON bytes.</param>
+        public DataWrapper(Type instanceType, byte[] bytes)
+        {
+            Covenant.Requires<ArgumentNullException>(instanceType != null);
+            Covenant.Requires<ArgumentNullException>(bytes != null);
+
+            try
+            {
+                var createFromMethod = instanceType.GetMethod("CreateFrom", new Type[] { typeof(byte[]) });
+
+                this.instance     = createFromMethod.Invoke(null, new object[] { bytes });
                 this.instanceType = instanceType;
 
                 if (this.instance == null)
@@ -286,6 +321,31 @@ namespace TestCodeGen
 
                     return (string)method.Invoke(instance, null);
                 }
+            }
+            catch (TargetInvocationException e)
+            {
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serializes the data model as UTF-8 encoded JSON.
+        /// </summary>
+        /// <returns>The JSON bytes.</returns>
+        public byte[] ToBytes()
+        {
+            try
+            {
+                var method = instanceType.GetMethod("ToBytes", new Type[] { });
+
+                return (byte[])method.Invoke(instance, null);
             }
             catch (TargetInvocationException e)
             {
