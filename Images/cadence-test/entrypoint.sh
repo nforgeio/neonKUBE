@@ -39,10 +39,8 @@ RF=${RF:-1}
 CADENCE_HOME=$1
 SERVICES="history,matching,frontend,worker"
 
-# initialize the environment,
 # start cassandra,
 # wait for it to complete startup
-init_env
 start_cassandra
 wait_for_cassandra
 
