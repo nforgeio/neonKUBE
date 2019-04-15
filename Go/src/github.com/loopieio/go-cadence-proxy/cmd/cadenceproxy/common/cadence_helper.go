@@ -91,6 +91,7 @@ func (h *Helper) SetupServiceConfig() {
 		h.registerDomainRequest.Description = &description
 		h.registerDomainRequest.WorkflowExecutionRetentionPeriodInDays = &wrd
 	}
+
 	request := h.registerDomainRequest
 
 	// check if the registration returned any errors other than

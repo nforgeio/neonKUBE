@@ -20,7 +20,6 @@ GOPATH="${NF_ROOT_FSLASH}/Go"
 BUILDLOGSPATH="${NF_ROOT_FSLASH}/Build/go-logs"
 PROXYPATH="${GOPATH}${PROJECTPATH}" && cd ${PROXYPATH}
 
-
 # execute the makefile and log the output into a logs folder
 {
     rm -f "${BUILDLOGSPATH}/build-proxy.log"

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/uber-go/tally"
+
 	"github.com/google/uuid"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/client"
@@ -63,14 +65,7 @@ func (b *WorkflowClientBuilder) SetClientOptions(opts *client.Options) *Workflow
 
 	// set defaults for client options
 	if opts == nil {
-
-		// setup test scope
-		tags := map[string]string{
-			"dc":   "west-2",
-			"type": "dev",
-		}
-
-		b.clientOptions.MetricsScope = CreateTestScope(b.serviceName+":"+b.domain, tags)
+		b.clientOptions.MetricsScope = tally.NoopScope
 		b.clientOptions.Identity = fmt.Sprintf("%s__%s", b.serviceName, uuid.New().String())
 	}
 	b.clientOptions = opts
