@@ -384,6 +384,84 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void InitializeRequest()
+        {
+            InitializeRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new InitializeRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.LibraryAddress);
+                Assert.Equal(0, message.LibraryPort);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.LibraryAddress = "1.2.3.4";
+                Assert.Equal("1.2.3.4", message.LibraryAddress);
+                message.LibraryPort = 666;
+                Assert.Equal(666, message.LibraryPort);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("1.2.3.4", message.LibraryAddress);
+                Assert.Equal(666, message.LibraryPort);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void InitializeReply()
+        {
+            InitializeReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new InitializeReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<InitializeReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<InitializeReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void ConnectRequest()
         {
             ConnectRequest message;

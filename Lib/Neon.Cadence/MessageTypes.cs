@@ -43,15 +43,18 @@ namespace Neon.Cadence
         // Global messages
 
         /// <summary>
-        /// <b>library --> proxy:</b> Requests that the proxy establish a connection to a Cadence
-        /// cluster.  This maps to a <c>NewClient()</c> in the proxy.
+        /// <b>library --> proxy:</b> Informs the proxy of the network endpoint where the
+        /// library is listening for proxy messages.  The proxy should respond with an
+        /// <see cref="InitializeReply"/> when it's ready to begin receiving inbound
+        /// proxy messages.
         /// </summary>
-        ReadyRequest = 1,
+        InitializeRequest = 1,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="ConnectRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="InitializeRequest"/> message
+        /// to indicate that the proxy ready to begin receiving inbound proxy messages.
         /// </summary>
-        ReadyReply = 2,
+        InitializeReply = 2,
 
         /// <summary>
         /// library --> proxy: Requests that the proxy establish a connection to a Cadence
