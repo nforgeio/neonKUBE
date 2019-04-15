@@ -45,7 +45,7 @@ namespace Neon.Xunit
     /// rely on test fixtures by adding a C# file called <c>AssemblyInfo.cs</c> with:
     /// </para>
     /// <code language="csharp">
-    /// [assembly: CollectionBehavior(DisableTestParallelization = true)]
+    /// [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
     /// </code>
     /// </note>
     /// </remarks>

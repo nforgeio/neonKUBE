@@ -46,54 +46,65 @@ namespace Neon.Cadence
         /// library --> proxy: Requests that the proxy establish a connection to a Cadence
         /// cluster.  This maps to a <c>NewClient()</c> in the proxy.
         /// </summary>
-        ConnectRequest = 1,
+        ReadyRequest = 1,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="ConnectRequest"/> message.
         /// </summary>
-        ConnectReply = 2,
+        ReadyReply = 2,
+
+        /// <summary>
+        /// library --> proxy: Requests that the proxy establish a connection to a Cadence
+        /// cluster.  This maps to a <c>NewClient()</c> in the proxy.
+        /// </summary>
+        ConnectRequest = 3,
+
+        /// <summary>
+        /// proxy --> library: Sent in response to a <see cref="ConnectRequest"/> message.
+        /// </summary>
+        ConnectReply = 4,
 
         /// <summary>
         /// library --> proxy: Signals the proxy that it should terminate gracefully.  The
         /// proxy should send a <see cref="TerminateReply"/> back to the library and
         /// then exit, terminating the process.
         /// </summary>
-        TerminateRequest = 3,
+        TerminateRequest = 5,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="TerminateRequest"/> message.
         /// </summary>
-        TerminateReply = 4,
+        TerminateReply = 6,
 
         /// <summary>
         /// library --> proxy: Requests that the proxy register a Cadence domain.
         /// </summary>
-        DomainRegisterRequest = 5,
+        DomainRegisterRequest = 7,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="DomainRegisterRequest"/> message.
         /// </summary>
-        DomainRegisterReply = 6,
+        DomainRegisterReply = 8,
 
         /// <summary>
         /// library --> proxy: Requests that the proxy return the details for a Cadence domain.
         /// </summary>
-        DomainDescribeRequest = 7,
+        DomainDescribeRequest = 9,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="DomainDescribeRequest"/> message.
         /// </summary>
-        DomainDescribeReply = 8,
+        DomainDescribeReply = 10,
 
         /// <summary>
         /// library --> proxy: Requests that the proxy update a Cadence domain.
         /// </summary>
-        DomainUpdateRequest = 9,
+        DomainUpdateRequest = 11,
 
         /// <summary>
         /// proxy --> library: Sent in response to a <see cref="DomainUpdateRequest"/> message.
         /// </summary>
-        DomainUpdateReply = 10,
+        DomainUpdateReply = 12,
 
         //---------------------------------------------------------------------
         // Workflow messages
