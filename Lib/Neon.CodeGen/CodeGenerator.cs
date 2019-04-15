@@ -1315,6 +1315,24 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Deserializes an instance from a UTF-8 encoded byte array.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <param name=\"bytes\">The input byte array.</param>");
+                    writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+                    writer.WriteLine($"        public static {className} CreateFrom(byte[] bytes)");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            if (bytes == null)");
+                    writer.WriteLine($"            {{");
+                    writer.WriteLine($"                throw new ArgumentNullException(nameof(bytes));");
+                    writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            var model = CreateFrom(Encoding.UTF8.GetString(bytes));");
+                    writer.WriteLine();
+                    writer.WriteLine($"            model.__Load();");
+                    writer.WriteLine($"            return model;");
+                    writer.WriteLine($"        }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Asynchronously deserializes an instance from a <see cref=\"Stream\"/>.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"stream\">The input <see cref=\"Stream\"/>.</param>");
@@ -1576,7 +1594,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// or from the optional <see cref=\"JObject\"/> passed.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"source\">The optional source <see cref=\"JObject\"/>.</param>");
-                    writer.WriteLine($"        /// <param name=\"isDerived\">Optionally indicates that were deserializing a derived class..</param>");
+                    writer.WriteLine($"        /// <param name=\"isDerived\">Optionally indicates that were deserializing a derived class.</param>");
                     writer.WriteLine($"        public {virtualModifier} void __Load(JObject source = null, bool isDerived = false)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            JProperty property;");
@@ -1801,6 +1819,20 @@ namespace Neon.CodeGen
                         writer.WriteLine($"            return noClone ? __JObject : TypeSerializationHelper.DeepClone(__JObject);");
                         writer.WriteLine($"        }}");
                     }
+
+                    //---------------------------------------------------------
+                    // Generate the ToBytes() method.
+
+                    writer.WriteLine();
+                    writer.WriteLine($"        /// <summary>");
+                    writer.WriteLine($"        /// Renders the instance as UTF-8 encoded JSON.");
+                    writer.WriteLine($"        /// </summary>");
+                    writer.WriteLine($"        /// <returns>The serialized JSON bytes.</returns>");
+                    writer.WriteLine($"        public {virtualModifier} byte[] ToBytes()");
+                    writer.WriteLine($"        {{");
+                    writer.WriteLine($"            __Save();");
+                    writer.WriteLine($"            return Encoding.UTF8.GetBytes(TypeSerializationHelper.Serialize(__JObject, Formatting.None));");
+                    writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
                     // Generate handy helper methods.

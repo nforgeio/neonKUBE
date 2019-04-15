@@ -61,6 +61,12 @@ namespace Neon.Data
         JObject ToJObject(bool noClone = false);
 
         /// <summary>
+        /// Renders the instance as UTF-8 encoded JSON.
+        /// </summary>
+        /// <returns>The serialized JSON bytes.</returns>
+        byte[] ToBytes();
+
+        /// <summary>
         /// Loads the instance properties from the backing <see cref="JObject"/> or
         /// the optional <paramref name="source"/> parameter.
         /// </summary>

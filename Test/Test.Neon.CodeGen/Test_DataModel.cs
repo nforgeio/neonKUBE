@@ -381,6 +381,15 @@ namespace TestCodeGen.DataModel
                 Assert.False(value2.Equals(value1));
                 Assert.False(value1.Equals(null));
                 Assert.False(value1.Equals("Hello World!"));
+
+                //-------------------------------------------------------------
+                // Verify FromBytes() and ToBytes()
+
+                var newValue1 = context.CreateDataWrapperFrom<SimpleData>(value1.ToBytes());
+                var newValue2 = context.CreateDataWrapperFrom<SimpleData>(value2.ToBytes());
+
+                Assert.True(value1.Equals(newValue1));
+                Assert.True(value2.Equals(newValue2));
             }
         }
 
