@@ -33,7 +33,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class for all proxy requests.
     /// </summary>
-    [ProxyMessage(MessageType.Unspecified)]
+    [ProxyMessage(MessageTypes.Unspecified)]
     internal class ProxyReply : ProxyMessage
     {
         /// <summary>

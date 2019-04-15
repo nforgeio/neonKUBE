@@ -46,7 +46,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="type">Specifies the message type to be used when serializing the tagged message.</param>
-        public ProxyMessageAttribute(MessageType type)
+        public ProxyMessageAttribute(MessageTypes type)
         {
             this.Type = type;
         }
@@ -54,6 +54,6 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the associated message type code.
         /// </summary>
-        public MessageType Type { get; private set; }
+        public MessageTypes Type { get; private set; }
     }
 }

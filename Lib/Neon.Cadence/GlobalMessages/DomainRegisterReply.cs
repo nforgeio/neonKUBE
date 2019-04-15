@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityReply.cs
+// FILE:	    DomainRegisterReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,24 +31,15 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Base class for all activity replies.
+    /// <b>proxy --> library:</b> Answers a <see cref="DomainRegisterRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class ActivityReply : ProxyReply
+    [ProxyMessage(MessageTypes.DomainRegisterReply)]
+    internal class DomainRegisterReply : ProxyRequest
     {
-        /// <summary>
-        /// Uniquely identifies the activity context associated with this reply.
-        /// </summary>
-        public long ActivityContextId
-        {
-            get => GetLongProperty("ActivityContextId");
-            set => SetLongProperty("ActivityContextId", value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityReply();
+            var clone = new ConnectRequest();
 
             CopyTo(clone);
 
@@ -59,10 +50,6 @@ namespace Neon.Cadence
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (ActivityReply)target;
-
-            typedTarget.ActivityContextId = this.ActivityContextId;
         }
     }
 }

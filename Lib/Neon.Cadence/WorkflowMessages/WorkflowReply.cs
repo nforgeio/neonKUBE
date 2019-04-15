@@ -33,7 +33,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class for all workflow replies.
     /// </summary>
-    [ProxyMessage(MessageType.Unspecified)]
+    [ProxyMessage(MessageTypes.Unspecified)]
     internal class WorkflowReply : ProxyReply
     {
         /// <summary>

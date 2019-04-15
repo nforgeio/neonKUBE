@@ -47,7 +47,7 @@ namespace Neon.Cadence
     /// This class is designed to be a very simple and flexible way of communicating
     /// operations and status between the Cadence client and proxy.  The specific 
     /// message type is identified via the <see cref="Type"/> property (one of the 
-    /// <see cref="MessageType"/> values.  The <see cref="Properties"/> dictionary will be
+    /// <see cref="MessageTypes"/> values.  The <see cref="Properties"/> dictionary will be
     /// used to pass named values.  Binary attachments may be passed using the 
     /// <see cref="Attachments"/> property, a list of binary arrays.
     /// </para>
@@ -121,7 +121,7 @@ namespace Neon.Cadence
     /// include any content.
     /// </para>
     /// </remarks>
-    [ProxyMessage(MessageType.Unspecified)]
+    [ProxyMessage(MessageTypes.Unspecified)]
     internal class ProxyMessage
     {
         //---------------------------------------------------------------------
@@ -196,7 +196,7 @@ namespace Neon.Cadence
 
                 Type messageClass;
 
-                var messageType = (MessageType)reader.ReadInt32();
+                var messageType = (MessageTypes)reader.ReadInt32();
 
                 if (!ignoreTypeCode)
                 {
@@ -311,9 +311,9 @@ namespace Neon.Cadence
         // Instance members
 
         /// <summary>
-        /// Indicates the message type, one of the <see cref="MessageType"/> values.
+        /// Indicates the message type, one of the <see cref="MessageTypes"/> values.
         /// </summary>
-        public MessageType Type { get; set; }
+        public MessageTypes Type { get; set; }
 
         /// <summary>
         /// Returns a case insensitive dictionary that maps argument names to value strings.
@@ -332,7 +332,7 @@ namespace Neon.Cadence
         /// <returns>The serialized byte array.</returns>
         public byte[] Serialize(bool ignoreTypeCode = false)
         {
-            if (!ignoreTypeCode && Type == MessageType.Unspecified)
+            if (!ignoreTypeCode && Type == MessageTypes.Unspecified)
             {
                 throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
             }

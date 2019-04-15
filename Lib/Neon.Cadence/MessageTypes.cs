@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MessageType.cs
+// FILE:	    MessageTypes.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,19 +32,19 @@ namespace Neon.Cadence
     /// <summary>
     /// Enumerates the possible message types.
     /// </summary>
-    internal enum MessageType
+    internal enum MessageTypes
     {
         /// <summary>
         /// Indicates a message with an unspecified type.  This normally indicates an error.
         /// </summary>
         Unspecified = 0,
 
+        //---------------------------------------------------------------------
+        // Global messages
+
         /// <summary>
-        /// library --> proxy: Informs the proxy of the network endpoint it should transmit
-        /// messages to the library and also includes the settings required to establish
-        /// a connection with a Cadence cluster.  The proxy will establish the Cadence cluster
-        /// connection and send a <see cref="ConnectReply"/> message back to the libary
-        /// indicating success or failure.
+        /// library --> proxy: Requests that the proxy establish a connection to a Cadence
+        /// cluster.  This maps to a <c>NewClient()</c> in the proxy.
         /// </summary>
         ConnectRequest = 1,
 
@@ -61,9 +61,39 @@ namespace Neon.Cadence
         TerminateRequest = 3,
 
         /// <summary>
-        /// proxy --> library: Sent in response to a <see cref="ConnectRequest"/> message.
+        /// proxy --> library: Sent in response to a <see cref="TerminateRequest"/> message.
         /// </summary>
         TerminateReply = 4,
+
+        /// <summary>
+        /// library --> proxy: Requests that the proxy register a Cadence domain.
+        /// </summary>
+        DomainRegisterRequest = 5,
+
+        /// <summary>
+        /// proxy --> library: Sent in response to a <see cref="DomainRegisterRequest"/> message.
+        /// </summary>
+        DomainRegisterReply = 6,
+
+        /// <summary>
+        /// library --> proxy: Requests that the proxy return the details for a Cadence domain.
+        /// </summary>
+        DomainDescribeRequest = 7,
+
+        /// <summary>
+        /// proxy --> library: Sent in response to a <see cref="DomainDescribeRequest"/> message.
+        /// </summary>
+        DomainDescribeReply = 8,
+
+        /// <summary>
+        /// library --> proxy: Requests that the proxy update a Cadence domain.
+        /// </summary>
+        DomainUpdateRequest = 9,
+
+        /// <summary>
+        /// proxy --> library: Sent in response to a <see cref="DomainUpdateRequest"/> message.
+        /// </summary>
+        DomainUpdateReply = 10,
 
         //---------------------------------------------------------------------
         // Workflow messages

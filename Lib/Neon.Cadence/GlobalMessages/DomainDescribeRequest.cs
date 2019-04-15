@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityReply.cs
+// FILE:	    DomainDescribeRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,24 +31,35 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Base class for all activity replies.
+    /// <b>library --> proxy:</b> Requests the details for a named domain.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class ActivityReply : ProxyReply
+    [ProxyMessage(MessageTypes.DomainDescribeRequest)]
+    internal class DomainDescribeRequest : ProxyRequest
     {
         /// <summary>
-        /// Uniquely identifies the activity context associated with this reply.
+        /// The target Cadence domain name (one of <see cref="Name"/> or <see cref="Uuid"/>
+        /// must be specified.
         /// </summary>
-        public long ActivityContextId
+        public string Name
         {
-            get => GetLongProperty("ActivityContextId");
-            set => SetLongProperty("ActivityContextId", value);
+            get => GetStringProperty("Name");
+            set => SetStringProperty("Name", value);
+        }
+
+        /// <summary>
+        /// The target Cadence domain UUID (one of <see cref="Name"/> or <see cref="Uuid"/>
+        /// must be specified.
+        /// </summary>
+        public string Uuid
+        {
+            get => GetStringProperty("Uuid");
+            set => SetStringProperty("Uuid", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityReply();
+            var clone = new DomainDescribeRequest();
 
             CopyTo(clone);
 
@@ -60,9 +71,10 @@ namespace Neon.Cadence
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityReply)target;
+            var typedTarget = (DomainDescribeRequest)target;
 
-            typedTarget.ActivityContextId = this.ActivityContextId;
+            typedTarget.Name = this.Name;
+            typedTarget.Uuid = this.Uuid;
         }
     }
 }

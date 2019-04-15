@@ -31,7 +31,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace TestCryptography
+namespace TestCadence
 {
     public class Test_Messages
     {
@@ -54,7 +54,7 @@ namespace TestCryptography
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
-                Assert.Equal(MessageType.Unspecified, message.Type);
+                Assert.Equal(MessageTypes.Unspecified, message.Type);
                 Assert.Empty(message.Properties);
                 Assert.Empty(message.Attachments);
 
@@ -76,7 +76,7 @@ namespace TestCryptography
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
-                Assert.Equal(MessageType.Unspecified, message.Type);
+                Assert.Equal(MessageTypes.Unspecified, message.Type);
                 Assert.Equal(4, message.Properties.Count);
                 Assert.Equal("1", message.Properties["One"]);
                 Assert.Equal("2", message.Properties["Two"]);
@@ -379,6 +379,432 @@ namespace TestCryptography
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkflowContextId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void ConnectRequest()
+        {
+            ConnectRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new ConnectRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ConnectRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Endpoints);
+                Assert.Null(message.Domain);
+                Assert.Null(message.Identity);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Endpoints = "1.1.1.1:555,2.2.2.2:5555";
+                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                message.Domain = "my-domain";
+                Assert.Equal("my-domain", message.Domain);
+                message.Identity = "my-identity";
+                Assert.Equal("my-identity", message.Identity);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ConnectRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-identity", message.Identity);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void ConnectReply()
+        {
+            ConnectReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new ConnectReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ConnectReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ConnectReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void DomainDescribeRequest()
+        {
+            DomainDescribeRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new DomainDescribeRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Null(message.Uuid);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Name = "my-domain";
+                Assert.Equal("my-domain", message.Name);
+                message.Uuid = "my-uuid";
+                Assert.Equal("my-uuid", message.Uuid);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-uuid", message.Uuid);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void DomainDescribeReply()
+        {
+            DomainDescribeReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new DomainDescribeReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Null(message.Description);
+                Assert.Null(message.Status);
+                Assert.Null(message.OwnerEmail);
+                Assert.Null(message.Uuid);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Name = "my-name";
+                Assert.Equal("my-name", message.Name);
+                message.Description = "my-description";
+                Assert.Equal("my-description", message.Description);
+                message.Status = "DEPRECATED";
+                Assert.Equal("DEPRECATED", message.Status);
+                message.OwnerEmail = "joe@bloe.com";
+                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                message.Uuid = "my-uuid";
+                Assert.Equal("my-uuid", message.Uuid);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-description", message.Description);
+                Assert.Equal("DEPRECATED", message.Status);
+                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                Assert.Equal("my-uuid", message.Uuid);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void DomainRegisterRequest()
+        {
+            DomainRegisterRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new DomainRegisterRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Null(message.Description);
+                Assert.Null(message.OwnerEmail);
+                Assert.False(message.EmitMetrics);
+                Assert.Equal(0, message.RetentionDays);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Name = "my-domain";
+                Assert.Equal("my-domain", message.Name);
+                message.Description = "my-description";
+                Assert.Equal("my-description", message.Description);
+                message.OwnerEmail = "my-email";
+                Assert.Equal("my-email", message.OwnerEmail);
+                message.EmitMetrics = true;
+                Assert.True(message.EmitMetrics);
+                message.RetentionDays = 14;
+                Assert.Equal(14, message.RetentionDays);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-description", message.Description);
+                Assert.Equal("my-email", message.OwnerEmail);
+                Assert.True(message.EmitMetrics);
+                Assert.Equal(14, message.RetentionDays);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void DomainRegisterReply()
+        {
+            DomainRegisterReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new DomainRegisterReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void DomainUpdateRequest()
+        {
+            DomainUpdateRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new DomainUpdateRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Null(message.NewName);
+                Assert.Null(message.Description);
+                Assert.Null(message.OwnerEmail);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Name = "my-name";
+                Assert.Equal("my-name", message.Name);
+                message.NewName = "my-newname";
+                Assert.Equal("my-newname", message.NewName);
+                message.Description = "my-description";
+                Assert.Equal("my-description", message.Description);
+                message.OwnerEmail = "joe@bloe.com";
+                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-newname", message.NewName);
+                Assert.Equal("my-description", message.Description);
+                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void DomainUpdateReply()
+        {
+            DomainUpdateReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new DomainUpdateReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TerminateRequest()
+        {
+            TerminateRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new TerminateRequest();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<TerminateRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<TerminateRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TerminateReply()
+        {
+            TerminateReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                // Empty message.
+
+                message = new TerminateReply();
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
             }
         }
     }
