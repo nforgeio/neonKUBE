@@ -156,9 +156,9 @@ namespace Neon.Xunit.Cadence
         }
 
         /// <summary>
-        /// Returns the <see cref="CadenceClient"/> to be used to interact with Cadence.
+        /// Returns the <see cref="CadenceConnection"/> to be used to interact with Cadence.
         /// </summary>
-        public CadenceClient Client { get; private set; }
+        public CadenceConnection Connection { get; private set; }
 
         /// <summary>
         /// Returns the Cadence username.

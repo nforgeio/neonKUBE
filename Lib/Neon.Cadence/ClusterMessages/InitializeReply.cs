@@ -31,7 +31,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="TerminateRequest"/>.
+    /// <b>proxy --> library:</b> Answers a <see cref="InitializeRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.InitializeReply)]
     internal class InitializeReply : ProxyRequest

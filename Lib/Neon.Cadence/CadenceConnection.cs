@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceClient.cs
+// FILE:	    CadenceConnection.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -39,18 +39,18 @@ using Neon.Diagnostics;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements a client for Uber Cadence.
+    /// Implements a client to manage an Uber Cadence cluster.
     /// </summary>
-    public class CadenceClient : IDisposable
+    public class CadenceConnection : IDisposable
     {
         //---------------------------------------------------------------------
         // Private types
 
         private class Startup
         {
-            private CadenceClient client;
+            private CadenceConnection client;
 
-            public void Configure(IApplicationBuilder app, CadenceClient client)
+            public void Configure(IApplicationBuilder app, CadenceConnection client)
             {
                 this.client = client;
 
@@ -64,7 +64,7 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static INeonLogger log = LogManager.Default.GetLogger<CadenceClient>();
+        private static INeonLogger log = LogManager.Default.GetLogger<CadenceConnection>();
 
         //---------------------------------------------------------------------
         // Instance members
@@ -75,7 +75,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
-        CadenceClient(CadenceSettings settings)
+        CadenceConnection(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
@@ -93,7 +93,7 @@ namespace Neon.Cadence
                 .ConfigureServices(
                     services =>
                     {
-                        services.AddSingleton(typeof(CadenceClient), this);
+                        services.AddSingleton(typeof(CadenceConnection), this);
                     })
                 .UseStartup<Startup>()
                 .Build();
@@ -108,7 +108,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~CadenceClient()
+        ~CadenceConnection()
         {
             Dispose(false);
         }

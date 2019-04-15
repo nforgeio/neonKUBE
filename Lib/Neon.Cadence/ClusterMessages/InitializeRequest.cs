@@ -31,9 +31,8 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Signals the proxy that it should terminate gracefully.  The
-    /// proxy should send a <see cref="TerminateReply"/> back to the library and
-    /// then exit, terminating the process.
+    /// <b>library --> proxy:</b> Informs the proxy of the network endpoint
+    /// where the library is listening for proxy messages.
     /// </summary>
     [ProxyMessage(MessageTypes.InitializeRequest)]
     internal class InitializeRequest : ProxyRequest
