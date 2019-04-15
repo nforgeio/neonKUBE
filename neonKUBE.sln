@@ -278,6 +278,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github.com", "github.com", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "go.uber.org", "go.uber.org", "{E4F6AFFE-0C33-4B98-B94C-B07885444291}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Nats", "Lib\Neon.Nats\Neon.Nats.csproj", "{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Lib\Neon.Couchbase.Lite.shared\Neon.Couchbase.Lite.shared.projitems*{8d7fe880-9006-488f-bab3-3a82011cd699}*SharedItemsImports = 13
@@ -831,6 +833,18 @@ Global
 		{C2071335-AFDF-4643-93A2-EAC482E90E73}.Release|x64.Build.0 = Release|Any CPU
 		{C2071335-AFDF-4643-93A2-EAC482E90E73}.Release|x86.ActiveCfg = Release|Any CPU
 		{C2071335-AFDF-4643-93A2-EAC482E90E73}.Release|x86.Build.0 = Release|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Debug|x64.Build.0 = Debug|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Debug|x86.Build.0 = Debug|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Release|x64.ActiveCfg = Release|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Release|x64.Build.0 = Release|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Release|x86.ActiveCfg = Release|Any CPU
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -907,6 +921,7 @@ Global
 		{578F6958-24DE-4985-ADBA-4CC834FC3948} = {D626CA98-0336-4B7A-BD8A-5680F509F8CB}
 		{035F513E-B23C-437E-8203-EEEB3D5CE1E8} = {AAC5D4B1-BA2C-45FF-8922-74190A115A82}
 		{E4F6AFFE-0C33-4B98-B94C-B07885444291} = {AAC5D4B1-BA2C-45FF-8922-74190A115A82}
+		{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
