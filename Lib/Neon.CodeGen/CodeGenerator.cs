@@ -1157,7 +1157,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)},  IGeneratedType";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedType";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -1829,7 +1829,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {className},  IGeneratedType");
+                    writer.WriteLine($"           where T : {className}, IGeneratedType");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine($"            return GeneratedTypeFactory.CreateFrom<T>(noClone ? __JObject : TypeSerializationHelper.DeepClone(__JObject));");

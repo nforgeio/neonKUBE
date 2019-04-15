@@ -95,7 +95,7 @@ namespace Neon.Data
     /// </para>
     /// </remarks>
     public interface IPersistableType<T> : IPersistableType
-        where T : class,  IGeneratedType, new()
+        where T : class, IGeneratedType, new()
     {
     }
 }

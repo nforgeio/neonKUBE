@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SemanticVersionJsonConverter.cs
+// FILE:	    VersionJsonConverter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,24 +29,24 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace Neon.Common
+namespace Neon.Data
 {
     /// <summary>
-    /// Implements a type converter for <see cref="SemanticVersion"/>.
+    /// Implements a type converter for <see cref="Version"/>.
     /// </summary>
-    public class SemanticVersionJsonConverter : JsonConverter<SemanticVersion>, IEnhancedJsonConverter
+    public class VersionJsonConverter : JsonConverter<Version>, IEnhancedJsonConverter
     {
         /// <inheritdoc/>
-        public Type Type => typeof(SemanticVersion);
+        public Type Type => typeof(Version);
 
         /// <inheritdoc/>
-        public override SemanticVersion ReadJson(JsonReader reader, Type objectType, SemanticVersion existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override Version ReadJson(JsonReader reader, Type objectType, Version existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return SemanticVersion.Parse((string)reader.Value);
+            return Version.Parse((string)reader.Value);
         }
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, SemanticVersion value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Version value, JsonSerializer serializer)
         {
             writer.WriteValue(value.ToString());
         }

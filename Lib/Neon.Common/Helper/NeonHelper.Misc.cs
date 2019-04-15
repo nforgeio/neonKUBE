@@ -1741,7 +1741,7 @@ namespace Neon.Common
                     // Special case NotePad++ on Windows by adding the [-multiInst]
                     // option if it's not already present.
 
-                    if (!args.Contains("-multiInst"))
+                    if (executablePath.ToLowerInvariant().Contains("notepad++") && !args.Contains("-multiInst"))
                     {
                         args = "-multiInst " + args;
                     }
