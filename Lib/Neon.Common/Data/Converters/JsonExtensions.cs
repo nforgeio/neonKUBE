@@ -29,7 +29,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace Neon.Common
+namespace Neon.Data
 {
     /// <summary>
     /// Newtonsoft related extension methods.

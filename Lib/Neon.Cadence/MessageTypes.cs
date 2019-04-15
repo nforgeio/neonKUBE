@@ -98,7 +98,7 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Workflow messages
         //
-        // Note that all workflow client request messages will include [WorkflowClientId] argument
+        // Note that all workflow client request messages will include [WorkflowClientId] property
         // identifying the target workflow client.
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Domain messages
         //
-        // Note that all domain client request messages will include a [DomainClientId] argument
+        // Note that all domain client request messages will include a [DomainClientId] property
         // identifying the target domain client.
 
         /// <summary>

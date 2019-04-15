@@ -29,6 +29,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
+using Neon.Data;
+
 namespace Neon.Common
 {
     public static partial class NeonHelper
