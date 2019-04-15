@@ -29,6 +29,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
+using Neon.Data;
+
 namespace Neon.Common
 {
     public static partial class NeonHelper
@@ -55,7 +57,7 @@ namespace Neon.Common
 
                     settings.MissingMemberHandling = MissingMemberHandling.Ignore;
 
-                    // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
+                    // Serialize dates as UTC like: 2012-07-27T18:51:45.534Z
                     //
                     // The nice thing about this is that Couchbase and other NoSQL database will
                     // be able to do date range queries out-of-the-box.
@@ -87,7 +89,7 @@ namespace Neon.Common
 
                     settings.MissingMemberHandling = MissingMemberHandling.Error;
 
-                    // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
+                    // Serialize dates as UTC like: 2012-07-27T18:51:45.534Z
                     //
                     // The nice thing about this is that Couchbase and other NoSQL database will
                     // be able to do date range queries out-of-the-box.

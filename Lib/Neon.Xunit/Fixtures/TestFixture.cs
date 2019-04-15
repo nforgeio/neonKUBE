@@ -40,7 +40,7 @@ namespace Neon.Xunit
     /// You should explicitly disable parallel execution in all test assemblies that
     /// rely on test fixtures by adding a C# file with:
     /// <code language="csharp">
-    /// [assembly: CollectionBehavior(DisableTestParallelization = true)]
+    /// [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
     /// </code>
     /// </para>
     /// </note>

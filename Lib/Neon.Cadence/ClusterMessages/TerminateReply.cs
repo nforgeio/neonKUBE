@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VersionJsonConverter.cs
+// FILE:	    TerminateReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,38 +17,39 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
-namespace Neon.Common
+using Neon.Common;
+
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements a type converter for <see cref="Version"/>.
+    /// <b>proxy --> library:</b> Answers a <see cref="TerminateRequest"/>.
     /// </summary>
-    public class VersionJsonConverter : JsonConverter<Version>, IEnhancedJsonConverter
+    [ProxyMessage(MessageTypes.TerminateReply)]
+    internal class TerminateReply : ProxyRequest
     {
         /// <inheritdoc/>
-        public Type Type => typeof(Version);
-
-        /// <inheritdoc/>
-        public override Version ReadJson(JsonReader reader, Type objectType, Version existingValue, bool hasExistingValue, JsonSerializer serializer)
+        internal override ProxyMessage Clone()
         {
-            return Version.Parse((string)reader.Value);
+            var clone = new ConnectRequest();
+
+            CopyTo(clone);
+
+            return clone;
         }
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, Version value, JsonSerializer serializer)
+        protected override void CopyTo(ProxyMessage target)
         {
-            writer.WriteValue(value.ToString());
+            base.CopyTo(target);
         }
     }
 }

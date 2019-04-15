@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TimeSpanJsonConverter.cs
+// FILE:	    ConnectReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,45 +17,39 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
-namespace Neon.Common
+using Neon.Common;
+
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <para>
-    /// Implements a type converter for <see cref="TimeSpan"/> using the culture
-    /// invariant <b>"c"</b> format.  This serializes <see cref="TimeSpan"/> instances
-    /// as:
-    /// </para>
-    /// <code>
-    /// [-][d'.']hh':'mm':'ss['.'fffffff]
-    /// </code>
+    /// <b>proxy --> library:</b> Answers a <see cref="ConnectRequest"/>.
     /// </summary>
-    public class TimeSpanJsonConverter : JsonConverter<TimeSpan>, IEnhancedJsonConverter
+    [ProxyMessage(MessageTypes.ConnectReply)]
+    internal class ConnectReply : ProxyRequest
     {
         /// <inheritdoc/>
-        public Type Type => typeof(TimeSpan);
-
-        /// <inheritdoc/>
-        public override TimeSpan ReadJson(JsonReader reader, Type objectType, TimeSpan existingValue, bool hasExistingValue, JsonSerializer serializer)
+        internal override ProxyMessage Clone()
         {
-            return TimeSpan.ParseExact((string)reader.Value, "c", null);
+            var clone = new ConnectRequest();
+
+            CopyTo(clone);
+
+            return clone;
         }
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, TimeSpan value, JsonSerializer serializer)
+        protected override void CopyTo(ProxyMessage target)
         {
-            writer.WriteValue(value.ToString("c"));
+            base.CopyTo(target);
         }
     }
 }

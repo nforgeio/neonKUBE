@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SemanticVersionJsonConverter.cs
+// FILE:	    TimeSpanJsonConverter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,26 +29,33 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-namespace Neon.Common
+namespace Neon.Data
 {
     /// <summary>
-    /// Implements a type converter for <see cref="SemanticVersion"/>.
+    /// <para>
+    /// Implements a type converter for <see cref="TimeSpan"/> using the culture
+    /// invariant <b>"c"</b> format.  This serializes <see cref="TimeSpan"/> instances
+    /// as:
+    /// </para>
+    /// <code>
+    /// [-][d'.']hh':'mm':'ss['.'fffffff]
+    /// </code>
     /// </summary>
-    public class SemanticVersionJsonConverter : JsonConverter<SemanticVersion>, IEnhancedJsonConverter
+    public class TimeSpanJsonConverter : JsonConverter<TimeSpan>, IEnhancedJsonConverter
     {
         /// <inheritdoc/>
-        public Type Type => typeof(SemanticVersion);
+        public Type Type => typeof(TimeSpan);
 
         /// <inheritdoc/>
-        public override SemanticVersion ReadJson(JsonReader reader, Type objectType, SemanticVersion existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override TimeSpan ReadJson(JsonReader reader, Type objectType, TimeSpan existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return SemanticVersion.Parse((string)reader.Value);
+            return TimeSpan.ParseExact((string)reader.Value, "c", null);
         }
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, SemanticVersion value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, TimeSpan value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.ToString());
+            writer.WriteValue(value.ToString("c"));
         }
     }
 }

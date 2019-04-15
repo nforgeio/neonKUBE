@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceClient.cs
+// FILE:	    ActivityReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,49 +19,50 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
+
+using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements a client for Uber Cadence.
+    /// Base class for all activity replies.
     /// </summary>
-    public class CadenceClient : IDisposable
+    [ProxyMessage(MessageTypes.Unspecified)]
+    internal class ActivityReply : ProxyReply
     {
         /// <summary>
-        /// Constructor.
+        /// Uniquely identifies the activity context associated with this reply.
         /// </summary>
-        CadenceClient()
+        public long ActivityContextId
         {
-        }
-
-        /// <summary>
-        /// Finalizer.
-        /// </summary>
-        ~CadenceClient()
-        {
-            Dispose(false);
+            get => GetLongProperty("ActivityContextId");
+            set => SetLongProperty("ActivityContextId", value);
         }
 
         /// <inheritdoc/>
-        public void Dispose()
+        internal override ProxyMessage Clone()
         {
-            Dispose(false);
+            var clone = new ActivityReply();
+
+            CopyTo(clone);
+
+            return clone;
         }
 
-        /// <summary>
-        /// Releases all associated resources.
-        /// </summary>
-        /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
-        protected virtual void Dispose(bool disposing)
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
         {
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-            }
+            base.CopyTo(target);
+
+            var typedTarget = (ActivityReply)target;
+
+            typedTarget.ActivityContextId = this.ActivityContextId;
         }
     }
 }

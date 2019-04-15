@@ -1157,7 +1157,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)},  IGeneratedType";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedType";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -1829,7 +1829,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {className},  IGeneratedType");
+                    writer.WriteLine($"           where T : {className}, IGeneratedType");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine($"            return GeneratedTypeFactory.CreateFrom<T>(noClone ? __JObject : TypeSerializationHelper.DeepClone(__JObject));");
@@ -2151,9 +2151,9 @@ namespace Neon.CodeGen
 
             writer.WriteLine($"        }}");
             writer.WriteLine();
-            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Finalizer.");
-            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        ~{clientTypeName}()");
             writer.WriteLine($"        {{");
             writer.WriteLine($"             Dispose(false);");
@@ -2185,37 +2185,37 @@ namespace Neon.CodeGen
             writer.WriteLine($"            isDisposed = true;");
             writer.WriteLine($"        }}");
             writer.WriteLine();
-            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Returns the underlying <see cref=\"JsonClient\"/>.");
-            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public JsonClient JsonClient => client;");
             writer.WriteLine();
-            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient\"/>.");
-            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public HttpClient HttpClient => client.HttpClient;");
             writer.WriteLine();
-            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Accesses the underlying <see cref=\"HttpClient.Timeout\"/>.");
-            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public TimeSpan Timeout");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            get => client.Timeout;");
             writer.WriteLine($"            set => client.Timeout = value;");
             writer.WriteLine($"        }}");
             writer.WriteLine();
-            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Accesses the underlying <see cref=\"HttpClient.BaseAddress\"/>.");
-            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public Uri BaseAddress");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            get => client.BaseAddress;");
             writer.WriteLine($"            set => client.BaseAddress = value;");
             writer.WriteLine($"        }}");
             writer.WriteLine();
-            writer.WriteLine($"        /// <summary");
+            writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient.DefaultRequestHeaders\"/>.");
-            writer.WriteLine($"        /// </summary");
+            writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;");
 
             if (hasNonRootMethodGroups)
@@ -2225,9 +2225,9 @@ namespace Neon.CodeGen
                 foreach (var nonRootGroup in nonRootMethodGroups)
                 {
                     writer.WriteLine();
-                    writer.WriteLine($"        /// <summary");
+                    writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// <b>{nonRootGroup.Key}</b> related service methods.");
-                    writer.WriteLine($"        /// </summary");
+                    writer.WriteLine($"        /// </summary>x");
                     writer.WriteLine($"        public __{nonRootGroup.Key} {nonRootGroup.Key} {{ get; private set; }}");
                 }
             }

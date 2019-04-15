@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MessageType.cs
+// FILE:	    DomainRegisterReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -30,23 +31,25 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the possible message types.
+    /// <b>proxy --> library:</b> Answers a <see cref="DomainRegisterRequest"/>.
     /// </summary>
-    internal static class MessageType
+    [ProxyMessage(MessageTypes.DomainRegisterReply)]
+    internal class DomainRegisterReply : ProxyRequest
     {
-        /// <summary>
-        /// Indicates an unspecified operation.
-        /// </summary>
-        public const int Unknown = 0;
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new ConnectRequest();
 
-        /// <summary>
-        /// <b>client --> proxy:</b> Establishes a connection from the client to the proxy.
-        /// </summary>
-        public const int Connect = 1;
+            CopyTo(clone);
 
-        /// <summary>
-        /// <b>client --> proxy:</b> Closes the proxy connection.
-        /// </summary>
-        public const int Disconnect = 2;
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }
