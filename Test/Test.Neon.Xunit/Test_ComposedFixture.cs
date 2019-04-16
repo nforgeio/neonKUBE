@@ -28,7 +28,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace TestCommon
+namespace TestXunit
 {
     /// <summary>
     /// Verify that a test fixture composed of other fixtures works.
