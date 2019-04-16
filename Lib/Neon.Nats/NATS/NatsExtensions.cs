@@ -34,7 +34,7 @@ using Neon.Net;
 namespace NATS.Client
 {
     /// <summary>
-    /// Implements handy extension methods.
+    /// Implements handy NATS extension methods.
     /// </summary>
     public static class NatsExtensions
     {
