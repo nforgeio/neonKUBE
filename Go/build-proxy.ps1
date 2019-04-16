@@ -41,12 +41,16 @@ if (!(test-path $buildPath))
 cd $projectPath
 
 # build the windows binary
-go build -i -o $buildPath\gocadenceproxy-windows cmd\cadenceproxy\main.go
+go build -o -i -ldflags="-w -s" -v $buildPath\gocadenceproxy.exe cmd\cadenceproxy\main.go
 
 # build the linux binary
 $env:GOOS    = "linux"
 $env:GOARCH  = "amd64"
-go build -ldflags="-w -s" -o $buildPath\gocadenceproxy-linux cmd\cadenceproxy\main.go
+go build -o -i -ldflags="-w -s" -v $buildPath\gocadenceproxy cmd\cadenceproxy\main.go
+
+# build the OSX binary
+#$env:GOOS    = "darwin"
+#go build -o -i -ldflags="-w -s" -v $buildPath\gocadenceproxy cmd\cadenceproxy\main.go
 
 # set exit code
 $exitCode = $lastExitCode
