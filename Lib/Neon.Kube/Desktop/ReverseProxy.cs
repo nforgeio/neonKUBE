@@ -391,7 +391,7 @@ namespace Neon.Kube
 
                                     // Copy the headers, body, and other state from the received request to the remote request. 
 
-                                    var remoteRequest = new HttpRequestMessage(new HttpMethod(request.Method), request.Path);
+                                    var remoteRequest = new HttpRequestMessage(new HttpMethod(request.Method), $"{request.Path}{request.QueryString}");
 
                                     remoteRequest.Version = request.ProtocolVersion;
 
