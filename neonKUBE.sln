@@ -214,6 +214,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cadence", "Lib\N
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Go", "Go", "{F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}"
 	ProjectSection(SolutionItems) = preProject
+		Go\build-proxy.ps1 = Go\build-proxy.ps1
 		Go\build-proxy.sh = Go\build-proxy.sh
 	EndProjectSection
 EndProject
@@ -278,7 +279,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github.com", "github.com", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "go.uber.org", "go.uber.org", "{E4F6AFFE-0C33-4B98-B94C-B07885444291}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Nats", "Lib\Neon.Nats\Neon.Nats.csproj", "{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Nats", "Lib\Neon.Nats\Neon.Nats.csproj", "{3D3A8742-0EC5-4C95-92F5-84F95A0B7F1A}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
