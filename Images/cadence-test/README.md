@@ -12,7 +12,7 @@ This image combines Uber Cadence and its backing Cassendra database and is inten
 
 ## Notes
 
-**Host**: By default the host is set to the Docker Host (usually `172.xx.x.x`).  This configuration can be found in `entrypoint.sh`
+**Host**: By default the host is set to the Docker Host.  This configuration can be found in `setup.sh`
 
 **Exposed Ports**: 
 * Cadence Ports: `7933`,`7934`,`7935`,`7939`

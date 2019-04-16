@@ -89,7 +89,7 @@ EXPOSE 7933 7934 7935 7939 9042
 COPY ./entrypoint.sh $CADENCE_HOME/entrypoint.sh
 COPY ./config_template.yaml $CADENCE_HOME/config/docker_template_cassandra.yaml
 COPY ./cassandra.yaml /etc/cassandra/cassandra_template.yaml
-COPY ./cassandra_setup.sh $CADENCE_HOME/cassandra_setup.sh
+COPY ./setup.sh $CADENCE_HOME/setup.sh
 
 # copy over necessary cadence files and schemas from the builder
 COPY --from=builder /go/src/github.com/uber/cadence/cadence-cassandra-tool /cadence
@@ -103,8 +103,8 @@ WORKDIR $CADENCE_HOME
 # Change permissions of start scripts 
 # Start cassandra and setup schema
 RUN chmod a+x entrypoint.sh \
-    && chmod a+x cassandra_setup.sh \
-    && /bin/bash cassandra_setup.sh $CADENCE_HOME
+    && chmod a+x setup.sh \
+    && /bin/bash setup.sh $CADENCE_HOME
 
 # Docker entrypiont
 ENTRYPOINT ./entrypoint.sh $CADENCE_HOME
