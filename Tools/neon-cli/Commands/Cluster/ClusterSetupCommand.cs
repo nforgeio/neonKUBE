@@ -1395,7 +1395,6 @@ rm /tmp/calico.yaml
             // We're going to split the bash script into two parts and download
             // and edit the file in the middle.
 
-            //var istioConfigPath = cluster.Definition.Network.MutualPodTLS ? "install/kubernetes/istio-demo-auth.yaml" : "install/kubernetes/istio-demo.yaml";
             var istioScript1 =
 $@"#!/bin/bash
 
@@ -1428,13 +1427,12 @@ helm template install/kubernetes/helm/istio-cni --name=istio-cni --namespace=ist
 # Install Istio's CRDs:
 
 helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
-sleep 15
-";
 
-            var istioScript2 =
-$@"#!/bin/bash
+# Verify that all 53 Istio CRDs were committed to the Kubernetes api-server
 
-cd /tmp/istio
+until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""53"" ]; do
+    sleep 1
+done
 
 # Install Istio:
 
@@ -1442,8 +1440,6 @@ helm template install/kubernetes/helm/istio --name istio --namespace istio-syste
     --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml --set istio_cni.enabled=true | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
-
-            master.SudoCommand(CommandBundle.FromScript(istioScript2));
         }
 
         /// <summary>
