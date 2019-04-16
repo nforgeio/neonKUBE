@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainRegisterReply.cs
+// FILE:	    ConnectionMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -31,33 +30,20 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="DomainRegisterRequest"/>.
+    /// Enumerates the Cadence connection modes.
     /// </summary>
-    [ProxyMessage(MessageTypes.DomainRegisterReply)]
-    internal class DomainRegisterReply : ProxyRequest
+    public enum ConnectionMode
     {
         /// <summary>
-        /// Default constructor.
+        /// Connect to a Cadence cluster via the Cadence proxy.
         /// </summary>
-        public DomainRegisterReply()
-        {
-            Type = MessageTypes.DomainRegisterReply;
-        }
+        Normal = 0,
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new DomainRegisterReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-        }
+        /// <summary>
+        /// <b>INTERNAL USE:</b> Start the connection's proxy listener but don't
+        /// launch the proxy and attempt to connect to a Cadence cluster.  This
+        /// mode is used for unit testing.
+        /// </summary>
+        ListenOnly
     }
 }

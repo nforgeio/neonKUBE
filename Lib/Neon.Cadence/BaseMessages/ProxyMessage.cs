@@ -35,6 +35,9 @@ using Neon.Collections;
 //
 // Performance could be improved by maintaining output stream and buffer pools
 // rather than allocating these every time.
+//
+// We should also try to convert the serialize/deserialize methods to be async
+// and work on streams.
 
 namespace Neon.Cadence
 {
@@ -259,7 +262,7 @@ namespace Neon.Cadence
 
                 if (result == null)
                 {
-                    throw new InvalidCastException($"Serialized message with [typecode={(int)messageType}] cannot be deserialized as a [{nameof(TMessage)}].");
+                    throw new InvalidCastException($"Serialized message with [typecode={(int)messageType}] cannot be deserialized as a [{typeof(TMessage).FullName}].");
                 }
 
                 return result;
@@ -308,6 +311,14 @@ namespace Neon.Cadence
         }
 
         //---------------------------------------------------------------------
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ProxyMessage()
+        {
+        }
+
         // Instance members
 
         /// <summary>

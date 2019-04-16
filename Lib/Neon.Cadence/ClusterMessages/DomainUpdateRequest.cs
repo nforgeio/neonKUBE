@@ -37,6 +37,14 @@ namespace Neon.Cadence
     internal class DomainUpdateRequest : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public DomainUpdateRequest()
+        {
+            Type = MessageTypes.DomainUpdateRequest;
+        }
+
+        /// <summary>
         /// The target Cadence domain name.
         /// </summary>
         public string Name

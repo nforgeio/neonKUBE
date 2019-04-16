@@ -37,6 +37,13 @@ namespace Neon.Cadence
     internal class ProxyReply : ProxyMessage
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ProxyReply()
+        {
+        }
+
+        /// <summary>
         /// Uniquely identifies the request this reply answers.
         /// </summary>
         public long RequestId

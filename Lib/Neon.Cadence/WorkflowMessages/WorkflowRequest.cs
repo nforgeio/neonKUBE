@@ -37,6 +37,13 @@ namespace Neon.Cadence
     internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public WorkflowRequest()
+        {
+        }
+
+        /// <summary>
         /// Uniquely identifies the workflow context associated with this request.
         /// </summary>
         public long WorkflowContextId

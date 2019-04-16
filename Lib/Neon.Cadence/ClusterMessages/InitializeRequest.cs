@@ -38,6 +38,14 @@ namespace Neon.Cadence
     internal class InitializeRequest : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public InitializeRequest()
+        {
+            Type = MessageTypes.InitializeRequest;
+        }
+
+        /// <summary>
         /// The IP address where the Cadence Library is listening for proxy messages
         /// send by the Cadence Proxy.
         /// </summary>
@@ -60,7 +68,7 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ConnectRequest();
+            var clone = new InitializeRequest();
 
             CopyTo(clone);
 
@@ -71,6 +79,11 @@ namespace Neon.Cadence
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
+
+            var typedTarget = (InitializeRequest)target;
+
+            typedTarget.LibraryAddress = this.LibraryAddress;
+            typedTarget.LibraryPort    = this.LibraryPort;
         }
     }
 }

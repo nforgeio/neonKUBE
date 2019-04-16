@@ -36,6 +36,14 @@ namespace Neon.Cadence
     [ProxyMessage(MessageTypes.DomainUpdateReply)]
     internal class DomainUpdateReply : ProxyRequest
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public DomainUpdateReply()
+        {
+            Type = MessageTypes.DomainUpdateReply;
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {

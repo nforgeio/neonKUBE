@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -75,7 +76,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
-        CadenceConnection(CadenceSettings settings)
+        public CadenceConnection(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
@@ -94,15 +95,14 @@ namespace Neon.Cadence
                     services =>
                     {
                         services.AddSingleton(typeof(CadenceConnection), this);
+                        services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
                     })
                 .UseStartup<Startup>()
                 .Build();
 
             webHost.Start();
 
-            var listenUri = new Uri(webHost.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
-
-            ListenPort = listenUri.Port;
+            ListenUri = new Uri(webHost.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
         }
 
         /// <summary>
@@ -143,9 +143,9 @@ namespace Neon.Cadence
         public CadenceSettings Settings { get; private set; }
 
         /// <summary>
-        /// Returns the port the client is listening on for requests from the Cadence Proxy.
+        /// Returns the URI the client is listening on for requests from the Cadence Proxy.
         /// </summary>
-        public int ListenPort { get; private set; }
+        public Uri ListenUri { get; private set; }
 
         /// <summary>
         /// Called when an HTTP request is received by the integrated web server 

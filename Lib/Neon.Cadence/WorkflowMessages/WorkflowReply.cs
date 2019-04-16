@@ -37,6 +37,13 @@ namespace Neon.Cadence
     internal class WorkflowReply : ProxyReply
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public WorkflowReply()
+        {
+        }
+
+        /// <summary>
         /// Uniquely identifies the workflow context associated with this reply.
         /// </summary>
         public long WorkflowContextId

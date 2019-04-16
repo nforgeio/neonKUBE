@@ -37,6 +37,14 @@ namespace Neon.Cadence
     internal class DomainDescribeRequest : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public DomainDescribeRequest()
+        {
+            Type = MessageTypes.DomainDescribeRequest;
+        }
+
+        /// <summary>
         /// The target Cadence domain name (one of <see cref="Name"/> or <see cref="Uuid"/>
         /// must be specified.
         /// </summary>

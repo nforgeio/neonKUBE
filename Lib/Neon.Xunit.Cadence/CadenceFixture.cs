@@ -66,8 +66,6 @@ namespace Neon.Xunit.Cadence
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <param name="username">Optional Cadence username (defaults to <b>Administrator</b>).</param>
-        /// <param name="password">Optional Cadence password (defaults to <b>password</b>).</param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
@@ -82,42 +80,34 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings  = null,
-            string              image     = "nkubeio/cadence-test:latest",
-            string              name      = "cadence-test",
-            string[]            env       = null,
-            string              username  = "Administrator",
-            string              password  = "password")
+            CadenceSettings     settings = null,
+            string              image    = "nkubeio/cadence-test:latest",
+            string              name     = "cadence-test",
+            string[]            env      = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
             return base.Start(
                 () =>
                 {
-                    StartInAction(settings, image, name, env, username, password);
+                    StartInAction(settings, image, name, env);
                 });
         }
 
         /// <summary>
         /// Actually starts Cadence within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(CadenceSettings, string, string, string[], string, string)"/>
+        /// generally want to use <see cref="Start(CadenceSettings, string, string, string[])"/>
         /// but this method is used internally or for special situations.
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <param name="username">Optional Cadence username (defaults to <b>Administrator</b>).</param>
-        /// <param name="password">Optional Cadence password (defaults to <b>password</b>).</param>
-        /// <param name="noPrimary">Optionally disable creation of thea primary bucket index.</param>
         public void StartInAction(
-            CadenceSettings     settings  = null,
-            string              image     = "nkubeio/cadence-test:latest",
-            string              name      = "cadence-test",
-            string[]            env       = null,
-            string              username  = "Administrator",
-            string              password  = "password",
-            bool                noPrimary = false)
+            CadenceSettings     settings = null,
+            string              image    = "nkubeio/cadence-test:latest",
+            string              name     = "cadence-test",
+            string[]            env      = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -129,7 +119,6 @@ namespace Neon.Xunit.Cadence
                     new string[]
                     {
                         "--detach",
-                        "--mount", "type=volume,target=/opt/couchbase/var",
                         "-p", "4369:4369",
                         "-p", "8091-8096:8091-8096",
                         "-p", "9100-9105:9100-9105",
@@ -150,8 +139,12 @@ namespace Neon.Xunit.Cadence
                 settings.Servers.Clear();
                 settings.Servers.Add(new Uri("http://localhost:8091"));
 
-                Username = username;
-                Password = password;
+                Connection = new CadenceConnection(settings);
+
+                ConnectionClient = new HttpClient()
+                {
+                     BaseAddress = Connection.ListenUri
+                };
             }
         }
 
@@ -161,22 +154,48 @@ namespace Neon.Xunit.Cadence
         public CadenceConnection Connection { get; private set; }
 
         /// <summary>
-        /// Returns the Cadence username.
+        /// Returns a <see cref="HttpClient"/> suitable for submitting requests to the
+        /// <see cref="ConnectionClient"/> instance web server.
         /// </summary>
-        public string Username { get; private set; }
+        public HttpClient ConnectionClient { get; private set; }
 
         /// <summary>
-        /// Returns the Cadence password.
+        /// <para>
+        /// Returns a <see cref="HttpClient"/> suitable for submitting requests to the
+        /// associated Cadence Proxy process.
+        /// </para>
+        /// <note>
+        /// This will return <c>null</c> if the Cadence Proxy process was disabled by
+        /// the settings.
+        /// </note>
         /// </summary>
-        public string Password { get; private set; }
+        public HttpClient ProxyClient { get; private set; }
 
         /// <summary>
         /// This method completely resets the fixture by removing the Cadence 
         /// container from Docker.  Use <see cref="ContainerFixture.Restart"/> 
-        /// if you just want to clear the database.
+        /// if you just want to restart a fresh Cadence instance.
         /// </summary>
         public override void Reset()
         {
+            if (Connection != null)
+            {
+                Connection.Dispose();
+                Connection = null;
+            }
+
+            if (ConnectionClient != null)
+            {
+                Connection.Dispose();
+                Connection = null;
+            }
+
+            if (ProxyClient != null)
+            {
+                ProxyClient.Dispose();
+                ProxyClient = null;
+            }
+
             base.Reset();
         }
     }

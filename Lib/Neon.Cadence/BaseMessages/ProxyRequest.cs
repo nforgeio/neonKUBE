@@ -37,6 +37,13 @@ namespace Neon.Cadence
     internal class ProxyRequest : ProxyMessage
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ProxyRequest()
+        {
+        }
+
+        /// <summary>
         /// Uniquely identifies this request.
         /// </summary>
         public long RequestId
