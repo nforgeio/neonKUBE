@@ -91,6 +91,31 @@ namespace Neon.Data
         }
 
         /// <summary>
+        /// Constructs an instance of <typeparamref name="TResult"/> from a byte array.
+        /// </summary>
+        /// <typeparam name="TResult">The result type.</typeparam>
+        /// <param name="bytes">The source bytes.</param>
+        /// <returns>The new <typeparamref name="TResult"/> instance.</returns>
+        public static TResult CreateFrom<TResult>(byte[] bytes)
+        {
+            return (TResult)CreateFrom(typeof(TResult), bytes);
+        }
+
+        /// <summary>
+        /// Constructs an instance of <paramref name="resultType"/> from a byte array.
+        /// </summary>
+        /// <param name="resultType">The result type.</param>
+        /// <param name="bytes">The source bytes.</param>
+        /// <returns>The new instance as an <see cref="object"/>.</returns>
+        public static object CreateFrom(Type resultType, byte[] bytes)
+        {
+            Covenant.Requires(resultType != null);
+            Covenant.Requires(bytes != null);
+
+            return CreateFrom(resultType, JObject.Parse(Encoding.UTF8.GetString(bytes)));
+        }
+
+        /// <summary>
         /// Constructs an instance of <paramref name="resultType"/> from a <see cref="Stream"/>.
         /// </summary>
         /// <param name="resultType">The result type.</param>
