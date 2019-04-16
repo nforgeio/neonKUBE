@@ -38,7 +38,7 @@ namespace STAN.Client
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
     public class StanMsgHandlerArgs<TMessage> : EventArgs
-        where TMessage : class, IGeneratedType, new()
+        where TMessage : class, IRoundtripType, new()
     {
         /// <summary>
         /// Constructs an instance from a low-level message and subscription.

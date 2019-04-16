@@ -49,7 +49,7 @@ namespace Neon.Xunit.Couchbase
     /// fixture is started.
     /// </para>
     /// <note>
-    /// This fixture calls <see cref="TypeSerializationHelper.PersistableInitialize()"/> to ensure
+    /// This fixture calls <see cref="RoundtripDataHelper.PersistableInitialize()"/> to ensure
     /// that any type filters for generated <see cref="IPersistableType"/> classes are automatically
     /// registered with <b>Linq2Couchbase</b>.
     /// </note>
@@ -69,7 +69,7 @@ namespace Neon.Xunit.Couchbase
             // Ensure that any type filters for [IPersistableType] classes are
             // registered with Linq2Couchbase.
 
-            TypeSerializationHelper.PersistableInitialize();
+            RoundtripDataHelper.PersistableInitialize();
         }
 
         /// <summary>

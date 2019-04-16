@@ -39,7 +39,7 @@ namespace NATS.Client
     /// </summary>
     /// <typeparam name="TMessage">The request message type.</typeparam>
     public class Msg<TMessage>
-        where TMessage : class, IGeneratedType, new()
+        where TMessage : class, IRoundtripType, new()
     {
         private string          subject;
         private string          reply;
@@ -98,7 +98,7 @@ namespace NATS.Client
 
             this.subject = msg.Subject;
             this.reply   = msg.Reply;
-            this.data    = GeneratedTypeFactory.CreateFrom<TMessage>(msg.Data);
+            this.data    = RoundtripDataFactory .CreateFrom<TMessage>(msg.Data);
             this.sub     = msg.ArrivalSubcription;
             this.cached  = msg;
         }

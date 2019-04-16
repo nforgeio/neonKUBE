@@ -39,7 +39,7 @@ namespace NATS.Client
     /// </summary>
     /// <typeparam name="TMessage">The request message type.</typeparam>
     public class StanMsg<TMessage>
-        where TMessage : class, IGeneratedType, new()
+        where TMessage : class, IRoundtripType, new()
     {
         private MsgProto            proto;
         private IAsyncSubscription  sub;
@@ -107,7 +107,7 @@ namespace NATS.Client
                     return null;
                 }
 
-                return cached = GeneratedTypeFactory.CreateFrom<TMessage>(proto.Data.ToByteArray());
+                return cached = RoundtripDataFactory .CreateFrom<TMessage>(proto.Data.ToByteArray());
             }
         }
 

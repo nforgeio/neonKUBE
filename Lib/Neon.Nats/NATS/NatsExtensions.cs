@@ -42,7 +42,7 @@ namespace NATS.Client
         // IConnection extensions
 
         /// <summary>
-        /// Publishes an <see cref="IGeneratedType"/> instance to the given <paramref name="subject"/>.
+        /// Publishes an <see cref="IRoundtripType"/> instance to the given <paramref name="subject"/>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -61,7 +61,7 @@ namespace NATS.Client
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
         /// the current connection.</param>
         /// <param name="data">The data to to publish to the connected NATS server.</param>
-        public static void Publish(this IConnection connection, string subject, IGeneratedType data)
+        public static void Publish(this IConnection connection, string subject, IRoundtripType data)
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -69,7 +69,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Publishes an <see cref="IGeneratedType"/> instance to the given <paramref name="subject"/>.
+        /// Publishes an <see cref="IRoundtripType"/> instance to the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
@@ -77,7 +77,7 @@ namespace NATS.Client
         /// <param name="reply">An optional reply subject.</param>
         /// <param name="data">The data to to publish to the connected NATS server.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
-        public static void Publish(this IConnection connection, string subject, string reply, IGeneratedType data)
+        public static void Publish(this IConnection connection, string subject, string reply, IRoundtripType data)
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -104,13 +104,13 @@ namespace NATS.Client
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public static Msg<TResponse> Request<TRequest, TResponse>(this IConnection connection, string subject, TRequest data, int timeout)
-            where TRequest : class, IGeneratedType, new()
-            where TResponse : class, IGeneratedType, new()
+            where TRequest : class, IRoundtripType, new()
+            where TResponse : class, IRoundtripType, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
             var response = connection.Request(subject, data.ToBytes(), timeout);
-            var payload  = GeneratedTypeFactory.CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory .CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
@@ -142,13 +142,13 @@ namespace NATS.Client
         /// <param name="data">The data to to publish to the connected NATS server.</param>
         /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         public static Msg<TResponse> Request<TRequest, TResponse>(this IConnection connection, string subject, TRequest data)
-            where TRequest : class, IGeneratedType, new()
-            where TResponse : class, IGeneratedType, new()
+            where TRequest : class, IRoundtripType, new()
+            where TResponse : class, IRoundtripType, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
             var response = connection.Request(subject, data.ToBytes());
-            var payload  = GeneratedTypeFactory.CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory .CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
@@ -188,8 +188,8 @@ namespace NATS.Client
             int                 timeout = 0,
             CancellationToken   token = default)
 
-            where TRequest : class, IGeneratedType, new()
-            where TResponse : class, IGeneratedType, new()
+            where TRequest : class, IRoundtripType, new()
+            where TResponse : class, IRoundtripType, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -204,7 +204,7 @@ namespace NATS.Client
                 response = await connection.RequestAsync(subject, data.ToBytes(), timeout, token);
             }
 
-            var payload  = GeneratedTypeFactory.CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory .CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {

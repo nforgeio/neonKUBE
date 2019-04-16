@@ -53,11 +53,11 @@ namespace TestCommon
         //---------------------------------------------------------------------
         // Implementation
 
-        private ComposedFixture  fixture;
-        private ITestFixture    fixture0;
-        private ITestFixture    fixture1;
-        private bool            fixture0Initialized;
-        private bool            fixture1Initialized;
+        private ComposedFixture     fixture;
+        private ITestFixture        fixture0;
+        private ITestFixture        fixture1;
+        private bool                fixture0Initialized;
+        private bool                fixture1Initialized;
 
         public Test_ComposedFixture(ComposedFixture fixture)
         {

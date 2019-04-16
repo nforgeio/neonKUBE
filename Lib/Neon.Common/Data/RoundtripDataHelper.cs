@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TypeSerializationHelper.cs
+// FILE:	    RoundtripDataHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ namespace Neon.Data
     /// Serialization related helpers used by the code generated
     /// by the <b>Neon.CodeGen</b> library.
     /// </summary>
-    public static class TypeSerializationHelper
+    public static class RoundtripDataHelper
     {
         private static readonly JsonSerializerSettings  settings;
         private static bool                             persistablesInitialzed;
@@ -57,7 +57,7 @@ namespace Neon.Data
         /// </summary>
         public static JsonSerializer Serializer { get; private set; }
 
-        static TypeSerializationHelper()
+        static RoundtripDataHelper()
         {
             settings = new JsonSerializerSettings()
             {

@@ -74,7 +74,7 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements<IGeneratedType>())
+            if (entityType.Implements<IRoundtripType>())
             {
                 var jObject = defaultSerializer.Deserialize<JObject>(buffer, offset, length);
 
@@ -83,7 +83,7 @@ namespace Couchbase
                     return default(T);
                 }
 
-                return GeneratedTypeFactory.CreateFrom<T>(jObject);
+                return RoundtripDataFactory .CreateFrom<T>(jObject);
             }
             else
             {
@@ -96,13 +96,13 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements<IGeneratedType>())
+            if (entityType.Implements<IRoundtripType>())
             {
-                // Custom IGeneratedType
+                // Custom IRoundtripType
 
                 var jObject = defaultSerializer.Deserialize<JObject>(stream);
 
-                return (T)GeneratedTypeFactory.CreateFrom<T>(jObject);
+                return (T)RoundtripDataFactory .CreateFrom<T>(jObject);
             }
             else
             {
@@ -123,11 +123,11 @@ namespace Couchbase
         {
             var entityType = obj.GetType();
 
-            var generatedDataModel = obj as IGeneratedType;
+            var generatedDataModel = obj as IRoundtripType;
 
             if (generatedDataModel != null)
             {
-                // Custom IGeneratedType
+                // Custom IRoundtripType
 
                 var jObject = generatedDataModel.__Save();
 
