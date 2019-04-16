@@ -40,5 +40,19 @@ namespace STAN.Client
     public class StanMsgHandlerArgs<TMessage> : EventArgs
         where TMessage : class, IGeneratedType, new()
     {
+        /// <summary>
+        /// Constructs an instance from a low-level message and subscription.
+        /// </summary>
+        /// <param name="proto">The message including protocol information.</param>
+        /// <param name="subscription">The subscription.</param>
+        internal StanMsgHandlerArgs(MsgProto proto, AsyncSubscription subscription)
+        {
+            this.Msg = new StanMsg<TMessage>(proto, subscription);
+        }
+
+        /// <summary>
+        /// Returns the received message.
+        /// </summary>
+        public StanMsg<TMessage> Msg { get; private set; }
     }
 }
