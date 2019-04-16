@@ -195,7 +195,6 @@ namespace Neon.Xunit.Couchbase
                     new string[]
                     {
                         "--detach",
-                        "--mount", "type=volume,target=/opt/couchbase/var",
                         "-p", "4369:4369",
                         "-p", "8091-8096:8091-8096",
                         "-p", "9100-9105:9100-9105",

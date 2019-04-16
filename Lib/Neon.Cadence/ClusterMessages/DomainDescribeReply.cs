@@ -41,6 +41,14 @@ namespace Neon.Cadence
     internal class DomainDescribeReply : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public DomainDescribeReply()
+        {
+            Type = MessageTypes.DomainDescribeReply;
+        }
+
+        /// <summary>
         /// The domain name.
         /// </summary>
         public string Name
@@ -88,7 +96,7 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ConnectRequest();
+            var clone = new DomainDescribeReply();
 
             CopyTo(clone);
 

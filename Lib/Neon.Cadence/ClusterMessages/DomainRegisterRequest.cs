@@ -42,6 +42,14 @@ namespace Neon.Cadence
     internal class DomainRegisterRequest : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public DomainRegisterRequest()
+        {
+            Type = MessageTypes.DomainRegisterRequest;
+        }
+
+        /// <summary>
         /// Name for the new domain.
         /// </summary>
         public string Name
@@ -89,7 +97,7 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ConnectRequest();
+            var clone = new DomainRegisterRequest();
 
             CopyTo(clone);
 

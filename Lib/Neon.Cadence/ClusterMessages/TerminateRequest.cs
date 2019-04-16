@@ -38,10 +38,18 @@ namespace Neon.Cadence
     [ProxyMessage(MessageTypes.TerminateRequest)]
     internal class TerminateRequest : ProxyRequest
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public TerminateRequest()
+        {
+            Type = MessageTypes.TerminateRequest;
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ConnectRequest();
+            var clone = new TerminateRequest();
 
             CopyTo(clone);
 

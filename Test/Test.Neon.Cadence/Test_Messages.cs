@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,15 +28,33 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Data;
 using Neon.IO;
 using Neon.Xunit;
+using Neon.Xunit.Cadence;
 
 using Xunit;
 
 namespace TestCadence
 {
-    public class Test_Messages
+    public class Test_Messages : IClassFixture<CadenceFixture>
     {
+        CadenceFixture      fixture;
+        CadenceConnection   connection;
+
+        public Test_Messages(CadenceFixture fixture)
+        {
+            var settings = new CadenceSettings()
+            {
+                Mode = ConnectionMode.ListenOnly
+            };
+
+            fixture.Start(settings);
+
+            this.fixture    = fixture;
+            this.connection = fixture.Connection;
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void TestProxyMessage()
@@ -92,7 +112,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void PropertyHelpers()
+        public void TestPropertyHelpers()
         {
             // Verify that the property helper methods work as expected.
 
@@ -382,9 +402,38 @@ namespace TestCadence
             }
         }
 
+        /// <summary>
+        /// Transmits a message to the connection's web server and then verifies that
+        /// the response matches.
+        /// </summary>
+        /// <typeparam name="TMessage">The message type.</typeparam>
+        /// <param name="message">The message to be checked.</param>
+        /// <returns>The received echo message.</returns>
+        private TMessage EchoToConnection<TMessage>(TMessage message)
+            where TMessage : ProxyMessage, new()
+        {
+            var bytes   = message.Serialize();
+            var content = new ByteArrayContent(bytes);
+
+            content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
+
+            var request = new HttpRequestMessage(HttpMethod.Put, "/echo")
+            {
+                Content = content
+            };
+
+            var response = fixture.ConnectionClient.SendAsync(request).Result;
+
+            response.EnsureSuccessStatusCode();
+
+            bytes = response.Content.ReadAsByteArrayAsync().Result;
+
+            return ProxyMessage.Deserialize<TMessage>(response.Content.ReadAsStreamAsync().Result);
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void InitializeRequest()
+        public void TestInitializeRequest()
         {
             InitializeRequest message;
 
@@ -422,12 +471,20 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("1.2.3.4", message.LibraryAddress);
+                Assert.Equal(666, message.LibraryPort);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void InitializeReply()
+        public void TestInitializeReply()
         {
             InitializeReply message;
 
@@ -457,12 +514,18 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<InitializeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void ConnectRequest()
+        public void TestConnectRequest()
         {
             ConnectRequest message;
 
@@ -504,12 +567,21 @@ namespace TestCadence
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-identity", message.Identity);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-identity", message.Identity);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void ConnectReply()
+        public void TestConnectReply()
         {
             ConnectReply message;
 
@@ -539,12 +611,24 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ConnectReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void DomainDescribeRequest()
+        public void TestDomainDescribeRequest()
         {
             DomainDescribeRequest message;
 
@@ -582,12 +666,20 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
                 Assert.Equal("my-uuid", message.Uuid);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-uuid", message.Uuid);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void DomainDescribeReply()
+        public void TestDomainDescribeReply()
         {
             DomainDescribeReply message;
 
@@ -637,12 +729,23 @@ namespace TestCadence
                 Assert.Equal("DEPRECATED", message.Status);
                 Assert.Equal("joe@bloe.com", message.OwnerEmail);
                 Assert.Equal("my-uuid", message.Uuid);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-description", message.Description);
+                Assert.Equal("DEPRECATED", message.Status);
+                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                Assert.Equal("my-uuid", message.Uuid);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void DomainRegisterRequest()
+        public void TestDomainRegisterRequest()
         {
             DomainRegisterRequest message;
 
@@ -692,12 +795,23 @@ namespace TestCadence
                 Assert.Equal("my-email", message.OwnerEmail);
                 Assert.True(message.EmitMetrics);
                 Assert.Equal(14, message.RetentionDays);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-description", message.Description);
+                Assert.Equal("my-email", message.OwnerEmail);
+                Assert.True(message.EmitMetrics);
+                Assert.Equal(14, message.RetentionDays);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void DomainRegisterReply()
+        public void TestDomainRegisterReply()
         {
             DomainRegisterReply message;
 
@@ -727,12 +841,18 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainRegisterReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void DomainUpdateRequest()
+        public void TestDomainUpdateRequest()
         {
             DomainUpdateRequest message;
 
@@ -778,12 +898,22 @@ namespace TestCadence
                 Assert.Equal("my-newname", message.NewName);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("joe@bloe.com", message.OwnerEmail);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-newname", message.NewName);
+                Assert.Equal("my-description", message.Description);
+                Assert.Equal("joe@bloe.com", message.OwnerEmail);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void DomainUpdateReply()
+        public void TestDomainUpdateReply()
         {
             DomainUpdateReply message;
 
@@ -813,12 +943,18 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainUpdateReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TerminateRequest()
+        public void TestTerminateRequest()
         {
             TerminateRequest message;
 
@@ -848,12 +984,18 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<TerminateRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TerminateReply()
+        public void TestTerminateReply()
         {
             TerminateReply message;
 
@@ -883,7 +1025,10 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-            }
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);            }
         }
     }
 }

@@ -38,6 +38,14 @@ namespace Neon.Cadence
     internal class ConnectRequest : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ConnectRequest()
+        {
+            Type = MessageTypes.ConnectRequest;
+        }
+
+        /// <summary>
         /// <para>
         /// The Cadence server network endpoints separated by commas.
         /// These may include a DNS hostname or IP address with a

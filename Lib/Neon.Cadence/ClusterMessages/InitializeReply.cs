@@ -36,10 +36,18 @@ namespace Neon.Cadence
     [ProxyMessage(MessageTypes.InitializeReply)]
     internal class InitializeReply : ProxyRequest
     {
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public InitializeReply()
+        {
+            Type = MessageTypes.InitializeReply;
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ConnectRequest();
+            var clone = new InitializeReply();
 
             CopyTo(clone);
 

@@ -37,6 +37,13 @@ namespace Neon.Cadence
     internal class ActivityRequest : ProxyRequest
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ActivityRequest()
+        {
+        }
+
+        /// <summary>
         /// Uniquely identifies the activity context associated with this request.
         /// </summary>
         public long ActivityContextId

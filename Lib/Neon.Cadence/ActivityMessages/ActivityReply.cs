@@ -37,6 +37,13 @@ namespace Neon.Cadence
     internal class ActivityReply : ProxyReply
     {
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public ActivityReply()
+        {
+        }
+
+        /// <summary>
         /// Uniquely identifies the activity context associated with this reply.
         /// </summary>
         public long ActivityContextId

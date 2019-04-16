@@ -30,7 +30,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Cadence clienbt settings.
+    /// Cadence client settings.
     /// </summary>
     public class CadenceSettings
     {
@@ -40,6 +40,15 @@ namespace Neon.Cadence
         public CadenceSettings()
         {
         }
+
+        /// <summary>
+        /// Specifies rhe connection mode.  User applications should use
+        /// the default: <see cref="ConnectionMode.Normal"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "Mode", ApplyNamingConventions = false)]
+        [DefaultValue(ConnectionMode.Normal)]
+        public ConnectionMode Mode { get; set; } = ConnectionMode.Normal;
 
         /// <summary>
         /// One or more Couchbase server URIs.

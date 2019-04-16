@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -38,36 +39,43 @@ namespace Neon.Cadence
         /// <summary>
         /// Indicates that there was no error.
         /// </summary>
+        [EnumMember(Value = "none")]
         None = 0,
 
         /// <summary>
         /// An operation was cancelled.
         /// </summary>
+        [EnumMember(Value = "cancelled")]
         Cancelled,
 
         /// <summary>
         /// Custom error.
         /// </summary>
+        [EnumMember(Value = "custom")]
         Custom,
 
         /// <summary>
         /// Generic error.
         /// </summary>
+        [EnumMember(Value = "generic")]
         Generic,
 
         /// <summary>
         /// Panic error.
         /// </summary>
+        [EnumMember(Value = "panic")]
         Panic,
 
         /// <summary>
         /// Terminated error.
         /// </summary>
+        [EnumMember(Value = "terminated")]
         Terminated,
 
         /// <summary>
         /// Timeout error.
         /// </summary>
+        [EnumMember(Value = "timeout")]
         Timeout
     }
 }
