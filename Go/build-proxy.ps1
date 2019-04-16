@@ -18,26 +18,43 @@
 # This script builds the Cadence Proxy GOLANG executables and writes
 # them to $NF_BUILD.  No command line arguments are required.
 
-$buildPath   = "$env:NF_BUILD"
-$goPath      = "$env:NF_ROOT/Go"
-$projectPath = "$goPath/src/github.com/loopieio/go-cadence-proxy"
-$logPath     = "$buildPath/build-proxy.log"
+$env:GOPATH   = "$env:NF_ROOT\Go"
+$buildPath    = "$env:NF_BUILD"
+$projectPath  = "$env:GOPATH\src\github.com\loopieio\go-cadence-proxy"
+$logPath      = "$buildPath\build-proxy.log"
+$orgDirectory = Get-Location
+
 
 # Create the NF_BUILD folder if it doesn't already exist.
+
+# install dependencies using dep (via dep ensure)
+go get -u github.com/golang/dep/cmd/dep
+cd "$projectpath\cmd\cadenceproxy"
+& "$env:GOPATH\bin\dep.exe" ensure
 
 if (!(test-path $buildPath))
 {
     New-Item -ItemType Directory -Force -Path $buildPath
 }
 
-$orgDirectory = Get-Location
+# change to project path
+cd $projectPath
 
-cd "$projectPath"
-make -f Makefile >> "$logPath"
+# build the windows binary
+go build -i -o $buildPath\gocadenceproxy-windows cmd\cadenceproxy\main.go
+
+# build the linux binary
+$env:GOOS    = "linux"
+$env:GOARCH  = "amd64"
+go build -ldflags="-w -s" -o $buildPath\gocadenceproxy-linux cmd\cadenceproxy\main.go
+
+# set exit code
 $exitCode = $lastExitCode
 
+# cd back to the original directory
 Set-Location $orgDirectory
 
+# catch any build errors and exit with exit code
 if ($exitCode -ne 0)
 {
     Write-Error "*** ERROR: Cadence Proxy build failed.  Check build logs: $logPath"
