@@ -1,7 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonController.cs
+// FILE:	    MsgHandlerEventArgs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:   Copyright (c) 2015-2018 The NATS Authors (method comments)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,22 +21,37 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
+
+using NATS.Client;
+using STAN.Client;
 
 using Neon.Common;
+using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
 
-namespace Neon.Web
+namespace NATS.Client
 {
     /// <summary>
-    /// Implements handy extension methods.
+    /// Asynchronous message handler event arguments for typed messages.
     /// </summary>
-    public static class Extensions
+    /// <typeparam name="TMessage">The message type.</typeparam>
+    public class MsgHandlerEventArgs<TMessage>
+        where TMessage : class, IGeneratedType, new()
     {
-        //---------------------------------------------------------------------
-        // IStanConnection extensions
+        /// <summary>
+        /// Constructs an instance from a low-level message.
+        /// </summary>
+        /// <param name="msg">The low-level message.</param>
+        internal MsgHandlerEventArgs(Msg msg)
+        {
+            this.Msg = new Msg<TMessage>(msg);
+        }
 
-        //---------------------------------------------------------------------
-        // IConnection extensions
+        /// <summary>
+        /// Returns the received message.
+        /// </summary>
+        public Msg<TMessage> Msg { get; private set; }
     }
 }
