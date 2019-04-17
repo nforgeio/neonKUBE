@@ -142,7 +142,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection(name, name);
+                    Connection = factory.CreateConnection(name, name, StanOptions.GetDefaultOptions());
                     await Task.CompletedTask;
 
                 }).Wait();
