@@ -78,7 +78,7 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void StanExtensions_Subscribe()
+        public void Subscribe()
         {
             Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
 
@@ -88,6 +88,7 @@ namespace TestXunit
                 (sender, args) =>
                 {
                     received = args.Msg;
+                    received.Ack();
                 }))
             {
                 var jack = new Person()
@@ -99,6 +100,195 @@ namespace TestXunit
                 };
 
                 connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeOptions()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            var options = StanSubscriptionOptions.GetDefaultOptions();
+
+            using (var subscription = connection.Subscribe<Person>("subject", options,
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeQGroup()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            using (var subscription = connection.Subscribe<Person>("subject", "qgroup",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeQGroupOptions()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            var options = StanSubscriptionOptions.GetDefaultOptions();
+
+            using (var subscription = connection.Subscribe<Person>("subject", "qgroup", options,
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void Publish()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            using (var subscription = connection.Subscribe<Person>("subject",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void PublishHandler()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+            bool            ackReceived = false;
+
+            using (var subscription = connection.Subscribe<Person>("subject",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack,
+                    (sender, args) =>
+                    {
+                        ackReceived = true;
+                    });
+
+                NeonHelper.WaitFor(() => received != null && ackReceived, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public async Task PublishAsync()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            using (var subscription = connection.Subscribe<Person>("subject",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                await connection.PublishAsync("subject", jack);
 
                 NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
                 Assert.True(received.Data == jack);
