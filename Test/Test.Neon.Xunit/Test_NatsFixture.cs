@@ -77,7 +77,7 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void NatsExtensionsSync()
+        public void NatsExtensionsSync1()
         {
             Assert.Equal(ConnState.CONNECTED, client.State);
 

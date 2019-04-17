@@ -42,7 +42,7 @@ namespace NATS.Client
         // IConnection extensions
 
         /// <summary>
-        /// Publishes an <see cref="IRoundtripType"/> instance to the given <paramref name="subject"/>.
+        /// Publishes an <see cref="IRoundtripData"/> instance to the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
@@ -61,7 +61,7 @@ namespace NATS.Client
         /// additional reliability into your client(s) yourself.
         /// </para>
         /// </remarks>
-        public static void Publish(this IConnection connection, string subject, IRoundtripType data)
+        public static void Publish(this IConnection connection, string subject, IRoundtripData data)
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -69,7 +69,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Publishes an <see cref="IRoundtripType"/> instance to the given <paramref name="subject"/>.
+        /// Publishes an <see cref="IRoundtripData"/> instance to the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
@@ -77,7 +77,7 @@ namespace NATS.Client
         /// <param name="reply">An optional reply subject.</param>
         /// <param name="data">The data to to publish to the connected NATS server.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
-        public static void Publish(this IConnection connection, string subject, string reply, IRoundtripType data)
+        public static void Publish(this IConnection connection, string subject, string reply, IRoundtripData data)
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -104,8 +104,8 @@ namespace NATS.Client
         /// </remarks>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public static Msg<TResponse> Request<TRequest, TResponse>(this IConnection connection, string subject, TRequest data, int timeout)
-            where TRequest : class, IRoundtripType, new()
-            where TResponse : class, IRoundtripType, new()
+            where TRequest : class, IRoundtripData, new()
+            where TResponse : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -142,8 +142,8 @@ namespace NATS.Client
         /// </para>
         /// </remarks>
         public static Msg<TResponse> Request<TRequest, TResponse>(this IConnection connection, string subject, TRequest data)
-            where TRequest : class, IRoundtripType, new()
-            where TResponse : class, IRoundtripType, new()
+            where TRequest : class, IRoundtripData, new()
+            where TResponse : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -188,8 +188,8 @@ namespace NATS.Client
             int                 timeout = 0,
             CancellationToken   token = default)
 
-            where TRequest : class, IRoundtripType, new()
-            where TResponse : class, IRoundtripType, new()
+            where TRequest : class, IRoundtripData, new()
+            where TResponse : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -226,7 +226,7 @@ namespace NATS.Client
         /// </returns>
         /// <seealso cref="ISubscription.Subject"/>
         public static SyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return new SyncSubscription<TMessage>(connection.SubscribeSync(subject));
         }
@@ -247,7 +247,7 @@ namespace NATS.Client
         /// </returns>
         /// <seealso cref="ISubscription.Subject"/>
         public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject));
         }
@@ -276,7 +276,7 @@ namespace NATS.Client
         /// </remarks>
         /// <seealso cref="ISubscription.Subject"/>
         public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             var subscription = new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject));
 
@@ -311,7 +311,7 @@ namespace NATS.Client
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         public static SyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject, string queue)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return new SyncSubscription<TMessage>(connection.SubscribeSync(subject));
         }
@@ -342,7 +342,7 @@ namespace NATS.Client
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject, queue));
         }
@@ -379,7 +379,7 @@ namespace NATS.Client
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
         public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             var subscription = new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject, queue));
 

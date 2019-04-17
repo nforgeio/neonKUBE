@@ -74,7 +74,7 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements<IRoundtripType>())
+            if (entityType.Implements<IRoundtripData>())
             {
                 var jObject = defaultSerializer.Deserialize<JObject>(buffer, offset, length);
 
@@ -96,9 +96,9 @@ namespace Couchbase
         {
             var entityType = typeof(T);
 
-            if (entityType.Implements<IRoundtripType>())
+            if (entityType.Implements<IRoundtripData>())
             {
-                // Custom IRoundtripType
+                // Custom IRoundtripData
 
                 var jObject = defaultSerializer.Deserialize<JObject>(stream);
 
@@ -123,11 +123,11 @@ namespace Couchbase
         {
             var entityType = obj.GetType();
 
-            var generatedDataModel = obj as IRoundtripType;
+            var generatedDataModel = obj as IRoundtripData;
 
             if (generatedDataModel != null)
             {
-                // Custom IRoundtripType
+                // Custom IRoundtripData
 
                 var jObject = generatedDataModel.__Save();
 

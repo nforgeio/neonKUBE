@@ -39,7 +39,7 @@ namespace NATS.Client
     /// </summary>
     /// <typeparam name="TMessage">The request message type.</typeparam>
     public class StanMsg<TMessage>
-        where TMessage : class, IRoundtripType, new()
+        where TMessage : class, IRoundtripData, new()
     {
         private MsgProto            proto;
         private IAsyncSubscription  sub;

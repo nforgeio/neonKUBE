@@ -87,7 +87,7 @@ namespace STAN.Client
         /// <param name="message">The base message.</param>
         /// <returns>The new <see cref="StanMsg{TMessage}"/></returns>
         private static StanMsgHandlerArgs<TMessage> ToHandler<TMessage>(this StanMsg message)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return new StanMsgHandlerArgs<TMessage>(message.GetProto(), message.GetSubscription());
         }
@@ -107,7 +107,7 @@ namespace STAN.Client
         /// <param name="data">Message payload.</param>
         /// <exception cref="StanException">When an error occurs locally or on the NATS streaming server.</exception>
         public static void Publish<TMessage>(this IStanConnection connection, string subject, TMessage data)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -129,7 +129,7 @@ namespace STAN.Client
         /// <returns>The GUID of the published message.</returns>
         /// <exception cref="StanException">Thrown when an error occurs publishing the message.</exception>
         public static string Publish<TMessage>(this IStanConnection connection, string subject, TMessage data, EventHandler<StanAckHandlerArgs> handler)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -149,7 +149,7 @@ namespace STAN.Client
         /// <param name="data"></param>
         /// <returns>The task object representing the asynchronous operation, containing the guid.</returns>
         public static async Task<string> PublishAsync<TMessage>(this IStanConnection connection, string subject, TMessage data)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -168,7 +168,7 @@ namespace STAN.Client
         /// <returns>A new Subscription</returns>
         /// <exception cref="StanException">An error occured creating the subscriber.</exception>
 	    public static IStanSubscription Subscribe<TMessage>(this IStanConnection connection, string subject, EventHandler<StanMsgHandlerArgs<TMessage>> handler)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return connection.Subscribe(subject,
                 (sender, args) =>
@@ -190,7 +190,7 @@ namespace STAN.Client
         /// <returns>A new subscription.</returns>
         /// <exception cref="StanException">An error occured creating the subscriber.</exception>
         public static IStanSubscription Subscribe<TMessage>(this IStanConnection connection, string subject, StanSubscriptionOptions options, EventHandler<StanMsgHandlerArgs<TMessage>> handler)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return connection.Subscribe(subject, options,
                 (sender, args) =>
@@ -212,7 +212,7 @@ namespace STAN.Client
         /// <param name="handler">A message handler to process messages.</param>
         /// <returns>A new subscription.</returns>
         public static IStanSubscription Subscribe<TMessage>(this IStanConnection connection, string subject, string qgroup, EventHandler<StanMsgHandlerArgs<TMessage>> handler)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return connection.Subscribe(subject, qgroup,
                 (sender, args) =>
@@ -234,7 +234,7 @@ namespace STAN.Client
         /// <param name="handler">A message handler to process messages.</param>
         /// <returns>A new subscription.</returns>
         public static IStanSubscription Subscribe<TMessage>(this IStanConnection connection, string subject, string qgroup, StanSubscriptionOptions options, EventHandler<StanMsgHandlerArgs<TMessage>> handler)
-            where TMessage : class, IRoundtripType, new()
+            where TMessage : class, IRoundtripData, new()
         {
             return connection.Subscribe(subject, qgroup, options,
                 (sender, args) =>

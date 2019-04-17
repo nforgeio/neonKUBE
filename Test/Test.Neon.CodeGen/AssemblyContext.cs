@@ -71,7 +71,7 @@ namespace TestCodeGen
 
             // We need the [Neon.Common] assembly.
 
-            base.LoadFromAssemblyPath(typeof( IRoundtripType).Assembly.Location);
+            base.LoadFromAssemblyPath(typeof( IRoundtripData).Assembly.Location);
 
             // Load the assembly passed.
 

@@ -38,7 +38,7 @@ namespace NATS.Client
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
     public sealed class AsyncSubscription<TMessage> : IAsyncSubscription
-        where TMessage : class, IRoundtripType, new()
+        where TMessage : class, IRoundtripData, new()
     {
         private IAsyncSubscription subscription;
 

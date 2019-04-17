@@ -107,7 +107,7 @@ namespace Neon.CodeGen
 
             // Add the [Neon.Common] assembly.
 
-            references.Add(typeof(IRoundtripType));
+            references.Add(typeof(IRoundtripData));
 
             // NOTE: 
             // 
@@ -1147,7 +1147,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = " : IRoundtripType";
+                var baseTypeRef = " : IRoundtripData";
 
                 if (dataModel.IsDerived)
                 {
@@ -1157,7 +1157,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IRoundtripType";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IRoundtripData";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -1381,7 +1381,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
                     writer.WriteLine($"        /// the same type as the current class.");
                     writer.WriteLine($"        /// </returns>");
-                    writer.WriteLine($"        public static bool SameTypeAs(IRoundtripType instance)");
+                    writer.WriteLine($"        public static bool SameTypeAs(IRoundtripData instance)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (instance == null)");
                     writer.WriteLine($"            {{");
@@ -1861,7 +1861,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {className}, IRoundtripType");
+                    writer.WriteLine($"           where T : {className}, IRoundtripData");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine($"            return RoundtripDataFactory.CreateFrom<T>(noClone ? __JObject : RoundtripDataHelper.DeepClone(__JObject));");
