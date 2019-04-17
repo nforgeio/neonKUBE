@@ -111,7 +111,17 @@ namespace Neon.Xunit
         /// or not.
         /// </param>
         /// <param name="name">Optionally specifies the container name (defaults to <c>nats-streaming-test</c>).</param>
-        /// <param name="args">Optional NATS-STREAMING server command line arguments.</param>
+        /// <param name="args">
+        /// <para>
+        /// Optional NATS-STREAMING server command line arguments.
+        /// </para>
+        /// <note>
+        /// Reasonable defaults are used when <paramref name="args"/> is passed 
+        /// as <c>null</c>.  These connect the NATS streaming server to the NATS
+        /// core server running within the container and also configure the
+        /// default MEMORY persisted store.
+        /// </note>
+        /// </param>
         public void StartInAction(
             string   image = null,
             string   name  = "nats-streaming-test",
@@ -131,9 +141,19 @@ namespace Neon.Xunit
                     "-p", "8222-8222",
                 };
 
+            var containerArgs = new List<string>();
+
+            if (args != null)
+            {
+                foreach (var arg in args)
+                {
+                    containerArgs.Add(arg);
+                }
+            }
+
             if (!IsRunning)
             {
-                RunContainer(name, image, dockerArgs, args);
+                RunContainer(name, image, dockerArgs, containerArgs);
             }
 
             var factory = new StanConnectionFactory();
@@ -142,7 +162,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection(name, name, StanOptions.GetDefaultOptions());
+                    Connection = factory.CreateConnection(name, name);
                     await Task.CompletedTask;
 
                 }).Wait();
