@@ -46,6 +46,8 @@ using STAN.Client;
 
 using Xunit;
 
+using Test.Neon.Models;
+
 namespace TestXunit
 {
     public class Test_NatsFixture : IClassFixture<NatsFixture>
@@ -55,7 +57,7 @@ namespace TestXunit
 
         public Test_NatsFixture(NatsFixture fixture)
         {
-            if (fixture.Start(image: "nkubedev/nats") == TestFixtureStatus.AlreadyRunning)
+            if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();
             }
@@ -78,6 +80,8 @@ namespace TestXunit
         public void NatsExtensionsSync()
         {
             Assert.Equal(ConnState.CONNECTED, client.State);
+
+
         }
     }
 }

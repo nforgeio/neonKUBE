@@ -107,7 +107,7 @@ namespace Neon.CodeGen
 
             // Add the [Neon.Common] assembly.
 
-            references.Add(typeof( IRoundtripType));
+            references.Add(typeof(IRoundtripType));
 
             // NOTE: 
             // 
@@ -1147,7 +1147,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = " :  IRoundtripType";
+                var baseTypeRef = " : IRoundtripType";
 
                 if (dataModel.IsDerived)
                 {
@@ -1381,7 +1381,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
                     writer.WriteLine($"        /// the same type as the current class.");
                     writer.WriteLine($"        /// </returns>");
-                    writer.WriteLine($"        public static bool SameTypeAs( IRoundtripType instance)");
+                    writer.WriteLine($"        public static bool SameTypeAs(IRoundtripType instance)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (instance == null)");
                     writer.WriteLine($"            {{");
