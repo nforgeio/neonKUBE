@@ -44,10 +44,18 @@ namespace STAN.Client
         /// Constructs an instance from a low-level message and subscription.
         /// </summary>
         /// <param name="proto">The message including protocol information.</param>
-        /// <param name="subscription">The subscription.</param>
-        internal StanMsgHandlerArgs(MsgProto proto, AsyncSubscription subscription)
+        /// <param name="subscription">
+        /// <para>
+        /// The subscription.
+        /// </para>
+        /// <note>
+        /// This needs to be passed as an <see cref="object"/> because 
+        /// <c>STAN.Client.AsyncSubscription</c> is defined as <c>internal</c>.
+        /// </note>
+        /// </param>
+        internal StanMsgHandlerArgs(MsgProto proto, object subscription)
         {
-            this.Msg = new StanMsg<TMessage>(proto, subscription);
+            this.Msg = new StanMsg<TMessage>(proto, (IStanSubscription)subscription);
         }
 
         /// <summary>

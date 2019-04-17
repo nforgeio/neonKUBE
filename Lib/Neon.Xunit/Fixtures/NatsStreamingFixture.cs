@@ -138,7 +138,7 @@ namespace Neon.Xunit
                 {
                     "--detach",
                     "-p", "4222:4222",
-                    "-p", "8222-8222",
+                    "-p", "8222:8222",
                 };
 
             var containerArgs = new List<string>();
@@ -156,13 +156,21 @@ namespace Neon.Xunit
                 RunContainer(name, image, dockerArgs, containerArgs);
             }
 
+            Connect();
+        }
+
+        /// <summary>
+        /// Establishes the server connection.
+        /// </summary>
+        private void Connect()
+        {
             var factory = new StanConnectionFactory();
             var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
 
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection(name, name);
+                    Connection = factory.CreateConnection("test-cluster", nameof(NatsStreamingFixture));
                     await Task.CompletedTask;
 
                 }).Wait();
@@ -182,16 +190,7 @@ namespace Neon.Xunit
                 Connection = null;
             }
 
-            var factory = new StanConnectionFactory();
-            var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
-
-            retry.InvokeAsync(
-                async () =>
-                {
-                    Connection = factory.CreateConnection(containerName, containerName);
-                    await Task.CompletedTask;
-
-                }).Wait();
+            Connect();
 
             return Connection;
         }

@@ -221,7 +221,7 @@ namespace Neon.Xunit
                 dockerArgs.Add("--rm");
             }
 
-            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, containerArgs);
+            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, null);
             result     = NeonHelper.ExecuteCapture($"docker", argsString);
 
             if (result.ExitCode != 0)

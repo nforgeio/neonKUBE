@@ -41,16 +41,16 @@ namespace NATS.Client
     public class StanMsg<TMessage>
         where TMessage : class, IRoundtripData, new()
     {
-        private MsgProto            proto;
-        private IAsyncSubscription  sub;
-        private TMessage            cached;
+        private MsgProto    proto;
+        private object      sub;
+        private TMessage    cached;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="proto">The message including protocol information.</param>
         /// <param name="subscription">The subscription.</param>
-        internal StanMsg(MsgProto proto, AsyncSubscription subscription)
+        internal StanMsg(MsgProto proto, object subscription)
         {
             Covenant.Requires<ArgumentNullException>(proto != null);
 

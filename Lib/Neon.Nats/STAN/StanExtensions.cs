@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,8 +43,8 @@ namespace STAN.Client
         //---------------------------------------------------------------------
         // Initialization
 
-        private static FieldInfo stanMsgProtoField;
-        private static FieldInfo stanMsgSubscriptionField;
+        private static FieldInfo        stanMsgProtoField;
+        private static FieldInfo        stanMsgSubscriptionField;
 
         /// <summary>
         /// Private constructor.
@@ -74,9 +75,15 @@ namespace STAN.Client
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns>The <see cref="AsyncSubscription "/>.</returns>
-        internal static AsyncSubscription GetSubscription(this StanMsg message)
+        /// <remarks>
+        /// <note>
+        /// We need to return the <c>STAN.Client.AsyncScription</c> as the <see cref="object"/>
+        /// type because it it defined as internal (grrrr....).
+        /// </note>
+        /// </remarks>
+        internal static object GetSubscription(this StanMsg message)
         {
-            return (AsyncSubscription)stanMsgSubscriptionField.GetValue(message);
+            return stanMsgSubscriptionField.GetValue(message);
         }
 
         /// <summary>

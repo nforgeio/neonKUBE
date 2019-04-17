@@ -66,7 +66,7 @@ namespace STAN.Client
         /// using the <c>internal</c> constructor.
         /// </summary>
         /// <returns>A new <see cref="StanBadSubscriptionException"/>.</returns>
-        public static StanBadSubscriptionException NewStanBadSubscriptionException()
+        internal static StanBadSubscriptionException NewStanBadSubscriptionException()
         {
             return (StanBadSubscriptionException)stanBadSubscriptionExceptionConstructor.Invoke(null);
         }
@@ -76,7 +76,7 @@ namespace STAN.Client
         /// </summary>
         /// <param name="proto">The message including protocol information.</param>
         /// <param name="sub">The subscription.</param>
-        public static StanMsg NewStanMsg(MsgProto proto, IAsyncSubscription sub)
+        internal static StanMsg NewStanMsg(MsgProto proto, object sub)
         {
             return (StanMsg)stanMsgConstructor.Invoke(new object[] { proto, sub });
         }
@@ -86,7 +86,7 @@ namespace STAN.Client
         /// </summary>
         /// <param name="subscription">The subscription.</param>
         /// <param name="msg">The message being acknowledged.</param>
-        public static void ManualAck(this IAsyncSubscription subscription, StanMsg msg)
+        internal static void ManualAck(this object subscription, StanMsg msg)
         {
             subscriptionManualAckMethod.Invoke(subscription, new object[] { msg });
         }

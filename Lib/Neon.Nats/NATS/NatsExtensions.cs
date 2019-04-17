@@ -110,7 +110,7 @@ namespace NATS.Client
             Covenant.Requires<ArgumentNullException>(data != null);
 
             var response = connection.Request(subject, data.ToBytes(), timeout);
-            var payload  = RoundtripDataFactory .CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
@@ -148,7 +148,7 @@ namespace NATS.Client
             Covenant.Requires<ArgumentNullException>(data != null);
 
             var response = connection.Request(subject, data.ToBytes());
-            var payload  = RoundtripDataFactory .CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
@@ -204,7 +204,7 @@ namespace NATS.Client
                 response = await connection.RequestAsync(subject, data.ToBytes(), timeout, token);
             }
 
-            var payload  = RoundtripDataFactory .CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
