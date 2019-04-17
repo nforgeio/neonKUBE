@@ -81,7 +81,7 @@ namespace Neon.Web
             }
             else
             {
-                var result = await RoundtripDataFactory .TryCreateFromAsync(context.ModelType, request.Body, Encoding.UTF8);
+                var result = await RoundtripDataFactory.TryCreateFromAsync(context.ModelType, request.Body, Encoding.UTF8);
 
                 if (result.Item1)
                 {

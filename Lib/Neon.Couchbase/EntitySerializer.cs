@@ -83,7 +83,7 @@ namespace Couchbase
                     return default(T);
                 }
 
-                return RoundtripDataFactory .CreateFrom<T>(jObject);
+                return RoundtripDataFactory.CreateFrom<T>(jObject);
             }
             else
             {
@@ -102,7 +102,7 @@ namespace Couchbase
 
                 var jObject = defaultSerializer.Deserialize<JObject>(stream);
 
-                return (T)RoundtripDataFactory .CreateFrom<T>(jObject);
+                return (T)RoundtripDataFactory.CreateFrom<T>(jObject);
             }
             else
             {
