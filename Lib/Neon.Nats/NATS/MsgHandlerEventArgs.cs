@@ -46,12 +46,12 @@ namespace NATS.Client
         /// <param name="msg">The low-level message.</param>
         internal MsgHandlerEventArgs(Msg msg)
         {
-            this.Msg = new Msg<TMessage>(msg);
+            this.Message = new Msg<TMessage>(msg);
         }
 
         /// <summary>
         /// Returns the received message.
         /// </summary>
-        public Msg<TMessage> Msg { get; private set; }
+        public Msg<TMessage> Message { get; private set; }
     }
 }

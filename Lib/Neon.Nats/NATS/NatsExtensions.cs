@@ -282,7 +282,7 @@ namespace NATS.Client
 
             if (handler != null)
             {
-                subscription.DeserializedMessageHandler +=
+                subscription.RoundtripMessageHandler +=
                     (sender, args) =>
                     {
                         handler.Invoke(sender, args);
@@ -385,7 +385,7 @@ namespace NATS.Client
 
             if (handler != null)
             {
-                subscription.DeserializedMessageHandler +=
+                subscription.RoundtripMessageHandler +=
                     (sender, args) =>
                     {
                         handler.Invoke(sender, args);

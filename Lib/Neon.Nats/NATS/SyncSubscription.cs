@@ -142,23 +142,13 @@ namespace NATS.Client
             subscription.Unsubscribe();
         }
 
-        /// <summary>
-        /// Returns the next <see cref="Msg{TMessage}"/> available to a synchronous
-        /// subscriber, blocking until one is available.
-        /// </summary>
-        /// <returns>The next <see cref="Msg{TMessage}"/> available to a subscriber.</returns>
+        /// <inheritdoc/>
         public Msg<TMessage> NextMessage()
         {
             return new Msg<TMessage>(subscription.NextMessage());
         }
 
-        /// <summary>
-        /// Returns the next <see cref="Msg{TMessage}"/> available to a synchronous
-        /// subscriber, or block up to a given timeout until the next one is available.
-        /// </summary>
-        /// <param name="timeout">The amount of time, in milliseconds, to wait for
-        /// the next message.</param>
-        /// <returns>The next <see cref="Msg{TMessage}"/> available to a subscriber.</returns>
+        /// <inheritdoc/>
         public Msg<TMessage> NextMessage(int timeout)
         {
             return new Msg<TMessage>(subscription.NextMessage(timeout));

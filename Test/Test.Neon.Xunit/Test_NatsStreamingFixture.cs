@@ -50,7 +50,7 @@ namespace TestXunit
     public class Test_NatsStreamingFixture : IClassFixture<NatsFixture>
     {
         private NatsFixture fixture;
-        private IConnection client;
+        private IConnection connection;
 
         public Test_NatsStreamingFixture(NatsFixture fixture)
         {
@@ -60,7 +60,7 @@ namespace TestXunit
             }
 
             this.fixture = fixture;
-            this.client = fixture.Client;
+            this.connection = fixture.Client;
         }
 
         [Fact]
@@ -69,7 +69,7 @@ namespace TestXunit
         {
             // Simply verify that the client is connected for now.
 
-            Assert.Equal(ConnState.CONNECTED, client.State);
+            Assert.Equal(ConnState.CONNECTED, connection.State);
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace TestXunit
         {
             // This second test will exercise restarting the service.
 
-            Assert.Equal(ConnState.CONNECTED, client.State);
+            Assert.Equal(ConnState.CONNECTED, connection.State);
         }
     }
 }

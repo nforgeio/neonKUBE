@@ -40,5 +40,9 @@ namespace NATS.Client
     public interface IAsyncSubscription<TMessage> : IAsyncSubscription, IDisposable
         where TMessage : class, IRoundtripData, new()
     {
+        /// <summary>
+        /// Raised when a deserialized <see cref="IRoundtripData"/> message is received.
+        /// </summary>
+        event EventHandler<MsgHandlerEventArgs<TMessage>> RoundtripMessageHandler;
     }
 }

@@ -52,10 +52,11 @@ namespace NATS.Client
 
             this.subscription = subscription;
 
-            MessageHandler +=
+            subscription.MessageHandler +=
                 (sender, args) =>
                 {
-                    DeserializedMessageHandler?.Invoke(sender, new MsgHandlerEventArgs<TMessage>(args.Message));
+                    MessageHandler?.Invoke(sender, args);
+                    RoundtripMessageHandler?.Invoke(sender, new MsgHandlerEventArgs<TMessage>(args.Message));
                 };
         }
 
@@ -106,14 +107,12 @@ namespace NATS.Client
         /// <inheritdoc/>
         public long Dropped => subscription.Dropped;
 
-        /// <summary>
-        /// Raised when a deserialized message of is received.
-        /// </summary>
-        public event EventHandler<MsgHandlerEventArgs<TMessage>> DeserializedMessageHandler;
+        /// <inheritdoc/>
+        public event EventHandler<MsgHandlerEventArgs<TMessage>> RoundtripMessageHandler;
 
         /// <summary>
         /// Raised when low-level messages are received.  Most application should probably
-        /// listen for deserialized messages on <see cref="DeserializedMessageHandler"/>.
+        /// listen for deserialized messages on <see cref="RoundtripMessageHandler"/>.
         /// </summary>
         public event EventHandler<MsgHandlerEventArgs> MessageHandler;
 

@@ -40,5 +40,20 @@ namespace NATS.Client
     public interface ISyncSubscription<TMessage> : ISubscription, IDisposable
         where TMessage : class, IRoundtripData, new()
     {
+        /// <summary>
+        /// Returns the next <see cref="Msg{TMessage}"/> available to a synchronous
+        /// subscriber, blocking until one is available.
+        /// </summary>
+        /// <returns>The next <see cref="Msg{TMessage}"/> available to a subscriber.</returns>
+        Msg<TMessage> NextMessage();
+
+        /// <summary>
+        /// Returns the next <see cref="Msg{TMessage}"/> available to a synchronous
+        /// subscriber, or block up to a given timeout until the next one is available.
+        /// </summary>
+        /// <param name="timeout">The amount of time, in milliseconds, to wait for
+        /// the next message.</param>
+        /// <returns>The next <see cref="Msg{TMessage}"/> available to a subscriber.</returns>
+        Msg<TMessage> NextMessage(int timeout);
     }
 }
