@@ -37,20 +37,26 @@ namespace NATS.Client
     /// Implements an <see cref="ISyncSubscription"/> for typed messages.
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
-    public sealed class SyncSubscription<TMessage> : ISubscription
+    public sealed class AsyncSubscription<TMessage> : IAsyncSubscription
         where TMessage : class, IRoundtripType, new()
     {
-        private ISyncSubscription subscription;
+        private IAsyncSubscription subscription;
 
         /// <summary>
-        /// Constructs a typed synchronous subscription wrapping a lower level subscription.
+        /// Internal constructor.
         /// </summary>
         /// <param name="subscription">The underlying non-generic subscription returned by NATS.</param>
-        internal SyncSubscription(ISyncSubscription subscription)
+        internal AsyncSubscription(IAsyncSubscription subscription)
         {
             Covenant.Requires<ArgumentNullException>(subscription != null);
 
             this.subscription = subscription;
+
+            MessageHandler +=
+                (sender, args) =>
+                {
+                    DeserializedMessageHandler?.Invoke(sender, new MsgHandlerEventArgs<TMessage>(args.Message));
+                };
         }
 
         /// <inheritdoc/>
@@ -100,6 +106,17 @@ namespace NATS.Client
         /// <inheritdoc/>
         public long Dropped => subscription.Dropped;
 
+        /// <summary>
+        /// Raised when a deserialized message of is received.
+        /// </summary>
+        public event EventHandler<MsgHandlerEventArgs<TMessage>> DeserializedMessageHandler;
+
+        /// <summary>
+        /// Raised when low-level messages are received.  Most application should probably
+        /// listen for deserialized messages on <see cref="DeserializedMessageHandler"/>.
+        /// </summary>
+        public event EventHandler<MsgHandlerEventArgs> MessageHandler;
+
         /// <inheritdoc/>
         public void AutoUnsubscribe(int max)
         {
@@ -127,7 +144,7 @@ namespace NATS.Client
         /// <inheritdoc/>
         public void GetPending(out long pendingBytes, out long pendingMessages)
         {
-            subscription.GetMaxPending(out pendingBytes, out pendingMessages);
+            subscription.GetPending(out pendingBytes, out pendingMessages);
         }
 
         /// <inheritdoc/>
@@ -137,31 +154,15 @@ namespace NATS.Client
         }
 
         /// <inheritdoc/>
+        public void Start()
+        {
+            subscription.Start();
+        }
+
+        /// <inheritdoc/>
         public void Unsubscribe()
         {
             subscription.Unsubscribe();
-        }
-
-        /// <summary>
-        /// Returns the next <see cref="Msg{TMessage}"/> available to a synchronous
-        /// subscriber, blocking until one is available.
-        /// </summary>
-        /// <returns>The next <see cref="Msg{TMessage}"/> available to a subscriber.</returns>
-        public Msg<TMessage> NextMessage()
-        {
-            return new Msg<TMessage>(subscription.NextMessage());
-        }
-
-        /// <summary>
-        /// Returns the next <see cref="Msg{TMessage}"/> available to a synchronous
-        /// subscriber, or block up to a given timeout until the next one is available.
-        /// </summary>
-        /// <param name="timeout">The amount of time, in milliseconds, to wait for
-        /// the next message.</param>
-        /// <returns>The next <see cref="Msg{TMessage}"/> available to a subscriber.</returns>
-        public Msg<TMessage> NextMessage(int timeout)
-        {
-            return new Msg<TMessage>(subscription.NextMessage(timeout));
         }
     }
 }

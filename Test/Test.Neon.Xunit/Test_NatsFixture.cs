@@ -42,6 +42,7 @@ using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using NATS.Client;
+using STAN.Client;
 
 using Xunit;
 
@@ -65,19 +66,17 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test1()
+        public void Connect()
         {
-            // Simply verify that the client is connected for now.
+            // Simply verify that the client is connected.
 
             Assert.Equal(ConnState.CONNECTED, client.State);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test2()
+        public void NatsExtensionsSync()
         {
-            // This second test will exercise restarting the service.
-
             Assert.Equal(ConnState.CONNECTED, client.State);
         }
     }
