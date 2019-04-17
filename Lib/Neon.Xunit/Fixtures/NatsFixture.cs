@@ -62,9 +62,9 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Returns a connected NATS client.
+        /// Returns the NATS connection.
         /// </summary>
-        public IConnection Client { get; private set; }
+        public IConnection Connection { get; private set; }
 
         /// <summary>
         /// Starts a NATS container if it's not already running.  You'll generally want
@@ -135,7 +135,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Client = factory.CreateConnection();
+                    Connection = factory.CreateConnection();
                     await Task.CompletedTask;
 
                 }).Wait();
@@ -149,10 +149,10 @@ namespace Neon.Xunit
         {
             base.Restart();
 
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
             var factory = new ConnectionFactory();
@@ -161,12 +161,12 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Client = factory.CreateConnection();
+                    Connection = factory.CreateConnection();
                     await Task.CompletedTask;
 
                 }).Wait();
 
-            return Client;
+            return Connection;
         }
 
         /// <summary>
@@ -175,10 +175,10 @@ namespace Neon.Xunit
         /// </summary>
         public override void Reset()
         {
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
             base.Reset();

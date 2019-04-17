@@ -45,8 +45,13 @@ using NATS.Client;
 
 using Xunit;
 
+using Test.Neon.Models;
+
 namespace TestXunit
 {
+    /// <summary>
+    /// This class tests both the <see cref="NatsStreamingFixture"/> as well as the Neon
+    /// STAN extensions.
     public class Test_NatsStreamingFixture : IClassFixture<NatsFixture>
     {
         private NatsFixture fixture;
@@ -60,25 +65,107 @@ namespace TestXunit
             }
 
             this.fixture = fixture;
-            this.connection = fixture.Client;
+            this.connection = fixture.Connection;
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test1()
+        public void Connect()
         {
-            // Simply verify that the client is connected for now.
-
             Assert.Equal(ConnState.CONNECTED, connection.State);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test2()
+        public void StanExtensions_Subscribe()
         {
-            // This second test will exercise restarting the service.
-
             Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                var received = subscription.NextMessage(1000);
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void StanExtensions_SubscribeQueue()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject", "queue"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                var received = subscription.NextMessage(1000);
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void StanExtensions_SubscribeAsync()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeAsync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                Msg receivedLowLevel = null;
+                Msg<Person> received = null;
+
+                subscription.MessageHandler +=
+                    (sender, args) =>
+                    {
+                        receivedLowLevel = args.Message;
+                    };
+
+                subscription.RoundtripMessageHandler +=
+                    (sender, args) =>
+                    {
+                        received = args.Message;
+                    };
+
+                subscription.Start();
+                connection.Publish("subject", jack);
+                NeonHelper.WaitFor(() => received != null && receivedLowLevel != null, TimeSpan.FromSeconds(5));
+
+                Assert.True(received.Data == jack);
+            }
         }
     }
 }

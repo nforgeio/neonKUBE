@@ -66,9 +66,9 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Returns a connected NATS-STREAMING client.
+        /// Returns the NATS-STREAMING connection.
         /// </summary>
-        public IStanConnection Client { get; private set; }
+        public IStanConnection Connection { get; private set; }
 
         /// <summary>
         /// Starts a NATS-STREAMING container if it's not already running.  You'll generally want
@@ -142,7 +142,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Client = factory.CreateConnection(name, name);
+                    Connection = factory.CreateConnection(name, name);
                     await Task.CompletedTask;
 
                 }).Wait();
@@ -156,10 +156,10 @@ namespace Neon.Xunit
         {
             base.Restart();
 
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
             var factory = new StanConnectionFactory();
@@ -168,12 +168,12 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Client = factory.CreateConnection(containerName, containerName);
+                    Connection = factory.CreateConnection(containerName, containerName);
                     await Task.CompletedTask;
 
                 }).Wait();
 
-            return Client;
+            return Connection;
         }
 
         /// <summary>
@@ -182,10 +182,10 @@ namespace Neon.Xunit
         /// </summary>
         public override void Reset()
         {
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
             base.Reset();

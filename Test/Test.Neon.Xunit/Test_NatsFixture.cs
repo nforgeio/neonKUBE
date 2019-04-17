@@ -68,21 +68,19 @@ namespace TestXunit
             }
 
             this.fixture = fixture;
-            this.connection = fixture.Client;
+            this.connection = fixture.Connection;
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
         public void Connect()
         {
-            // Simply verify that the client is connected.
-
             Assert.Equal(ConnState.CONNECTED, connection.State);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void NatsExtensions_SubscribeSyncSubject()
+        public void NatsExtensions_Subscribe()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
 
@@ -108,7 +106,7 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void NatsExtensions_SubscribeSync_SubjectQueue()
+        public void NatsExtensions_SubscribeQueue()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
 
@@ -134,7 +132,7 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void NatsExtensions_SubscribeAsyncSubject()
+        public void NatsExtensions_SubscribeAsync()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
 
@@ -175,7 +173,7 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void NatsExtensions_SubscribeAsyncSubjectHandler()
+        public void NatsExtensions_SubscribeAsyncHandler()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
 
@@ -218,7 +216,7 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void NatsExtensions_SubscribeAsyncSubjectQueue()
+        public void NatsExtensions_SubscribeAsyncQueue()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
 
@@ -259,7 +257,7 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void NatsExtensions_SubscribeAsyncSubjectQueueHandler()
+        public void NatsExtensions_SubscribeAsyncQueueHandler()
         {
             Assert.Equal(ConnState.CONNECTED, connection.State);
 
