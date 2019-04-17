@@ -37,7 +37,7 @@ namespace NATS.Client
     /// Implements an <see cref="ISyncSubscription"/> for typed messages.
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
-    public sealed class SyncSubscription<TMessage> : ISubscription
+    public sealed class SyncSubscription<TMessage> : ISyncSubscription<TMessage>
         where TMessage : class, IRoundtripData, new()
     {
         private ISyncSubscription subscription;

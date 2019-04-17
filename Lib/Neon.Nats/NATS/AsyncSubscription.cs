@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SyncSubscription.cs
+// FILE:	    AsyncSubscription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 // COPYRIGHT:   Copyright (c) 2015-2018 The NATS Authors (method comments)
@@ -37,7 +37,7 @@ namespace NATS.Client
     /// Implements an <see cref="ISyncSubscription"/> for typed messages.
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
-    public sealed class AsyncSubscription<TMessage> : IAsyncSubscription
+    public sealed class AsyncSubscription<TMessage> : IAsyncSubscription<TMessage>
         where TMessage : class, IRoundtripData, new()
     {
         private IAsyncSubscription subscription;

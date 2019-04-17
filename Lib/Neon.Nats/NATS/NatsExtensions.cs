@@ -225,7 +225,7 @@ namespace NATS.Client
         /// from the NATS Server on the given <paramref name="subject"/>.
         /// </returns>
         /// <seealso cref="ISubscription.Subject"/>
-        public static SyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject)
+        public static ISyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject)
             where TMessage : class, IRoundtripData, new()
         {
             return new SyncSubscription<TMessage>(connection.SubscribeSync(subject));
@@ -246,7 +246,7 @@ namespace NATS.Client
         /// from the NATS Server on the given <paramref name="subject"/>.
         /// </returns>
         /// <seealso cref="ISubscription.Subject"/>
-        public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject)
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject)
             where TMessage : class, IRoundtripData, new()
         {
             return new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject));
@@ -275,7 +275,7 @@ namespace NATS.Client
         /// <see cref="IAsyncSubscription.Start"/>.
         /// </remarks>
         /// <seealso cref="ISubscription.Subject"/>
-        public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
             where TMessage : class, IRoundtripData, new()
         {
             var subscription = new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject));
@@ -310,7 +310,7 @@ namespace NATS.Client
         /// </remarks>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        public static SyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject, string queue)
+        public static ISyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject, string queue)
             where TMessage : class, IRoundtripData, new()
         {
             return new SyncSubscription<TMessage>(connection.SubscribeSync(subject));
@@ -341,7 +341,7 @@ namespace NATS.Client
         /// </param>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue)
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue)
             where TMessage : class, IRoundtripData, new()
         {
             return new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject, queue));
@@ -378,7 +378,7 @@ namespace NATS.Client
         /// </remarks>
         /// <seealso cref="ISubscription.Subject"/>
         /// <seealso cref="ISubscription.Queue"/>
-        public static AsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
             where TMessage : class, IRoundtripData, new()
         {
             var subscription = new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject, queue));
