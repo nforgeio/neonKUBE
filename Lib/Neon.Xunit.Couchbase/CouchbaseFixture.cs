@@ -73,8 +73,14 @@ namespace Neon.Xunit.Couchbase
         }
 
         /// <summary>
+        /// <para>
         /// Starts a Couchbase container if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
+        /// </para>
+        /// <note>
+        /// You'll need to call <see cref="StartAsComposed(CouchbaseSettings, string, string, string[], string, string, bool)"/>
+        /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
+        /// </note>
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">
@@ -154,14 +160,12 @@ namespace Neon.Xunit.Couchbase
             return base.Start(
                 () =>
                 {
-                    StartInAction(settings, image, name, env, username, password, noPrimary);
+                    StartAsComposed(settings, image, name, env, username, password, noPrimary);
                 });
         }
 
         /// <summary>
-        /// Actually starts Couchbase within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(CouchbaseSettings, string, string, string[], string, string, bool)"/>
-        /// but this method is used internally or for special situations.
+        /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">
@@ -174,7 +178,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
         /// <param name="noPrimary">Optionally disable creation of thea primary bucket index.</param>
-        public void StartInAction(
+        public void StartAsComposed(
             CouchbaseSettings   settings  = null,
             string              image     = null,
             string              name      = "cb-test",
@@ -191,7 +195,7 @@ namespace Neon.Xunit.Couchbase
 
             if (!IsRunning)
             {
-                StartInAction(name, image,
+                StartAsComposed(name, image,
                     new string[]
                     {
                         "--detach",

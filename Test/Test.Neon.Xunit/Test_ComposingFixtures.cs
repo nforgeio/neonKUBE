@@ -106,13 +106,13 @@ namespace TestXunit
                     composedFixture.AddFixture("aspNet", new AspNetFixture(),
                         aspNetFixture =>
                         {
-                            aspNetFixture.StartInAction<Startup>();
+                            aspNetFixture.StartAsComposed<Startup>();
                         });
 
                     composedFixture.AddFixture("container", new ContainerFixture(),
                         containerFixture =>
                         {
-                            containerFixture.StartInAction("my-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
+                            containerFixture.StartAsComposed("my-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
                         });
 
                     composedFixture.AddFixture("hosts", new HostsFixture());
@@ -120,7 +120,7 @@ namespace TestXunit
                     composedFixture.AddFixture("nats", new NatsFixture(),
                         natsFixture =>
                         {
-                            natsFixture.StartInAction();
+                            natsFixture.StartAsComposed();
                         });
                 });
 

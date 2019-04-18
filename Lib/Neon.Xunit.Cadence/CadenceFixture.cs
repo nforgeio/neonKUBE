@@ -59,8 +59,14 @@ namespace Neon.Xunit.Cadence
         }
 
         /// <summary>
+        /// <para>
         /// Starts a Cadence container if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
+        /// </para>
+        /// <note>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[])"/>
+        /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
+        /// </note>
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
@@ -90,20 +96,18 @@ namespace Neon.Xunit.Cadence
             return base.Start(
                 () =>
                 {
-                    StartInAction(settings, image, name, env);
+                    StartAsComposed(settings, image, name, env);
                 });
         }
 
         /// <summary>
-        /// Actually starts Cadence within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(CadenceSettings, string, string, string[])"/>
-        /// but this method is used internally or for special situations.
+        /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        public void StartInAction(
+        public void StartAsComposed(
             CadenceSettings     settings = null,
             string              image    = "nkubeio/cadence-test:latest",
             string              name     = "cadence-test",
@@ -115,7 +119,7 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
-                StartInAction(name, image,
+                StartAsComposed(name, image,
                     new string[]
                     {
                         "--detach",

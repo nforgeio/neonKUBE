@@ -92,19 +92,19 @@ namespace TestCouchbase
                     composedFixture.AddFixture("aspNet", new AspNetFixture(),
                         aspNetFixture =>
                         {
-                            aspNetFixture.StartInAction<Startup>();
+                            aspNetFixture.StartAsComposed<Startup>();
                         });
 
                     composedFixture.AddFixture("natsStreaming", new NatsStreamingFixture(),
                         natsStreamingFixture =>
                         {
-                            natsStreamingFixture.StartInAction();
+                            natsStreamingFixture.StartAsComposed();
                         });
 
                     composedFixture.AddFixture("couchbase", new CouchbaseFixture(),
                         couchbaseFixture =>
                         {
-                            couchbaseFixture.StartInAction();
+                            couchbaseFixture.StartAsComposed();
                         });
                 });
 

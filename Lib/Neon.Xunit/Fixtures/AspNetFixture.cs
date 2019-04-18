@@ -119,7 +119,13 @@ namespace Neon.Xunit
         public IWebHost WebHost { get; private set; }
 
         /// <summary>
+        /// <para>
         /// Starts the ASP.NET service using the default controller factory.
+        /// </para>
+        /// <note>
+        /// You'll need to call <see cref="StartAsComposed{TStartup}(Action{IWebHostBuilder}, int, TestOutputWriter, LogLevel)"/>
+        /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
+        /// </note>
         /// </summary>
         /// <typeparam name="TStartup">The startup class for the service.</typeparam>
         /// <param name="hostConfigurator">Optional action providing for customization of the hosting environment.</param>
@@ -161,12 +167,12 @@ namespace Neon.Xunit
             base.Start(
                 () =>
                 {
-                    StartInAction<TStartup>(hostConfigurator, port, logWriter, logLevel);
+                    StartAsComposed<TStartup>(hostConfigurator, port, logWriter, logLevel);
                 });
         }
 
         /// <summary>
-        /// Starts the ASP.NET service using the default controller factory.
+        /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <typeparam name="TStartup">The startup class for the service.</typeparam>
         /// <param name="hostConfigurator">Optional action providing for customization of the hosting environment.</param>
@@ -202,7 +208,7 @@ namespace Neon.Xunit
         /// }
         /// </code>
         /// </remarks>
-        public void StartInAction<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0, TestOutputWriter logWriter = null, LogLevel logLevel = LogLevel.None)
+        public void StartAsComposed<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0, TestOutputWriter logWriter = null, LogLevel logLevel = LogLevel.None)
             where TStartup : class
         {
             this.hostConfigurator = hostConfigurator;

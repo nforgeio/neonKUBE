@@ -89,7 +89,13 @@ namespace Neon.Xunit
 
 
         /// <summary>
+        /// <para>
         /// Starts the container.
+        /// </para>
+        /// <note>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[], IEnumerable{string}, IEnumerable{string}, bool)"/>
+        /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
+        /// </note>
         /// </summary>
         /// <param name="name">Specifies the container name.</param>
         /// <param name="image">Specifies the container Docker image.</param>
@@ -119,13 +125,12 @@ namespace Neon.Xunit
             return base.Start(
                 () =>
                 {
-                    StartInAction(name, image, dockerArgs, containerArgs, env, noRemove);
+                    StartAsComposed(name, image, dockerArgs, containerArgs, env, noRemove);
                 });
         }
 
         /// <summary>
-        /// Starts the container.  This must be called only from within the 
-        /// <see cref="Action"/> passed to <see cref="ITestFixture.Start(Action)"/>.
+        /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="name">Specifies the container name.</param>
         /// <param name="image">Specifies the container Docker image.</param>
@@ -145,7 +150,7 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public void StartInAction(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
+        public void StartAsComposed(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
