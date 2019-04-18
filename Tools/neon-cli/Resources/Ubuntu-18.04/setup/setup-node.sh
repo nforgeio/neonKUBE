@@ -547,6 +547,18 @@ sleep_seconds=300
 
 echo "[INFO] Starting: [sleep_time=\${sleep_seconds} seconds]"
 
+# This is temporarily disabled due to:
+#
+#       https://github.com/nforgeio/neonKUBE/issues/496
+#
+# I think something may have changed for the Ubuntu 18.04 upgrade.
+# This needs further investigation.
+
+while true
+do
+    sleep \${sleep_seconds}
+done
+
 while true
 do
     # Clean [.bash-history]

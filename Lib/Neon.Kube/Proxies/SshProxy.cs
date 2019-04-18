@@ -998,9 +998,9 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                         if (createHomeFolders)
                         {
-                            sshClient.RunCommand($"mkdir -f /home/{Username}/.download");
-                            sshClient.RunCommand($"mkdir -f /home/{Username}/.exec");
-                            sshClient.RunCommand($"mkdir -f /home/{Username}/.upload");
+                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Download(Username)}");
+                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Exec(Username)}");
+                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Upload(Username)}");
                         }
 
                         // We need to verify that the [/dev/shm/neonkube/rebooting] file is not present
@@ -1460,23 +1460,20 @@ rm {KubeHostFolders.Home(Username)}/askpass
             //
             // All of a sudden, I find that I need these folders too.
 
-            SudoCommand("mkdir -p /home/root", RunOptions.LogOnErrorOnly);
-            SudoCommand("chown root:root /home/root", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p /home/root", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chown root:root /home/root", RunOptions.LogOnErrorOnly);
 
-            SudoCommand("mkdir -p /home/root/.archive", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 750 /home/root/.archive", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand("mkdir -p /home/root/.download", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 777 /home/root/.download", RunOptions.LogOnErrorOnly);       // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"mkdir -p {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Another potential security problem?
 
-            SudoCommand("mkdir -p /home/root/.exec", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 777 /home/root/.exec", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand("mkdir -p /home/root/.secrets", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 750 /home/root/.secrets", RunOptions.LogOnErrorOnly);
-
-            SudoCommand("mkdir -p /home/root/.upload", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 777 /home/root/.upload", RunOptions.LogOnErrorOnly);         // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"mkdir -p {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);      // $todo(jeff.lill): Another potential security problem?
         }
 
         /// <summary>
