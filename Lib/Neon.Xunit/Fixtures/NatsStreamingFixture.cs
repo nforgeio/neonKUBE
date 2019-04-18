@@ -66,13 +66,19 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Returns a connected NATS-STREAMING client.
+        /// Returns the NATS-STREAMING connection.
         /// </summary>
-        public IStanConnection Client { get; private set; }
+        public IStanConnection Connection { get; private set; }
 
         /// <summary>
+        /// <para>
         /// Starts a NATS-STREAMING container if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
+        /// </para>
+        /// <note>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[])"/>
+        /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
+        /// </note>
         /// </summary>
         /// <param name="image">
         /// Optionally specifies the NATS-STREAMING container image.  This defaults to 
@@ -95,24 +101,32 @@ namespace Neon.Xunit
             return base.Start(
                 () =>
                 {
-                    StartInAction(image, name, args);
+                    StartAsComposed(image, name, args);
                 });
         }
 
         /// <summary>
-        /// Actually starts NATS within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(string, string, string[])"/>
-        /// but this method is used internally or for special situations.
+        /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="image">
         /// Optionally specifies the NATS container image.  This defaults to 
-        /// <b>nkubeio/nats-strreaming:latest</b> or <b>nkubedev/nats-streaming:latest</b>
+        /// <b>nkubeio/nats-streaming:latest</b> or <b>nkubedev/nats-streaming:latest</b>
         /// depending on whether the assembly was built from a git release branch
         /// or not.
         /// </param>
         /// <param name="name">Optionally specifies the container name (defaults to <c>nats-streaming-test</c>).</param>
-        /// <param name="args">Optional NATS-STREAMING server command line arguments.</param>
-        public void StartInAction(
+        /// <param name="args">
+        /// <para>
+        /// Optional NATS-STREAMING server command line arguments.
+        /// </para>
+        /// <note>
+        /// Reasonable defaults are used when <paramref name="args"/> is passed 
+        /// as <c>null</c>.  These connect the NATS streaming server to the NATS
+        /// core server running within the container and also configure the
+        /// default MEMORY persisted store.
+        /// </note>
+        /// </param>
+        public void StartAsComposed(
             string   image = null,
             string   name  = "nats-streaming-test",
             string[] args  = null)
@@ -128,21 +142,39 @@ namespace Neon.Xunit
                 {
                     "--detach",
                     "-p", "4222:4222",
-                    "-p", "8222-8222",
+                    "-p", "8222:8222",
                 };
+
+            var containerArgs = new List<string>();
+
+            if (args != null)
+            {
+                foreach (var arg in args)
+                {
+                    containerArgs.Add(arg);
+                }
+            }
 
             if (!IsRunning)
             {
-                RunContainer(name, image, dockerArgs, args);
+                StartAsComposed(name, image, dockerArgs, containerArgs);
             }
 
+            Connect();
+        }
+
+        /// <summary>
+        /// Establishes the server connection.
+        /// </summary>
+        private void Connect()
+        {
             var factory = new StanConnectionFactory();
             var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
 
             retry.InvokeAsync(
                 async () =>
                 {
-                    Client = factory.CreateConnection(name, name);
+                    Connection = factory.CreateConnection("test-cluster", nameof(NatsStreamingFixture));
                     await Task.CompletedTask;
 
                 }).Wait();
@@ -156,24 +188,15 @@ namespace Neon.Xunit
         {
             base.Restart();
 
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
-            var factory = new StanConnectionFactory();
-            var retry   = new LinearRetryPolicy(exception => true, 20, TimeSpan.FromSeconds(0.5));
+            Connect();
 
-            retry.InvokeAsync(
-                async () =>
-                {
-                    Client = factory.CreateConnection(containerName, containerName);
-                    await Task.CompletedTask;
-
-                }).Wait();
-
-            return Client;
+            return Connection;
         }
 
         /// <summary>
@@ -182,10 +205,10 @@ namespace Neon.Xunit
         /// </summary>
         public override void Reset()
         {
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
             base.Reset();

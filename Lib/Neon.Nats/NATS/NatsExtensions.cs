@@ -34,7 +34,7 @@ using Neon.Net;
 namespace NATS.Client
 {
     /// <summary>
-    /// Implements handy extension methods.
+    /// Implements handy NATS extension methods.
     /// </summary>
     public static class NatsExtensions
     {
@@ -42,8 +42,12 @@ namespace NATS.Client
         // IConnection extensions
 
         /// <summary>
-        /// Publishes an <see cref="IGeneratedType"/> instance to the given <paramref name="subject"/>.
+        /// Publishes an <see cref="IRoundtripData"/> instance to the given <paramref name="subject"/>.
         /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">The data to to publish to the connected NATS server.</param>
         /// <remarks>
         /// <para>
         /// NATS implements a publish-subscribe message distribution model. NATS publish subscribe is a
@@ -57,11 +61,7 @@ namespace NATS.Client
         /// additional reliability into your client(s) yourself.
         /// </para>
         /// </remarks>
-        /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
-        public static void Publish(this IConnection connection, string subject, IGeneratedType data)
+        public static void Publish(this IConnection connection, string subject, IRoundtripData data)
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -69,7 +69,7 @@ namespace NATS.Client
         }
 
         /// <summary>
-        /// Publishes an <see cref="IGeneratedType"/> instance to the given <paramref name="subject"/>.
+        /// Publishes an <see cref="IRoundtripData"/> instance to the given <paramref name="subject"/>.
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <param name="subject">The subject to publish <paramref name="data"/> to over
@@ -77,7 +77,7 @@ namespace NATS.Client
         /// <param name="reply">An optional reply subject.</param>
         /// <param name="data">The data to to publish to the connected NATS server.</param>
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
-        public static void Publish(this IConnection connection, string subject, string reply, IGeneratedType data)
+        public static void Publish(this IConnection connection, string subject, string reply, IRoundtripData data)
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -88,6 +88,12 @@ namespace NATS.Client
         /// Sends a request payload and returns the response <see cref="Msg"/>, or throws
         /// <see cref="NATSTimeoutException"/> if the <paramref name="timeout"/> expires.
         /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <remarks>
         /// <typeparamref name="TRequest">The request message type.</typeparamref>
         /// <typeparamref name="TResponse">The response message type.</typeparamref>
@@ -96,21 +102,15 @@ namespace NATS.Client
         /// <see cref="Options.UseOldRequestStyle"/> is set, each request will have its own underlying subscription. 
         /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
         /// </remarks>
-        /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <seealso cref="IConnection.Request(string, byte[])"/>
         public static Msg<TResponse> Request<TRequest, TResponse>(this IConnection connection, string subject, TRequest data, int timeout)
-            where TRequest : class, IGeneratedType, new()
-            where TResponse : class, IGeneratedType, new()
+            where TRequest : class, IRoundtripData, new()
+            where TResponse : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
             var response = connection.Request(subject, data.ToBytes(), timeout);
-            var payload  = GeneratedTypeFactory.CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
@@ -121,6 +121,11 @@ namespace NATS.Client
         /// <summary>
         /// Sends a request payload and returns the response <see cref="Msg"/>.
         /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <remarks>
         /// <para>
         /// NATS supports two flavors of request-reply messaging: point-to-point or one-to-many. Point-to-point
@@ -136,19 +141,14 @@ namespace NATS.Client
         /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
         /// </para>
         /// </remarks>
-        /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
-        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         public static Msg<TResponse> Request<TRequest, TResponse>(this IConnection connection, string subject, TRequest data)
-            where TRequest : class, IGeneratedType, new()
-            where TResponse : class, IGeneratedType, new()
+            where TRequest : class, IRoundtripData, new()
+            where TResponse : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
             var response = connection.Request(subject, data.ToBytes());
-            var payload  = GeneratedTypeFactory.CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
@@ -159,6 +159,13 @@ namespace NATS.Client
         /// <summary>
         /// Asynchronously sends a request payload and returns the response <see cref="Msg"/>.
         /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">The subject to publish <paramref name="data"/> to over
+        /// the current connection.</param>
+        /// <param name="data">The data to to publish to the connected NATS server.</param>
+        /// <param name="timeout">Optional timeout in milliseconds.</param>
+        /// <param name="token">Optional cancellation token.</param>
+        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         /// <remarks>
         /// <para>
         /// NATS supports two flavors of request-reply messaging: point-to-point or one-to-many. Point-to-point
@@ -174,13 +181,6 @@ namespace NATS.Client
         /// The old behavior is not recommended as it may cause unnecessary overhead on connected NATS servers.
         /// </para>
         /// </remarks>
-        /// <param name="connection">The connection.</param>
-        /// <param name="subject">The subject to publish <paramref name="data"/> to over
-        /// the current connection.</param>
-        /// <param name="data">The data to to publish to the connected NATS server.</param>
-        /// <param name="timeout">Optional timeout in milliseconds.</param>
-        /// <param name="token">Optional cancellation token.</param>
-        /// <returns>A <see cref="Msg"/> with the response from the NATS server.</returns>
         public static async Task<Msg<TResponse>> RequestAsync<TRequest, TResponse>(
             this IConnection    connection, 
             string              subject, 
@@ -188,8 +188,8 @@ namespace NATS.Client
             int                 timeout = 0,
             CancellationToken   token = default)
 
-            where TRequest : class, IGeneratedType, new()
-            where TResponse : class, IGeneratedType, new()
+            where TRequest : class, IRoundtripData, new()
+            where TResponse : class, IRoundtripData, new()
         {
             Covenant.Requires<ArgumentNullException>(data != null);
 
@@ -204,12 +204,195 @@ namespace NATS.Client
                 response = await connection.RequestAsync(subject, data.ToBytes(), timeout, token);
             }
 
-            var payload  = GeneratedTypeFactory.CreateFrom<TResponse>(response.Data);
+            var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
                 ArrivalSubscription = response.ArrivalSubcription
             };
+        }
+
+        /// <summary>
+        /// Expresses interest in the given <paramref name="subject"/> to the NATS Server.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">
+        /// The subject on which to listen for messages.  The subject can have
+        /// wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
+        /// </param>
+        /// <returns>
+        /// An <see cref="ISyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.
+        /// </returns>
+        /// <seealso cref="ISubscription.Subject"/>
+        public static ISyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject)
+            where TMessage : class, IRoundtripData, new()
+        {
+            return new SyncSubscription<TMessage>(connection.SubscribeSync(subject));
+        }
+
+        /// <summary>
+        /// Expresses interest in the given <paramref name="subject"/> to the NATS Server.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="IAsyncSubscription"/> returned will not start receiving messages until
+        /// <see cref="IAsyncSubscription.Start"/> is called.
+        /// </remarks>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">
+        /// The subject on which to listen for messages. 
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).</param>
+        /// <returns>An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.
+        /// </returns>
+        /// <seealso cref="ISubscription.Subject"/>
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject)
+            where TMessage : class, IRoundtripData, new()
+        {
+            return new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject));
+        }
+
+        /// <summary>
+        /// Expresses interest in the given <paramref name="subject"/> to the NATS Server, and begins delivering
+        /// messages to the given event handler.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">
+        /// The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
+        /// </param>
+        /// <param name="handler">
+        /// The <see cref="EventHandler{TEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.
+        /// </param>
+        /// <returns>
+        /// An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.
+        /// </returns>
+        /// <remarks>
+        /// The <see cref="IAsyncSubscription"/> returned will start delivering messages
+        /// to the event handler as soon as they are received. The caller does not have to invoke
+        /// <see cref="IAsyncSubscription.Start"/>.
+        /// </remarks>
+        /// <seealso cref="ISubscription.Subject"/>
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
+            where TMessage : class, IRoundtripData, new()
+        {
+            var subscription = new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject));
+
+            if (handler != null)
+            {
+                subscription.RoundtripMessageHandler +=
+                    (sender, args) =>
+                    {
+                        handler.Invoke(sender, args);
+                    };
+            }
+
+            return subscription;
+        }
+
+        /// <summary>
+        /// Creates a synchronous queue subscriber on the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">The subject on which to listen for messages.</param>
+        /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <returns>
+        /// An <see cref="ISyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>, as part of 
+        /// the given queue group.
+        /// </returns>
+        /// <remarks>
+        /// All subscribers with the same queue name will form the queue group and
+        /// only one member of the group will be selected to receive any given message
+        /// synchronously.
+        /// </remarks>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
+        public static ISyncSubscription<TMessage> SubscribeSync<TMessage>(this IConnection connection, string subject, string queue)
+            where TMessage : class, IRoundtripData, new()
+        {
+            return new SyncSubscription<TMessage>(connection.SubscribeSync(subject));
+        }
+
+        /// <summary>
+        /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>.
+        /// </summary>
+        /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <returns>
+        /// An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// All subscribers with the same queue name will form the queue group and
+        /// only one member of the group will be selected to receive any given message.
+        /// </para>
+        /// <para>
+        /// The <see cref="IAsyncSubscription"/> returned will not start receiving messages until
+        /// <see cref="IAsyncSubscription.Start"/> is called.
+        /// </para>
+        /// </remarks>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">
+        /// The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
+        /// </param>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue)
+            where TMessage : class, IRoundtripData, new()
+        {
+            return new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject, queue));
+        }
+
+        /// <summary>
+        /// Creates an asynchronous queue subscriber on the given <paramref name="subject"/>, and begins delivering
+        /// messages to the given event handler.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="subject">
+        /// The subject on which to listen for messages.
+        /// The subject can have wildcards (partial: <c>*</c>, full: <c>&gt;</c>).
+        /// </param>
+        /// <param name="queue">The name of the queue group in which to participate.</param>
+        /// <param name="handler">
+        /// The <see cref="EventHandler{MsgHandlerEventArgs}"/> invoked when messages are received 
+        /// on the returned <see cref="IAsyncSubscription"/>.
+        /// </param>
+        /// <returns>
+        /// An <see cref="IAsyncSubscription"/> to use to read any messages received
+        /// from the NATS Server on the given <paramref name="subject"/>.
+        /// </returns>
+        /// <remarks>
+        /// <para>
+        /// All subscribers with the same queue name will form the queue group and
+        /// only one member of the group will be selected to receive any given message.
+        /// </para>
+        /// <para>
+        /// The <see cref="IAsyncSubscription"/> returned will start delivering messages
+        /// to the event handler as soon as they are received. The caller does not have to invoke
+        /// <see cref="IAsyncSubscription.Start"/>.
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="ISubscription.Subject"/>
+        /// <seealso cref="ISubscription.Queue"/>
+        public static IAsyncSubscription<TMessage> SubscribeAsync<TMessage>(this IConnection connection, string subject, string queue, EventHandler<MsgHandlerEventArgs<TMessage>> handler)
+            where TMessage : class, IRoundtripData, new()
+        {
+            var subscription = new AsyncSubscription<TMessage>(connection.SubscribeAsync(subject, queue));
+
+            if (handler != null)
+            {
+                subscription.RoundtripMessageHandler +=
+                    (sender, args) =>
+                    {
+                        handler.Invoke(sender, args);
+                    };
+            }
+
+            return subscription;
         }
     }
 }

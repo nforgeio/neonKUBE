@@ -39,13 +39,13 @@ namespace NATS.Client
     /// </summary>
     /// <typeparam name="TMessage">The request message type.</typeparam>
     public class Msg<TMessage>
-        where TMessage : class, IGeneratedType, new()
+        where TMessage : class, IRoundtripData, new()
     {
         private string          subject;
         private string          reply;
         private TMessage        data;
         private ISubscription   sub;
-        private Msg             cachedMsg;
+        private Msg             cached;
 
         /// <summary>
         /// Default constructor.
@@ -96,11 +96,11 @@ namespace NATS.Client
         {
             Covenant.Requires<ArgumentNullException>(msg != null);
 
-            this.subject   = msg.Subject;
-            this.reply     = msg.Reply;
-            this.data      = GeneratedTypeFactory.CreateFrom<TMessage>(msg.Data);
-            this.sub       = msg.ArrivalSubcription;
-            this.cachedMsg = msg;
+            this.subject = msg.Subject;
+            this.reply   = msg.Reply;
+            this.data    = RoundtripDataFactory.CreateFrom<TMessage>(msg.Data);
+            this.sub     = msg.ArrivalSubcription;
+            this.cached  = msg;
         }
 
         /// <summary>
@@ -114,9 +114,9 @@ namespace NATS.Client
             {
                 subject = value;
 
-                if (cachedMsg != null)
+                if (cached != null)
                 {
-                    cachedMsg.Subject = value;
+                    cached.Subject = value;
                 }
             }
         }
@@ -132,9 +132,9 @@ namespace NATS.Client
             {
                 reply = value;
 
-                if (cachedMsg != null)
+                if (cached != null)
                 {
-                    cachedMsg.Reply = value;
+                    cached.Reply = value;
                 }
             }
         }
@@ -150,15 +150,15 @@ namespace NATS.Client
             {
                 data = value;
 
-                if (cachedMsg != null)
+                if (cached != null)
                 {
                     if (value != null)
                     {
-                        cachedMsg.Data = value.ToBytes();
+                        cached.Data = value.ToBytes();
                     }
                     else
                     {
-                        cachedMsg.Data = null;
+                        cached.Data = null;
                     }
                 }
             }
@@ -179,17 +179,17 @@ namespace NATS.Client
         /// <returns>The <see cref="Msg"/>.</returns>
         internal Msg ToBaseMsg()
         {
-            if (cachedMsg == null)
+            if (cached == null)
             {
-                cachedMsg = new Msg(subject, reply, null);
+                cached = new Msg(subject, reply, null);
 
                 if (data != null)
                 {
-                    cachedMsg.Data = data.ToBytes();
+                    cached.Data = data.ToBytes();
                 }
             }
 
-            return cachedMsg;
+            return cached;
         }
 
         /// <summary>

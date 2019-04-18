@@ -62,13 +62,19 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Returns a connected NATS client.
+        /// Returns the NATS connection.
         /// </summary>
-        public IConnection Client { get; private set; }
+        public IConnection Connection { get; private set; }
 
         /// <summary>
+        /// <para>
         /// Starts a NATS container if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
+        /// </para>
+        /// <note>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[])"/>
+        /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
+        /// </note>
         /// </summary>
         /// <param name="image">
         /// Optionally specifies the NATS container image.  This defaults to 
@@ -90,14 +96,12 @@ namespace Neon.Xunit
             return base.Start(
                 () =>
                 {
-                    StartInAction(image, name, args);
+                    StartAsComposed(image, name, args);
                 });
         }
 
         /// <summary>
-        /// Actually starts NATS within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(string, string, string[])"/>
-        /// but this method is used internally or for special situations.
+        /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="image">
         /// Optionally specifies the NATS container image.  This defaults to 
@@ -106,7 +110,7 @@ namespace Neon.Xunit
         /// </param>
         /// <param name="name">Optionally specifies the container name (defaults to <c>nats-test</c>).</param>
         /// <param name="args">Optional NATS server command line arguments.</param>
-        public void StartInAction(
+        public void StartAsComposed(
             string   image = null,
             string   name  = "nats-test",
             string[] args  = null)
@@ -120,13 +124,13 @@ namespace Neon.Xunit
                 {
                     "--detach",
                     "-p", "4222:4222",
-                    "-p", "8222-8222",
-                    "-p", "6222-6222"
+                    "-p", "8222:8222",
+                    "-p", "6222:6222"
                 };
 
             if (!IsRunning)
             {
-                RunContainer(name, image, dockerArgs, args);
+                StartAsComposed(name, image, dockerArgs, args);
             }
 
             var factory = new ConnectionFactory();
@@ -135,7 +139,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Client = factory.CreateConnection();
+                    Connection = factory.CreateConnection();
                     await Task.CompletedTask;
 
                 }).Wait();
@@ -149,10 +153,10 @@ namespace Neon.Xunit
         {
             base.Restart();
 
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
             var factory = new ConnectionFactory();
@@ -161,12 +165,12 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Client = factory.CreateConnection();
+                    Connection = factory.CreateConnection();
                     await Task.CompletedTask;
 
                 }).Wait();
 
-            return Client;
+            return Connection;
         }
 
         /// <summary>
@@ -175,10 +179,10 @@ namespace Neon.Xunit
         /// </summary>
         public override void Reset()
         {
-            if (Client != null)
+            if (Connection != null)
             {
-                Client.Dispose();
-                Client = null;
+                Connection.Dispose();
+                Connection = null;
             }
 
             base.Reset();

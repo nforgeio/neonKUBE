@@ -26,9 +26,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Nats\Neon.Nats.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Web\Neon.Web.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+    <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj" />
   </ItemGroup>
 
 </Project>

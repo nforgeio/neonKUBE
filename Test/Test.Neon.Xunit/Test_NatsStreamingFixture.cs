@@ -42,43 +42,257 @@ using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using NATS.Client;
+using STAN.Client;
 
 using Xunit;
 
+using Test.Neon.Models;
+
 namespace TestXunit
 {
-    public class Test_NatsStreamingFixture : IClassFixture<NatsFixture>
+    /// <summary>
+    /// This class tests both the <see cref="NatsStreamingFixture"/> as well as the Neon
+    /// STAN extensions.
+    public class Test_NatsStreamingFixture : IClassFixture<NatsStreamingFixture>
     {
-        private NatsFixture fixture;
-        private IConnection client;
+        private NatsStreamingFixture    fixture;
+        private IStanConnection         connection;
 
-        public Test_NatsStreamingFixture(NatsFixture fixture)
+        public Test_NatsStreamingFixture(NatsStreamingFixture fixture)
         {
-            if (fixture.Start(image: "nkubedev/nats-streaming:latest") == TestFixtureStatus.AlreadyRunning)
+            if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();
             }
 
             this.fixture = fixture;
-            this.client = fixture.Client;
+            this.connection = fixture.Connection;
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test1()
+        public void Connect()
         {
-            // Simply verify that the client is connected for now.
-
-            Assert.Equal(ConnState.CONNECTED, client.State);
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test2()
+        public void Subscribe()
         {
-            // This second test will exercise restarting the service.
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
 
-            Assert.Equal(ConnState.CONNECTED, client.State);
+            StanMsg<Person> received = null;
+
+            using (var subscription = connection.Subscribe<Person>("subject",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeOptions()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            var options = StanSubscriptionOptions.GetDefaultOptions();
+
+            using (var subscription = connection.Subscribe<Person>("subject", options,
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeQGroup()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            using (var subscription = connection.Subscribe<Person>("subject", "qgroup",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeQGroupOptions()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            var options = StanSubscriptionOptions.GetDefaultOptions();
+
+            using (var subscription = connection.Subscribe<Person>("subject", "qgroup", options,
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void Publish()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            using (var subscription = connection.Subscribe<Person>("subject",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void PublishHandler()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+            bool            ackReceived = false;
+
+            using (var subscription = connection.Subscribe<Person>("subject",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack,
+                    (sender, args) =>
+                    {
+                        ackReceived = true;
+                    });
+
+                NeonHelper.WaitFor(() => received != null && ackReceived, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public async Task PublishAsync()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.NATSConnection.State);
+
+            StanMsg<Person> received = null;
+
+            using (var subscription = connection.Subscribe<Person>("subject",
+                (sender, args) =>
+                {
+                    received = args.Msg;
+                    received.Ack();
+                }))
+            {
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                await connection.PublishAsync("subject", jack);
+
+                NeonHelper.WaitFor(() => received != null, TimeSpan.FromSeconds(5));
+                Assert.True(received.Data == jack);
+            }
         }
     }
 }

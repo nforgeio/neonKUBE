@@ -107,7 +107,7 @@ namespace Neon.CodeGen
 
             // Add the [Neon.Common] assembly.
 
-            references.Add(typeof( IGeneratedType));
+            references.Add(typeof(IRoundtripData));
 
             // NOTE: 
             // 
@@ -1147,7 +1147,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = " :  IGeneratedType";
+                var baseTypeRef = " : IRoundtripData";
 
                 if (dataModel.IsDerived)
                 {
@@ -1157,7 +1157,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedType";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IRoundtripData";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -1241,7 +1241,7 @@ namespace Neon.CodeGen
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Performs any persistence related initialization including registering the Linq2Couchbase type");
-                        writer.WriteLine($"        /// filter.  This is typically called via <see cref=\"TypeSerializationHelper.PersistableInitialize()\"/>.");
+                        writer.WriteLine($"        /// filter.  This is typically called via <see cref=\"RoundtripDataHelper.PersistableInitialize()\"/>.");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        public static void PersistableInitialize()");
                         writer.WriteLine($"        {{");
@@ -1264,7 +1264,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            var model = new {className}(TypeSerializationHelper.Deserialize<JObject>(jsonText));");
+                    writer.WriteLine($"            var model = new {className}(RoundtripDataHelper.Deserialize<JObject>(jsonText));");
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
@@ -1381,7 +1381,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
                     writer.WriteLine($"        /// the same type as the current class.");
                     writer.WriteLine($"        /// </returns>");
-                    writer.WriteLine($"        public static bool SameTypeAs( IGeneratedType instance)");
+                    writer.WriteLine($"        public static bool SameTypeAs(IRoundtripData instance)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (instance == null)");
                     writer.WriteLine($"            {{");
@@ -1402,7 +1402,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the item.</param>");
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(\"{dataModel.PersistedType}\", args);");
+                        writer.WriteLine($"            return RoundtripDataHelper.GetPersistedKey(\"{dataModel.PersistedType}\", args);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1625,7 +1625,7 @@ namespace Neon.CodeGen
 
                             if (property.RequiresObjectification)
                             {
-                                writer.WriteLine($"                this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(TypeSerializationHelper.Serializer);");
+                                writer.WriteLine($"                this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(RoundtripDataHelper.Serializer);");
                             }
                             else
                             {
@@ -1725,7 +1725,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = TypeSerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1755,7 +1755,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = TypeSerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1787,7 +1787,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return TypeSerializationHelper.Serialize(__JObject, Formatting.None);");
+                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__JObject, Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
@@ -1799,7 +1799,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return TypeSerializationHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
+                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1816,7 +1816,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine($"            return noClone ? __JObject : TypeSerializationHelper.DeepClone(__JObject);");
+                        writer.WriteLine($"            return noClone ? __JObject : RoundtripDataHelper.DeepClone(__JObject);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1831,7 +1831,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public {virtualModifier} byte[] ToBytes()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return Encoding.UTF8.GetBytes(TypeSerializationHelper.Serialize(__JObject, Formatting.None));");
+                    writer.WriteLine($"            return Encoding.UTF8.GetBytes(RoundtripDataHelper.Serialize(__JObject, Formatting.None));");
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
@@ -1845,7 +1845,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public {className} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return CreateFrom(TypeSerializationHelper.DeepClone(__JObject));");
+                    writer.WriteLine($"            return CreateFrom(RoundtripDataHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1861,10 +1861,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {className}, IGeneratedType");
+                    writer.WriteLine($"           where T : {className}, IRoundtripData");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return GeneratedTypeFactory.CreateFrom<T>(noClone ? __JObject : TypeSerializationHelper.DeepClone(__JObject));");
+                    writer.WriteLine($"            return RoundtripDataFactory.CreateFrom<T>(noClone ? __JObject : RoundtripDataHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1916,7 +1916,7 @@ namespace Neon.CodeGen
 
                     if (hashedProperties.Count == 0)
                     {
-                        writer.WriteLine($"            throw new InvalidOperationException(TypeSerializationHelper.NoHashPropertiesError);");
+                        writer.WriteLine($"            throw new InvalidOperationException(RoundtripDataHelper.NoHashPropertiesError);");
                     }
                     else
                     {
@@ -1988,7 +1988,7 @@ namespace Neon.CodeGen
                         }
                         else if (persistedKeyProperty.PropertyType.IsValueType)
                         {
-                            writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name}.ToString());");
+                            writer.WriteLine($"            return RoundtripDataHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name}.ToString());");
                         }
                         else
                         {
@@ -2000,7 +2000,7 @@ namespace Neon.CodeGen
 
                             if (persistedKeyProperty.PropertyType == typeof(string))
                             {
-                                writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name});");
+                                writer.WriteLine($"            return RoundtripDataHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name});");
                             }
                             else
                             {
@@ -2483,7 +2483,7 @@ namespace Neon.CodeGen
                 }
                 else
                 {
-                    sbArguments.AppendWithSeparator($"document: TypeSerializationHelper.Serialize({bodyParameter.Name})", argSeparator);
+                    sbArguments.AppendWithSeparator($"document: RoundtripDataHelper.Serialize({bodyParameter.Name})", argSeparator);
                 }
             }
 

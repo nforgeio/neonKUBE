@@ -682,7 +682,7 @@ namespace TestCodeGen.DataModel
 
                 //-------------------------------------------------------------
                 // Verify that we can use [ToDerived<TResult>()] to create a derived instance
-                // from the base type.  This also exercises [GeneratedTypeFactory] a bit.
+                // from the base type.  This also exercises [RoundtripDataFactory] a bit.
 
                 derivedData = context.CreateDataWrapper<DerivedModel>();
 
@@ -1145,7 +1145,7 @@ namespace TestCodeGen.DataModel
 
                 deserialzedEmptyData.JObject["Unknown"] = "even trickier!";
 
-                var jObject = TypeSerializationHelper.DeepClone(emptyData.JObject);
+                var jObject = RoundtripDataHelper.DeepClone(emptyData.JObject);
 
                 jObject["__T"] = typeof(DataWrapper).FullName;
 
@@ -1162,14 +1162,14 @@ namespace TestCodeGen.DataModel
 
                 var deserialzedSimpleData = context.CreateDataWrapperFrom<SimpleData>(jObject.ToString());
 
-                jObject = TypeSerializationHelper.DeepClone(deserialzedSimpleData.JObject);
+                jObject = RoundtripDataHelper.DeepClone(deserialzedSimpleData.JObject);
 
                 Assert.Equal(simpleData, deserialzedSimpleData);
                 Assert.Equal("very tricky!", deserialzedSimpleData.JObject["Unknown"]);
 
                 deserialzedSimpleData.JObject["Unknown"] = "even trickier!";
 
-                jObject = TypeSerializationHelper.DeepClone(deserialzedSimpleData.JObject);
+                jObject = RoundtripDataHelper.DeepClone(deserialzedSimpleData.JObject);
 
                 jObject["__T"] = typeof(SimpleData).FullName;
 
