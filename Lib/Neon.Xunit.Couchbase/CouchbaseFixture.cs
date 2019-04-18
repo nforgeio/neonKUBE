@@ -191,7 +191,7 @@ namespace Neon.Xunit.Couchbase
 
             if (!IsRunning)
             {
-                RunContainer(name, image,
+                StartInAction(name, image,
                     new string[]
                     {
                         "--detach",

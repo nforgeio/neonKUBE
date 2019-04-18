@@ -153,7 +153,7 @@ namespace Neon.Xunit
 
             if (!IsRunning)
             {
-                RunContainer(name, image, dockerArgs, containerArgs);
+                StartInAction(name, image, dockerArgs, containerArgs);
             }
 
             Connect();

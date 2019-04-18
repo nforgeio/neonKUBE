@@ -115,7 +115,7 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
-                RunContainer(name, image,
+                StartInAction(name, image,
                     new string[]
                     {
                         "--detach",

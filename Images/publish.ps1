@@ -121,7 +121,6 @@ if ($base)
 
 	Publish "$image_root\\golang"
 	Publish "$image_root\\haproxy"
-    Publish "$image_root\\nats-streaming"
 }
 
 if ($dotnetBase)

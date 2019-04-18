@@ -158,9 +158,56 @@ namespace Neon.Xunit
         public void Start<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0, TestOutputWriter logWriter = null, LogLevel logLevel = LogLevel.None)
             where TStartup : class
         {
+            base.Start(
+                () =>
+                {
+                    StartInAction<TStartup>(hostConfigurator, port, logWriter, logLevel);
+                });
+        }
+
+        /// <summary>
+        /// Starts the ASP.NET service using the default controller factory.
+        /// </summary>
+        /// <typeparam name="TStartup">The startup class for the service.</typeparam>
+        /// <param name="hostConfigurator">Optional action providing for customization of the hosting environment.</param>
+        /// <param name="port">The port where the server will listen or zero to allow the operating system to select a free port.</param>
+        /// <param name="logWriter">Optionally specifies a test output writer.</param>
+        /// <param name="logLevel">Optionally specifies the log level.  This defaults to <see cref="LogLevel.None"/>.</param>
+        /// <remarks>
+        /// <para>
+        /// You can capture ASP.NET and service logs into your unit test logs by passing <paramref name="logWriter"/> as 
+        /// non-null and <paramref name="logLevel"/> as something other than <see cref="LogLevel.None"/>.  You'll need
+        /// to obtain a <see cref="ITestOutputHelper"/> instance from Xunit via dependency injection by adding a parameter
+        /// to your test constructor and then creating a <see cref="TestOutputWriter"/> from it, like:
+        /// </para>
+        /// <code language="c#">
+        /// public class MyTest : IClassFixture&lt;AspNetFixture&gt;
+        /// {
+        ///     private AspNetFixture               fixture;
+        ///     private TestAspNetFixtureClient     client;
+        ///     private TestOutputWriter            testWriter;
+        ///
+        ///     public Test_EndToEnd(AspNetFixture fixture, ITestOutputHelper outputHelper)
+        ///     {
+        ///         this.fixture    = fixture;
+        ///         this.testWriter = new TestOutputWriter(outputHelper);
+        ///
+        ///         fixture.Start&lt;Startup&gt;(logWriter: testWriter, logLevel: Neon.Diagnostics.LogLevel.Debug);
+        ///
+        ///         client = new TestAspNetFixtureClient()
+        ///         {
+        ///             BaseAddress = fixture.BaseAddress
+        ///         };
+        ///      }
+        /// }
+        /// </code>
+        /// </remarks>
+        public void StartInAction<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0, TestOutputWriter logWriter = null, LogLevel logLevel = LogLevel.None)
+            where TStartup : class
+        {
             this.hostConfigurator = hostConfigurator;
-            this.logWriter        = logWriter;
-            this.logLevel         = logLevel;
+            this.logWriter = logWriter;
+            this.logLevel = logLevel;
 
             if (IsRunning)
             {

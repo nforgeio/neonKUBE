@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_ComposedFixture.cs
+// FILE:	    Test_SimpleComposedFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ namespace TestXunit
     /// <summary>
     /// Verify that a test fixture composed of other fixtures works.
     /// </summary>
-    public class Test_ComposedFixture : IClassFixture<ComposedFixture>
+    public class Test_SimpleComposedFixture : IClassFixture<ComposedFixture>
     {
         //---------------------------------------------------------------------
         // Private types
@@ -59,7 +59,7 @@ namespace TestXunit
         private bool                fixture0Initialized;
         private bool                fixture1Initialized;
 
-        public Test_ComposedFixture(ComposedFixture fixture)
+        public Test_SimpleComposedFixture(ComposedFixture fixture)
         {
             this.fixture = fixture;
 

@@ -126,7 +126,7 @@ namespace Neon.Xunit
 
             if (!IsRunning)
             {
-                RunContainer(name, image, dockerArgs, args);
+                StartInAction(name, image, dockerArgs, args);
             }
 
             var factory = new ConnectionFactory();
