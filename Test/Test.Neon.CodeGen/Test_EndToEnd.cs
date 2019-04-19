@@ -95,14 +95,6 @@ namespace TestCodeGen.AspNet
         }
 
         [HttpGet]
-        [Route("GetSemanticVersion")]
-        [Produces("application/json")]
-        public SemanticVersion GetSemanticVersion(SemanticVersion version)
-        {
-            return version;
-        }
-
-        [HttpGet]
         [Route("person/{id}/{name}/{age}")]
         [Produces("application/json")]
         public Person CreatePerson(int id, string name, int age)
@@ -248,15 +240,6 @@ namespace TestCodeGen.AspNet
             var version = new Version(1, 2, 3);
 
             Assert.Equal(version, await client.GetVersionAsync(version));
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public async Task GetSemanticVersion()
-        {
-            var version = SemanticVersion.Create(1, 2, 3, "build", "alpha");
-
-            Assert.Equal(version, await client.GetSemanticVersionAsync(version));
         }
 
         [Fact]
