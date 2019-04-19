@@ -974,6 +974,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Threading;");
             writer.WriteLine($"using System.Threading.Tasks;");
             writer.WriteLine();
+            writer.WriteLine($"using Neon.CodeGen;");
             writer.WriteLine($"using Neon.Collections;");
             writer.WriteLine($"using Neon.Common;");
             writer.WriteLine($"using Neon.Data;");
@@ -2151,7 +2152,7 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine();
-            writer.WriteLine($"    public partial class {clientTypeName} : IDisposable");
+            writer.WriteLine($"    public partial class {clientTypeName} : IDisposable, IGeneratedServiceClient");
             writer.WriteLine($"    {{");
 
             if (hasNonRootMethodGroups)
@@ -2161,7 +2162,7 @@ namespace Neon.CodeGen
 
                 foreach (var clientGroup in nonRootMethodGroups)
                 {
-                    writer.WriteLine($"        public class __{clientGroup.Key}");
+                    writer.WriteLine($"        public class __{clientGroup.Key} : IGeneratedServiceClient");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            private JsonClient client;");
                     writer.WriteLine();
@@ -2325,6 +2326,41 @@ namespace Neon.CodeGen
 
             foreach (var parameter in serviceMethod.Parameters)
             {
+                // Generate the [GeneratedParam] attribute with the metadata the service
+                // client validator will need to ensure that generated service methods
+                // those from the actual service implementation.
+
+                string generatedParamAttribute;
+
+                switch (parameter.Pass)
+                {
+                    case Pass.AsBody:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Body)]";
+                        break;
+
+                    case Pass.AsHeader:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Header, Name = \"{parameter.SerializedName}\")]";
+                        break;
+
+                    case Pass.AsQuery:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Query, Name = \"{parameter.SerializedName}\")]";
+                        break;
+
+                    case Pass.AsRoute:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Route, Name = \"{parameter.SerializedName}\")]";
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+
+                // Generate the default value expression for optional parameters.
+
                 var defaultValueExpression = string.Empty;
 
                 if (parameter.IsOptional)
@@ -2337,7 +2373,7 @@ namespace Neon.CodeGen
                     }
                 }
 
-                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterInfo.ParameterType)} {parameter.Name}{defaultValueExpression}", argSeparator);
+                sbParameters.AppendWithSeparator($"{generatedParamAttribute} {ResolveTypeReference(parameter.ParameterInfo.ParameterType)} {parameter.Name}{defaultValueExpression}", argSeparator);
             }
 
             sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", argSeparator);
@@ -2346,8 +2382,8 @@ namespace Neon.CodeGen
 
             // Generate the arguments to be passed to the client methods.
 
-            var sbArgGenerate    = new StringBuilder();   // Will hold the code required to generate the arguments.
-            var sbArguments      = new StringBuilder();   // Will hold the arguments to be passed to the [JsonClient] method.
+            var sbArgGenerate    = new StringBuilder();   // This holds the code required to generate the arguments.
+            var sbArguments      = new StringBuilder();   // This holds the arguments to be passed to the [JsonClient] method.
             var routeParameters  = new List<MethodParameter>();
             var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
             var uriRef           = $"\"{serviceMethod.RouteTemplate}\"";
@@ -2704,7 +2740,19 @@ namespace Neon.CodeGen
                 methodName += "Async";
             }
 
+            string generatedMethodAttribute;
+
+            if (serviceMethod.RouteTemplate == null)
+            {
+                generatedMethodAttribute = $"[GeneratedMethod(typeof({returnType}), RouteTemplate = \"\")]";
+            }
+            else
+            {
+                generatedMethodAttribute = $"[GeneratedMethod(typeof({returnType}), RouteTemplate = \"{serviceMethod.RouteTemplate}\")]";
+            }
+
             writer.WriteLine();
+            writer.WriteLine($"{indent}        {generatedMethodAttribute}");
             writer.WriteLine($"{indent}        public async {methodReturnType} {methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
 
