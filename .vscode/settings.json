@@ -1,0 +1,17 @@
+{
+    // Terminals for windows
+    "terminal.integrated.shell.windows": "cmd.exe",
+    "terminal.integrated.shellArgs.windows": [
+        "/k", "C:\\Program Files (x86)\\cmder_mini\\vendor\\init.bat", "/noautorun"
+    ],
+    "terminal.integrated.env.windows": {
+        "GOPATH": "C:\\Users\\johnc\\source\\repos\\nforgeio\\neonKUBE\\Go"
+    },
+    "go.gocodeAutoBuild": true,
+    "go.autocompleteUnimportedPackages": true,
+    "go.inferGopath": true,
+    "go.lintTool": "gometalinter",
+    "go.useCodeSnippetsOnFunctionSuggest": true,
+    "go.vetOnSave": "package",
+    "go.lintOnSave":"file"
+}

@@ -91,7 +91,5 @@ GeneratedTypes.cs
 ##################
 ### Go Project ###
 ##################
-/Go/pkg
-/Go/bin
-/Go/src/github.com/*/*/vendor/*
+/Go/pkg/dep
 *.test
