@@ -607,7 +607,7 @@ namespace Neon.CodeGen
                     {
                         fromAttributeCount++;
 
-                        methodParameter.Pass           = Pass.InQuery;
+                        methodParameter.Pass           = Pass.AsQuery;
                         methodParameter.SerializedName = fromQueryAttribute.Name ?? parameterInfo.Name;
                     }
 
@@ -617,7 +617,7 @@ namespace Neon.CodeGen
                     {
                         fromAttributeCount++;
 
-                        methodParameter.Pass           = Pass.InRoute;
+                        methodParameter.Pass           = Pass.AsRoute;
                         methodParameter.SerializedName = fromRouteAttribute.Name ?? parameterInfo.Name;
                     }
 
@@ -625,7 +625,7 @@ namespace Neon.CodeGen
                     {
                         // Default to [FromQuery] using the parameter name.
 
-                        methodParameter.Pass           = Pass.InQuery;
+                        methodParameter.Pass           = Pass.AsQuery;
                         methodParameter.SerializedName = parameterInfo.Name;
                     }
                     else if (fromAttributeCount > 1)
@@ -2344,7 +2344,7 @@ namespace Neon.CodeGen
             sbParameters.AppendWithSeparator("IRetryPolicy retryPolicy = default", argSeparator);
             sbParameters.AppendWithSeparator("LogActivity logActivity = default", argSeparator);
 
-            // Generate the arguments to be passed to the query methods.
+            // Generate the arguments to be passed to the client methods.
 
             var sbArgGenerate    = new StringBuilder();   // Will hold the code required to generate the arguments.
             var sbArguments      = new StringBuilder();   // Will hold the arguments to be passed to the [JsonClient] method.
@@ -2352,7 +2352,7 @@ namespace Neon.CodeGen
             var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
             var uriRef           = $"\"{serviceMethod.RouteTemplate}\"";
 
-            foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.InRoute))
+            foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.AsRoute))
             {
                 routeParameters.Add(routeParameter);
             }
@@ -2381,10 +2381,10 @@ namespace Neon.CodeGen
                 }
 
                 // Compare the parameters without a [FromXXX] attribute against the
-                // the route template parameters by name, assigning [Pass.InRoute]
+                // the route template parameters by name, assigning [Pass.AsRoute]
                 // to any of these.
                 // 
-                // NOTE: Parameters will be assigned [Pass.InQuery] by default when
+                // NOTE: Parameters will be assigned [Pass.AsQuery] by default when
                 //       no  [FromXXX] tag was present, so all we need to do is to
                 //       check for the absence of a [FromQuery] attribute.
 
@@ -2394,14 +2394,14 @@ namespace Neon.CodeGen
 
                     if (noFromXXX && templateParameters.Contains(parameter.SerializedName))
                     {
-                        parameter.Pass = Pass.InRoute;
+                        parameter.Pass = Pass.AsRoute;
 
                         routeParameters.Add(parameter);
                     }
                 }
             }
 
-            // Only header and query parameters are allowed to be optional.
+            // Only header, body, and query parameters are allowed to be optional.
 
             foreach (var parameter in serviceMethod.Parameters)
             {
@@ -2413,20 +2413,16 @@ namespace Neon.CodeGen
                     {
                         // These are allowed.
 
-                        case Pass.Default:
+                        case Pass.AsBody:
                         case Pass.AsHeader:
-                        case Pass.InQuery:
+                        case Pass.AsQuery:
+                        case Pass.Default:
 
                             break;
 
                         // These are not allowed.
 
-                        case Pass.AsBody:
-
-                            invalidPass = "FromBody";
-                            break;
-
-                        case Pass.InRoute:
+                        case Pass.AsRoute:
 
                             invalidPass = "Route";
                             break;
@@ -2443,9 +2439,9 @@ namespace Neon.CodeGen
                 }
             }
 
-            // The query parameters include those that have [Pass.InQuery].
+            // The query parameters include those that have [Pass.AsQuery].
 
-            var queryParameters = parameters.Where(p => p.Pass == Pass.InQuery);
+            var queryParameters = parameters.Where(p => p.Pass == Pass.AsQuery);
 
             // We're ready to generate the method code.
 

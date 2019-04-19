@@ -171,5 +171,13 @@ namespace Test.Neon.Models.Definitions
         [HttpGet]
         [Route("GetOptionalDoubleViaQuery")]
         double GetOptionalDoubleViaQuery([FromQuery] double value = 1.234);
+
+        [HttpPut]
+        [Route("GetOptionalDoubleViaBody")]
+        double GetOptionalDoubleViaBody([FromBody] double value = 1.234);
+
+        [HttpPut]
+        [Route("GetOptionalStringViaBody")]
+        string GetOptionalStringViaBody([FromBody] string value = "Hello World!");
     }
 }
