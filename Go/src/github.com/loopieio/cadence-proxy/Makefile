@@ -35,6 +35,6 @@ test: bins
 clean:
 	rm -f test/gocadenceproxy.test
 	rm -f test/logs/test.log
-	rm -f bin/gocadenceproxy-windows
-	rm -f bin/gocadenceproxy-linux
+	rm -f bin/gocadenceproxy.exe
+	rm -f bin/gocadenceproxy
 	rm -Rf $(BUILD)

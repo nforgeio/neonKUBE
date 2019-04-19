@@ -91,5 +91,5 @@ GeneratedTypes.cs
 ##################
 ### Go Project ###
 ##################
-/Go/pkg/dep
+**/dep/**
 *.test
