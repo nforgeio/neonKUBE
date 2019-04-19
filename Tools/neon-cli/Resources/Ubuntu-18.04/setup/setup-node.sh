@@ -543,21 +543,9 @@ $   3. Clean the temporary file SshProxy upload and execute folders.
 
 history_path1=${HOME}/.bash_history
 history_path2=/root/.bash_history
-sleep_seconds=300
+sleep_seconds=3600
 
 echo "[INFO] Starting: [sleep_time=\${sleep_seconds} seconds]"
-
-# This is temporarily disabled due to:
-#
-#       https://github.com/nforgeio/neonKUBE/issues/496
-#
-# I think something may have changed for the Ubuntu 18.04 upgrade.
-# This needs further investigation.
-
-while true
-do
-    sleep \${sleep_seconds}
-done
 
 while true
 do
@@ -579,32 +567,23 @@ do
         fi
     fi
 
-    # Clean the [SshProxy] temporary command files.
-
-    if [ -d /dev/shm/neonkube/cmd ] ; then
-        echo "[INFO] Cleaning: /dev/shm/neonkube/cmd"
-        find /dev/shm/neonkube/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
-    fi
-
-    # Clean the [SshProxy] temporary upload files.
-
-    if [ -d "${HOME}/.upload" ] ; then
-        echo "[INFO] Cleaning: ${HOME}/.upload"
-        find "${HOME}/.upload" ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
-    fi
-
     # Clean the [SshProxy] temporary download files.
 
     if [ -d "${HOME}/.download" ] ; then
         echo "[INFO] Cleaning: ${HOME}/.download"
-        find "${HOME}/.download" ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+        find "${HOME}/.download/*" -type d -ctime +1 | xargs rm -rf
     fi
 
     # Clean the [SshProxy] temporary exec files.
 
     if [ -d "${HOME}/.exec" ] ; then
         echo "[INFO] Cleaning: "${HOME}/.exec""
-        find "${HOME}/.exec" ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+        find "${HOME}/.exec/*" -type d -ctime +1 | xargs rm -rf
+    fi
+
+    if [ -d "${HOME}/.upload" ] ; then
+        echo "[INFO] Cleaning: ${HOME}/.upload"
+        find "${HOME}/.upload/*" -type d -ctime +1 | xargs rm -rf
     fi
 
     # Sleep for a while before trying again.

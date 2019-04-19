@@ -2265,12 +2265,12 @@ rm {KubeHostFolders.Home(Username)}/askpass
             // it completed, potentially after we've been disconnected and then were
             // able to reestablish the connection.
             //
-            // We're going to use the [/dev/shm] "shared memory" tmpfs to coordinate
+            // We're going to use the [/home/sysadmin/.exec] folder coordinate
             // this by:
             //
             //      1. Generating a GUID for the operation.
             //
-            //      2. Creating a folder named [/dev/shm/neonkube/cmd/GUID] for the 
+            //      2. Creating a folder named [/home/sysadmin/.exec] for the 
             //         operation.  This folder will be referred to as [$] below.
             //
             //      3. Generating a script called [$/cmd.sh] that 
@@ -2333,19 +2333,46 @@ echo $? > {cmdFolder}/exit
 
             do
             {
+                var abortedSshCommand = (SafeSshCommand)null;
+
                 SafeSshOperation("waiting",
                     () =>
                     {
-                        var response = sshClient.RunCommand($"if [ -f {LinuxPath.Combine(cmdFolder, "exit")} ] ; then exit 0; else exit 1; fi;");
+                        // We're also going to check to ensure that the [cmdFolder] still exists and
+                        // fail the command and if it does not.  This will help mitigate situations 
+                        // where the folder gets inadvertently deleted as happened with:
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/496
+                        //
+                        // We'll have the test command return 2 in this case to distinguish between
+                        // the folder not being present from the exit file not being there.
+
+                        var response = sshClient.RunCommand($"if [ ! -d {cmdFolder} ] ; then exit 2; fi; if [ -f {LinuxPath.Combine(cmdFolder, "exit")} ] ; then exit 0; else exit 1; fi;");
 
                         if (response.ExitStatus == 0)
                         {
                             finished = true;
                             return;
                         }
+                        else if (response.ExitStatus == 2)
+                        {
+                            // The [cmdFolder] was deleted.
+
+                            abortedSshCommand = new SafeSshCommand()
+                            {
+                                ExitStatus = 1,
+                                Result     = string.Empty,
+                                Error      = $"Command failed because the [{cmdFolder}] no longer exists."
+                            };
+                        }
 
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     });
+
+                if (abortedSshCommand != null)
+                {
+                    return abortedSshCommand;
+                }
             }
             while (!finished);
 
