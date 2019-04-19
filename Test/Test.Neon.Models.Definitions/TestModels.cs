@@ -111,9 +111,6 @@ namespace Test.Neon.Models.Definitions
         Version GetVersion(Version version);
 
         [HttpGet]
-        SemanticVersion GetSemanticVersion(SemanticVersion version);
-
-        [HttpGet]
         [Route("person/{id}/{name}/{age}")]
         Person CreatePerson(int id, string name, int age);
 
