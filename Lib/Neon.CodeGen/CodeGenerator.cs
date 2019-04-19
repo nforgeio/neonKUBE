@@ -2108,7 +2108,7 @@ namespace Neon.CodeGen
             //
             // We're going collate the service methods into client groups by name,
             // with the empty name referring to methods that should appear directly
-            // within the generated service class.
+            // within the generated service class (AKA the root group).
 
             var clientGroups = new Dictionary<string, List<ServiceMethod>>();
 
