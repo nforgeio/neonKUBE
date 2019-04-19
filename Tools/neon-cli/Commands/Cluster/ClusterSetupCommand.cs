@@ -1416,16 +1416,6 @@ rm /tmp/calico.yaml
         {
             master.Status = "deploy: istio";
 
-            // $todo(jeff.lill):
-            //
-            // We need to edit the Istio installation YAML file so that Istio
-            // runs with root access so it can insert pod sidecars.  This is
-            // temporary and we should be able to clean this up after Istio
-            // with integrated CNI goes GA.
-            //
-            // We're going to split the bash script into two parts and download
-            // and edit the file in the middle.
-
             var istioScript1 =
 $@"#!/bin/bash
 
@@ -1470,7 +1460,13 @@ done
 helm template install/kubernetes/helm/istio \
     --name istio \
     --namespace istio-system \
+    --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml \
     --set istio_cni.enabled=true \
+    --set global.proxy.accessLogFile=/dev/stdout \
+    --set kiali.enabled=true \
+    --set tracing.enabled=true \
+    --set grafana.enabled=true \
+    --set servicegraph.enabled=true \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
