@@ -121,6 +121,70 @@ namespace TestCodeGen.AspNet
 
             return person;
         }
+
+        [HttpGet]
+        [Route("GetOptionalStringViaHeader_Null")]
+        [Produces("application/json")]
+        public string GetOptionalStringViaHeader_Null([FromHeader(Name = "X-Test")] string value = null)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        [Route("GetOptionalStringViaHeader_Value")]
+        [Produces("application/json")]
+        public string GetOptionalStringViaHeader_Value([FromHeader(Name = "X-Test")] string value = "Hello World!")
+        {
+            return value;
+        }
+
+        [HttpGet]
+        [Route("GetOptionalStringViaQuery_Null")]
+        [Produces("application/json")]
+        public string GetOptionalStringViaQuery_Null([FromQuery] string value = null)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        [Route("GetOptionalStringViaQuery_Value")]
+        [Produces("application/json")]
+        public string GetOptionalStringViaQuery_Value([FromQuery] string value = "Hello World!")
+        {
+            return value;
+        }
+
+        [HttpGet]
+        [Route("GetOptionalEnumViaHeader")]
+        [Produces("application/json")]
+        public MyEnum GetOptionalEnumViaHeader([FromHeader(Name = "X-Test")] MyEnum value = MyEnum.Three)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        [Route("GetOptionalEnumViaQuery")]
+        [Produces("application/json")]
+        public MyEnum GetOptionalEnumViaQuery([FromQuery] MyEnum value = MyEnum.Three)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        [Route("GetOptionalDoubleViaHeader")]
+        [Produces("application/json")]
+        public double GetOptionalDoubleViaHeader([FromHeader(Name = "X-Test")] double value = 1.234)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        [Route("GetOptionalDoubleViaQuery")]
+        [Produces("application/json")]
+        public double GetOptionalDoubleViaQuery([FromQuery] double value = 1.234)
+        {
+            return value;
+        }
     }
 
     public class Startup
@@ -269,6 +333,31 @@ namespace TestCodeGen.AspNet
             Assert.Equal(10, modified.Id);
             Assert.Equal("Jeff", modified.Name);
             Assert.Equal(59, modified.Age);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task OptionalParams()
+        {
+            Assert.Null(await client.GetOptionalStringViaHeader_NullAsync());
+            Assert.Equal("Goodbye World!", await client.GetOptionalStringViaHeader_ValueAsync("Goodbye World!"));
+            Assert.Equal("Hello World!", await client.GetOptionalStringViaHeader_ValueAsync());
+            Assert.Equal("Goodbye World!", await client.GetOptionalStringViaHeader_ValueAsync("Goodbye World!"));
+
+            Assert.Null((await client.UnsafeGetOptionalStringViaHeader_NullAsync()).As<string>());
+            Assert.Equal("Goodbye World!", (await client.UnsafeGetOptionalStringViaHeader_NullAsync("Goodbye World!")).As<string>());
+            Assert.Equal("Hello World!", (await client.UnsafeGetOptionalStringViaHeader_ValueAsync()).As<string>());
+            Assert.Equal("Goodbye World!", (await client.UnsafeGetOptionalStringViaHeader_ValueAsync("Goodbye World!")).As<string>());
+
+            Assert.Equal(MyEnum.Three, await client.GetOptionalEnumViaHeaderAsync());
+            Assert.Equal(MyEnum.Two, await client.GetOptionalEnumViaHeaderAsync(MyEnum.Two));
+            Assert.Equal(MyEnum.Three, (await client.UnsafeGetOptionalEnumViaHeaderAsync()).As<MyEnum>());
+            Assert.Equal(MyEnum.Two, (await client.UnsafeGetOptionalEnumViaHeaderAsync(MyEnum.Two)).As<MyEnum>());
+
+            Assert.Equal(1.234, await client.GetOptionalDoubleViaHeaderAsync());
+            Assert.Equal(2.345, await client.GetOptionalDoubleViaHeaderAsync(2.345));
+            Assert.Equal(1.234, (await client.UnsafeGetOptionalDoubleViaHeaderAsync()).As<double>());
+            Assert.Equal(2.345, (await client.UnsafeGetOptionalDoubleViaHeaderAsync(2.345)).As<double>());
         }
     }
 }

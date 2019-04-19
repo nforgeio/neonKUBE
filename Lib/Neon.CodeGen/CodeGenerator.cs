@@ -640,6 +640,27 @@ namespace Neon.CodeGen
                         Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with complex type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody] or implementing a JSON type converter that implements [IEnhancedJsonConverter].");
                     }
 
+                    if (parameterInfo.IsIn)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] as [in].  This is not supported for ASP.NET service endpoints.");
+                    }
+
+                    if (parameterInfo.IsOut)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] as [out].  This is not supported for ASP.NET service endpoints.");
+                    }
+
+                    if (parameterInfo.IsRetval)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] as [ref].  This is not supported for ASP.NET service endpoints.");
+                    }
+
+                    if (parameterInfo.IsOptional)
+                    {
+                        methodParameter.IsOptional   = true;
+                        methodParameter.DefaultValue = parameterInfo.DefaultValue;
+                    }
+
                     serviceMethod.Parameters.Add(methodParameter);
                 }
 
@@ -1557,7 +1578,7 @@ namespace Neon.CodeGen
 
                         writer.WriteLine($"        [JsonProperty(PropertyName = \"{property.SerializedName}\", DefaultValueHandling = DefaultValueHandling.{defaultValueHandling}, Required = Required.{property.Required}, Order = {property.Order})]");
 
-                        defaultValueExpression = property.DefaultValueExpression;
+                        defaultValueExpression = property.DefaultValueLiteral;
 
                         if (defaultValueExpression != null)
                         {
@@ -1567,7 +1588,7 @@ namespace Neon.CodeGen
 
                     var propertyTypeName = ResolveTypeReference(property.Type);
 
-                    defaultValueExpression = property.DefaultValueExpression;
+                    defaultValueExpression = property.DefaultValueLiteral;
 
                     if (defaultValueExpression == null)
                     {
@@ -1649,7 +1670,7 @@ namespace Neon.CodeGen
                                     // Set the property to its default value, when the
                                     // default differs from the type's default.
 
-                                    defaultValueExpression = property.DefaultValueExpression;
+                                    defaultValueExpression = property.DefaultValueLiteral;
 
                                     if (defaultValueExpression != null)
                                     {
@@ -1741,7 +1762,7 @@ namespace Neon.CodeGen
                                         writer.WriteLine();
                                     }
 
-                                    defaultValueExpression = property.DefaultValueExpression ?? "default";
+                                    defaultValueExpression = property.DefaultValueLiteral ?? "default";
 
                                     writer.WriteLine($"            if (this.{property.Name} == {defaultValueExpression})");
                                     writer.WriteLine($"            {{");
@@ -2302,9 +2323,21 @@ namespace Neon.CodeGen
             var argSeparator = ", ";
             var sbParameters = new StringBuilder();
 
-            foreach (var parameter in serviceMethod.MethodInfo.GetParameters())
+            foreach (var parameter in serviceMethod.Parameters)
             {
-                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterType)} {parameter.Name}", argSeparator);
+                var defaultValueExpression = string.Empty;
+
+                if (parameter.IsOptional)
+                {
+                    var defaultValueLiteral = parameter.DefaultValueLiteral;
+
+                    if (defaultValueLiteral != null)
+                    {
+                        defaultValueExpression = $" = {defaultValueLiteral}";
+                    }
+                }
+
+                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterInfo.ParameterType)} {parameter.Name}{defaultValueExpression}", argSeparator);
             }
 
             sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", argSeparator);
@@ -2364,6 +2397,48 @@ namespace Neon.CodeGen
                         parameter.Pass = Pass.InRoute;
 
                         routeParameters.Add(parameter);
+                    }
+                }
+            }
+
+            // Only header and query parameters are allowed to be optional.
+
+            foreach (var parameter in serviceMethod.Parameters)
+            {
+                string invalidPass = null;
+
+                if (parameter.IsOptional)
+                {
+                    switch (parameter.Pass)
+                    {
+                        // These are allowed.
+
+                        case Pass.Default:
+                        case Pass.AsHeader:
+                        case Pass.InQuery:
+
+                            break;
+
+                        // These are not allowed.
+
+                        case Pass.AsBody:
+
+                            invalidPass = "FromBody";
+                            break;
+
+                        case Pass.InRoute:
+
+                            invalidPass = "Route";
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+
+                    if (invalidPass != null)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has optional parameter [{parameter.Name}] tagged with the unsupported [{invalidPass}] attribute.");
                     }
                 }
             }
@@ -2436,22 +2511,34 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary()");
-                sbArgGenerate.AppendLine($"{indent}            {{");
+                var nonOptionalQueryParameters = queryParameters.Where(p => !p.IsOptional);
+                var optionalQueryParameters    = queryParameters.Where(p => p.IsOptional);
 
-                foreach (var parameter in queryParameters)
+                if (nonOptionalQueryParameters.Count() == 0)
                 {
-                    if (parameter.ParameterInfo.ParameterType.IsEnum)
-                    {
-                        sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", NeonHelper.EnumToString({parameter.Name}) }},");
-                    }
-                    else
+                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary();");
+                }
+                else
+                {
+                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+
+                    foreach (var parameter in nonOptionalQueryParameters)
                     {
                         sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
                     }
+
+                    sbArgGenerate.AppendLine($"{indent}            }};");
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            }};");
+                foreach (var parameter in optionalQueryParameters)
+                {
+                    sbArgGenerate.AppendLine();
+                    sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+                    sbArgGenerate.AppendLine($"{indent}                args.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}            }}");
+                }
             }
 
             if (headerParameters.Count() > 0)
@@ -2461,15 +2548,34 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary()");
-                sbArgGenerate.AppendLine($"{indent}            {{");
+                var nonOptionalHeaderParameters = headerParameters.Where(p => !p.IsOptional);
+                var optionalHeaderParameters    = headerParameters.Where(p => p.IsOptional);
 
-                foreach (var parameter in headerParameters)
+                if (nonOptionalHeaderParameters.Count() == 0)
                 {
-                    sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
+                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary();");
+                }
+                else
+                {
+                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+
+                    foreach (var parameter in nonOptionalHeaderParameters)
+                    {
+                        sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
+                    }
+
+                    sbArgGenerate.AppendLine($"{indent}            }};");
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            }};");
+                foreach (var parameter in optionalHeaderParameters)
+                {
+                    sbArgGenerate.AppendLine();
+                    sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+                    sbArgGenerate.AppendLine($"{indent}                headers.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}            }}");
+                }
             }
 
             sbArguments.AppendWithSeparator("retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
