@@ -859,11 +859,13 @@ safe-apt-get update
                     node.Status = "hold: kubernetes packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
 
-                    node.Status = "configure: kubeket volume-plugins";
+                    node.Status = "configure: kubelet";
+                    node.SudoCommand("mkdir -p /opt/cni/bin");
+                    node.SudoCommand("mkdir -p /etc/cni/net.d");
                     node.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
 
-echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 "));
@@ -987,7 +989,36 @@ networking:
                             {
                                 kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart, pEnd - pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
+
+                            kubeContextExtension.Save();
                         });
+
+                    // Configure kube-apiserver
+
+                    foreach (var master in cluster.Masters)
+                    {
+                        try
+                        {
+                            master.InvokeIdempotentAction("setup/kube-apiserver",
+                            () =>
+                            {
+                                master.Status = "configure: kube-apiserver";
+                                master.SudoCommand(CommandBundle.FromScript(
+@"#!/bin/bash
+
+sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
+"));
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            master.Fault(NeonHelper.ExceptionError(e));
+                            master.LogException(e);
+                        }
+
+                        master.Status = "done";
+                    }
+                    
 
                     // kubectl config:
 
@@ -1436,8 +1467,11 @@ done
 
 # Install Istio:
 
-helm template install/kubernetes/helm/istio --name istio --namespace istio-system \
-    --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml --set istio_cni.enabled=true | kubectl apply -f -
+helm template install/kubernetes/helm/istio \
+    --name istio \
+    --namespace istio-system \
+    --set istio_cni.enabled=true \
+    | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
         }
