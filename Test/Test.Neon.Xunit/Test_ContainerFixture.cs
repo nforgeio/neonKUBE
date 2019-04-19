@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SemanticVersionJsonConverter.cs
+// FILE:	    Test_ContainerFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,37 +20,39 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
 using Neon.Common;
+using Neon.Kube;
+using Neon.Xunit;
 
-namespace Neon.Data
+using Xunit;
+
+namespace TestXunit
 {
-    /// <summary>
-    /// Implements a type converter for <see cref="SemanticVersion"/>.
-    /// </summary>
-    public class SemanticVersionJsonConverter : JsonConverter<SemanticVersion>, IEnhancedJsonConverter
+    public class Test_ContainerFixture : IClassFixture<ContainerFixture>
     {
-        /// <inheritdoc/>
-        public Type Type => typeof(SemanticVersion);
+        private ContainerFixture fixture;
 
-        /// <inheritdoc/>
-        public override SemanticVersion ReadJson(JsonReader reader, Type objectType, SemanticVersion existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public Test_ContainerFixture(ContainerFixture fixture)
         {
-            return SemanticVersion.Parse((string)reader.Value);
+            this.fixture = fixture;
+
+            fixture.Start("my-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
         }
 
-        /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, SemanticVersion value, JsonSerializer serializer)
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Verify()
         {
-            writer.WriteValue(value.ToString());
+            // All we need to do is verify that the container is running.
+
+            var result = NeonHelper.ExecuteCapture("docker", "ps");
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("my-container", result.AllText);
         }
     }
 }

@@ -26,7 +26,7 @@ using Neon.Data;
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to tag the property acting as the database key for an <see cref=" IGeneratedType"/>.
+    /// Used to tag the property acting as the database key for an <see cref=" IRoundtripData"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class PersistableKeyAttribute : Attribute

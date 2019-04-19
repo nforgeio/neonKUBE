@@ -88,6 +88,14 @@ namespace Test.Neon.Models.Definitions
         byte[] Data { get; set; }
     }
 
+    public enum MyEnum
+    {
+        Zero,
+        One,
+        Two,
+        Three
+    }
+
     [ServiceModel]
     [Route("/TestAspNetFixture")]
     public interface TestAspNetFixtureController
@@ -111,13 +119,57 @@ namespace Test.Neon.Models.Definitions
         Version GetVersion(Version version);
 
         [HttpGet]
-        SemanticVersion GetSemanticVersion(SemanticVersion version);
-
-        [HttpGet]
         [Route("person/{id}/{name}/{age}")]
         Person CreatePerson(int id, string name, int age);
 
         [HttpPut]
         Person IncrementAge([FromBody] Person person);
+
+        [HttpGet]
+        int DefaultInt(int value = 10);
+
+        [HttpGet]
+        bool DefaultBool(bool value = true);
+
+        [HttpGet]
+        double DefaultInt(double value = 1.234);
+
+        [HttpGet]
+        string DefaultString(string value = "test");
+
+        [HttpGet]
+        MyEnum DefaultEnum(MyEnum value = MyEnum.Three);
+
+        [HttpGet]
+        [Route("GetOptionalStringViaHeader_Null")]
+        string GetOptionalStringViaHeader_Null([FromHeader(Name = "X-Test")] string value = null);
+
+        [HttpGet]
+        [Route("GetOptionalStringViaHeader_Value")]
+        string GetOptionalStringViaHeader_Value([FromHeader(Name = "X-Test")] string value = "Hello World!");
+
+        [HttpGet]
+        [Route("GetOptionalStringViaQuery_Null")]
+        string GetOptionalStringViaQuery_Null([FromQuery] string value = null);
+
+        [HttpGet]
+        [Route("GetOptionalStringViaQuery_Value")]
+        string GetOptionalStringViaQuery_Value([FromQuery] string value = "Hello World!");
+
+        [HttpGet]
+        [Route("GetOptionalEnumViaHeader")]
+        MyEnum GetOptionalEnumViaHeader([FromHeader(Name = "X-Test")] MyEnum value = MyEnum.Three);
+
+        [HttpGet]
+        [Route("GetOptionalEnumViaQuery")]
+        MyEnum GetOptionalEnumViaQuery([FromQuery] MyEnum value = MyEnum.Three);
+
+        [HttpGet]
+        [Route("GetOptionalDoubleViaHeader")]
+        double GetOptionalDoubleViaHeader([FromHeader(Name = "X-Test")] double value = 1.234);
+
+        [HttpGet]
+        [Route("GetOptionalDoubleViaQuery")]
+        double GetOptionalDoubleViaQuery([FromQuery] double value = 1.234);
     }
 }

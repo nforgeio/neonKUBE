@@ -34,35 +34,31 @@ using Neon.Net;
 namespace NATS.Client
 {
     /// <summary>
-    /// Implements an <see cref="IAsyncSubscription"/> for typed messages.
+    /// Implements an <see cref="ISyncSubscription"/> for typed messages.
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
-    public sealed class AsyncSubscription<TMessage> : ISubscription
-        where TMessage : class, IGeneratedType, new()
+    public sealed class AsyncSubscription<TMessage> : IAsyncSubscription<TMessage>
+        where TMessage : class, IRoundtripData, new()
     {
         private IAsyncSubscription subscription;
 
         /// <summary>
-        /// Constructs a typed asynchronous subscription wrapping a lower level subscription.
+        /// Internal constructor.
         /// </summary>
-        /// <param name="subscription">The subscripting being wrapped.</param>
+        /// <param name="subscription">The underlying non-generic subscription returned by NATS.</param>
         internal AsyncSubscription(IAsyncSubscription subscription)
         {
             Covenant.Requires<ArgumentNullException>(subscription != null);
 
             this.subscription = subscription;
 
-            this.subscription.MessageHandler +=
+            subscription.MessageHandler +=
                 (sender, args) =>
                 {
-                    MessageHandler?.Invoke(sender, new MsgHandlerEventArgs<TMessage>(args.Message));
+                    MessageHandler?.Invoke(sender, args);
+                    RoundtripMessageHandler?.Invoke(sender, new MsgHandlerEventArgs<TMessage>(args.Message));
                 };
         }
-
-        /// <summary>
-        /// Fires when messages are received asynchronously.
-        /// </summary>
-        public event EventHandler<MsgHandlerEventArgs<TMessage>> MessageHandler;
 
         /// <inheritdoc/>
         public string Subject => subscription.Subject;
@@ -80,7 +76,6 @@ namespace NATS.Client
         public int QueuedMessageCount => subscription.QueuedMessageCount;
 
         /// <inheritdoc/>
-        /// <inheritdoc/>
         public long PendingByteLimit
         {
             get => subscription.PendingByteLimit;
@@ -94,7 +89,6 @@ namespace NATS.Client
             set => subscription.PendingMessageLimit = value;
         }
 
-        /// <inheritdoc/>
         /// <inheritdoc/>
         public long PendingBytes => subscription.PendingBytes;
 
@@ -112,6 +106,15 @@ namespace NATS.Client
 
         /// <inheritdoc/>
         public long Dropped => subscription.Dropped;
+
+        /// <inheritdoc/>
+        public event EventHandler<MsgHandlerEventArgs<TMessage>> RoundtripMessageHandler;
+
+        /// <summary>
+        /// Raised when low-level messages are received.  Most application should probably
+        /// listen for deserialized messages on <see cref="RoundtripMessageHandler"/>.
+        /// </summary>
+        public event EventHandler<MsgHandlerEventArgs> MessageHandler;
 
         /// <inheritdoc/>
         public void AutoUnsubscribe(int max)
@@ -140,13 +143,19 @@ namespace NATS.Client
         /// <inheritdoc/>
         public void GetPending(out long pendingBytes, out long pendingMessages)
         {
-            subscription.GetMaxPending(out pendingBytes, out pendingMessages);
+            subscription.GetPending(out pendingBytes, out pendingMessages);
         }
 
         /// <inheritdoc/>
         public void SetPendingLimits(long messageLimit, long bytesLimit)
         {
             subscription.SetPendingLimits(messageLimit, bytesLimit);
+        }
+
+        /// <inheritdoc/>
+        public void Start()
+        {
+            subscription.Start();
         }
 
         /// <inheritdoc/>

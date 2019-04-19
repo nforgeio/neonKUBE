@@ -107,7 +107,7 @@ namespace Neon.CodeGen
 
             // Add the [Neon.Common] assembly.
 
-            references.Add(typeof( IGeneratedType));
+            references.Add(typeof(IRoundtripData));
 
             // NOTE: 
             // 
@@ -640,6 +640,27 @@ namespace Neon.CodeGen
                         Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] with complex type [{parameterInfo.ParameterType.Name}].  Consider tagging the parameter with [FromBody] or implementing a JSON type converter that implements [IEnhancedJsonConverter].");
                     }
 
+                    if (parameterInfo.IsIn)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] as [in].  This is not supported for ASP.NET service endpoints.");
+                    }
+
+                    if (parameterInfo.IsOut)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] as [out].  This is not supported for ASP.NET service endpoints.");
+                    }
+
+                    if (parameterInfo.IsRetval)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] defines parameter [{parameterInfo.Name}] as [ref].  This is not supported for ASP.NET service endpoints.");
+                    }
+
+                    if (parameterInfo.IsOptional)
+                    {
+                        methodParameter.IsOptional   = true;
+                        methodParameter.DefaultValue = parameterInfo.DefaultValue;
+                    }
+
                     serviceMethod.Parameters.Add(methodParameter);
                 }
 
@@ -1147,7 +1168,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = " :  IGeneratedType";
+                var baseTypeRef = " : IRoundtripData";
 
                 if (dataModel.IsDerived)
                 {
@@ -1157,7 +1178,7 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IGeneratedType";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IRoundtripData";
                 }
                 else if (Settings.UxFeatures)
                 {
@@ -1241,7 +1262,7 @@ namespace Neon.CodeGen
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Performs any persistence related initialization including registering the Linq2Couchbase type");
-                        writer.WriteLine($"        /// filter.  This is typically called via <see cref=\"TypeSerializationHelper.PersistableInitialize()\"/>.");
+                        writer.WriteLine($"        /// filter.  This is typically called via <see cref=\"RoundtripDataHelper.PersistableInitialize()\"/>.");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        public static void PersistableInitialize()");
                         writer.WriteLine($"        {{");
@@ -1264,7 +1285,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                throw new ArgumentNullException(nameof(jsonText));");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
-                    writer.WriteLine($"            var model = new {className}(TypeSerializationHelper.Deserialize<JObject>(jsonText));");
+                    writer.WriteLine($"            var model = new {className}(RoundtripDataHelper.Deserialize<JObject>(jsonText));");
                     writer.WriteLine();
                     writer.WriteLine($"            model.__Load();");
                     writer.WriteLine($"            return model;");
@@ -1381,7 +1402,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
                     writer.WriteLine($"        /// the same type as the current class.");
                     writer.WriteLine($"        /// </returns>");
-                    writer.WriteLine($"        public static bool SameTypeAs( IGeneratedType instance)");
+                    writer.WriteLine($"        public static bool SameTypeAs(IRoundtripData instance)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (instance == null)");
                     writer.WriteLine($"            {{");
@@ -1402,7 +1423,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the item.</param>");
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
-                        writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(\"{dataModel.PersistedType}\", args);");
+                        writer.WriteLine($"            return RoundtripDataHelper.GetPersistedKey(\"{dataModel.PersistedType}\", args);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1557,7 +1578,7 @@ namespace Neon.CodeGen
 
                         writer.WriteLine($"        [JsonProperty(PropertyName = \"{property.SerializedName}\", DefaultValueHandling = DefaultValueHandling.{defaultValueHandling}, Required = Required.{property.Required}, Order = {property.Order})]");
 
-                        defaultValueExpression = property.DefaultValueExpression;
+                        defaultValueExpression = property.DefaultValueLiteral;
 
                         if (defaultValueExpression != null)
                         {
@@ -1567,7 +1588,7 @@ namespace Neon.CodeGen
 
                     var propertyTypeName = ResolveTypeReference(property.Type);
 
-                    defaultValueExpression = property.DefaultValueExpression;
+                    defaultValueExpression = property.DefaultValueLiteral;
 
                     if (defaultValueExpression == null)
                     {
@@ -1625,7 +1646,7 @@ namespace Neon.CodeGen
 
                             if (property.RequiresObjectification)
                             {
-                                writer.WriteLine($"                this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(TypeSerializationHelper.Serializer);");
+                                writer.WriteLine($"                this.{property.Name} = property.Value.ToObject<{resolvedPropertyType}>(RoundtripDataHelper.Serializer);");
                             }
                             else
                             {
@@ -1649,7 +1670,7 @@ namespace Neon.CodeGen
                                     // Set the property to its default value, when the
                                     // default differs from the type's default.
 
-                                    defaultValueExpression = property.DefaultValueExpression;
+                                    defaultValueExpression = property.DefaultValueLiteral;
 
                                     if (defaultValueExpression != null)
                                     {
@@ -1725,7 +1746,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = TypeSerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1741,7 +1762,7 @@ namespace Neon.CodeGen
                                         writer.WriteLine();
                                     }
 
-                                    defaultValueExpression = property.DefaultValueExpression ?? "default";
+                                    defaultValueExpression = property.DefaultValueLiteral ?? "default";
 
                                     writer.WriteLine($"            if (this.{property.Name} == {defaultValueExpression})");
                                     writer.WriteLine($"            {{");
@@ -1755,7 +1776,7 @@ namespace Neon.CodeGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = TypeSerializationHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
@@ -1787,7 +1808,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return TypeSerializationHelper.Serialize(__JObject, Formatting.None);");
+                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__JObject, Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
@@ -1799,7 +1820,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return TypeSerializationHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
+                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -1816,7 +1837,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine($"            return noClone ? __JObject : TypeSerializationHelper.DeepClone(__JObject);");
+                        writer.WriteLine($"            return noClone ? __JObject : RoundtripDataHelper.DeepClone(__JObject);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1831,7 +1852,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public {virtualModifier} byte[] ToBytes()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return Encoding.UTF8.GetBytes(TypeSerializationHelper.Serialize(__JObject, Formatting.None));");
+                    writer.WriteLine($"            return Encoding.UTF8.GetBytes(RoundtripDataHelper.Serialize(__JObject, Formatting.None));");
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
@@ -1845,7 +1866,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        public {className} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return CreateFrom(TypeSerializationHelper.DeepClone(__JObject));");
+                    writer.WriteLine($"            return CreateFrom(RoundtripDataHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1861,10 +1882,10 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
-                    writer.WriteLine($"           where T : {className}, IGeneratedType");
+                    writer.WriteLine($"           where T : {className}, IRoundtripData");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return GeneratedTypeFactory.CreateFrom<T>(noClone ? __JObject : TypeSerializationHelper.DeepClone(__JObject));");
+                    writer.WriteLine($"            return RoundtripDataFactory.CreateFrom<T>(noClone ? __JObject : RoundtripDataHelper.DeepClone(__JObject));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1916,7 +1937,7 @@ namespace Neon.CodeGen
 
                     if (hashedProperties.Count == 0)
                     {
-                        writer.WriteLine($"            throw new InvalidOperationException(TypeSerializationHelper.NoHashPropertiesError);");
+                        writer.WriteLine($"            throw new InvalidOperationException(RoundtripDataHelper.NoHashPropertiesError);");
                     }
                     else
                     {
@@ -1988,7 +2009,7 @@ namespace Neon.CodeGen
                         }
                         else if (persistedKeyProperty.PropertyType.IsValueType)
                         {
-                            writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name}.ToString());");
+                            writer.WriteLine($"            return RoundtripDataHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name}.ToString());");
                         }
                         else
                         {
@@ -2000,7 +2021,7 @@ namespace Neon.CodeGen
 
                             if (persistedKeyProperty.PropertyType == typeof(string))
                             {
-                                writer.WriteLine($"            return TypeSerializationHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name});");
+                                writer.WriteLine($"            return RoundtripDataHelper.GetPersistedKey(PersistedType, {persistedKeyProperty.Name});");
                             }
                             else
                             {
@@ -2302,9 +2323,21 @@ namespace Neon.CodeGen
             var argSeparator = ", ";
             var sbParameters = new StringBuilder();
 
-            foreach (var parameter in serviceMethod.MethodInfo.GetParameters())
+            foreach (var parameter in serviceMethod.Parameters)
             {
-                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterType)} {parameter.Name}", argSeparator);
+                var defaultValueExpression = string.Empty;
+
+                if (parameter.IsOptional)
+                {
+                    var defaultValueLiteral = parameter.DefaultValueLiteral;
+
+                    if (defaultValueLiteral != null)
+                    {
+                        defaultValueExpression = $" = {defaultValueLiteral}";
+                    }
+                }
+
+                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterInfo.ParameterType)} {parameter.Name}{defaultValueExpression}", argSeparator);
             }
 
             sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", argSeparator);
@@ -2364,6 +2397,48 @@ namespace Neon.CodeGen
                         parameter.Pass = Pass.InRoute;
 
                         routeParameters.Add(parameter);
+                    }
+                }
+            }
+
+            // Only header and query parameters are allowed to be optional.
+
+            foreach (var parameter in serviceMethod.Parameters)
+            {
+                string invalidPass = null;
+
+                if (parameter.IsOptional)
+                {
+                    switch (parameter.Pass)
+                    {
+                        // These are allowed.
+
+                        case Pass.Default:
+                        case Pass.AsHeader:
+                        case Pass.InQuery:
+
+                            break;
+
+                        // These are not allowed.
+
+                        case Pass.AsBody:
+
+                            invalidPass = "FromBody";
+                            break;
+
+                        case Pass.InRoute:
+
+                            invalidPass = "Route";
+                            break;
+
+                        default:
+
+                            throw new NotImplementedException();
+                    }
+
+                    if (invalidPass != null)
+                    {
+                        Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has optional parameter [{parameter.Name}] tagged with the unsupported [{invalidPass}] attribute.");
                     }
                 }
             }
@@ -2436,22 +2511,34 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary()");
-                sbArgGenerate.AppendLine($"{indent}            {{");
+                var nonOptionalQueryParameters = queryParameters.Where(p => !p.IsOptional);
+                var optionalQueryParameters    = queryParameters.Where(p => p.IsOptional);
 
-                foreach (var parameter in queryParameters)
+                if (nonOptionalQueryParameters.Count() == 0)
                 {
-                    if (parameter.ParameterInfo.ParameterType.IsEnum)
-                    {
-                        sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", NeonHelper.EnumToString({parameter.Name}) }},");
-                    }
-                    else
+                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary();");
+                }
+                else
+                {
+                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+
+                    foreach (var parameter in nonOptionalQueryParameters)
                     {
                         sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
                     }
+
+                    sbArgGenerate.AppendLine($"{indent}            }};");
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            }};");
+                foreach (var parameter in optionalQueryParameters)
+                {
+                    sbArgGenerate.AppendLine();
+                    sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+                    sbArgGenerate.AppendLine($"{indent}                args.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}            }}");
+                }
             }
 
             if (headerParameters.Count() > 0)
@@ -2461,15 +2548,34 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary()");
-                sbArgGenerate.AppendLine($"{indent}            {{");
+                var nonOptionalHeaderParameters = headerParameters.Where(p => !p.IsOptional);
+                var optionalHeaderParameters    = headerParameters.Where(p => p.IsOptional);
 
-                foreach (var parameter in headerParameters)
+                if (nonOptionalHeaderParameters.Count() == 0)
                 {
-                    sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
+                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary();");
+                }
+                else
+                {
+                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+
+                    foreach (var parameter in nonOptionalHeaderParameters)
+                    {
+                        sbArgGenerate.AppendLine($"{indent}                {{ \"{parameter.SerializedName}\", {parameter.Name} }},");
+                    }
+
+                    sbArgGenerate.AppendLine($"{indent}            }};");
                 }
 
-                sbArgGenerate.AppendLine($"{indent}            }};");
+                foreach (var parameter in optionalHeaderParameters)
+                {
+                    sbArgGenerate.AppendLine();
+                    sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
+                    sbArgGenerate.AppendLine($"{indent}            {{");
+                    sbArgGenerate.AppendLine($"{indent}                headers.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}            }}");
+                }
             }
 
             sbArguments.AppendWithSeparator("retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
@@ -2483,7 +2589,7 @@ namespace Neon.CodeGen
                 }
                 else
                 {
-                    sbArguments.AppendWithSeparator($"document: TypeSerializationHelper.Serialize({bodyParameter.Name})", argSeparator);
+                    sbArguments.AppendWithSeparator($"document: RoundtripDataHelper.Serialize({bodyParameter.Name})", argSeparator);
                 }
             }
 

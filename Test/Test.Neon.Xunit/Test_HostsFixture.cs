@@ -29,7 +29,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-namespace TestCommon
+namespace TestXunit
 {
     public class Test_HostsFixture : IClassFixture<HostsFixture>
     {

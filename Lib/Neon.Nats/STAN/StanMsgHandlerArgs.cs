@@ -38,7 +38,29 @@ namespace STAN.Client
     /// </summary>
     /// <typeparam name="TMessage">The message type.</typeparam>
     public class StanMsgHandlerArgs<TMessage> : EventArgs
-        where TMessage : class, IGeneratedType, new()
+        where TMessage : class, IRoundtripData, new()
     {
+        /// <summary>
+        /// Constructs an instance from a low-level message and subscription.
+        /// </summary>
+        /// <param name="proto">The message including protocol information.</param>
+        /// <param name="subscription">
+        /// <para>
+        /// The subscription.
+        /// </para>
+        /// <note>
+        /// This needs to be passed as an <see cref="object"/> because 
+        /// <c>STAN.Client.AsyncSubscription</c> is defined as <c>internal</c>.
+        /// </note>
+        /// </param>
+        internal StanMsgHandlerArgs(MsgProto proto, object subscription)
+        {
+            this.Msg = new StanMsg<TMessage>(proto, (IStanSubscription)subscription);
+        }
+
+        /// <summary>
+        /// Returns the received message.
+        /// </summary>
+        public StanMsg<TMessage> Msg { get; private set; }
     }
 }

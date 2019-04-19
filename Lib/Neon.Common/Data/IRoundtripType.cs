@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IGeneratedType.cs
+// FILE:	    IRoundtripData.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -38,9 +38,9 @@ namespace Neon.Data
 {
     /// <summary>
     /// Used by the <b>Neon.CodeGen</b> assembly to indicate that a class
-    /// was generated as a data model.
+    /// was generated as a round-trip data model.
     /// </summary>
-    public interface IGeneratedType
+    public interface IRoundtripData
     {
         /// <summary>
         /// Returns the string identifying the entity type.

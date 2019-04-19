@@ -21,6 +21,7 @@ using System.IO;
 using System.Net.Http;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore;
@@ -42,43 +43,453 @@ using Neon.Xunit;
 using Neon.Xunit.Kube;
 
 using NATS.Client;
+using STAN.Client;
 
 using Xunit;
 
+using Test.Neon.Models;
+
 namespace TestXunit
 {
+    /// <summary>
+    /// This class tests both the <see cref="NatsFixture"/> as well as the Neon
+    /// NATS extensions.
+    /// </summary>
     public class Test_NatsFixture : IClassFixture<NatsFixture>
     {
         private NatsFixture     fixture;
-        private IConnection     client;
+        private IConnection     connection;
 
         public Test_NatsFixture(NatsFixture fixture)
         {
-            if (fixture.Start(image: "nkubedev/nats") == TestFixtureStatus.AlreadyRunning)
+            if (fixture.Start() == TestFixtureStatus.AlreadyRunning)
             {
                 fixture.Restart();
             }
 
             this.fixture = fixture;
-            this.client  = fixture.Client;
+            this.connection = fixture.Connection;
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test1()
+        public void Connect()
         {
-            // Simply verify that the client is connected for now.
-
-            Assert.Equal(ConnState.CONNECTED, client.State);
+            Assert.Equal(ConnState.CONNECTED, connection.State);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
-        public void Test2()
+        public void Subscribe()
         {
-            // This second test will exercise restarting the service.
+            Assert.Equal(ConnState.CONNECTED, connection.State);
 
-            Assert.Equal(ConnState.CONNECTED, client.State);
+            using (var subscription = connection.SubscribeSync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                var received = subscription.NextMessage(1000);
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeQueue()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject", "queue"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                var received = subscription.NextMessage(1000);
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeAsync()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeAsync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                Msg receivedLowLevel = null;
+                Msg<Person> received = null;
+
+                subscription.MessageHandler +=
+                    (sender, args) =>
+                    {
+                        receivedLowLevel = args.Message;
+                    };
+
+                subscription.RoundtripMessageHandler +=
+                    (sender, args) =>
+                    {
+                        received = args.Message;
+                    };
+
+                subscription.Start();
+                connection.Publish("subject", jack);
+                NeonHelper.WaitFor(() => received != null && receivedLowLevel != null, TimeSpan.FromSeconds(5));
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeAsyncHandler()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            Msg<Person> receivedFromHandler = null;
+
+            using (var subscription = connection.SubscribeAsync<Person>("subject", (s, a) => { receivedFromHandler = a.Message; }))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                Msg receivedLowLevel = null;
+                Msg<Person> received = null;
+
+                subscription.MessageHandler +=
+                    (sender, args) =>
+                    {
+                        receivedLowLevel = args.Message;
+                    };
+
+                subscription.RoundtripMessageHandler +=
+                    (sender, args) =>
+                    {
+                        received = args.Message;
+                    };
+
+                subscription.Start();
+                connection.Publish("subject", jack);
+                NeonHelper.WaitFor(() => received != null && receivedLowLevel != null && receivedFromHandler != null, TimeSpan.FromSeconds(5));
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeAsyncQueue()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeAsync<Person>("subject", "queue"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                Msg receivedLowLevel = null;
+                Msg<Person> received = null;
+
+                subscription.MessageHandler +=
+                    (sender, args) =>
+                    {
+                        receivedLowLevel = args.Message;
+                    };
+
+                subscription.RoundtripMessageHandler +=
+                    (sender, args) =>
+                    {
+                        received = args.Message;
+                    };
+
+                subscription.Start();
+                connection.Publish("subject", jack);
+                NeonHelper.WaitFor(() => received != null && receivedLowLevel != null, TimeSpan.FromSeconds(5));
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void SubscribeAsyncQueueHandler()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            Msg<Person> receivedFromHandler = null;
+
+            using (var subscription = connection.SubscribeAsync<Person>("subject", "queue", (s, a) => { receivedFromHandler = a.Message; }))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                Msg receivedLowLevel = null;
+                Msg<Person> received = null;
+
+                subscription.MessageHandler +=
+                    (sender, args) =>
+                    {
+                        receivedLowLevel = args.Message;
+                    };
+
+                subscription.RoundtripMessageHandler +=
+                    (sender, args) =>
+                    {
+                        received = args.Message;
+                    };
+
+                subscription.Start();
+                connection.Publish("subject", jack);
+                NeonHelper.WaitFor(() => received != null && receivedLowLevel != null && receivedFromHandler != null, TimeSpan.FromSeconds(5));
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void Publish()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", jack);
+
+                var received = subscription.NextMessage(1000);
+
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void PublishReply()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                connection.Publish("subject", "reply", jack);
+
+                var received = subscription.NextMessage(1000);
+
+                Assert.Equal("reply", received.Reply);
+                Assert.True(received.Data == jack);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void Request()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                var jill = new Person()
+                {
+                    Id = 2,
+                    Name = "Jill",
+                    Age = 11,
+                    Data = new byte[] { 5, 6, 7, 8, 9 }
+                };
+
+                Msg<Person> request = null;
+                Msg<Person> reply = null;
+
+                var thread = new Thread(
+                    new ThreadStart(
+                        () =>
+                        {
+                            request = subscription.NextMessage();
+
+                            connection.Publish(request.Reply, jill);
+                        }));
+
+                thread.Start();
+
+                reply = connection.Request<Person, Person>("subject", jack);
+
+                Assert.True(request.Data == jack);
+                Assert.True(reply.Data == jill);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public void RequestTimeout()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                var jill = new Person()
+                {
+                    Id = 2,
+                    Name = "Jill",
+                    Age = 11,
+                    Data = new byte[] { 5, 6, 7, 8, 9 }
+                };
+
+                Msg<Person> request = null;
+                Msg<Person> reply = null;
+
+                var thread = new Thread(
+                    new ThreadStart(
+                        () =>
+                        {
+                            request = subscription.NextMessage();
+
+                            connection.Publish(request.Reply, jill);
+                        }));
+
+                thread.Start();
+
+                reply = connection.Request<Person, Person>("subject", jack, 1000);
+
+                Assert.True(request.Data == jack);
+                Assert.True(reply.Data == jill);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonXunit)]
+        public async Task RequestAsync()
+        {
+            Assert.Equal(ConnState.CONNECTED, connection.State);
+
+            using (var subscription = connection.SubscribeSync<Person>("subject"))
+            {
+                Assert.Equal(0, subscription.PendingMessages);
+
+                var jack = new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                };
+
+                var jill = new Person()
+                {
+                    Id = 2,
+                    Name = "Jill",
+                    Age = 11,
+                    Data = new byte[] { 5, 6, 7, 8, 9 }
+                };
+
+                Msg<Person> request = null;
+                Msg<Person> reply = null;
+
+                var thread = new Thread(
+                    new ThreadStart(
+                        () =>
+                        {
+                            request = subscription.NextMessage();
+
+                            connection.Publish(request.Reply, jill);
+                        }));
+
+                thread.Start();
+
+                reply = await connection.RequestAsync<Person, Person>("subject", jack);
+
+                Assert.True(request.Data == jack);
+                Assert.True(reply.Data == jill);
+            }
         }
     }
 }

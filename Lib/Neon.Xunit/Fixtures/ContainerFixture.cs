@@ -87,9 +87,50 @@ namespace Neon.Xunit
         /// </summary>
         public string ContainerId { get; private set; }
 
+
         /// <summary>
-        /// Starts the container.  This must be called only from within the 
-        /// <see cref="Action"/> passed to <see cref="ITestFixture.Start(Action)"/>.
+        /// <para>
+        /// Starts the container.
+        /// </para>
+        /// <note>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[], IEnumerable{string}, IEnumerable{string}, bool)"/>
+        /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
+        /// </note>
+        /// </summary>
+        /// <param name="name">Specifies the container name.</param>
+        /// <param name="image">Specifies the container Docker image.</param>
+        /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker run ...</b> command.</param>
+        /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
+        /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="noRemove">Optionally indicates that the <b>--rm</b> option should not be included when creating the container.</param>
+        /// <returns>
+        /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
+        /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
+        /// fixture was already running.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if this is not called from  within the <see cref="Action"/> method 
+        /// passed <see cref="ITestFixture.Start(Action)"/>
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// You must specify a valid container <paramref name="name"/>so that the fixure
+        /// can remove any existing container with the same name before starting the new container.
+        /// This is very useful during test debugging when the test might be interrupted during 
+        /// debugging before ensuring that the container is stopped.
+        /// </note>
+        /// </remarks>
+        public TestFixtureStatus Start(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
+        {
+            return base.Start(
+                () =>
+                {
+                    StartAsComposed(name, image, dockerArgs, containerArgs, env, noRemove);
+                });
+        }
+
+        /// <summary>
+        /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="name">Specifies the container name.</param>
         /// <param name="image">Specifies the container Docker image.</param>
@@ -109,7 +150,7 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public void RunContainer(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
+        public void StartAsComposed(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -196,10 +237,15 @@ namespace Neon.Xunit
 
             var dockerArgs = new List<string>();
 
-            foreach (var arg in this.dockerArgs)
+            if (this.dockerArgs != null)
             {
-                dockerArgs.Add(arg);
+                foreach (var arg in this.dockerArgs)
+                {
+                    dockerArgs.Add(arg);
+                }
             }
+
+            dockerArgs.Add("--detach");
 
             if (!string.IsNullOrEmpty(name))
             {
@@ -221,7 +267,7 @@ namespace Neon.Xunit
                 dockerArgs.Add("--rm");
             }
 
-            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, containerArgs);
+            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, null);
             result     = NeonHelper.ExecuteCapture($"docker", argsString);
 
             if (result.ExitCode != 0)

@@ -998,9 +998,9 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                         if (createHomeFolders)
                         {
-                            sshClient.RunCommand($"mkdir -f /home/{Username}/.download");
-                            sshClient.RunCommand($"mkdir -f /home/{Username}/.exec");
-                            sshClient.RunCommand($"mkdir -f /home/{Username}/.upload");
+                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Download(Username)}");
+                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Exec(Username)}");
+                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Upload(Username)}");
                         }
 
                         // We need to verify that the [/dev/shm/neonkube/rebooting] file is not present
@@ -1460,23 +1460,20 @@ rm {KubeHostFolders.Home(Username)}/askpass
             //
             // All of a sudden, I find that I need these folders too.
 
-            SudoCommand("mkdir -p /home/root", RunOptions.LogOnErrorOnly);
-            SudoCommand("chown root:root /home/root", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p /home/root", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chown root:root /home/root", RunOptions.LogOnErrorOnly);
 
-            SudoCommand("mkdir -p /home/root/.archive", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 750 /home/root/.archive", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 750 {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand("mkdir -p /home/root/.download", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 777 /home/root/.download", RunOptions.LogOnErrorOnly);       // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"mkdir -p {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Another potential security problem?
 
-            SudoCommand("mkdir -p /home/root/.exec", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 777 /home/root/.exec", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand("mkdir -p /home/root/.secrets", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 750 /home/root/.secrets", RunOptions.LogOnErrorOnly);
-
-            SudoCommand("mkdir -p /home/root/.upload", RunOptions.LogOnErrorOnly);
-            SudoCommand("chmod 777 /home/root/.upload", RunOptions.LogOnErrorOnly);         // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"mkdir -p {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);      // $todo(jeff.lill): Another potential security problem?
         }
 
         /// <summary>
@@ -2268,12 +2265,12 @@ rm {KubeHostFolders.Home(Username)}/askpass
             // it completed, potentially after we've been disconnected and then were
             // able to reestablish the connection.
             //
-            // We're going to use the [/dev/shm] "shared memory" tmpfs to coordinate
+            // We're going to use the [/home/sysadmin/.exec] folder coordinate
             // this by:
             //
             //      1. Generating a GUID for the operation.
             //
-            //      2. Creating a folder named [/dev/shm/neonkube/cmd/GUID] for the 
+            //      2. Creating a folder named [/home/sysadmin/.exec] for the 
             //         operation.  This folder will be referred to as [$] below.
             //
             //      3. Generating a script called [$/cmd.sh] that 
@@ -2336,19 +2333,46 @@ echo $? > {cmdFolder}/exit
 
             do
             {
+                var abortedSshCommand = (SafeSshCommand)null;
+
                 SafeSshOperation("waiting",
                     () =>
                     {
-                        var response = sshClient.RunCommand($"if [ -f {LinuxPath.Combine(cmdFolder, "exit")} ] ; then exit 0; else exit 1; fi;");
+                        // We're also going to check to ensure that the [cmdFolder] still exists and
+                        // fail the command and if it does not.  This will help mitigate situations 
+                        // where the folder gets inadvertently deleted as happened with:
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/496
+                        //
+                        // We'll have the test command return 2 in this case to distinguish between
+                        // the folder not being present from the exit file not being there.
+
+                        var response = sshClient.RunCommand($"if [ ! -d {cmdFolder} ] ; then exit 2; fi; if [ -f {LinuxPath.Combine(cmdFolder, "exit")} ] ; then exit 0; else exit 1; fi;");
 
                         if (response.ExitStatus == 0)
                         {
                             finished = true;
                             return;
                         }
+                        else if (response.ExitStatus == 2)
+                        {
+                            // The [cmdFolder] was deleted.
+
+                            abortedSshCommand = new SafeSshCommand()
+                            {
+                                ExitStatus = 1,
+                                Result     = string.Empty,
+                                Error      = $"Command failed because the [{cmdFolder}] no longer exists."
+                            };
+                        }
 
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     });
+
+                if (abortedSshCommand != null)
+                {
+                    return abortedSshCommand;
+                }
             }
             while (!finished);
 
