@@ -2381,9 +2381,9 @@ namespace Neon.CodeGen
                 sbParameters.AppendWithSeparator($"{generatedParamAttribute} {ResolveTypeReference(parameter.ParameterInfo.ParameterType)} {parameter.Name}{defaultValueExpression}", argSeparator);
             }
 
-            sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", argSeparator);
-            sbParameters.AppendWithSeparator("IRetryPolicy retryPolicy = default", argSeparator);
-            sbParameters.AppendWithSeparator("LogActivity logActivity = default", argSeparator);
+            sbParameters.AppendWithSeparator("CancellationToken _cancellationToken = default", argSeparator);
+            sbParameters.AppendWithSeparator("IRetryPolicy _retryPolicy = default", argSeparator);
+            sbParameters.AppendWithSeparator("LogActivity _logActivity = default", argSeparator);
 
             // Generate the arguments to be passed to the client methods.
 
@@ -2553,11 +2553,11 @@ namespace Neon.CodeGen
 
                 if (nonOptionalQueryParameters.Count() == 0)
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary();");
+                    sbArgGenerate.AppendLine($"{indent}            var _args = new ArgDictionary();");
                 }
                 else
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            var _args = new ArgDictionary()");
                     sbArgGenerate.AppendLine($"{indent}            {{");
 
                     foreach (var parameter in nonOptionalQueryParameters)
@@ -2573,7 +2573,7 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                     sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
                     sbArgGenerate.AppendLine($"{indent}            {{");
-                    sbArgGenerate.AppendLine($"{indent}                args.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}                _args.Add(\"{parameter.SerializedName}\", {parameter.Name});");
                     sbArgGenerate.AppendLine($"{indent}            }}");
                 }
             }
@@ -2590,11 +2590,11 @@ namespace Neon.CodeGen
 
                 if (nonOptionalHeaderParameters.Count() == 0)
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary();");
+                    sbArgGenerate.AppendLine($"{indent}            var _headers = new ArgDictionary();");
                 }
                 else
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            var _headers = new ArgDictionary()");
                     sbArgGenerate.AppendLine($"{indent}            {{");
 
                     foreach (var parameter in nonOptionalHeaderParameters)
@@ -2610,12 +2610,12 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                     sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
                     sbArgGenerate.AppendLine($"{indent}            {{");
-                    sbArgGenerate.AppendLine($"{indent}                headers.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}                _headers.Add(\"{parameter.SerializedName}\", {parameter.Name});");
                     sbArgGenerate.AppendLine($"{indent}            }}");
                 }
             }
 
-            sbArguments.AppendWithSeparator("retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
+            sbArguments.AppendWithSeparator("_retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
             sbArguments.AppendWithSeparator(uriRef, argSeparator);
 
             if (bodyParameter != null)
@@ -2632,16 +2632,16 @@ namespace Neon.CodeGen
 
             if (queryParameters.Count() > 0)
             {
-                sbArguments.AppendWithSeparator("args: args", argSeparator);
+                sbArguments.AppendWithSeparator("args: _args", argSeparator);
             }
 
             if (headerParameters.Count() > 0)
             {
-                sbArguments.AppendWithSeparator("headers: headers", argSeparator);
+                sbArguments.AppendWithSeparator("headers: _headers", argSeparator);
             }
 
-            sbArguments.AppendWithSeparator("cancellationToken: cancellationToken", argSeparator);
-            sbArguments.AppendWithSeparator("logActivity: logActivity", argSeparator);
+            sbArguments.AppendWithSeparator("cancellationToken: _cancellationToken", argSeparator);
+            sbArguments.AppendWithSeparator("logActivity: _logActivity", argSeparator);
 
             // Generate the safe and unsafe query method names and 
             // verify that each method actually supports sending
