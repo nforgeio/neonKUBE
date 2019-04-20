@@ -132,7 +132,7 @@ namespace Test.Neon.Models.Definitions
         bool DefaultBool(bool value = true);
 
         [HttpGet]
-        double DefaultInt(double value = 1.234);
+        double DefaultDouble(double value = 1.234);
 
         [HttpGet]
         string DefaultString(string value = "test");

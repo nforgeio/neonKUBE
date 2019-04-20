@@ -94,9 +94,9 @@ namespace TestCodeGen.AspNet
         {
             return new Person()
             {
-                Id   = id,
+                Id = id,
                 Name = name,
-                Age  = age
+                Age = age
             };
         }
 
@@ -112,6 +112,36 @@ namespace TestCodeGen.AspNet
             person.Age++;
 
             return person;
+        }
+
+        [HttpGet]
+        public int DefaultInt(int value = 10)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public bool DefaultBool(bool value = true)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public double DefaultDouble(double value = 1.234)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public string DefaultString(string value = "test")
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public MyEnum DefaultEnum(MyEnum value = MyEnum.Three)
+        {
+            return value;
         }
 
         [HttpGet]
@@ -313,7 +343,7 @@ namespace TestCodeGen.AspNet
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public async Task ReturnPerson()
+        public async Task CreatePerson()
         {
             var person = await client.CreatePersonAsync(10, "Jeff", 58);
 

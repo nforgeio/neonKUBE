@@ -36,7 +36,7 @@ namespace Neon.CodeGen
         /// <param name="passAs">Indicates how the client passes the tagged parameter to the service.</param>
         public GeneratedParamAttribute(PassAs passAs)
         {
-            this.PassAs = PassAs;
+            this.PassAs = passAs;
         }
 
         /// <summary>

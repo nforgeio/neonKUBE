@@ -2398,7 +2398,7 @@ namespace Neon.CodeGen
             var sbArguments        = new StringBuilder();   // This holds the arguments to be passed to the [JsonClient] method.
             var routeParameters    = new List<MethodParameter>();
             var headerParameters   = parameters.Where(p => p.Pass == Pass.AsHeader);
-            var endpointUriLiteral = $"\"{ConcatRoutes(serviceMethod.ServiceModel.RouteTemplate, serviceMethod.RouteTemplate)}\"";
+            var endpointUriLiteral = $"$\"{ConcatRoutes(serviceMethod.ServiceModel.RouteTemplate, serviceMethod.RouteTemplate)}\"";
 
             foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.AsRoute))
             {
