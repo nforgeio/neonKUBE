@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IncompatibleServiceException.cs
+// FILE:	    ControllerValidationAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,29 +18,25 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
-using Neon.Common;
-using Neon.Data;
-using Neon.Xunit;
-
-namespace Neon.Xunit
+namespace Neon.CodeGen
 {
     /// <summary>
-    /// Thrown by <see cref="XunitExtensions.ValidateController{TServiceImplementation}(IGeneratedServiceClient)"/> when
-    /// the service type doesn't match a generated service client.
+    /// <para>
+    /// Used to have the <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
+    /// method including the tagged method when validating the service controller
+    /// against its definining interface.  This is useful for rare situations where a
+    /// service controller inherits from another class that implements some endpoints.
+    /// </para>
+    /// <note>
+    /// By default, <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
+    /// only considers service methods implemented directly in the service controller
+    /// during validation.
+    /// </note>
     /// </summary>
-    public class IncompatibleServiceException : Exception
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ControllerValidationAttribute : Attribute
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="message">The error message.</param>
-        public IncompatibleServiceException(string message)
-            : base(message)
-        {
-        }
     }
 }

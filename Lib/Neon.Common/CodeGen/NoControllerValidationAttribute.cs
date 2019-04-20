@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NoValidationAttribute.cs
+// FILE:	    NoControllerValidationAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,12 +25,12 @@ namespace Neon.CodeGen
     /// <summary>
     /// Used to prevent the <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
     /// method from including the tagged method when validating the service controller
-    /// against its definining interface.  This is useful an rare situations where a
+    /// against its definining interface.  This is useful for rare situations where a
     /// service controller implements some extra endpoints that are not covered by the
     /// generated client.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class NoValidationAttribute : Attribute
+    public class NoControllerValidationAttribute : Attribute
     {
     }
 }

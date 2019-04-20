@@ -180,4 +180,19 @@ namespace Test.Neon.Models.Definitions
         [Route("GetOptionalStringViaBody")]
         string GetOptionalStringViaBody([FromBody] string value = "Hello World!");
     }
+
+    [ServiceModel]
+    [Route("")]
+    public interface VerifyController0
+    {
+    }
+
+    [ServiceModel]
+    [Route("/foo")]
+    public interface VerifyController1
+    {
+        [HttpGet]
+        [Route]
+        void Hello();
+    }
 }

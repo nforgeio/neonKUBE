@@ -494,11 +494,18 @@ namespace Neon.CodeGen
                         Output.Error($"[{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that defines a route template with a constraint.  Constraints are not currently supported.");
                     }
 
-                    serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, routeAttribute.Template);
+                    if (!string.IsNullOrWhiteSpace(routeAttribute.Template))
+                    {
+                        serviceMethod.RouteTemplate = routeAttribute.Template;
+                    }
+                    else
+                    {
+                        serviceMethod.RouteTemplate = methodInfo.Name;
+                    }
                 }
                 else
                 {
-                    serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, methodInfo.Name);
+                    serviceMethod.RouteTemplate = methodInfo.Name;
                 }
 
                 var httpAttribute = methodInfo.GetCustomAttribute<HttpAttribute>();
@@ -2387,11 +2394,11 @@ namespace Neon.CodeGen
 
             // Generate the arguments to be passed to the client methods.
 
-            var sbArgGenerate    = new StringBuilder();   // This holds the code required to generate the arguments.
-            var sbArguments      = new StringBuilder();   // This holds the arguments to be passed to the [JsonClient] method.
-            var routeParameters  = new List<MethodParameter>();
-            var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
-            var uriRef           = $"\"{serviceMethod.RouteTemplate}\"";
+            var sbArgGenerate      = new StringBuilder();   // This holds the code required to generate the arguments.
+            var sbArguments        = new StringBuilder();   // This holds the arguments to be passed to the [JsonClient] method.
+            var routeParameters    = new List<MethodParameter>();
+            var headerParameters   = parameters.Where(p => p.Pass == Pass.AsHeader);
+            var endpointUriLiteral = $"\"{ConcatRoutes(serviceMethod.ServiceModel.RouteTemplate, serviceMethod.RouteTemplate)}\"";
 
             foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.AsRoute))
             {
@@ -2537,8 +2544,6 @@ namespace Neon.CodeGen
                 {
                     Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a malformed route [{route}] that references a method parameter that doesn't exist or has extra \"{{\" or \"}}\" characters.");
                 }
-
-                uriRef = $"$\"{uri}\"";
             }
 
             if (queryParameters.Count() > 0)
@@ -2616,7 +2621,7 @@ namespace Neon.CodeGen
             }
 
             sbArguments.AppendWithSeparator("_retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
-            sbArguments.AppendWithSeparator(uriRef, argSeparator);
+            sbArguments.AppendWithSeparator(endpointUriLiteral, argSeparator);
 
             if (bodyParameter != null)
             {
