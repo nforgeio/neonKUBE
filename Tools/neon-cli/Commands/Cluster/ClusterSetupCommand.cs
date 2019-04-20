@@ -1466,7 +1466,6 @@ helm template install/kubernetes/helm/istio \
     --set kiali.enabled=true \
     --set tracing.enabled=true \
     --set grafana.enabled=true \
-    --set servicegraph.enabled=true \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
