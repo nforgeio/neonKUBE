@@ -238,6 +238,13 @@ namespace TestCodeGen.AspNet
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void ValidateController()
+        {
+            client.ValidateController<TestAspNetFixtureController>();
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task GetString()
         {
             Assert.Equal("Hello World!", await client.GetStringAsync("Hello World!"));

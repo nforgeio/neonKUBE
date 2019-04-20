@@ -33,16 +33,19 @@ namespace Neon.CodeGen
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="resultType">The method result type.</param>
-        public GeneratedMethodAttribute(Type resultType)
+        public GeneratedMethodAttribute()
         {
-            this.ResultType = resultType;
         }
 
         /// <summary>
-        /// Returns the method result type.
+        /// The method name from the service model definition.
         /// </summary>
-        public Type ResultType { get; private set; }
+        public string DefinedAs { get; set; }
+
+        /// <summary>
+        /// The method result type.
+        /// </summary>
+        public Type Returns { get; set; }
 
         /// <summary>
         /// The route template.

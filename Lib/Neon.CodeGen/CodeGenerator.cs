@@ -2757,7 +2757,7 @@ namespace Neon.CodeGen
                 routeTemplate = serviceMethod.RouteTemplate;
             }
 
-            generatedMethodAttribute = $"[GeneratedMethod(typeof({returnType}), RouteTemplate = \"{routeTemplate}\", HttpMethod=\"{serviceMethod.HttpMethod}\")]";
+            generatedMethodAttribute = $"[GeneratedMethod(DefinedAs = \"{serviceMethod.MethodInfo.Name}\", Returns = typeof({returnType}), RouteTemplate = \"{routeTemplate}\", HttpMethod = \"{serviceMethod.HttpMethod}\")]";
 
             writer.WriteLine();
             writer.WriteLine($"{indent}        {generatedMethodAttribute}");
