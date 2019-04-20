@@ -48,5 +48,10 @@ namespace Neon.CodeGen
         /// The route template.
         /// </summary>
         public string RouteTemplate { get; set; }
+
+        /// <summary>
+        /// The HTTP method for the endpoint.
+        /// </summary>
+        public string HttpMethod { get; set; }
     }
 }

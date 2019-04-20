@@ -2102,34 +2102,32 @@ namespace Neon.CodeGen
             Covenant.Assert(clientNameSet.Count > 0);
 
             // Service models may be organized into zero or more client groups by client
-            // group name.  Service methods that are not within a client group will be
-            // generated directly within the class.  Methods within a client group will
+            // group name.  Service models that are not within a client group will be
+            // generated directly within the class.  Models within a client group will
             // be generated in subclasses within the client class.
             //
-            // We're going collate the service methods into client groups by name,
-            // with the empty name referring to methods that should appear directly
-            // within the generated service class (AKA the root group).
+            // Note that there's a one-to-one mapping between service models and
+            // client groups.
 
-            var clientGroups = new Dictionary<string, List<ServiceMethod>>();
+            var clientGroups = new Dictionary<string, ServiceModel>();
 
             foreach (var serviceModel in serviceModels)
             {
                 var groupName = serviceModel.ClientGroup ?? string.Empty;
 
-                if (!clientGroups.TryGetValue(groupName, out var clientGroup))
+                if (clientGroups.TryGetValue(groupName, out var existingModel))
                 {
-                    clientGroups.Add(groupName, clientGroup = new List<ServiceMethod>());
+                    Output.Error($"Service model [{serviceModel.SourceType.Name}] and [{existingModel.SourceType.Name}] can both be in the same group [{groupName}].");
                 }
-
-                foreach (var serviceMethod in serviceModel.Methods)
+                else
                 {
-                    clientGroup.Add(serviceMethod);
+                    clientGroups.Add(groupName, serviceModel);
                 }
             }
 
-            var rootMethodGroups       = clientGroups.Where(cg => string.IsNullOrEmpty(cg.Key));
-            var nonRootMethodGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
-            var hasNonRootMethodGroups = nonRootMethodGroups.Any();
+            var rootClientGroup        = clientGroups.Where(cg => string.IsNullOrEmpty(cg.Key));
+            var nonRootClientGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
+            var hasNonRootClientGroups = nonRootClientGroups.Any();
 
             // $todo(jeff.lill):
             //
@@ -2152,16 +2150,23 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine();
+
+            if (rootClientGroup.Count() > 0)
+            {
+                writer.WriteLine($"    [GeneratedClient(\"{rootClientGroup.First().Value.RouteTemplate}\")]");
+            }
+
             writer.WriteLine($"    public partial class {clientTypeName} : IDisposable, IGeneratedServiceClient");
             writer.WriteLine($"    {{");
 
-            if (hasNonRootMethodGroups)
+            if (hasNonRootClientGroups)
             {
                 // Generate local [class] definitions for any non-root service
                 // methods here.
 
-                foreach (var clientGroup in nonRootMethodGroups)
+                foreach (var clientGroup in nonRootClientGroups)
                 {
+                    writer.WriteLine($"        [GeneratedClient(\"{clientGroup.Value.RouteTemplate}\")]");
                     writer.WriteLine($"        public class __{clientGroup.Key} : IGeneratedServiceClient");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            private JsonClient client;");
@@ -2171,7 +2176,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"                this.client = client;");
                     writer.WriteLine($"            }}");
 
-                    foreach (var serviceMethod in clientGroup.Value)
+                    foreach (var serviceMethod in clientGroup.Value.Methods)
                     {
                         GenerateServiceMethod(serviceMethod, indent: "    ");
                     }
@@ -2193,11 +2198,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"        {{");
             writer.WriteLine($"            this.client = new JsonClient(handler, disposeHandler);");
 
-            if (hasNonRootMethodGroups)
+            if (hasNonRootClientGroups)
             {
                 // Initialize the non-root method group properties.
 
-                foreach (var nonRootGroup in nonRootMethodGroups)
+                foreach (var nonRootGroup in nonRootClientGroups)
                 {
                     writer.WriteLine($"            this.{nonRootGroup.Key} = new __{nonRootGroup.Key}(this.client);");
                 }
@@ -2272,11 +2277,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;");
 
-            if (hasNonRootMethodGroups)
+            if (hasNonRootClientGroups)
             {
                 // Generate any service group properties.
 
-                foreach (var nonRootGroup in nonRootMethodGroups)
+                foreach (var nonRootGroup in nonRootClientGroups)
                 {
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -2286,11 +2291,11 @@ namespace Neon.CodeGen
                 }
             }
 
-            // Generate any root service methods here.
+            // Generate any root client methods here.
 
-            foreach (var rootGroup in rootMethodGroups)
+            foreach (var rootGroup in rootClientGroup)
             {
-                foreach (var serviceMethod in rootGroup.Value)
+                foreach (var serviceMethod in rootGroup.Value.Methods)
                 {
                     GenerateServiceMethod(serviceMethod);
                 }
@@ -2741,15 +2746,18 @@ namespace Neon.CodeGen
             }
 
             string generatedMethodAttribute;
+            string routeTemplate;
 
-            if (serviceMethod.RouteTemplate == null)
+            if (string.IsNullOrEmpty(serviceMethod.RouteTemplate))
             {
-                generatedMethodAttribute = $"[GeneratedMethod(typeof({returnType}), RouteTemplate = \"\")]";
+                routeTemplate = serviceMethod.Name;
             }
             else
             {
-                generatedMethodAttribute = $"[GeneratedMethod(typeof({returnType}), RouteTemplate = \"{serviceMethod.RouteTemplate}\")]";
+                routeTemplate = serviceMethod.RouteTemplate;
             }
+
+            generatedMethodAttribute = $"[GeneratedMethod(typeof({returnType}), RouteTemplate = \"{routeTemplate}\", HttpMethod=\"{serviceMethod.HttpMethod}\")]";
 
             writer.WriteLine();
             writer.WriteLine($"{indent}        {generatedMethodAttribute}");
