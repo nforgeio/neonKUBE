@@ -22,7 +22,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Neon.Common
+namespace Neon.Data
 {
     /// <summary>
     /// A common implementation of <see cref="INotifyPropertyChanged"/>.
@@ -39,7 +39,8 @@ namespace Neon.Common
         /// </summary>
         /// <param name="propertyName">
         /// The optional property name.  This defaults to the name of the caller, typically
-        /// the property's setter.
+        /// the property's setter.  This may also be passed as <c>null</c> signalling that
+        /// all instance properties may have changed.
         /// </param>
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -27,6 +27,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Couchbase.DynamicData.Internal;
+using Neon.Data;
 
 namespace Neon.Couchbase.DynamicData
 {
