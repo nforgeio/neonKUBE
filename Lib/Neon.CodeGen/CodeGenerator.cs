@@ -171,6 +171,7 @@ namespace Neon.CodeGen
         private bool                                firstItemGenerated = true;
         private StringWriter                        writer;
         private HashSet<Type>                       convertableTypes;
+        private bool                                generateNotifyPropertyChanged = false;
 
         /// <summary>
         /// Constructs a code generator.
@@ -194,6 +195,8 @@ namespace Neon.CodeGen
             }
 
             Settings.TargetNamespace = Settings.TargetNamespace ?? "Neon.CodeGen.Output";
+
+            generateNotifyPropertyChanged = settings.UxFramework == UxFrameworks.Xaml;
 
             // Scan the [Neon.Common] assembly for JSON converters that implement [IEnhancedJsonConverter]
             // and initialize the [convertableTypes] hashset with the convertable types.  We'll need
@@ -1186,11 +1189,18 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IRoundtripData";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}";
                 }
-                else if (Settings.UxFeatures)
+                else
                 {
-                    baseTypeRef = " : __NotifyPropertyChanged";
+                    if (generateNotifyPropertyChanged)
+                    {
+                        baseTypeRef = " : NotifyPropertyChanged, IRoundtripData";
+                    }
+                    else
+                    {
+                        baseTypeRef = " : IRoundtripData";
+                    }
                 }
 
                 if (genPersistence)
@@ -1607,7 +1617,33 @@ namespace Neon.CodeGen
                         defaultValueExpression = $" = {defaultValueExpression};";
                     }
 
-                    writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}{defaultValueExpression}");
+                    if (!generateNotifyPropertyChanged)
+                    {
+                        writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}{defaultValueExpression}");
+                    }
+                    else
+                    {
+                        writer.WriteLine($"        public {propertyTypeName} {property.Name}");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            get => __{property.Name};");
+                        writer.WriteLine($"            set");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                if (value != __{property.Name})");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    __{property.Name} = value;");
+                        writer.WriteLine($"                    base.RaisePropertyChanged();");
+                        writer.WriteLine($"                }}");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine($"        }}");
+                        writer.WriteLine();
+
+                        if (!defaultValueExpression.EndsWith(";"))
+                        {
+                            defaultValueExpression += ";";
+                        }
+
+                        writer.WriteLine($"        private {propertyTypeName} __{property.Name}{defaultValueExpression}");
+                    }
                 }
 
                 if (Settings.RoundTrip)

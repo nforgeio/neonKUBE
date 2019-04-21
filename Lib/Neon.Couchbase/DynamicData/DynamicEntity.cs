@@ -678,7 +678,7 @@ namespace Neon.Couchbase.DynamicData
         /// <inheritdoc/>
         void IDynamicEntity._OnPropertyChanged(string propertyName)
         {
-            OnPropertyChanged(propertyName);
+            RaisePropertyChanged(propertyName);
             _OnChanged();
         }
     }

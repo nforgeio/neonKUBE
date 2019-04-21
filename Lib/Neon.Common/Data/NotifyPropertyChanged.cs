@@ -42,7 +42,7 @@ namespace Neon.Data
         /// the property's setter.  This may also be passed as <c>null</c> signalling that
         /// all instance properties may have changed.
         /// </param>
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

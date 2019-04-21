@@ -71,10 +71,10 @@ namespace Neon.CodeGen
         internal bool ServiceClients => !NoServiceClients;
 
         /// <summary>
-        /// Indicates that the generated classes should include user interface related
-        /// code including <see cref="INotifyPropertyChanged"/> implementations.
+        /// Optionally specifies the user experience framework that the generated 
+        /// classes should support by generating additional code.
         /// </summary>
-        public bool UxFeatures { get; set; } = false;
+        public UxFrameworks UxFramework { get; set; } = UxFrameworks.None;
 
         /// <summary>
         /// Enhances data model code generation to prevent property loss
