@@ -2495,19 +2495,12 @@ namespace Neon.CodeGen
 
             if (!string.IsNullOrEmpty(serviceMethod.RouteTemplate))
             {
-                // NOTE:
-                //
-                // When a service method has a [Route] attribute that defines a route template, 
-                // we're going to treat any parameter that has no other [FromXXX] attribute as
-                // if it was tagged by a [FromRoute] attribute.
-
                 if (sbArgGenerate.Length > 0)
                 {
                     sbArgGenerate.AppendLine();
                 }
 
                 var route     = serviceMethod.RouteTemplate;
-                var uri       = route;
                 var uriVerify = route;
 
                 foreach (var parameter in routeParameters)
@@ -2519,23 +2512,23 @@ namespace Neon.CodeGen
 
                     uriVerify = uriVerify.Replace($"{{{parameter.SerializedName}}}", parameter.Name);
 
-                    // Generate the URI template parameter.  These need to be URI encoded and
+                    // Generate the URI template parameter.  This needs to be URI encoded and
                     // note that we also need to treat Enum parameters specially to ensure that 
                     // they honor any [EnumMember] attributes.
 
                     if (parameter.ParameterInfo.ParameterType.IsEnum)
                     {
-                        uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString(NeonHelper.EnumToString({parameter.Name}))}}");
+                        endpointUriLiteral = endpointUriLiteral.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString(NeonHelper.EnumToString({parameter.Name}))}}");
                     }
                     else
                     {
                         if (parameter.ParameterInfo.ParameterType == typeof(string))
                         {
-                            uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name})}}");
+                            endpointUriLiteral = endpointUriLiteral.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name})}}");
                         }
                         else
                         {
-                            uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name}.ToString())}}");
+                            endpointUriLiteral = endpointUriLiteral.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name}.ToString())}}");
                         }
                     }
                 }

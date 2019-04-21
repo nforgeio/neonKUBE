@@ -1105,7 +1105,7 @@ namespace TestCodeGen.ServiceModel
 
                         await client.CallAsync("Test1", 1, "two", MyEnum.Three);
                         Assert.Equal("GET", requestMethod);
-                        Assert.Equal("/api/v1/service3", requestPath);
+                        Assert.Equal("/api/v1/service3/Test1", requestPath);
                         Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
                         Assert.Null(requestContentType);
                         Assert.Null(requestBody);
