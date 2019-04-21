@@ -55,6 +55,16 @@ namespace Neon.Xunit
         /// <exception cref="IncompatibleServiceException">Thrown when the service implementaton doesn't match the generated client.</exception>
         public static void ValidateController<TServiceController>(this IGeneratedServiceClient client)
         {
+            // Verify that the schema for the generated code is compatable with this
+            // version of the validator.  We currently require schema=1.
+
+            var versionFields = client.GeneratorVersion.Split(':');
+
+            if (versionFields.Length != 2 || versionFields[1] != "1")
+            {
+                throw new IncompatibleServiceException($"The generated service client code is not compatible with this version of the validator.  Consider upgrading to the latest Neon packages and rebuilding your service clients.");
+            }
+
             // The idea here is to construct two dictionaries that map method signatures
             // [MethodInfo] instances.  One dictionary will do this for [TServiceImplementation]
             // and the other one for the [client] passed.

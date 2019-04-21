@@ -2251,6 +2251,9 @@ namespace Neon.CodeGen
             writer.WriteLine($"            isDisposed = true;");
             writer.WriteLine($"        }}");
             writer.WriteLine();
+            writer.WriteLine($"        /// <inheritdoc/>");
+            writer.WriteLine($"        public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
+            writer.WriteLine();
             writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Returns the underlying <see cref=\"JsonClient\"/>.");
             writer.WriteLine($"        /// </summary>");

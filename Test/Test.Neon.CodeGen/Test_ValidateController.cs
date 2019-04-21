@@ -47,7 +47,7 @@ using Xunit;
 
 using Test.Neon.Models;
 
-namespace TestCodeGen
+namespace TestCodeGen.Validator
 {
     /// <summary>
     /// This class verifies that <see cref="XunitExtensions.ValidateController{TServiceController}(Neon.Data.IGeneratedServiceClient)"/>
