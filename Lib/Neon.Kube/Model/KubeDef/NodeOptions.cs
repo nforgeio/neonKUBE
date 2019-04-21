@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// to pick up most criticial updates.
         /// </summary>
         [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]
-        [YamlMember(Alias = "Upgrade", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "upgrade", ApplyNamingConventions = false)]
         [DefaultValue(defaultUpgrade)]
         public OsUpgrade Upgrade { get; set; } = defaultUpgrade;
 
@@ -63,7 +63,7 @@ namespace Neon.Kube
         /// This defaults to <b>20</b> characters.  The minumum length is <b>8</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PasswordLength", Required = Required.Default)]
-        [YamlMember(Alias = "PasswordLength", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "passwordLength", ApplyNamingConventions = false)]
         [DefaultValue(defaultPasswordLength)]
         public int PasswordLength { get; set; } = defaultPasswordLength;
 
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// to IPv4.
         /// </summary>
         [JsonProperty(PropertyName = "AllowPackageManagerIPv6", Required = Required.Default)]
-        [YamlMember(Alias = "AllowPackageManagerIPv6", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "allowPackageManagerIPv6", ApplyNamingConventions = false)]
         [DefaultValue(defaultAllowPackageManagerIPv6)]
         public bool AllowPackageManagerIPv6 { get; set; } = defaultAllowPackageManagerIPv6;
 
@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// failed index or package downloads.  This defaults to <b>5</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PackageManagerRetries", Required = Required.Default)]
-        [YamlMember(Alias = "PackageManagerRetries", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "packageManagerRetries", ApplyNamingConventions = false)]
         [DefaultValue(defaultPackageManagerRetries)]
         public int PackageManagerRetries { get; set; } = defaultPackageManagerRetries;
 

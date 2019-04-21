@@ -57,7 +57,7 @@ namespace Neon.Kube
         /// Returns the neonKUBE help URL.
         /// </summary>
         [JsonProperty(PropertyName = "HelpUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HelpUrl", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "helpUrl", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string HelpUrl { get; set; }
 
@@ -65,7 +65,7 @@ namespace Neon.Kube
         /// Returns the neonKUBE GitHub repository URL.
         /// </summary>
         [JsonProperty(PropertyName = "GitHubUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "GitHubUrl", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "githubUrl", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string GitHubUrl { get; set; }
 
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// Returns the URL for the installed release notes.
         /// </summary>
         [JsonProperty(PropertyName = "ReleaseNotesUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ReleaseNotesUrl", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "releaseNotesUrl", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ReleaseNotesUrl { get; set; }
 
@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// This will be <c>null</c> when there are no updates.
         /// </summary>
         [JsonProperty(PropertyName = "UpdateVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "UpdateVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "updateVersion", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string UpdateVersion { get; set; }
 
@@ -91,7 +91,7 @@ namespace Neon.Kube
         /// This will be <c>null</c> when there are no updates.
         /// </summary>
         [JsonProperty(PropertyName = "UpdateUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "UpdateUrl", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "updateUrl", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string UpdateUrl { get; set; }
 
@@ -101,7 +101,7 @@ namespace Neon.Kube
         /// no updates.
         /// </summary>
         [JsonProperty(PropertyName = "UpdateReleaseNotesUrl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "UpdateReleaseNotesUrl", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "updateReleaseNotesUrl", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string UpdateReleaseNotesUrl { get; set; }
     }

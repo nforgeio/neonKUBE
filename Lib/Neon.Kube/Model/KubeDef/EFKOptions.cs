@@ -49,7 +49,7 @@ namespace Neon.Kube
         /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
-        [YamlMember(Alias = "Enabled", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
 

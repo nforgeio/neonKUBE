@@ -220,14 +220,14 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]
-        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
         /// Identifies the tool/version used to provision the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Provisioner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Provisioner", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "provisioner", ApplyNamingConventions = false)]
         [DefaultValue(defaultProvisioner)]
         public string Provisioner { get; set; } = defaultProvisioner;
 
@@ -235,7 +235,7 @@ namespace Neon.Kube
         /// Returns the Kubernetes cluster options.,
         /// </summary>
         [JsonProperty(PropertyName = "Kubernetes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Kubernetes", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubernetes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public KubernetesOptions Kubernetes { get; set; } = new KubernetesOptions();
 
@@ -244,7 +244,7 @@ namespace Neon.Kube
         /// of the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "Docker", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Docker", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "docker", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public DockerOptions Docker { get; set; } = new DockerOptions();
 
@@ -253,7 +253,7 @@ namespace Neon.Kube
         /// Ceph file system.
         /// </summary>
         [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Ceph", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "ceph", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public CephOptions Ceph { get; set; } = new CephOptions();
 
@@ -262,7 +262,7 @@ namespace Neon.Kube
         /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
         /// </summary>
         [JsonProperty(PropertyName = "EFK", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "EFK", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "efk", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public EFKOptions EFK { get; set; } = new EFKOptions();
 
@@ -271,7 +271,7 @@ namespace Neon.Kube
         /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
         /// </summary>
         [JsonProperty(PropertyName = "Prometheus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Prometheus", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public PrometheusOptions Prometheus { get; set; } = new PrometheusOptions();
 
@@ -292,7 +292,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DrivePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DrivePrefix", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "drivePrefix", ApplyNamingConventions = false)]
         [DefaultValue(defaultDrivePrefix)]
         public string DrivePrefix { get; set; } = defaultDrivePrefix;
 
@@ -301,7 +301,7 @@ namespace Neon.Kube
         /// default for safety.
         /// </summary>
         [JsonProperty(PropertyName = "AllowUnitTesting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "AllowUnitTesting", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "allowUnitTesting", ApplyNamingConventions = false)]
         [DefaultValue(defaultAllowUnitTesting)]
         public bool AllowUnitTesting { get; set; } = defaultAllowUnitTesting;
 
@@ -310,7 +310,7 @@ namespace Neon.Kube
         /// <c>null</c> which indicates that the cluster will be hosted on private servers.
         /// </summary>
         [JsonProperty(PropertyName = "Hosting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Hosting", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "hosting", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public HostingOptions Hosting { get; set; } = null;
 
@@ -323,7 +323,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Datacenter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Datacenter", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "datacenter", ApplyNamingConventions = false)]
         [DefaultValue(defaultDatacenter)]
         public string Datacenter { get; set; } = defaultDatacenter;
 
@@ -331,7 +331,7 @@ namespace Neon.Kube
         /// Indicates how the cluster is being used.
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Environment", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
         [JsonConverter(typeof(StringEnumConverter))]
         [DefaultValue(EnvironmentType.Other)]
         public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
@@ -348,7 +348,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "TimeSources", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "TimeSources", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "timeSources", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string[] TimeSources { get; set; } = null;
 
@@ -375,7 +375,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PackageProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PackageProxy", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "packageProxy", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PackageProxy { get; set; } = null;
 
@@ -383,7 +383,7 @@ namespace Neon.Kube
         /// Optionally specifies setup process related options.
         /// </summary>
         [JsonProperty(PropertyName = "Setup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Setup", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "setup", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public SetupOptions Setup { get; set; } = null;
 
@@ -391,7 +391,7 @@ namespace Neon.Kube
         /// Describes the cluster's network configuration.
         /// </summary>
         [JsonProperty(PropertyName = "Network", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Network", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "network", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NetworkOptions Network { get; set; } = new NetworkOptions();
 
@@ -399,7 +399,7 @@ namespace Neon.Kube
         /// Specifies host node options.
         /// </summary>
         [JsonProperty(PropertyName = "NodeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "NodeOptions", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "nodeOptions", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 
@@ -407,7 +407,7 @@ namespace Neon.Kube
         /// Describes the host nodes in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
-        [YamlMember(Alias = "Nodes", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "nodes", ApplyNamingConventions = false)]
         public Dictionary<string, NodeDefinition> NodeDefinitions { get; set; } = new Dictionary<string, NodeDefinition>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>

@@ -98,7 +98,7 @@ namespace Neon.Kube
         /// Identifies the Azure environment.  This defaults to <see cref="AzureCloudEnvironments.GlobalCloud"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Name", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         [DefaultValue(AzureCloudEnvironments.GlobalCloud)]
         public AzureCloudEnvironments Name { get; set; } = AzureCloudEnvironments.GlobalCloud;
 
@@ -106,28 +106,28 @@ namespace Neon.Kube
         /// Environment authentication endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "AuthenticationEndpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "AuthenticationEndpoint", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "authenticationEndpoint", ApplyNamingConventions = false)]
         public string AuthenticationEndpoint { get; set; }
 
         /// <summary>
         /// Environment resource manager endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceManagerEndpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "ResourceManagerEndpoint", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "resourceManagerEndpoint", ApplyNamingConventions = false)]
         public string ResourceManagerEndpoint { get; set; }
 
         /// <summary>
         /// Environment graph endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "GraphEndpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "GraphEndpoint", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "graphEndpoint", ApplyNamingConventions = false)]
         public string GraphEndpoint { get; set; }
 
         /// <summary>
         /// Environment management endpoint.
         /// </summary>
         [JsonProperty(PropertyName = "ManagementEnpoint", Required = Required.AllowNull)]
-        [YamlMember(Alias = "ManagementEnpoint", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "managementEnpoint", ApplyNamingConventions = false)]
         public string ManagementEnpoint { get; set; }
 
         /// <summary>

@@ -56,7 +56,7 @@ namespace Neon.Kube
         /// The schema version for this state file.
         /// </summary>
         [JsonProperty(PropertyName = "Schema", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Schema", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "schema", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Schema { get; set; } = "v1";
 
@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// The globally unique client installation ID.
         /// </summary>
         [JsonProperty(PropertyName = "InstallationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "InstallationId", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "installationId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string InstallationId { get; set; }
 
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// cluster configuration state.  This defaults to <b>1 second</b>.
         /// </summary>
         [JsonProperty(PropertyName = "StatusPollSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "StatusPollSeconds", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "statusPollSeconds", ApplyNamingConventions = false)]
         [DefaultValue(1)]
         public int StatusPollSeconds { get; set; } = 1;
 
@@ -83,7 +83,7 @@ namespace Neon.Kube
         /// command line tool.  This defaults to <see cref="KubeConst.DesktopServicePort"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DesktopServicePort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DesktopServicePort", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "desktopServicePort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.DesktopServicePort)]
         public int DesktopServicePort { get; set; } = KubeConst.DesktopServicePort;
 
@@ -93,7 +93,7 @@ namespace Neon.Kube
         /// defaults to <see cref="KubeConst.KubectlProxyPort"/>.
         /// </summary>
         [JsonProperty(PropertyName = "KubectlProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubectlProxyPort", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubectlProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.KubectlProxyPort)]
         public int KubectlProxyPort { get; set; } = KubeConst.KubectlProxyPort;
 
@@ -103,7 +103,7 @@ namespace Neon.Kube
         /// defaults to <see cref="KubeConst.KubeDashboardProxyPort"/>.
         /// </summary>
         [JsonProperty(PropertyName = "KubeDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeDashboardProxyPort", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeDashboardProxyPort", ApplyNamingConventions = false)]
         [DefaultValue(KubeConst.KubeDashboardProxyPort)]
         public int KubeDashboardProxyPort { get; set; } = KubeConst.KubeDashboardProxyPort;
 

@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// tool.
         /// </summary>
         [JsonProperty(PropertyName = "PublicPUB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PublicPUB", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "publicPUB", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PublicPUB { get; set; }
 
@@ -84,7 +84,7 @@ namespace Neon.Kube
         /// The private key formatted for <b>OpenSSH</b> (PEM formatted).  
         /// </summary>
         [JsonProperty(PropertyName = "PrivatePEM", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PrivatePEM", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "privatePEM", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PrivatePEM { get; set; }
 
@@ -92,7 +92,7 @@ namespace Neon.Kube
         /// The private key formatted as <b>PuTTY Private Key (PPK)</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PrivatePPK", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PrivatePPK", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "privatePPK", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PrivatePPK { get; set; }
 
@@ -100,7 +100,7 @@ namespace Neon.Kube
         /// <b>Not Implemented Yet:</b> The optional passphrase used for additional security.
         /// </summary>
         [JsonProperty(PropertyName = "Passphrase", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Passphrase", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "passphrase", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Passphrase { get; set; }
     }

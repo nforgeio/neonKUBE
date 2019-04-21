@@ -49,7 +49,7 @@ namespace Neon.Kube
             /// The downloaded file ETAG.
             /// </summary>
             [JsonProperty(PropertyName = "ETag", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "ETag", ApplyNamingConventions = false)]
+            [YamlMember(Alias = "etag", ApplyNamingConventions = false)]
             [DefaultValue(null)]
             public string ETag { get; set; }
 
@@ -58,7 +58,7 @@ namespace Neon.Kube
             /// the complete file was downloaded.
             /// </summary>
             [JsonProperty(PropertyName = "Length", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-            [YamlMember(Alias = "Length", ApplyNamingConventions = false)]
+            [YamlMember(Alias = "length", ApplyNamingConventions = false)]
             [DefaultValue(-1)]
             public long Length { get; set; }
         }

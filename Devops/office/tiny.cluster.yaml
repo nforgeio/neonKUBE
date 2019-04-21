@@ -1,21 +1,21 @@
-Name: office-tiny
-Datacenter: fremont
-Environment: development
-TimeSources:
+name: office-tiny
+datacenter: fremont
+environment: development
+timeSources:
 - pool.ntp.org
-AllowUnitTesting: true
-Kubernetes:
-  AllowPodsOnMasters: true
-Hosting:
-  Environment: hyperv-local
-  VmDriveFolder: C:\\VM
-Network:
-  PremiseSubnet: 10.50.0.0/16
-  NodesSubnet: 10.50.0.0/16
-NodeOptions:
-   Upgrade: none
-   PasswordLength: 20
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+hosting:
+  environment: hyperv-local
+  vmDriveFolder: C:\\VM
+network:
+  premiseSubnet: 10.50.0.0/16
+  nodesSubnet: 10.50.0.0/16
+nodeOptions:
+  upgrade: none
+  passwordLength: 20
 Nodes:
-   master-0:
-     Role: master
-     PrivateAddress: 10.50.0.30
+  master-0:
+    role: master
+    privateAddress: 10.50.0.30
