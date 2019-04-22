@@ -20,15 +20,15 @@ type (
 	}
 )
 
-// GetRequestId gets a request id from a ProxyMessage's properties
-func (request *ProxyRequest) GetRequestId(key string) int64 {
-	return request.ProxyMessage.GetLongProperty("RequestId")
+// GetRequestID gets a request id from a ProxyMessage's properties
+func (request *ProxyRequest) GetRequestID(key string) int64 {
+	return request.ProxyMessage.GetLongProperty(RequestIDKey)
 }
 
-// SetRequestId sets a request id in a ProxyRequest's ProxyMessage
+// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
 // properties
-func (request *ProxyRequest) SetRequestId(value int64) {
-	request.ProxyMessage.SetLongProperty("RequestId", value)
+func (request *ProxyRequest) SetRequestID(value int64) {
+	request.ProxyMessage.SetLongProperty(RequestIDKey, value)
 }
 
 // Clone inherits docs from ProxyMessage.Clone()

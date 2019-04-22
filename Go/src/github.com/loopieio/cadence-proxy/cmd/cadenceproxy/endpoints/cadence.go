@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadence"
+	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadence"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
 
@@ -72,7 +72,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 // Helper
 func ConfigureCadenceClientHelper(args map[string]*string) (*cadence.Helper, error) {
 
-	var h *cadence.Helper
+	var h *cadenceclient.Helper
 	var err error
 
 	return h, err

@@ -36,7 +36,15 @@ const (
 
 	// ContentType is the content type to be used for HTTP requests
 	// encapsulationg a ProxyMessage
-	ContentType   = "application/x-neon-cadence-proxy"
+	ContentType = "application/x-neon-cadence-proxy"
+
+	// CadenceErrorTypesKey is the string for accessing
+	// the error type property in a ProxyMessage's properties map
+	CadenceErrorTypesKey = "ErrorType"
+
+	// RequestIdKey is the string key for accessing
+	// the RequestId property in a ProxyMessage's properties map
+	RequestIDKey  = "RequestId"
 	int32ByteSize = 4
 )
 
@@ -326,8 +334,8 @@ func (pm *ProxyMessage) GetTimeSpanProperty(key string) time.Duration {
 // Helper methods derived classes can use for setting typed message properties.
 
 // SetStringProperty is a helper method to set a string property
-func (pm *ProxyMessage) SetStringProperty(key string, value string) {
-	pm.Properties[key] = &value
+func (pm *ProxyMessage) SetStringProperty(key string, value *string) {
+	pm.Properties[key] = value
 }
 
 // SetIntProperty is a helper method to set an int property

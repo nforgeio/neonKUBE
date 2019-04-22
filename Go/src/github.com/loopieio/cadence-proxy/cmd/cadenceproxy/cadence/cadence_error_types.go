@@ -1,12 +1,12 @@
-package cadence
+package cadenceclient
 
 // CadenceErrorTypes is an enumerated list of
 // all of the cadence error types
-type ErrorTypes int
+type CadenceErrorTypes int
 
 const (
 	// None indicates no errors
-	None ErrorTypes = iota
+	None CadenceErrorTypes = iota
 
 	// Cancelled indicates that an operation was cancelled
 	Cancelled
@@ -27,7 +27,7 @@ const (
 	Timeout
 )
 
-func (t ErrorTypes) String() string {
+func (t CadenceErrorTypes) String() string {
 	return [...]string{
 		"None",
 		"Cancelled",
