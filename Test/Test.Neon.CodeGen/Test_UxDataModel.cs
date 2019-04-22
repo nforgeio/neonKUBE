@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -505,7 +506,7 @@ namespace TestCodeGen.UxDataModel
 
                 // Initialize the list and verify.
 
-                data["List"] = new List<string>() { "item0", "item1" };
+                data["List"] = new ObservableCollection<string>() { "item0", "item1" };
 
                 Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}", data.ToString());
 
@@ -1095,7 +1096,7 @@ namespace TestCodeGen.UxDataModel
 
                 var complexData = context.CreateDataWrapper<ComplexData>();
 
-                complexData["List"]        = new List<string>() { "zero", "one", "two" };
+                complexData["List"]        = new ObservableCollection<string>() { "zero", "one", "two" };
                 complexData["Dictionary"]  = new Dictionary<string, int>() { { "zero", 1 }, { "one", 1 } };
                 complexData["Enum1"]       = MyEnum1.One;
                 complexData["Enum2"]       = MyEnum2.Three;

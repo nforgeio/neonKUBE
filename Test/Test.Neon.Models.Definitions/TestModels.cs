@@ -179,6 +179,18 @@ namespace Test.Neon.Models.Definitions
         [HttpPut]
         [Route("GetOptionalStringViaBody")]
         string GetOptionalStringViaBody([FromBody] string value = "Hello World!");
+
+        [HttpPut]
+        [Route("GetStringList")]
+        List<string> GetStringList([FromBody] List<string> value);
+
+        [HttpPut]
+        [Route("GetPersonList")]
+        List<Person> GetPersonList([FromBody] List<Person> value);
+
+        [HttpPut]
+        [Route("GetPersonArray")]
+        Person[] GetPersonArray([FromBody] Person[] value);
     }
 
     [ServiceModel]

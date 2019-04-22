@@ -213,6 +213,27 @@ namespace TestCodeGen.AspNet
         {
             return value;
         }
+
+        [HttpPut]
+        [Route("GetStringList")]
+        public List<string> GetStringList([FromBody] List<string> value)
+        {
+            return value;
+        }
+
+        [HttpPut]
+        [Route("GetPersonList")]
+        public List<Person> GetPersonList([FromBody] List<Person> value)
+        {
+            return value;
+        }
+
+        [HttpPut]
+        [Route("GetPersonArray")]
+        public Person[] GetPersonArray([FromBody] Person[] value)
+        {
+            return value;
+        }
     }
 
     public class Startup
@@ -403,6 +424,78 @@ namespace TestCodeGen.AspNet
             Assert.Equal("Goodbye World!", await client.GetOptionalStringViaBodyAsync("Goodbye World!"));
             Assert.Equal("Hello World!", (await client.UnsafeGetOptionalStringViaBodyAsync()).As<string>());
             Assert.Equal("Goodbye World!", (await client.UnsafeGetOptionalStringViaBodyAsync("Goodbye World!")).As<string>());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetStringList()
+        {
+            Assert.Null(await client.GetStringListAsync(null));
+            Assert.Empty(await client.GetStringListAsync(new List<string>()));
+
+            var list = new List<string>();
+
+            list.Add("zero");
+            list.Add("one");
+            list.Add("two");
+
+            Assert.Equal(list, await client.GetStringListAsync(list));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetPersonList()
+        {
+            Assert.Null(await client.GetPersonListAsync(null));
+            Assert.Empty(await client.GetPersonListAsync(new List<Person>()));
+
+            var list = new List<Person>();
+
+            list.Add(new Person()
+            {
+                Id = 1,
+                Name = "Jack",
+                Age = 10,
+                Data = new byte[] { 0, 1, 2, 3, 4 }
+            });
+
+            list.Add(new Person()
+            {
+                Id = 2,
+                Name = "Jill",
+                Age = 11,
+                Data = new byte[] { 5, 6, 7, 8, 9 }
+            });
+
+            Assert.Equal(list, await client.GetPersonListAsync(list));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetPersonArray()
+        {
+            Assert.Null(await client.GetPersonArrayAsync(null));
+            Assert.Empty(await client.GetPersonArrayAsync(new Person[0]));
+
+            var list = new Person[]
+            {
+                new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                },
+                new Person()
+                {
+                    Id = 2,
+                    Name = "Jill",
+                    Age = 11,
+                    Data = new byte[] { 5, 6, 7, 8, 9 }
+                }
+            };
+
+            Assert.Equal(list, await client.GetPersonArrayAsync(list));
         }
     }
 }

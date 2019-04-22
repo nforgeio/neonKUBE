@@ -171,7 +171,7 @@ namespace Neon.CodeGen
         private bool                                firstItemGenerated = true;
         private StringWriter                        writer;
         private HashSet<Type>                       convertableTypes;
-        private bool                                generateNotifyPropertyChanged = false;
+        private bool                                generateUx = false;
 
         /// <summary>
         /// Constructs a code generator.
@@ -196,7 +196,7 @@ namespace Neon.CodeGen
 
             Settings.TargetNamespace = Settings.TargetNamespace ?? "Neon.CodeGen.Output";
 
-            generateNotifyPropertyChanged = settings.UxFramework == UxFrameworks.Xaml;
+            generateUx = settings.UxFramework == UxFrameworks.Xaml;
 
             // Scan the [Neon.Common] assembly for JSON converters that implement [IEnhancedJsonConverter]
             // and initialize the [convertableTypes] hashset with the convertable types.  We'll need
@@ -683,7 +683,7 @@ namespace Neon.CodeGen
 
                 if (serviceMethod.HttpMethod == "GET" && asBodyParameterCount > 0)
                 {
-                    Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] a parameter tagged with [FromBody].  This is not alowed for methods using the HTTP GET method.");
+                    Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a parameter tagged with [FromBody].  This is not allowed for methods using the HTTP GET method.");
                 }
 
                 serviceModel.Methods.Add(serviceMethod);
@@ -970,6 +970,12 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"using System;");
             writer.WriteLine($"using System.Collections.Generic;");
+
+            if (generateUx)
+            {
+                writer.WriteLine($"using System.Collections.ObjectModel;");
+            }
+
             writer.WriteLine($"using System.ComponentModel;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
@@ -1193,7 +1199,7 @@ namespace Neon.CodeGen
                 }
                 else
                 {
-                    if (generateNotifyPropertyChanged)
+                    if (generateUx)
                     {
                         baseTypeRef = " : NotifyPropertyChanged, IRoundtripData";
                     }
@@ -1617,7 +1623,7 @@ namespace Neon.CodeGen
                         defaultValueExpression = $" = {defaultValueExpression};";
                     }
 
-                    if (!generateNotifyPropertyChanged)
+                    if (!generateUx)
                     {
                         writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}{defaultValueExpression}");
                     }
@@ -3048,6 +3054,16 @@ namespace Neon.CodeGen
                     }
 
                     genericParams += genericParamType.Name;
+                }
+
+                if (generateUx)
+                {
+                    // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
+
+                    if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                    {
+                        return $"ObservableCollection<{genericParams}>";
+                    }
                 }
 
                 return $"{genericRef}<{genericParams}>";
