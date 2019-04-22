@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_EndToEnd.cs
+// FILE:	    Test_UxEndToEnd.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Net.Http;
 using System.Linq;
@@ -36,12 +37,12 @@ using Neon.Common;
 using Neon.Web;
 using Neon.Xunit;
 
-using Test.Neon.Models;
+using Test.Neon.UxModels;
 
 using Xunit;
 using Xunit.Abstractions;
 
-namespace TestCodeGen.AspNet
+namespace TestCodeGen.UxAspNet
 {
     [Route("/TestAspNetFixture")]
     public class TestAspNetFixtureController : NeonControllerBase
@@ -431,9 +432,9 @@ namespace TestCodeGen.AspNet
         public async Task GetStringList()
         {
             Assert.Null(await client.GetStringListAsync(null));
-            Assert.Empty(await client.GetStringListAsync(new List<string>()));
+            Assert.Empty(await client.GetStringListAsync(new ObservableCollection<string>()));
 
-            var list = new List<string>();
+            var list = new ObservableCollection<string>();
 
             list.Add("zero");
             list.Add("one");
@@ -447,9 +448,9 @@ namespace TestCodeGen.AspNet
         public async Task GetPersonList()
         {
             Assert.Null(await client.GetPersonListAsync(null));
-            Assert.Empty(await client.GetPersonListAsync(new List<Person>()));
+            Assert.Empty(await client.GetPersonListAsync(new ObservableCollection<Person>()));
 
-            var list = new List<Person>();
+            var list = new ObservableCollection<Person>();
 
             list.Add(new Person()
             {

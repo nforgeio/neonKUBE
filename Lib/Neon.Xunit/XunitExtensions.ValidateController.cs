@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
@@ -516,7 +517,7 @@ namespace Neon.Xunit
                 }
             }
 
-            sbSignature.Append($"{httpMethod}[\"{routeTemplate}\"]: {returnType.ToString()} (");
+            sbSignature.Append($"{httpMethod}[\"{routeTemplate}\"]: {NormalizeType(returnType)} (");
 
             var firstParam = true;
 
@@ -541,12 +542,39 @@ namespace Neon.Xunit
                     sbSignature.Append(", ");
                 }
 
-                sbSignature.Append(parameter.ParameterType.ToString());
+                sbSignature.Append(NormalizeType(parameter.ParameterType));
             }
 
             sbSignature.Append(")");
 
             return sbSignature.ToString();
+        }
+
+        /// <summary>
+        /// Normalizes types to strings including converting <see cref="ObservableCollection{T}"/> 
+        /// types to <see cref="List{T}"/>.
+        /// </summary>
+        /// <param name="type">The input type.</param>
+        /// <returns>The normalized type rendered as a string.</returns>
+        private static string NormalizeType(Type type)
+        {
+            var renderedType = type.ToString();
+
+            if (!type.IsGenericType)
+            {
+                return renderedType;
+            }
+
+            const string pattern = "System.Collections.ObjectModel.ObservableCollection`";
+
+            if (renderedType.StartsWith(pattern))
+            {
+                return "System.Collections.Generic.List`" + renderedType.Substring(pattern.Length);
+            }
+            else
+            {
+                return renderedType;
+            }
         }
     }
 }

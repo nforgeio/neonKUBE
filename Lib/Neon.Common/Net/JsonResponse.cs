@@ -143,7 +143,7 @@ namespace Neon.Net
 
         /// <summary>
         /// Ensures that the status code indicates success by throwing an 
-        /// exception if it does not.
+        /// exception for any error related status codes.
         /// </summary>
         /// <exception cref="HttpException">Thrown if the response doesn't indicate success.</exception>
         public void EnsureSuccess()
