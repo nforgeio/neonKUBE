@@ -74,7 +74,7 @@ namespace Neon.Kube
         /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
-        [YamlMember(Alias = "Enabled", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
 
@@ -105,7 +105,7 @@ namespace Neon.Kube
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "Release", Required = Required.Default)]
-        [YamlMember(Alias = "Release", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "release", ApplyNamingConventions = false)]
         [DefaultValue(defaultRelease)]
         public string Release { get; set; } = defaultRelease;
 
@@ -120,7 +120,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDDriveSize", Required = Required.Default)]
-        [YamlMember(Alias = "OSDDriveSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdDriveSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDDriveSize)]
         public string OSDDriveSize { get; set; } = defaultOSDDriveSize;
 
@@ -147,7 +147,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDCacheSize", Required = Required.Default)]
-        [YamlMember(Alias = "OSDCacheSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdCacheSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDCacheSize)]
         public string OSDCacheSize { get; set; } = defaultOSDCacheSize;
 
@@ -161,7 +161,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDJournalSize", Required = Required.Default)]
-        [YamlMember(Alias = "OSDJournalSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdJournalSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDJournalSize)]
         public string OSDJournalSize { get; set; } = defaultOSDJournalSize;
 
@@ -170,7 +170,7 @@ namespace Neon.Kube
         /// This can be overridden for specific nodes.  This defaults to <b>5GiB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OSDObjectSizeMax", Required = Required.Default)]
-        [YamlMember(Alias = "OSDObjectSizeMax", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdObjectSizeMax", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDObjectSizeMax)]
         public string OSDObjectSizeMax { get; set; } = defaultOSDObjectSizeMax;
 
@@ -180,7 +180,7 @@ namespace Neon.Kube
         /// in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "OSDReplicaCount", Required = Required.Default)]
-        [YamlMember(Alias = "OSDReplicaCount", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdReplicaCount", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int OSDReplicaCount { get; set; } = 0;
 
@@ -191,7 +191,7 @@ namespace Neon.Kube
         /// in which case this will also default to 1.
         /// </summary>
         [JsonProperty(PropertyName = "OSDReplicaCountMin", Required = Required.Default)]
-        [YamlMember(Alias = "OSDReplicaCountMin", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdReplicaCountMin", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int OSDReplicaCountMin { get; set; }
 
@@ -200,7 +200,7 @@ namespace Neon.Kube
         /// This defaults to <b>100</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OSDPlacementGroups", Required = Required.Default)]
-        [YamlMember(Alias = "OSDPlacementGroups", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdPlacementGroups", ApplyNamingConventions = false)]
         [DefaultValue(defaultOSDPlacementGroups)]
         public int OSDPlacementGroups { get; set; } = defaultOSDPlacementGroups;
 
@@ -227,7 +227,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "MDSCacheSize", Required = Required.Default)]
-        [YamlMember(Alias = "MDSCacheSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "mdsCacheSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultMDSCacheSize)]
         public string MDSCacheSize { get; set; } = defaultMDSCacheSize;
 

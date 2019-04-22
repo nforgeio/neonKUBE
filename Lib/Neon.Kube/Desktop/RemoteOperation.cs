@@ -66,7 +66,7 @@ namespace Neon.Kube
         /// A brief summary of the operation being performed.
         /// </summary>
         [JsonProperty(PropertyName = "Summary", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Summary", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "summary", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Summary { get; set; }
 
@@ -75,7 +75,7 @@ namespace Neon.Kube
         /// as toast for calls to <see cref="DesktopClient.EndOperationAsync"/>.
         /// </summary>
         [JsonProperty(PropertyName = "CompletedToast", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "CompletedToast", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "completedToast", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CompletedToast { get; set; }
 
@@ -83,7 +83,7 @@ namespace Neon.Kube
         /// Indicates whether the operation failed.
         /// </summary>
         [JsonProperty(PropertyName = "Failed", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Failed", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "failed", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public bool Failed { get; set; }
     }

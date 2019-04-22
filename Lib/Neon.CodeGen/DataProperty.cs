@@ -114,7 +114,7 @@ namespace Neon.CodeGen
         /// <c>null</c> if the property has no default value or if it's
         /// the same as the default value for the property type.
         /// </summary>
-        public string DefaultValueExpression
+        public string DefaultValueLiteral
         {
             get
             {

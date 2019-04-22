@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FromHeaderAttribute.cs
+// FILE:	    NoControllerValidationAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,34 +18,19 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Reflection;
 using System.Text;
 
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to indicate that a service endpoint parameter is to be obtained
-    /// by parsing a request header value.
+    /// Used to prevent the <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
+    /// method from including the tagged method when validating the service controller
+    /// against its definining interface.  This is useful for rare situations where a
+    /// service controller implements some extra endpoints that are not covered by the
+    /// generated client.
     /// </summary>
-    /// <remarks>
-    /// By default, this option will look for the HTTP header with the same
-    /// name as the tagged endpoint parameter.  This can be overriden by setting
-    /// the <see cref="Name"/> property.
-    /// </remarks>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public class FromHeaderAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class)]
+    public class NoControllerValidationAttribute : Attribute
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public FromHeaderAttribute()
-        {
-        }
-
-        /// <summary>
-        /// Optionally overrides the tagged service endpoint method property
-        /// name when generating the client code.
-        /// </summary>
-        public string Name { get; set; }
     }
 }

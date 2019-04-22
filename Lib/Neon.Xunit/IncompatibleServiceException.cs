@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FromHeaderAttribute.cs
+// FILE:	    IncompatibleServiceException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,34 +18,29 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Reflection;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace Neon.CodeGen
+using Neon.Common;
+using Neon.Data;
+using Neon.Xunit;
+
+namespace Neon.Xunit
 {
     /// <summary>
-    /// Used to indicate that a service endpoint parameter is to be obtained
-    /// by parsing a request header value.
+    /// Thrown by <see cref="XunitExtensions.ValidateController{TServiceImplementation}(IGeneratedServiceClient)"/> when
+    /// the service type doesn't match a generated service client.
     /// </summary>
-    /// <remarks>
-    /// By default, this option will look for the HTTP header with the same
-    /// name as the tagged endpoint parameter.  This can be overriden by setting
-    /// the <see cref="Name"/> property.
-    /// </remarks>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public class FromHeaderAttribute : Attribute
+    public class IncompatibleServiceException : Exception
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public FromHeaderAttribute()
+        /// <param name="message">The error message.</param>
+        public IncompatibleServiceException(string message)
+            : base(message)
         {
         }
-
-        /// <summary>
-        /// Optionally overrides the tagged service endpoint method property
-        /// name when generating the client code.
-        /// </summary>
-        public string Name { get; set; }
     }
 }

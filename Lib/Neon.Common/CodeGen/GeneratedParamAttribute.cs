@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FromHeaderAttribute.cs
+// FILE:	    GeneratedParamAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,33 +18,35 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Reflection;
 using System.Text;
 
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to indicate that a service endpoint parameter is to be obtained
-    /// by parsing a request header value.
+    /// Used to tag generated service client method parameters with additional
+    /// metadata that will be used when validatating the a generated service
+    /// client actually matches an ASP.NET service implementation.
     /// </summary>
-    /// <remarks>
-    /// By default, this option will look for the HTTP header with the same
-    /// name as the tagged endpoint parameter.  This can be overriden by setting
-    /// the <see cref="Name"/> property.
-    /// </remarks>
     [AttributeUsage(AttributeTargets.Parameter)]
-    public class FromHeaderAttribute : Attribute
+    public class GeneratedParamAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public FromHeaderAttribute()
+        /// <param name="passAs">Indicates how the client passes the tagged parameter to the service.</param>
+        public GeneratedParamAttribute(PassAs passAs)
         {
+            this.PassAs = passAs;
         }
 
         /// <summary>
-        /// Optionally overrides the tagged service endpoint method property
-        /// name when generating the client code.
+        /// Indicates how the client passes the tagged parameter to the service.
+        /// </summary>
+        public PassAs PassAs { get; private set; }
+
+        /// <summary>
+        /// Parameter name as it appears on the wire for parameters passed
+        /// as a query, header, or route.
         /// </summary>
         public string Name { get; set; }
     }

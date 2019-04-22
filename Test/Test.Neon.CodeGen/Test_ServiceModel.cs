@@ -43,6 +43,7 @@ namespace TestCodeGen.ServiceModel
         public const string BaseAddress = "http://127.0.0.1:888/";
     }
 
+    [Target("Default")]
     public enum MyEnum
     {
         One,
@@ -50,6 +51,7 @@ namespace TestCodeGen.ServiceModel
         Three
     }
 
+    [Target("Default")]
     public interface SimpleData
     {
         string Name { get; set; }
@@ -57,6 +59,7 @@ namespace TestCodeGen.ServiceModel
         MyEnum Enum { get; set; }
     }
 
+    [Target("Default")]
     public interface ComplexData
     {
         List<string> List { get; set; }
@@ -70,16 +73,20 @@ namespace TestCodeGen.ServiceModel
         int IgnoreThis { get; set; }
     }
 
+    [Target("Default")]
     [ServiceModel]
+    [Target("Default")]
     public interface EmptyServiceController
     {
     }
 
+    [Target("Default")]
     [ServiceModel(name: "EmptyOverride")]
     public interface Empty2ServiceController
     {
     }
 
+    [Target("Default")]
     [ServiceModel]
     public interface VoidServiceController
     {
@@ -88,6 +95,7 @@ namespace TestCodeGen.ServiceModel
         Task VoidTask();
     }
 
+    [Target("Default")]
     [ServiceModel]
     public interface MethodsServiceController
     {
@@ -115,6 +123,7 @@ namespace TestCodeGen.ServiceModel
         void TestPut([FromQuery]int p1, [FromQuery]string p2, [FromQuery]MyEnum p3);
     }
 
+    [Target("Default")]
     [ServiceModel]
     public interface ResultsServiceController
     {
@@ -129,6 +138,7 @@ namespace TestCodeGen.ServiceModel
         SimpleData GetSimpleData();
     }
 
+    [Target("Default")]
     [ServiceModel]
     public interface RouteService1
     {
@@ -145,6 +155,7 @@ namespace TestCodeGen.ServiceModel
         void Test2([FromRoute(Name = "arg1")]int p1, [FromRoute(Name = "arg2")]string p2, [FromRoute(Name = "arg3")]MyEnum p3);
     }
 
+    [Target("Default")]
     [ServiceModel]
     [Route("/api/v1/service2")]
     public interface RouteService2
@@ -162,6 +173,7 @@ namespace TestCodeGen.ServiceModel
         void Test2(int p1, string p2, MyEnum p3);
     }
 
+    [Target("Default")]
     [ServiceModel(name: "MyRouteService")]
     [Route("/api/v1/service3")]
     public interface RouteService3
@@ -183,6 +195,7 @@ namespace TestCodeGen.ServiceModel
     /// <summary>
     /// Used to impersonate the custom class generated for <see cref="RouteService3"/>
     /// </summary>
+    [Target("Default")]
     public interface MyRouteService
     {
     }
@@ -190,6 +203,7 @@ namespace TestCodeGen.ServiceModel
     /// <summary>
     /// Used for testing [FromBody] method parameters.
     /// </summary>
+    [Target("Default")]
     [ServiceModel]
     [Route("/api/v1/frombody")]
     public interface FromBodyService
@@ -222,6 +236,7 @@ namespace TestCodeGen.ServiceModel
     /// <summary>
     /// Used for testing a service client composed of multiple controllers.
     /// </summary>
+    [Target("Default")]
     [ServiceModel(name: "Composed", group: "User")]
     [Route("/api/v1/user")]
     public interface ComposedUserController
@@ -237,6 +252,7 @@ namespace TestCodeGen.ServiceModel
     /// <summary>
     /// Used for testing a service client composed of multiple controllers.
     /// </summary>
+    [Target("Default")]
     [ServiceModel(name: "Composed", group: "Delivery")]
     [Route("/api/v1/delivery")]
     public interface ComposedDeliveryController
@@ -252,6 +268,7 @@ namespace TestCodeGen.ServiceModel
     /// <summary>
     /// Used for testing a service client composed of multiple controllers.
     /// </summary>
+    [Target("Default")]
     [ServiceModel(name: "Composed")]
     [Route("/api/v1")]
     public interface ComposedController
@@ -261,7 +278,7 @@ namespace TestCodeGen.ServiceModel
     }
 
     [NoCodeGen]
-    public class Test_ServiceModel
+    public partial class Test_ServiceModel
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
@@ -269,7 +286,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify a controller with no methods.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -290,7 +307,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that we can rename a service controller.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -313,7 +330,7 @@ namespace TestCodeGen.ServiceModel
             // any special routing (etc) attributes and where all methods
             // return VOID.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -402,7 +419,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that the correct HTTP methods are used.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -538,7 +555,7 @@ namespace TestCodeGen.ServiceModel
             // Verify that the correct HTTP methods are used when performing unsafe
             // operations.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -672,7 +689,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that we can parse various types of service results.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -872,7 +889,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that we do URI routing properly.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -952,7 +969,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that we do URI routing properly.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -1032,7 +1049,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that we do URI routing properly.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -1088,7 +1105,7 @@ namespace TestCodeGen.ServiceModel
 
                         await client.CallAsync("Test1", 1, "two", MyEnum.Three);
                         Assert.Equal("GET", requestMethod);
-                        Assert.Equal("/api/v1/service3", requestPath);
+                        Assert.Equal("/api/v1/service3/Test1", requestPath);
                         Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
                         Assert.Null(requestContentType);
                         Assert.Null(requestBody);
@@ -1112,7 +1129,7 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that we can transmit [FromBody] parameters properly.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
@@ -1216,13 +1233,13 @@ namespace TestCodeGen.ServiceModel
         {
             // Verify that a client composed from multiple service models work.
 
-            var settings = new CodeGeneratorSettings()
+            var settings = new CodeGeneratorSettings("Default")
             {
                 SourceNamespace = typeof(Test_ServiceModel).Namespace,
             };
 
             var generator = new CodeGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+            var output = generator.Generate(Assembly.GetExecutingAssembly());
 
             Assert.False(output.HasErrors);
 
@@ -1245,8 +1262,8 @@ namespace TestCodeGen.ServiceModel
                     var request  = context.Request;
                     var response = context.Response;
 
-                    requestMethod      = request.Method;
-                    requestPath        = request.Path;
+                    requestMethod = request.Method;
+                    requestPath = request.Path;
                     requestQueryString = request.QueryString;
                     requestContentType = request.ContentType;
 
@@ -1315,6 +1332,117 @@ namespace TestCodeGen.ServiceModel
                     }
                 }
             }
+        }
+    }
+
+    [Target("OptionalParamController_Header")]
+    [ServiceModel]
+    public interface DefaultParamController_AsHeader
+    {
+        [HttpPost]
+        void Test([FromHeader(Name = "X-Test")] string hello = "world");
+    }
+
+    [Target("OptionalParamController_Query")]
+    [ServiceModel]
+    public interface DefaultParamController_AsQuery
+    {
+        [HttpPost]
+        void Test([FromQuery] string hello = "world");
+    }
+
+    [Target("OptionalParamController_Body")]
+    [ServiceModel]
+    public interface DefaultParamController_AsBody
+    {
+        [HttpPost]
+        void Test([FromBody] string hello = "world");
+    }
+
+    [Target("OptionalParamController_Route")]
+    [ServiceModel]
+    public interface DefaultParamController_InRoute
+    {
+        [HttpPost]
+        [Route("{hello}")]
+        void Test([FromRoute] string hello = "world");
+    }
+
+    [Target("OptionalParamController_Default")]
+    [ServiceModel]
+    public interface DefaultParamController_Default
+    {
+        [HttpPost]
+        [Route("{hello}")]
+        void Test(string hello = "world");
+    }
+
+    public partial class Test_ServiceModel
+    {
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void OptionalParams()
+        {
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_ServiceModel).Namespace
+            };
+
+            // Verify that only [FromHeader] and [FromBody] parameters are allowed
+            // to be defined as optional.
+
+            // [Default(route)]: should work
+
+            settings.Targets.Clear();
+            settings.Targets.Add("OptionalParamController_Default");
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.True(output.HasErrors);
+
+            // [FromHeader]: should work
+
+            settings.Targets.Clear();
+            settings.Targets.Add("OptionalParamController_Header");
+
+            generator = new CodeGenerator(settings);
+            output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+            CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            // [FromQuery]: should work
+
+            settings.Targets.Clear();
+            settings.Targets.Add("OptionalParamController_Query");
+
+            generator = new CodeGenerator(settings);
+            output = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+            CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            // [FromBody]: should work
+
+            settings.Targets.Clear();
+            settings.Targets.Add("OptionalParamController_Body");
+
+            generator = new CodeGenerator(settings);
+            output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+            CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            // [FromRoute]: should fail
+
+            settings.Targets.Clear();
+            settings.Targets.Add("OptionalParamController_Route");
+
+            generator = new CodeGenerator(settings);
+            output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.True(output.HasErrors);
         }
     }
 }

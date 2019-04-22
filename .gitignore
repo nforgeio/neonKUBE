@@ -87,6 +87,7 @@ wwwroot/
 GeneratedModels.cs
 GeneratedEntities.cs
 GeneratedTypes.cs
+GeneratedUxTypes.cs
 
 ##################
 ### Go Project ###

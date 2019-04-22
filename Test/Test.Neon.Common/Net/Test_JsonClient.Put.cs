@@ -44,7 +44,7 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync()
         {
-            // Ensure that PUT sending and returning an explict types works.
+            // Ensure that PUT sending and returning an explict type works.
 
             RequestDoc requestDoc = null;
 

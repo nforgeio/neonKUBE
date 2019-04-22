@@ -46,7 +46,7 @@ namespace Neon.Cadence
         /// the default: <see cref="ConnectionMode.Normal"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Mode", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "mode", ApplyNamingConventions = false)]
         [DefaultValue(ConnectionMode.Normal)]
         public ConnectionMode Mode { get; set; } = ConnectionMode.Normal;
 
@@ -60,7 +60,7 @@ namespace Neon.Cadence
         /// problems if any single node is down.
         /// </remarks>
         [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Servers", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "servers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<Uri> Servers { get; set; } = new List<Uri>();
 

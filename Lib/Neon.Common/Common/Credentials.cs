@@ -50,7 +50,7 @@ namespace Neon.Common
         /// The security token.
         /// </summary>
         [JsonProperty(PropertyName = "Token", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Token", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "token", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Token { get; set; }
 
@@ -58,7 +58,7 @@ namespace Neon.Common
         /// The username (use in conjunction with <see cref="Password"/>).
         /// </summary>
         [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Username", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "username", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Username { get; set; }
 
@@ -66,7 +66,7 @@ namespace Neon.Common
         /// The password (use in conjunction with <see cref="Username"/>).
         /// </summary>
         [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Password", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "password", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Password { get; set; }
 

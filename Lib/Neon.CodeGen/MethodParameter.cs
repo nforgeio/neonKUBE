@@ -22,6 +22,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
+using Neon.Common;
+
 namespace Neon.CodeGen
 {
     /// <summary>
@@ -53,12 +55,75 @@ namespace Neon.CodeGen
         /// <summary>
         /// Specifies how the parameter shoud be passed to the service endpoint.
         /// </summary>
-        public Pass Pass { get; set; } = Pass.InQuery;
+        public Pass Pass { get; set; } = Pass.AsQuery;
 
         /// <summary>
-        /// The parameter or HTTP header name to use when passing the parameter as <see cref="Pass.InQuery"/>
-        /// <see cref="Pass.InRoute"/>, or <see cref="Pass.AsHeader"/>.  This is ignored for <see cref="Pass.AsBody"/>.
+        /// The parameter or HTTP header name to use when passing the parameter as <see cref="Pass.AsQuery"/>
+        /// <see cref="Pass.AsRoute"/>, or <see cref="Pass.AsHeader"/>.  This is ignored for <see cref="Pass.AsBody"/>.
         /// </summary>
         public string SerializedName { get; set; }
+
+        /// <summary>
+        /// Returns <c>true</c> if the parameter is optional.
+        /// </summary>
+        public bool IsOptional { get; set; }
+
+        /// <summary>
+        /// Returns the the default for parameters where <see cref="IsOptional"/> is <c>true</c>.
+        /// </summary>
+        public object DefaultValue { get; set; }
+
+        /// <summary>
+        /// Returns <see cref="DefaultValue"/> as an expression string or
+        /// <c>null</c> if the parameter is not optional.
+        /// </summary>
+        public string DefaultValueLiteral
+        {
+            get
+            {
+                if (!IsOptional)
+                {
+                    return null;
+                }
+
+                var type = ParameterInfo.ParameterType;
+
+                if (type.IsPrimitive || type == typeof(string) || type == typeof(Decimal) || type.IsEnum)
+                {
+                    if (type == typeof(string))
+                    {
+                        if (DefaultValue == null)
+                        {
+                            return "null";
+                        }
+                        else
+                        {
+                            return $"\"{DefaultValue}\"";
+                        }
+                    }
+                    else
+                    {
+                        if (type.IsEnum)
+                        {
+                            return $"{type.Name}.{DefaultValue}";
+                        }
+                        else if (type == typeof(bool))
+                        {
+                            return NeonHelper.ToBoolString((bool)DefaultValue);
+                        }
+                        else
+                        {
+                            return DefaultValue.ToString();
+                        }
+                    }
+                }
+                else
+                {
+                    // Other types can't have default values.
+
+                    return null;
+                }
+            }
+        }
     }
 }

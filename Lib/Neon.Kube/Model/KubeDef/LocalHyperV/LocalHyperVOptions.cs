@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostVhdxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HostVhdxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "hostVhdxUri", ApplyNamingConventions = false)]
         [DefaultValue(defaultHostVhdxUri)]
         public string HostVhdxUri { get; set; } = defaultHostVhdxUri;
 

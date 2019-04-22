@@ -50,12 +50,12 @@ namespace Neon.CodeGen
         /// <summary>
         /// Passes the parameter as a URI query parameter.
         /// </summary>
-        InQuery,
+        AsQuery,
 
         /// <summary>
         /// Passes the parameter within the URI route template. 
         /// </summary>
-        InRoute,
+        AsRoute,
 
         /// <summary>
         /// Passes the parameter as an HTTP header.

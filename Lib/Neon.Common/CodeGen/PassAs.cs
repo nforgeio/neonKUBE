@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NotifyPropertyChanged.cs
+// FILE:	    PassAs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,32 +18,44 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Reflection;
+using System.Runtime;
+using System.Runtime.Serialization;
 using System.Text;
 
-namespace Neon.Common
+using Newtonsoft.Json;
+
+using Neon.Common;
+
+namespace Neon.CodeGen
 {
     /// <summary>
-    /// A common implementation of <see cref="INotifyPropertyChanged"/>.
+    /// Identifies how a generated service client will pass a parameter to 
+    /// an ASP.NET service.
     /// </summary>
-    public abstract class NotifyPropertyChanged : INotifyPropertyChanged
+    public enum PassAs
     {
         /// <summary>
-        /// Raised when an instance property value has changed.
+        /// Passes the parameter is passed as a URI query parameter.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        Query,
 
         /// <summary>
-        /// Derived classes will call this when an property instance property value has changed.
+        /// Passes the parameter within the URI route template. 
         /// </summary>
-        /// <param name="propertyName">
-        /// The optional property name.  This defaults to the name of the caller, typically
-        /// the property's setter.
-        /// </param>
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        Route,
+
+        /// <summary>
+        /// Passes the parameter as an HTTP header.
+        /// </summary>
+        Header,
+
+        /// <summary>
+        /// Passes the parameter as the HTTP request body. 
+        /// </summary>
+        Body,
     }
 }
