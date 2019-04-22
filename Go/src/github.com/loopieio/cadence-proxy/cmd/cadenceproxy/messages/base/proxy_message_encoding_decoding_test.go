@@ -92,9 +92,22 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 		opBytes := test.input.Serialize()
 		buf := bytes.NewBuffer(opBytes)
 		output := base.Deserialize(buf)
+		var requestId int64 = 12345678910
+		pr := base.ProxyRequest{
+			RequestId:    requestId,
+			ProxyMessage: &test.input,
+		}
+
+		prClone := pr.Clone()
 
 		log.Println("***Output ProxyMessage***")
 		output.String()
+
+		log.Println("***ProxyRequest***")
+		pr.String()
+
+		log.Println("***Copy ProxyRequest***")
+		prClone.String()
 
 		if output.Type != test.input.Type {
 			t.Errorf("Test Failed: %v, %v, Types not equal: Expected %d, Got %d\n", test.input, output, test.input.Type, output.Type)

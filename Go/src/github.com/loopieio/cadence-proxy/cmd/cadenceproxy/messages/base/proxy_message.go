@@ -3,7 +3,6 @@ package base
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -27,8 +26,13 @@ type (
 	}
 
 	IProxyMessage interface {
-		Clone() *IProxyMessage
-		CopyTo(target *IProxyMessage)
+		Clone() IProxyMessage
+		CopyTo(target IProxyMessage)
+		SetIProxyMessageRequestId(value int64)
+		SetIProxyMessageProxyMessage(value *ProxyMessage)
+		SetLongProperty(key string, value int64)
+		GetLongProperty(key string) int64
+		String()
 	}
 )
 
@@ -188,17 +192,6 @@ func (pm *ProxyMessage) Serialize() []byte {
 	return b.Bytes()
 }
 
-// CopyTo implemented by derived classes to copy
-// message properties to another message instance
-// during a Clone() operation
-func (pm *ProxyMessage) CopyTo(target *IProxyMessage) {}
-
-// Clone is implemented by derived classes to make a copy of themselves
-// for echo testing purposes
-func (pm *ProxyMessage) Clone() *IProxyMessage {
-	return nil
-}
-
 // ProxyMessageToString is a method for cleanly
 // printing an ProxyMessage object to a log console
 func (pm *ProxyMessage) String() {
@@ -222,6 +215,28 @@ func (pm *ProxyMessage) String() {
 
 	log.Print("}\n\n")
 }
+
+// CopyTo implemented by derived classes to copy
+// message properties to another message instance
+// during a Clone() operation
+func (pm *ProxyMessage) CopyTo(target IProxyMessage) {
+	target.SetIProxyMessageProxyMessage(pm)
+}
+
+// Clone is implemented by derived classes to make a copy of themselves
+// for echo testing purposes
+func (pm *ProxyMessage) Clone() IProxyMessage {
+	return nil
+}
+
+// SetRequestId is implemented by derived classes to set the request Id of
+// a class that implements the IProxyMessage interface to set the requestId
+// of any struct implementing the interface
+func (pm *ProxyMessage) SetIProxyMessageRequestId(value int64) {}
+
+// SetProxyMessage is implemented by derived classes to set the value
+// of a ProxyMessage in an IProxyMessage interface
+func (pm *ProxyMessage) SetIProxyMessageProxyMessage(value *ProxyMessage) {}
 
 // -------------------------------------------------------------------------
 // Helper methods derived classes can use for retreiving typed message properties
@@ -362,17 +377,12 @@ func initIntToMessageStruct() {
 	intToMessageStruct = make(map[int]IProxyMessage)
 
 	// iterate through MessageTypesArray
-	for i, messageType := range messages.MessageTypeSlice {
-
-		// check to make sure that the MessageTypeSlice indexes are correct
-		if int(messageType) != i {
-			err := errors.New("Message type mapping incorrect: MessageType--" + string(messageType) + ", SliceIndex: " + string(i))
-			panic(err)
-		}
+	for _, messageType := range messages.MessageTypeSlice {
+		typeCode := int(messageType)
 
 		switch messageType {
 		case messages.Unspecified:
-			intToMessageStruct[i] = new(ProxyMessage)
+			intToMessageStruct[typeCode] = new(ProxyMessage)
 		case messages.InitializeRequest:
 			fmt.Println("Need to fill with initializeRequest struct")
 		case messages.InitializeReply:
@@ -385,6 +395,9 @@ func initIntToMessageStruct() {
 			fmt.Println("Need to fill with TerminateRequest struct")
 		case messages.TerminateReply:
 			fmt.Println("Need to fill with TerminateReply struct")
+		default:
+			fmt.Println("Need to fill out default struct")
+			intToMessageStruct[typeCode] = new(ProxyMessage)
 		}
 	}
 }
