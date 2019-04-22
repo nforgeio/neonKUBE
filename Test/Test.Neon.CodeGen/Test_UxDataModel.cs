@@ -37,6 +37,8 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
+using Test.Neon.UxModels;
+
 namespace TestCodeGen.UxDataModel
 {
     public interface EmptyData
@@ -1194,6 +1196,40 @@ namespace TestCodeGen.UxDataModel
                 Assert.False(DataWrapper.Equals(simpleData, deserialzedSimpleData));
                 Assert.True(DataWrapper.NotEquals<SimpleData>(simpleData, deserialzedSimpleData));
             }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void NotifyPropertyChanged()
+        {
+            // Verify that the generated classes actually implement [INotifyPropertyChanged].
+
+            var changed = (string)null;
+            var person  = new Person();
+
+            person.PropertyChanged +=
+                (sender, args) =>
+                {
+                    changed = args.PropertyName;
+                };
+
+            changed = null;
+            person.Name = "Jeff";
+            Assert.Equal(nameof(person.Name), changed);
+
+            changed = null;
+            person.Age = 10;
+            Assert.Equal(nameof(person.Age), changed);
+
+            changed = null;
+            person.Data = new byte[] { 1, 1, 1, 1 };
+            Assert.Equal(nameof(person.Data), changed);
+
+            // This one shouldn't change because the values are the same.
+
+            changed = null;
+            person.Name = "Jeff";
+            Assert.Null(changed);
         }
     }
 }

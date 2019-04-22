@@ -44,8 +44,8 @@ using Xunit.Abstractions;
 
 namespace TestCodeGen.UxAspNet
 {
-    [Route("/TestAspNetFixture")]
-    public class TestAspNetFixtureController : NeonControllerBase
+    [Route("/TestUxAspNetFixture")]
+    public class TestUxAspNetFixtureController : NeonControllerBase
     {
         [HttpGet]
         [Route("GetString")]
@@ -269,7 +269,7 @@ namespace TestCodeGen.UxAspNet
     public class Test_EndToEnd : IClassFixture<AspNetFixture>
     {
         private AspNetFixture               fixture;
-        private TestAspNetFixtureClient     client;
+        private TestUxAspNetFixtureClient   client;
         private TestOutputWriter            testWriter;
 
         public Test_EndToEnd(AspNetFixture fixture, ITestOutputHelper outputHelper)
@@ -282,7 +282,7 @@ namespace TestCodeGen.UxAspNet
 
             fixture.Start<Startup>(port: testPort, logWriter: testWriter, logLevel: logLevel);
 
-            client = new TestAspNetFixtureClient()
+            client = new TestUxAspNetFixtureClient()
             {
                 BaseAddress = fixture.BaseAddress
             };
@@ -292,7 +292,7 @@ namespace TestCodeGen.UxAspNet
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public void ValidateController()
         {
-            client.ValidateController<TestAspNetFixtureController>();
+            client.ValidateController<TestUxAspNetFixtureController>();
         }
 
         [Fact]

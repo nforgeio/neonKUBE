@@ -2207,6 +2207,9 @@ namespace Neon.CodeGen
 
             writer.WriteLine($"    public partial class {clientTypeName} : IDisposable, IGeneratedServiceClient");
             writer.WriteLine($"    {{");
+            writer.WriteLine($"        /// <inheritdoc/>");
+            writer.WriteLine($"        public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
+            writer.WriteLine();
 
             if (hasNonRootClientGroups)
             {
@@ -2224,6 +2227,9 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                this.client = client;");
                     writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            /// <inheritdoc/>");
+                    writer.WriteLine($"            public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
 
                     foreach (var serviceMethod in clientGroup.Value.Methods)
                     {
@@ -2292,9 +2298,6 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"            isDisposed = true;");
             writer.WriteLine($"        }}");
-            writer.WriteLine();
-            writer.WriteLine($"        /// <inheritdoc/>");
-            writer.WriteLine($"        public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
             writer.WriteLine();
             writer.WriteLine($"        /// <summary>");
             writer.WriteLine($"        /// Returns the underlying <see cref=\"JsonClient\"/>.");
