@@ -37,6 +37,57 @@ namespace Neon.Xunit
         //---------------------------------------------------------------------
         // IGeneratedServiceClient extensions
 
+        private class ErrorWriter
+        {
+            private StringBuilder sb = new StringBuilder();
+
+            public void Error(string message)
+            {
+                HasErrors = true;
+
+                if (sb.Length > 0)
+                {
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine("ERROR: " + message);
+            }
+
+            public bool HasErrors { get; private set; }
+
+            public override string ToString()
+            {
+                var errors = sb.ToString();
+
+                // $hack(jeff.lill):
+                //
+                // Remove some common namespace prefixes to make these errors easier to read.
+
+                errors = errors.Replace("System.Collections.Generic.", string.Empty);
+                errors = errors.Replace("System.Collections.ObjectModel.", string.Empty);
+                errors = errors.Replace("System.Threading.Tasks.", string.Empty);
+                errors = errors.Replace("System.Threading.", string.Empty);
+                errors = errors.Replace("Neon.Diagnostics.", string.Empty);
+                errors = errors.Replace("Neon.Retry.", string.Empty);
+
+                errors = errors.Replace("System.Boolean", "bool");
+                errors = errors.Replace("System.Byte", "byte");
+                errors = errors.Replace("System.SByte", "sbyte");
+                errors = errors.Replace("System.Int16", "short");
+                errors = errors.Replace("System.UInt16", "ushort");
+                errors = errors.Replace("System.Int32", "int");
+                errors = errors.Replace("System.UInt32", "uint");
+                errors = errors.Replace("System.Int64", "long");
+                errors = errors.Replace("System.UInt64", "ulong");
+                errors = errors.Replace("System.Float", "float");
+                errors = errors.Replace("System.Double", "double");
+                errors = errors.Replace("System.Decimal", "decimal");
+                errors = errors.Replace("System.String", "string");
+
+                return errors;
+            }
+        }
+
         /// <summary>
         /// <para>
         /// Compares the service model implemented by the generated service client against
@@ -71,7 +122,7 @@ namespace Neon.Xunit
             //
             // The method signature will be formatted like:
             //
-            //      ReturnType [HTTPMethod]:[RouteTemplate](Param0Type, Param1Type,...)
+            //      HTTPMethod["RouteTemplate"]: ReturnType (Param0Type, Param1Type,...)
             //
             // Note that we're only going to include parameters from the client that
             // are tagged by [GeneratedParam].  The remaining parameters are client
@@ -95,7 +146,7 @@ namespace Neon.Xunit
             var clientMethods     = new Dictionary<string, MethodInfo>();
             var controllerType    = typeof(TServiceController);
             var clientType        = client.GetType();
-            var sbErrors           = new StringBuilder();
+            var errors            = new ErrorWriter();
 
             // Ensure that the service controller and client route templates match.
 
@@ -104,19 +155,19 @@ namespace Neon.Xunit
 
             if (generatedClientAttribute == null)
             {
-                sbErrors.AppendLine($"ERROR: [{clientType.Name}] must be tagged with a [GeneratedClient] attribute.");
+                errors.Error($"[{clientType.Name}] must be tagged with a [GeneratedClient] attribute.");
             }
 
             if (controllerRouteAttribute == null)
             {
-                sbErrors.AppendLine($"ERROR: [{controllerType.Name}] must be tagged with a [Route] attribute.");
+                errors.Error($"[{controllerType.Name}] must be tagged with a [Route] attribute.");
             }
 
             if (generatedClientAttribute != null && controllerRouteAttribute != null)
             {
                 if (generatedClientAttribute.RouteTemplate != controllerRouteAttribute.Template)
                 {
-                    sbErrors.AppendLine($"ERROR: [{controllerType.Name}] has [Route(\"{controllerRouteAttribute.Template}\")] which does not match [{clientType.Name}] client's [Route(\"{generatedClientAttribute.RouteTemplate}\")].");
+                    errors.Error($"[{controllerType.Name}] has [Route(\"{controllerRouteAttribute.Template}\")] which does not match [{clientType.Name}] client's [Route(\"{generatedClientAttribute.RouteTemplate}\")].");
                 }
             }
 
@@ -150,7 +201,7 @@ namespace Neon.Xunit
 
                 if (method.ReturnType == typeof(Microsoft.AspNetCore.Mvc.IActionResult))
                 {
-                    sbErrors.AppendLine($"ERROR: Controller method [{method.Name}(...)] returns [IActionResult] which is not supported.  Use [ActionResult] or [ActionResult<T>] instead.");
+                    errors.Error($"Controller method [{method.Name}(...)] returns [IActionResult] which is not supported.  Use [ActionResult] or [ActionResult<T>] instead.");
                 }
 
                 var     routeAttribute = method.GetCustomAttribute<Microsoft.AspNetCore.Mvc.RouteAttribute>();
@@ -229,7 +280,7 @@ namespace Neon.Xunit
 
                 if (controllerMethods.TryGetValue(signature, out var existing))
                 {
-                    sbErrors.AppendLine($"ERROR: [{controllerType.Name}] has multiple methods including [{method.Name}(...)] and [{existing.Name}(...)] with the same parameters at endpoint [{httpMethod}:{routeTemplate}].");
+                    errors.Error($"[{controllerType.Name}] has multiple methods including\r\n\r\n    {method.Name}(...)] and\r\n\r\n    [{existing.Name}(...)]\r\n\r\n    with the same parameters at endpoint [{httpMethod}:{routeTemplate}].");
                 }
                 else
                 {
@@ -252,7 +303,7 @@ namespace Neon.Xunit
 
                 if (clientMethods.TryGetValue(signature, out var existing))
                 {
-                    sbErrors.AppendLine($"ERROR: [{clientType.Name}] has multiple methods including [{method.Name}(...)] and [{existing.Name}(...)] with the same parameters at endpoint [{generatedMethodAttribute.HttpMethod}:{generatedMethodAttribute.RouteTemplate}].");
+                    errors.Error($"[{clientType.Name}] has multiple methods including\r\n\r\n    [{method.Name}(...)] and\r\n\t\n    [{existing.Name}(...)]\r\n\r\n    with the same parameters at endpoint [{generatedMethodAttribute.HttpMethod}:{generatedMethodAttribute.RouteTemplate}].");
                 }
                 else
                 {
@@ -266,7 +317,7 @@ namespace Neon.Xunit
             {
                 if (!controllerMethods.ContainsKey(clientMethod.Key))
                 {
-                    sbErrors.AppendLine($"ERROR: Service controller [{controllerType.Name}] lacks a method that corresponds to [{clientType.Name}::{clientMethod.Value}] with signature [{clientMethod.Key}].");
+                    errors.Error($"Service controller [{controllerType.Name}] lacks a method that corresponds to:\r\n\r\n    {clientType.Name}::{clientMethod.Value}\r\n\r\n    with signature:\r\n\r\n    {clientMethod.Key}]");
                 }
             }
 
@@ -276,7 +327,7 @@ namespace Neon.Xunit
             {
                 if (!clientMethods.ContainsKey(controllerMethod.Key))
                 {
-                    sbErrors.AppendLine($"ERROR: Service client [{clientType.Name}] lacks a method that corresponds to [{controllerType.Name}.{controllerMethod.Value}] with signature [{controllerMethod.Key}].");
+                    errors.Error($"Service client [{clientType.Name}] lacks a method that corresponds to:\r\n\r\n    {controllerType.Name}::{controllerMethod.Value}\r\n\r\n    with signature:\r\n\r\n    {controllerMethod.Key}");
                 }
             }
 
@@ -313,11 +364,11 @@ namespace Neon.Xunit
                         {
                             if (controllerParam.IsOptional && !clientParam.IsOptional)
                             {
-                                sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is optional which conflicts with the service definition which is not optional.");
+                                errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is optional which conflicts with the service definition which is not optional.");
                             }
                             else
                             {
-                                sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is not optional which conflicts with the service definition which is optional.");
+                                errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is not optional which conflicts with the service definition which is optional.");
                             }
                         }
 
@@ -336,7 +387,7 @@ namespace Neon.Xunit
 
                             if (!defaultsAreEqual)
                             {
-                                sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] default value [{clientParam.DefaultValue}] does not match the controller default value [{controllerParam.DefaultValue}].");
+                                errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] default value [{clientParam.DefaultValue}] does not match the controller default value [{controllerParam.DefaultValue}].");
                             }
                         }
 
@@ -353,11 +404,11 @@ namespace Neon.Xunit
 
                             if (generatedClientParam.PassAs != PassAs.Query)
                             {
-                                sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromQuery].");
+                                errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromQuery].");
                             }
                             else if (generatedClientParam.Name != fromQueryAttribute.Name)
                             {
-                                sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using name [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{fromQueryAttribute.Name}].");
+                                errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using name [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{fromQueryAttribute.Name}].");
                             }
                         }
                         else
@@ -368,11 +419,11 @@ namespace Neon.Xunit
                             {
                                 if (generatedClientParam.PassAs != PassAs.Route)
                                 {
-                                    sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromRoute].");
+                                    errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromRoute].");
                                 }
                                 else if (generatedClientParam.Name != fromRouteAttribute.Name)
                                 {
-                                    sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using route name [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{fromRouteAttribute.Name}].");
+                                    errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using route name [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{fromRouteAttribute.Name}].");
                                 }
                             }
                             else
@@ -383,11 +434,11 @@ namespace Neon.Xunit
                                 {
                                     if (generatedClientParam.PassAs != PassAs.Header)
                                     {
-                                        sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromHeader].");
+                                        errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromHeader].");
                                     }
                                     else if (generatedClientParam.Name != fromHeaderAttribute.Name)
                                     {
-                                        sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using HTTP header [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{fromHeaderAttribute.Name}].");
+                                        errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using HTTP header [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{fromHeaderAttribute.Name}].");
                                     }
                                 }
                                 else
@@ -398,7 +449,7 @@ namespace Neon.Xunit
                                     {
                                         if (generatedClientParam.PassAs != PassAs.Body)
                                         {
-                                            sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromBody].");
+                                            errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which requires [FromBody].");
                                         }
                                     }
                                     else
@@ -407,11 +458,11 @@ namespace Neon.Xunit
 
                                         if (generatedClientParam.PassAs != PassAs.Query)
                                         {
-                                            sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which implicitly specifies [FromQuery].");
+                                            errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed as [From{generatedClientParam.PassAs}] which doesn't match the controller method parameter which implicitly specifies [FromQuery].");
                                         }
                                         else if (generatedClientParam.Name != controllerParam.Name)
                                         {
-                                            sbErrors.AppendLine($"ERROR: [{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using HTTP query parameter [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{controllerParam.Name}].");
+                                            errors.Error($"[{clientType.Name}::{clientMethod}(...)] parameter [{clientParam.Name}] is passed using HTTP query parameter [{generatedClientParam.Name}] which doesn't match the controller method parameter which requires [{controllerParam.Name}].");
                                         }
                                     }
                                 }
@@ -421,9 +472,9 @@ namespace Neon.Xunit
                 }
             }
 
-            if (sbErrors.Length > 0)
+            if (errors.HasErrors)
             {
-                throw new IncompatibleServiceException(sbErrors.ToString());
+                throw new IncompatibleServiceException("\r\n\r\n" + errors.ToString());
             }
         }
 
@@ -465,7 +516,7 @@ namespace Neon.Xunit
                 }
             }
 
-            sbSignature.Append($"[{httpMethod}]:{returnType.ToString()} [{routeTemplate}](");
+            sbSignature.Append($"{httpMethod}[\"{routeTemplate}\"]: {returnType.ToString()} (");
 
             var firstParam = true;
 
