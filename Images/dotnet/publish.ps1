@@ -81,4 +81,4 @@ if ($allVersions)
     Build 2.2-runtime-alpine3.8
 }
 
-Build 3.0.0-preview2-runtime-alpine3.8 -latest
+Build 3.0.0-preview4-alpine3.9 -latest
