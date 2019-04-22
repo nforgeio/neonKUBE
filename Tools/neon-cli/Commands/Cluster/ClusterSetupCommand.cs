@@ -859,11 +859,13 @@ safe-apt-get update
                     node.Status = "hold: kubernetes packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
 
-                    node.Status = "configure: kubeket volume-plugins";
+                    node.Status = "configure: kubelet";
+                    node.SudoCommand("mkdir -p /opt/cni/bin");
+                    node.SudoCommand("mkdir -p /etc/cni/net.d");
                     node.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
 
-echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 "));
@@ -987,7 +989,36 @@ networking:
                             {
                                 kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart, pEnd - pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
+
+                            kubeContextExtension.Save();
                         });
+
+                    // Configure kube-apiserver
+
+                    foreach (var master in cluster.Masters)
+                    {
+                        try
+                        {
+                            master.InvokeIdempotentAction("setup/kube-apiserver",
+                            () =>
+                            {
+                                master.Status = "configure: kube-apiserver";
+                                master.SudoCommand(CommandBundle.FromScript(
+@"#!/bin/bash
+
+sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
+"));
+                            });
+                        }
+                        catch (Exception e)
+                        {
+                            master.Fault(NeonHelper.ExceptionError(e));
+                            master.LogException(e);
+                        }
+
+                        master.Status = "done";
+                    }
+                    
 
                     // kubectl config:
 
@@ -1385,16 +1416,6 @@ rm /tmp/calico.yaml
         {
             master.Status = "deploy: istio";
 
-            // $todo(jeff.lill):
-            //
-            // We need to edit the Istio installation YAML file so that Istio
-            // runs with root access so it can insert pod sidecars.  This is
-            // temporary and we should be able to clean this up after Istio
-            // with integrated CNI goes GA.
-            //
-            // We're going to split the bash script into two parts and download
-            // and edit the file in the middle.
-
             var istioScript1 =
 $@"#!/bin/bash
 
@@ -1427,17 +1448,43 @@ helm template install/kubernetes/helm/istio-cni --name=istio-cni --namespace=ist
 # Install Istio's CRDs:
 
 helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
+kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-10.yaml
+kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-11.yaml
 
 # Verify that all 53 Istio CRDs were committed to the Kubernetes api-server
 
-until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""53"" ]; do
+until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""58"" ]; do
     sleep 1
 done
 
 # Install Istio:
 
-helm template install/kubernetes/helm/istio --name istio --namespace istio-system \
-    --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml --set istio_cni.enabled=true | kubectl apply -f -
+helm template install/kubernetes/helm/istio \
+    --name istio \
+    --namespace istio-system \
+    --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml \
+    --set istio_cni.enabled=true \
+    --set global.proxy.accessLogFile=/dev/stdout \
+    --set kiali.enabled=true \
+    --set tracing.enabled=true \
+    --set grafana.enabled=true \
+    --set gateways.istio-ingressgateway.sds.enabled=true \
+    --set global.k8sIngress.enabled=true \
+    --set global.k8sIngress.enableHttps=true \
+    --set global.k8sIngress.gatewayName=ingressgateway \
+    --set certmanager.enabled=true \
+    --set certmanager.email=mailbox@donotuseexample.com \
+    --set gateways.istio-ingressgateway.type=NodePort \
+    --set gateways.istio-ingressgateway.ports[0].targetPort=80 \
+    --set gateways.istio-ingressgateway.ports[0].port=80 \
+    --set gateways.istio-ingressgateway.ports[0].name=http2 \
+    --set gateways.istio-ingressgateway.ports[0].nodePort=30080 \
+    \
+    --set gateways.istio-ingressgateway.ports[1].targetPort=443 \
+    --set gateways.istio-ingressgateway.ports[1].port=443 \
+    --set gateways.istio-ingressgateway.ports[1].name=https \
+    --set gateways.istio-ingressgateway.ports[1].nodePort=30443 \
+    | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
         }
