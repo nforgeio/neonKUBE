@@ -3,6 +3,8 @@ package base
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 	"log"
 	"strconv"
@@ -23,6 +25,11 @@ type (
 		Properties  map[string]*string
 		Attachments [][]byte
 	}
+
+	IProxyMessage interface {
+		Clone() *IProxyMessage
+		CopyTo(target *IProxyMessage)
+	}
 )
 
 const (
@@ -32,6 +39,15 @@ const (
 	ContentType   = "application/x-neon-cadence-proxy"
 	int32ByteSize = 4
 )
+
+// intToMessagStruct is a map that maps a message type to its corresponding
+// Message Struct
+var intToMessageStruct map[int]IProxyMessage
+
+// initialize the intToMessageStruct map
+func init() {
+	initIntToMessageStruct()
+}
 
 // Deserialize takes a pointer to an existing bytes.Buffer of bytes.
 // It then reads the bytes from the buffer and deserializes them into
@@ -74,44 +90,6 @@ func Deserialize(b *bytes.Buffer) ProxyMessage {
 	}
 
 	return pm
-}
-
-// Serialize is called on a ProxyMessage instance and
-// serializes it into a []byte for sending over a network
-//
-// return []byte -> the ProxyMessage instance encoded as a []byte
-func (pm *ProxyMessage) Serialize() []byte {
-	b := new(bytes.Buffer)
-
-	// write to the buffer LittleEndian byte order
-	writeInt32(b, int32(pm.Type))
-
-	// write to the buffer LittleEndian byte order
-	writeInt32(b, int32(len(pm.Properties)))
-
-	for k, v := range pm.Properties {
-		writeString(b, &k)
-		writeString(b, v)
-	}
-
-	// write to the buffer LittleEndian byte order
-	writeInt32(b, int32(len(pm.Attachments)))
-
-	for _, attachment := range pm.Attachments {
-		if attachment == nil {
-			// write to the buffer LittleEndian byte order
-			writeInt32(b, int32(-1))
-		} else {
-			// write to the buffer LittleEndian byte order
-			writeInt32(b, int32(len(attachment)))
-			_, err := b.Write(attachment)
-			if err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	return b.Bytes()
 }
 
 func writeInt32(w io.Writer, value int32) {
@@ -170,6 +148,55 @@ func readInt32(b *bytes.Buffer) int32 {
 	}
 
 	return num
+}
+
+// Serialize is called on a ProxyMessage instance and
+// serializes it into a []byte for sending over a network
+//
+// return []byte -> the ProxyMessage instance encoded as a []byte
+func (pm *ProxyMessage) Serialize() []byte {
+	b := new(bytes.Buffer)
+
+	// write to the buffer LittleEndian byte order
+	writeInt32(b, int32(pm.Type))
+
+	// write to the buffer LittleEndian byte order
+	writeInt32(b, int32(len(pm.Properties)))
+
+	for k, v := range pm.Properties {
+		writeString(b, &k)
+		writeString(b, v)
+	}
+
+	// write to the buffer LittleEndian byte order
+	writeInt32(b, int32(len(pm.Attachments)))
+
+	for _, attachment := range pm.Attachments {
+		if attachment == nil {
+			// write to the buffer LittleEndian byte order
+			writeInt32(b, int32(-1))
+		} else {
+			// write to the buffer LittleEndian byte order
+			writeInt32(b, int32(len(attachment)))
+			_, err := b.Write(attachment)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	return b.Bytes()
+}
+
+// CopyTo implemented by derived classes to copy
+// message properties to another message instance
+// during a Clone() operation
+func (pm *ProxyMessage) CopyTo(target *IProxyMessage) {}
+
+// Clone is implemented by derived classes to make a copy of themselves
+// for echo testing purposes
+func (pm *ProxyMessage) Clone() *IProxyMessage {
+	return nil
 }
 
 // ProxyMessageToString is a method for cleanly
@@ -327,4 +354,37 @@ func (pm *ProxyMessage) SetDateTimeProperty(key string, value time.Time) {
 func (pm *ProxyMessage) SetTimeSpanProperty(key string, value time.Duration) {
 	timeSpan := strconv.FormatInt(value.Nanoseconds()/100, 10)
 	pm.Properties[key] = &timeSpan
+}
+
+//---------------------------------------------------------------------
+// Helper method that builds the intToMessageStruct map
+func initIntToMessageStruct() {
+	intToMessageStruct = make(map[int]IProxyMessage)
+
+	// iterate through MessageTypesArray
+	for i, messageType := range messages.MessageTypeSlice {
+
+		// check to make sure that the MessageTypeSlice indexes are correct
+		if int(messageType) != i {
+			err := errors.New("Message type mapping incorrect: MessageType--" + string(messageType) + ", SliceIndex: " + string(i))
+			panic(err)
+		}
+
+		switch messageType {
+		case messages.Unspecified:
+			intToMessageStruct[i] = new(ProxyMessage)
+		case messages.InitializeRequest:
+			fmt.Println("Need to fill with initializeRequest struct")
+		case messages.InitializeReply:
+			fmt.Println("Need to fill with initializeReply struct")
+		case messages.ConnectRequest:
+			fmt.Println("Need to fill with ConnectionRequest struct")
+		case messages.ConnectReply:
+			fmt.Println("Need to fill with ConnectionRequest struct")
+		case messages.TerminateRequest:
+			fmt.Println("Need to fill with TerminateRequest struct")
+		case messages.TerminateReply:
+			fmt.Println("Need to fill with TerminateReply struct")
+		}
+	}
 }
