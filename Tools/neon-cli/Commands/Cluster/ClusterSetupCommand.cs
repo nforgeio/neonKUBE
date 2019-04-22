@@ -1448,10 +1448,12 @@ helm template install/kubernetes/helm/istio-cni --name=istio-cni --namespace=ist
 # Install Istio's CRDs:
 
 helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
+kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-10.yaml
+kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-11.yaml
 
 # Verify that all 53 Istio CRDs were committed to the Kubernetes api-server
 
-until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""53"" ]; do
+until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""58"" ]; do
     sleep 1
 done
 
@@ -1466,6 +1468,22 @@ helm template install/kubernetes/helm/istio \
     --set kiali.enabled=true \
     --set tracing.enabled=true \
     --set grafana.enabled=true \
+    --set gateways.istio-ingressgateway.sds.enabled=true \
+    --set global.k8sIngress.enabled=true \
+    --set global.k8sIngress.enableHttps=true \
+    --set global.k8sIngress.gatewayName=ingressgateway \
+    --set certmanager.enabled=true \
+    --set certmanager.email=mailbox@donotuseexample.com \
+    --set gateways.istio-ingressgateway.type=NodePort \
+    --set gateways.istio-ingressgateway.ports[0].targetPort=80 \
+    --set gateways.istio-ingressgateway.ports[0].port=80 \
+    --set gateways.istio-ingressgateway.ports[0].name=http2 \
+    --set gateways.istio-ingressgateway.ports[0].nodePort=30080 \
+    \
+    --set gateways.istio-ingressgateway.ports[1].targetPort=443 \
+    --set gateways.istio-ingressgateway.ports[1].port=443 \
+    --set gateways.istio-ingressgateway.ports[1].name=https \
+    --set gateways.istio-ingressgateway.ports[1].nodePort=30443 \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
