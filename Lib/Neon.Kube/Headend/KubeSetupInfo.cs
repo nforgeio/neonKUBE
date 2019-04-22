@@ -57,7 +57,7 @@ namespace Neon.Kube
         /// Lists the installed component versions.
         /// </summary>
         [JsonProperty(PropertyName = "Versions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Versions", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "versions", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public KubeSetupVersions Versions { get; set; } = new KubeSetupVersions();
 
@@ -68,7 +68,7 @@ namespace Neon.Kube
         /// The <b>kubectl</b> binary download URI for Linux.
         /// </summary>
         [JsonProperty(PropertyName = "KubeCtlLinuxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeCtlLinuxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeCtlLinuxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeCtlLinuxUri { get; set; }
 
@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// The <b>kubectl</b> binary download URI for OS/X.
         /// </summary>
         [JsonProperty(PropertyName = "KubeCtlOsxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeCtlOsxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeCtlOsxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeCtlOsxUri { get; set; }
 
@@ -84,7 +84,7 @@ namespace Neon.Kube
         /// The <b>kubectl</b> binary download URI for Windows.
         /// </summary>
         [JsonProperty(PropertyName = "KubeCtlWindowsUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeCtlWindowsUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeCtlWindowsUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeCtlWindowsUri { get; set; }
 
@@ -95,7 +95,7 @@ namespace Neon.Kube
         /// The <b>kubeadm</b> binary download URI for Linux.
         /// </summary>
         [JsonProperty(PropertyName = "KubeAdmLinuxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeAdmLinuxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeAdmLinuxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeAdmLinuxUri { get; set; }
 
@@ -103,7 +103,7 @@ namespace Neon.Kube
         /// The <b>kubelet</b> binary download URI for Linux.
         /// </summary>
         [JsonProperty(PropertyName = "KubeletLinuxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeletLinuxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeletLinuxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeletLinuxUri { get; set; }
 
@@ -114,7 +114,7 @@ namespace Neon.Kube
         /// The Ubuntu package version for <b>kubeadm</b>.
         /// </summary>
         [JsonProperty(PropertyName = "KubeAdmPackageUbuntuVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeAdmPackageUbuntuVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeAdmPackageUbuntuVersion", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeAdmPackageUbuntuVersion { get; set; }
 
@@ -122,7 +122,7 @@ namespace Neon.Kube
         /// The Ubuntu package version for <b>kubectl</b>.
         /// </summary>
         [JsonProperty(PropertyName = "KubeCtlPackageUbuntuVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeCtlPackageUbuntuVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeCtlPackageUbuntuVersion", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeCtlPackageUbuntuVersion { get; set; }
 
@@ -130,7 +130,7 @@ namespace Neon.Kube
         /// The Ubuntu package version for <b>kubelet</b>.
         /// </summary>
         [JsonProperty(PropertyName = "KubeletPackageUbuntuVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeletPackageUbuntuVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubeletPackageUbuntuVersion", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubeletPackageUbuntuVersion { get; set; }
 
@@ -141,7 +141,7 @@ namespace Neon.Kube
         /// The Docker package for Ubuntu.
         /// </summary>
         [JsonProperty(PropertyName = "DockerPackageUbuntuUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DockerPackageUbuntuUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "dockerPackageUbuntuUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string DockerPackageUbuntuUri { get; set; }
 
@@ -152,7 +152,7 @@ namespace Neon.Kube
         /// The Helm binary URL for Linux.
         /// </summary>
         [JsonProperty(PropertyName = "HelmLinuxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HelmLinuxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "helmLinuxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string HelmLinuxUri { get; set; }
 
@@ -160,7 +160,7 @@ namespace Neon.Kube
         /// The Helm binary URL for OS/X.
         /// </summary>
         [JsonProperty(PropertyName = "HelmOsxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HelmOsxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "helmOsxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string HelmOsxUri { get; set; }
 
@@ -168,7 +168,7 @@ namespace Neon.Kube
         /// The Helm binary URL for Windows.
         /// </summary>
         [JsonProperty(PropertyName = "HelmWindowsUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HelmWindowsUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "helmWindowsUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string HelmWindowsUri { get; set; }
 
@@ -179,7 +179,7 @@ namespace Neon.Kube
         /// The Calico RBAC rules download (YAML for kubectl).
         /// </summary>
         [JsonProperty(PropertyName = "CalicoRbacYamlUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "CalicoRbacYamlUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "calicoRbacYamlUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CalicoRbacYamlUri { get; set; }
 
@@ -187,7 +187,7 @@ namespace Neon.Kube
         /// The Calico setup download (YAML for kubectl).
         /// </summary>
         [JsonProperty(PropertyName = "CalicoSetupYamlUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "CalicoSetupYamlUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "calicoSetupYamlUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string CalicoSetupYamlUri { get; set; }
 
@@ -198,7 +198,7 @@ namespace Neon.Kube
         /// The Istio binary URL for Linux.
         /// </summary>
         [JsonProperty(PropertyName = "IstioLinuxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "IstioLinuxUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "istioLinuxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string IstioLinuxUri { get; set; }
 

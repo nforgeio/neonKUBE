@@ -59,7 +59,7 @@ namespace Neon.Kube
         /// <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
         /// </summary>
         [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PremiseSubnet", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "premiseSubnet", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PremiseSubnet { get; set; }
 
@@ -80,7 +80,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NodesSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "NodesSubnet", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "nodesSubnet", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string NodeSubnet { get; set; }
 
@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "PodSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "PodSubnet", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "podSubnet", ApplyNamingConventions = false)]
         [DefaultValue(defaultPodSubnet)]
         public string PodSubnet { get; set; } = defaultPodSubnet;
 
@@ -105,7 +105,7 @@ namespace Neon.Kube
         /// within the cluster.  This defaults to <b>10.253.0.0/16</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ServiceSubnet", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "serviceSubnet", ApplyNamingConventions = false)]
         [DefaultValue(defaultServiceSubnet)]
         public string ServiceSubnet { get; set; } = defaultServiceSubnet;
 
@@ -114,7 +114,7 @@ namespace Neon.Kube
         /// Google Public DNS servers: <b>[ "8.8.8.8", "8.8.4.4" ]</b> when the property is <c>null</c> or empty.
         /// </summary>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default)]
-        [YamlMember(Alias = "Nameservers", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "nameservers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string[] Nameservers { get; set; } = null;
 
@@ -125,7 +125,7 @@ namespace Neon.Kube
         /// environments.
         /// </summary>
         [JsonProperty(PropertyName = "Gateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Gateway", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "gGateway", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Gateway { get; set; } = null;
 
@@ -134,7 +134,7 @@ namespace Neon.Kube
         /// but this will change to the <see cref="NetworkCni.Istio"/> integrated provider once that stablizes.
         /// </summary>
         [JsonProperty(PropertyName = "Cni", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Cni", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cni", ApplyNamingConventions = false)]
         [DefaultValue(NetworkCni.Calico)]
         public NetworkCni Cni { get; set; } = NetworkCni.Calico;
 
@@ -148,7 +148,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CniVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "CniVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cniVersion", ApplyNamingConventions = false)]
         [DefaultValue("default")]
         public string CniVersion { get; set; } = "default";
 
@@ -157,7 +157,7 @@ namespace Neon.Kube
         /// will install a reasonable supported version.
         /// </summary>
         [JsonProperty(PropertyName = "IstioVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "IstioVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "istioVersion", ApplyNamingConventions = false)]
         [DefaultValue("default")]
         public string IstioVersion { get; set; } = "default";
 
@@ -166,7 +166,7 @@ namespace Neon.Kube
         /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "MutualPodTLS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "MutualPodTLS", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "mutualPodTLS", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool MutualPodTLS { get; set; } = false;
 

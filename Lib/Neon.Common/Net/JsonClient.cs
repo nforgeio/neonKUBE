@@ -331,7 +331,7 @@ namespace Neon.Net
             {
                 var json = document as string;
 
-                if (json == null)
+                if (json != null)
                 {
                     var jObject = document as JObject;
 

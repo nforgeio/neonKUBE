@@ -189,7 +189,7 @@ namespace Neon.Kube
         /// to <c>true</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageLocal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageLocal", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "storageLocal", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool StorageLocal { get; set; } = true;
 
@@ -199,7 +199,7 @@ namespace Neon.Kube
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageHDD", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageHDD", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "storageHDD", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool StorageHDD { get; set; } = false;
 
@@ -209,7 +209,7 @@ namespace Neon.Kube
         /// This defaults to <c>false</c> for on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRedundant", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageRedundant", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "storageRedundant", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool StorageRedundant { get; set; } = false;
 
@@ -219,7 +219,7 @@ namespace Neon.Kube
         /// on-premise clusters and is computed for cloud deployments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageEphemeral", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "StorageEphemeral", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "storageEphemeral", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool StorageEphemeral { get; set; } = false;
 
@@ -300,7 +300,7 @@ namespace Neon.Kube
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalLocation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalLocation", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "physicalLocation", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalLocation { get; set; } = string.Empty;
 
@@ -309,7 +309,7 @@ namespace Neon.Kube
         /// physical server computer model (e.g. <b>Dell-PowerEdge-R220</b>).  This defaults to the <b>empty string</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PhysicalMachine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalMachine", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "physicalMachine", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalMachine { get; set; } = string.Empty;
 
@@ -381,7 +381,7 @@ namespace Neon.Kube
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalFaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalFaultDomain", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "physicalFaultDomain", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalFaultDomain
         {
@@ -403,7 +403,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalPower", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "PhysicalPower", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "pPhysicalPower", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
 
@@ -475,7 +475,7 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "CephMON", Required = Required.Default)]
-        [YamlMember(Alias = "CephMON", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephMON", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CephMON { get; set; } = false;
 
@@ -492,7 +492,7 @@ namespace Neon.Kube
         /// are normally required for redundancy and high availability.
         /// </remarks>
         [JsonProperty(PropertyName = "CephOSD", Required = Required.Default)]
-        [YamlMember(Alias = "CephOSD", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephOSD", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CephOSD { get; set; } = false;
 
@@ -504,7 +504,7 @@ namespace Neon.Kube
         /// explicitly for <see cref="HostingEnvironments.Machine"/>.
         /// </summary>
         [JsonProperty(PropertyName = "CephOSDDevice", Required = Required.Default)]
-        [YamlMember(Alias = "CephOSDDevice", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephOSDDevice", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string CephOSDDevice { get; set; } = null;
 
@@ -521,7 +521,7 @@ namespace Neon.Kube
         /// the Ceph Storage Cluster.
         /// </remarks>
         [JsonProperty(PropertyName = "CephMDS", Required = Required.Default)]
-        [YamlMember(Alias = "CephMDS", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephMDS", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CephMDS { get; set; } = false;
 
@@ -533,7 +533,7 @@ namespace Neon.Kube
         /// (<b>128GiB</b>).
         /// </summary>
         [JsonProperty(PropertyName = "CephOSDDriveSize", Required = Required.Default)]
-        [YamlMember(Alias = "CephOSDDriveSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephOSDDriveSize", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public string CephOSDDriveSize { get; set; }
 
@@ -559,7 +559,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CephOSDCacheSize", Required = Required.Default)]
-        [YamlMember(Alias = "CephOSDCacheSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephOSDCacheSize", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public string CephOSDCacheSize { get; set; }
 
@@ -570,7 +570,7 @@ namespace Neon.Kube
         /// This defaults to <see cref="CephOptions.OSDJournalSize"/>.
         /// </summary>
         [JsonProperty(PropertyName = "CephOSDJournalSize", Required = Required.Default)]
-        [YamlMember(Alias = "CephOSDJournalSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephOSDJournalSize", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public string CephOSDJournalSize { get; set; }
 
@@ -595,7 +595,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CephMDSCacheSize", Required = Required.Default)]
-        [YamlMember(Alias = "CephMDSCacheSize", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cephMDSCacheSize", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public string CephMDSCacheSize { get; set; }
 
@@ -614,7 +614,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Custom")]
-        [YamlMember(Alias = "Custom", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "custom", ApplyNamingConventions = false)]
         public Dictionary<string, string> Custom { get; set; } = new Dictionary<string, string>();
 
         //---------------------------------------------------------------------

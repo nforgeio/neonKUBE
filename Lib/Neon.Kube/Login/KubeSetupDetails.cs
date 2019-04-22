@@ -56,7 +56,7 @@ namespace Neon.Kube
         /// Identifies the information used to setup the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "SetupInfo", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SetupInfo", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "setupInfo", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public KubeSetupInfo SetupInfo { get; set; }
 
@@ -65,7 +65,7 @@ namespace Neon.Kube
         /// pending for this cluster
         /// </summary>
         [JsonProperty(PropertyName = "SetupPending", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SetupPending", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "setupPending", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool SetupPending { get; set; } = false;
 
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// Temporarily holds the strong password during cluster setup.
         /// </summary>
         [JsonProperty(PropertyName = "SshStrongPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SshStrongPassword", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "sshStrongPassword", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SshStrongPassword { get; set; }
 
@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "HasStrongSshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HasStrongSshPassword", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "hasStrongSshPassword", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool HasStrongSshPassword { get; set; }
 
@@ -90,7 +90,7 @@ namespace Neon.Kube
         /// The command to be used join nodes to an existing cluster.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterJoinCommand", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ClusterJoinCommand", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "clusterJoinCommand", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ClusterJoinCommand { get; set; }
 
@@ -100,7 +100,7 @@ namespace Neon.Kube
         /// specifies the file text, permissions, and owner.
         /// </summary>
         [JsonProperty(PropertyName = "MasterFiles", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "MasterFiles", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "masterFiles", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Dictionary<string, KubeFileDetails> MasterFiles { get; set; } = new Dictionary<string, KubeFileDetails>();
     }

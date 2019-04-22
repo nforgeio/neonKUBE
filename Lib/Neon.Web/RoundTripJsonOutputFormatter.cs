@@ -87,7 +87,7 @@ namespace Neon.Web
                 }
                 else
                 {
-                    await generated.WriteJsonToAsync(response.Body);
+                    await response.Body.WriteAsync(Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(context.Object)));
                 }
             }
         }

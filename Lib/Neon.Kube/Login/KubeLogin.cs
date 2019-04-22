@@ -42,28 +42,28 @@ namespace Neon.Kube
         /// The Kubernetes cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Cluster", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Cluster", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "cluster", ApplyNamingConventions = false)]
         public KubeConfigCluster Cluster { get; set; }
 
         /// <summary>
         /// The Kubernetes context.
         /// </summary>
         [JsonProperty(PropertyName = "Context", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Context", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "context", ApplyNamingConventions = false)]
         public KubeConfigContext Context { get; set; }
 
         /// <summary>
         /// The context extension information.  This may be <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Extensions", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
         public KubeContextExtension Extensions { get; set; }
 
         /// <summary>
         /// The Kubernetes user.
         /// </summary>
         [JsonProperty(PropertyName = "User", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "User", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "user", ApplyNamingConventions = false)]
         public KubeConfigUser User { get; set; }
 
         /// <summary>

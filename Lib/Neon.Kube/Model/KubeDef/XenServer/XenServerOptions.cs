@@ -60,7 +60,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostXvaUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HostXvaUri", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "hostXvaUri", ApplyNamingConventions = false)]
         [DefaultValue(defaultHostXvaUri)]
         public string HostXvaUri { get; set; } = defaultHostXvaUri;
 
@@ -69,7 +69,7 @@ namespace Neon.Kube
         /// to <b>ubuntu-template</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "TemplateName", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "templateName", ApplyNamingConventions = false)]
         [DefaultValue(defaultTemplate)]
         public string TemplateName { get; set; } = defaultTemplate;
 
@@ -79,7 +79,7 @@ namespace Neon.Kube
         /// <b>Local storage</b>.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "StorageRepository", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "storageRepository", ApplyNamingConventions = false)]
         [DefaultValue(defaultStorageRepository)]
         public string StorageRepository { get; set; } = defaultStorageRepository;
 
@@ -88,7 +88,7 @@ namespace Neon.Kube
         /// drives created for the cluster.  This defaults to <b>Local storage</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OsdStorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "OsdStorageRepository", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "osdStorageRepository", ApplyNamingConventions = false)]
         [DefaultValue(defaultStorageRepository)]
         public string OsdStorageRepository { get; set; } = defaultStorageRepository;
 
@@ -119,7 +119,7 @@ namespace Neon.Kube
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Snapshot", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Snapshot", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "snapshot", ApplyNamingConventions = false)]
         [DefaultValue(defaultSnapshot)]
         public bool Snapshot { get; set; } = defaultSnapshot;
 

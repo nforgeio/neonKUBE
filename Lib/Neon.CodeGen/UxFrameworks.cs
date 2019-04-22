@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    FromHeaderAttribute.cs
+// FILE:	    UxFrameworks.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,36 +16,24 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Reflection;
-using System.Text;
 
 namespace Neon.CodeGen
 {
     /// <summary>
-    /// Used to indicate that a service endpoint parameter is to be obtained
-    /// by parsing a request header value.
+    /// Enumerates the user interface frameworks that are supported with
+    /// additional generated code.
     /// </summary>
-    /// <remarks>
-    /// By default, this option will look for the HTTP header with the same
-    /// name as the tagged endpoint parameter.  This can be overriden by setting
-    /// the <see cref="Name"/> property.
-    /// </remarks>
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public class FromHeaderAttribute : Attribute
+    public enum UxFrameworks
     {
         /// <summary>
-        /// Constructor.
+        /// Disables generation of additional UX related code.
         /// </summary>
-        public FromHeaderAttribute()
-        {
-        }
+        None = 0,
 
         /// <summary>
-        /// Optionally overrides the tagged service endpoint method property
-        /// name when generating the client code.
+        /// Generate property and collection change notifications to support
+        /// data binding for XAML UX frameworks.
         /// </summary>
-        public string Name { get; set; }
+        Xaml
     }
 }

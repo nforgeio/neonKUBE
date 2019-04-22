@@ -159,7 +159,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Deserializes JSON text optionally requiring strict mapping of input properties to the target type.
+        /// Deserializes JSON text, optionally requiring strict mapping of input properties to the target type.
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="json">The JSON text.</param>
@@ -178,7 +178,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Non-generic method that deserializes JSON text optionally requiring strict mapping of input properties to the target type.
+        /// Non-generic method that deserializes JSON text, optionally requiring strict mapping of input properties to the target type.
         /// </summary>
         /// <param name="type">The target type.</param>
         /// <param name="json">The JSON text.</param>

@@ -61,8 +61,13 @@ namespace Neon.CodeGen
         public string Name { get; set; }
 
         /// <summary>
-        /// Specifies the fully qualfied route template for this method.
+        /// <para>
+        /// Specifies the route template for this method.
         /// This includes the service model's route as well.
+        /// </para>
+        /// <note>
+        /// This does not include the service controller's route prefix.
+        /// </note>
         /// </summary>
         public string RouteTemplate { get; set; }
 
