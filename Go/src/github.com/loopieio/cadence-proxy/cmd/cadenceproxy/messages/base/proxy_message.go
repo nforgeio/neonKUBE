@@ -28,10 +28,6 @@ type (
 	IProxyMessage interface {
 		Clone() IProxyMessage
 		CopyTo(target IProxyMessage)
-		SetIProxyMessageRequestId(value int64)
-		SetIProxyMessageProxyMessage(value *ProxyMessage)
-		SetLongProperty(key string, value int64)
-		GetLongProperty(key string) int64
 		String()
 	}
 )
@@ -220,7 +216,7 @@ func (pm *ProxyMessage) String() {
 // message properties to another message instance
 // during a Clone() operation
 func (pm *ProxyMessage) CopyTo(target IProxyMessage) {
-	target.SetIProxyMessageProxyMessage(pm)
+	//target.SetIProxyMessageProxyMessage(pm)
 }
 
 // Clone is implemented by derived classes to make a copy of themselves

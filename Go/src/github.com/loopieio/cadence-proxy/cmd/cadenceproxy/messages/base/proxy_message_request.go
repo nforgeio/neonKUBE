@@ -20,23 +20,15 @@ type (
 	}
 )
 
-// GetLongProperty inherits docs from ProxyMessage.GetLongProperty()
-func (request *ProxyRequest) GetLongProperty(key string) int64 {
-	return request.ProxyMessage.GetLongProperty(key)
+// GetRequestId gets a request id from a ProxyMessage's properties
+func (request *ProxyRequest) GetRequestId(key string) int64 {
+	return request.ProxyMessage.GetLongProperty("RequestId")
 }
 
-// SetLongProperty inherits docs from ProxyMessage.SetLongProperty()
-func (request *ProxyRequest) SetLongProperty(key string, value int64) {
-	request.ProxyMessage.SetLongProperty(key, value)
-}
-
-func (request *ProxyRequest) SetIProxyMessageProxyMessage(value *ProxyMessage) {
-	*request.ProxyMessage = *value
-}
-
-// SetRequestId inherits docs from ProxyMessage.SetRequestId()
-func (request *ProxyRequest) SetIProxyMessageRequestId(value int64) {
-	request.RequestId = value
+// SetRequestId sets a request id in a ProxyRequest's ProxyMessage
+// properties
+func (request *ProxyRequest) SetRequestId(value int64) {
+	request.ProxyMessage.SetLongProperty("RequestId", value)
 }
 
 // Clone inherits docs from ProxyMessage.Clone()
@@ -54,7 +46,11 @@ func (request *ProxyRequest) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	request.ProxyMessage.CopyTo(target)
-	target.SetIProxyMessageRequestId(request.RequestId)
+	v, ok := target.(*ProxyRequest)
+	if ok {
+		v.RequestId = request.RequestId
+		*v.ProxyMessage = *request.ProxyMessage
+	}
 }
 
 // String inherits docs from ProxyMessage.String()
