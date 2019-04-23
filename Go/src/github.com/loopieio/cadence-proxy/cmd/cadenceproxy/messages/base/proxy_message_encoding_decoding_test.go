@@ -8,6 +8,9 @@ import (
 	"testing"
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+	connect "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/connect"
+	initialize "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
+	terminate "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/terminate"
 )
 
 const (
@@ -16,6 +19,10 @@ const (
 )
 
 func TestProxyMessageEncodingDecoding(t *testing.T) {
+
+	connect.NewConnectRequest()
+	initialize.NewInitializeRequest()
+	terminate.NewTerminateRequest()
 
 	strs := randStrings(50, 8)
 	emptyStr := ""
@@ -87,27 +94,15 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 
 	for _, test := range tests {
 		log.Println("***Input ProxyMessage***")
-		test.input.String()
+		log.Println(test.input.String())
 
 		opBytes := test.input.Serialize()
 		buf := bytes.NewBuffer(opBytes)
-		output := base.Deserialize(buf)
-		var requestId int64 = 12345678910
-		pr := base.ProxyRequest{
-			RequestId:    requestId,
-			ProxyMessage: &test.input,
-		}
-
-		prClone := pr.Clone()
+		des := base.Deserialize(buf, false)
+		output := des.GetProxyMessage()
 
 		log.Println("***Output ProxyMessage***")
-		output.String()
-
-		log.Println("***ProxyRequest***")
-		pr.String()
-
-		log.Println("***Copy ProxyRequest***")
-		prClone.String()
+		log.Println(des.String())
 
 		if output.Type != test.input.Type {
 			t.Errorf("Test Failed: %v, %v, Types not equal: Expected %d, Got %d\n", test.input, output, test.input.Type, output.Type)

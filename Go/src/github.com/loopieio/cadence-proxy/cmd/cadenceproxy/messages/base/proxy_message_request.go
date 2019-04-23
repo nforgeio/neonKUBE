@@ -1,6 +1,8 @@
 package base
 
-import "log"
+import (
+	"fmt"
+)
 
 type (
 
@@ -18,26 +20,35 @@ type (
 		// RequestId is the unique id of the ProxyRequest
 		RequestId int64
 	}
+
+	IProxyRequest interface {
+		GetProxyRequest() *ProxyRequest
+		SetProxyRequest(value *ProxyRequest)
+	}
 )
 
+func NewProxyRequest() *ProxyRequest {
+	request := new(ProxyRequest)
+	request.ProxyMessage = NewProxyMessage()
+	return request
+}
+
 // GetRequestID gets a request id from a ProxyMessage's properties
-func (request *ProxyRequest) GetRequestID(key string) int64 {
-	return request.ProxyMessage.GetLongProperty(RequestIDKey)
+func (request *ProxyRequest) GetRequestID() int64 {
+	return request.GetLongProperty(RequestIDKey)
 }
 
 // SetRequestID sets a request id in a ProxyRequest's ProxyMessage
 // properties
 func (request *ProxyRequest) SetRequestID(value int64) {
-	request.ProxyMessage.SetLongProperty(RequestIDKey, value)
+	request.SetLongProperty(RequestIDKey, value)
 }
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *ProxyRequest) Clone() IProxyMessage {
-	proxyRequest := ProxyRequest{
-		ProxyMessage: new(ProxyMessage),
-	}
+	proxyRequest := NewProxyRequest()
 
-	var messageClone IProxyMessage = &proxyRequest
+	var messageClone IProxyMessage = proxyRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
@@ -48,16 +59,38 @@ func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	request.ProxyMessage.CopyTo(target)
 	v, ok := target.(*ProxyRequest)
 	if ok {
-		v.RequestId = request.RequestId
-		*v.ProxyMessage = *request.ProxyMessage
+		v.SetRequestID(request.GetRequestID())
+		v.SetProxyMessage(request.ProxyMessage)
 	}
 }
 
-// String inherits docs from ProxyMessage.String()
-func (request *ProxyRequest) String() {
-	log.Print("{\n")
-	log.Println()
-	log.Printf("\tRequestId: %d\n", request.RequestId)
-	request.ProxyMessage.String()
-	log.Print("}\n\n")
+// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+func (request *ProxyRequest) SetProxyMessage(value *ProxyMessage) {
+	*request.ProxyMessage = *value
 }
+
+// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+func (request *ProxyRequest) GetProxyMessage() *ProxyMessage {
+	return request.ProxyMessage
+}
+
+// String inherits docs from ProxyMessage.String()
+func (request *ProxyRequest) String() string {
+	str := ""
+	str = fmt.Sprintf("%s\n", str)
+	str = fmt.Sprintf("%s%s", str, request.ProxyMessage.String())
+	str = fmt.Sprintf("%s\n", str)
+	return str
+}
+
+// GetProxyRequest is an interface method that allows all
+// structures that extend IProxyRequest to get their nested proxy
+// requests
+func (request *ProxyRequest) GetProxyRequest() *ProxyRequest {
+	return nil
+}
+
+// SetProxyRequest is an interface method that allows all
+// structures that extend IProxyRequest to set the value of their nested
+// proxy requests
+func (request *ProxyRequest) SetProxyRequest(value *ProxyRequest) {}

@@ -5,9 +5,16 @@ import (
 	"testing"
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+	connect "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/connect"
+	initialize "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
+	terminate "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/terminate"
 )
 
 func TestProxyRequestClone(t *testing.T) {
+
+	connect.NewConnectRequest()
+	initialize.NewInitializeRequest()
+	terminate.NewTerminateRequest()
 
 	strs := randStrings(50, 8)
 	emptyStr := ""
@@ -65,8 +72,6 @@ func TestProxyRequestClone(t *testing.T) {
 		Attachments: att4,
 	}
 
-	op5 := base.ProxyMessage{}
-
 	var tests = []struct {
 		input base.ProxyMessage
 	}{
@@ -74,7 +79,6 @@ func TestProxyRequestClone(t *testing.T) {
 		{op2},
 		{op3},
 		{op4},
-		{op5},
 	}
 
 	for _, test := range tests {
@@ -85,12 +89,12 @@ func TestProxyRequestClone(t *testing.T) {
 		}
 
 		log.Println("***ProxyRequest***")
-		pr.String()
+		log.Println(pr.String())
 
 		prClone := pr.Clone()
 
 		log.Println("***Copy ProxyRequest***")
-		prClone.String()
+		log.Println(prClone.String())
 
 		v, ok := prClone.(*base.ProxyRequest)
 		if ok {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -28,7 +29,9 @@ type (
 	IProxyMessage interface {
 		Clone() IProxyMessage
 		CopyTo(target IProxyMessage)
-		String()
+		SetProxyMessage(value *ProxyMessage)
+		GetProxyMessage() *ProxyMessage
+		String() string
 	}
 )
 
@@ -42,62 +45,111 @@ const (
 	// the error type property in a ProxyMessage's properties map
 	CadenceErrorTypesKey = "ErrorType"
 
-	// RequestIdKey is the string key for accessing
+	// RequestIDKey is the string key for accessing
 	// the RequestId property in a ProxyMessage's properties map
-	RequestIDKey  = "RequestId"
-	int32ByteSize = 4
+	RequestIDKey = "RequestId"
+
+	// EndpointsKey is the string key for accessing
+	// the endpoints property in a ProxyMessage's properties map
+	EndpointsKey = "Endpoints"
+
+	// DomainKey is the string key for accessing
+	// the domain property in a ProxyMessage's properties map
+	DomainKey = "Domain"
+
+	// IdentityKey is the string key for accessing
+	// the identity property in a ProxyMessage's properties map
+	IdentityKey = "Identity"
+
+	// LibraryAddressKey is the string key for accessing
+	// the library address property in a ProxyMessage's properties map
+	LibraryAddressKey = "LibraryAddress"
+
+	// LibraryPortKey is the string key for accessing the
+	// library port property in a ProxyMessage's properties map
+	LibraryPortKey = "LibraryPort"
+	int32ByteSize  = 4
 )
 
-// intToMessagStruct is a map that maps a message type to its corresponding
-// Message Struct
-var intToMessageStruct map[int]IProxyMessage
+// IntToMessageStruct is a map that maps a message type to its corresponding Message Struct
+var IntToMessageStruct map[int]IProxyMessage
 
-// initialize the intToMessageStruct map
+// initialize the IntToMessageStruct
+// This will allow derived classes to add to IntToMessageStruct
+// Also add Unspecified message type as just a plain ProxyMessage
 func init() {
-	initIntToMessageStruct()
+	IntToMessageStruct = make(map[int]IProxyMessage)
+	IntToMessageStruct[0] = NewProxyRequest()
+
+}
+
+func NewProxyMessage() *ProxyMessage {
+	message := new(ProxyMessage)
+	message.Properties = make(map[string]*string)
+	message.Attachments = make([][]byte, 0)
+	return message
 }
 
 // Deserialize takes a pointer to an existing bytes.Buffer of bytes.
 // It then reads the bytes from the buffer and deserializes them into
 // a ProxyMessage instance
 //
-// param b *bytes.Buffer -> bytes.Buffer of bytes holding an encoded
+// param buf *bytes.Buffer -> bytes.Buffer of bytes holding an encoded
 // ProxyMessage
+// Param ignoreTypeCode bool -> ignore unspecified message types (for unit testing)
 //
 // return ProxyMessage -> ProxyMessage initialized using values encoded in
 // bytes from the bytes.Buffer
-func Deserialize(b *bytes.Buffer) ProxyMessage {
-	pm := ProxyMessage{
-		Properties: make(map[string]*string),
-	}
+func Deserialize(buf *bytes.Buffer, ignoreTypeCode bool) IProxyMessage {
+	var message IProxyMessage
 
 	// get the message type
-	pm.Type = messages.MessageType(readInt32(b))
+	messageType := messages.MessageType(readInt32(buf))
+
+	if !ignoreTypeCode {
+		intMessageType := int(messageType)
+		if IntToMessageStruct[intMessageType] == nil {
+			errStr := fmt.Sprintf("Unexpected message type %s", messageType.String())
+			err := errors.New(errStr)
+			panic(err)
+		} else {
+			message = IntToMessageStruct[intMessageType].Clone()
+		}
+	} else {
+		intUnspecified := int(messages.Unspecified)
+		message = IntToMessageStruct[intUnspecified].Clone()
+	}
+
+	pm := NewProxyMessage()
+
+	// get the message type
+	pm.Type = messageType
 
 	// get property count
-	propertyCount := int(readInt32(b))
+	propertyCount := int(readInt32(buf))
 
 	for i := 0; i < propertyCount; i++ {
-		key := readString(b)
-		value := readString(b)
+		key := readString(buf)
+		value := readString(buf)
 		pm.Properties[*key] = value
 	}
 
 	// attachment count
-	attachmentCount := int(readInt32(b))
+	attachmentCount := int(readInt32(buf))
 	pm.Attachments = make([][]byte, attachmentCount)
 	for i := 0; i < attachmentCount; i++ {
-		length := int(readInt32(b))
+		length := int(readInt32(buf))
 		if length == -1 {
 			pm.Attachments[i] = nil
 		} else if length == 0 {
 			pm.Attachments[i] = make([]byte, 0)
 		} else {
-			pm.Attachments[i] = b.Next(length)
+			pm.Attachments[i] = buf.Next(length)
 		}
 	}
 
-	return pm
+	message.SetProxyMessage(pm)
+	return message
 }
 
 func writeInt32(w io.Writer, value int32) {
@@ -107,35 +159,35 @@ func writeInt32(w io.Writer, value int32) {
 	}
 }
 
-func writeString(b *bytes.Buffer, value *string) {
+func writeString(buf *bytes.Buffer, value *string) {
 	if value == nil {
-		err := binary.Write(b, binary.LittleEndian, int32(-1))
+		err := binary.Write(buf, binary.LittleEndian, int32(-1))
 		if err != nil {
 			log.Println("binary.Write failed: ", err)
 		}
 	} else {
-		err := binary.Write(b, binary.LittleEndian, int32(len(*value)))
+		err := binary.Write(buf, binary.LittleEndian, int32(len(*value)))
 		if err != nil {
 			log.Println("binary.Write failed: ", err)
 		}
-		_, err = b.WriteString(*value)
+		_, err = buf.WriteString(*value)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func readString(b *bytes.Buffer) *string {
+func readString(buf *bytes.Buffer) *string {
 
 	var strPtr *string
-	length := int(readInt32(b))
+	length := int(readInt32(buf))
 	if length == -1 {
 		strPtr = nil
 	} else if length == 0 {
 		str := ""
 		strPtr = &str
 	} else {
-		strBytes := b.Next(length)
+		strBytes := buf.Next(length)
 		str := string(strBytes)
 		strPtr = &str
 	}
@@ -143,14 +195,14 @@ func readString(b *bytes.Buffer) *string {
 	return strPtr
 }
 
-func readInt32(b *bytes.Buffer) int32 {
+func readInt32(buf *bytes.Buffer) int32 {
 	var num int32
-	intBytes := b.Next(int32ByteSize)
-	buf := bytes.NewReader(intBytes)
+	intBytes := buf.Next(int32ByteSize)
+	reader := bytes.NewReader(intBytes)
 
 	// Read the []byte into the byte.Reader
 	// LittleEndian byte order
-	err := binary.Read(buf, binary.LittleEndian, &num)
+	err := binary.Read(reader, binary.LittleEndian, &num)
 	if err != nil {
 		log.Println("binary.Read failed: ", err)
 	}
@@ -163,69 +215,66 @@ func readInt32(b *bytes.Buffer) int32 {
 //
 // return []byte -> the ProxyMessage instance encoded as a []byte
 func (pm *ProxyMessage) Serialize() []byte {
-	b := new(bytes.Buffer)
+	buf := new(bytes.Buffer)
 
 	// write to the buffer LittleEndian byte order
-	writeInt32(b, int32(pm.Type))
+	writeInt32(buf, int32(pm.Type))
 
 	// write to the buffer LittleEndian byte order
-	writeInt32(b, int32(len(pm.Properties)))
+	writeInt32(buf, int32(len(pm.Properties)))
 
 	for k, v := range pm.Properties {
-		writeString(b, &k)
-		writeString(b, v)
+		writeString(buf, &k)
+		writeString(buf, v)
 	}
 
 	// write to the buffer LittleEndian byte order
-	writeInt32(b, int32(len(pm.Attachments)))
+	writeInt32(buf, int32(len(pm.Attachments)))
 
 	for _, attachment := range pm.Attachments {
 		if attachment == nil {
 			// write to the buffer LittleEndian byte order
-			writeInt32(b, int32(-1))
+			writeInt32(buf, int32(-1))
 		} else {
 			// write to the buffer LittleEndian byte order
-			writeInt32(b, int32(len(attachment)))
-			_, err := b.Write(attachment)
+			writeInt32(buf, int32(len(attachment)))
+			_, err := buf.Write(attachment)
 			if err != nil {
 				panic(err)
 			}
 		}
 	}
 
-	return b.Bytes()
+	return buf.Bytes()
 }
 
 // ProxyMessageToString is a method for cleanly
 // printing an ProxyMessage object to a log console
-func (pm *ProxyMessage) String() {
-	log.Print("{\n")
-	log.Println()
-	log.Printf("\tType: (%d)%s\n", pm.Type, pm.Type.String())
-
-	log.Print("\tProperties:\n")
+func (pm *ProxyMessage) String() string {
+	str := ""
+	str = fmt.Sprintf("%s\n", str)
+	str = fmt.Sprintf("%s\tType: (%d)%s\n", str, pm.Type, pm.Type.String())
+	str = fmt.Sprintf("%s\tProperties:\n", str)
 	for k, v := range pm.Properties {
 		if v == nil {
-			log.Printf("\t\t%s: %s,\n", k, "nil")
+			str = fmt.Sprintf("%s\t\t%s: %s,\n", str, k, "nil")
 		} else {
-			log.Printf("\t\t%s: %s,\n", k, *v)
+			str = fmt.Sprintf("%s\t\t%s: %s,\n", str, k, *v)
 		}
 	}
 
-	log.Print("\tAttachments:")
+	str = fmt.Sprintf("%s\tAttachments:\n", str)
 	for i := 0; i < len(pm.Attachments); i++ {
-		log.Printf("\t\t%v\n", pm.Attachments[i])
+		str = fmt.Sprintf("%s\t\t%v\n", str, pm.Attachments[i])
 	}
 
-	log.Print("}\n\n")
+	return str
 }
 
 // CopyTo implemented by derived classes to copy
 // message properties to another message instance
 // during a Clone() operation
-func (pm *ProxyMessage) CopyTo(target IProxyMessage) {
-	//target.SetIProxyMessageProxyMessage(pm)
-}
+func (pm *ProxyMessage) CopyTo(target IProxyMessage) {}
 
 // Clone is implemented by derived classes to make a copy of themselves
 // for echo testing purposes
@@ -233,14 +282,15 @@ func (pm *ProxyMessage) Clone() IProxyMessage {
 	return nil
 }
 
-// SetRequestId is implemented by derived classes to set the request Id of
-// a class that implements the IProxyMessage interface to set the requestId
-// of any struct implementing the interface
-func (pm *ProxyMessage) SetIProxyMessageRequestId(value int64) {}
-
 // SetProxyMessage is implemented by derived classes to set the value
 // of a ProxyMessage in an IProxyMessage interface
-func (pm *ProxyMessage) SetIProxyMessageProxyMessage(value *ProxyMessage) {}
+func (pm *ProxyMessage) SetProxyMessage(value *ProxyMessage) {}
+
+// GetProxyMessage is implemented by derived classes to get the value of
+// a ProxyMessage in an IProxyMessage interface
+func (pm *ProxyMessage) GetProxyMessage() *ProxyMessage {
+	return nil
+}
 
 // -------------------------------------------------------------------------
 // Helper methods derived classes can use for retreiving typed message properties
@@ -373,35 +423,4 @@ func (pm *ProxyMessage) SetDateTimeProperty(key string, value time.Time) {
 func (pm *ProxyMessage) SetTimeSpanProperty(key string, value time.Duration) {
 	timeSpan := strconv.FormatInt(value.Nanoseconds()/100, 10)
 	pm.Properties[key] = &timeSpan
-}
-
-//---------------------------------------------------------------------
-// Helper method that builds the intToMessageStruct map
-func initIntToMessageStruct() {
-	intToMessageStruct = make(map[int]IProxyMessage)
-
-	// iterate through MessageTypesArray
-	for _, messageType := range messages.MessageTypeSlice {
-		typeCode := int(messageType)
-
-		switch messageType {
-		case messages.Unspecified:
-			intToMessageStruct[typeCode] = new(ProxyMessage)
-		case messages.InitializeRequest:
-			fmt.Println("Need to fill with initializeRequest struct")
-		case messages.InitializeReply:
-			fmt.Println("Need to fill with initializeReply struct")
-		case messages.ConnectRequest:
-			fmt.Println("Need to fill with ConnectionRequest struct")
-		case messages.ConnectReply:
-			fmt.Println("Need to fill with ConnectionRequest struct")
-		case messages.TerminateRequest:
-			fmt.Println("Need to fill with TerminateRequest struct")
-		case messages.TerminateReply:
-			fmt.Println("Need to fill with TerminateReply struct")
-		default:
-			fmt.Println("Need to fill out default struct")
-			intToMessageStruct[typeCode] = new(ProxyMessage)
-		}
-	}
 }

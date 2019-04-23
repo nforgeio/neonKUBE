@@ -70,7 +70,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 // to make cadence client calls to the cadence server
 // Returns err -> any errors that might be thrown during the initialization of cadence
 // Helper
-func ConfigureCadenceClientHelper(args map[string]*string) (*cadence.Helper, error) {
+func ConfigureCadenceClientHelper(args map[string]*string) (*cadenceclient.Helper, error) {
 
 	var h *cadenceclient.Helper
 	var err error

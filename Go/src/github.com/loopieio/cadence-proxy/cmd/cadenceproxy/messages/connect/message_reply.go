@@ -1,4 +1,4 @@
-package initialize
+package connect
 
 import (
 	"fmt"
@@ -8,54 +8,54 @@ import (
 )
 
 type (
-	InitializeReply struct {
+	ConnectReply struct {
 		*base.ProxyReply
 	}
 )
 
 func init() {
-	key := int(messages.InitializeReply)
-	base.IntToMessageStruct[key] = NewInitializeReply()
+	key := int(messages.ConnectReply)
+	base.IntToMessageStruct[key] = NewConnectReply()
 }
 
-func NewInitializeReply() *InitializeReply {
-	reply := new(InitializeReply)
+func NewConnectReply() *ConnectReply {
+	reply := new(ConnectReply)
 	reply.ProxyReply = base.NewProxyReply()
-	reply.Type = messages.InitializeReply
+	reply.Type = messages.ConnectReply
 	return reply
 }
 
 // Clone inherits docs from ProxyMessage.Clone()
-func (reply *InitializeReply) Clone() base.IProxyMessage {
-	initializeReply := NewInitializeReply()
+func (reply *ConnectReply) Clone() base.IProxyMessage {
+	connectReply := NewConnectReply()
 
-	var messageClone base.IProxyMessage = initializeReply
+	var messageClone base.IProxyMessage = connectReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
-func (reply *InitializeReply) CopyTo(target base.IProxyMessage) {
+func (reply *ConnectReply) CopyTo(target base.IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
-	v, ok := target.(*InitializeReply)
+	v, ok := target.(*ConnectReply)
 	if ok {
 		v.SetProxyReply(reply.ProxyReply)
 	}
 }
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *InitializeReply) SetProxyMessage(value *base.ProxyMessage) {
+func (reply *ConnectReply) SetProxyMessage(value *base.ProxyMessage) {
 	*reply.ProxyMessage = *value
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *InitializeReply) GetProxyMessage() *base.ProxyMessage {
+func (reply *ConnectReply) GetProxyMessage() *base.ProxyMessage {
 	return reply.ProxyMessage
 }
 
 // String inherits docs from ProxyMessage.String()
-func (reply *InitializeReply) String() string {
+func (reply *ConnectReply) String() string {
 	str := ""
 	str = fmt.Sprintf("%s\n{\n", str)
 	str = fmt.Sprintf("%s%s", str, reply.ProxyReply.String())
@@ -66,13 +66,13 @@ func (reply *InitializeReply) String() string {
 // GetProxyReply is an interface method that allows all
 // structures that extend IProxyReply to get their nested proxy
 // replies
-func (reply *InitializeReply) GetProxyReply() *base.ProxyReply {
+func (reply *ConnectReply) GetProxyReply() *base.ProxyReply {
 	return reply.ProxyReply
 }
 
 // SetProxyReply is an interface method that allows all
 // structures that extend IProxyReply to set the value of their nested
 // proxy replies
-func (reply *InitializeReply) SetProxyReply(value *base.ProxyReply) {
+func (reply *ConnectReply) SetProxyReply(value *base.ProxyReply) {
 	*reply.ProxyReply = *value
 }
