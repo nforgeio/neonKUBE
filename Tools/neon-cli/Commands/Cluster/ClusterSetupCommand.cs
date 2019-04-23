@@ -1183,13 +1183,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                             else
                             {
-                                allowPodsOnMasters = cluster.Definition.Workers.Count() > 0;
+                                allowPodsOnMasters = cluster.Definition.Workers.Count() == 0;
                             }
 
                             // The [kubectl taint] command looks like it can return a non-zero exit code.
                             // We'll ignore this.
 
-                            firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+                            if (allowPodsOnMasters)
+                            {
+                                firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+                            }
                         });
 
                     // Install the network CNI.
