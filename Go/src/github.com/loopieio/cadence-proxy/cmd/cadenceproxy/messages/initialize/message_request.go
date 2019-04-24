@@ -8,11 +8,18 @@ import (
 )
 
 type (
+
+	// InitializeRequest is a ProxyRequest of MessageType
+	// InitializeRequest.  It holds a reference to a
+	// ProxyRequest in memory
 	InitializeRequest struct {
 		*base.ProxyRequest
 	}
 )
 
+// InitInitialize is a method that adds a key/value entry into the
+// IntToMessageStruct at keys InitializeRequest and InitializeReply.
+// The values are new instances of a InitializeRequest and InitializeReply
 func InitInitialize() {
 	key := int(messages.InitializeRequest)
 	base.IntToMessageStruct[key] = NewInitializeRequest()
@@ -21,6 +28,10 @@ func InitInitialize() {
 	base.IntToMessageStruct[key] = NewInitializeReply()
 }
 
+// NewInitializeRequest is the default constructor for a InitializeRequest
+//
+// returns *InitializeRequest -> pointer to a newly initialized
+// InitializeRequest in memory
 func NewInitializeRequest() *InitializeRequest {
 	request := new(InitializeRequest)
 	request.ProxyRequest = base.NewProxyRequest()
@@ -28,29 +39,50 @@ func NewInitializeRequest() *InitializeRequest {
 	return request
 }
 
+// GetLibraryAddress gets the LibraryAddress property from an InitializeRequest
+// in its properties map
+//
+// returns *string -> a pointer to a string in memory that holds the value
+// of an InitializeRequest's LibraryAddress
 func (request *InitializeRequest) GetLibraryAddress() *string {
 	return request.GetStringProperty(base.LibraryAddressKey)
 }
 
+// SetLibraryAddress sets the LibraryAddress property in an INitializeRequest's
+// properties map
+//
+// param value *string -> a pointer to a string that holds the LibraryAddress value
+// to set in the request's properties map
 func (request *InitializeRequest) SetLibraryAddress(value *string) {
 	request.SetStringProperty(base.LibraryAddressKey, value)
 }
 
+// GetLibraryPort gets the LibraryPort property from an InitializeRequest
+// in its properties map
+//
+// returns *string -> a pointer to a string in memory that holds the value
+// of an InitializeRequest's LibraryPort
 func (request *InitializeRequest) GetLibraryPort() *string {
 	return request.GetStringProperty(base.LibraryPortKey)
 }
 
+// SetLibraryPort sets the LibraryPort property in an INitializeRequest's
+// properties map
+//
+// param value *string -> a pointer to a string that holds the LibraryPort value
+// to set in the request's properties map
 func (request *InitializeRequest) SetLibraryPort(value *string) {
 	request.SetStringProperty(base.LibraryPortKey, value)
 }
 
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *InitializeRequest) Clone() base.IProxyMessage {
 	initializeRequest := NewInitializeRequest()
-
 	var messageClone base.IProxyMessage = initializeRequest
 	request.CopyTo(messageClone)
-
 	return messageClone
 }
 
@@ -84,16 +116,15 @@ func (request *InitializeRequest) String() string {
 	return str
 }
 
-// GetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to get their nested proxy
-// requests
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
+
+// GetProxyRequest inherits docs from ProxyRequest.GetProxyRequest()
 func (request *InitializeRequest) GetProxyRequest() *base.ProxyRequest {
 	return request.ProxyRequest
 }
 
-// SetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to set the value of their nested
-// proxy requests
+// SetProxyRequest inherits docs from ProxyRequest.SetProxyRequest()
 func (request *InitializeRequest) SetProxyRequest(value *base.ProxyRequest) {
 	*request.ProxyRequest = *value
 }

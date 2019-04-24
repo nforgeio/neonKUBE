@@ -8,11 +8,18 @@ import (
 )
 
 type (
+
+	// ConnectRequest is ProxyRequest of MessageType
+	// ConnectRequest.  It holds a reference to a
+	// ProxyRequest in memory
 	ConnectRequest struct {
 		*base.ProxyRequest
 	}
 )
 
+// InitConnect is a method that adds a key/value entry into the
+// IntToMessageStruct at keys ConnectRequest and ConnectReply.
+// The values are new instances of a ConnectRequest and ConnectReply
 func InitConnect() {
 	key := int(messages.ConnectRequest)
 	base.IntToMessageStruct[key] = NewConnectRequest()
@@ -21,6 +28,10 @@ func InitConnect() {
 	base.IntToMessageStruct[key] = NewConnectReply()
 }
 
+// NewConnectRequest is the default constructor for a ConnectRequest
+//
+// returns *ConnectRequest -> a reference to a newly initialized
+// ConnectRequest in memory
 func NewConnectRequest() *ConnectRequest {
 	request := new(ConnectRequest)
 	request.ProxyRequest = base.NewProxyRequest()
@@ -28,29 +39,62 @@ func NewConnectRequest() *ConnectRequest {
 	return request
 }
 
+// GetEndpoints gets a ConnectRequest's endpoints value from
+// its nested properties map
+//
+// returns *string -> a pointer to a string in memory holding the value
+// of a ConnectRequest's endpoints
 func (request *ConnectRequest) GetEndpoints() *string {
 	return request.GetStringProperty(base.EndpointsKey)
 }
 
+// SetEndpoints sets a ConnectionRequest's endpoints in
+// its nested properties map
+//
+// param value *string -> a pointer to a string in memory
+// that holds the value to be set in the properties map
 func (request *ConnectRequest) SetEndpoints(value *string) {
 	request.SetStringProperty(base.EndpointsKey, value)
 }
 
+// GetDomain gets a ConnectRequest's domain value from
+// its nested properties map
+//
+// returns *string -> a pointer to a string in memory holding the value
+// of a ConnectRequest's domain
 func (request *ConnectRequest) GetDomain() *string {
 	return request.GetStringProperty(base.DomainKey)
 }
 
+// SetDomain sets a ConnectionRequest's domain in
+// its nested properties map
+//
+// param value *string -> a pointer to a string in memory
+// that holds the value to be set in the properties map
 func (request *ConnectRequest) SetDomain(value *string) {
 	request.SetStringProperty(base.DomainKey, value)
 }
 
+// GetIdentity gets a ConnectRequest's identity value from
+// its nested properties map
+//
+// returns *string -> a pointer to a string in memory holding the value
+// of a ConnectRequest's identity
 func (request *ConnectRequest) GetIdentity() *string {
 	return request.GetStringProperty(base.IdentityKey)
 }
 
+// SetIdentity sets a ConnectionRequest's identity in
+// its nested properties map
+//
+// param value *string -> a pointer to a string in memory
+// that holds the value to be set in the properties map
 func (request *ConnectRequest) SetIdentity(value *string) {
 	request.SetStringProperty(base.IdentityKey, value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *ConnectRequest) Clone() base.IProxyMessage {
@@ -93,16 +137,15 @@ func (request *ConnectRequest) String() string {
 	return str
 }
 
-// GetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to get their nested proxy
-// requests
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
+
+// GetProxyRequest inherits docs from ProxyRequest.GetProxyRequest()
 func (request *ConnectRequest) GetProxyRequest() *base.ProxyRequest {
 	return request.ProxyRequest
 }
 
-// SetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to set the value of their nested
-// proxy requests
+// SetProxyRequest inherits docs from ProxyRequest.SetProxyRequest()
 func (request *ConnectRequest) SetProxyRequest(value *base.ProxyRequest) {
 	*request.ProxyRequest = *value
 }

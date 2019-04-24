@@ -8,11 +8,19 @@ import (
 )
 
 type (
+
+	// ConnectReply is a ProxyReply of MessageType
+	// ConnectReply.  It holds a reference to a ProxyReply in memory
 	ConnectReply struct {
 		*base.ProxyReply
 	}
 )
 
+// NewConnectReply is the default constructor for
+// a ConnectReply
+//
+// returns *ConnectReply -> a pointer to a newly initialized
+// ConnectReply in memory
 func NewConnectReply() *ConnectReply {
 	reply := new(ConnectReply)
 	reply.ProxyReply = base.NewProxyReply()
@@ -20,13 +28,14 @@ func NewConnectReply() *ConnectReply {
 	return reply
 }
 
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *ConnectReply) Clone() base.IProxyMessage {
 	connectReply := NewConnectReply()
-
 	var messageClone base.IProxyMessage = connectReply
 	reply.CopyTo(messageClone)
-
 	return messageClone
 }
 
@@ -58,16 +67,15 @@ func (reply *ConnectReply) String() string {
 	return str
 }
 
-// GetProxyReply is an interface method that allows all
-// structures that extend IProxyReply to get their nested proxy
-// replies
+// -------------------------------------------------------------------------
+// IProxyReply interface methods for implementing the IProxyReply interface
+
+// GetProxyReply inherits docs from ProxyReply.GetProxyReply()
 func (reply *ConnectReply) GetProxyReply() *base.ProxyReply {
 	return reply.ProxyReply
 }
 
-// SetProxyReply is an interface method that allows all
-// structures that extend IProxyReply to set the value of their nested
-// proxy replies
+// SetProxyReply inherits docs from ProxyReply.SetProxyReply()
 func (reply *ConnectReply) SetProxyReply(value *base.ProxyReply) {
 	*reply.ProxyReply = *value
 }

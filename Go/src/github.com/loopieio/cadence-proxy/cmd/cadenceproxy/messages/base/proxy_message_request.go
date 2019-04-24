@@ -21,12 +21,20 @@ type (
 		RequestId int64
 	}
 
+	// IProxyRequest is an interface for all ProxyRequest message types.
+	// It allows any message type that implements the IProxyRequest interface
+	// to use any methods defined.  The primary use of this interface is to
+	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
 		GetProxyRequest() *ProxyRequest
 		SetProxyRequest(value *ProxyRequest)
 	}
 )
 
+// NewProxyRequest is the default constructor for a ProxyRequest
+//
+// returns *ProxyRequest -> a pointer to a newly initialized ProxyRequest
+// in memory
 func NewProxyRequest() *ProxyRequest {
 	request := new(ProxyRequest)
 	request.ProxyMessage = NewProxyMessage()
@@ -34,23 +42,29 @@ func NewProxyRequest() *ProxyRequest {
 }
 
 // GetRequestID gets a request id from a ProxyMessage's properties
+//
+// returns int64 -> long as a ProxyRequest's request id from the properties map
 func (request *ProxyRequest) GetRequestID() int64 {
 	return request.GetLongProperty(RequestIDKey)
 }
 
 // SetRequestID sets a request id in a ProxyRequest's ProxyMessage
 // properties
+//
+// param value int64 -> the long representation of a ProxyRequest's
+// request id to be set in the properties map
 func (request *ProxyRequest) SetRequestID(value int64) {
 	request.SetLongProperty(RequestIDKey, value)
 }
 
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *ProxyRequest) Clone() IProxyMessage {
 	proxyRequest := NewProxyRequest()
-
 	var messageClone IProxyMessage = proxyRequest
 	request.CopyTo(messageClone)
-
 	return messageClone
 }
 
@@ -83,9 +97,14 @@ func (request *ProxyRequest) String() string {
 	return str
 }
 
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
+
 // GetProxyRequest is an interface method that allows all
 // structures that extend IProxyRequest to get their nested proxy
 // requests
+//
+// returns *ProxyRequest -> a pointer to a IProxyRequest's nested proxy request
 func (request *ProxyRequest) GetProxyRequest() *ProxyRequest {
 	return nil
 }
@@ -93,4 +112,7 @@ func (request *ProxyRequest) GetProxyRequest() *ProxyRequest {
 // SetProxyRequest is an interface method that allows all
 // structures that extend IProxyRequest to set the value of their nested
 // proxy requests
+//
+// param value *ProxyRequest -> a pointer to the ProxyRequest in memory that
+// you want to set the instance IProxyRequest's value as
 func (request *ProxyRequest) SetProxyRequest(value *ProxyRequest) {}

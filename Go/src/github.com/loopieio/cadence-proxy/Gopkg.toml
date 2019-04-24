@@ -40,10 +40,10 @@
   name = "go.uber.org/zap"
   version = "1.4.0"
 
-[prune]
-  go-tests = true
-  unused-packages = true
-
 [[override]]
   name = "github.com/apache/thrift"
   version = "0.9.3"
+
+[prune]
+  go-tests = true
+  unused-packages = true

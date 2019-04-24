@@ -21,11 +21,10 @@
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
 $projectPath  = "$env:GOPATH\src\github.com\loopieio\cadence-proxy"
-$logPath      = "$buildPath\build-proxy.log"
+$logPath      = "$buildPath\build-cadence-proxy.log"
 $orgDirectory = Get-Location
 
 Set-Location "$projectpath\cmd\cadenceproxy"
-& "$env:NF_ROOT\ToolBin\dep.exe" ensure
 
 if (!(test-path $buildPath))
 {

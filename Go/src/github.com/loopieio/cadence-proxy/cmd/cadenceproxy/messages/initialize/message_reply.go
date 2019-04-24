@@ -8,11 +8,19 @@ import (
 )
 
 type (
+
+	// InitializeReply is a ProxyReply of MessageType
+	// InitializeReply.  It holds a reference to a ProxyReply in memory
 	InitializeReply struct {
 		*base.ProxyReply
 	}
 )
 
+// NewInitializeReply is the default constructor for
+// a InitializeReply
+//
+// returns *InitializeReply -> a pointer to a newly initialized
+// InitializeReply in memory
 func NewInitializeReply() *InitializeReply {
 	reply := new(InitializeReply)
 	reply.ProxyReply = base.NewProxyReply()
@@ -20,13 +28,14 @@ func NewInitializeReply() *InitializeReply {
 	return reply
 }
 
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *InitializeReply) Clone() base.IProxyMessage {
 	initializeReply := NewInitializeReply()
-
 	var messageClone base.IProxyMessage = initializeReply
 	reply.CopyTo(messageClone)
-
 	return messageClone
 }
 
@@ -58,16 +67,15 @@ func (reply *InitializeReply) String() string {
 	return str
 }
 
-// GetProxyReply is an interface method that allows all
-// structures that extend IProxyReply to get their nested proxy
-// replies
+// -------------------------------------------------------------------------
+// IProxyReply interface methods for implementing the IProxyReply interface
+
+// GetProxyReply inherits docs from ProxyReply.GetProxyReply()
 func (reply *InitializeReply) GetProxyReply() *base.ProxyReply {
 	return reply.ProxyReply
 }
 
-// SetProxyReply is an interface method that allows all
-// structures that extend IProxyReply to set the value of their nested
-// proxy replies
+// SetProxyReply inherits docs from ProxyReply.SetProxyReply()
 func (reply *InitializeReply) SetProxyReply(value *base.ProxyReply) {
 	*reply.ProxyReply = *value
 }

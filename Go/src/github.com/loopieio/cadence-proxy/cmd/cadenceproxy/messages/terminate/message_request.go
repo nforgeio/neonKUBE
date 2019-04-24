@@ -8,11 +8,18 @@ import (
 )
 
 type (
+
+	// TerminateRequest is a ProxyRequest of MessageType
+	// TerminateRequest It holds a reference to a
+	// ProxyRequest in memory
 	TerminateRequest struct {
 		*base.ProxyRequest
 	}
 )
 
+// InitTerminate is a method that adds a key/value entry into the
+// IntToMessageStruct at keys TerminateRequest and TerminateReply.
+// The values are new instances of a TerminateRequest and TerminateReply
 func InitTerminate() {
 	key := int(messages.TerminateRequest)
 	base.IntToMessageStruct[key] = NewTerminateRequest()
@@ -21,6 +28,11 @@ func InitTerminate() {
 	base.IntToMessageStruct[key] = NewTerminateReply()
 }
 
+// NewTerminateRequest is the default constructor for
+// TerminateRequest
+//
+// returns *TerminateRequest -> pointer to a newly initialized
+// TerminateReqeuest in memory
 func NewTerminateRequest() *TerminateRequest {
 	request := new(TerminateRequest)
 	request.ProxyRequest = base.NewProxyRequest()
@@ -28,13 +40,14 @@ func NewTerminateRequest() *TerminateRequest {
 	return request
 }
 
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *TerminateRequest) Clone() base.IProxyMessage {
 	terminateRequest := NewTerminateRequest()
-
 	var messageClone base.IProxyMessage = terminateRequest
 	request.CopyTo(messageClone)
-
 	return messageClone
 }
 
@@ -66,16 +79,15 @@ func (request *TerminateRequest) String() string {
 	return str
 }
 
-// GetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to get their nested proxy
-// requests
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
+
+// GetProxyRequest inherits docs from ProxyRequest.GetProxyRequest()
 func (request *TerminateRequest) GetProxyRequest() *base.ProxyRequest {
 	return request.ProxyRequest
 }
 
-// SetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to set the value of their nested
-// proxy requests
+// SetProxyRequest inherits docs from ProxyRequest.SetProxyRequest()
 func (request *TerminateRequest) SetProxyRequest(value *base.ProxyRequest) {
 	*request.ProxyRequest = *value
 }
