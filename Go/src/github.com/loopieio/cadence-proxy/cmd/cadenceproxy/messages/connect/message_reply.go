@@ -13,11 +13,6 @@ type (
 	}
 )
 
-func init() {
-	key := int(messages.ConnectReply)
-	base.IntToMessageStruct[key] = NewConnectReply()
-}
-
 func NewConnectReply() *ConnectReply {
 	reply := new(ConnectReply)
 	reply.ProxyReply = base.NewProxyReply()

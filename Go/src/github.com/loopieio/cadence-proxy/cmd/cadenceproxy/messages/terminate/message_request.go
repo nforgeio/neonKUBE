@@ -13,9 +13,12 @@ type (
 	}
 )
 
-func init() {
+func InitTerminate() {
 	key := int(messages.TerminateRequest)
 	base.IntToMessageStruct[key] = NewTerminateRequest()
+
+	key = int(messages.TerminateReply)
+	base.IntToMessageStruct[key] = NewTerminateReply()
 }
 
 func NewTerminateRequest() *TerminateRequest {

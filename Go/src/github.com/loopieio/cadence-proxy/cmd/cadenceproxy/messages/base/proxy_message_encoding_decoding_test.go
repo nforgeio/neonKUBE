@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
+
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 	connect "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/connect"
 	initialize "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
@@ -18,11 +20,14 @@ const (
 	int32ByteSize = 4
 )
 
-func TestProxyMessageEncodingDecoding(t *testing.T) {
+func init() {
+	base.InitProxyMessage()
+	connect.InitConnect()
+	initialize.InitInitialize()
+	terminate.InitTerminate()
+}
 
-	connect.NewConnectRequest()
-	initialize.NewInitializeRequest()
-	terminate.NewTerminateRequest()
+func TestProxyMessageEncodingDecoding(t *testing.T) {
 
 	strs := randStrings(50, 8)
 	emptyStr := ""
@@ -80,7 +85,7 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 		Attachments: att4,
 	}
 
-	op5 := base.ProxyMessage{}
+	op5 := base.ProxyMessage{Type: messages.InitializeReply, Properties: args1}
 
 	var tests = []struct {
 		input base.ProxyMessage
@@ -96,9 +101,9 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 		log.Println("***Input ProxyMessage***")
 		log.Println(test.input.String())
 
-		opBytes := test.input.Serialize()
+		opBytes, _ := test.input.Serialize(false)
 		buf := bytes.NewBuffer(opBytes)
-		des := base.Deserialize(buf, false)
+		des, _ := base.Deserialize(buf, false)
 		output := des.GetProxyMessage()
 
 		log.Println("***Output ProxyMessage***")

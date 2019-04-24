@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadence"
+	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
 )
 
 type (

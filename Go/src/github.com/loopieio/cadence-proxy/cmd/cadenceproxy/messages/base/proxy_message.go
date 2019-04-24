@@ -74,15 +74,17 @@ const (
 // IntToMessageStruct is a map that maps a message type to its corresponding Message Struct
 var IntToMessageStruct map[int]IProxyMessage
 
-// initialize the IntToMessageStruct
+// InitProxyMessage initializes the IntToMessageStruct
 // This will allow derived classes to add to IntToMessageStruct
-// Also add Unspecified message type as just a plain ProxyMessage
-func init() {
+func InitProxyMessage() {
 	IntToMessageStruct = make(map[int]IProxyMessage)
-	IntToMessageStruct[0] = NewProxyRequest()
-
 }
 
+// NewProxyMessage creates a new ProxyMessage in memory, initializes
+// its Properties map and Attachments [][]byte
+//
+// returns *ProxyMessage -> pointer to the newly created ProxyMessage
+// in memory
 func NewProxyMessage() *ProxyMessage {
 	message := new(ProxyMessage)
 	message.Properties = make(map[string]*string)
@@ -100,7 +102,8 @@ func NewProxyMessage() *ProxyMessage {
 //
 // return ProxyMessage -> ProxyMessage initialized using values encoded in
 // bytes from the bytes.Buffer
-func Deserialize(buf *bytes.Buffer, ignoreTypeCode bool) IProxyMessage {
+// return Error -> an error deserializing does not work
+func Deserialize(buf *bytes.Buffer, ignoreTypeCode bool) (IProxyMessage, error) {
 	var message IProxyMessage
 
 	// get the message type
@@ -110,14 +113,12 @@ func Deserialize(buf *bytes.Buffer, ignoreTypeCode bool) IProxyMessage {
 		intMessageType := int(messageType)
 		if IntToMessageStruct[intMessageType] == nil {
 			errStr := fmt.Sprintf("Unexpected message type %s", messageType.String())
-			err := errors.New(errStr)
-			panic(err)
-		} else {
-			message = IntToMessageStruct[intMessageType].Clone()
+			return message, errors.New(errStr)
 		}
+		message = IntToMessageStruct[intMessageType].Clone()
+
 	} else {
-		intUnspecified := int(messages.Unspecified)
-		message = IntToMessageStruct[intUnspecified].Clone()
+		message = NewProxyMessage()
 	}
 
 	pm := NewProxyMessage()
@@ -149,7 +150,7 @@ func Deserialize(buf *bytes.Buffer, ignoreTypeCode bool) IProxyMessage {
 	}
 
 	message.SetProxyMessage(pm)
-	return message
+	return message, nil
 }
 
 func writeInt32(w io.Writer, value int32) {
@@ -213,8 +214,16 @@ func readInt32(buf *bytes.Buffer) int32 {
 // Serialize is called on a ProxyMessage instance and
 // serializes it into a []byte for sending over a network
 //
+// param ignoredTypeCode bool -> Optionally ignore unspecified message types (unit testing)
+//
 // return []byte -> the ProxyMessage instance encoded as a []byte
-func (pm *ProxyMessage) Serialize() []byte {
+// return error -> an error if serialization goes wrong
+func (pm *ProxyMessage) Serialize(ignoreTypeCode bool) ([]byte, error) {
+	if (!ignoreTypeCode) && (pm.Type == messages.Unspecified) {
+		errMessage := fmt.Sprintf("Proxy Message has not initialized its [%s] property", pm.Type.String())
+		return nil, errors.New(errMessage)
+	}
+
 	buf := new(bytes.Buffer)
 
 	// write to the buffer LittleEndian byte order
@@ -240,12 +249,12 @@ func (pm *ProxyMessage) Serialize() []byte {
 			writeInt32(buf, int32(len(attachment)))
 			_, err := buf.Write(attachment)
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 		}
 	}
 
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
 
 // ProxyMessageToString is a method for cleanly
@@ -284,12 +293,14 @@ func (pm *ProxyMessage) Clone() IProxyMessage {
 
 // SetProxyMessage is implemented by derived classes to set the value
 // of a ProxyMessage in an IProxyMessage interface
-func (pm *ProxyMessage) SetProxyMessage(value *ProxyMessage) {}
+func (pm *ProxyMessage) SetProxyMessage(value *ProxyMessage) {
+	*pm = *value
+}
 
 // GetProxyMessage is implemented by derived classes to get the value of
 // a ProxyMessage in an IProxyMessage interface
 func (pm *ProxyMessage) GetProxyMessage() *ProxyMessage {
-	return nil
+	return pm
 }
 
 // -------------------------------------------------------------------------

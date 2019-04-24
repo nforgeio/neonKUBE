@@ -13,11 +13,6 @@ type (
 	}
 )
 
-func init() {
-	key := int(messages.InitializeReply)
-	base.IntToMessageStruct[key] = NewInitializeReply()
-}
-
 func NewInitializeReply() *InitializeReply {
 	reply := new(InitializeReply)
 	reply.ProxyReply = base.NewProxyReply()

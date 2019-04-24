@@ -3,8 +3,19 @@ package main
 import (
 	"os"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/connect"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/terminate"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/server"
 )
+
+func init() {
+	base.InitProxyMessage()
+	connect.InitConnect()
+	initialize.InitInitialize()
+	terminate.InitTerminate()
+}
 
 func main() {
 

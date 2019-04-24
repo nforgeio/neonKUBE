@@ -12,9 +12,9 @@ import (
 
 func TestProxyRequestClone(t *testing.T) {
 
-	connect.NewConnectRequest()
-	initialize.NewInitializeRequest()
-	terminate.NewTerminateRequest()
+	connect.InitConnect()
+	initialize.InitInitialize()
+	terminate.InitTerminate()
 
 	strs := randStrings(50, 8)
 	emptyStr := ""

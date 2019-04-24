@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadence"
+	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
 
@@ -15,43 +15,93 @@ import (
 // HTTP POST
 func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 
-	// new ProxyMessage object
-	var pm base.ProxyMessage
+	// // new ProxyMessage object
+	// var pm base.ProxyMessage
 
-	// Check if there is a request body
-	// If there is then parse it and try to decode it into an ProxyMessage object
+	// // Check if there is a request body
+	// // If there is then parse it and try to decode it into an ProxyMessage object
+	// if r.Body != nil {
+
+	// 	// new []byte to hold the encoded payload
+	// 	var payload []byte
+
+	// 	// Read the request body into a []byte
+	// 	payload, err := ioutil.ReadAll(r.Body)
+	// 	if err != nil {
+	// 		log.Panicln("Error reading request body: ", err)
+	// 	}
+
+	// 	buf := bytes.NewBuffer(payload)
+
+	// 	// decode the []byte request body into an ProxyMessage object
+	// 	pm = base.Deserialize(buf, false)
+
+	// 	// Log a pretty printed out ProxyMessage from the
+	// 	// Passed []byte
+	// 	pm.String()
+
+	// 	// Encode back to a []byte
+	// 	// Write it as a response to the request
+	// 	b := pm.Serialize()
+	// 	w.Write(b)
+
+	// } else {
+	// 	log.Panicln("No content in request body")
+	// }
+}
+
+func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Body != nil {
-
-		// new []byte to hold the encoded payload
 		var payload []byte
 
-		// Read the request body into a []byte
+		defer r.Body.Close()
 		payload, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			log.Panicln("Error reading request body: ", err)
 		}
 
 		buf := bytes.NewBuffer(payload)
+		message, err := base.Deserialize(buf, false)
+		if err != nil {
+			buf := bytes.NewBufferString(err.Error())
+			resp, respErr := http.Post(r.RequestURI, "Text", buf)
+			if respErr != nil {
+				panic(respErr)
+			}
+			defer resp.Body.Close()
 
-		// decode the []byte request body into an ProxyMessage object
-		pm = base.Deserialize(buf)
+			return
+		}
 
-		// Log a pretty printed out ProxyMessage from the
-		// Passed []byte
-		pm.String()
+		messageCopy := message.Clone()
 
-		// Encode back to a []byte
-		// Write it as a response to the request
-		b := pm.Serialize()
-		w.Write(b)
+		var serializedMessageCopy []byte
+		v, ok := messageCopy.(*base.ProxyMessage)
+		if ok {
+			serializedMessageCopy, err = v.Serialize(false)
+			if err != nil {
+				buf := bytes.NewBufferString(err.Error())
+				resp, respErr := http.Post(r.RequestURI, "Text", buf)
+				if respErr != nil {
+					panic(respErr)
+				}
+				defer resp.Body.Close()
 
+				return
+			}
+
+			buf := bytes.NewBuffer(serializedMessageCopy)
+			resp, err := http.Post(r.RequestURI, base.ContentType, buf)
+			if err != nil {
+				panic(err)
+			}
+			defer resp.Body.Close()
+
+		}
 	} else {
-		log.Panicln("No content in request body")
+		buf := bytes.NewBufferString("Request body is empty")
+		w.Write(buf.Bytes())
 	}
-}
-
-func EchoHandler(w http.ResponseWriter, r *http.Request) {
-
 }
 
 // ConfigureCadenceClientHelper takes an ProxyMessage and

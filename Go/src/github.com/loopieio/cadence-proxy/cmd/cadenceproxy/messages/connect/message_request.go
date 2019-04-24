@@ -13,9 +13,12 @@ type (
 	}
 )
 
-func init() {
+func InitConnect() {
 	key := int(messages.ConnectRequest)
 	base.IntToMessageStruct[key] = NewConnectRequest()
+
+	key = int(messages.ConnectReply)
+	base.IntToMessageStruct[key] = NewConnectReply()
 }
 
 func NewConnectRequest() *ConnectRequest {

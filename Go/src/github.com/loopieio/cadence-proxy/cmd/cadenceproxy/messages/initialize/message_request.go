@@ -13,9 +13,12 @@ type (
 	}
 )
 
-func init() {
+func InitInitialize() {
 	key := int(messages.InitializeRequest)
 	base.IntToMessageStruct[key] = NewInitializeRequest()
+
+	key = int(messages.InitializeReply)
+	base.IntToMessageStruct[key] = NewInitializeReply()
 }
 
 func NewInitializeRequest() *InitializeRequest {
