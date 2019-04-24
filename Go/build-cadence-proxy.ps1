@@ -21,11 +21,10 @@
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
 $projectPath  = "$env:GOPATH\src\github.com\loopieio\cadence-proxy"
-$logPath      = "$buildPath\build-proxy.log"
+$logPath      = "$buildPath\build-cadence-proxy.log"
 $orgDirectory = Get-Location
 
 Set-Location "$projectpath\cmd\cadenceproxy"
-& "$env:NF_ROOT\ToolBin\dep.exe" ensure
 
 if (!(test-path $buildPath))
 {
@@ -36,16 +35,19 @@ if (!(test-path $buildPath))
 Set-Location $projectPath
 
 # build the windows binary
-go build -i -ldflags="-w -s" -v -o $buildPath\gocadenceproxy.exe cmd\cadenceproxy\main.go
+$env:GOOS	= "windows"
+$env:GOARCH = "amd64"
+go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go
 
 # build the linux binary
-$env:GOOS    = "linux"
-$env:GOARCH  = "amd64"
-go build -i -ldflags="-w -s" -v -o $buildPath\gocadenceproxy cmd\cadenceproxy\main.go
+$env:GOOS   = "linux"
+$env:GOARCH = "amd64"
+go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go
 
 # build the OSX binary
-#$env:GOOS    = "darwin"
-#go build -o -i -ldflags="-w -s" -v $buildPath\gocadenceproxy cmd\cadenceproxy\main.go
+$env:GOOS   = "darwin"
+$env:GOARCH = "amd64"
+go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go
 
 # set exit code
 $exitCode = $lastExitCode

@@ -92,6 +92,5 @@ GeneratedUxTypes.cs
 ##################
 ### Go Project ###
 ##################
-/Go/**/dep/**
-/Go/**/*.test
-/Go/**/*.a
+*.test
+Go/pkg/**

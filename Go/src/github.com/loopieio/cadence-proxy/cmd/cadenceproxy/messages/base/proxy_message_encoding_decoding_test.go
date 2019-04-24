@@ -101,9 +101,9 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 		log.Println("***Input ProxyMessage***")
 		log.Println(test.input.String())
 
-		opBytes, _ := test.input.Serialize(false)
+		opBytes, _ := test.input.Serialize()
 		buf := bytes.NewBuffer(opBytes)
-		des, _ := base.Deserialize(buf, false)
+		des, _ := base.Deserialize(buf)
 		output := des.GetProxyMessage()
 
 		log.Println("***Output ProxyMessage***")

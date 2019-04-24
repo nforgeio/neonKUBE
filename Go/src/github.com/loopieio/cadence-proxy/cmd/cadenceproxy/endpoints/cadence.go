@@ -61,7 +61,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		buf := bytes.NewBuffer(payload)
-		message, err := base.Deserialize(buf, false)
+		message, err := base.Deserialize(buf)
 		if err != nil {
 			buf := bytes.NewBufferString(err.Error())
 			resp, respErr := http.Post(r.RequestURI, "Text", buf)
@@ -78,7 +78,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 		var serializedMessageCopy []byte
 		v, ok := messageCopy.(*base.ProxyMessage)
 		if ok {
-			serializedMessageCopy, err = v.Serialize(false)
+			serializedMessageCopy, err = v.Serialize()
 			if err != nil {
 				buf := bytes.NewBufferString(err.Error())
 				resp, respErr := http.Post(r.RequestURI, "Text", buf)
