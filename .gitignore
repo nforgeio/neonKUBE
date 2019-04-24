@@ -94,4 +94,3 @@ GeneratedUxTypes.cs
 ##################
 *.test
 Go/pkg/**
-Go/src/github.com/loopieio/cadence-proxy/Gopkg.lock
