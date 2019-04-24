@@ -26,6 +26,9 @@ type (
 		Attachments [][]byte
 	}
 
+	// IProxyMessage is an interface that all proxy message types implement
+	// this allows structures that implement this interface to use a common
+	// set of methods
 	IProxyMessage interface {
 		Clone() IProxyMessage
 		CopyTo(target IProxyMessage)
