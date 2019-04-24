@@ -13,28 +13,34 @@ ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
 dep-ensured:
 	dep ensure
 
-cadenceproxywindows: dep-ensured $(ALL_SRC)
-	go build -i -ldflags="-w -s" -v -o bin/gocadenceproxy.exe $(APP_DIR)/*.go
+cadence-proxy-windows: dep-ensured $(ALL_SRC)
+	env GOOS=windows GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/cadence-proxy.win.exe $(APP_DIR)/*.go
 
-cadenceproxylinux: dep-ensured $(ALL_SRC)
-	env GOOS=linux GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/gocadenceproxy $(APP_DIR)/*.go
+cadence-proxy-linux: dep-ensured $(ALL_SRC)
+	env GOOS=linux GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/cadence-proxy.linux $(APP_DIR)/*.go
 
-cadenceproxy: cadenceproxylinux \
-	cadenceproxywindows
+cadence-proxy-osx: dep-ensured $(ALL_SRC)
+	env GOOS=darwin GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/cadence-proxy.osx $(APP_DIR)/*.go
+
+cadenceproxy: cadence-proxy-linux \
+	cadence-proxy-windows \
+	cadence-proxy-osx
 
 bins: cadenceproxy \
 
 test: bins
-	@rm -f test/gocadenceproxy.test
+	@rm -f test/cadence-proxy.test
 	@rm -f test/logs/test.log
 	@echo $(TEST_DIRS)
 	@for dir in $(TEST_DIRS); do \
-		go test -v -o test/gocadenceproxy.test "$$dir" | tee -a test/logs/test.log; \
+		go test -v -o test/cadence-proxy.test "$$dir" | tee -a test/logs/test.log; \
 	done;
 
 clean:
-	rm -f test/gocadenceproxy.test
+	rm -f test/cadence-proxy.test
 	rm -f test/logs/test.log
-	rm -f bin/gocadenceproxy.exe
-	rm -f bin/gocadenceproxy
+	rm -fr bin/*
 	rm -Rf $(BUILD)
+	rm -f $(NF_ROOT)/Build/cadence-proxy.win.exe
+	rm -f $(NF_ROOT)/Build/cadence-proxy.linux
+	rm -f $(NF_ROOT)/Build/cadence-proxy.osx
