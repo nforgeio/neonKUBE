@@ -212,8 +212,8 @@ namespace Neon.Xunit
             where TStartup : class
         {
             this.hostConfigurator = hostConfigurator;
-            this.logWriter = logWriter;
-            this.logLevel = logLevel;
+            this.logWriter        = logWriter;
+            this.logLevel         = logLevel;
 
             if (IsRunning)
             {
