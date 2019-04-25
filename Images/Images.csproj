@@ -74,8 +74,6 @@
     <None Include="haproxy\Dockerfile" />
     <None Include="haproxy\publish.ps1" />
     <None Include="haproxy\README.md" />
-    <Content Include="bin\Debug\ImageFiles.dll" />
-    <Content Include="bin\Debug\ImageFiles.pdb" />
     <Content Include="couchbase-test\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -172,9 +170,7 @@
     <None Include="ubuntu-16.04\publish.ps1" />
     <None Include="ubuntu-16.04\README.md" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="bin\Release\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
