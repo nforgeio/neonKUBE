@@ -298,7 +298,13 @@ Building the cadence-proxy Golang executables is part of the neonKUBE.sln build.
 
 ## Building the cadence-proxy for development on the cadence-proxy
 
-If you are developing the cadence-proxy Golang project, you might need to manage the cadence-proxy project dependencies themselves.  This requires a different method of building that utilizes a `Makefile` in the cadence-proxy project root (`$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy`).  The `Makefile` uses Golang's dependency management tool, dep, to install new project dependencies and update existing ones.  Running the `Makefile` will also run all test files in the cadence-proxy project.  It will also generate a Golang test executable in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test`, as well as test logs in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test/logs`.  To execute the `Makefile`, run the command:
+If you are developing the cadence-proxy Golang project, you might need to manage the cadence-proxy project dependencies themselves.  This requires a different method of building that utilizes a `Makefile` in the cadence-proxy project root (`$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy`).  The `Makefile` uses Golang's dependency management tool, dep, to install new project dependencies and update existing ones.  Because dep is used, you must have it installed in your `$GOPATH`.  To do this run the command:
+
+```
+go get -u github.com/golang/dep/cmd/dep
+```
+
+This will install or update the dep package in your machine's `$GOPATH`.  Running the `Makefile` will also run all test files in the cadence-proxy project.  It will also generate a Golang test executable in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test`, as well as test logs in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test/logs`.  To execute the `Makefile`, run the command:
 
 ```
 make
