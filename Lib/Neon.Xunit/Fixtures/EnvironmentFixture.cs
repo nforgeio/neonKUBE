@@ -59,29 +59,23 @@ namespace Neon.Xunit
     /// <threadsafety instance="true"/>
     public class EnvironmentFixture : TestFixture
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private object                              syncLock = new object();
-        private Dictionary<string, string>          orgEnvironment;
-        private Dictionary<string, TempFolder>      nameToTempFolder;
+        private object                      syncLock = new object();
+        private Dictionary<string, string>  orgEnvironment;
 
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
         public EnvironmentFixture()
         {
+            // Grab the environment variables before any tests run so we can
+            // restore the environment variable state after the tests complete.
+
             orgEnvironment = new Dictionary<string, string>();
 
             foreach (DictionaryEntry variable in Environment.GetEnvironmentVariables())
             {
                 orgEnvironment[(string)variable.Key] = (string)variable.Value;
             }
-
-            nameToTempFolder = new Dictionary<string, TempFolder>();
         }
 
         /// <summary>
@@ -114,7 +108,7 @@ namespace Neon.Xunit
         /// Restores the original environment variables captured at the time the
         /// fixture was instantiated and also removes any temporary test files.
         /// </summary>
-        public void Clear()
+        public void Restore()
         {
             lock (syncLock)
             {
@@ -125,21 +119,12 @@ namespace Neon.Xunit
                     Environment.SetEnvironmentVariable((string)variable.Key, null);
                 }
 
-                // Restore the original variables.
+                // ...and now restore the original variables.
 
                 foreach (var variable in orgEnvironment)
                 {
                     Environment.SetEnvironmentVariable(variable.Key, variable.Value);
                 }
-
-                // Remove all temporary files.
-
-                foreach (var folder in nameToTempFolder.Values)
-                {
-                    folder.Dispose();
-                }
-
-                nameToTempFolder.Clear();
             }
         }
     }
