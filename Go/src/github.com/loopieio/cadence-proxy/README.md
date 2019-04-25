@@ -158,7 +158,7 @@ The ProxyMessage class is inherited by all other message types and provides basi
 
 ```
 type ProxyMessage struct {
-    Type 		    int
+    Type 		    MessageType
     Properties      map[string]*string          
     Attachments		[][]byte
 }
@@ -173,7 +173,6 @@ The ProxyRequest class is inherited by all request messages. Its purpose is to a
 ```
 type ProxyRequest struct {
     *ProxyMessage
-    RequestId int64
 }
 ```
 
@@ -184,9 +183,6 @@ The ProxyReply class is inherited by all reply messages. Its purpose is to add t
 ```
 type ProxyReply struct {
     *ProxyMessage
-    RequestId       int64
-    ErrorType       string
-    ErrorMessage    string
 }
 ```
 
@@ -197,12 +193,10 @@ All Workflow related messages derive from either ProxyWorkflowRequest or ProxyWo
 ```
 type WorkflowProxyRequest struct {
     *ProxyRequest
-    ContextId int64
 }
 
 type WorkflowProxyReply struct {
     *ProxyReply
-    ContextId int64
 }
 ```
 
@@ -215,12 +209,10 @@ NOTE: In theory we could have shared a common implementation with the workflow r
 ```
 type ActivityProxyRequest struct {
     *ProxyRequest
-    ContextId int64
 }
 
 type ActivityProxyReply struct {
     *ProxyReply
-    ContextId int64
 }
 ```
 

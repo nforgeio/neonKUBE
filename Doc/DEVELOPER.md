@@ -81,7 +81,11 @@ Follow the steps below to configure a development or test workstation:
 
 10. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
 
-11: Install **go 1.12.4** or later for Windows from [here](https://golang.org/dl/)
+11. Install **go 1.12.4** or later for Windows from [here](https://golang.org/dl/)
+  * If you are planning on developing any of the Golang projects, you need Golang's dependency management tool [dep](https://github.com/golang/dep "dep GitHub").  To install dep, run in your console:
+  ```
+  go get -u github.com/golang/dep/cmd/dep
+  ```
 
 12. Install **Docker for Windows** from [here](https://store.docker.com/editions/community/docker-ce-desktop-windows)
 
