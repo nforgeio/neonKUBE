@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"strconv"
 	"time"
 
@@ -374,7 +375,7 @@ func (pm *ProxyMessage) GetDoubleProperty(key string) float64 {
 	if pm.Properties[key] != nil {
 		value, err := strconv.ParseFloat(*pm.Properties[key], 64)
 		if err != nil {
-			panic(err)
+			return math.NaN()
 		}
 
 		return value
