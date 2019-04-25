@@ -226,14 +226,13 @@ type ActivityProxyReply struct {
 
 ## Project Structure
 
-The cadence-proxy project follows the [golang-standard project layout](https://github.com/golang-standards/project-layout "Golang Standard Project-Layout GitHub").
+The cadence-proxy project follows the [golang-standard project layout](https://github.com/golang-standards/project-layout "Golang Standard Project-Layout GitHub"):
 ```
 cadence-proxy/
     bin/
         cadence-proxy.linux
         cadence-proxy.osx
         cadence-proxy.win.exe 
-    
     cmd/
         cadenceproxy/
             cadenceclient/
@@ -274,17 +273,14 @@ cadence-proxy/
                 instance.go
                 router.go
             main.go
-        
         test/
             cadence-proxy.test
             logs/
                 test.logs
-            
         vendor/
             */
             */
             */
-
         Gopkg.lock
         Gopkg.toml
         Makefile
@@ -298,16 +294,16 @@ The cadence-proxy is written in Golang and needs to be built into windows, linux
 
 ## Building the cadence-proxy for neonKUBE.sln Build
 
-Building the cadence-proxy Golang executables is part of the neonKUBE.sln build.  This happens in `$NF_ROOT/Go/build-cadence-proxy.ps1`, which is a powershell script that builds a cadence-proxy Golang executable for windows, linux, and OSX.  The [neonKUBE](https://github.com/nforgeio/neonKUBE "nforgeio/neonKUBE") repository includes source code for all Go dependencies necessary for building the cadence-proxy Golang executables, so there are no further steps required for compiling and building the executables.  These dependencies can be found in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/vendor`.  The `vendor` directory is generated automatically generated, along with `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/Gopkg.lock`, by the Golang tool [dep](https://github.com/golang/dep "dep GitHub").  Dep is the dependency management tool for Go and is the convention for managing dependencies in Golang projects.  Upon successful completion, the build script places the executables in `$NF_ROOT/Build` and they are titled `cadence-proxy.win.exe`, `cadence-proxy.linux`, and `cadence-proxy.osx`.
+Building the cadence-proxy Golang executables is part of the neonKUBE.sln build.  This happens in `$NF_ROOT/Go/build-cadence-proxy.ps1`, which is a powershell script that builds a cadence-proxy Golang executable for windows, linux, and OSX.  The [neonKUBE](https://github.com/nforgeio/neonKUBE "nforgeio/neonKUBE") repository includes source code for all Go dependencies necessary for building the cadence-proxy Golang executables, so there are no further steps required for compiling and building the executables.  These dependencies can be found in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/vendor`.  The `vendor` directory and `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/Gopkg.lock` are generated, by the Golang tool [dep](https://github.com/golang/dep "dep GitHub").  Dep is the dependency management tool for Go and is the convention for managing dependencies in Golang projects.  Upon successful completion of the build script, 3 executables, `cadence-proxy.win.exe`, `cadence-proxy.linux`, and `cadence-proxy.osx` are placed in `$NF_ROOT/Build`.
 
 ## Building the cadence-proxy for developing on the cadence-proxy
 
-If you are developing the cadence-proxy Golang project, you might need to manage the cadence-proxy project dependencies themselves.  This requires a different method of building that utilizes a `Makefile` in the cadence-proxy project root (`$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy`).  The `Makefile` uses Golang's dependency management tool, dep, to install new project dependencies, and update existing dependencies.  Running the `Makefile` will also run all test files in the cadence-proxy project, and they must pass for the build to complete.  It will also generate a Golang test executable in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test`, as well as test logs in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test/logs`.  To execute the `Makefile`, run the command:
+If you are developing the cadence-proxy Golang project, you might need to manage the cadence-proxy project dependencies themselves.  This requires a different method of building that utilizes a `Makefile` in the cadence-proxy project root (`$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy`).  The `Makefile` uses Golang's dependency management tool, dep, to install new project dependencies and update existing ones.  Running the `Makefile` will also run all test files in the cadence-proxy project.  It will also generate a Golang test executable in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test`, as well as test logs in `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/test/logs`.  To execute the `Makefile`, run the command:
 
 ```
 make
 ```
-in the cadence-proxy project root (`$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy`).  In order to run the `make` command, you must have a console that can run the command.  [Cmder](https://cmder.net/ "Cmder.net") is a good console emulator for windows that provides some nice extra console functionality (like `make`) not included in the windows Command Prompt.  Upon successful completion, the Golang executables will be placed into `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/bin`.  To run the windows executable, simply change directories from the cadence-proxy project root to `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/bin`, and run in the console:
+in the cadence-proxy project root (`$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy`).  In order to run `make`, you must have a console that can run the command.  [Cmder](https://cmder.net/ "Cmder.net") is a good console emulator for windows that provides some nice extra console functionality (like `make`) not included in the windows Command Prompt.  Upon successful completion, the Golang executables will be placed into `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/bin`.  To run the windows executable, simply change directories from the cadence-proxy project root to `$NF_ROOT/Go/src/github.com/loopieio/cadence-proxy/bin`, and run in the console:
 
 ```
 cadence-proxy.win.exe
@@ -316,10 +312,10 @@ The executable should run and the cadence-proxy server will start up.
 
 ### Steps Before Committing
 
-Before committing any work on the cadence-proxy, first you must build, test, and then clean up your mess: Goland executables, test files, log files, build files, etc.
+Before committing any work on the cadence-proxy, first you must build, test, and then clean up your mess: Golang executables, test files, log files, build files, etc.
 
 1. Run `make` in the cadence-proxy project root.  Make sure the tests pass and the executables are built.
-2. Once the tests pass and the executables are built and in `bin`, execute the executable for the OS you are working on to make sure that it works.
+2. Once the tests pass and the executables are built in `bin`, execute the OS specific executable.
 3. If you want to, you can run some sort of integration test to make sure that the server is working as it is supposed to.
 4. Shut down the server.
 5. Run `make clean` in the cadence-proxy project root.  This will remove test files, logs, build files, and the generated executables.
