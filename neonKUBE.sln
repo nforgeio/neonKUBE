@@ -214,8 +214,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cadence", "Lib\N
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Go", "Go", "{F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}"
 	ProjectSection(SolutionItems) = preProject
-		Go\build-proxy.ps1 = Go\build-proxy.ps1
-		Go\build-proxy.sh = Go\build-proxy.sh
+		Go\build-cadence-proxy.ps1 = Go\build-cadence-proxy.ps1
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoBuilder", "Go\GoBuilder\GoBuilder.csproj", "{C2071335-AFDF-4643-93A2-EAC482E90E73}"

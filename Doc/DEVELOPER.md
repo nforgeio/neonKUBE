@@ -132,7 +132,9 @@ Follow the steps below to configure a development or test workstation:
   * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-20. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+20. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
+
+21. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
   * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -142,7 +144,7 @@ Follow the steps below to configure a development or test workstation:
   
     ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-21. Install **OpenVPN**
+22. Install **OpenVPN**
 
    * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
    * Run this command as administrator in a CMD window to install a second TAP interface:
@@ -151,26 +153,26 @@ Follow the steps below to configure a development or test workstation:
 
    * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-22. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+23. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-23. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+24. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-24. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+25. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-25. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
+26. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
 
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Confgure this to run as administrator.
   * Run Cmdr and configure settings.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-26. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+27. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-27. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
+28. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
 
-28. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+29. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
 ## Git Branches
 

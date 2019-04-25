@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
-# FILE:         build-proxy.ps1
-# CONTRIBUTOR:  Jeff Lill
+# FILE:         build-cadence-proxy.ps1
+# CONTRIBUTOR:  John C Burnes
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
