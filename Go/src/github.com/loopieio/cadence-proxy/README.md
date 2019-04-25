@@ -74,13 +74,13 @@ A full encoded message will look like:
 |  PROPERTY-COUNT  |   32-bit
 +------------------+
 |  +------------+  |
-|  |  NAME-LEN  |  |   32-bit
+|  |   LENGTH   |  |   32-bit
 |  +------------+  |
-|  |   NAME     |  |
+|  |    NAME    |  |
 |  +------------+  |
-|  |  VALUE-LEN |  |   32-bit
+|  |   LENGTH   |  |   32-bit
 |  +------------+  |
-|  |   VALUE    |  |
+|  |    VALUE   |  |
 |  +------------+  |
 |       ...        |
 |                  |

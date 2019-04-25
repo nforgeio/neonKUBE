@@ -2,12 +2,19 @@ package endpoints
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+)
+
+const (
+
+	// ContentType is the content type to be used for HTTP requests
+	// encapsulationg a ProxyMessage
+	contentType = "application/x-neon-cadence-proxy"
 )
 
 // ProxyMessageHandler accepts a []byte as a payload
@@ -51,57 +58,73 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func EchoHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Body != nil {
-		var payload []byte
 
+	if r.Header.Get("Content-Type") != contentType {
 		defer r.Body.Close()
-		payload, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			log.Panicln("Error reading request body: ", err)
-		}
-
-		buf := bytes.NewBuffer(payload)
-		message, err := base.Deserialize(buf)
-		if err != nil {
-			buf := bytes.NewBufferString(err.Error())
-			resp, respErr := http.Post(r.RequestURI, "Text", buf)
-			if respErr != nil {
-				panic(respErr)
-			}
-			defer resp.Body.Close()
-
-			return
-		}
-
-		messageCopy := message.Clone()
-
-		var serializedMessageCopy []byte
-		v, ok := messageCopy.(*base.ProxyMessage)
-		if ok {
-			serializedMessageCopy, err = v.Serialize()
-			if err != nil {
-				buf := bytes.NewBufferString(err.Error())
-				resp, respErr := http.Post(r.RequestURI, "Text", buf)
-				if respErr != nil {
-					panic(respErr)
-				}
-				defer resp.Body.Close()
-
-				return
-			}
-
-			buf := bytes.NewBuffer(serializedMessageCopy)
-			resp, err := http.Post(r.RequestURI, base.ContentType, buf)
-			if err != nil {
-				panic(err)
-			}
-			defer resp.Body.Close()
-
-		}
-	} else {
-		buf := bytes.NewBufferString("Request body is empty")
-		w.Write(buf.Bytes())
+		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), contentType)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(errStr))
+		return
 	}
+
+	if r.Body == nil {
+		defer r.Body.Close()
+		errStr := "Cannot parse null request body"
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(errStr))
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		defer r.Body.Close()
+		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPost)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(errStr))
+		return
+	}
+
+	defer r.Body.Close()
+
+	var payload []byte
+	payload, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		panic(err)
+	}
+
+	buf := bytes.NewBuffer(payload)
+	message, err := base.Deserialize(buf)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		panic(err)
+	}
+
+	messageCopy := message.Clone()
+	proxyMessage := messageCopy.GetProxyMessage()
+
+	var serializedMessageCopy []byte
+	serializedMessageCopy, err = proxyMessage.Serialize()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		panic(err)
+	}
+
+	buf = bytes.NewBuffer(serializedMessageCopy)
+	req, err := http.NewRequest(http.MethodPost, r.RequestURI, buf)
+	if err != nil {
+		panic(err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
 }
 
 // ConfigureCadenceClientHelper takes an ProxyMessage and

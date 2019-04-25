@@ -45,7 +45,7 @@ func NewInitializeRequest() *InitializeRequest {
 // returns *string -> a pointer to a string in memory that holds the value
 // of an InitializeRequest's LibraryAddress
 func (request *InitializeRequest) GetLibraryAddress() *string {
-	return request.GetStringProperty(base.LibraryAddressKey)
+	return request.GetStringProperty("LibraryAddress")
 }
 
 // SetLibraryAddress sets the LibraryAddress property in an INitializeRequest's
@@ -54,7 +54,7 @@ func (request *InitializeRequest) GetLibraryAddress() *string {
 // param value *string -> a pointer to a string that holds the LibraryAddress value
 // to set in the request's properties map
 func (request *InitializeRequest) SetLibraryAddress(value *string) {
-	request.SetStringProperty(base.LibraryAddressKey, value)
+	request.SetStringProperty("LibraryAddress", value)
 }
 
 // GetLibraryPort gets the LibraryPort property from an InitializeRequest
@@ -63,7 +63,7 @@ func (request *InitializeRequest) SetLibraryAddress(value *string) {
 // returns *string -> a pointer to a string in memory that holds the value
 // of an InitializeRequest's LibraryPort
 func (request *InitializeRequest) GetLibraryPort() *string {
-	return request.GetStringProperty(base.LibraryPortKey)
+	return request.GetStringProperty("LibraryPort")
 }
 
 // SetLibraryPort sets the LibraryPort property in an INitializeRequest's
@@ -72,7 +72,7 @@ func (request *InitializeRequest) GetLibraryPort() *string {
 // param value *string -> a pointer to a string that holds the LibraryPort value
 // to set in the request's properties map
 func (request *InitializeRequest) SetLibraryPort(value *string) {
-	request.SetStringProperty(base.LibraryPortKey, value)
+	request.SetStringProperty("LibraryPort", value)
 }
 
 // -------------------------------------------------------------------------
@@ -93,7 +93,6 @@ func (request *InitializeRequest) CopyTo(target base.IProxyMessage) {
 	if ok {
 		v.SetLibraryAddress(request.GetLibraryAddress())
 		v.SetLibraryPort(request.GetLibraryPort())
-		v.SetProxyRequest(request.ProxyRequest)
 	}
 }
 
@@ -119,12 +118,18 @@ func (request *InitializeRequest) String() string {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetProxyRequest inherits docs from ProxyRequest.GetProxyRequest()
-func (request *InitializeRequest) GetProxyRequest() *base.ProxyRequest {
-	return request.ProxyRequest
+// GetRequestID gets a request id from a ProxyMessage's properties
+//
+// returns int64 -> long as a ProxyRequest's request id from the properties map
+func (request *InitializeRequest) GetRequestID() int64 {
+	return request.GetLongProperty("RequestId")
 }
 
-// SetProxyRequest inherits docs from ProxyRequest.SetProxyRequest()
-func (request *InitializeRequest) SetProxyRequest(value *base.ProxyRequest) {
-	*request.ProxyRequest = *value
+// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
+// properties
+//
+// param value int64 -> the long representation of a ProxyRequest's
+// request id to be set in the properties map
+func (request *InitializeRequest) SetRequestID(value int64) {
+	request.SetLongProperty("RequestId", value)
 }

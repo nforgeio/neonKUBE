@@ -29,12 +29,12 @@ const (
 
 func (t CadenceErrorTypes) String() string {
 	return [...]string{
-		"None",
-		"Cancelled",
-		"Custom",
-		"Generic",
-		"Panic",
-		"Terminated",
-		"Timeout",
+		"none",
+		"cancelled",
+		"custom",
+		"generic",
+		"panic",
+		"terminated",
+		"timeout",
 	}[t]
 }
