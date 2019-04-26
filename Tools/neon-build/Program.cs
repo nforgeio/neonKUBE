@@ -68,8 +68,8 @@ older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path the (uncompressed) source file.
-    TARGET          - path the (compressed) target file.
+    SOURCE          - path to the (uncompressed) source file.
+    TARGET          - path to the (compressed) target file.
 
 neon-build copy SOURCE TARGET
 -----------------------------
@@ -77,8 +77,8 @@ Copies a file if the target doesn't exist or is older than the source.
 
 ARGUMENTS:
 
-    SOURCE          - path the (uncompressed) source file.
-    TARGET          - path the (compressed) target file.
+    SOURCE          - path to the (uncompressed) source file.
+    TARGET          - path to the (compressed) target file.
 
 ";
         private static CommandLine commandLine;
@@ -134,12 +134,18 @@ ARGUMENTS:
 
                         foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "bin", SearchOption.AllDirectories))
                         {
-                            NeonHelper.DeleteFolder(folder);
+                            if (Directory.Exists(folder))
+                            {
+                                NeonHelper.DeleteFolder(folder);
+                            }
                         }
 
                         foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "obj", SearchOption.AllDirectories))
                         {
-                            NeonHelper.DeleteFolder(folder);
+                            if (Directory.Exists(folder))
+                            {
+                                NeonHelper.DeleteFolder(folder);
+                            }
                         }
 
                         break;
