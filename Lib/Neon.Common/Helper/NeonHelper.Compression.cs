@@ -138,38 +138,6 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Uses deflate to compress a source to a target stream.
-        /// </summary>
-        /// <param name="source">The source stream.</param>
-        /// <param name="target">The target stream.</param>
-        public static void DeflateTo(Stream source, Stream target)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
-
-            using (var compressor = new DeflateStream(source, CompressionMode.Compress))
-            {
-                compressor.CopyTo(target);
-            }
-        }
-
-        /// <summary>
-        /// Uses deflate to decompress a source to a target stream.
-        /// </summary>
-        /// <param name="source">The source stream.</param>
-        /// <param name="target">The target stream.</param>
-        public static void InflateTo(Stream source, Stream target)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
-
-            using (var decompressor = new DeflateStream(source, CompressionMode.Decompress))
-            {
-                decompressor.CopyTo(target);
-            }
-        }
-
-        /// <summary>
         /// Examines a file to determine whether it has been compressed via GZIP.
         /// </summary>
         /// <param name="path">The file path.</param>
@@ -316,38 +284,6 @@ namespace Neon.Common
 
                     return msUncompressed.ToArray();
                 }
-            }
-        }
-
-        /// <summary>
-        /// Uses GZIP to compress a source to a target stream.
-        /// </summary>
-        /// <param name="source">The source stream.</param>
-        /// <param name="target">The target stream.</param>
-        public static void GzipTo(Stream source, Stream target)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
-
-            using (var compressor = new GZipStream(source, CompressionLevel.Optimal))
-            {
-                compressor.CopyTo(target);
-            }
-        }
-
-        /// <summary>
-        /// Uses GZIP to decompress a source to a target stream.
-        /// </summary>
-        /// <param name="source">The source stream.</param>
-        /// <param name="target">The target stream.</param>
-        public static void GunzipTo(Stream source, Stream target)
-        {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
-
-            using (var decompressor = new GZipStream(source, CompressionMode.Decompress))
-            {
-                decompressor.CopyTo(target);
             }
         }
     }
