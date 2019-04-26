@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/endpoints"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/connect"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
@@ -28,7 +29,9 @@ func main() {
 		hostPort = arg
 	}
 
-	// create the instance and start the server
+	// create the instance, set the routes,
+	// and start the server
 	instance := server.NewInstance(hostPort)
+	endpoints.SetupRoutes(instance.Router)
 	instance.Start()
 }

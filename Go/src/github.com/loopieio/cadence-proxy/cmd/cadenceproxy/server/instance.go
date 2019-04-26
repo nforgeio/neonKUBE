@@ -6,15 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/endpoints"
 	"go.uber.org/zap"
-)
-
-const (
-	_version    = "/v1"
-	_rootPath   = "/cadence-proxy"
-	_pathPrefix = "/api" + _version + _rootPath
 )
 
 // Instance is a server instance that contains
@@ -48,7 +40,6 @@ func NewInstance(addr string) *Instance {
 }
 
 // Start sets a zap.Logger for a server Instance
-// Configures the Router's routes,
 // ListenAndServers on the configured server address,
 // and provides functionality for a clean shutdown if the server
 // shuts down unexpectedly
@@ -62,9 +53,6 @@ func (s *Instance) Start() {
 	}
 	logger.Info("Logger created.")
 	s.Logger = logger
-
-	// set the routes for the Instance.Router
-	s.setupRoutes()
 
 	// listen and serve (for your country)
 	err = s.httpServer.ListenAndServe()
@@ -91,33 +79,4 @@ func (s *Instance) Shutdown() {
 			s.httpServer = nil
 		}
 	}
-}
-
-// SetupRoutes sets up the chi middleware
-// and the route tree
-func (s *Instance) setupRoutes() {
-
-	// Group the 2 endpoint routes together to utilize
-	// same middleware stack
-	s.Router.Group(func(router chi.Router) {
-
-		// Set middleware for the chi.Router to use:
-		// RequestID
-		// Logger
-		// Recoverer
-		router.Use(middleware.RequestID)
-		router.Use(middleware.Logger)
-		router.Use(middleware.Recoverer)
-
-		// Set the route for the chi.Router to pathPrefix
-		router.Route(_pathPrefix, func(router chi.Router) {
-
-			// cadence-proxy endpoints
-			router.Put("/", endpoints.ProxyMessageHandler)
-			router.Put("/echo", endpoints.EchoHandler)
-
-			// endpoints for test paths
-			router.Mount("/test", endpoints.TestRouter())
-		})
-	})
 }
