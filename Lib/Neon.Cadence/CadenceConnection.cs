@@ -161,9 +161,12 @@ namespace Neon.Cadence
             // Launch the proxy with a console window when we're running in DEBUG
             // mode on Windows.  We'll ignore this for the other platforms.
 
+            var debugOption = settings.Debug ? " --debug" : string.Empty;
+            var commandLine = $"--listen {endpoint.Address}:{endpoint.Port} --log-level {settings.LogLevel}{debugOption}";
+
             if (NeonHelper.IsWindows)
             {
-                var startInfo = new ProcessStartInfo(binaryPath, $"{endpoint.Address}:{endpoint.Port}")
+                var startInfo = new ProcessStartInfo(binaryPath, commandLine)
                 {
                     UseShellExecute = settings.Debug,
                 };
@@ -172,7 +175,7 @@ namespace Neon.Cadence
             }
             else
             {
-                return Process.Start(binaryPath, $"{endpoint.Address}:{endpoint.Port}");
+                return Process.Start(binaryPath, commandLine);
             }
         }
 
