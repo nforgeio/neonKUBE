@@ -934,7 +934,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="input">The input string or <c>null</c>.</param>
         /// <returns>The compressed bytes or <c>null</c>.</returns>
-        public static byte[] CompressString(string input)
+        public static byte[] DeflateString(string input)
         {
             if (input == null)
             {
@@ -957,7 +957,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="bytes">The compressed bytes or <c>null</c>.</param>
         /// <returns>The decompressed string or <c>null</c>.</returns>
-        public static string DecompressString(byte[] bytes)
+        public static string InflateString(byte[] bytes)
         {
             if (bytes == null)
             {
@@ -983,7 +983,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="bytes">The input byte array or <c>null</c>.</param>
         /// <returns>The compressed bytes or <c>null</c>.</returns>
-        public static byte[] CompressBytes(byte[] bytes)
+        public static byte[] DeflateBytes(byte[] bytes)
         {
             if (bytes == null)
             {
@@ -1006,7 +1006,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="bytes">The compressed bytes or <c>null</c>.</param>
         /// <returns>The decompressed string or <c>null</c>.</returns>
-        public static byte[] DecompressBytes(byte[] bytes)
+        public static byte[] InflateBytes(byte[] bytes)
         {
             if (bytes == null)
             {
@@ -1018,6 +1018,156 @@ namespace Neon.Common
                 using (var msEncrypted = new MemoryStream(bytes))
                 {
                     using (var deflater = new DeflateStream(msEncrypted, CompressionMode.Decompress))
+                    {
+                        deflater.CopyTo(msDecrypted);
+                    }
+
+                    return msDecrypted.ToArray();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Examines a file to determine whether it has been compressed via GZIP.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <returns><c>true</c> if the file is compressed via GZIP.</returns>
+        public static bool IsGzipped(string path)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                return IsGzipped(stream);
+            }
+        }
+
+        /// <summary>
+        /// Examines a <see cref="Stream"/> to determine whether it has been compressed via GZIP.
+        /// This assumes that the current position points to the GZIP header if there is one.
+        /// The stream position will be restored before returning.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <returns><c>true</c> if the file is compressed via GZIP.</returns>
+        public static bool IsGzipped(Stream stream)
+        {
+            Covenant.Requires<ArgumentNullException>(stream != null);
+
+            // GZIP files begin with the two byte magic number:
+            //
+            //      0x1f 0x8b
+
+            var orgPos = stream.Position;
+
+            try
+            {
+                if (stream.Length - stream.Position < 2)
+                {
+                    return false;
+                }
+
+                if (stream.ReadByte() != 0x1f)
+                {
+                    return false;
+                }
+
+                return stream.ReadByte() == 0x8b;
+            }
+            finally
+            {
+                stream.Position = orgPos;
+            }
+        }
+
+        /// <summary>
+        /// Uses GZIP to commpress a string.
+        /// </summary>
+        /// <param name="input">The input string or <c>null</c>.</param>
+        /// <returns>The compressed bytes or <c>null</c>.</returns>
+        public static byte[] GzipString(string input)
+        {
+            if (input == null)
+            {
+                return null;
+            }
+
+            using (var msEncrypted = new MemoryStream())
+            {
+                using (var deflater = new GZipStream(msEncrypted, CompressionLevel.Optimal))
+                {
+                    deflater.Write(Encoding.UTF8.GetBytes(input));
+                }
+
+                return msEncrypted.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Uses GZIP to decompress a string from compressed bytes.
+        /// </summary>
+        /// <param name="bytes">The compressed bytes or <c>null</c>.</param>
+        /// <returns>The decompressed string or <c>null</c>.</returns>
+        public static string GunzipString(byte[] bytes)
+        {
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            using (var msDecrypted = new MemoryStream())
+            {
+                using (var msEncrypted = new MemoryStream(bytes))
+                {
+                    using (var deflater = new GZipStream(msEncrypted, CompressionMode.Decompress))
+                    {
+                        deflater.CopyTo(msDecrypted);
+                    }
+
+                    return Encoding.UTF8.GetString(msDecrypted.ToArray());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Uses GZIP to commpress a byte array.
+        /// </summary>
+        /// <param name="bytes">The input byte array or <c>null</c>.</param>
+        /// <returns>The compressed bytes or <c>null</c>.</returns>
+        public static byte[] GzipBytes(byte[] bytes)
+        {
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            using (var msEncrypted = new MemoryStream())
+            {
+                using (var deflater = new GZipStream(msEncrypted, CompressionLevel.Optimal))
+                {
+                    deflater.Write(bytes);
+                }
+
+                return msEncrypted.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Uses GZIP to decompress a byte array from compressed bytes.
+        /// </summary>
+        /// <param name="bytes">The compressed bytes or <c>null</c>.</param>
+        /// <returns>The decompressed string or <c>null</c>.</returns>
+        public static byte[] GunzipBytes(byte[] bytes)
+        {
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            using (var msDecrypted = new MemoryStream())
+            {
+                using (var msEncrypted = new MemoryStream(bytes))
+                {
+                    using (var deflater = new GZipStream(msEncrypted, CompressionMode.Decompress))
                     {
                         deflater.CopyTo(msDecrypted);
                     }

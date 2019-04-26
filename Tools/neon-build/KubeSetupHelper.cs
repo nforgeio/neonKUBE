@@ -23,7 +23,6 @@ using System.Net.Http;
 using System.Text;
 
 using Neon.Common;
-using Neon.HyperV;
 using Neon.Windows;
 
 using Renci.SshNet;
