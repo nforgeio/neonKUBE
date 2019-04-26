@@ -49,7 +49,7 @@ namespace Neon.Common
         public string ErrorText { get; internal set; }
 
         /// <summary>
-        /// Returns trhe captured standard output and error stream text from the process.
+        /// Returns the captured standard output and error stream text from the process.
         /// </summary>
         public string AllText
         {

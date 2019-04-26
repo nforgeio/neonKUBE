@@ -18,18 +18,7 @@
 # This script builds the Cadence Proxy GOLANG executables and writes
 # them to $NF_BUILD.
 #
-# USAGE: powershell -file build-cadence.ps1 [CONFIGURATION]
-#
-# ARGUMENTS:
-#
-#       -buildConfig Debug  - Optionally specifies the build configuration,
-#                             either "Debug" or "Release".  This defaults
-#                             to "Debug".
-
-param 
-(
-    [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
-)
+# USAGE: powershell -file build-cadence.ps1
 
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
@@ -89,28 +78,12 @@ if ($exitCode -ne 0)
     exit $exitCode
 }
 
-# Compress the binaries for RELEASE builds only to make DEBUG builds faster.
-
-# $hack(jeff.lill):
-#
-# Note that for DEBUG builds, we're just going to copy the files without
-# compressing them.  This is a bit confusing because the file extension
-# will still be ".gz", but the [Neon.Cadence] assembly is the only consumer
-# for these files and it's smart enough to read the header to distingush
-# between compressed and uncompressed files.
-
-if ($buildConfig -eq "Release")
-{
-    neon-build gzip $buildPath\cadence-proxy.linux $buildPath\cadence-proxy.linux.gz
-    neon-build gzip $buildPath\cadence-proxy.osx $buildPath\cadence-proxy.osx.gz
-    neon-build gzip $buildPath\cadence-proxy.win.exe $buildPath\cadence-proxy.win.exe.gz
-}
-else
-{
-    neon-build copy $buildPath\cadence-proxy.linux $buildPath\cadence-proxy.linux.gz
-    neon-build copy $buildPath\cadence-proxy.osx $buildPath\cadence-proxy.osx.gz
-    neon-build copy $buildPath\cadence-proxy.win.exe $buildPath\cadence-proxy.win.exe.gz
-}
+# Compress the binaries to the [Neon.Cadence] project where they'll
+# be embedded as binary resources.
+$neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence\Resources"
+neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"
+neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"
+neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz"
 
 # Go back to the original directory
 Set-Location $orgDirectory

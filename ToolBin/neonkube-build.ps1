@@ -36,10 +36,11 @@ param
 	[switch]$installer = $false
 )
 
-$msbuild   = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot    = "$env:NF_ROOT"
-$nfBuild   = "$env:NF_BUILD"
-$env:PATH += ";$nfBuild"
+$msbuild    = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot     = "$env:NF_ROOT"
+$nfBuild    = "$env:NF_BUILD"
+$nfSolution = "$nfRoot\neonKUBE.sln"
+$env:PATH  += ";$nfBuild"
 
 if (-not $debug -and -not $release)
 {
@@ -102,9 +103,12 @@ cd $nfRoot
 
 if (-not $nobuild)
 {
-    # Clear the NF_BUILD folder:
+    # Clear the NF_BUILD folder and delete any [bin] or [obj] folders
+    # to be really sure we're doing a clean build.  I've run into 
+    # situations where I've upgraded SDKs or Visual Studio and Files
+    # left over from previous builds caused build trouble.
 
-    & rm -r "$nfBuild/*"
+    & neon-build clean "$nfRoot"
 
     # Clean and build the solution.
 
@@ -114,7 +118,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" $buildConfig "-t:Clean"
+    & "$msbuild" "$nfSolution" $buildConfig "-t:Clean"
 
     if (-not $?)
     {
@@ -124,21 +128,6 @@ if (-not $nobuild)
         exit 1
     }
 
-    ""
-    "**********************************************************"
-    "***                  RESTORE PACKAGES                  ***"
-    "**********************************************************"
-    ""
-
-    & "$msbuild" /restore
-
-    if (-not $?)
-    {
-        ""
-        "*** RESTORE FAILED ***"
-        ""
-        exit 1
-    }
 
     ""
     "**********************************************************"
@@ -146,7 +135,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" $buildConfig "-t:Compile"
+    & "$msbuild" "$nfSolution" $buildConfig -restore "-t:Compile"
 
     if (-not $?)
     {
@@ -159,9 +148,8 @@ if (-not $nobuild)
 
 # Publish the .NET Core binaries.
 
-PublishCore "Tools\neon-cli\neon-cli.csproj"        "neon"
-PublishCore "Tools\neon-build\neon-build.csproj"    "neon-build"
-PublishCore "Tools\unix-text\unix-text.csproj"      "unix-text"
+PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
+PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
 
 if ($installer)
 {

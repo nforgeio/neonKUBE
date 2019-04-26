@@ -80,10 +80,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Couchbase", "Lib\Neon.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3D01B-F890-4F0A-88F1-5F87E5D1F198}"
 	ProjectSection(SolutionItems) = preProject
+		ToolBin\neon-build.cmd = ToolBin\neon-build.cmd
 		ToolBin\neonkube-build.cmd = ToolBin\neonkube-build.cmd
 		ToolBin\neonkube-build.ps1 = ToolBin\neonkube-build.ps1
 		ToolBin\nuget-neonforge-local.ps1 = ToolBin\nuget-neonforge-local.ps1
 		ToolBin\nuget-neonforge-public.ps1 = ToolBin\nuget-neonforge-public.ps1
+		ToolBin\text.cmd = ToolBin\text.cmd
+		ToolBin\unix-text.cmd = ToolBin\unix-text.cmd
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core-layers", "Tools\core-layers\core-layers.csproj", "{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}"

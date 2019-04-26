@@ -39,8 +39,8 @@ namespace TestCadence
 {
     public class Test_Messages : IClassFixture<CadenceFixture>
     {
-        CadenceFixture      fixture;
-        CadenceConnection   connection;
+        CadenceFixture fixture;
+        CadenceConnection connection;
 
         public Test_Messages(CadenceFixture fixture)
         {
@@ -51,7 +51,7 @@ namespace TestCadence
 
             fixture.Start(settings);
 
-            this.fixture    = fixture;
+            this.fixture = fixture;
             this.connection = fixture.Connection;
         }
 
@@ -162,6 +162,22 @@ namespace TestCadence
 
             message.SetTimeSpanProperty("foo", TimeSpan.FromSeconds(123));
             Assert.Equal(TimeSpan.FromSeconds(123), message.GetTimeSpanProperty("foo"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void ProxyLaunch()
+        {
+            // Verify that [CadenceConnection] can launch and then close a [cadence-proxy] instance.
+
+            var settings = new CadenceSettings()
+            {
+                Debug = true
+            };
+
+            using (var connection = new CadenceConnection(settings))
+            {
+            }
         }
 
         [Fact]
