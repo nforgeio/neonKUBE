@@ -18,10 +18,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,6 +38,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Net;
 
 namespace Neon.Cadence
 {
@@ -65,12 +68,115 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static INeonLogger log = LogManager.Default.GetLogger<CadenceConnection>();
+        private static object       staticSyncLock = new object();
+        private static Assembly     thisAssembly   = Assembly.GetExecutingAssembly();
+        private static INeonLogger  log            = LogManager.Default.GetLogger<CadenceConnection>();
+        private static string       proxyPath;
+
+        /// <summary>
+        /// Writes the correct <b>cadence-proxy</b> binary for the current environment
+        /// to the file system (if that hasn't been done already) and then launches 
+        /// a proxy instance configured to listen at the specified endpoint.
+        /// </summary>
+        /// <param name="endpoint">The network endpoint where the proxy will listen.</param>
+        /// <param name="settings">The cadence connection settings.</param>
+        /// <returns>The proxy <see cref="Process"/>.</returns>
+        /// <remarks>
+        /// By default, this class will write the binary to the same directory where
+        /// this assembly resides.  This should work for most circumstances.  On the
+        /// odd change that the current application doesn't have write access to this
+        /// directory, you may specify an alternative via <paramref name="settings"/>.
+        /// </remarks>
+        private static Process StartProxy(IPEndPoint endpoint, CadenceSettings settings)
+        {
+            Covenant.Requires<ArgumentNullException>(endpoint != null);
+            Covenant.Requires<ArgumentNullException>(settings != null);
+
+            var binaryFolder = settings.BinaryFolder;
+
+            if (binaryFolder == null)
+            {
+                binaryFolder = NeonHelper.GetAssemblyFolder(thisAssembly);
+            }
+
+            string resourcePath;
+            string binaryPath;
+
+            if (NeonHelper.IsWindows)
+            {
+                resourcePath = "Neon.Cadence.Resources.cadence-proxy.win.exe.gz";
+                binaryPath   = Path.Combine(binaryFolder, "cadence-proxy.exe");
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                resourcePath = "Neon.Cadence.Resources.cadence-proxy.osx.gz";
+                binaryPath   = Path.Combine(binaryFolder, "cadence-proxy");
+            }
+            else if (NeonHelper.IsLinux)
+            {
+                resourcePath = "Neon.Cadence.Resources.cadence-proxy.linux.gz";
+                binaryPath   = Path.Combine(binaryFolder, "cadence-proxy");
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            lock (staticSyncLock)
+            {
+                if (!File.Exists(binaryPath))
+                {
+                    // Extract and decompress the correct [cadence-proxy].
+
+                    using (var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath))
+                    {
+                        using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            NeonHelper.GzipTo(resourceStream, binaryStream);
+                        }
+                    }
+
+                    if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+                    {
+                        // We need to set the execute permissions on this file.  We're
+                        // going to assume that only the root and current user will
+                        // need to execute this.
+
+                        var result = NeonHelper.ExecuteCapture("chmod", new object[] { "774", binaryPath });
+
+                        if (result.ExitCode != 0)
+                        {
+                            throw new IOException($"Cannot set execute permissions for [{binaryPath}]:\r\n{result.ErrorText}");
+                        }
+                    }
+                }
+            }
+
+            // Launch the proxy with a console window when we're running in DEBUG
+            // mode on Windows.  We'll ignore this for the other platforms.
+
+            if (NeonHelper.IsWindows)
+            {
+                var startInfo = new ProcessStartInfo(binaryPath, $"{endpoint.Address}:{endpoint.Port}")
+                {
+                    CreateNoWindow = !settings.Debug,
+                };
+
+                return Process.Start(startInfo);
+            }
+            else
+            {
+                return Process.Start(binaryPath, $"{endpoint.Address}:{endpoint.Port}");
+            }
+        }
 
         //---------------------------------------------------------------------
         // Instance members
 
         private IWebHost    webHost;
+        private IPAddress   proxyAddress = IPAddress.Parse("127.0.0.2");    // Using a non-standard loopback to avoid port conflicts
+        private int         proxyPort;
+        private Process     proxyProcess;
 
         /// <summary>
         /// Constructor.
@@ -89,7 +195,7 @@ namespace Neon.Cadence
                 .UseKestrel(
                     options =>
                     {
-                        options.Listen(IPAddress.Loopback, settings.ListenPort);
+                        options.Listen(proxyAddress, settings.ListenPort);
                     })
                 .ConfigureServices(
                     services =>
@@ -103,6 +209,12 @@ namespace Neon.Cadence
             webHost.Start();
 
             ListenUri = new Uri(webHost.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
+
+            // Determine the port we'll have [cadence-proxy] listen on and then
+            // fire up the proxy process.
+
+            proxyPort    = NetHelper.GetUnusedTcpPort(proxyAddress);
+            proxyProcess = StartProxy(new IPEndPoint(proxyAddress, proxyPort), settings);
         }
 
         /// <summary>
@@ -129,6 +241,13 @@ namespace Neon.Cadence
             {
                 webHost.Dispose();
                 webHost = null;
+            }
+
+            if (proxyProcess != null)
+            {
+                proxyProcess.Kill();
+                proxyProcess.WaitForExit();
+                proxyProcess = null;
             }
 
             if (disposing)

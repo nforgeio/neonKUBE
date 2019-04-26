@@ -42,7 +42,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Specifies rhe connection mode.  User applications should use
+        /// Specifies the connection mode.  User applications should use
         /// the default: <see cref="ConnectionMode.Normal"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -65,10 +65,35 @@ namespace Neon.Cadence
         public List<Uri> Servers { get; set; } = new List<Uri>();
 
         /// <summary>
-        /// The port where the client will listen for traffic from the associated Cadency Proxy.
-        /// This default to 0 which specifies that we'll let the operating system choose an
-        /// unused ephermal port.
+        /// Optionally specifies the port where the client will listen for traffic from the 
+        /// associated Cadency Proxy.  This defaults to 0 which specifies that lets the 
+        /// operating system choose an unused ephermal port.
         /// </summary>
-        public int ListenPort { get; set; }
+        [JsonProperty(PropertyName = "ListenPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "listenPort", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int ListenPort { get; set; } = 0;
+
+        /// <summary>
+        /// Optionally specifies that the connection should run in DEBUG mode.  This currently
+        /// launches the <b>cadence-proxy</b> with a command window (on Windows only)  to make 
+        /// it easy to see any output it generates.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Debug", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Debug { get; set; } = false;
+
+        /// <summary>
+        /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
+        /// will be written before starting it.  This defaults to <c>null</c> which specifies
+        /// that the binary will be written to the same folder where the <b>Neon.Cadence</b>
+        /// assembly resides.  This folder may not be writable by the current user so this
+        /// allows you to specify an alternative folder.
+        /// </summary>
+        [JsonProperty(PropertyName = "BinaryFolder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "binaryFolder", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string BinaryFolder { get; set; } = null;
     }
 }

@@ -119,7 +119,7 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
-                StartAsComposed(name, image,
+                base.StartAsComposed(name, image,
                     new string[]
                     {
                         "--detach",
