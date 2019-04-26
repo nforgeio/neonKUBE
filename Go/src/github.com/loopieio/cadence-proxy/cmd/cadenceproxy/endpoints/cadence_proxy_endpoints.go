@@ -64,27 +64,24 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != contentType {
 		defer r.Body.Close()
 		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), contentType)
-		w.Header().Set("Content-Type", "Text")
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(errStr))
+		w.Write([]byte(errStr + ".  "))
 		return
 	}
 
 	if r.Body == nil {
 		defer r.Body.Close()
 		errStr := "Cannot parse null request body"
-		w.Header().Set("Content-Type", "Text")
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(errStr))
+		w.Write([]byte(errStr + ".  "))
 		return
 	}
 
 	if r.Method != http.MethodPost {
 		defer r.Body.Close()
 		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPost)
-		w.Header().Set("Content-Type", "Text")
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(errStr))
+		w.Write([]byte(errStr + ".  "))
 		return
 	}
 
@@ -93,18 +90,16 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	var payload []byte
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.Header().Set("Content-Type", "Text")
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(err.Error() + ".  "))
 		panic(err)
 	}
 
 	buf := bytes.NewBuffer(payload)
 	message, err := base.Deserialize(buf)
 	if err != nil {
-		w.Header().Set("Content-Type", "Text")
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(err.Error() + ".  "))
 		panic(err)
 	}
 
@@ -114,9 +109,8 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	var serializedMessageCopy []byte
 	serializedMessageCopy, err = proxyMessage.Serialize()
 	if err != nil {
-		w.Header().Set("Content-Type", "Text")
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(err.Error() + ".  "))
 		panic(err)
 	}
 
@@ -124,17 +118,15 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	req, err := http.NewRequest(http.MethodPost, r.RequestURI, buf)
 	req.Header.Set("Content-Type", contentType)
 	if err != nil {
-		w.Header().Set("Content-Type", "Text")
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(err.Error() + ".  "))
 		panic(err)
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		w.Header().Set("Content-Type", "Text")
-		w.Write([]byte(err.Error()))
+		w.Write([]byte(err.Error() + ".  "))
 		panic(err)
 	}
 	defer resp.Body.Close()
