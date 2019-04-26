@@ -89,8 +89,17 @@ GeneratedEntities.cs
 GeneratedTypes.cs
 GeneratedUxTypes.cs
 
-##################
-### Go Project ###
-##################
+###################
+### Go Projects ###
+###################
 *.test
 Go/pkg/**
+
+####################
+### Neon.Cadence ###
+####################
+
+# These files are created during the build and will be embedded
+# into the [Neon.Cadence] assembly as resources.
+
+/Lib/Neon.Cadence/Resources/**
