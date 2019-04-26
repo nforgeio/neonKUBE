@@ -16,7 +16,20 @@
 # limitations under the License.
 #
 # This script builds the Cadence Proxy GOLANG executables and writes
-# them to $NF_BUILD.  No command line arguments are required.
+# them to $NF_BUILD.
+#
+# USAGE: powershell -file build-cadence.ps1 [CONFIGURATION]
+#
+# ARGUMENTS:
+#
+#       -buildConfig Debug  - Optionally specifies the build configuration,
+#                             either "Debug" or "Release".  This defaults
+#                             to "Debug".
+
+param 
+(
+    [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
+)
 
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
@@ -31,33 +44,73 @@ if (!(test-path $buildPath))
     New-Item -ItemType Directory -Force -Path $buildPath
 }
 
-# change to project path
+# Change to project path
 Set-Location $projectPath
 
-# build the windows binary
+# Build the WINDOWS binary
 $env:GOOS	= "windows"
 $env:GOARCH = "amd64"
 go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go
 
-# build the linux binary
+$exitCode = $lastExitCode
+
+if ($exitCode -ne 0)
+{
+    Write-Error "*** ERROR: Cadence Proxy WINDOWS build failed.  Check build logs: $logPath"
+    Set-Location $orgDirectory
+    exit $exitCode
+}
+
+# Build the LINUX binary
 $env:GOOS   = "linux"
 $env:GOARCH = "amd64"
 go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go
 
-# build the OSX binary
+$exitCode = $lastExitCode
+
+if ($exitCode -ne 0)
+{
+    Write-Error "*** ERROR: Cadence Proxy  LINUX build failed.  Check build logs: $logPath"
+    Set-Location $orgDirectory
+    exit $exitCode
+}
+
+# Build the OSX binary
 $env:GOOS   = "darwin"
 $env:GOARCH = "amd64"
 go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go
 
-# set exit code
 $exitCode = $lastExitCode
 
-# cd back to the original directory
-Set-Location $orgDirectory
-
-# catch any build errors and exit with exit code
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: Cadence Proxy build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR: Cadence Proxy OSX build failed.  Check build logs: $logPath"
+    Set-Location $orgDirectory
     exit $exitCode
 }
+
+# Compress the binaries for RELEASE builds only to make DEBUG builds faster.
+
+# $hack(jeff.lill):
+#
+# Note that for DEBUG builds, we're just going to copy the files without
+# compressing them.  This is a bit confusing because the file extension
+# will still be ".gz", but the [Neon.Cadence] assembly is the only consumer
+# for these files and it's smart enough to read the header to distingush
+# between compressed and uncompressed files.
+
+if ($buildConfig -eq "Release")
+{
+    neon-build gzip $buildPath\cadence-proxy.linux $buildPath\cadence-proxy.linux.gz
+    neon-build gzip $buildPath\cadence-proxy.osx $buildPath\cadence-proxy.osx.gz
+    neon-build gzip $buildPath\cadence-proxy.win.exe $buildPath\cadence-proxy.win.exe.gz
+}
+else
+{
+    neon-build copy $buildPath\cadence-proxy.linux $buildPath\cadence-proxy.linux.gz
+    neon-build copy $buildPath\cadence-proxy.osx $buildPath\cadence-proxy.osx.gz
+    neon-build copy $buildPath\cadence-proxy.win.exe $buildPath\cadence-proxy.win.exe.gz
+}
+
+# Go back to the original directory
+Set-Location $orgDirectory

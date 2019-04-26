@@ -16,6 +16,19 @@
 # limitations under the License.
 #
 # This script builds all GOLANG projects.
+#
+# USAGE: powershell -file build-all.ps1 [CONFIGURATION]
+#
+# ARGUMENTS:
+#
+#       -buildConfig Debug  - Optionally specifies the build configuration,
+#                             either "Debug" or "Release".  This defaults
+#                             to "Debug".
+
+param 
+(
+    [parameter(Mandatory=$false)][string] $buildConfig = "Debug"
+)
 
 $orgDirectory = Get-Location
 
@@ -23,6 +36,6 @@ $env:NF_GOROOT = "$env:NF_ROOT\Go"
 
 Set-Location $env:NF_GOROOT
 
-./build-cadence-proxy.ps1
+./build-cadence-proxy.ps1 -buildConfig $buildConfig
 
 Set-Location $orgDirectory
