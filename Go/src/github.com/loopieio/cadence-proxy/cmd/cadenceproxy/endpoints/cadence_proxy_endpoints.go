@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
@@ -69,17 +70,9 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Body == nil {
+	if r.Method != http.MethodPut {
 		defer r.Body.Close()
-		errStr := "Cannot parse null request body"
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(errStr + ".  "))
-		return
-	}
-
-	if r.Method != http.MethodPost {
-		defer r.Body.Close()
-		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPost)
+		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPut)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(errStr + ".  "))
 		return
@@ -115,7 +108,8 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	buf = bytes.NewBuffer(serializedMessageCopy)
-	req, err := http.NewRequest(http.MethodPost, r.RequestURI, buf)
+	req, err := http.NewRequest(http.MethodPut, r.RequestURI, buf)
+	log.Println(r.RequestURI)
 	req.Header.Set("Content-Type", contentType)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
