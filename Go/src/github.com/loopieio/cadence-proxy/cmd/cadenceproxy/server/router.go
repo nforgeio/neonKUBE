@@ -24,8 +24,8 @@ func (s *Instance) SetupRoutes() {
 		router.Route(PathPrefix, func(router chi.Router) {
 
 			// cadence-proxy endpoints
-			router.Post("/", endpoints.ProxyMessageHandler)
-			router.Post("/echo", endpoints.EchoHandler)
+			router.Put("/", endpoints.ProxyMessageHandler)
+			router.Put("/echo", endpoints.EchoHandler)
 
 			// endpoints for test paths
 			router.Mount("/test", endpoints.TestRouter())
