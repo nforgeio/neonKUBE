@@ -1,3 +1,2 @@
 @echo off
-    "%~dp0\unix-text\unix-text.exe" %*
-    
+"%~dp0\unix-text\unix-text.exe" %*
