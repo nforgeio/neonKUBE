@@ -51,10 +51,10 @@ func (s *Instance) Start() {
 	if err != nil {
 		panic(err)
 	}
-	logger.Info("Logger created.")
 	s.Logger = logger
 
 	// listen and serve (for your country)
+	logger.Info("Server listening:", zap.String("Address", s.httpServer.Addr))
 	err = s.httpServer.ListenAndServe()
 
 	// Clean shutdown is the server unexpectedly shuts down
