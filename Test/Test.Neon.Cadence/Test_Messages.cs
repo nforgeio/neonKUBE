@@ -46,7 +46,8 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Mode = ConnectionMode.ListenOnly
+                Mode  = ConnectionMode.ListenOnly,
+                Debug = true
             };
 
             fixture.Start(settings);
@@ -162,22 +163,6 @@ namespace TestCadence
 
             message.SetTimeSpanProperty("foo", TimeSpan.FromSeconds(123));
             Assert.Equal(TimeSpan.FromSeconds(123), message.GetTimeSpanProperty("foo"));
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void ProxyLaunch()
-        {
-            // Verify that [CadenceConnection] can launch and then close a [cadence-proxy] instance.
-
-            var settings = new CadenceSettings()
-            {
-                Debug = true
-            };
-
-            using (var connection = new CadenceConnection(settings))
-            {
-            }
         }
 
         [Fact]

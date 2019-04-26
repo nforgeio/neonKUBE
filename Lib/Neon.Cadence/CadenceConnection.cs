@@ -38,6 +38,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.IO;
 using Neon.Net;
 
 namespace Neon.Cadence
@@ -92,6 +93,11 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(endpoint != null);
             Covenant.Requires<ArgumentNullException>(settings != null);
 
+            if (!NeonHelper.Is64Bit)
+            {
+                throw new Exception("[Neon.Cadence] supports 64-bit applications only.  If you're running unit tests, be sure to set the test architecture to [x64].");
+            }
+
             var binaryFolder = settings.BinaryFolder;
 
             if (binaryFolder == null)
@@ -132,7 +138,7 @@ namespace Neon.Cadence
                     {
                         using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
                         {
-                            NeonHelper.GzipTo(resourceStream, binaryStream);
+                            resourceStream.GunzipTo(binaryStream);
                         }
                     }
 
@@ -159,7 +165,7 @@ namespace Neon.Cadence
             {
                 var startInfo = new ProcessStartInfo(binaryPath, $"{endpoint.Address}:{endpoint.Port}")
                 {
-                    CreateNoWindow = !settings.Debug,
+                    UseShellExecute = settings.Debug,
                 };
 
                 return Process.Start(startInfo);
