@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This script builds the Cadence Proxy GOLANG executables and writes
+# This script builds the [cadence-proxy] GOLANG executables and writes
 # them to $NF_BUILD.
 #
 # USAGE: powershell -file build-cadence.ps1
@@ -45,7 +45,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: Cadence Proxy WINDOWS build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }
@@ -59,7 +59,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: Cadence Proxy  LINUX build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }
@@ -73,7 +73,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: Cadence Proxy OSX build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }

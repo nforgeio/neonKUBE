@@ -43,7 +43,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// The base class for all messages transferred between the .NET Cadence client
-    /// and the Cadence proxy.
+    /// and the <b>cadence-proxy</b>.
     /// </summary>
     /// <remarks>
     /// <para>

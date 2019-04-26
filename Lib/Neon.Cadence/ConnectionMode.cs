@@ -35,7 +35,7 @@ namespace Neon.Cadence
     public enum ConnectionMode
     {
         /// <summary>
-        /// Connect to a Cadence cluster via the Cadence proxy.
+        /// Connect to a Cadence cluster via the <b>cadence-proxy</b>.
         /// </summary>
         Normal = 0,
 
