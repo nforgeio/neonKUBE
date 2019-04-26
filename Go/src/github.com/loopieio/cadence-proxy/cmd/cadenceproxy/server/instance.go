@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 const (
 	_version    = "/v1"
 	_rootPath   = "/cadence-proxy"
-	_pathPrefix = fmt.Sprintf("/api%s%s", _version, _rootPath)
+	_pathPrefix = "/api" + _version + _rootPath
 )
 
 // Instance is a server instance that contains
