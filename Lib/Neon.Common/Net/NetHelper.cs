@@ -791,6 +791,34 @@ namespace Neon.Net
                 throw new FormatException($"[{input}] is not a valid IPv4 endpoint.");
             }
         }
+
+        /// <summary>
+        /// Returns a free TCP port for a local IP address.
+        /// </summary>
+        /// <param name="address">The IP address.</param>
+        /// <returns>The free port number.</returns>
+        /// <exception cref="NetworkException">Thrown when there are no available ports.</exception>
+        public static int GetUnusedTcpPort(IPAddress address)
+        {
+            Covenant.Requires<ArgumentNullException>(address != null);
+
+            try
+            {
+                var listener = new TcpListener(address, 0);
+
+                listener.Start();
+
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+                listener.Stop();
+
+                return port;
+            }
+            catch (Exception e)
+            {
+                throw new NetworkException($"Cannot obtain a free port for [{address}].", e);
+            }
+        }
     }
 }
 
