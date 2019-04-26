@@ -38,10 +38,6 @@ type (
 	}
 )
 
-const (
-	int32ByteSize = 4
-)
-
 // IntToMessageStruct is a map that maps a message type
 // to its corresponding Message Struct
 var IntToMessageStruct map[int]IProxyMessage
@@ -170,7 +166,7 @@ func readString(buf *bytes.Buffer) *string {
 
 func readInt32(buf *bytes.Buffer) int32 {
 	var num int32
-	intBytes := buf.Next(int32ByteSize)
+	intBytes := buf.Next(4)
 	reader := bytes.NewReader(intBytes)
 
 	// Read the []byte into the byte.Reader

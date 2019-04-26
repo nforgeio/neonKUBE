@@ -114,6 +114,9 @@ func (b *WorkflowClientBuilder) BuildServiceClient() (workflowserviceclient.Inte
 	return workflowserviceclient.New(b.dispatcher.ClientConfig(b.serviceName)), nil
 }
 
+// build builds the transport channels and dispatcher
+// for connection between teh cadence client instance
+// and the cadence server
 func (b *WorkflowClientBuilder) build() error {
 	if b.dispatcher != nil {
 		return nil

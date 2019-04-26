@@ -9,8 +9,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// Instance is a server instance
-// Can also hold DB instance and logger
+// Instance is a server instance that contains
+// a reference to an http.Server in memory,
+// a reference to an existing zap.Logger,
+// and a reference to an existing chi.Mux
 type Instance struct {
 	httpServer *http.Server
 	Logger     *zap.Logger
@@ -18,9 +20,11 @@ type Instance struct {
 }
 
 // NewInstance initializes a new instance of the server Instance
-// Param addr string -> the desired address for the server to
+//
+// param addr string -> the desired address for the server to
 // listen and serve on
-// Returns *Instance -> Pointer to an Instance object
+//
+// returns *Instance -> Pointer to an Instance object
 func NewInstance(addr string) *Instance {
 
 	// Router defines new chi router to set up the routes
@@ -35,7 +39,10 @@ func NewInstance(addr string) *Instance {
 	return s
 }
 
-// Start starts the server instance
+// Start sets a zap.Logger for a server Instance
+// ListenAndServers on the configured server address,
+// and provides functionality for a clean shutdown if the server
+// shuts down unexpectedly
 func (s *Instance) Start() {
 
 	// Startup all dependencies
@@ -46,9 +53,6 @@ func (s *Instance) Start() {
 	}
 	logger.Info("Logger created.")
 	s.Logger = logger
-
-	// setup the routes
-	s.SetupRoutes()
 
 	// listen and serve (for your country)
 	err = s.httpServer.ListenAndServe()
@@ -75,10 +79,4 @@ func (s *Instance) Shutdown() {
 			s.httpServer = nil
 		}
 	}
-}
-
-// GetAddress is a getter for an instances
-// server address
-func (s *Instance) GetAddress() string {
-	return s.httpServer.Addr
 }

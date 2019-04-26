@@ -13,58 +13,32 @@ import (
 
 const (
 
-	// ContentType is the content type to be used for HTTP requests
+	// contentType is the content type to be used for HTTP requests
 	// encapsulationg a ProxyMessage
-	contentType = "application/x-neon-cadence-proxy"
+	_contentType = "application/x-neon-cadence-proxy"
 )
 
 // ProxyMessageHandler accepts a []byte as a payload
 // Then converts it into an ProxyMessage object
-// HTTP POST
+// HTTP PUT
+//
+// param w http.ResponseWriter
+// param r *http.Request
 func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
-
-	// // new ProxyMessage object
-	// var pm base.ProxyMessage
-
-	// // Check if there is a request body
-	// // If there is then parse it and try to decode it into an ProxyMessage object
-	// if r.Body != nil {
-
-	// 	// new []byte to hold the encoded payload
-	// 	var payload []byte
-
-	// 	// Read the request body into a []byte
-	// 	payload, err := ioutil.ReadAll(r.Body)
-	// 	if err != nil {
-	// 		log.Panicln("Error reading request body: ", err)
-	// 	}
-
-	// 	buf := bytes.NewBuffer(payload)
-
-	// 	// decode the []byte request body into an ProxyMessage object
-	// 	pm = base.Deserialize(buf, false)
-
-	// 	// Log a pretty printed out ProxyMessage from the
-	// 	// Passed []byte
-	// 	pm.String()
-
-	// 	// Encode back to a []byte
-	// 	// Write it as a response to the request
-	// 	b := pm.Serialize()
-	// 	w.Write(b)
-
-	// } else {
-	// 	log.Panicln("No content in request body")
-	// }
+	// $debug(jack.burns): DELETE THIS!
 }
 
 // EchoHandler is the handler function for the /echo endpoint used for testing serialization
-// and deserialization of ProxyMessages that are sent over the network.
+// and deserialization of ProxyMessages that are sent
+// via HTTP PUT over the network.
+//
+// param w http.ResponseWriter
+// param r *http.Request
 func EchoHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Header.Get("Content-Type") != contentType {
+	if r.Header.Get("Content-Type") != _contentType {
 		defer r.Body.Close()
-		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), contentType)
+		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), _contentType)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(errStr + ".  "))
 		return
@@ -110,7 +84,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	buf = bytes.NewBuffer(serializedMessageCopy)
 	req, err := http.NewRequest(http.MethodPut, r.RequestURI, buf)
 	log.Println(r.RequestURI)
-	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Content-Type", _contentType)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error() + ".  "))
@@ -142,9 +116,9 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 // to make cadence client calls to the cadence server
 // Returns err -> any errors that might be thrown during the initialization of cadence
 // Helper
-func ConfigureCadenceClientHelper(args map[string]*string) (*cadenceclient.Helper, error) {
+func ConfigureCadenceClientHelper(args map[string]*string) (*cadenceclient.CadenceClientHelper, error) {
 
-	var h *cadenceclient.Helper
+	var h *cadenceclient.CadenceClientHelper
 	var err error
 
 	return h, err
