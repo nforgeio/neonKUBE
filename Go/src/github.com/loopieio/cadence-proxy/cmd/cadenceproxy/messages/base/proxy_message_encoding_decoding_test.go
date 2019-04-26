@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 	connect "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/connect"
@@ -30,30 +30,36 @@ func init() {
 func TestProxyMessageEncodingDecoding(t *testing.T) {
 
 	strs := randStrings(50, 8)
-	emptyStr := ""
 	utf8Str := "õ世界"
+	strLong := "12345657776"
+	et := cadenceclient.Timeout.String()
 
 	args1 := map[string]*string{
-		"snap":    &utf8Str,
-		"crackle": nil,
-		"pop":     &utf8Str,
+		"RequestId":      &strLong,
+		"LibraryAddress": nil,
+		"LibraryPort":    &utf8Str,
 	}
 
 	args2 := map[string]*string{
-		"laser": nil,
-		"l":     &strs[3],
-		"":      &emptyStr,
+		"RequestId":    &strLong,
+		"ErrorType":    nil,
+		"ErrorMessage": &strs[25],
 	}
 
 	args3 := map[string]*string{
-		"879043*": &strs[5],
-		"":        &strs[4],
+		"RequestId": &strLong,
+		"Endpoints": &strs[4],
+		"Domain":    &strs[6],
+		"Identity":  &strs[9],
 	}
 
-	args4 := map[string]*string{}
+	args4 := map[string]*string{
+		"RequestId":    &strLong,
+		"ErrorType":    &et,
+		"ErrorMessage": &utf8Str,
+	}
 
 	int1 := Int32ToByteSlice(1)
-	//int2 := base.Int32ToByteSlice(-4)
 	int3 := Int32ToByteSlice(100000)
 
 	att1 := [][]byte{[]byte(utf8Str), []byte(utf8Str), int1, nil}
@@ -85,8 +91,6 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 		Attachments: att4,
 	}
 
-	op5 := base.ProxyMessage{Type: messages.InitializeReply, Properties: args1}
-
 	var tests = []struct {
 		input base.ProxyMessage
 	}{
@@ -94,7 +98,6 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 		{op2},
 		{op3},
 		{op4},
-		{op5},
 	}
 
 	for _, test := range tests {

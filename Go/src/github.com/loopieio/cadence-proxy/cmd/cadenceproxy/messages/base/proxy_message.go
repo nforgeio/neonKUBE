@@ -39,39 +39,7 @@ type (
 )
 
 const (
-
-	// ContentType is the content type to be used for HTTP requests
-	// encapsulationg a ProxyMessage
-	ContentType = "application/x-neon-cadence-proxy"
-
-	// CadenceErrorTypesKey is the string for accessing
-	// the error type property in a ProxyMessage's properties map
-	CadenceErrorTypesKey = "ErrorType"
-
-	// RequestIDKey is the string key for accessing
-	// the RequestId property in a ProxyMessage's properties map
-	RequestIDKey = "RequestId"
-
-	// EndpointsKey is the string key for accessing
-	// the endpoints property in a ProxyMessage's properties map
-	EndpointsKey = "Endpoints"
-
-	// DomainKey is the string key for accessing
-	// the domain property in a ProxyMessage's properties map
-	DomainKey = "Domain"
-
-	// IdentityKey is the string key for accessing
-	// the identity property in a ProxyMessage's properties map
-	IdentityKey = "Identity"
-
-	// LibraryAddressKey is the string key for accessing
-	// the library address property in a ProxyMessage's properties map
-	LibraryAddressKey = "LibraryAddress"
-
-	// LibraryPortKey is the string key for accessing the
-	// library port property in a ProxyMessage's properties map
-	LibraryPortKey = "LibraryPort"
-	int32ByteSize  = 4
+	int32ByteSize = 4
 )
 
 // IntToMessageStruct is a map that maps a message type
@@ -124,12 +92,8 @@ func Deserialize(buf *bytes.Buffer) (IProxyMessage, error) {
 	// set message to corresponding message type
 	message = IntToMessageStruct[int(messageType)].Clone()
 
-	// an empty proxy message to deserialize the []byte
-	// stream into
-	pm := NewProxyMessage()
-
-	// get the message type
-	pm.Type = messageType
+	// point to message's ProxyMessage
+	pm := message.GetProxyMessage()
 
 	// get property count
 	propertyCount := int(readInt32(buf))
@@ -156,9 +120,6 @@ func Deserialize(buf *bytes.Buffer) (IProxyMessage, error) {
 			pm.Attachments[i] = buf.Next(length)
 		}
 	}
-
-	// set the proxy message of the IProxyMessage
-	message.SetProxyMessage(pm)
 
 	// return the message and a nil error
 	return message, nil

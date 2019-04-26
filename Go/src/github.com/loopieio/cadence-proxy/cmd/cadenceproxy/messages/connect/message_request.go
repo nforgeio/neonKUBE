@@ -45,7 +45,7 @@ func NewConnectRequest() *ConnectRequest {
 // returns *string -> a pointer to a string in memory holding the value
 // of a ConnectRequest's endpoints
 func (request *ConnectRequest) GetEndpoints() *string {
-	return request.GetStringProperty(base.EndpointsKey)
+	return request.GetStringProperty("Endpoints")
 }
 
 // SetEndpoints sets a ConnectionRequest's endpoints in
@@ -54,7 +54,7 @@ func (request *ConnectRequest) GetEndpoints() *string {
 // param value *string -> a pointer to a string in memory
 // that holds the value to be set in the properties map
 func (request *ConnectRequest) SetEndpoints(value *string) {
-	request.SetStringProperty(base.EndpointsKey, value)
+	request.SetStringProperty("Endpoints", value)
 }
 
 // GetDomain gets a ConnectRequest's domain value from
@@ -63,7 +63,7 @@ func (request *ConnectRequest) SetEndpoints(value *string) {
 // returns *string -> a pointer to a string in memory holding the value
 // of a ConnectRequest's domain
 func (request *ConnectRequest) GetDomain() *string {
-	return request.GetStringProperty(base.DomainKey)
+	return request.GetStringProperty("Domain")
 }
 
 // SetDomain sets a ConnectionRequest's domain in
@@ -72,7 +72,7 @@ func (request *ConnectRequest) GetDomain() *string {
 // param value *string -> a pointer to a string in memory
 // that holds the value to be set in the properties map
 func (request *ConnectRequest) SetDomain(value *string) {
-	request.SetStringProperty(base.DomainKey, value)
+	request.SetStringProperty("Domain", value)
 }
 
 // GetIdentity gets a ConnectRequest's identity value from
@@ -81,7 +81,7 @@ func (request *ConnectRequest) SetDomain(value *string) {
 // returns *string -> a pointer to a string in memory holding the value
 // of a ConnectRequest's identity
 func (request *ConnectRequest) GetIdentity() *string {
-	return request.GetStringProperty(base.IdentityKey)
+	return request.GetStringProperty("Identity")
 }
 
 // SetIdentity sets a ConnectionRequest's identity in
@@ -90,7 +90,7 @@ func (request *ConnectRequest) GetIdentity() *string {
 // param value *string -> a pointer to a string in memory
 // that holds the value to be set in the properties map
 func (request *ConnectRequest) SetIdentity(value *string) {
-	request.SetStringProperty(base.IdentityKey, value)
+	request.SetStringProperty("Identity", value)
 }
 
 // -------------------------------------------------------------------------
@@ -114,7 +114,6 @@ func (request *ConnectRequest) CopyTo(target base.IProxyMessage) {
 		v.SetEndpoints(request.GetEndpoints())
 		v.SetDomain(request.GetDomain())
 		v.SetIdentity(request.GetIdentity())
-		v.SetProxyRequest(request.ProxyRequest)
 	}
 }
 
@@ -140,12 +139,18 @@ func (request *ConnectRequest) String() string {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetProxyRequest inherits docs from ProxyRequest.GetProxyRequest()
-func (request *ConnectRequest) GetProxyRequest() *base.ProxyRequest {
-	return request.ProxyRequest
+// GetRequestID gets a request id from a ProxyMessage's properties
+//
+// returns int64 -> long as a ProxyRequest's request id from the properties map
+func (request *ConnectRequest) GetRequestID() int64 {
+	return request.GetLongProperty("RequestId")
 }
 
-// SetProxyRequest inherits docs from ProxyRequest.SetProxyRequest()
-func (request *ConnectRequest) SetProxyRequest(value *base.ProxyRequest) {
-	*request.ProxyRequest = *value
+// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
+// properties
+//
+// param value int64 -> the long representation of a ProxyRequest's
+// request id to be set in the properties map
+func (request *ConnectRequest) SetRequestID(value int64) {
+	request.SetLongProperty("RequestId", value)
 }

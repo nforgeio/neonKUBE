@@ -16,9 +16,6 @@ type (
 
 		// ProxyMessage is a reference to a ProxyMessage in memory
 		*ProxyMessage
-
-		// RequestId is the unique id of the ProxyRequest
-		RequestId int64
 	}
 
 	// IProxyRequest is an interface for all ProxyRequest message types.
@@ -26,8 +23,8 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
-		GetProxyRequest() *ProxyRequest
-		SetProxyRequest(value *ProxyRequest)
+		GetRequestID() int64
+		SetRequestID(value int64)
 	}
 )
 
@@ -39,22 +36,6 @@ func NewProxyRequest() *ProxyRequest {
 	request := new(ProxyRequest)
 	request.ProxyMessage = NewProxyMessage()
 	return request
-}
-
-// GetRequestID gets a request id from a ProxyMessage's properties
-//
-// returns int64 -> long as a ProxyRequest's request id from the properties map
-func (request *ProxyRequest) GetRequestID() int64 {
-	return request.GetLongProperty(RequestIDKey)
-}
-
-// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
-// properties
-//
-// param value int64 -> the long representation of a ProxyRequest's
-// request id to be set in the properties map
-func (request *ProxyRequest) SetRequestID(value int64) {
-	request.SetLongProperty(RequestIDKey, value)
 }
 
 // -------------------------------------------------------------------------
@@ -71,10 +52,9 @@ func (request *ProxyRequest) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	request.ProxyMessage.CopyTo(target)
-	v, ok := target.(*ProxyRequest)
+	v, ok := target.(IProxyRequest)
 	if ok {
 		v.SetRequestID(request.GetRequestID())
-		v.SetProxyMessage(request.ProxyMessage)
 	}
 }
 
@@ -100,19 +80,18 @@ func (request *ProxyRequest) String() string {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to get their nested proxy
-// requests
+// GetRequestID gets a request id from a ProxyMessage's properties
 //
-// returns *ProxyRequest -> a pointer to a IProxyRequest's nested proxy request
-func (request *ProxyRequest) GetProxyRequest() *ProxyRequest {
-	return nil
+// returns int64 -> long as a ProxyRequest's request id from the properties map
+func (request *ProxyRequest) GetRequestID() int64 {
+	return request.GetLongProperty("RequestId")
 }
 
-// SetProxyRequest is an interface method that allows all
-// structures that extend IProxyRequest to set the value of their nested
-// proxy requests
+// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
+// properties
 //
-// param value *ProxyRequest -> a pointer to the ProxyRequest in memory that
-// you want to set the instance IProxyRequest's value as
-func (request *ProxyRequest) SetProxyRequest(value *ProxyRequest) {}
+// param value int64 -> the long representation of a ProxyRequest's
+// request id to be set in the properties map
+func (request *ProxyRequest) SetRequestID(value int64) {
+	request.SetLongProperty("RequestId", value)
+}

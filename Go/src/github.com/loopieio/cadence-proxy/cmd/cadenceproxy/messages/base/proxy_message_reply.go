@@ -23,8 +23,12 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyReply
 	IProxyReply interface {
-		GetProxyReply() *ProxyReply
-		SetProxyReply(value *ProxyReply)
+		GetRequestID() int64
+		SetRequestID(value int64)
+		GetErrorMessage() *string
+		SetErrorMessage(value *string)
+		GetErrorType() cadenceclient.CadenceErrorTypes
+		SetErrorType(value cadenceclient.CadenceErrorTypes)
 	}
 )
 
@@ -39,32 +43,76 @@ func NewProxyReply() *ProxyReply {
 	return reply
 }
 
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Clone inherits docs from ProxyMessage.Clone()
+func (reply *ProxyReply) Clone() IProxyMessage {
+	proxyReply := NewProxyReply()
+	var messageClone IProxyMessage = proxyReply
+	reply.CopyTo(messageClone)
+	return messageClone
+}
+
+// CopyTo inherits docs from ProxyMessage.CopyTo()
+func (reply *ProxyReply) CopyTo(target IProxyMessage) {
+	reply.ProxyMessage.CopyTo(target)
+	v, ok := target.(IProxyReply)
+	if ok {
+		v.SetRequestID(reply.GetRequestID())
+		v.SetErrorType(reply.GetErrorType())
+		v.SetErrorMessage(reply.GetErrorMessage())
+	}
+}
+
+// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+func (reply *ProxyReply) SetProxyMessage(value *ProxyMessage) {
+	*reply.ProxyMessage = *value
+}
+
+// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+func (reply *ProxyReply) GetProxyMessage() *ProxyMessage {
+	return reply.ProxyMessage
+}
+
+// String inherits docs from ProxyMessage.String()
+func (reply *ProxyReply) String() string {
+	str := ""
+	str = fmt.Sprintf("%s\n", str)
+	str = fmt.Sprintf("%s%s", str, reply.ProxyMessage.String())
+	str = fmt.Sprintf("%s", str)
+	return str
+}
+
+// -------------------------------------------------------------------------
+// IProxyReply interface methods for implementing the IProxyReply interface
+
 // GetRequestID gets a request id from a ProxyReply's ProxyMessage properties map
 //
 // returns int64 -> A long corresponding to a ProxyReply's request id
 func (reply *ProxyReply) GetRequestID() int64 {
-	return reply.GetLongProperty(RequestIDKey)
+	return reply.GetLongProperty("RequestId")
 }
 
 // SetRequestID sets the request id in a ProxyReply's ProxyMessage properties map
 //
 // param value int64 -> the long value to set as a ProxyReply's request id
 func (reply *ProxyReply) SetRequestID(value int64) {
-	reply.SetLongProperty(RequestIDKey, value)
+	reply.SetLongProperty("RequestId", value)
 }
 
 // GetErrorMessage gets an error message from a ProxyReply's ProxyMessage properties map
 //
 // returns *string -> a pointer to the string error message in the properties map
 func (reply *ProxyReply) GetErrorMessage() *string {
-	return reply.GetStringProperty(CadenceErrorTypesKey)
+	return reply.GetStringProperty("ErrorMessage")
 }
 
 // SetErrorMessage sets an error message in a ProxyReply's ProxyMessage properties map
 //
 // param value *string -> a pointer to the string value in memory to set in the properties map
 func (reply *ProxyReply) SetErrorMessage(value *string) {
-	reply.SetStringProperty(CadenceErrorTypesKey, value)
+	reply.SetStringProperty("ErrorMessage", value)
 }
 
 // GetErrorType gets the CadenceErrorType as a string
@@ -75,7 +123,7 @@ func (reply *ProxyReply) SetErrorMessage(value *string) {
 func (reply *ProxyReply) GetErrorType() cadenceclient.CadenceErrorTypes {
 
 	// Grap the pointer to the error string in the properties map
-	errorStringPtr := reply.GetStringProperty(CadenceErrorTypesKey)
+	errorStringPtr := reply.GetStringProperty("ErrorType")
 	if errorStringPtr == nil {
 		return cadenceclient.None
 	}
@@ -112,7 +160,7 @@ func (reply *ProxyReply) SetErrorType(value cadenceclient.CadenceErrorTypes) {
 	// switch block on the param value
 	switch value {
 	case cadenceclient.None:
-		reply.Properties[CadenceErrorTypesKey] = nil
+		reply.Properties["ErrorType"] = nil
 		return
 	case cadenceclient.Cancelled:
 		typeString = "cancelled"
@@ -139,67 +187,5 @@ func (reply *ProxyReply) SetErrorType(value cadenceclient.CadenceErrorTypes) {
 	}
 
 	// set the string in the properties map
-	reply.SetStringProperty(CadenceErrorTypesKey, &typeString)
+	reply.SetStringProperty("ErrorType", &typeString)
 }
-
-// -------------------------------------------------------------------------
-// IProxyMessage interface methods for implementing the IProxyMessage interface
-
-// Clone inherits docs from ProxyMessage.Clone()
-func (reply *ProxyReply) Clone() IProxyMessage {
-	proxyReply := NewProxyReply()
-	var messageClone IProxyMessage = proxyReply
-	reply.CopyTo(messageClone)
-	return messageClone
-}
-
-// CopyTo inherits docs from ProxyMessage.CopyTo()
-func (reply *ProxyReply) CopyTo(target IProxyMessage) {
-	reply.ProxyMessage.CopyTo(target)
-	v, ok := target.(*ProxyReply)
-	if ok {
-		v.SetRequestID(reply.GetRequestID())
-		v.SetErrorType(reply.GetErrorType())
-		v.SetErrorMessage(reply.GetErrorMessage())
-		v.SetProxyMessage(reply.ProxyMessage)
-	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *ProxyReply) SetProxyMessage(value *ProxyMessage) {
-	*reply.ProxyMessage = *value
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *ProxyReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (reply *ProxyReply) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n", str)
-	str = fmt.Sprintf("%s%s", str, reply.ProxyMessage.String())
-	str = fmt.Sprintf("%s", str)
-	return str
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetProxyReply is an interface method that allows all
-// structures that extend IProxyReply to get their nested proxy
-// replies
-//
-// returns *ProxyReply -> a pointer to a ProxyReply in a message type
-// that implements the IProxyReply interface
-func (reply *ProxyReply) GetProxyReply() *ProxyReply {
-	return nil
-}
-
-// SetProxyReply is an interface method that allows all
-// structures that extend IProxyReply to set the value of their nested
-// proxy replies
-//
-// param value *ProxyReply -> a pointer to a ProxyReply in memory that you want
-func (reply *ProxyReply) SetProxyReply(value *ProxyReply) {}

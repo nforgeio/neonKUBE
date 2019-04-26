@@ -54,10 +54,6 @@ func (request *TerminateRequest) Clone() base.IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *TerminateRequest) CopyTo(target base.IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
-	v, ok := target.(*TerminateRequest)
-	if ok {
-		v.SetProxyRequest(request.ProxyRequest)
-	}
 }
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
@@ -82,12 +78,18 @@ func (request *TerminateRequest) String() string {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetProxyRequest inherits docs from ProxyRequest.GetProxyRequest()
-func (request *TerminateRequest) GetProxyRequest() *base.ProxyRequest {
-	return request.ProxyRequest
+// GetRequestID gets a request id from a ProxyMessage's properties
+//
+// returns int64 -> long as a ProxyRequest's request id from the properties map
+func (request *TerminateRequest) GetRequestID() int64 {
+	return request.GetLongProperty("RequestId")
 }
 
-// SetProxyRequest inherits docs from ProxyRequest.SetProxyRequest()
-func (request *TerminateRequest) SetProxyRequest(value *base.ProxyRequest) {
-	*request.ProxyRequest = *value
+// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
+// properties
+//
+// param value int64 -> the long representation of a ProxyRequest's
+// request id to be set in the properties map
+func (request *TerminateRequest) SetRequestID(value int64) {
+	request.SetLongProperty("RequestId", value)
 }
