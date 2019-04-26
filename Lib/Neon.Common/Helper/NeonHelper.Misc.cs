@@ -934,7 +934,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="input">The input string or <c>null</c>.</param>
         /// <returns>The compressed bytes or <c>null</c>.</returns>
-        public static byte[] CompressString(string input)
+        public static byte[] DeflateString(string input)
         {
             if (input == null)
             {
@@ -957,7 +957,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="bytes">The compressed bytes or <c>null</c>.</param>
         /// <returns>The decompressed string or <c>null</c>.</returns>
-        public static string DecompressString(byte[] bytes)
+        public static string InflateString(byte[] bytes)
         {
             if (bytes == null)
             {
@@ -983,7 +983,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="bytes">The input byte array or <c>null</c>.</param>
         /// <returns>The compressed bytes or <c>null</c>.</returns>
-        public static byte[] CompressBytes(byte[] bytes)
+        public static byte[] DeflateBytes(byte[] bytes)
         {
             if (bytes == null)
             {
@@ -1006,7 +1006,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="bytes">The compressed bytes or <c>null</c>.</param>
         /// <returns>The decompressed string or <c>null</c>.</returns>
-        public static byte[] DecompressBytes(byte[] bytes)
+        public static byte[] InflateBytes(byte[] bytes)
         {
             if (bytes == null)
             {
