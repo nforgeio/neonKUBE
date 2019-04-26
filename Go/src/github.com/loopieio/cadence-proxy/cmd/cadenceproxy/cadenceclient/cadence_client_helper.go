@@ -15,23 +15,32 @@ import (
 	"go.uber.org/cadence/client"
 )
 
-const (
-	workflowRetentionDays = 3
-)
-
 type (
-	// Helper for configuring cadence-client and stoping/starting workflows
-	// and cadence workers
-	Helper struct {
+	// CadenceClientHelper holds configuration details for building
+	// the cadence domain client and the cadence workflow client
+	// This is used for creating, update, and registering cadence domains
+	// and stoping/starting cadence workflows workers
+	//
+	// Holds:
+	// Workflowserviceclient.Interface -> Interface is a client for the WorkflowService service
+	// CadenceClientConfiguration -> configuration information for building the cadence workflow and domain clients
+	// *zap.Logger -> reference to a zap.Logger to log cadence client output to the console
+	// *WorkflowClientBuilder -> reference to a WorkflowClientBuilder used to build the cadence
+	// domain and workflow clients
+	// *RegisterDomainRequest -> reference to a RegisterDomainRequest that contains configuration details
+	// for registering a cadence domain
+	CadenceClientHelper struct {
 		Service               workflowserviceclient.Interface
-		Config                Configuration
+		Config                cadenceClientConfiguration
 		Logger                *zap.Logger
 		Builder               *WorkflowClientBuilder
 		registerDomainRequest *s.RegisterDomainRequest
 	}
 
-	// Configuration for running samples.
-	Configuration struct {
+	// CadenceClientConfiguration contains configuration details for
+	// building the cadence workflow and domain clients as well as
+	// configuration options for building rpc channels
+	cadenceClientConfiguration struct {
 		domainName       string
 		serviceName      string
 		hostPort         string
@@ -40,99 +49,141 @@ type (
 	}
 )
 
+// domainCreated is a flag that prevents a CadenceClientHelper from
+// creating a new domain client and registering an existing domain
 var domainCreated bool
 
-// SetupServiceConfig setup the config for the sample code run
-func (h *Helper) SetupServiceConfig() {
-	if h.Service != nil {
+// SetupServiceConfig configures a CadenceClientHelper's workflowserviceclient.Interface
+// Service.  It also sets the Logger, the WorkflowClientBuilder, creates and registers
+// a new domain from the CadenceClientHelper registerDomainRequest options
+func (helper *CadenceClientHelper) SetupServiceConfig() {
+
+	// exit if the service has already been setup
+	if helper.Service != nil {
 		return
 	}
 
-	// Initialize logger for running samples
+	// Initialize and set logger
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
 	}
-	logger.Info("Logger created.")
-	logger.Info(fmt.Sprintf("Domain:%s, HostPort:%s, Service:%s", h.Config.domainName, h.Config.hostPort, h.Config.serviceName))
+	helper.Logger = logger
 
-	// set helper logger, scope and cadence client builder
-	h.Logger = logger
-	h.Builder = NewBuilder(logger).
-		SetHostPort(h.Config.hostPort).
-		SetDomain(h.Config.domainName).
-		SetServiceName(h.Config.serviceName).
-		SetClientOptions(h.Config.clientOptions).
-		SetDispatcher(h.Config.dispatcherConfig)
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug(fmt.Sprintf("Logger created!\nDomain:%s, HostPort:%s, Service:%s\n", helper.Config.domainName, helper.Config.hostPort, helper.Config.serviceName))
 
-	// set service
-	service, err := h.Builder.BuildServiceClient()
+	// Configure the CadenceClientHelper.Builder
+	helper.Builder = NewBuilder(logger).
+		SetHostPort(helper.Config.hostPort).
+		SetDomain(helper.Config.domainName).
+		SetServiceName(helper.Config.serviceName).
+		SetClientOptions(helper.Config.clientOptions).
+		SetDispatcher(helper.Config.dispatcherConfig)
+
+	// Configure the CadenceClientHelper.Service from the
+	// CadenceClientHelper.Builder
+	service, err := helper.Builder.BuildServiceClient()
 	if err != nil {
 		panic(err)
 	}
-	h.Service = service
+	helper.Service = service
 
+	// Catch domainCreated flag
 	if domainCreated {
 		return
 	}
 
-	// create the domain client and register the domain
-	domainClient, _ := h.Builder.BuildCadenceDomainClient()
+	// Build the cadence domain client
+	domainClient, _ := helper.Builder.BuildCadenceDomainClient()
 
-	// Set RegisterDomainRequest
-	if h.registerDomainRequest == nil {
+	// Configure CadenceClientHelper.registerDomainRequest
+	// default values
+	if helper.registerDomainRequest == nil {
 
-		// set defaults
-		description := fmt.Sprintf("default domain description for domain: %s", h.Config.domainName)
-		wrd := int32(workflowRetentionDays)
+		// registerDomainRequest defaults
+		description := fmt.Sprintf("default domain description for domain: %s", helper.Config.domainName)
+		workflowRetentionDays := int32(3)
+		domainName := helper.Config.domainName
 
 		// set default name, description, and workflow retention (3)
-		h.registerDomainRequest.Name = &h.Config.domainName
-		h.registerDomainRequest.Description = &description
-		h.registerDomainRequest.WorkflowExecutionRetentionPeriodInDays = &wrd
+		helper.registerDomainRequest.Name = &domainName
+		helper.registerDomainRequest.Description = &description
+		helper.registerDomainRequest.WorkflowExecutionRetentionPeriodInDays = &workflowRetentionDays
 	}
 
-	request := h.registerDomainRequest
+	// Set the request
+	request := helper.registerDomainRequest
 
-	// check if the registration returned any errors other than
-	// DomainAlreadyExistsError
+	// Register the domain
 	err = domainClient.Register(context.Background(), request)
+
 	if err != nil {
+
+		// if the error was anything but DomainAlreadyExistsError panic
 		if _, ok := err.(*s.DomainAlreadyExistsError); !ok {
 			panic(err)
 		}
-		logger.Info("Domain already registered.", zap.String("Domain", h.Config.domainName))
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Domain already registered.", zap.String("Domain", helper.Config.domainName))
 	} else {
-		logger.Info("Domain succeesfully registered.", zap.String("Domain", h.Config.domainName))
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Domain succeesfully registered.", zap.String("Domain", helper.Config.domainName))
 	}
+
+	// set domainCreated flag to true
 	domainCreated = true
 }
 
-// StartWorkflow starts a workflow
-func (h *Helper) StartWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) error {
-	workflowClient, err := h.Builder.BuildCadenceClient()
+// StartWorkflow is an instance method that is starts a registered cadence workflow
+//
+// param options client.StartWorkflowOptions -> configuration parameters for starting a workflow execution
+// param workflow interface{} -> a registered cadence workflow
+// param args ...interface{} -> anonymous number of arguments for starting a workflow
+//
+// returns error -> an error if the workflow could not be started, or nil if
+// the workflow was triggered successfully
+func (helper *CadenceClientHelper) StartWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) error {
+
+	// build the actual cadence client.Client
+	workflowClient, err := helper.Builder.BuildCadenceClient()
 	if err != nil {
-		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
+
+		// $debug(jack.burns): DELETE THIS!
+		helper.Logger.Debug("Failed to build cadence client.", zap.Error(err))
 		return err
 	}
 
-	we, err := workflowClient.StartWorkflow(context.Background(), options, workflow, args...)
+	// start the workflow in the background context and store execution information
+	workflowExecution, err := workflowClient.StartWorkflow(context.Background(), options, workflow, args...)
 	if err != nil {
-		h.Logger.Error("Failed to create workflow", zap.Error(err))
+
+		// $debug(jack.burns): DELETE THIS!
+		helper.Logger.Debug("Failed to create workflow", zap.Error(err))
 		return err
 
 	}
 
-	h.Logger.Info("Started Workflow", zap.String("WorkflowID", we.ID), zap.String("RunID", we.RunID))
+	// $debug(jack.burns): DELETE THIS!
+	helper.Logger.Debug("Started Workflow", zap.String("WorkflowID", workflowExecution.ID), zap.String("RunID", workflowExecution.RunID))
 	return nil
 }
 
-// StartWorkers starts workflow worker and activity worker based on configured options.
-func (h *Helper) StartWorkers(domainName, groupName string, options worker.Options) {
-	worker := worker.New(h.Service, domainName, groupName, options)
+// StartWorkers starts a workflow worker and activity worker based on configured options.
+// The worker will listen for workflows registered with the same groupName
+//
+// param domainName string -> name of the cadence doamin for the worker to listen on
+// param groupName string -> the name of the group of cadence workflows for the worker to listen for
+// options worker.Options -> Options used to configure a worker instance
+func (helper *CadenceClientHelper) StartWorkers(domainName, groupName string, options worker.Options) {
+	worker := worker.New(helper.Service, domainName, groupName, options)
 	err := worker.Start()
 	if err != nil {
-		h.Logger.Error("Failed to start workers.", zap.Error(err))
+
+		// $debug(jack.burns): DELETE THIS!
+		helper.Logger.Debug("Failed to start workers.", zap.Error(err))
 		panic("Failed to start workers")
 	}
 }
