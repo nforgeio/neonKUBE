@@ -56,7 +56,7 @@
 # !**/packages/repositories.config
 
 # Random [.rnd] files are generated sometimes while building Docker
-# images.  I'm not sure where they're comming from and deleting them
+# images.  I'm not sure where they're coming from and deleting them
 # in the image build scripts doesn't always seem to take.  We'll
 # just ignore these.
 
