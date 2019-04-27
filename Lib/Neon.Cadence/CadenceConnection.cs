@@ -169,7 +169,7 @@ namespace Neon.Cadence
                         return;
                     }
 
-                    AwaitingTask.SetResult(reply);
+                    AwaitingTask.TrySetResult(reply);
                     AwaitingTask = null;
                 }
             }
@@ -194,7 +194,7 @@ namespace Neon.Cadence
                         return;
                     }
 
-                    AwaitingTask.SetCanceled();
+                    AwaitingTask.TrySetCanceled();
                     AwaitingTask = null;
                 }
             }
@@ -222,7 +222,7 @@ namespace Neon.Cadence
                         return;
                     }
 
-                    AwaitingTask.SetException(e);
+                    AwaitingTask.TrySetException(e);
                     AwaitingTask = null;
                 }
             }
@@ -524,6 +524,13 @@ namespace Neon.Cadence
         public Uri ProxyUri => new Uri($"http://{proxyAddress}:{proxyPort}");
 
         /// <summary>
+        /// Raised when the connection is closed.  You can determing whether the connection
+        /// was closed normally or due to an error by examining the <see cref="CadenceConnectionClosedArgs"/>
+        /// arguments passed to the handler.
+        /// </summary>
+        public event OnCadenceConnectionClosed ConnectionClosed;
+
+        /// <summary>
         /// Called when an HTTP request is received by the integrated web server 
         /// (presumably from the the associated <b>cadence-proxy</b> process).
         /// </summary>
@@ -614,19 +621,114 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Implements the connection's background thread which is responsible
-        /// for cchecking [cadence-proxy] health via heartbeat requests and 
+        /// for checking [cadence-proxy] health via heartbeat requests and 
         /// also for implelementing request timeouts.
         /// </summary>
         private void BackgroundThread()
         {
-            var sleepTime = TimeSpan.FromSeconds(1);
+            Task.Run(
+                async () =>
+                {
+                    var sleepTime = TimeSpan.FromSeconds(1);
+                    var exception = (Exception)null;
 
-            while (!closingConnection)
-            {
-                Thread.Sleep(sleepTime);
+                    try
+                    {
+                        while (!closingConnection)
+                        {
+                            Thread.Sleep(sleepTime);
 
-                // $todo(jeff.lill): Implement this.
-            }
+                            // Verify the [cadence-proxy] health via be sending a heartbeat
+                            // and waiting a bit for a reply.
+
+                            try
+                            {
+                                var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: TimeSpan.FromSeconds(5));
+
+                                if (heartbeatReply.ErrorType != CadenceErrorTypes.None)
+                                {
+                                    throw new Exception($"[cadence-proxy]: Heartbeat returns [{heartbeatReply.ErrorType}].");
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                log.LogError("Heartbeat check failed.  Closing cadence connection.", e);
+                                exception = e;
+
+                                // Break out of the while loop so we'll signal the application that
+                                // the connection has closed and then exit the thread below.
+
+                                break;
+                            }
+
+                            // Look for any operations that have been running longer than
+                            // the specified timeout and then individually cancel and
+                            // remove them, and then notify the application that they were
+                            // cancelled.
+
+                            var timedOutOperations = new List<Operation>();
+                            var utcNow = DateTime.UtcNow;
+
+                            lock (syncLock)
+                            {
+                                foreach (var operation in pendingOperations.Values)
+                                {
+                                    if (operation.TimeLimitUtc <= utcNow)
+                                    {
+                                        timedOutOperations.Add(operation);
+                                    }
+                                }
+
+                                foreach (var operation in timedOutOperations)
+                                {
+                                    pendingOperations.Remove(operation.RequestId);
+                                }
+                            }
+
+                            foreach (var operation in timedOutOperations)
+                            {
+                                // Send a cancel to the [cadence-proxy] for each timed-out
+                                // operation, wait for the reply and then signal the client
+                                // application that the operation was cancelled.
+                                //
+                                // Note that we're not sending a new CancelRequest for another
+                                // CancelRequest that timed out.
+                                //
+                                // Note that we're going to have all of these cancellations
+                                // run in parallel rather than waiting for them to complete
+                                // one-by-one.
+
+                                var notAwaitingTask = Task.Run(
+                                    async () =>
+                                    {
+                                        if (operation.Request.Type != MessageTypes.CancelRequest)
+                                        {
+                                            await CallProxyAsync(new CancelRequest() { TargetRequestId = operation.RequestId }, timeout: TimeSpan.FromSeconds(1));
+                                        }
+
+                                        operation.SetCanceled();
+                                    });
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        // We shouldn't see any exceptions here except perhaps
+                        // [TaskCanceledException] when the connection is in
+                        // the process of being closed.
+
+                        if (!closingConnection || !(e is TaskCanceledException))
+                        {
+                            exception = e;
+                            log.LogError(e);
+                        }
+                    }
+
+                    // This is a good place to signal the client application that the
+                    // connection has been closed.
+
+                    ConnectionClosed?.Invoke(this, new CadenceConnectionClosedArgs() { Exception = exception });
+                });
         }
 
         /// <summary>
@@ -693,6 +795,11 @@ namespace Neon.Cadence
                     await OnEmulatedHeartbeatRequestAsync((HeartbeatRequest) requestMessage);
                     break;
 
+                case MessageTypes.CancelRequest:
+
+                    await OnEmulatedCancelRequestAsync((CancelRequest)requestMessage);
+                    break;
+
                 default:
 
                     response.StatusCode = StatusCodes.Status400BadRequest;
@@ -744,6 +851,30 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Handles emulated <see cref="CancelRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedCancelRequestAsync(CancelRequest request)
+        {
+            var cancelReply = new CancelReply()
+            {
+                WasCancelled = false
+            };
+
+            lock (syncLock)
+            {
+                if (pendingOperations.TryGetValue(request.TargetRequestId, out var operation))
+                {
+                    pendingOperations.Remove(request.TargetRequestId);
+                    cancelReply.WasCancelled = true;
+                }
+            }
+
+            await EmulatedCadenceClient.SendReplyAsync(request, cancelReply);
+        }
+
+        /// <summary>
         /// Called when an HTTP request is received by the integrated web server 
         /// (presumably from the the associated <b>cadence-proxy</b> process).
         /// </summary>
@@ -751,7 +882,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedHttpRequestAsync(HttpContext context)
         {
-            var request = context.Request;
+            var request  = context.Request;
             var response = context.Response;
 
             if (request.Method != "PUT")
