@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"os"
 
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+	"go.uber.org/zap"
 )
 
 const (
@@ -36,8 +37,16 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 // param r *http.Request
 func EchoHandler(w http.ResponseWriter, r *http.Request) {
 
+	// new global logger
+	logger := zap.L()
+
+	// construct the request address
+	requestAddress := fmt.Sprintf("%s%s", r.Host, r.URL.String())
+
+	// log when a new request has come in
+	logger.Info("Request Recieved", zap.String("Address", requestAddress), zap.String("Method", r.Method), zap.Int("ProccessId", os.Getpid()))
+
 	if r.Header.Get("Content-Type") != _contentType {
-		defer r.Body.Close()
 		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), _contentType)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(errStr + ".  "))
@@ -45,14 +54,11 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodPut {
-		defer r.Body.Close()
 		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPut)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		w.Write([]byte(errStr + ".  "))
 		return
 	}
-
-	defer r.Body.Close()
 
 	var payload []byte
 	payload, err := ioutil.ReadAll(r.Body)
@@ -82,8 +88,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	buf = bytes.NewBuffer(serializedMessageCopy)
-	req, err := http.NewRequest(http.MethodPut, r.RequestURI, buf)
-	log.Println(r.RequestURI)
+	req, err := http.NewRequest(http.MethodPut, requestAddress, buf)
 	req.Header.Set("Content-Type", _contentType)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -5,11 +5,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-const (
-	_version    = "/v1"
-	_rootPath   = "/cadence-proxy"
-	_pathPrefix = "/api" + _version + _rootPath
-)
+var Debug bool
 
 // SetupRoutes sets up the chi middleware
 // and the route tree
@@ -21,21 +17,19 @@ func SetupRoutes(router *chi.Mux) {
 
 		// Set middleware for the chi.Router to use:
 		// RequestID
-		// Logger
 		// Recoverer
 		router.Use(middleware.RequestID)
-		router.Use(middleware.Logger)
 		router.Use(middleware.Recoverer)
 
-		// Set the route for the chi.Router to pathPrefix
-		router.Route(_pathPrefix, func(router chi.Router) {
+		if Debug {
+			router.Use(middleware.Logger)
+		}
 
-			// cadence-proxy endpoints
-			router.Put("/", ProxyMessageHandler)
-			router.Put("/echo", EchoHandler)
+		// cadence-proxy endpoints
+		router.Put("/", ProxyMessageHandler)
+		router.Put("/echo", EchoHandler)
 
-			// endpoints for test paths
-			router.Mount("/test", TestRouter())
-		})
+		// endpoints for test paths
+		router.Mount("/test", TestRouter())
 	})
 }

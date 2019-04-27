@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -45,17 +46,15 @@ func NewInstance(addr string) *Instance {
 // shuts down unexpectedly
 func (s *Instance) Start() {
 
-	// Startup all dependencies
-	// Panic if anything essential fails
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	s.Logger = logger
+	// set the logger to the global
+	// zap.Logger
+	s.Logger = zap.L()
+	s.Logger.Info("Server listening:",
+		zap.String("Address", s.httpServer.Addr),
+		zap.Int("ProccessId", os.Getpid()))
 
 	// listen and serve (for your country)
-	logger.Info("Server listening:", zap.String("Address", s.httpServer.Addr))
-	err = s.httpServer.ListenAndServe()
+	err := s.httpServer.ListenAndServe()
 
 	// Clean shutdown is the server unexpectedly shuts down
 	if err != http.ErrServerClosed {
