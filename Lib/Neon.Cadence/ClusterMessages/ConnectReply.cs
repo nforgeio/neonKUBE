@@ -34,7 +34,7 @@ namespace Neon.Cadence
     /// <b>proxy --> library:</b> Answers a <see cref="ConnectRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.ConnectReply)]
-    internal class ConnectReply : ProxyRequest
+    internal class ConnectReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.

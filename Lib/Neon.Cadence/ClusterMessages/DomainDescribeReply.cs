@@ -38,7 +38,7 @@ namespace Neon.Cadence
     /// <b>proxy --> library:</b> Answers a <see cref="DomainDescribeRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.DomainDescribeReply)]
-    internal class DomainDescribeReply : ProxyRequest
+    internal class DomainDescribeReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.

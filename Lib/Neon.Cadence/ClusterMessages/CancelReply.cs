@@ -36,7 +36,7 @@ namespace Neon.Cadence
     /// exist.
     /// </summary>
     [ProxyMessage(MessageTypes.CancelReply)]
-    internal class CancelReply : ProxyRequest
+    internal class CancelReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.

@@ -34,7 +34,7 @@ namespace Neon.Cadence
     /// <b>proxy --> library:</b> Answers a <see cref="HeartbeatRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.HeartbeatReply)]
-    internal class HeartbeatReply : ProxyRequest
+    internal class HeartbeatReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.

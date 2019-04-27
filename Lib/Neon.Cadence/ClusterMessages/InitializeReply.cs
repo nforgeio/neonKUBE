@@ -34,7 +34,7 @@ namespace Neon.Cadence
     /// <b>proxy --> library:</b> Answers a <see cref="InitializeRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.InitializeReply)]
-    internal class InitializeReply : ProxyRequest
+    internal class InitializeReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
