@@ -49,6 +49,10 @@ type (
 	}
 )
 
+// LogLevel decides which log level
+// to use
+var LogLevel string
+
 // domainCreated is a flag that prevents a CadenceClientHelper from
 // creating a new domain client and registering an existing domain
 var domainCreated bool
@@ -63,18 +67,17 @@ func (helper *CadenceClientHelper) SetupServiceConfig() {
 		return
 	}
 
-	// Initialize and set logger
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	helper.Logger = logger
+	// set the logger to global logger
+	helper.Logger = zap.L()
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug(fmt.Sprintf("Logger created!\nDomain:%s, HostPort:%s, Service:%s\n", helper.Config.domainName, helper.Config.hostPort, helper.Config.serviceName))
+	// $debug(jack.burns)
+	helper.Logger.Debug(fmt.Sprintf("Logger created!\nDomain:%s, HostPort:%s, Service:%s\n",
+		helper.Config.domainName,
+		helper.Config.hostPort,
+		helper.Config.serviceName))
 
 	// Configure the CadenceClientHelper.Builder
-	helper.Builder = NewBuilder(logger).
+	helper.Builder = NewBuilder(helper.Logger).
 		SetHostPort(helper.Config.hostPort).
 		SetDomain(helper.Config.domainName).
 		SetServiceName(helper.Config.serviceName).
@@ -125,12 +128,12 @@ func (helper *CadenceClientHelper) SetupServiceConfig() {
 			panic(err)
 		}
 
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Domain already registered.", zap.String("Domain", helper.Config.domainName))
+		// $debug(jack.burns)
+		helper.Logger.Debug("Domain already registered.", zap.String("Domain", helper.Config.domainName))
 	} else {
 
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Domain succeesfully registered.", zap.String("Domain", helper.Config.domainName))
+		// $debug(jack.burns)
+		helper.Logger.Debug("Domain succeesfully registered.", zap.String("Domain", helper.Config.domainName))
 	}
 
 	// set domainCreated flag to true
@@ -151,7 +154,7 @@ func (helper *CadenceClientHelper) StartWorkflow(options client.StartWorkflowOpt
 	workflowClient, err := helper.Builder.BuildCadenceClient()
 	if err != nil {
 
-		// $debug(jack.burns): DELETE THIS!
+		// $debug(jack.burns)
 		helper.Logger.Debug("Failed to build cadence client.", zap.Error(err))
 		return err
 	}
@@ -160,14 +163,16 @@ func (helper *CadenceClientHelper) StartWorkflow(options client.StartWorkflowOpt
 	workflowExecution, err := workflowClient.StartWorkflow(context.Background(), options, workflow, args...)
 	if err != nil {
 
-		// $debug(jack.burns): DELETE THIS!
+		// $debug(jack.burns)
 		helper.Logger.Debug("Failed to create workflow", zap.Error(err))
 		return err
-
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Debug("Started Workflow", zap.String("WorkflowID", workflowExecution.ID), zap.String("RunID", workflowExecution.RunID))
+	// $debug(jack.burns)
+	helper.Logger.Debug("Started Workflow",
+		zap.String("WorkflowID", workflowExecution.ID),
+		zap.String("RunID", workflowExecution.RunID))
+
 	return nil
 }
 
@@ -181,10 +186,7 @@ func (helper *CadenceClientHelper) StartWorkers(domainName, groupName string, op
 	worker := worker.New(helper.Service, domainName, groupName, options)
 	err := worker.Start()
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		helper.Logger.Debug("Failed to start workers.", zap.Error(err))
-		panic("Failed to start workers")
+		helper.Logger.Panic("Failed to start workers.", zap.Error(err))
 	}
 }
 

@@ -152,6 +152,10 @@ func (b *WorkflowClientBuilder) build() error {
 		if err := b.dispatcher.Start(); err != nil {
 			b.Logger.Fatal("Failed to create outbound transport channel: %v", zap.Error(err))
 		}
+
+		b.Logger.Debug("Created outbound transport channel/RPC dispatcher outbound",
+			zap.String("ServiceName", b.serviceName),
+			zap.String("HostPort", b.hostPort))
 	}
 
 	return nil
