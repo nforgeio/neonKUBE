@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HeartbeatRequest.cs
+// FILE:	    CancelRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,24 +32,33 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// <b>library --> proxy:</b> Sent periodically to confirm that the proxy is
-    /// still healthy.  The proxy should send a <see cref="HeartbeatReply"/>,
-    /// possibly indicating that there's a problem by specifying an error.
+    /// still healthy.  The proxy should send a <see cref="CancelReply"/>
+    /// optionally indicating that there's a problem by specifying an error.
     /// </summary>
-    [ProxyMessage(MessageTypes.HeartbeatRequest)]
-    internal class HeartbeatRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.CancelRequest)]
+    internal class CancelRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public HeartbeatRequest()
+        public CancelRequest()
         {
-            Type = MessageTypes.HeartbeatRequest;
+            Type = MessageTypes.CancelRequest;
+        }
+
+        /// <summary>
+        /// The ID of the request being cancelled.
+        /// </summary>
+        public long TargetRequestId
+        {
+            get => GetLongProperty("TargetRequestId");
+            set => SetLongProperty("TargetRequestId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new HeartbeatRequest();
+            var clone = new CancelRequest();
 
             CopyTo(clone);
 
@@ -60,6 +69,10 @@ namespace Neon.Cadence
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
+
+            var typedTarget = (CancelRequest)target;
+
+            typedTarget.TargetRequestId = this.TargetRequestId;
         }
     }
 }

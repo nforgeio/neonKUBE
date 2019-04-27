@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
@@ -40,6 +41,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -66,13 +68,147 @@ namespace Neon.Cadence
             }
         }
 
+        /// <summary>
+        /// Used for tracking pending <b>cadence-proxy</b> operations.
+        /// </summary>
+        private class Operation
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="requestId">The unique request ID.</param>
+            /// <param name="request">The request message.</param>
+            /// <param name="timeLimitUtc">
+            /// The time (UTC) after which the operation should be considered
+            /// to have timed out.  This defaults to the end-of-time.
+            /// </param>
+            public Operation(long requestId, ProxyRequest request, DateTime timeLimitUtc = default)
+            {
+                Covenant.Requires<ArgumentNullException>(request != null);
+
+                if (timeLimitUtc == default)
+                {
+                    timeLimitUtc = DateTime.MaxValue;
+                }
+
+                this.AwaitingTask = new TaskCompletionSource<ProxyReply>();
+                this.RequestId    = requestId;
+                this.TimeLimitUtc = timeLimitUtc;
+            }
+
+            /// <summary>
+            /// The operation (aka the request) ID.
+            /// </summary>
+            public long RequestId { get; private set; }
+
+            /// <summary>
+            /// Returns the request message.
+            /// </summary>
+            public ProxyRequest Request { get; private set; }
+
+            /// <summary>
+            /// The time (UTC) after which the operation should be considered
+            /// to have timed out.
+            /// </summary>
+            public DateTime TimeLimitUtc { get; private set; }
+
+            /// <summary>
+            /// Returns the awaitable <see cref="TaskCompletionSource{ProxyReply}"/> that
+            /// will signal completion when <see cref="SetReply(ProxyReply)"/> is called
+            /// with the reply message for this operation, <see cref="SetCanceled"/> when
+            /// the operation has been canceled, or <see cref="SetException(Exception)"/>
+            /// is called signalling an error.
+            /// </summary>
+            public TaskCompletionSource<ProxyReply> AwaitingTask { get; private set; }
+
+            /// <summary>
+            /// Signals the awaiting <see cref="Task"/> that a reply message 
+            /// has been received.
+            /// </summary>
+            /// <param name="reply">The reply message.</param>
+            /// <remarks>
+            /// <note>
+            /// Only the first call to <see cref="SetReply(ProxyReply)"/>
+            /// <see cref="SetException(Exception)"/>, or <see cref="SetCanceled()"/>
+            /// will actually wake the awaiting task.  Any subsequent calls will do nothing.
+            /// </note>
+            /// </remarks>
+            public void SetReply(ProxyReply reply)
+            {
+                Covenant.Requires<ArgumentNullException>(reply != null);
+
+                lock (this)
+                {
+                    if (AwaitingTask == null)
+                    {
+                        return;
+                    }
+
+                    AwaitingTask.SetResult(reply);
+                    AwaitingTask = null;
+                }
+            }
+
+            /// <summary>
+            /// Signals the awaiting <see cref="Task"/> that the operation has
+            /// been canceled.
+            /// </summary>
+            /// <remarks>
+            /// <note>
+            /// Only the first call to <see cref="SetReply(ProxyReply)"/>
+            /// <see cref="SetException(Exception)"/>, or <see cref="SetCanceled()"/>
+            /// will actually wake the awaiting task.  Any subsequent calls will do nothing.
+            /// </note>
+            /// </remarks>
+            public void SetCanceled()
+            {
+                lock (this)
+                {
+                    if (AwaitingTask == null)
+                    {
+                        return;
+                    }
+
+                    AwaitingTask.SetCanceled();
+                    AwaitingTask = null;
+                }
+            }
+
+            /// <summary>
+            /// Signals the awaiting <see cref="Task"/> that it should fail
+            /// with an exception.
+            /// </summary>
+            /// <param name="e">The exception.</param>
+            /// <remarks>
+            /// <note>
+            /// Only the first call to <see cref="SetReply(ProxyReply)"/>
+            /// <see cref="SetException(Exception)"/>, or <see cref="SetCanceled()"/>
+            /// will actually wake the awaiting task.  Any subsequent calls will do nothing.
+            /// </note>
+            /// </remarks>
+            public void SetException(Exception e)
+            {
+                Covenant.Requires<ArgumentNullException>(e != null);
+
+                lock (this)
+                {
+                    if (AwaitingTask == null)
+                    {
+                        return;
+                    }
+
+                    AwaitingTask.SetException(e);
+                    AwaitingTask = null;
+                }
+            }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
         private static object       staticSyncLock = new object();
         private static Assembly     thisAssembly   = Assembly.GetExecutingAssembly();
         private static INeonLogger  log            = LogManager.Default.GetLogger<CadenceConnection>();
-        private static string       proxyPath;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -95,7 +231,7 @@ namespace Neon.Cadence
 
             if (!NeonHelper.Is64Bit)
             {
-                throw new Exception("[Neon.Cadence] supports 64-bit applications only.  If you're running unit tests, be sure to set the test architecture to [x64].");
+                throw new Exception("[Neon.Cadence] supports 64-bit applications only.");
             }
 
             var binaryFolder = settings.BinaryFolder;
@@ -182,10 +318,15 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private IWebHost    webHost;
-        private IPAddress   proxyAddress = IPAddress.Parse("127.0.0.2");    // Using a non-standard loopback to avoid port conflicts
-        private int         proxyPort;
-        private Process     proxyProcess;
+        private object                      syncLock     = new object();
+        private IPAddress                   proxyAddress = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
+        private int                         proxyPort;
+        private Process                     proxyProcess;
+        private IWebHost                    webHost;
+        private long                        nextRequestId;
+        private Thread                      backgroundThread;
+        private bool                        closingConnection;
+        private Dictionary<long, Operation> pendingOperations;
 
         /// <summary>
         /// Constructor.
@@ -224,6 +365,17 @@ namespace Neon.Cadence
 
             proxyPort    = NetHelper.GetUnusedTcpPort(proxyAddress);
             proxyProcess = StartProxy(new IPEndPoint(proxyAddress, proxyPort), settings);
+
+            // Initialize the pending operations.
+
+            nextRequestId     = 0;
+            pendingOperations = new Dictionary<long, Operation>();
+
+            // Crank up the background thread which will handle [cadence-proxy]
+            // health heartbeats as well as request timeouts.
+
+            backgroundThread = new Thread(new ThreadStart(BackgroundThread));
+            backgroundThread.Start();
         }
 
         /// <summary>
@@ -246,6 +398,14 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
+            closingConnection = true;
+
+            if (backgroundThread != null)
+            {
+                backgroundThread.Join();
+                backgroundThread = null;
+            }
+
             if (webHost != null)
             {
                 webHost.Dispose();
@@ -367,6 +527,41 @@ namespace Neon.Cadence
             response.ContentType = ProxyMessage.ContentType;
 
             await response.Body.WriteAsync(clonedMessage.Serialize());
+        }
+
+        /// <summary>
+        /// Implements the connection's background thread which is responsible
+        /// for cchecking [cadence-proxy] health via heartbeat requests and 
+        /// also for implelementing request timeouts.
+        /// </summary>
+        private void BackgroundThread()
+        {
+            var sleepTime = TimeSpan.FromSeconds(1);
+
+            while (!closingConnection)
+            {
+                Thread.Sleep(sleepTime);
+
+                // $todo(jeff.lill): Implement this.
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously calls the <b>cadence-proxy</b> by sending a request message
+        /// and then waits for a reply.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <param name="timeout">
+        /// Optionally specifies the maximum time to wait for the operation to complete.
+        /// This defaults to unlimited.
+        /// </param>
+        /// <returns>The reply message.</returns>
+        private Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
+        {
+            var requestId = Interlocked.Increment(ref this.nextRequestId);
+            // var operation = new Operation(requestId, 
+
+            throw new NotImplementedException();
         }
     }
 }

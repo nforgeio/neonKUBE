@@ -118,7 +118,19 @@ namespace Neon.Cadence
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="HeartbeatRequest"/> message.
         /// </summary>
-        HeartbeatReply = 13,
+        HeartbeatReply = 14,
+
+        /// <summary>
+        /// <b>library --> proxy:</b> Sent to request that a pending operation be cancelled.
+        /// </summary>
+        CancelRequest = 15,
+
+        /// <summary>
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="CancelRequest"/> message,
+        /// indicating that the operation was canceled or that it already completed or no longer
+        /// exists.
+        /// </summary>
+        CancelReply = 16,
 
         //---------------------------------------------------------------------
         // Workflow messages

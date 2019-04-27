@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HeartbeatRequest.cs
+// FILE:	    CancelReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,25 +31,36 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Sent periodically to confirm that the proxy is
-    /// still healthy.  The proxy should send a <see cref="HeartbeatReply"/>,
-    /// possibly indicating that there's a problem by specifying an error.
+    /// <b>proxy --> library:</b> Sent in response to a <see cref="CancelRequest"/>
+    /// indicating that the operation was canceled, has already completed or doesn't
+    /// exist.
     /// </summary>
-    [ProxyMessage(MessageTypes.HeartbeatRequest)]
-    internal class HeartbeatRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.CancelReply)]
+    internal class CancelReply : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public HeartbeatRequest()
+        public CancelReply()
         {
-            Type = MessageTypes.HeartbeatRequest;
+            Type = MessageTypes.CancelReply;
+        }
+
+        /// <summary>
+        /// Set to <c>true</c> if the operation was actually cancelled or <c>false</c>
+        /// if the operation had already completed, doesn't exist, or if cancellation
+        /// is not appropriate for the operation and no action was performed.
+        /// </summary>
+        public bool WasCancelled
+        {
+            get => GetBoolProperty("WasCancelled");
+            set => SetBoolProperty("WasCancelled", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new HeartbeatRequest();
+            var clone = new CancelReply();
 
             CopyTo(clone);
 
@@ -60,6 +71,10 @@ namespace Neon.Cadence
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
+
+            var typedTarget = (CancelReply)target;
+
+            typedTarget.WasCancelled = this.WasCancelled;
         }
     }
 }
