@@ -64,7 +64,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[])"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -72,6 +72,11 @@ namespace Neon.Xunit.Cadence
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="emulateProxy">
+        /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
+        /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
+        /// because it's probably not going to do what you expect.
+        /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
@@ -86,17 +91,18 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings = null,
-            string              image    = "nkubeio/cadence-test:latest",
-            string              name     = "cadence-test",
-            string[]            env      = null)
+            CadenceSettings     settings     = null,
+            string              image        = "nkubeio/cadence-test:latest",
+            string              name         = "cadence-test",
+            string[]            env          = null,
+            bool                emulateProxy = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(settings, image, name, env);
+                    StartAsComposed(settings, image, name, env, emulateProxy);
                 });
         }
 
@@ -107,11 +113,17 @@ namespace Neon.Xunit.Cadence
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="emulateProxy">
+        /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
+        /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
+        /// because it's probably not going to do what you expect.
+        /// </param>
         public void StartAsComposed(
-            CadenceSettings     settings = null,
-            string              image    = "nkubeio/cadence-test:latest",
-            string              name     = "cadence-test",
-            string[]            env      = null)
+            CadenceSettings     settings     = null,
+            string              image        = "nkubeio/cadence-test:latest",
+            string              name         = "cadence-test",
+            string[]            env          = null,
+            bool                emulateProxy = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -138,10 +150,16 @@ namespace Neon.Xunit.Cadence
 
                 Thread.Sleep(warmupDelay);
 
+                // Initialize the settings.
+
                 settings = settings ?? new CadenceSettings();
 
                 settings.Servers.Clear();
                 settings.Servers.Add(new Uri("http://localhost:8091"));
+
+                settings.EmulateProxy = emulateProxy || settings.EmulateProxy;
+
+                // Create the Cadence connection.
 
                 Connection = new CadenceConnection(settings);
 

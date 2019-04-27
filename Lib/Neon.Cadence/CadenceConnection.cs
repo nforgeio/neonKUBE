@@ -23,6 +23,8 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -53,6 +55,10 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Private types
 
+        /// <summary>
+        /// Configures the <b>cadence-client</b> connection's web server used to 
+        /// receive messages from the <b>cadence-proxy</b>.
+        /// </summary>
         private class Startup
         {
             private CadenceConnection client;
@@ -64,6 +70,25 @@ namespace Neon.Cadence
                 app.Run(async context =>
                 {
                     await client.OnHttpRequestAsync(context);
+                });
+            }
+        }
+
+        /// <summary>
+        /// Configures a partially implemented emulation of a <b>cadence-proxy</b>
+        /// for low-level testing.
+        /// </summary>
+        private class EmulatedStartup
+        {
+            private CadenceConnection client;
+
+            public void Configure(IApplicationBuilder app, CadenceConnection client)
+            {
+                this.client = client;
+
+                app.Run(async context =>
+                {
+                    await client.OnEmulatedHttpRequestAsync(context);
                 });
             }
         }
@@ -92,7 +117,7 @@ namespace Neon.Cadence
                 }
 
                 this.AwaitingTask = new TaskCompletionSource<ProxyReply>();
-                this.RequestId    = requestId;
+                this.RequestId = requestId;
                 this.TimeLimitUtc = timeLimitUtc;
             }
 
@@ -322,7 +347,9 @@ namespace Neon.Cadence
         private IPAddress                   proxyAddress = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private int                         proxyPort;
         private Process                     proxyProcess;
-        private IWebHost                    webHost;
+        private HttpClient                  proxyClient;
+        private IWebHost                    host;
+        private IWebHost                    emulatedHost;
         private long                        nextRequestId;
         private Thread                      backgroundThread;
         private bool                        closingConnection;
@@ -341,7 +368,7 @@ namespace Neon.Cadence
             // Start the web server that will listen for requests from the associated 
             // [cadence-proxy] process.
 
-            webHost = new WebHostBuilder()
+            host = new WebHostBuilder()
                 .UseKestrel(
                     options =>
                     {
@@ -356,15 +383,53 @@ namespace Neon.Cadence
                 .UseStartup<Startup>()
                 .Build();
 
-            webHost.Start();
+            host.Start();
 
-            ListenUri = new Uri(webHost.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
+            ListenUri = new Uri(host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
 
             // Determine the port we'll have [cadence-proxy] listen on and then
-            // fire up the proxy process.
+            // fire up the cadence-proxy process or the stubbed host.
 
-            proxyPort    = NetHelper.GetUnusedTcpPort(proxyAddress);
-            proxyProcess = StartProxy(new IPEndPoint(proxyAddress, proxyPort), settings);
+            proxyPort = NetHelper.GetUnusedTcpPort(proxyAddress);
+
+            if (!settings.EmulateProxy)
+            {
+                proxyProcess = StartProxy(new IPEndPoint(proxyAddress, proxyPort), settings);
+            }
+            else
+            {
+                // Start up a partially implemented emulation of a cadence-proxy.
+
+                emulatedHost = new WebHostBuilder()
+                    .UseKestrel(
+                        options =>
+                        {
+                            options.Listen(proxyAddress, proxyPort);
+                        })
+                    .ConfigureServices(
+                        services =>
+                        {
+                            services.AddSingleton(typeof(CadenceConnection), this);
+                            services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
+                        })
+                    .UseStartup<EmulatedStartup>()
+                    .Build();
+
+                emulatedHost.Start();
+            }
+
+            // Create the HTTP client we'll use to communicate with the [cadence-proxy].
+
+            var httpHandler = new HttpClientHandler()
+            {
+                // Disable compression because all communication is happening on
+                // a loopback interface (essentially in-memory) so there's not
+                // much point in taking the CPU hit to manage compression.
+
+                AutomaticDecompression = DecompressionMethods.None
+            };
+
+            proxyClient = new HttpClient(httpHandler, disposeHandler: true);
 
             // Initialize the pending operations.
 
@@ -406,10 +471,16 @@ namespace Neon.Cadence
                 backgroundThread = null;
             }
 
-            if (webHost != null)
+            if (host != null)
             {
-                webHost.Dispose();
-                webHost = null;
+                host.Dispose();
+                host = null;
+            }
+
+            if (emulatedHost != null)
+            {
+                emulatedHost.Dispose();
+                emulatedHost = null;
             }
 
             if (proxyProcess != null)
@@ -417,6 +488,18 @@ namespace Neon.Cadence
                 proxyProcess.Kill();
                 proxyProcess.WaitForExit();
                 proxyProcess = null;
+            }
+
+            if (proxyClient != null)
+            {
+                proxyClient.Dispose();
+                proxyClient = null;
+            }
+
+            if (EmulatedCadenceClient != null)
+            {
+                EmulatedCadenceClient.Dispose();
+                EmulatedCadenceClient = null;
             }
 
             if (disposing)
@@ -482,7 +565,7 @@ namespace Neon.Cadence
                     default:
 
                         response.StatusCode = StatusCodes.Status404NotFound;
-                        await response.WriteAsync($"[{request.Path}] HTTP PATH not supported.  Only [/] and [/echo] are allowed.");
+                        await response.WriteAsync($"[{request.Path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed.");
                         return;
                 }
             }
@@ -499,7 +582,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Handles requests to the root "<b>"/"</b> endpoint path.
+        /// Handles requests to the root <b>"/"</b> endpoint path.
         /// </summary>
         /// <param name="context">The request context.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -513,7 +596,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Handles requests to the test "<b>"/echo"</b> endpoint path.
+        /// Handles requests to the test <b>"/echo"</b> endpoint path.
         /// </summary>
         /// <param name="context">The request context.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -562,6 +645,160 @@ namespace Neon.Cadence
             // var operation = new Operation(requestId, 
 
             throw new NotImplementedException();
+        }
+
+        //---------------------------------------------------------------------
+        // Emulated [cadence-proxy] implementation:
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Set this to <c>false</c> to emulate an unhealthy
+        /// <b>cadence-proxy</b>.
+        /// </summary>
+        internal bool EmulatedHealth { get; set; } = true;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Configured as the HTTP client the emulated 
+        /// [cadence-proxy] implementation uses to communicate with the [cadence-client]
+        /// after the first <see cref="InitializeRequest"/> has been received.
+        /// </summary>
+        internal HttpClient EmulatedCadenceClient { get; private set; }
+
+        /// <summary>
+        /// Handles requests to the emulated <b>cadence-proxy</b> root <b>"/"</b> endpoint path.
+        /// </summary>
+        /// <param name="context">The request context.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedRootRequestAsync(HttpContext context)
+        {
+            var request        = context.Request;
+            var response       = context.Response;
+            var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
+
+            if (EmulatedCadenceClient == null && requestMessage.Type != MessageTypes.InitializeRequest)
+            {
+                response.StatusCode = StatusCodes.Status400BadRequest;
+                await response.WriteAsync($"Unexpected Message: Waiting for an [{nameof(InitializeRequest)}] message to specify the [cadence-client] network endpoint.");
+                return;
+            }
+
+            switch (requestMessage.Type)
+            {
+                case MessageTypes.InitializeRequest:
+
+                    await OnEmulatedInitializeRequestAsync((InitializeRequest)requestMessage);
+                    break;
+
+                case MessageTypes.HeartbeatRequest:
+
+                    await OnEmulatedHeartbeatRequestAsync((HeartbeatRequest) requestMessage);
+                    break;
+
+                default:
+
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    await response.WriteAsync($"EMULATION: Message [{requestMessage.Type}] is not supported.");
+                    break;
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="InitializeRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedInitializeRequestAsync(InitializeRequest request)
+        {
+            lock (syncLock)
+            {
+                if (EmulatedCadenceClient != null)
+                {
+                    var httpHandler = new HttpClientHandler()
+                    {
+                        // Disable compression because all communication is happening on
+                        // a loopback interface (essentially in-memory) so there's not
+                        // much point in taking the CPU hit to manage compression.
+
+                        AutomaticDecompression = DecompressionMethods.None
+                    };
+
+                    EmulatedCadenceClient = new HttpClient(httpHandler, disposeHandler: true)
+                    {
+                        BaseAddress = new Uri($"http://{request.LibraryAddress}:{request.LibraryPort}")
+                    };
+                }
+            }
+
+            await EmulatedCadenceClient.SendReplyAsync(request, new InitializeReply());
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="HeartbeatRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedHeartbeatRequestAsync(HeartbeatRequest request)
+        {
+            await EmulatedCadenceClient.SendReplyAsync(request, new HeartbeatReply());
+        }
+
+        /// <summary>
+        /// Called when an HTTP request is received by the integrated web server 
+        /// (presumably from the the associated <b>cadence-proxy</b> process).
+        /// </summary>
+        /// <param name="context">The request context.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedHttpRequestAsync(HttpContext context)
+        {
+            var request = context.Request;
+            var response = context.Response;
+
+            if (request.Method != "PUT")
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted with [PUT].");
+                return;
+            }
+
+            if (request.ContentType != ProxyMessage.ContentType)
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                await response.WriteAsync($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}].");
+                return;
+            }
+
+            try
+            {
+                switch (request.Path)
+                {
+                    case "/":
+
+                        await OnEmulatedRootRequestAsync(context);
+                        break;
+
+                    case "/echo":
+
+                        await OnEchoRequestAsync(context);
+                        break;
+
+                    default:
+
+                        response.StatusCode = StatusCodes.Status404NotFound;
+                        await response.WriteAsync($"[{request.Path}] HTTP PATH not supported.  Only [/] and [/echo] are allowed.");
+                        return;
+                }
+            }
+            catch (FormatException e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status400BadRequest;
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
         }
     }
 }

@@ -106,5 +106,13 @@ namespace Neon.Cadence
         [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Debug { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally specifies that the real <b>cadence-proxy</b>
+        /// should not be started and a partially implemented local emulation should be started 
+        /// in its place.  This is used internally for low-level testing and should never be 
+        /// enabled for production (because it won't work).
+        /// </summary>
+        internal bool EmulateProxy { get; set; } = false;
     }
 }
