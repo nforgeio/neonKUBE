@@ -166,10 +166,10 @@ namespace Neon.Xunit.Cadence
         /// <summary>
         /// <para>
         /// Returns a <see cref="HttpClient"/> suitable for submitting requests to the
-        /// associated Cadence Proxy process.
+        /// associated <b>cadence-proxy</b> process.
         /// </para>
         /// <note>
-        /// This will return <c>null</c> if the Cadence Proxy process was disabled by
+        /// This will return <c>null</c> if the <b>cadence-proxy</b> process was disabled by
         /// the settings.
         /// </note>
         /// </summary>

@@ -109,6 +109,17 @@ namespace Neon.Cadence
         /// </summary>
         DomainUpdateReply = 12,
 
+        /// <summary>
+        /// <b>library --> proxy:</b> Sent periodically (every second) by the library to the
+        /// proxy to verify that it is still healthy.
+        /// </summary>
+        HeartbeatRequest = 13,
+
+        /// <summary>
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="HeartbeatRequest"/> message.
+        /// </summary>
+        HeartbeatReply = 13,
+
         //---------------------------------------------------------------------
         // Workflow messages
         //

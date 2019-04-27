@@ -47,7 +47,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// The IP address where the Cadence Library is listening for proxy messages
-        /// send by the Cadence Proxy.
+        /// send by the <b>cadence-proxy</b>.
         /// </summary>
         public string LibraryAddress
         {
@@ -57,7 +57,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// The port where the Cadence Library is listening for proxy messages
-        /// send by the Cadence Proxy.
+        /// send by the <b>cadence-proxy</b>.
         /// </summary>
         public int LibraryPort
         {

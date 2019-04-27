@@ -161,9 +161,12 @@ namespace Neon.Cadence
             // Launch the proxy with a console window when we're running in DEBUG
             // mode on Windows.  We'll ignore this for the other platforms.
 
+            var debugOption = settings.Debug ? " --debug" : string.Empty;
+            var commandLine = $"--listen {endpoint.Address}:{endpoint.Port} --log-level {settings.LogLevel}{debugOption}";
+
             if (NeonHelper.IsWindows)
             {
-                var startInfo = new ProcessStartInfo(binaryPath, $"{endpoint.Address}:{endpoint.Port}")
+                var startInfo = new ProcessStartInfo(binaryPath, commandLine)
                 {
                     UseShellExecute = settings.Debug,
                 };
@@ -172,7 +175,7 @@ namespace Neon.Cadence
             }
             else
             {
-                return Process.Start(binaryPath, $"{endpoint.Address}:{endpoint.Port}");
+                return Process.Start(binaryPath, commandLine);
             }
         }
 
@@ -195,7 +198,7 @@ namespace Neon.Cadence
             this.Settings = settings;
 
             // Start the web server that will listen for requests from the associated 
-            // Cadence Proxy process.
+            // [cadence-proxy] process.
 
             webHost = new WebHostBuilder()
                 .UseKestrel(
@@ -268,13 +271,18 @@ namespace Neon.Cadence
         public CadenceSettings Settings { get; private set; }
 
         /// <summary>
-        /// Returns the URI the client is listening on for requests from the Cadence Proxy.
+        /// Returns the URI the client is listening on for requests from the <b>cadence-proxy</b>.
         /// </summary>
         public Uri ListenUri { get; private set; }
 
         /// <summary>
+        /// Returns the URI the associated <b>cadence-proxy</b> instance is listening on.
+        /// </summary>
+        public Uri ProxyUri => new Uri($"http://{proxyAddress}:{proxyPort}");
+
+        /// <summary>
         /// Called when an HTTP request is received by the integrated web server 
-        /// (presumably from the the associated Cadence Proxy process).
+        /// (presumably from the the associated <b>cadence-proxy</b> process).
         /// </summary>
         /// <param name="context">The request context.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>

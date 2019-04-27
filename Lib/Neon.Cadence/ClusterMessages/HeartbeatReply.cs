@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ConnectionMode.cs
+// FILE:	    HeartbeatReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -30,20 +31,33 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the Cadence connection modes.
+    /// <b>proxy --> library:</b> Answers a <see cref="HeartbeatRequest"/>.
     /// </summary>
-    public enum ConnectionMode
+    [ProxyMessage(MessageTypes.HeartbeatReply)]
+    internal class HeartbeatReply : ProxyRequest
     {
         /// <summary>
-        /// Connect to a Cadence cluster via the <b>cadence-proxy</b>.
+        /// Default constructor.
         /// </summary>
-        Normal = 0,
+        public HeartbeatReply()
+        {
+            Type = MessageTypes.HeartbeatReply;
+        }
 
-        /// <summary>
-        /// <b>INTERNAL USE:</b> Start the connection's proxy listener but don't
-        /// launch the proxy and attempt to connect to a Cadence cluster.  This
-        /// mode is used for unit testing.
-        /// </summary>
-        ListenOnly
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new HeartbeatReply();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }

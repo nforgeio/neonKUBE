@@ -75,16 +75,6 @@ namespace Neon.Cadence
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
-        /// Optionally specifies that the connection should run in DEBUG mode.  This currently
-        /// launches the <b>cadence-proxy</b> with a command window (on Windows only)  to make 
-        /// it easy to see any output it generates.  This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Debug", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool Debug { get; set; } = false;
-
-        /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
         /// will be written before starting it.  This defaults to <c>null</c> which specifies
         /// that the binary will be written to the same folder where the <b>Neon.Cadence</b>
@@ -95,5 +85,26 @@ namespace Neon.Cadence
         [YamlMember(Alias = "binaryFolder", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string BinaryFolder { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies the logging level for the associated <b>cadence-proxy</b>.
+        /// The supported values are <b>panic</b>, <b>fatal</b>, <b>error</b>, <b>warn</b>, 
+        /// and <b>debug</b>.  This defaults to <b>info</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogLevel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logLevel", ApplyNamingConventions = false)]
+        [DefaultValue("info")]
+        public string LogLevel { get; set; } = "info";
+
+        /// <summary>
+        /// Optionally specifies that the connection should run in DEBUG mode.  This currently
+        /// launches the <b>cadence-proxy</b> with a command window (on Windows only) to make 
+        /// it easy to see any output it generates and also has <b>cadence-proxy</b>.  This
+        /// defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Debug", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Debug { get; set; } = false;
     }
 }
