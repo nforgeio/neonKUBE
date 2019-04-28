@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_Emultated.cs
+// FILE:        Test_Emulation.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,13 +41,13 @@ namespace TestCadence
     /// Tests low-level <see cref="CadenceConnection"/> functionality against a
     /// partially implemented <b>cadence-proxy</b> emulation.
     /// </summary>
-    public sealed class Test_Emultated : IClassFixture<CadenceFixture>, IDisposable
+    public sealed class Test_Emulation : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture      fixture;
         CadenceConnection   connection;
         HttpClient          proxyClient;
 
-        public Test_Emultated(CadenceFixture fixture)
+        public Test_Emulation(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {
