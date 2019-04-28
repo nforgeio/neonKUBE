@@ -51,9 +51,12 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Mode         = ConnectionMode.ListenOnly,
-                Debug        = true,
-                EmulateProxy = true
+                Mode              = ConnectionMode.ListenOnly,
+                Debug             = true,
+                EmulateProxy      = true,
+                //ProxyTimeout      = TimeSpan.FromMinutes(5),
+                //DisableHeartbeats = true,
+                //IgnoreTimeouts    = true
             };
 
             fixture.Start(settings);
@@ -61,8 +64,6 @@ namespace TestCadence
             this.fixture     = fixture;
             this.connection  = fixture.Connection;
             this.proxyClient = new HttpClient() { BaseAddress = connection.ProxyUri };
-
-            System.Threading.Thread.Sleep(10000000);
         }
 
         public void Dispose()

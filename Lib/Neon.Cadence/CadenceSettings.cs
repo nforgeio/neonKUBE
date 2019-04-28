@@ -75,6 +75,17 @@ namespace Neon.Cadence
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
+        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
+        /// to indicate that it has received a proxy request message by returning an
+        /// OK response.  The proxy will be considered to be unhealthy when this 
+        /// happens.  This defaults to <b>5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ProxyTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "proxyTimeout", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public TimeSpan ProxyTimeout { get; set; } = default;
+
+        /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
         /// will be written before starting it.  This defaults to <c>null</c> which specifies
         /// that the binary will be written to the same folder where the <b>Neon.Cadence</b>
@@ -114,5 +125,19 @@ namespace Neon.Cadence
         /// enabled for production (because it won't work).
         /// </summary>
         internal bool EmulateProxy { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
+        /// useful while debugging the library but should never be set for production.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        internal bool DisableHeartbeats { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
+        /// useful while debugging the library but should never be set for production.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        internal bool IgnoreTimeouts { get; set; } = false;
     }
 }

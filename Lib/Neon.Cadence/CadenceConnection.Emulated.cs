@@ -64,7 +64,7 @@ namespace Neon.Cadence
         /// [cadence-proxy] implementation uses to communicate with the [cadence-client]
         /// after the first <see cref="InitializeRequest"/> has been received.
         /// </summary>
-        internal HttpClient EmulatedCadenceClient { get; private set; }
+        internal HttpClient EmulatedLibraryClient { get; private set; }
 
         /// <summary>
         /// Handles requests to the emulated <b>cadence-proxy</b> root <b>"/"</b> endpoint path.
@@ -77,7 +77,7 @@ namespace Neon.Cadence
             var response       = context.Response;
             var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
 
-            if (EmulatedCadenceClient == null && requestMessage.Type != MessageTypes.InitializeRequest)
+            if (EmulatedLibraryClient == null && requestMessage.Type != MessageTypes.InitializeRequest)
             {
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 await response.WriteAsync($"Unexpected Message: Waiting for an [{nameof(InitializeRequest)}] message to specify the [cadence-client] network endpoint.");
@@ -120,25 +120,25 @@ namespace Neon.Cadence
         {
             lock (syncLock)
             {
-                if (EmulatedCadenceClient != null)
+                if (EmulatedLibraryClient == null)
                 {
                     var httpHandler = new HttpClientHandler()
                     {
                         // Disable compression because all communication is happening on
                         // a loopback interface (essentially in-memory) so there's not
-                        // much point in taking the CPU hit to manage compression.
+                        // much point in taking the CPU hit to do compression.
 
                         AutomaticDecompression = DecompressionMethods.None
                     };
 
-                    EmulatedCadenceClient = new HttpClient(httpHandler, disposeHandler: true)
+                    EmulatedLibraryClient = new HttpClient(httpHandler, disposeHandler: true)
                     {
                         BaseAddress = new Uri($"http://{request.LibraryAddress}:{request.LibraryPort}")
                     };
                 }
             }
 
-            await EmulatedCadenceClient.SendReplyAsync(request, new InitializeReply());
+            await EmulatedLibraryClient.SendReplyAsync(request, new InitializeReply());
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedHeartbeatRequestAsync(HeartbeatRequest request)
         {
-            await EmulatedCadenceClient.SendReplyAsync(request, new HeartbeatReply());
+            await EmulatedLibraryClient.SendReplyAsync(request, new HeartbeatReply());
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace Neon.Cadence
                 }
             }
 
-            await EmulatedCadenceClient.SendReplyAsync(request, cancelReply);
+            await EmulatedLibraryClient.SendReplyAsync(request, cancelReply);
         }
 
         /// <summary>
