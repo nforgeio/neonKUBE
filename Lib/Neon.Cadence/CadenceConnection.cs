@@ -446,7 +446,7 @@ namespace Neon.Cadence
             catch (Exception e)
             {
                 Dispose();
-                throw;
+                throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
             }
 
             // Crank up the background threads which will handle [cadence-proxy]
@@ -479,7 +479,40 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
+            RaiseConnectionClosed();
+
             closingConnection = true;
+
+            if (ProxyProcess != null)
+            {
+                try
+                {
+                    // Signal the proxy that it should exit gracefully and then
+                    // allow it [Settings.TerminateTimeout] to actually exit
+                    // before killing it.
+
+                    try
+                    {
+                        ProxyCallAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
+                    }
+                    catch
+                    {
+                        // Ignoring these.
+                    }
+
+                    if (!ProxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
+                    {
+                        log.LogWarn(() => $"[cadence-proxy]: Did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
+                        ProxyProcess.Kill();
+                    }
+
+                    ProxyProcess = null;
+                }
+                catch
+                {
+                    // Ignoring this.
+                }
+            }
 
             if (heartbeatThread != null)
             {
@@ -503,20 +536,6 @@ namespace Neon.Cadence
             {
                 emulatedHost.Dispose();
                 emulatedHost = null;
-            }
-
-            if (ProxyProcess != null)
-            {
-                try
-                {
-                    ProxyProcess.Kill();
-                    ProxyProcess.WaitForExit();
-                    ProxyProcess = null;
-                }
-                catch
-                {
-                    // Ignoring this.
-                }
             }
 
             if (proxyClient != null)
@@ -571,15 +590,15 @@ namespace Neon.Cadence
         /// <param name="exception">Optional exception to be included in the event.</param>
         private void RaiseConnectionClosed(Exception exception = null)
         {
-            var raise = false;
+            var raiseConnectionClosed = false;
 
             lock (syncLock)
             {
-                raise                  = !connectionClosedRaised;
+                raiseConnectionClosed  = !connectionClosedRaised;
                 connectionClosedRaised = true;
             }
 
-            if (raise)
+            if (raiseConnectionClosed)
             {
                 ConnectionClosed?.Invoke(this, new CadenceConnectionClosedArgs() { Exception = exception });
             }

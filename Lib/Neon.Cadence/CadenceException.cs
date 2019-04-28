@@ -16,25 +16,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
 
 namespace Neon.Cadence
 {

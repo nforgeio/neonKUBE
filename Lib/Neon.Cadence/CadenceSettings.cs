@@ -86,6 +86,17 @@ namespace Neon.Cadence
         public TimeSpan ProxyTimeout { get; set; } = default;
 
         /// <summary>
+        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
+        /// to gracefully close its Cadence cluster connection and terminate.  The proxy
+        /// will be forceably killed when this time is exceeded.  This defaults to
+        /// <b>30 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "TerminateTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "terminateTimeout", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public TimeSpan TerminateTimeout { get; set; } = default;
+
+        /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
         /// will be written before starting it.  This defaults to <c>null</c> which specifies
         /// that the binary will be written to the same folder where the <b>Neon.Cadence</b>

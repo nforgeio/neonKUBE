@@ -194,5 +194,37 @@ namespace TestCadence
                 connection.Settings.DebugBlockHeartbeats = false;
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void ConnectionClosed()
+        {
+            try
+            {
+                // Verify that the [ConnectionClosed] event when a
+                // connection is disposed.
+
+                var connectionClosed    = false;
+                var connectionException = (Exception)null;
+
+                connection.ConnectionClosed +=
+                    (sender, args) =>
+                    {
+                        connectionClosed    = true;
+                        connectionException = args.Exception;
+                    };
+
+                connection.Dispose();
+
+                Assert.True(connectionClosed);
+                Assert.Null(connectionException);
+            }
+            finally
+            {
+                // Restart the fixture for the next test.
+
+                fixture.Restart();
+            }
+        }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceTimeoutException.cs
+// FILE:	    CadenceConnectException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,16 +20,16 @@ using System;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Indicates that a Cadence operation timed out.
+    /// Indicates that a Cadence connection could not be established.
     /// </summary>
-    public class CadenceTimeoutException : CadenceException
+    public class CadenceConnectException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceTimeoutException(string message, Exception innerException = null)
+        public CadenceConnectException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }

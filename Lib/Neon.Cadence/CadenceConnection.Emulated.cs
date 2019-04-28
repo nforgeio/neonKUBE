@@ -100,6 +100,11 @@ namespace Neon.Cadence
                     await OnEmulatedCancelRequestAsync((CancelRequest)requestMessage);
                     break;
 
+                case MessageTypes.TerminateRequest:
+
+                    await OnEmulatedTerminateRequestAsync((TerminateRequest)requestMessage);
+                    break;
+
                 default:
 
                     response.StatusCode = StatusCodes.Status400BadRequest;
@@ -164,7 +169,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedCancelRequestAsync(CancelRequest request)
         {
-            var cancelReply = new CancelReply()
+            var reply = new CancelReply()
             {
                 WasCancelled = false
             };
@@ -174,11 +179,21 @@ namespace Neon.Cadence
                 if (operations.TryGetValue(request.TargetRequestId, out var operation))
                 {
                     operations.Remove(request.TargetRequestId);
-                    cancelReply.WasCancelled = true;
+                    reply.WasCancelled = true;
                 }
             }
 
-            await EmulatedLibraryClient.SendReplyAsync(request, cancelReply);
+            await EmulatedLibraryClient.SendReplyAsync(request, reply);
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="TerminateRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedTerminateRequestAsync(TerminateRequest request)
+        {
+            await EmulatedLibraryClient.SendReplyAsync(request, new TerminateReply());
         }
 
         /// <summary>
