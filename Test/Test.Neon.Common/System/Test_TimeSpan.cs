@@ -36,7 +36,7 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Adjust()
+        public void AdjustToFitDateRange()
         {
             // Verify that we can adjust a timespan such that when
             // added to a DateTime, the result won't exceed the
@@ -44,30 +44,30 @@ namespace TestCommon
 
             // TimeSpan.Zero should always work without adjustment.
 
-            Assert.Equal(TimeSpan.Zero, TimeSpan.Zero.Adjust(default));
-            Assert.Equal(TimeSpan.Zero, TimeSpan.Zero.Adjust(DateTime.MinValue));
-            Assert.Equal(TimeSpan.Zero, TimeSpan.Zero.Adjust(DateTime.MaxValue));
+            Assert.Equal(TimeSpan.Zero, TimeSpan.Zero.AdjustToFitDateRange(default));
+            Assert.Equal(TimeSpan.Zero, TimeSpan.Zero.AdjustToFitDateRange(DateTime.MinValue));
+            Assert.Equal(TimeSpan.Zero, TimeSpan.Zero.AdjustToFitDateRange(DateTime.MaxValue));
 
             // Verify timespans that won't exceed the data range.
 
             var timespan = TimeSpan.FromDays(10);
             var datetime = new DateTime(2019, 4, 28);
 
-            Assert.Equal(timespan, timespan.Adjust(datetime));
-            Assert.Equal(timespan, timespan.Adjust(DateTime.MaxValue - timespan));
-            Assert.Equal(timespan, timespan.Adjust(DateTime.MinValue + timespan));
+            Assert.Equal(timespan, timespan.AdjustToFitDateRange(datetime));
+            Assert.Equal(timespan, timespan.AdjustToFitDateRange(DateTime.MaxValue - timespan));
+            Assert.Equal(timespan, timespan.AdjustToFitDateRange(DateTime.MinValue + timespan));
 
             // Verify a timespan that breaks the lower date range.
 
             timespan = -TimeSpan.FromDays(10);
 
-            Assert.Equal(timespan + TimeSpan.FromDays(1), timespan.Adjust(DateTime.MinValue - timespan - TimeSpan.FromDays(1)));
+            Assert.Equal(timespan + TimeSpan.FromDays(1), timespan.AdjustToFitDateRange(DateTime.MinValue - timespan - TimeSpan.FromDays(1)));
 
             // Verify a timespan that breaks the upper date range.
 
             timespan = TimeSpan.FromDays(10);
 
-            Assert.Equal(timespan - TimeSpan.FromDays(1), timespan.Adjust(DateTime.MaxValue - timespan + TimeSpan.FromDays(1)));
+            Assert.Equal(timespan - TimeSpan.FromDays(1), timespan.AdjustToFitDateRange(DateTime.MaxValue - timespan + TimeSpan.FromDays(1)));
         }
     }
 }

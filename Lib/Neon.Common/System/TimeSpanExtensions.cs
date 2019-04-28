@@ -40,7 +40,7 @@ namespace System
         /// <param name="timespan">The <see cref="TimeSpan"/>.</param>
         /// <param name="dateTime">The <see cref="DateTime"/>.</param>
         /// <returns>The adjusted <see cref="TimeSpan"/>.</returns>
-        public static TimeSpan Adjust(this TimeSpan timespan, DateTime dateTime)
+        public static TimeSpan AdjustToFitDateRange(this TimeSpan timespan, DateTime dateTime)
         {
             if (timespan == TimeSpan.Zero)
             {
