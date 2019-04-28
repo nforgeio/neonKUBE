@@ -124,20 +124,33 @@ namespace Neon.Cadence
         /// in its place.  This is used internally for low-level testing and should never be 
         /// enabled for production (because it won't work).
         /// </summary>
-        internal bool EmulateProxy { get; set; } = false;
+        internal bool DebugEmulateProxy { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
         /// useful while debugging the library but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
-        internal bool DisableHeartbeats { get; set; } = false;
+        internal bool DebugDisableHeartbeats { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
         /// useful while debugging the library but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
-        internal bool IgnoreTimeouts { get; set; } = false;
+        internal bool DebugIgnoreTimeouts { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
+        /// emulated <b>cadence-proxy</b> for testing purposes.
+        /// </summary>
+        internal bool DebugBlockHeartbeats { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally specifies the timeout to use for 
+        /// HTTP requests made to the <b>cadence-proxy</b>.  This defaults to
+        /// <b>5 seconds</b>.
+        /// </summary>
+        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(5);
     }
 }

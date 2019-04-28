@@ -51,12 +51,13 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Mode              = ConnectionMode.ListenOnly,
-                Debug             = true,
-                EmulateProxy      = true,
-                //ProxyTimeout      = TimeSpan.FromMinutes(5),
-                //DisableHeartbeats = true,
-                //IgnoreTimeouts    = true
+                Mode                   = ConnectionMode.ListenOnly,
+                Debug                  = true,
+                ProxyTimeout           = TimeSpan.FromSeconds(1),
+                DebugEmulateProxy      = true,
+                DebugHttpTimeout       = TimeSpan.FromSeconds(1),
+                //DebugDisableHeartbeats = true,
+                //DebugIgnoreTimeouts    = true
             };
 
             fixture.Start(settings);
@@ -154,6 +155,43 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task NoHeartbeat()
+        {
+            try
+            {
+                var connectionClosed    = false;
+                var connectionException = (Exception)null;
+
+                connection.ConnectionClosed +=
+                    (sender, args) =>
+                    {
+                        connectionClosed    = true;
+                        connectionException = args.Exception;
+                    };
+
+                // Wait 5 seconds to verify that the [cadence-proxy] is happily
+                // responding to heartbeats.
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                Assert.False(connectionClosed);
+
+                // Disable heartbeat monitoring so we can verify that
+                // the connection is closed gracefully.
+
+                connection.Settings.DebugBlockHeartbeats = true;
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                Assert.True(connectionClosed);
+                Assert.IsType<CadenceTimeoutException>(connectionException);
+            }
+            finally
+            {
+                connection.Settings.DebugBlockHeartbeats = false;
             }
         }
     }

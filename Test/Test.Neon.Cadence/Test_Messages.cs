@@ -49,7 +49,7 @@ namespace TestCadence
             {
                 Mode         = ConnectionMode.ListenOnly,
                 Debug        = true,
-                EmulateProxy = true     // $debug(jeff.lill): REMOVE THIS ONCE JACK GETS THE PROXY WORKING!
+                DebugEmulateProxy = true     // $debug(jeff.lill): REMOVE THIS ONCE JACK GETS THE PROXY WORKING!
             };
 
             fixture.Start(settings);

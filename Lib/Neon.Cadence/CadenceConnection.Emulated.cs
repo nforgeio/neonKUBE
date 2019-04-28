@@ -49,7 +49,6 @@ namespace Neon.Cadence
 {
     public partial class CadenceConnection
     {
-
         //---------------------------------------------------------------------
         // Emulated [cadence-proxy] implementation:
 
@@ -148,6 +147,13 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedHeartbeatRequestAsync(HeartbeatRequest request)
         {
+            if (Settings.DebugBlockHeartbeats)
+            {
+                // Ignore heartbeats so unit tests can verify the correct behavior.
+
+                return;
+            }
+
             await EmulatedLibraryClient.SendReplyAsync(request, new HeartbeatReply());
         }
 

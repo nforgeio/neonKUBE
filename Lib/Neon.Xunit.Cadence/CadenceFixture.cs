@@ -157,7 +157,7 @@ namespace Neon.Xunit.Cadence
                 settings.Servers.Clear();
                 settings.Servers.Add(new Uri("http://localhost:8091"));
 
-                settings.EmulateProxy = emulateProxy || settings.EmulateProxy;
+                settings.DebugEmulateProxy = emulateProxy || settings.DebugEmulateProxy;
 
                 // Create the Cadence connection.
 
@@ -208,8 +208,8 @@ namespace Neon.Xunit.Cadence
 
             if (ConnectionClient != null)
             {
-                Connection.Dispose();
-                Connection = null;
+                ConnectionClient.Dispose();
+                ConnectionClient = null;
             }
 
             if (ProxyClient != null)
