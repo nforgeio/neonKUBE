@@ -52,6 +52,12 @@ namespace Neon.Cadence
             set => SetLongProperty("RequestId", value);
         }
 
+        /// <summary>
+        /// Derived request types must return the type of the expected
+        /// <see cref="ProxyReply"/> message.
+        /// </summary>
+        public virtual MessageTypes ReplyType => MessageTypes.Unspecified;
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {

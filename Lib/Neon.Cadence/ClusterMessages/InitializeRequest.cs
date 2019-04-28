@@ -45,6 +45,9 @@ namespace Neon.Cadence
             Type = MessageTypes.InitializeRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.InitializeReply;
+
         /// <summary>
         /// The IP address where the Cadence Library is listening for proxy messages
         /// send by the <b>cadence-proxy</b>.

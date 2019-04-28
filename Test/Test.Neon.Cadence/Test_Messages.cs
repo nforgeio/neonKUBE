@@ -47,8 +47,9 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Mode  = ConnectionMode.ListenOnly,
-                Debug = true
+                Mode         = ConnectionMode.ListenOnly,
+                Debug        = true,
+                EmulateProxy = true     // $debug(jeff.lill): REMOVE THIS ONCE JACK GETS THE PROXY WORKING!
             };
 
             fixture.Start(settings);
@@ -489,9 +490,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new InitializeRequest();
+
+                Assert.Equal(MessageTypes.InitializeReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -548,9 +551,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new InitializeReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -595,9 +598,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new ConnectRequest();
+
+                Assert.Equal(MessageTypes.ConnectReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -660,9 +665,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new ConnectReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -713,9 +718,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainDescribeRequest();
+
+                Assert.Equal(MessageTypes.DomainDescribeReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -772,9 +779,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainDescribeReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -849,9 +856,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainRegisterRequest();
+
+                Assert.Equal(MessageTypes.DomainRegisterReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -926,9 +935,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainRegisterReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -973,9 +982,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainUpdateRequest();
+
+                Assert.Equal(MessageTypes.DomainUpdateReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1044,9 +1055,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainUpdateReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1091,9 +1102,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new TerminateRequest();
+
+                Assert.Equal(MessageTypes.TerminateReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1138,9 +1151,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new TerminateReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1185,9 +1198,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new HeartbeatRequest();
+
+                Assert.Equal(MessageTypes.HeartbeatReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1232,9 +1247,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new HeartbeatReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1279,9 +1294,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new CancelRequest();
+
+                Assert.Equal(MessageTypes.CancelReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1330,9 +1347,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new CancelReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));

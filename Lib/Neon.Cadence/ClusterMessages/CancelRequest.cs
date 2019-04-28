@@ -46,6 +46,9 @@ namespace Neon.Cadence
             Type = MessageTypes.CancelRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.CancelReply;
+
         /// <summary>
         /// The ID of the request being cancelled.
         /// </summary>

@@ -47,6 +47,9 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.HeartbeatReply;
+
+        /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
             var clone = new HeartbeatRequest();

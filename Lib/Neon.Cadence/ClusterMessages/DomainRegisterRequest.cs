@@ -49,6 +49,9 @@ namespace Neon.Cadence
             Type = MessageTypes.DomainRegisterRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.DomainRegisterReply;
+
         /// <summary>
         /// Name for the new domain.
         /// </summary>

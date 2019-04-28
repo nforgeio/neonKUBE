@@ -45,6 +45,9 @@ namespace Neon.Cadence
             Type = MessageTypes.ConnectRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.ConnectReply;
+
         /// <summary>
         /// <para>
         /// The Cadence server network endpoints separated by commas.

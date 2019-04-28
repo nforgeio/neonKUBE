@@ -44,6 +44,9 @@ namespace Neon.Cadence
             Type = MessageTypes.DomainUpdateRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.DomainUpdateReply;
+
         /// <summary>
         /// The target Cadence domain name.
         /// </summary>

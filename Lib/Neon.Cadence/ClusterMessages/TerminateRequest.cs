@@ -47,6 +47,9 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.TerminateReply;
+
+        /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
             var clone = new TerminateRequest();
