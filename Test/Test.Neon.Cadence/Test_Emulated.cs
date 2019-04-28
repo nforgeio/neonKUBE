@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_LowLevel.cs
+// FILE:        Test_Emultated.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,13 +41,13 @@ namespace TestCadence
     /// Tests low-level <see cref="CadenceConnection"/> functionality against a
     /// partially implemented <b>cadence-proxy</b> emulation.
     /// </summary>
-    public sealed class Test_LowLevel : IClassFixture<CadenceFixture>, IDisposable
+    public sealed class Test_Emultated : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture      fixture;
         CadenceConnection   connection;
         HttpClient          proxyClient;
 
-        public Test_LowLevel(CadenceFixture fixture)
+        public Test_Emultated(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {
@@ -61,6 +61,8 @@ namespace TestCadence
             this.fixture     = fixture;
             this.connection  = fixture.Connection;
             this.proxyClient = new HttpClient() { BaseAddress = connection.ProxyUri };
+
+            System.Threading.Thread.Sleep(10000000);
         }
 
         public void Dispose()

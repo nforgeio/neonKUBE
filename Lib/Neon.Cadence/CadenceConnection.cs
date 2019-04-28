@@ -50,7 +50,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Implements a client to manage an Uber Cadence cluster.
     /// </summary>
-    public class CadenceConnection : IDisposable
+    public partial class CadenceConnection : IDisposable
     {
         //---------------------------------------------------------------------
         // Private types
@@ -103,22 +103,17 @@ namespace Neon.Cadence
             /// </summary>
             /// <param name="requestId">The unique request ID.</param>
             /// <param name="request">The request message.</param>
-            /// <param name="timeLimitUtc">
-            /// The time (UTC) after which the operation should be considered
-            /// to have timed out.  This defaults to the end-of-time.
+            /// <param name="timeout">
+            /// Optionally specifies the timeout.  This defaults to the end of time.
             /// </param>
-            public Operation(long requestId, ProxyRequest request, DateTime timeLimitUtc = default)
+            public Operation(long requestId, ProxyRequest request, TimeSpan timeout = default)
             {
                 Covenant.Requires<ArgumentNullException>(request != null);
 
-                if (timeLimitUtc == default)
-                {
-                    timeLimitUtc = DateTime.MaxValue;
-                }
-
-                this.AwaitingTask = new TaskCompletionSource<ProxyReply>();
-                this.RequestId = requestId;
-                this.TimeLimitUtc = timeLimitUtc;
+                this.CompletionSource = new TaskCompletionSource<ProxyReply>();
+                this.RequestId        = requestId;
+                this.StartTimeUtc     = DateTime.UtcNow;
+                this.Timeout          = timeout.AdjustToFitDateRange(StartTimeUtc);
             }
 
             /// <summary>
@@ -132,19 +127,23 @@ namespace Neon.Cadence
             public ProxyRequest Request { get; private set; }
 
             /// <summary>
-            /// The time (UTC) after which the operation should be considered
-            /// to have timed out.
+            /// The time (UTC) the operation started.
             /// </summary>
-            public DateTime TimeLimitUtc { get; private set; }
+            public DateTime StartTimeUtc { get; private set; }
 
             /// <summary>
-            /// Returns the awaitable <see cref="TaskCompletionSource{ProxyReply}"/> that
-            /// will signal completion when <see cref="SetReply(ProxyReply)"/> is called
+            /// The operation timeout. 
+            /// </summary>
+            public TimeSpan Timeout { get; private set; }
+
+            /// <summary>
+            /// Returns the <see cref="TaskCompletionSource{ProxyReply}"/> that we'll use
+            /// to signal completion when <see cref="SetReply(ProxyReply)"/> is called
             /// with the reply message for this operation, <see cref="SetCanceled"/> when
             /// the operation has been canceled, or <see cref="SetException(Exception)"/>
             /// is called signalling an error.
             /// </summary>
-            public TaskCompletionSource<ProxyReply> AwaitingTask { get; private set; }
+            public TaskCompletionSource<ProxyReply> CompletionSource { get; private set; }
 
             /// <summary>
             /// Signals the awaiting <see cref="Task"/> that a reply message 
@@ -164,13 +163,13 @@ namespace Neon.Cadence
 
                 lock (this)
                 {
-                    if (AwaitingTask == null)
+                    if (CompletionSource == null)
                     {
                         return;
                     }
 
-                    AwaitingTask.TrySetResult(reply);
-                    AwaitingTask = null;
+                    CompletionSource.TrySetResult(reply);
+                    CompletionSource = null;
                 }
             }
 
@@ -189,13 +188,13 @@ namespace Neon.Cadence
             {
                 lock (this)
                 {
-                    if (AwaitingTask == null)
+                    if (CompletionSource == null)
                     {
                         return;
                     }
 
-                    AwaitingTask.TrySetCanceled();
-                    AwaitingTask = null;
+                    CompletionSource.TrySetCanceled();
+                    CompletionSource = null;
                 }
             }
 
@@ -217,13 +216,13 @@ namespace Neon.Cadence
 
                 lock (this)
                 {
-                    if (AwaitingTask == null)
+                    if (CompletionSource == null)
                     {
                         return;
                     }
 
-                    AwaitingTask.TrySetException(e);
-                    AwaitingTask = null;
+                    CompletionSource.TrySetException(e);
+                    CompletionSource = null;
                 }
             }
         }
@@ -351,9 +350,9 @@ namespace Neon.Cadence
         private IWebHost                    host;
         private IWebHost                    emulatedHost;
         private long                        nextRequestId;
+        private Dictionary<long, Operation> operations;
         private Thread                      backgroundThread;
         private bool                        closingConnection;
-        private Dictionary<long, Operation> pendingOperations;
 
         /// <summary>
         /// Constructor.
@@ -434,7 +433,7 @@ namespace Neon.Cadence
             // Initialize the pending operations.
 
             nextRequestId     = 0;
-            pendingOperations = new Dictionary<long, Operation>();
+            operations = new Dictionary<long, Operation>();
 
             // Crank up the background thread which will handle [cadence-proxy]
             // health heartbeats as well as request timeouts.
@@ -620,6 +619,29 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Asynchronously calls the <b>cadence-proxy</b> by sending a request message
+        /// and then waits for a reply.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <param name="timeout">
+        /// Optionally specifies the maximum time to wait for the operation to complete.
+        /// This defaults to unlimited.
+        /// </param>
+        /// <returns>The reply message.</returns>
+        private async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
+        {
+            var requestId = Interlocked.Increment(ref this.nextRequestId);
+            var operation = new Operation(requestId, request, timeout);
+
+            lock (syncLock)
+            {
+                operations.Add(requestId, operation);
+            }
+
+            return await operation.CompletionSource.Task;
+        }
+
+        /// <summary>
         /// Implements the connection's background thread which is responsible
         /// for checking [cadence-proxy] health via heartbeat requests and 
         /// also for implelementing request timeouts.
@@ -667,13 +689,20 @@ namespace Neon.Cadence
                             // cancelled.
 
                             var timedOutOperations = new List<Operation>();
-                            var utcNow = DateTime.UtcNow;
+                            var utcNow             = DateTime.UtcNow;
 
                             lock (syncLock)
                             {
-                                foreach (var operation in pendingOperations.Values)
+                                foreach (var operation in operations.Values)
                                 {
-                                    if (operation.TimeLimitUtc <= utcNow)
+                                    if (operation.Timeout <= TimeSpan.Zero)
+                                    {
+                                        // These operations can run indefinitely.
+
+                                        continue;
+                                    }
+
+                                    if (operation.StartTimeUtc + operation.Timeout <= utcNow)
                                     {
                                         timedOutOperations.Add(operation);
                                     }
@@ -681,7 +710,7 @@ namespace Neon.Cadence
 
                                 foreach (var operation in timedOutOperations)
                                 {
-                                    pendingOperations.Remove(operation.RequestId);
+                                    operations.Remove(operation.RequestId);
                                 }
                             }
 
@@ -692,13 +721,16 @@ namespace Neon.Cadence
                                 // application that the operation was cancelled.
                                 //
                                 // Note that we're not sending a new CancelRequest for another
-                                // CancelRequest that timed out.
+                                // CancelRequest that timed out to the potential of a blizzard
+                                // of CancelRequests.
                                 //
                                 // Note that we're going to have all of these cancellations
                                 // run in parallel rather than waiting for them to complete
                                 // one-by-one.
 
-                                var notAwaitingTask = Task.Run(
+                                log.LogWarn(() => $" Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormatTZ)}, timeout={operation.Timeout}].");
+
+                                var notAwaitingThis = Task.Run(
                                     async () =>
                                     {
                                         if (operation.Request.Type != MessageTypes.CancelRequest)
@@ -729,207 +761,6 @@ namespace Neon.Cadence
 
                     ConnectionClosed?.Invoke(this, new CadenceConnectionClosedArgs() { Exception = exception });
                 });
-        }
-
-        /// <summary>
-        /// Asynchronously calls the <b>cadence-proxy</b> by sending a request message
-        /// and then waits for a reply.
-        /// </summary>
-        /// <param name="request">The request message.</param>
-        /// <param name="timeout">
-        /// Optionally specifies the maximum time to wait for the operation to complete.
-        /// This defaults to unlimited.
-        /// </param>
-        /// <returns>The reply message.</returns>
-        private Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
-        {
-            var requestId = Interlocked.Increment(ref this.nextRequestId);
-            // var operation = new Operation(requestId, 
-
-            throw new NotImplementedException();
-        }
-
-        //---------------------------------------------------------------------
-        // Emulated [cadence-proxy] implementation:
-
-        /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Set this to <c>false</c> to emulate an unhealthy
-        /// <b>cadence-proxy</b>.
-        /// </summary>
-        internal bool EmulatedHealth { get; set; } = true;
-
-        /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Configured as the HTTP client the emulated 
-        /// [cadence-proxy] implementation uses to communicate with the [cadence-client]
-        /// after the first <see cref="InitializeRequest"/> has been received.
-        /// </summary>
-        internal HttpClient EmulatedCadenceClient { get; private set; }
-
-        /// <summary>
-        /// Handles requests to the emulated <b>cadence-proxy</b> root <b>"/"</b> endpoint path.
-        /// </summary>
-        /// <param name="context">The request context.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedRootRequestAsync(HttpContext context)
-        {
-            var request        = context.Request;
-            var response       = context.Response;
-            var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
-
-            if (EmulatedCadenceClient == null && requestMessage.Type != MessageTypes.InitializeRequest)
-            {
-                response.StatusCode = StatusCodes.Status400BadRequest;
-                await response.WriteAsync($"Unexpected Message: Waiting for an [{nameof(InitializeRequest)}] message to specify the [cadence-client] network endpoint.");
-                return;
-            }
-
-            switch (requestMessage.Type)
-            {
-                case MessageTypes.InitializeRequest:
-
-                    await OnEmulatedInitializeRequestAsync((InitializeRequest)requestMessage);
-                    break;
-
-                case MessageTypes.HeartbeatRequest:
-
-                    await OnEmulatedHeartbeatRequestAsync((HeartbeatRequest) requestMessage);
-                    break;
-
-                case MessageTypes.CancelRequest:
-
-                    await OnEmulatedCancelRequestAsync((CancelRequest)requestMessage);
-                    break;
-
-                default:
-
-                    response.StatusCode = StatusCodes.Status400BadRequest;
-                    await response.WriteAsync($"EMULATION: Message [{requestMessage.Type}] is not supported.");
-                    break;
-            }
-
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Handles emulated <see cref="InitializeRequest"/> messages.
-        /// </summary>
-        /// <param name="request">The received message.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedInitializeRequestAsync(InitializeRequest request)
-        {
-            lock (syncLock)
-            {
-                if (EmulatedCadenceClient != null)
-                {
-                    var httpHandler = new HttpClientHandler()
-                    {
-                        // Disable compression because all communication is happening on
-                        // a loopback interface (essentially in-memory) so there's not
-                        // much point in taking the CPU hit to manage compression.
-
-                        AutomaticDecompression = DecompressionMethods.None
-                    };
-
-                    EmulatedCadenceClient = new HttpClient(httpHandler, disposeHandler: true)
-                    {
-                        BaseAddress = new Uri($"http://{request.LibraryAddress}:{request.LibraryPort}")
-                    };
-                }
-            }
-
-            await EmulatedCadenceClient.SendReplyAsync(request, new InitializeReply());
-        }
-
-        /// <summary>
-        /// Handles emulated <see cref="HeartbeatRequest"/> messages.
-        /// </summary>
-        /// <param name="request">The received message.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedHeartbeatRequestAsync(HeartbeatRequest request)
-        {
-            await EmulatedCadenceClient.SendReplyAsync(request, new HeartbeatReply());
-        }
-
-        /// <summary>
-        /// Handles emulated <see cref="CancelRequest"/> messages.
-        /// </summary>
-        /// <param name="request">The received message.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedCancelRequestAsync(CancelRequest request)
-        {
-            var cancelReply = new CancelReply()
-            {
-                WasCancelled = false
-            };
-
-            lock (syncLock)
-            {
-                if (pendingOperations.TryGetValue(request.TargetRequestId, out var operation))
-                {
-                    pendingOperations.Remove(request.TargetRequestId);
-                    cancelReply.WasCancelled = true;
-                }
-            }
-
-            await EmulatedCadenceClient.SendReplyAsync(request, cancelReply);
-        }
-
-        /// <summary>
-        /// Called when an HTTP request is received by the integrated web server 
-        /// (presumably from the the associated <b>cadence-proxy</b> process).
-        /// </summary>
-        /// <param name="context">The request context.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedHttpRequestAsync(HttpContext context)
-        {
-            var request  = context.Request;
-            var response = context.Response;
-
-            if (request.Method != "PUT")
-            {
-                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
-                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted with [PUT].");
-                return;
-            }
-
-            if (request.ContentType != ProxyMessage.ContentType)
-            {
-                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
-                await response.WriteAsync($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}].");
-                return;
-            }
-
-            try
-            {
-                switch (request.Path)
-                {
-                    case "/":
-
-                        await OnEmulatedRootRequestAsync(context);
-                        break;
-
-                    case "/echo":
-
-                        await OnEchoRequestAsync(context);
-                        break;
-
-                    default:
-
-                        response.StatusCode = StatusCodes.Status404NotFound;
-                        await response.WriteAsync($"[{request.Path}] HTTP PATH not supported.  Only [/] and [/echo] are allowed.");
-                        return;
-                }
-            }
-            catch (FormatException e)
-            {
-                log.LogError(e);
-                response.StatusCode = StatusCodes.Status400BadRequest;
-            }
-            catch (Exception e)
-            {
-                log.LogError(e);
-                response.StatusCode = StatusCodes.Status500InternalServerError;
-            }
         }
     }
 }
