@@ -238,6 +238,8 @@ ARGUMENTS:
                                 Program.Exit(1);
                             }
 
+                            Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
+
                             if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) <= File.GetLastWriteTimeUtc(sourcePath))
                             {
                                 Console.WriteLine($"File [{targetPath}] is up to date.");
@@ -272,6 +274,8 @@ ARGUMENTS:
                                 Console.Error.WriteLine($"*** ERROR: SOURCE file [{sourcePath}] does not exist.");
                                 Program.Exit(1);
                             }
+
+                            Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
 
                             if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) <= File.GetLastWriteTimeUtc(sourcePath))
                             {
