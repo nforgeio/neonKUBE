@@ -237,15 +237,25 @@ namespace Neon.Cadence
             if (!string.IsNullOrEmpty(request.Uuid))
             {
                 domain = emulatedDomains.Where(d => d.Name == request.Name).SingleOrDefault();
+
+                if (domain == null)
+                {
+                    reply.ErrorDetails = $"Domain [uuid={request.Uuid}] does not exist.";
+                }
             }
             else if (!string.IsNullOrEmpty(request.Name))
             {
                 domain = emulatedDomains.Where(d => d.Uuid == request.Uuid).SingleOrDefault();
+
+                if (domain == null)
+                {
+                    reply.ErrorDetails = $"Domain [name={request.Name}] does not exist.";
+                }
             }
             else
             {
                 reply.ErrorType    = CadenceErrorTypes.Generic;
-                reply.ErrorMessage = new CadenceEntityNotExistsException(null).CadenceError;
+                reply.Error = new CadenceEntityNotExistsException(null).CadenceError;
 
                 await EmulatedLibraryClient.SendReplyAsync(request, reply);
                 return;
@@ -261,8 +271,8 @@ namespace Neon.Cadence
             }
             else
             {
-                reply.ErrorType    = CadenceErrorTypes.Generic;
-                reply.ErrorMessage = new CadenceEntityNotExistsException(null).CadenceError;
+                reply.ErrorType = CadenceErrorTypes.Generic;
+                reply.Error     = new CadenceEntityNotExistsException(null).CadenceError;
             }
 
             await EmulatedLibraryClient.SendReplyAsync(request, reply);
@@ -275,6 +285,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainRegisterAsync(DomainRegisterRequest request)
         {
+
+
             await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
         }
 

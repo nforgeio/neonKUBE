@@ -48,7 +48,7 @@ namespace TestCadence
             var settings = new CadenceSettings()
             {
                 Mode  = ConnectionMode.ListenOnly,
-                Debug = true
+                Debug = true,
             };
 
             fixture.Start(settings);
@@ -234,11 +234,21 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
+                message.ErrorType = CadenceErrorTypes.Custom;
+                message.Error = "MyError";
+                message.ErrorDetails = "MyError Details";
+
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -247,6 +257,9 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
             }
         }
 
