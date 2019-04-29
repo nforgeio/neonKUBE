@@ -612,7 +612,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Endpoints);
-                Assert.Null(message.Domain);
                 Assert.Null(message.Identity);
 
                 // Round-trip
@@ -621,8 +620,6 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Endpoints = "1.1.1.1:555,2.2.2.2:5555";
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
-                message.Domain = "my-domain";
-                Assert.Equal("my-domain", message.Domain);
                 message.Identity = "my-identity";
                 Assert.Equal("my-identity", message.Identity);
 
@@ -634,7 +631,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
-                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-identity", message.Identity);
 
                 // Echo the message via the connection's web server and verify.
@@ -643,7 +639,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
-                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-identity", message.Identity);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -652,7 +647,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
-                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-identity", message.Identity);
             }
         }

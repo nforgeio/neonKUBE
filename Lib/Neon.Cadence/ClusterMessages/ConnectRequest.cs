@@ -28,6 +28,8 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
+// $todo(jeff.lill): Investegate adding metrics details.
+
 namespace Neon.Cadence
 {
     /// <summary>
@@ -66,15 +68,6 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// The target Cadence domain.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
-        }
-
-        /// <summary>
         /// Optionally identifies the client application.
         /// </summary>
         public string Identity
@@ -101,7 +94,6 @@ namespace Neon.Cadence
             var typedTarget = (ConnectRequest)target;
 
             typedTarget.Endpoints = this.Endpoints;
-            typedTarget.Domain    = this.Domain;
             typedTarget.Identity  = this.Identity;
         }
     }
