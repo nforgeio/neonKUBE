@@ -49,7 +49,6 @@ namespace TestCadence
             {
                 Mode  = ConnectionMode.ListenOnly,
                 Debug = true,
-                DebugEmulateProxy = true
             };
 
             fixture.Start(settings);
