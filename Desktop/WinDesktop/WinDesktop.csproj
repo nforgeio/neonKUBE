@@ -338,9 +338,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>if not exist "$(NF_BUILD)" mkdir "$(NF_BUILD)"
-if not exist "$(NF_BUILD)/win-desktop" mkdir "$(NF_BUILD)/win-desktop"
-cp -R "$(TargetDir)/*" "$(NF_BUILD)/win-desktop"
+    <PostBuildEvent>if not exist "%25NF_BUILD%25" mkdir "%25NF_BUILD%25"
+if not exist "%25NF_BUILD%25/win-desktop" mkdir "%25NF_BUILD%25/win-desktop"
+cp -R "$(TargetDir)/*" "%25NF_BUILD%25/win-desktop"
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
