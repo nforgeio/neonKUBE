@@ -47,9 +47,8 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Mode         = ConnectionMode.ListenOnly,
-                Debug        = true,
-                DebugEmulateProxy = true     // $debug(jeff.lill): REMOVE THIS ONCE JACK GETS THE PROXY WORKING!
+                Mode  = ConnectionMode.ListenOnly,
+                Debug = true
             };
 
             fixture.Start(settings);
@@ -454,15 +453,6 @@ namespace TestCadence
         private TMessage EchoToProxy<TMessage>(TMessage message)
             where TMessage : ProxyMessage, new()
         {
-            // $debug(jeff.lill): DELETE THIS!
-            //
-            // [cadence-proxy] [/echo] doesn't work yet so we're going to
-            // temporarily disable this test and return as if it worked.
-
-            return message;
-
-            //--------------------------------
-
             var bytes   = message.Serialize();
             var content = new ByteArrayContent(bytes);
 
