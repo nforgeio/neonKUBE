@@ -49,7 +49,7 @@ func (s *Instance) Start() {
 	// set the logger to the global
 	// zap.Logger
 	s.Logger = zap.L()
-	s.Logger.Info("Server listening:",
+	s.Logger.Info("Server Details",
 		zap.String("Address", s.httpServer.Addr),
 		zap.Int("ProccessId", os.Getpid()))
 

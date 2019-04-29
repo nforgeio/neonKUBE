@@ -34,6 +34,18 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", false, "Set to debug mode")
 	flag.Parse()
 
+	// set the log level and if the program should run in debug mode
+	setLogLevelAndDebugMode(logLevel, debugMode)
+
+	// create the instance, set the routes,
+	// and start the server
+	instance := server.NewInstance(address)
+	endpoints.SetupRoutes(instance.Router)
+	instance.Start()
+}
+
+func setLogLevelAndDebugMode(logLevel string, debugMode bool) {
+
 	// new *zap.Logger
 	// new zapcore.EncoderConfig for the logger
 	var logger *zap.Logger
@@ -54,6 +66,8 @@ func main() {
 		// create the logger
 		encoderCfg = zap.NewDevelopmentEncoderConfig()
 		encoderCfg.TimeKey = "Time"
+		encoderCfg.LevelKey = "Level"
+		encoderCfg.MessageKey = "Message"
 		logger = zap.New(zapcore.NewCore(
 			zapcore.NewJSONEncoder(encoderCfg),
 			zapcore.Lock(os.Stdout),
@@ -82,6 +96,8 @@ func main() {
 		// create the logger
 		encoderCfg = zap.NewProductionEncoderConfig()
 		encoderCfg.TimeKey = "Time"
+		encoderCfg.MessageKey = "Message"
+		encoderCfg.LevelKey = "Level"
 		logger = zap.New(zapcore.NewCore(
 			zapcore.NewJSONEncoder(encoderCfg),
 			zapcore.Lock(os.Stdout),
@@ -92,10 +108,4 @@ func main() {
 
 	// set the global logger
 	_ = zap.ReplaceGlobals(logger)
-
-	// create the instance, set the routes,
-	// and start the server
-	instance := server.NewInstance(address)
-	endpoints.SetupRoutes(instance.Router)
-	instance.Start()
 }
