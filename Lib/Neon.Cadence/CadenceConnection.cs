@@ -342,6 +342,19 @@ namespace Neon.Cadence
 
             this.Settings = settings;
 
+            if (settings.Servers == null || settings.Servers.Count == 0)
+            {
+                throw new CadenceConnectException("No Cadence servers were specified.");
+            }
+
+            foreach (var server in settings.Servers)
+            {
+                if (server == null || !server.IsAbsoluteUri)
+                {
+                    throw new CadenceConnectException($"Invalid Cadence server URI [{server}].");
+                }
+            }
+
             if (settings.DebugIgnoreTimeouts)
             {
                 // Use a really long HTTP timeout when timeout detection is disabled

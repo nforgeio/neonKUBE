@@ -141,239 +141,239 @@ namespace Neon.Cadence
         /// <summary>
         /// <b>library --> proxy:</b> Registers a workflow handler.
         /// </summary>
-        Workflow_RegisterRequest = 100,
+        WorkflowRegisterRequest = 100,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_RegisterRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRegisterRequest"/> message.
         /// </summary>
-        Workflow_RegisterflowReply = 101,
+        WorkflowRegisterflowReply = 101,
 
         /// <summary>
         /// <b>library --> proxy:</b> Starts a workflow.
         /// </summary>
-        Workflow_StartWorkflowRequest = 102,
+        WorkflowStartWorkflowRequest = 102,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_StartWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowStartWorkflowRequest"/> message.
         /// </summary>
-        Workflow_StartWorkflowReply = 103,
+        WorkflowStartWorkflowReply = 103,
 
         /// <summary>
         /// <b>library --> proxy:</b> Executes a workflow.
         /// </summary>
-        Workflow_ExecuteWorkflowRequest = 104,
+        WorkflowExecuteWorkflowRequest = 104,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_ExecuteWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowExecuteWorkflowRequest"/> message.
         /// </summary>
-        Workflow_ExecuteWorkflowReply = 105,
+        WorkflowExecuteWorkflowReply = 105,
 
         /// <summary>
         /// <b>library --> proxy:</b> Signals a workflow.
         /// </summary>
-        Workflow_SignalWorkflowRequest = 106,
+        WorkflowSignalWorkflowRequest = 106,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_SignalWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWorkflowRequest"/> message.
         /// </summary>
-        Workflow_SignalWorkslowReply = 107,
+        WorkflowSignalWorkslowReply = 107,
 
         /// <summary>
         /// <b>library --> proxy:</b> Signals a workflow, starting it if necessary.
         /// </summary>
-        Workflow_SignalWorkflowWithStartRequest = 108,
+        WorkflowSignalWorkflowWithStartRequest = 108,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_SignalWorkflowWithStartRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWorkflowWithStartRequest"/> message.
         /// </summary>
-        Workflow_SignalWorkflowWithStartReply = 109,
+        WorkflowSignalWorkflowWithStartReply = 109,
 
         /// <summary>
         /// <b>library --> proxy:</b> Cancels a workflow.
         /// </summary>
-        Workflow_CancelWorkflowRequest = 110,
+        WorkflowCancelWorkflowRequest = 110,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_CancelWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCancelWorkflowRequest"/> message.
         /// </summary>
-        Workflow_CancelWorkflowReply = 111,
+        WorkflowCancelWorkflowReply = 111,
 
         /// <summary>
         /// <b>library --> proxy:</b> Terminates a workflow.
         /// </summary>
-        Workflow_TerminateWorkflowRequest = 112,
+        WorkflowTerminateWorkflowRequest = 112,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_TerminateWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowTerminateWorkflowRequest"/> message.
         /// </summary>
-        Workflow_TerminateWorkflowReply = 113,
+        WorkflowTerminateWorkflowReply = 113,
 
         /// <summary>
         /// <b>library --> proxy:</b> Requests the a workflow's history.
         /// </summary>
-        Workflow_GetWorkflowHistoryRequest = 114,
+        WorkflowGetWorkflowHistoryRequest = 114,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_GetWorkflowHistoryRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowGetWorkflowHistoryRequest"/> message.
         /// </summary>
-        Workflow_GetWorkflowHistoryReply = 115,
+        WorkflowGetWorkflowHistoryReply = 115,
 
         /// <summary>
         /// <b>library --> proxy:</b> Indicates that an activity has completed.
         /// </summary>
-        Workflow_CompleteActivityRequest = 116,
+        WorkflowCompleteActivityRequest = 116,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_CompleteActivityRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCompleteActivityRequest"/> message.
         /// </summary>
-        Workflow_CompleteActivityReply = 117,
+        WorkflowCompleteActivityReply = 117,
 
         /// <summary>
         /// <b>library --> proxy:</b> Indicates that the activity with a specified ID as completed has completed.
         /// </summary>
-        Workflow_CompleteActivityByIdRequest = 118,
+        WorkflowCompleteActivityByIdRequest = 118,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_CompleteActivityByIdRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCompleteActivityByIdRequest"/> message.
         /// </summary>
-        Workflow_CompleteActivityByIdReply = 119,
+        WorkflowCompleteActivityByIdReply = 119,
 
         /// <summary>
         /// <b>library --> proxy:</b> Records an activity heartbeat.
         /// </summary>
-        Workflow_RecordActivityHeartbeatRequest = 120,
+        WorkflowRecordActivityHeartbeatRequest = 120,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_RecordActivityHeartbeatRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatRequest"/> message.
         /// </summary>
-        Workflow_RecordActivityHeartbeatReply = 121,
+        WorkflowRecordActivityHeartbeatReply = 121,
 
         /// <summary>
         /// <b>library --> proxy:</b> Records a heartbeat for an activity specified by ID.
         /// </summary>
-        Workflow_RecordActivityHeartbeatByIdRequest = 122,
+        WorkflowRecordActivityHeartbeatByIdRequest = 122,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_RecordActivityHeartbeatByIdRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatByIdRequest"/> message.
         /// </summary>
-        Workflow_RecordActivityHeartbeatByIdReply = 123,
+        WorkflowRecordActivityHeartbeatByIdReply = 123,
 
         /// <summary>
         /// <b>library --> proxy:</b> Requests the list of closed workflows.
         /// </summary>
-        Workflow_ListClosedWorkflowRequest = 124,
+        WorkflowListClosedWorkflowRequest = 124,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_ListClosedWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListClosedWorkflowRequest"/> message.
         /// </summary>
-        Workflow_ListClosedWorkflowReply = 125,
+        WorkflowListClosedWorkflowReply = 125,
 
         /// <summary>
         /// <b>library --> proxy:</b> Requests the list of open workflows.
         /// </summary>
-        Workflow_ListOpenWorkflowRequest = 126,
+        WorkflowListOpenWorkflowRequest = 126,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_ListOpenWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListOpenWorkflowRequest"/> message.
         /// </summary>
-        Workflow_ListOpenWorkflowReply = 127,
+        WorkflowListOpenWorkflowReply = 127,
 
         /// <summary>
         /// <b>library --> proxy:</b> Queries a workflow's last execution.
         /// </summary>
-        Workflow_QueryWorkflowRequest = 128,
+        WorkflowQueryWorkflowRequest = 128,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_QueryWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowQueryWorkflowRequest"/> message.
         /// </summary>
-        Workflow_QueryWorkflowReply = 129,
+        WorkflowQueryWorkflowReply = 129,
 
         /// <summary>
         /// <b>library --> proxy:</b> Returns information about a worflow execution.
         /// </summary>
-        Workflow_DescribeWorkflowExecutionRequest = 130,
+        WorkflowDescribeWorkflowExecutionRequest = 130,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_DescribeWorkflowExecutionRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowDescribeWorkflowExecutionRequest"/> message.
         /// </summary>
-        Workflow_DescribeWorkflowExecutionReply = 131,
-
-        /// <summary>
-        /// <b>RESERVED:</b> This is not currently implemented.
-        /// </summary>
-        [Obsolete("RESERVED but not implemented.")]
-        Workflow_DescribeTaskListRequest = 132,
+        WorkflowDescribeWorkflowExecutionReply = 131,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
         [Obsolete("RESERVED but not implemented.")]
-        Workflow_DescribeTaskListReply = 133,
+        WorkflowDescribeTaskListRequest = 132,
+
+        /// <summary>
+        /// <b>RESERVED:</b> This is not currently implemented.
+        /// </summary>
+        [Obsolete("RESERVED but not implemented.")]
+        WorkflowDescribeTaskListReply = 133,
 
         /// <summary>
         /// <b>proxy --> library:</b> Commands the client library and associated .NET application
         /// to process a workflow instance.
         /// </summary>
-        Workflow_InvokeRequest = 134,
+        WorkflowInvokeRequest = 134,
 
         /// <summary>
-        /// <b>library --> proxy:</b> Sent in response to a <see cref="Workflow_InvokeRequest"/> message.
+        /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
         /// </summary>
-        Workflow_InvokeReply = 135,
+        WorkflowInvokeReply = 135,
 
         /// <summary>
         /// <b>proxy --> library:</b> Initiates execution of a child workflow.
         /// </summary>
-        Workflow_ExecuteChildRequest = 136,
+        WorkflowExecuteChildRequest = 136,
 
         /// <summary>
-        /// <b>library --> proxy:</b> Sent in response to a <see cref="Workflow_InvokeRequest"/> message.
+        /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
         /// </summary>
-        Workflow_ExecuteChildReply = 137,
+        WorkflowExecuteChildReply = 137,
 
         /// <summary>
         /// <b>library --> proxy:</b> Indicates that .NET application wishes to consume signals from
         /// a named channel.  Any signals received by the proxy will be forwarded to the
-        /// library via <see cref="Workflow_SignalReceivedRequest"/> messages.
+        /// library via <see cref="WorkflowSignalReceivedRequest"/> messages.
         /// </summary>
-        Workflow_SignalSubscribeRequest = 138,
+        WorkflowSignalSubscribeRequest = 138,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Workflow_SignalSubscribeRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalSubscribeRequest"/> message.
         /// </summary>
-        Workflow_SignalSubscribeReply = 139,
+        WorkflowSignalSubscribeReply = 139,
 
         /// <summary>
         /// <b>proxy --> library:</b> Send when a signal is received by the proxy on a subscribed channel.
         /// </summary>
-        Workflow_SignalReceivedRequest = 140,
+        WorkflowSignalReceivedRequest = 140,
 
         /// <summary>
-        /// <b>library --> proxy:</b> Sent in response to a <see cref="Workflow_SignalReceivedRequest"/> message.
+        /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
         /// </summary>
-        Workflow_SignalReceivedReply = 141,
+        WorkflowSignalReceivedReply = 141,
 
         /// <summary>
         /// <para>
         /// <b>proxy --> library:</b> Implements the standard Cadence <i>side effect</i> behavior by 
-        /// transmitting a <see cref="Workflow_SideEffectInvokeRequest"/> to the library and
-        /// waiting for the <see cref="Workflow_SideEffectInvokeReply"/> reply, persisting the 
+        /// transmitting a <see cref="WorkflowSideEffectInvokeRequest"/> to the library and
+        /// waiting for the <see cref="WorkflowSideEffectInvokeReply"/> reply, persisting the 
         /// answer in the workflow history and then transmitting the answer back to the .NET
-        /// workflow implementation via a <see cref="Workflow_SideEffectReply"/>.
+        /// workflow implementation via a <see cref="WorkflowSideEffectReply"/>.
         /// </para>
         /// <para>
         /// This message includes a unique identifier that is used to ensure that a specific side effect
-        /// operation results in only a single <see cref="Workflow_SideEffectInvokeRequest"/> message to
+        /// operation results in only a single <see cref="WorkflowSideEffectInvokeRequest"/> message to
         /// the .NET workflow application per workflow instance.  Subsequent calls will simply return the
         /// value from the execution history.
         /// </para>
         /// </summary>
-        Workflow_SideEffectRequest = 142,
+        WorkflowSideEffectRequest = 142,
 
         /// <summary>
-        /// <b>library --> proxy:</b> Sent in response to a <see cref="Workflow_SignalReceivedRequest"/> message.
+        /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
         /// </summary>
-        Workflow_SideEffectReply = 143,
+        WorkflowSideEffectReply = 143,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent by the proxy to the library the first time a side effect
@@ -381,48 +381,12 @@ namespace Neon.Cadence
         /// side effect value to be persisted in the workflow history and returned back to
         /// the the .NET workflow application.
         /// </summary>
-        Workflow_SideEffectInvokeRequest = 144,
+        WorkflowSideEffectInvokeRequest = 144,
 
         /// <summary>
-        /// <b>library --> proxy:</b> Sent in response to a <see cref="Workflow_SignalReceivedRequest"/> message.
+        /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
         /// </summary>
-        Workflow_SideEffectInvokeReply = 145,
-
-        //---------------------------------------------------------------------
-        // Domain messages
-        //
-        // Note that all domain client request messages will include a [DomainClientId] property
-        // identifying the target domain client.
-
-        /// <summary>
-        /// <b>library --> proxy:</b> Registers a Cadence domain.
-        /// </summary>
-        Domain_RegisterRequest = 200,
-
-        /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Domain_RegisterRequest"/> message.
-        /// </summary>
-        Domain_RegisterReply = 201,
-
-        /// <summary>
-        /// <b>library --> proxy:</b> Describes a Cadence domain.
-        /// </summary>
-        Domain_DescribeRequest = 202,
-
-        /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Domain_DescribeRequest"/> message.
-        /// </summary>
-        Domain_DescribeReply = 203,
-
-        /// <summary>
-        /// <b>library --> proxy:</b> Updates a Cadence domain.
-        /// </summary>
-        Domain_UpdateRequest = 204,
-
-        /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Domain_UpdateRequest"/> message.
-        /// </summary>
-        Domain_UpdateReply = 205,
+        WorkflowSideEffectInvokeReply = 145,
 
         //---------------------------------------------------------------------
         // Activity messages
@@ -431,62 +395,62 @@ namespace Neon.Cadence
         /// <b>proxy --> library:</b> Commands the client library and associated .NET application
         /// to process an activity instance.
         /// </summary>
-        Activity_InvokeRequest = 300,
+        ActivityInvokeRequest = 200,
 
         /// <summary>
-        /// <b>library --> proxy:</b> Sent in response to a <see cref="Activity_InvokeRequest"/> message.
+        /// <b>library --> proxy:</b> Sent in response to a <see cref="ActivityInvokeRequest"/> message.
         /// </summary>
-        Activity_InvokeReply = 301,
+        ActivityInvokeReply = 201,
 
         /// <summary>
         /// <b>library --> proxy:</b> Requests the heartbeat details from the last failed attempt.
         /// </summary>
-        Activity_GetHeartbeatDetailsRequest = 302,
+        ActivityGetHeartbeatDetailsRequest = 202,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Activity_GetHeartbeatDetailsRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityGetHeartbeatDetailsRequest"/> message.
         /// </summary>
-        Activity_GetHeartbeatDetailsReply = 303,
+        ActivityGetHeartbeatDetailsReply = 203,
 
         /// <summary>
         /// <b>library --> proxy:</b> Logs a message for an activity.
         /// </summary>
-        Activity_LogRequest = 304,
+        ActivityLogRequest = 204,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Activity_LogRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityLogRequest"/> message.
         /// </summary>
-        Activity_LogReply = 305,
+        ActivityLogReply = 205,
 
         /// <summary>
         /// <b>library --> proxy:</b> Records a heartbeat message for an activity.
         /// </summary>
-        Activity_RecordHeartbeatRequest = 306,
+        ActivityRecordHeartbeatRequest = 206,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Activity_RecordHeartbeatRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityRecordHeartbeatRequest"/> message.
         /// </summary>
-        Activity_RecordHeartbeatReply = 307,
+        ActivityRecordHeartbeatReply = 207,
 
         /// <summary>
         /// <b>library --> proxy:</b> Determines whether an activity execution has any heartbeat details.
         /// </summary>
-        Activity_HasHeartbeatDetailsRequest = 308,
+        ActivityHasHeartbeatDetailsRequest = 208,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Activity_HasHeartbeatDetailsRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityHasHeartbeatDetailsRequest"/> message.
         /// </summary>
-        Activity_HasHeartbeatDetailsReply = 309,
+        ActivityHasHeartbeatDetailsReply = 209,
 
         /// <summary>
         /// <b>library --> proxy:</b> Signals that the application executing an activity is terminating,
         /// giving the the proxy a chance to gracefully inform Cadence and then terminate the activity.
         /// </summary>
-        Activity_StopRequest = 310,
+        ActivityStopRequest = 210,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="Activity_StopRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityStopRequest"/> message.
         /// </summary>
-        Activity_StopReply = 311,
+        ActivityStopReply = 211,
     }
 }

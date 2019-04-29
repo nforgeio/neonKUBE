@@ -197,6 +197,48 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void ConnectionFailed()
+        {
+            // Verify that we see a [CadenceConnectException] when connecting
+            // with no server URIs.
+
+            var settings = new CadenceSettings()
+            {
+                Servers = new List<Uri>()
+            };
+
+            Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
+
+            // Verify that we see a [CadenceConnectException] when connecting
+            // with a relative server URI.
+
+            settings.Servers.Clear();
+            settings.Servers.Add(new Uri("/relativeuri", UriKind.Relative));
+
+            Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
+
+#if TODO
+            // Verify that we see a [CadenceConnectException] when attempting
+            // to connect to a Cadence cluster that doesn't exist.
+
+            // $todo(jeff.lill):
+            //
+            // The emulator won't throw an exception for this because it doesn't
+            // actually attempt to connect to a Cadence cluster.  We should include
+            // this when testing against the real [cadence-proxy].
+
+            // $hack(jeff.lill): I'm betting that there will never be a Cadence server 
+            // at the URI specified.
+
+            settings.Servers.Clear();
+            settings.Servers.Add(new Uri("http://127.1.2.3:23444"));
+
+            Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
+#endif
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void ConnectionClosed()
         {
             try
