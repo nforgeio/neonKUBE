@@ -40,6 +40,31 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(message != null);
 
+            // First, we're going to try mapping the message string to predefined
+            // Cadence exceptions and if that doesn't work, we'll generate a more
+            // generic exception.
+
+            switch (message)
+            {
+                case "BadRequestError":
+
+                    return new CadenceBadRequestException(message);
+
+                case "DomainAlreadyExistsError":
+
+                    return new CadenceDomainAlreadyExistsException(message);
+
+                case "EntityNotExistsError":
+
+                    return new CadenceEntityNotExistsException(message);
+
+                case "InternalServiceError":
+
+                    return new CadenceInternalServiceException(message);
+            }
+
+            // Create a more generic exception.
+
             switch (errorType)
             {
                 case CadenceErrorTypes.Cancelled:
@@ -85,5 +110,12 @@ namespace Neon.Cadence
             : base(message, innerException)
         {
         }
+
+        /// <summary>
+        /// Returns the Cadence GOLANG client's error string corresponding to the
+        /// exception or <c>null</c> when the exception does not map to an
+        /// error string.
+        /// </summary>
+        internal virtual string CadenceError => null;
     }
 }

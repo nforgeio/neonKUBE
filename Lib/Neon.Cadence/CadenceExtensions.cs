@@ -101,6 +101,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentNullException>(reply != null);
+            Covenant.Requires<ArgumentException>(reply.Type == request.ReplyType, $"Reply message type [{reply.Type}] is not a suitable response for a [{request.Type}] request.");
 
             reply.RequestId = request.RequestId;
 

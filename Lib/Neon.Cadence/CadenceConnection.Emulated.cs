@@ -15,8 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if DEBUG
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -49,10 +47,23 @@ using Neon.Tasks;
 
 namespace Neon.Cadence
 {
+#if DEBUG
+
     public partial class CadenceConnection
     {
         //---------------------------------------------------------------------
         // Emulated [cadence-proxy] implementation:
+
+        private class EmulatedCadenceDomain
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+            public string Status { get; set; }
+            public string OwnerEmail { get; set; }
+            public string Uuid { get; set; }
+        }
+
+        private List<EmulatedCadenceDomain> emulatedDomains = new List<EmulatedCadenceDomain>();
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Set this to <c>false</c> to emulate an unhealthy
@@ -74,43 +85,58 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedRootRequestAsync(HttpContext context)
         {
-            var request        = context.Request;
-            var response       = context.Response;
-            var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
+            var request      = context.Request;
+            var response     = context.Response;
+            var proxyRequest = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
 
-            if (EmulatedLibraryClient == null && requestMessage.Type != MessageTypes.InitializeRequest)
+            if (EmulatedLibraryClient == null && proxyRequest.Type != MessageTypes.InitializeRequest)
             {
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 await response.WriteAsync($"Unexpected Message: Waiting for an [{nameof(InitializeRequest)}] message to specify the [cadence-client] network endpoint.");
                 return;
             }
 
-            switch (requestMessage.Type)
+            switch (proxyRequest.Type)
             {
-                case MessageTypes.InitializeRequest:
+                case MessageTypes.CancelRequest:
 
-                    await OnEmulatedInitializeRequestAsync((InitializeRequest)requestMessage);
+                    await OnEmulatedCancelAsync((CancelRequest)proxyRequest);
+                    break;
+
+                case MessageTypes.DomainDescribeRequest:
+
+                    await OnEmulatedDomainDescribeAsync((DomainDescribeRequest)proxyRequest);
+                    break;
+
+                case MessageTypes.DomainRegisterRequest:
+
+                    await OnEmulatedDomainRegisterAsync((DomainRegisterRequest)proxyRequest);
+                    break;
+
+                case MessageTypes.DomainUpdateRequest:
+
+                    await OnEmulatedDomainUpdateAsync((DomainUpdateRequest)proxyRequest);
                     break;
 
                 case MessageTypes.HeartbeatRequest:
 
-                    await OnEmulatedHeartbeatRequestAsync((HeartbeatRequest) requestMessage);
+                    await OnEmulatedHeartbeatAsync((HeartbeatRequest) proxyRequest);
                     break;
 
-                case MessageTypes.CancelRequest:
+                case MessageTypes.InitializeRequest:
 
-                    await OnEmulatedCancelRequestAsync((CancelRequest)requestMessage);
+                    await OnEmulatedInitializeAsync((InitializeRequest)proxyRequest);
                     break;
 
                 case MessageTypes.TerminateRequest:
 
-                    await OnEmulatedTerminateRequestAsync((TerminateRequest)requestMessage);
+                    await OnEmulatedTerminateAsync((TerminateRequest)proxyRequest);
                     break;
 
                 default:
 
                     response.StatusCode = StatusCodes.Status400BadRequest;
-                    await response.WriteAsync($"EMULATION: Message [{requestMessage.Type}] is not supported.");
+                    await response.WriteAsync($"EMULATION: Message [{proxyRequest.Type}] is not supported.");
                     break;
             }
 
@@ -122,7 +148,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The received message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedInitializeRequestAsync(InitializeRequest request)
+        private async Task OnEmulatedInitializeAsync(InitializeRequest request)
         {
             lock (syncLock)
             {
@@ -152,7 +178,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The received message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedHeartbeatRequestAsync(HeartbeatRequest request)
+        private async Task OnEmulatedHeartbeatAsync(HeartbeatRequest request)
         {
             if (Settings.DebugBlockHeartbeats)
             {
@@ -169,7 +195,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The received message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedCancelRequestAsync(CancelRequest request)
+        private async Task OnEmulatedCancelAsync(CancelRequest request)
         {
             var reply = new CancelReply()
             {
@@ -193,9 +219,73 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The received message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedTerminateRequestAsync(TerminateRequest request)
+        private async Task OnEmulatedTerminateAsync(TerminateRequest request)
         {
             await EmulatedLibraryClient.SendReplyAsync(request, new TerminateReply());
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="DomainDescribeRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedDomainDescribeAsync(DomainDescribeRequest request)
+        {
+            var reply  = new DomainDescribeReply();
+            var domain = (EmulatedCadenceDomain)null;
+
+            if (!string.IsNullOrEmpty(request.Uuid))
+            {
+                domain = emulatedDomains.Where(d => d.Name == request.Name).SingleOrDefault();
+            }
+            else if (!string.IsNullOrEmpty(request.Name))
+            {
+                domain = emulatedDomains.Where(d => d.Uuid == request.Uuid).SingleOrDefault();
+            }
+            else
+            {
+                reply.ErrorType    = CadenceErrorTypes.Generic;
+                reply.ErrorMessage = new CadenceEntityNotExistsException(null).CadenceError;
+
+                await EmulatedLibraryClient.SendReplyAsync(request, reply);
+                return;
+            }
+
+            if (domain != null)
+            {
+                reply.Name        = domain.Name;
+                reply.Uuid        = domain.Uuid;
+                reply.OwnerEmail  = domain.OwnerEmail;
+                reply.Status      = domain.Status;
+                reply.Description = domain.Description;
+            }
+            else
+            {
+                reply.ErrorType    = CadenceErrorTypes.Generic;
+                reply.ErrorMessage = new CadenceEntityNotExistsException(null).CadenceError;
+            }
+
+            await EmulatedLibraryClient.SendReplyAsync(request, reply);
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="DomainRegisterRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedDomainRegisterAsync(DomainRegisterRequest request)
+        {
+            await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="DomainUpdateRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedDomainUpdateAsync(DomainUpdateRequest request)
+        {
+            await EmulatedLibraryClient.SendReplyAsync(request, new DomainUpdateReply());
         }
 
         /// <summary>
