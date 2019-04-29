@@ -598,6 +598,10 @@ namespace Neon.Cadence
                 connectionClosedRaised = true;
             }
 
+            if (!raiseConnectionClosed)
+            {
+            }
+
             if (raiseConnectionClosed)
             {
                 ConnectionClosed?.Invoke(this, new CadenceConnectionClosedArgs() { Exception = exception });
@@ -786,6 +790,14 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
+                if (closingConnection && (request is HeartbeatRequest))
+                {
+                    // Special-case heartbeat replies while we're closing
+                    // the connection to make things more deterministic.
+
+                    return new HeartbeatReply() { RequestId = request.RequestId };
+                }
+
                 // We should never see an exception under normal circumstances.
                 // Either a requestID somehow got reused (which should never 
                 // happen) or the HTTP request to the [cadence-proxy] failed

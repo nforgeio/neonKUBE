@@ -207,6 +207,9 @@ namespace Neon.Xunit.Cadence
             Connection.Dispose();
             Connection = null;
 
+            ConnectionClient.Dispose();
+            ConnectionClient = null;
+
             // Restart the Cadence container.
 
             base.Restart();

@@ -204,6 +204,11 @@ namespace TestCadence
                 // Verify that the [ConnectionClosed] event when a
                 // connection is disposed.
 
+                fixture.Restart();
+
+                this.connection  = fixture.Connection;
+                this.proxyClient = new HttpClient() { BaseAddress = connection.ProxyUri };
+
                 var connectionClosed    = false;
                 var connectionException = (Exception)null;
 
@@ -221,7 +226,7 @@ namespace TestCadence
             }
             finally
             {
-                // Restart the fixture for the next test.
+                // Restart the cadence fixture for the next test.
 
                 fixture.Restart();
             }

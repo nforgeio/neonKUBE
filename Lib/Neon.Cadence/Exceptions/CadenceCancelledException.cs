@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceConnectException.cs
+// FILE:	    CadenceCancelledException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,16 +20,16 @@ using System;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Indicates that a Cadence connection could not be established.
+    /// Thrown when a Cadence operation is cancelled.
     /// </summary>
-    public class CadenceConnectException : CadenceException
+    public class CadenceCancelledException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">The message.</param>
-        /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceConnectException(string message, Exception innerException = null)
+        /// <param name="innerException">Optional inner exception.</param>
+        public CadenceCancelledException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }
