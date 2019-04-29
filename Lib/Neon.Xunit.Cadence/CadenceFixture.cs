@@ -50,6 +50,7 @@ namespace Neon.Xunit.Cadence
     {
         private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Cadence to start.
         private readonly TimeSpan   retryDelay  = TimeSpan.FromSeconds(0.5);    // Time to wait after a failure.
+        private CadenceSettings     settings;
 
         /// <summary>
         /// Constructs the fixture.
@@ -159,6 +160,8 @@ namespace Neon.Xunit.Cadence
 
                 settings.DebugEmulateProxy = emulateProxy || settings.DebugEmulateProxy;
 
+                this.settings = settings;
+
                 // Create the Cadence connection.
 
                 Connection = new CadenceConnection(settings);
@@ -192,6 +195,31 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </summary>
         public HttpClient ProxyClient { get; private set; }
+
+        /// <summary>
+        /// Closes the existing Cadence connection and then restarts the Cadence
+        /// server and establishes a new connection.
+        /// </summary>
+        public new void Restart()
+        {
+            // Disconnect.
+
+            Connection.Dispose();
+            Connection = null;
+
+            // Restart the Cadence container.
+
+            base.Restart();
+
+            // Reconnect.
+
+            Connection = new CadenceConnection(settings);
+
+            ConnectionClient = new HttpClient()
+            {
+                BaseAddress = Connection.ListenUri
+            };
+        }
 
         /// <summary>
         /// This method completely resets the fixture by removing the Cadence 
