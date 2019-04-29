@@ -74,6 +74,7 @@ namespace Neon.Cadence
             }
         }
 
+#if DEBUG
         /// <summary>
         /// Configures a partially implemented emulation of a <b>cadence-proxy</b>
         /// for low-level testing.
@@ -92,6 +93,7 @@ namespace Neon.Cadence
                 });
             }
         }
+#endif
 
         /// <summary>
         /// Used for tracking pending <b>cadence-proxy</b> operations.
@@ -394,6 +396,7 @@ namespace Neon.Cadence
 
             proxyPort = NetHelper.GetUnusedTcpPort(address);
 
+#if DEBUG
             if (!settings.DebugEmulateProxy)
             {
                 ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
@@ -419,6 +422,9 @@ namespace Neon.Cadence
 
                 emulatedHost.Start();
             }
+#else
+            ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+#endif
 
             // Create the HTTP client we'll use to communicate with the [cadence-proxy].
 
@@ -557,11 +563,13 @@ namespace Neon.Cadence
                 proxyClient = null;
             }
 
+#if DEBUG
             if (EmulatedLibraryClient != null)
             {
                 EmulatedLibraryClient.Dispose();
                 EmulatedLibraryClient = null;
             }
+#endif
 
             if (disposing)
             {
