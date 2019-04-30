@@ -868,8 +868,8 @@ namespace TestCadence
                 Assert.Equal("my-name", message.Name);
                 message.Description = "my-description";
                 Assert.Equal("my-description", message.Description);
-                message.Status = "DEPRECATED";
-                Assert.Equal("DEPRECATED", message.Status);
+                message.Status = CadenceDomainStatus.Deprecated;
+                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
                 message.OwnerEmail = "joe@bloe.com";
                 Assert.Equal("joe@bloe.com", message.OwnerEmail);
                 message.Uuid = "my-uuid";
@@ -887,7 +887,7 @@ namespace TestCadence
                 Assert.Equal("MyError Details", message.ErrorDetails);
                 Assert.Equal("my-name", message.Name);
                 Assert.Equal("my-description", message.Description);
-                Assert.Equal("DEPRECATED", message.Status);
+                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
                 Assert.Equal("joe@bloe.com", message.OwnerEmail);
                 Assert.Equal("my-uuid", message.Uuid);
 
@@ -901,7 +901,7 @@ namespace TestCadence
                 Assert.Equal("MyError Details", message.ErrorDetails);
                 Assert.Equal("my-name", message.Name);
                 Assert.Equal("my-description", message.Description);
-                Assert.Equal("DEPRECATED", message.Status);
+                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
                 Assert.Equal("joe@bloe.com", message.OwnerEmail);
                 Assert.Equal("my-uuid", message.Uuid);
 
@@ -915,7 +915,7 @@ namespace TestCadence
                 Assert.Equal("MyError Details", message.ErrorDetails);
                 Assert.Equal("my-name", message.Name);
                 Assert.Equal("my-description", message.Description);
-                Assert.Equal("DEPRECATED", message.Status);
+                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
                 Assert.Equal("joe@bloe.com", message.OwnerEmail);
                 Assert.Equal("my-uuid", message.Uuid);
             }

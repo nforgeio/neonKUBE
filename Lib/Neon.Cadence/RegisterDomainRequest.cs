@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceExtensions.cs
+// FILE:	    RegisterDomainRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -47,7 +47,30 @@ using Neon.Tasks;
 
 namespace Neon.Cadence
 {
+    /// <summary>
+    /// Domain registration details.
+    /// </summary>
     public class RegisterDomainRequest
     {
+        /// <summary>
+        /// The domain name.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The domain description.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// The domain owner's email address.
+        /// </summary>
+        public string OwnerEmail { get; set; }
+
+        /// <summary>
+        /// The number of days to retain the history for workflowws
+        /// completed in this domain.  This defaults to <b>7 days</b>.
+        /// </summary>
+        public int RetentionDays { get; set; } = 7;
     }
 }

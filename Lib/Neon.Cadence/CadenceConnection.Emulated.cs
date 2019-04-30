@@ -60,11 +60,12 @@ namespace Neon.Cadence
         {
             public string Name { get; set; }
             public string Description { get; set; }
-            public string Status { get; set; }
+            public CadenceDomainStatus Status { get; set; }
             public string OwnerEmail { get; set; }
             public string Uuid { get; set; }
         }
 
+        private AsyncMutex                  emulationMutex  = new AsyncMutex();
         private List<EmulatedCadenceDomain> emulatedDomains = new List<EmulatedCadenceDomain>();
 
         /// <summary>
@@ -152,7 +153,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedInitializeAsync(InitializeRequest request)
         {
-            lock (syncLock)
+            using (await emulationMutex.AcquireAsync())
             {
                 if (EmulatedLibraryClient == null)
                 {
@@ -204,7 +205,7 @@ namespace Neon.Cadence
                 WasCancelled = false
             };
 
-            lock (syncLock)
+            using (await emulationMutex.AcquireAsync())
             {
                 if (operations.TryGetValue(request.TargetRequestId, out var operation))
                 {
@@ -233,51 +234,54 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainDescribeAsync(DomainDescribeRequest request)
         {
-            var reply  = new DomainDescribeReply();
-            var domain = (EmulatedCadenceDomain)null;
-
-            if (!string.IsNullOrEmpty(request.Uuid))
+            using (await emulationMutex.AcquireAsync())
             {
-                domain = emulatedDomains.Where(d => d.Name == request.Name).SingleOrDefault();
+                var reply  = new DomainDescribeReply();
+                var domain = (EmulatedCadenceDomain)null;
 
-                if (domain == null)
+                if (!string.IsNullOrEmpty(request.Uuid))
                 {
-                    reply.ErrorDetails = $"Domain [uuid={request.Uuid}] does not exist.";
-                }
-            }
-            else if (!string.IsNullOrEmpty(request.Name))
-            {
-                domain = emulatedDomains.Where(d => d.Uuid == request.Uuid).SingleOrDefault();
+                    domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
 
-                if (domain == null)
-                {
-                    reply.ErrorDetails = $"Domain [name={request.Name}] does not exist.";
+                    if (domain == null)
+                    {
+                        reply.ErrorDetails = $"Domain [uuid={request.Uuid}] does not exist.";
+                    }
                 }
-            }
-            else
-            {
-                reply.ErrorType    = CadenceErrorTypes.Generic;
-                reply.Error = new CadenceEntityNotExistsException(null).CadenceError;
+                else if (!string.IsNullOrEmpty(request.Name))
+                {
+                    domain = emulatedDomains.SingleOrDefault(d => d.Uuid == request.Uuid);
+
+                    if (domain == null)
+                    {
+                        reply.ErrorDetails = $"Domain [name={request.Name}] does not exist.";
+                    }
+                }
+                else
+                {
+                    reply.ErrorType = CadenceErrorTypes.Generic;
+                    reply.Error = new CadenceEntityNotExistsException(null).CadenceError;
+
+                    await EmulatedLibraryClient.SendReplyAsync(request, reply);
+                    return;
+                }
+
+                if (domain != null)
+                {
+                    reply.Name        = domain.Name;
+                    reply.Uuid        = domain.Uuid;
+                    reply.OwnerEmail  = domain.OwnerEmail;
+                    reply.Status      = domain.Status;
+                    reply.Description = domain.Description;
+                }
+                else
+                {
+                    reply.ErrorType = CadenceErrorTypes.Generic;
+                    reply.Error     = new CadenceEntityNotExistsException(null).CadenceError;
+                }
 
                 await EmulatedLibraryClient.SendReplyAsync(request, reply);
-                return;
             }
-
-            if (domain != null)
-            {
-                reply.Name        = domain.Name;
-                reply.Uuid        = domain.Uuid;
-                reply.OwnerEmail  = domain.OwnerEmail;
-                reply.Status      = domain.Status;
-                reply.Description = domain.Description;
-            }
-            else
-            {
-                reply.ErrorType = CadenceErrorTypes.Generic;
-                reply.Error     = new CadenceEntityNotExistsException(null).CadenceError;
-            }
-
-            await EmulatedLibraryClient.SendReplyAsync(request, reply);
         }
 
         /// <summary>
@@ -287,7 +291,40 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainRegisterAsync(DomainRegisterRequest request)
         {
-            await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
+            using (await emulationMutex.AcquireAsync())
+            {
+                if (string.IsNullOrEmpty(request.Name))
+                {
+                    await EmulatedLibraryClient.SendReplyAsync(request,
+                        new DomainRegisterReply()
+                        {
+                            Error        = new CadenceBadRequestException(null).CadenceError,
+                            ErrorDetails = "Domain name is required."
+                        });
+                }
+
+                if (emulatedDomains.SingleOrDefault(d => d.Name == request.Name) != null)
+                {
+                    await EmulatedLibraryClient.SendReplyAsync(request,
+                        new DomainRegisterReply()
+                        {
+                            Error        = new CadenceDomainAlreadyExistsException(null).CadenceError,
+                            ErrorDetails = $"Domain [{request.Name}] already exists."
+                        });
+                }
+
+                emulatedDomains.Add(
+                    new EmulatedCadenceDomain()
+                    {
+                        Name        = request.Name,
+                        Description = request.Description,
+                        OwnerEmail  = request.OwnerEmail,
+                        Status      = CadenceDomainStatus.Registered,
+                        Uuid        = Guid.NewGuid().ToString("D")
+                    });
+
+                await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
+            }
         }
 
         /// <summary>
@@ -297,7 +334,10 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainUpdateAsync(DomainUpdateRequest request)
         {
-            await EmulatedLibraryClient.SendReplyAsync(request, new DomainUpdateReply());
+            using (await emulationMutex.AcquireAsync())
+            {
+                await EmulatedLibraryClient.SendReplyAsync(request, new DomainUpdateReply());
+            }
         }
 
         /// <summary>

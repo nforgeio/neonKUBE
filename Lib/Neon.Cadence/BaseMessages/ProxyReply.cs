@@ -138,5 +138,16 @@ namespace Neon.Cadence.Internal
             typedTarget.Error        = this.Error;
             typedTarget.ErrorDetails = this.ErrorDetails;
         }
+
+        /// <summary>
+        /// Throws the related exception if the reply is reporting an error.
+        /// </summary>
+        public void ThrowIfError()
+        {
+            if (!string.IsNullOrEmpty(Error))
+            {
+                throw CadenceException.Create(ErrorType, Error, ErrorDetails);
+            }
+        }
     }
 }

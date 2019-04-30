@@ -274,5 +274,24 @@ namespace TestCadence
                 fixture.Restart();
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task DomainOperations()
+        {
+            // Exercise the Cadence domain operations.
+
+            //-----------------------------------------------------------------
+
+            await connection.RegisterDomain("domain0", "this is domain 0", "jeff@lilltek.com", retentionDays: 14);
+
+            //-----------------------------------------------------------------
+
+            await Assert.ThrowsAsync<CadenceDomainAlreadyExistsException>(async () => await connection.RegisterDomain(name: "domain0"));
+
+            //-----------------------------------------------------------------
+
+            await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await connection.RegisterDomain(name: null));
+        }
     }
 }

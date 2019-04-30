@@ -69,10 +69,10 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The domain status.
         /// </summary>
-        public string Status
+        public CadenceDomainStatus Status
         {
-            get => GetStringProperty("Status");
-            set => SetStringProperty("Status", value);
+            get => GetEnumProperty<CadenceDomainStatus>("Status");
+            set => SetEnumProperty<CadenceDomainStatus>("Status", value);
         }
 
         /// <summary>

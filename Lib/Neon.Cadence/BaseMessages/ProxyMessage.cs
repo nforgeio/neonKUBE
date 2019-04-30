@@ -489,6 +489,26 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Helper method for retrieving an enumeration property.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="key">The property key.</param>
+        /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
+        /// <returns>The long value.</returns>
+        internal TEnum GetEnumProperty<TEnum>(string key, TEnum def = default(TEnum))
+            where TEnum : struct
+        {
+            if (Properties.TryGetValue(key, out var value))
+            {
+                return NeonHelper.ParseEnum<TEnum>(value, def);
+            }
+            else
+            {
+                return def;
+            }
+        }
+
+        /// <summary>
         /// Helper method for retrieving a double property.
         /// </summary>
         /// <param name="key">The property key.</param>
@@ -548,7 +568,7 @@ namespace Neon.Cadence.Internal
         // Helper methods derived classes can use for setting typed message properties.
 
         /// <summary>
-        /// Helper method for retrieving a string property.
+        /// Helper method for setting a string property.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
@@ -558,7 +578,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Helper method for retrieving a 32-bit integer property.
+        /// Helper method for setting a 32-bit integer property.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
@@ -568,7 +588,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Helper method for retrieving a 64-bit integer property.
+        /// Helper method for setting a 64-bit integer property.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
@@ -578,7 +598,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Helper method for retrieving a boolean property.
+        /// Helper method for setting a boolean property.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
@@ -588,7 +608,19 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Helper method for retrieving a double property.
+        /// Helper method for setting an enumeration property.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="key">The property key.</param>
+        /// <param name="value">The property value.</param>
+        internal void SetEnumProperty<TEnum>(string key, TEnum value)
+            where TEnum : struct
+        {
+            Properties[key] = NeonHelper.EnumToString(value);
+        }
+
+        /// <summary>
+        /// Helper method for setting a double property.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
@@ -598,7 +630,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Helper method for retrieving a date/time property.
+        /// Helper method for setting a date/time property.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
@@ -608,7 +640,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Helper method for retrieving a timespan property.
+        /// Helper method for setting a timespan property.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
