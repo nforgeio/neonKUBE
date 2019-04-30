@@ -185,7 +185,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedHeartbeatAsync(HeartbeatRequest request)
         {
-            if (Settings.DebugBlockHeartbeats)
+            if (Settings.DebugDisableHeartbeats)
             {
                 // Ignore heartbeats so unit tests can verify the correct behavior.
 

@@ -51,10 +51,11 @@ namespace TestCadence
                 Mode  = ConnectionMode.ListenOnly,
                 Debug = true,
 
+                //--------------------------------
                 // $debug(jeff.lill): DELETE THIS!
                 DebugPrelaunched       = true,
                 DebugDisableHandshakes = true,
-                DebugBlockHeartbeats   = true,
+                DebugDisableHeartbeats = true,
                 //--------------------------------
             };
 

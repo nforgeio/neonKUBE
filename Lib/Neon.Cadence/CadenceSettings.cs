@@ -174,7 +174,7 @@ namespace Neon.Cadence
         /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
         /// emulated <b>cadence-proxy</b> for testing purposes.
         /// </summary>
-        internal bool DebugBlockHeartbeats { get; set; } = false;
+        internal bool DebugIgnoreHeartbeats { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally specifies the timeout to use for 
