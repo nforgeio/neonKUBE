@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegisterDomainRequest.cs
+// FILE:	    UpdateDomainInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -48,34 +48,18 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Domain registration details.
+    /// Holds the changes to be made to a Cadence domain's basic properties.
     /// </summary>
-    public class RegisterDomainRequest
+    public class UpdateDomainInfo
     {
         /// <summary>
-        /// The domain name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// The domain description.
+        /// The updated domain description.
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// The domain owner's email address.
+        /// The updated domain owner's email address.
         /// </summary>
         public string OwnerEmail { get; set; }
-
-        /// <summary>
-        /// The number of days to retain the history for workflowws
-        /// completed in this domain.  This defaults to <b>7 days</b>.
-        /// </summary>
-        public int RetentionDays { get; set; } = 7;
-
-        /// <summary>
-        /// Enables metric generation.  This defaults to <c>false.</c>
-        /// </summary>
-        public bool EmitMetrics { get; set; }
     }
 }

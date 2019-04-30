@@ -62,6 +62,10 @@ namespace Neon.Cadence
                 case "InternalServiceError":
 
                     return new CadenceInternalServiceException(details);
+
+                case "ServiceBusyError ":
+
+                    return new CadenceServiceBusyException(details);
             }
 
             // Create a more generic exception.

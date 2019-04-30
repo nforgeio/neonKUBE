@@ -276,7 +276,7 @@ namespace Neon.Cadence
                     // Extract and decompress the [cadence-proxy] binary.  Note that it's
                     // possible that another instance of an .NET application using this 
                     // library is already runing on this machine such that the proxy
-                    // binary file will be read-only.  In this case, we'll log and otherwse
+                    // binary file will be read-only.  In this case, we'll log and otherwise
                     // ignore the exception and assume that the proxy binary is correct.
 
                     try

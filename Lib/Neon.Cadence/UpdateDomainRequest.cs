@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceDomainStatus.cs
+// FILE:	    RegisterDomainRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,43 +18,53 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Net;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Indicates a Cadence domain status.
+    /// Holds the changes to be made to a Cadence domain.
     /// </summary>
-    public enum CadenceDomainStatus
+    public class UpdateDomainRequest
     {
         /// <summary>
-        /// The status cannot be determined.
+        /// The domain name.
         /// </summary>
-        [EnumMember(Value = "UNSPECIFIED")]
-        Unspecified = 0,
+        public string Name { get; set; }
 
         /// <summary>
-        /// The domain is registered and active.
+        /// The updated basic domain properties.
         /// </summary>
-        [EnumMember(Value = "REGISTERED")]
-        Registered,
+        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
 
         /// <summary>
-        /// The domain is closed for new workflows but will remain
-        /// until already running workflows are completed and the
-        /// history retention period for the last executed workflow
-        /// has been satisified.
+        /// The updated domain confifuration.
         /// </summary>
-        [EnumMember(Value = "DEPRECATED")]
-        Deprecated
+        public DomainConfiguation Configuration { get; set; } = new DomainConfiguation();
     }
 }

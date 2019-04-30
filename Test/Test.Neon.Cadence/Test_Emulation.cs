@@ -277,21 +277,53 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task DomainOperations()
+        public async Task GlobalDomain()
         {
-            // Exercise the Cadence domain operations.
+            // Exercise the Cadence global domain operations.
 
             //-----------------------------------------------------------------
+            // RegisterDomain:
 
-            await connection.RegisterDomain("domain0", "this is domain 0", "jeff@lilltek.com", retentionDays: 14);
+            await connection.RegisterDomainAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
+            await Assert.ThrowsAsync<CadenceDomainAlreadyExistsException>(async () => await connection.RegisterDomainAsync(name: "domain-0"));
+            await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await connection.RegisterDomainAsync(name: null));
 
             //-----------------------------------------------------------------
+            // DescribeDomain:
 
-            await Assert.ThrowsAsync<CadenceDomainAlreadyExistsException>(async () => await connection.RegisterDomain(name: "domain0"));
+            var domainDescribeReply = await connection.DescribeDomainAsync("domain-0");
+
+            Assert.False(domainDescribeReply.Configuration.EmitMetrics);
+            Assert.Equal(14, domainDescribeReply.Configuration.RetentionDays);
+            Assert.Equal("domain-0", domainDescribeReply.DomainInfo.Name);
+            Assert.Equal("this is domain-0", domainDescribeReply.DomainInfo.Description);
+            Assert.Equal("jeff@lilltek.com", domainDescribeReply.DomainInfo.OwnerEmail);
+            Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
+
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await connection.DescribeDomainAsync("does-not-exist"));
 
             //-----------------------------------------------------------------
+            // UpdateDomain:
 
-            await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await connection.RegisterDomain(name: null));
+            var updateDomainRequest = new UpdateDomainRequest();
+
+            updateDomainRequest.Configuration.EmitMetrics   = true;
+            updateDomainRequest.Configuration.RetentionDays = 77;
+            updateDomainRequest.DomainInfo.OwnerEmail       = "foo@bar.com";
+            updateDomainRequest.DomainInfo.Description      = "new description";
+
+            await connection.UpdateDomainAsync("domain-0", updateDomainRequest);
+
+            domainDescribeReply = await connection.DescribeDomainAsync("domain-0");
+
+            Assert.True(domainDescribeReply.Configuration.EmitMetrics);
+            Assert.Equal(77, domainDescribeReply.Configuration.RetentionDays);
+            Assert.Equal("domain-0", domainDescribeReply.DomainInfo.Name);
+            Assert.Equal("new description", domainDescribeReply.DomainInfo.Description);
+            Assert.Equal("foo@bar.com", domainDescribeReply.DomainInfo.OwnerEmail);
+            Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
+
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await connection.UpdateDomainAsync("does-not-exist", updateDomainRequest));
         }
     }
 }

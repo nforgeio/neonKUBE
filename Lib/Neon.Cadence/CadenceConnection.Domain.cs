@@ -59,6 +59,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceDomainAlreadyExistsException">Thrown if the domain already exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomain(RegisterDomainRequest request)
         {
             var domainRegisterRequest =
@@ -72,7 +73,7 @@ namespace Neon.Cadence
 
             var reply = await ProxyCallAsync(domainRegisterRequest);
 
-            reply.ThrowIfError();
+            reply.ThrowOnError();
         }
 
         /// <summary>
@@ -89,7 +90,8 @@ namespace Neon.Cadence
         /// <exception cref="CadenceDomainAlreadyExistsException">Thrown if the domain already exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        public async Task RegisterDomain(string name, string description = null, string ownerEmail = null, int retentionDays = 7)
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7)
         {
             await RegisterDomain(
                 new RegisterDomainRequest()
@@ -99,6 +101,72 @@ namespace Neon.Cadence
                     OwnerEmail    = ownerEmail,
                     RetentionDays = retentionDays
                 });
+        }
+
+        /// <summary>
+        /// Describes the named Cadence domain.
+        /// </summary>
+        /// <param name="name">The domain name.</param>
+        /// <returns>Tyhe domain description.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        public async Task<DescribeDomainResponse> DescribeDomainAsync(string name)
+        {
+            var domainDescribeRequest =
+                new DomainDescribeRequest()
+                {
+                    Name = name,
+                };
+
+            var reply = (DomainDescribeReply)await ProxyCallAsync(domainDescribeRequest);
+
+            reply.ThrowOnError();
+
+            return new DescribeDomainResponse()
+            {
+                DomainInfo = new DomainInfo()
+                {
+                    Description = reply.DomainInfoDescription,
+                    Name        = reply.DomainInfoName,
+                    OwnerEmail  = reply.DomainInfoOwnerEmail,
+                    Status      = reply.DomainInfoStatus
+                },
+
+                Configuration = new DomainConfiguation()
+                {
+                    EmitMetrics   = reply.ConfigurationEmitMetrics,
+                    RetentionDays = reply.ConfigurationRetentionDays
+                },
+            };
+        }
+
+        /// <summary>
+        /// Updates the named Cadence domain.
+        /// </summary>
+        /// <param name="name">Identifies the target domain.</param>
+        /// <param name="request">The updated domain information.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null);
+            Covenant.Requires<ArgumentNullException>(request.Configuration != null);
+            Covenant.Requires<ArgumentNullException>(request.DomainInfo != null);
+
+            var domainUpdateRequest 
+                = new DomainUpdateRequest()
+                {
+                    Name                       = name,
+                    UpdatedInfoDescription     = request.DomainInfo.Description,
+                    UpdatedInfoOwnerEmail      = request.DomainInfo.OwnerEmail,
+                    ConfigurationEmitMetrics   = request.Configuration.EmitMetrics,
+                    ConfigurationRetentionDays = request.Configuration.RetentionDays
+                };
+
+            var reply = await ProxyCallAsync(domainUpdateRequest);
+
+            reply.ThrowOnError();
         }
     }
 }

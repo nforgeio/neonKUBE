@@ -787,7 +787,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
-                Assert.Null(message.Uuid);
 
                 // Round-trip
 
@@ -795,8 +794,6 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Name = "my-domain";
                 Assert.Equal("my-domain", message.Name);
-                message.Uuid = "my-uuid";
-                Assert.Equal("my-uuid", message.Uuid);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -806,7 +803,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
-                Assert.Equal("my-uuid", message.Uuid);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -814,7 +810,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
-                Assert.Equal("my-uuid", message.Uuid);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -822,7 +817,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
-                Assert.Equal("my-uuid", message.Uuid);
             }
         }
 
@@ -848,11 +842,12 @@ namespace TestCadence
                 Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
                 Assert.Null(message.ErrorDetails);
-                Assert.Null(message.Name);
-                Assert.Null(message.Description);
-                Assert.Null(message.Status);
-                Assert.Null(message.OwnerEmail);
-                Assert.Null(message.Uuid);
+                Assert.False(message.ConfigurationEmitMetrics);
+                Assert.Equal(0, message.ConfigurationRetentionDays);
+                Assert.Null(message.DomainInfoName);
+                Assert.Null(message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Unspecified, message.DomainInfoStatus);
+                Assert.Null(message.DomainInfoOwnerEmail);
 
                 // Round-trip
 
@@ -864,16 +859,18 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error);
                 message.ErrorDetails = "MyError Details";
                 Assert.Equal("MyError Details", message.ErrorDetails);
-                message.Name = "my-name";
-                Assert.Equal("my-name", message.Name);
-                message.Description = "my-description";
-                Assert.Equal("my-description", message.Description);
-                message.Status = CadenceDomainStatus.Deprecated;
-                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
-                message.OwnerEmail = "joe@bloe.com";
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
-                message.Uuid = "my-uuid";
-                Assert.Equal("my-uuid", message.Uuid);
+                message.ConfigurationEmitMetrics = true;
+                Assert.True(message.ConfigurationEmitMetrics);
+                message.ConfigurationRetentionDays = 7;
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                message.DomainInfoName = "my-name";
+                Assert.Equal("my-name", message.DomainInfoName);
+                message.DomainInfoDescription = "my-description";
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                message.DomainInfoStatus = DomainStatus.Deprecated;
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                message.DomainInfoOwnerEmail = "joe@bloe.com";
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -885,11 +882,12 @@ namespace TestCadence
                 Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
                 Assert.Equal("MyError", message.Error);
                 Assert.Equal("MyError Details", message.ErrorDetails);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
-                Assert.Equal("my-uuid", message.Uuid);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-name", message.DomainInfoName);
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -899,11 +897,12 @@ namespace TestCadence
                 Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
                 Assert.Equal("MyError", message.Error);
                 Assert.Equal("MyError Details", message.ErrorDetails);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
-                Assert.Equal("my-uuid", message.Uuid);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-name", message.DomainInfoName);
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -913,11 +912,12 @@ namespace TestCadence
                 Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
                 Assert.Equal("MyError", message.Error);
                 Assert.Equal("MyError Details", message.ErrorDetails);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal(CadenceDomainStatus.Deprecated, message.Status);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
-                Assert.Equal("my-uuid", message.Uuid);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-name", message.DomainInfoName);
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
             }
         }
 
@@ -1087,9 +1087,10 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
-                Assert.Null(message.NewName);
-                Assert.Null(message.Description);
-                Assert.Null(message.OwnerEmail);
+                Assert.Null(message.UpdatedInfoDescription);
+                Assert.Null(message.UpdatedInfoOwnerEmail);
+                Assert.False(message.ConfigurationEmitMetrics);
+                Assert.Equal(0, message.ConfigurationRetentionDays);
 
                 // Round-trip
 
@@ -1097,12 +1098,14 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Name = "my-name";
                 Assert.Equal("my-name", message.Name);
-                message.NewName = "my-newname";
-                Assert.Equal("my-newname", message.NewName);
-                message.Description = "my-description";
-                Assert.Equal("my-description", message.Description);
-                message.OwnerEmail = "joe@bloe.com";
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                message.UpdatedInfoDescription = "my-description";
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                message.UpdatedInfoOwnerEmail = "joe@bloe.com";
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                message.ConfigurationEmitMetrics = true;
+                Assert.True(message.ConfigurationEmitMetrics);
+                message.ConfigurationRetentionDays = 7;
+                Assert.Equal(7, message.ConfigurationRetentionDays);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -1112,9 +1115,10 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-newname", message.NewName);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -1122,9 +1126,10 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-newname", message.NewName);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1132,9 +1137,10 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-newname", message.NewName);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
             }
         }
 

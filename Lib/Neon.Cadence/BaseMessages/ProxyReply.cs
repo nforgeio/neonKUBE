@@ -142,7 +142,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Throws the related exception if the reply is reporting an error.
         /// </summary>
-        public void ThrowIfError()
+        public void ThrowOnError()
         {
             if (!string.IsNullOrEmpty(Error))
             {

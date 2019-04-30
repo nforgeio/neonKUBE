@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegisterDomainRequest.cs
+// FILE:	    DomainInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,39 +18,23 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Domain registration details.
+    /// Information about a Cadence domain.
     /// </summary>
-    public class RegisterDomainRequest
+    public class DomainInfo
     {
         /// <summary>
         /// The domain name.
@@ -58,7 +42,12 @@ namespace Neon.Cadence
         public string Name { get; set; }
 
         /// <summary>
-        /// The domain description.
+        /// The domain status.
+        /// </summary>
+        public DomainStatus Status { get; set; }
+
+        /// <summary>
+        /// Ths domain description.
         /// </summary>
         public string Description { get; set; }
 
@@ -66,16 +55,5 @@ namespace Neon.Cadence
         /// The domain owner's email address.
         /// </summary>
         public string OwnerEmail { get; set; }
-
-        /// <summary>
-        /// The number of days to retain the history for workflowws
-        /// completed in this domain.  This defaults to <b>7 days</b>.
-        /// </summary>
-        public int RetentionDays { get; set; } = 7;
-
-        /// <summary>
-        /// Enables metric generation.  This defaults to <c>false.</c>
-        /// </summary>
-        public bool EmitMetrics { get; set; }
     }
 }
