@@ -54,6 +54,18 @@ namespace Neon.Cadence
     /// </summary>
     public partial class CadenceConnection : IDisposable
     {
+        /// <summary>
+        /// The <b>cadence-proxy</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
+        /// mode is enabled.
+        /// </summary>
+        private const int debugProxyPort = 5000;
+
+        /// <summary>
+        /// The <b>cadence-client</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
+        /// mode is enabled.
+        /// </summary>
+        private const int debugClientPort = 5001;
+
         //---------------------------------------------------------------------
         // Private types
 
@@ -399,7 +411,7 @@ namespace Neon.Cadence
                 .UseKestrel(
                     options =>
                     {
-                        options.Listen(address, settings.ListenPort);
+                        options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
                     })
                 .ConfigureServices(
                     services =>
@@ -417,12 +429,15 @@ namespace Neon.Cadence
             // Determine the port we'll have [cadence-proxy] listen on and then
             // fire up the cadence-proxy process or the stubbed host.
 
-            proxyPort = NetHelper.GetUnusedTcpPort(address);
+            proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
 
 #if DEBUG
             if (!settings.DebugEmulateProxy)
             {
-                ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                if (!Settings.DebugPrelaunched)
+                {
+                    ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                }
             }
             else
             {
@@ -471,24 +486,27 @@ namespace Neon.Cadence
             nextRequestId = 0;
             operations    = new Dictionary<long, Operation>();
 
-            // Send the [InitializeRequest] to the [cadence-proxy] so it will know
-            // where to send reply messages.
-
-            try
+            if (!Settings.DebugDisableHandshakes)
             {
-                var initializeRequest =
-                    new InitializeRequest()
-                    {
-                        LibraryAddress = ListenUri.Host,
-                        LibraryPort    = ListenUri.Port
-                    };
+                // Send the [InitializeRequest] to the [cadence-proxy] so it will know
+                // where to send reply messages.
 
-                ProxyCallAsync(initializeRequest).Wait();
-            }
-            catch (Exception e)
-            {
-                Dispose();
-                throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                try
+                {
+                    var initializeRequest =
+                        new InitializeRequest()
+                        {
+                            LibraryAddress = ListenUri.Host,
+                            LibraryPort = ListenUri.Port
+                        };
+
+                    ProxyCallAsync(initializeRequest).Wait();
+                }
+                catch (Exception e)
+                {
+                    Dispose();
+                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                }
             }
 
             // Crank up the background threads which will handle [cadence-proxy]
@@ -525,7 +543,7 @@ namespace Neon.Cadence
 
             closingConnection = true;
 
-            if (ProxyProcess != null)
+            if (ProxyProcess != null && !Settings.DebugDisableHandshakes)
             {
                 try
                 {
