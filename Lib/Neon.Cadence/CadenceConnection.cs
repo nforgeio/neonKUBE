@@ -618,7 +618,7 @@ namespace Neon.Cadence
         /// was closed normally or due to an error by examining the <see cref="CadenceConnectionClosedArgs"/>
         /// arguments passed to the handler.
         /// </summary>
-        public event OnCadenceConnectionClosed ConnectionClosed;
+        public event CadenceConnectionClosedDelegate ConnectionClosed;
 
         /// <summary>
         /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already

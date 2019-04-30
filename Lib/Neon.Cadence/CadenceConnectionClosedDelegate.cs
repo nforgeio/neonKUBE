@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    OnCadenceConnectionClosed.cs
+// FILE:	    CadenceConnectionClosedDelegate.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,7 +27,7 @@ namespace Neon.Cadence
     /// </summary>
     /// <param name="sender">The event sender.</param>
     /// <param name="args">The event arguments.</param>
-    public delegate void OnCadenceConnectionClosed(object sender, CadenceConnectionClosedArgs args);
+    public delegate void CadenceConnectionClosedDelegate(object sender, CadenceConnectionClosedArgs args);
 
     /// <summary>
     /// The event arguments sent when a <see cref="CadenceConnection"/> is closed
