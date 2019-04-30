@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    DescribeDomainResponse.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -28,48 +29,21 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// Information returned by <see cref="CadenceConnection.DescribeDomainAsync(string)"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    public class DescribeDomainResponse
     {
         /// <summary>
-        /// Default constructor.
+        /// The domain information.
         /// </summary>
-        public ActivityRequest()
-        {
-        }
+        public DomainInfo DomainInfo { get; set; }
 
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// The domain configuration.
         /// </summary>
-        public long ActivityContextId
-        {
-            get => GetLongProperty("ActivityContextId");
-            set => SetLongProperty("ActivityContextId", value);
-        }
-
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new ActivityRequest();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (ActivityRequest)target;
-
-            typedTarget.ActivityContextId = this.ActivityContextId;
-        }
+        public DomainConfiguation Configuration { get; set; }
     }
 }

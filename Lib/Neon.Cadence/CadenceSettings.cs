@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
+using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
@@ -130,6 +131,24 @@ namespace Neon.Cadence
         public bool Debug { get; set; } = false;
 
         /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
+        /// already be running for debugging purposes.  When this is <c>true</c>, the 
+        /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and
+        /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.2:5000</b>.
+        /// This defaults to <c>false.</c>
+        /// </summary>
+        internal bool DebugPrelaunched { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-client</b>
+        /// will not perform the <see cref="InitializeRequest"/>/<see cref="InitializeReply"/>
+        /// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes 
+        /// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
+        /// <c>false</c>.
+        /// </summary>
+        internal bool DebugDisableHandshakes { get; set; } = false;
+
+        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally specifies that the real <b>cadence-proxy</b>
         /// should not be started and a partially implemented local emulation should be started 
         /// in its place.  This is used internally for low-level testing and should never be 
@@ -155,7 +174,7 @@ namespace Neon.Cadence
         /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
         /// emulated <b>cadence-proxy</b> for testing purposes.
         /// </summary>
-        internal bool DebugBlockHeartbeats { get; set; } = false;
+        internal bool DebugIgnoreHeartbeats { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally specifies the timeout to use for 

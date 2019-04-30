@@ -33,34 +33,39 @@ namespace Neon.Cadence
         /// error type and message passed.
         /// </summary>
         /// <param name="errorType">Identifies the error type.</param>
-        /// <param name="message">The error message.</param>
+        /// <param name="error">Identifies the error.</param>
+        /// <param name="details">The error details.</param>
         /// <param name="innerException">Optional inner exception.</param>
         /// <returns>One of the exceptions derived from <see cref="CadenceException"/>.</returns>
-        internal static CadenceException Create(CadenceErrorTypes errorType, string message, Exception innerException = null)
+        internal static CadenceException Create(CadenceErrorTypes errorType, string error, string details, Exception innerException = null)
         {
-            Covenant.Requires<ArgumentNullException>(message != null);
+            Covenant.Requires<ArgumentNullException>(details != null);
 
-            // First, we're going to try mapping the message string to predefined
-            // Cadence exceptions and if that doesn't work, we'll generate a more
-            // generic exception.
+            // First, we're going to try mapping the error identifier to one of the
+            // predefined Cadence exceptions and if that doesn't work, we'll generate
+            // a more generic exception.
 
-            switch (message)
+            switch (error)
             {
                 case "BadRequestError":
 
-                    return new CadenceBadRequestException(message);
+                    return new CadenceBadRequestException(details);
 
                 case "DomainAlreadyExistsError":
 
-                    return new CadenceDomainAlreadyExistsException(message);
+                    return new CadenceDomainAlreadyExistsException(details);
 
                 case "EntityNotExistsError":
 
-                    return new CadenceEntityNotExistsException(message);
+                    return new CadenceEntityNotExistsException(details);
 
                 case "InternalServiceError":
 
-                    return new CadenceInternalServiceException(message);
+                    return new CadenceInternalServiceException(details);
+
+                case "ServiceBusyError ":
+
+                    return new CadenceServiceBusyException(details);
             }
 
             // Create a more generic exception.
@@ -69,27 +74,27 @@ namespace Neon.Cadence
             {
                 case CadenceErrorTypes.Cancelled:
 
-                    return new CadenceCancelledException(message, innerException);
+                    return new CadenceCancelledException(details, innerException);
 
                 case CadenceErrorTypes.Custom:
 
-                    return new CadenceCustomException(message, innerException);
+                    return new CadenceCustomException(details, innerException);
 
                 case CadenceErrorTypes.Generic:
 
-                    return new CadenceGenericException(message, innerException);
+                    return new CadenceGenericException(details, innerException);
 
                 case CadenceErrorTypes.Panic:
 
-                    return new CadencePanicException(message, innerException);
+                    return new CadencePanicException(details, innerException);
 
                 case CadenceErrorTypes.Terminated:
 
-                    return new CadenceTerminatedException(message, innerException);
+                    return new CadenceTerminatedException(details, innerException);
 
                 case CadenceErrorTypes.Timeout:
 
-                    return new CadenceTimeoutException(message, innerException);
+                    return new CadenceTimeoutException(details, innerException);
 
                 case CadenceErrorTypes.None:
                 default:

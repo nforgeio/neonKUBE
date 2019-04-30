@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Base class for all proxy requests.
@@ -137,6 +137,17 @@ namespace Neon.Cadence
             typedTarget.ErrorType    = this.ErrorType;
             typedTarget.Error        = this.Error;
             typedTarget.ErrorDetails = this.ErrorDetails;
+        }
+
+        /// <summary>
+        /// Throws the related exception if the reply is reporting an error.
+        /// </summary>
+        public void ThrowOnError()
+        {
+            if (!string.IsNullOrEmpty(Error))
+            {
+                throw CadenceException.Create(ErrorType, Error, ErrorDetails);
+            }
         }
     }
 }

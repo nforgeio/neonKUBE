@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TerminateReply.cs
+// FILE:	    CadenceServiceBusyException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,48 +16,25 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-
-using Neon.Common;
-
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="TerminateRequest"/>.
+    /// Thrown when the Cadence cluster is too busy to perform an operation.
     /// </summary>
-    [ProxyMessage(MessageTypes.TerminateReply)]
-    internal class TerminateReply : ProxyReply
+    public class CadenceServiceBusyException : CadenceException
     {
         /// <summary>
-        /// Default constructor.
+        /// Constructor.
         /// </summary>
-        public TerminateReply()
+        /// <param name="message">The message.</param>
+        /// <param name="innerException">Optional inner exception.</param>
+        public CadenceServiceBusyException(string message, Exception innerException = null)
+            : base(message, innerException)
         {
-            Type = MessageTypes.TerminateReply;
         }
 
         /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new TerminateReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-        }
+        internal override string CadenceError => "ServiceBusyError";
     }
 }

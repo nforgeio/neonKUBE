@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    DomainStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -28,48 +29,32 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// Indicates a Cadence domain status.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    public enum DomainStatus
     {
         /// <summary>
-        /// Default constructor.
+        /// The status cannot be determined.
         /// </summary>
-        public ActivityRequest()
-        {
-        }
+        [EnumMember(Value = "UNSPECIFIED")]
+        Unspecified = 0,
 
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// The domain is registered and active.
         /// </summary>
-        public long ActivityContextId
-        {
-            get => GetLongProperty("ActivityContextId");
-            set => SetLongProperty("ActivityContextId", value);
-        }
+        [EnumMember(Value = "REGISTERED")]
+        Registered,
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new ActivityRequest();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (ActivityRequest)target;
-
-            typedTarget.ActivityContextId = this.ActivityContextId;
-        }
+        /// <summary>
+        /// The domain is closed for new workflows but will remain
+        /// until already running workflows are completed and the
+        /// history retention period for the last executed workflow
+        /// has been satisified.
+        /// </summary>
+        [EnumMember(Value = "DEPRECATED")]
+        Deprecated
     }
 }

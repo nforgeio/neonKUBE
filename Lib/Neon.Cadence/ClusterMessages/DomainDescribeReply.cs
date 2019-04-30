@@ -32,7 +32,7 @@ using Neon.Common;
 //
 // There's several more fields that could be handled.
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>proxy --> library:</b> Answers a <see cref="DomainDescribeRequest"/>.
@@ -51,46 +51,55 @@ namespace Neon.Cadence
         /// <summary>
         /// The domain name.
         /// </summary>
-        public string Name
+        public string DomainInfoName
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty("DomainInfoName");
+            set => SetStringProperty("DomainInfoName", value);
         }
 
         /// <summary>
         /// Human readable description for the domain.
         /// </summary>
-        public string Description
+        public string DomainInfoDescription
         {
-            get => GetStringProperty("Description");
-            set => SetStringProperty("Description", value);
+            get => GetStringProperty("DomainInfoDescription");
+            set => SetStringProperty("DomainInfoDescription", value);
         }
 
         /// <summary>
         /// The domain status.
         /// </summary>
-        public string Status
+        public DomainStatus DomainInfoStatus
         {
-            get => GetStringProperty("Status");
-            set => SetStringProperty("Status", value);
+            get => GetEnumProperty<DomainStatus>("DomainInfoStatus");
+            set => SetEnumProperty<DomainStatus>("DomainInfoStatus", value);
         }
 
         /// <summary>
         /// Owner email address.
         /// </summary>
-        public string OwnerEmail
+        public string DomainInfoOwnerEmail
         {
-            get => GetStringProperty("OwnerEmail");
-            set => SetStringProperty("OwnerEmail", value);
+            get => GetStringProperty("DomainInfoOwnerEmail");
+            set => SetStringProperty("DomainInfoOwnerEmail", value);
         }
 
         /// <summary>
-        /// The domain UUID.
+        /// The workflow history retention period in days.
         /// </summary>
-        public string Uuid
+        public int ConfigurationRetentionDays
         {
-            get => GetStringProperty("Uuid");
-            set => SetStringProperty("Uuid", value);
+            get => GetIntProperty("ConfigurationRetentionDays");
+            set => SetIntProperty("ConfigurationRetentionDays", value);
+        }
+
+        /// <summary>
+        /// Enables metric generation.
+        /// </summary>
+        public bool ConfigurationEmitMetrics
+        {
+            get => GetBoolProperty("ConfigurationEmitMetrics");
+            set => SetBoolProperty("ConfigurationEmitMetrics", value);
         }
 
         /// <inheritdoc/>
@@ -110,11 +119,12 @@ namespace Neon.Cadence
 
             var typedTarget = (DomainDescribeReply)target;
 
-            typedTarget.Name        = this.Name;
-            typedTarget.Description = this.Description;
-            typedTarget.Status      = this.Status;
-            typedTarget.OwnerEmail  = this.OwnerEmail;
-            typedTarget.Uuid        = this.Uuid;
+            typedTarget.ConfigurationRetentionDays = this.ConfigurationRetentionDays;
+            typedTarget.ConfigurationEmitMetrics   = this.ConfigurationEmitMetrics;
+            typedTarget.DomainInfoName             = this.DomainInfoName;
+            typedTarget.DomainInfoDescription      = this.DomainInfoDescription;
+            typedTarget.DomainInfoStatus           = this.DomainInfoStatus;
+            typedTarget.DomainInfoOwnerEmail       = this.DomainInfoOwnerEmail;
         }
     }
 }

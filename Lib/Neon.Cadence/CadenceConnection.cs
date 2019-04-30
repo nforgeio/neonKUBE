@@ -45,6 +45,8 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
+using Neon.Cadence.Internal;
+
 namespace Neon.Cadence
 {
     /// <summary>
@@ -52,6 +54,18 @@ namespace Neon.Cadence
     /// </summary>
     public partial class CadenceConnection : IDisposable
     {
+        /// <summary>
+        /// The <b>cadence-proxy</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
+        /// mode is enabled.
+        /// </summary>
+        private const int debugProxyPort = 5000;
+
+        /// <summary>
+        /// The <b>cadence-client</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
+        /// mode is enabled.
+        /// </summary>
+        private const int debugClientPort = 5001;
+
         //---------------------------------------------------------------------
         // Private types
 
@@ -211,6 +225,7 @@ namespace Neon.Cadence
         private static readonly object      staticSyncLock = new object();
         private static readonly Assembly    thisAssembly   = Assembly.GetExecutingAssembly();
         private static readonly INeonLogger log            = LogManager.Default.GetLogger<CadenceConnection>();
+        private static bool                 proxyWritten   = false;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -268,15 +283,33 @@ namespace Neon.Cadence
 
             lock (staticSyncLock)
             {
-                if (!File.Exists(binaryPath))
+                if (!proxyWritten)
                 {
-                    // Extract and decompress the correct [cadence-proxy].
+                    // Extract and decompress the [cadence-proxy] binary.  Note that it's
+                    // possible that another instance of an .NET application using this 
+                    // library is already runing on this machine such that the proxy
+                    // binary file will be read-only.  In this case, we'll log and otherwise
+                    // ignore the exception and assume that the proxy binary is correct.
 
-                    using (var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath))
+                    try
                     {
-                        using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath))
                         {
-                            resourceStream.GunzipTo(binaryStream);
+                            using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                resourceStream.GunzipTo(binaryStream);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (File.Exists(binaryPath))
+                        {
+                            log.LogWarn($"[cadence-proxy] binary [{binaryPath}] already exists and is probably read-only.", e);
+                        }
+                        else
+                        {
+                            log.LogWarn($"[cadence-proxy] binary [{binaryPath}] cannot be written.", e);
                         }
                     }
 
@@ -284,7 +317,7 @@ namespace Neon.Cadence
                     {
                         // We need to set the execute permissions on this file.  We're
                         // going to assume that only the root and current user will
-                        // need to execute this.
+                        // need to execute rights to the proxy binary.
 
                         var result = NeonHelper.ExecuteCapture("chmod", new object[] { "774", binaryPath });
 
@@ -293,6 +326,8 @@ namespace Neon.Cadence
                             throw new IOException($"Cannot set execute permissions for [{binaryPath}]:\r\n{result.ErrorText}");
                         }
                     }
+
+                    proxyWritten = true;
                 }
             }
 
@@ -376,7 +411,7 @@ namespace Neon.Cadence
                 .UseKestrel(
                     options =>
                     {
-                        options.Listen(address, settings.ListenPort);
+                        options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
                     })
                 .ConfigureServices(
                     services =>
@@ -394,12 +429,15 @@ namespace Neon.Cadence
             // Determine the port we'll have [cadence-proxy] listen on and then
             // fire up the cadence-proxy process or the stubbed host.
 
-            proxyPort = NetHelper.GetUnusedTcpPort(address);
+            proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
 
 #if DEBUG
             if (!settings.DebugEmulateProxy)
             {
-                ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                if (!Settings.DebugPrelaunched)
+                {
+                    ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                }
             }
             else
             {
@@ -448,24 +486,27 @@ namespace Neon.Cadence
             nextRequestId = 0;
             operations    = new Dictionary<long, Operation>();
 
-            // Send the [InitializeRequest] to the [cadence-proxy] so it will know
-            // where to send reply messages.
-
-            try
+            if (!Settings.DebugDisableHandshakes)
             {
-                var initializeRequest =
-                    new InitializeRequest()
-                    {
-                        LibraryAddress = ListenUri.Host,
-                        LibraryPort    = ListenUri.Port
-                    };
+                // Send the [InitializeRequest] to the [cadence-proxy] so it will know
+                // where to send reply messages.
 
-                ProxyCallAsync(initializeRequest).Wait();
-            }
-            catch (Exception e)
-            {
-                Dispose();
-                throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                try
+                {
+                    var initializeRequest =
+                        new InitializeRequest()
+                        {
+                            LibraryAddress = ListenUri.Host,
+                            LibraryPort = ListenUri.Port
+                        };
+
+                    ProxyCallAsync(initializeRequest).Wait();
+                }
+                catch (Exception e)
+                {
+                    Dispose();
+                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                }
             }
 
             // Crank up the background threads which will handle [cadence-proxy]
@@ -502,7 +543,7 @@ namespace Neon.Cadence
 
             closingConnection = true;
 
-            if (ProxyProcess != null)
+            if (ProxyProcess != null && !Settings.DebugDisableHandshakes)
             {
                 try
                 {
@@ -602,7 +643,7 @@ namespace Neon.Cadence
         /// was closed normally or due to an error by examining the <see cref="CadenceConnectionClosedArgs"/>
         /// arguments passed to the handler.
         /// </summary>
-        public event OnCadenceConnectionClosed ConnectionClosed;
+        public event CadenceConnectionClosedDelegate ConnectionClosed;
 
         /// <summary>
         /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already

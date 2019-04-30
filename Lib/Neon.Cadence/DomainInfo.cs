@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    OnCadenceConnectionClosed.cs
+// FILE:	    DomainInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,28 +18,42 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+
+using Newtonsoft.Json;
+using YamlDotNet.Serialization;
+
+using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Delegate called by a <see cref="CadenceConnection"/> when the connection is closed
-    /// explicitly or where there's a problem communicating with the <b>cadence-proxy</b>.
+    /// Information about a Cadence domain.
     /// </summary>
-    /// <param name="sender">The event sender.</param>
-    /// <param name="args">The event arguments.</param>
-    public delegate void OnCadenceConnectionClosed(object sender, CadenceConnectionClosedArgs args);
-
-    /// <summary>
-    /// The event arguments sent when a <see cref="CadenceConnection"/> is closed
-    /// with a property indicating whether or not the connection was closed due
-    /// to an error.
-    /// </summary>
-    public class CadenceConnectionClosedArgs : EventArgs
+    public class DomainInfo
     {
         /// <summary>
-        /// This will be set if the connection was closed due to an error
-        /// or <c>null</c> when the connection was closed normally.
+        /// The domain name.
         /// </summary>
-        public Exception Exception { get; internal  set; }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The domain status.
+        /// </summary>
+        public DomainStatus Status { get; set; }
+
+        /// <summary>
+        /// Ths domain description.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// The domain owner's email address.
+        /// </summary>
+        public string OwnerEmail { get; set; }
     }
 }
