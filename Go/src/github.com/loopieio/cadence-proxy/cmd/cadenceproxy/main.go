@@ -29,7 +29,7 @@ func main() {
 	var debugMode bool
 
 	// define the flags and parse them
-	flag.StringVar(&address, "listen", "127.0.0.1:3000", "Address for the Cadence Proxy Server to listen on")
+	flag.StringVar(&address, "listen", "127.0.0.2:5000", "Address for the Cadence Proxy Server to listen on")
 	flag.StringVar(&logLevel, "log-level", "info", "The log level when running the proxy")
 	flag.BoolVar(&debugMode, "debug", false, "Set to debug mode")
 	flag.Parse()
@@ -67,7 +67,7 @@ func setLogLevelAndDebugMode(logLevel string, debugMode bool) {
 		encoderCfg = zap.NewDevelopmentEncoderConfig()
 		encoderCfg.TimeKey = "Time"
 		encoderCfg.LevelKey = "Level"
-		encoderCfg.MessageKey = "Message"
+		encoderCfg.MessageKey = "Debug Message"
 		logger = zap.New(zapcore.NewCore(
 			zapcore.NewJSONEncoder(encoderCfg),
 			zapcore.Lock(os.Stdout),
