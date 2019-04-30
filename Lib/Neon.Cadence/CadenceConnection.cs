@@ -211,6 +211,7 @@ namespace Neon.Cadence
         private static readonly object      staticSyncLock = new object();
         private static readonly Assembly    thisAssembly   = Assembly.GetExecutingAssembly();
         private static readonly INeonLogger log            = LogManager.Default.GetLogger<CadenceConnection>();
+        private static bool                 proxyWritten   = false;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -268,23 +269,34 @@ namespace Neon.Cadence
 
             lock (staticSyncLock)
             {
-                if (!File.Exists(binaryPath))
+                if (!proxyWritten)
                 {
-                    // Extract and decompress the correct [cadence-proxy].
+                    // Extract and decompress the [cadence-proxy] binary.  Note that it's
+                    // possible that another instance of an .NET application using this 
+                    // library is already runing on this machine such that the proxy
+                    // binary file will be read-only.  In this case, we'll log and otherwse
+                    // ignore the exception and assume that the proxy binary is correct.
 
-                    using (var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath))
+                    try
                     {
-                        using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath))
                         {
-                            resourceStream.GunzipTo(binaryStream);
+                            using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                resourceStream.GunzipTo(binaryStream);
+                            }
                         }
+                    }
+                    catch (IOException e)
+                    {
+                        log.LogWarn("[cadence-proxy] binary may already exist.", e);
                     }
 
                     if (NeonHelper.IsLinux || NeonHelper.IsOSX)
                     {
                         // We need to set the execute permissions on this file.  We're
                         // going to assume that only the root and current user will
-                        // need to execute this.
+                        // need to execute rights to the proxy binary.
 
                         var result = NeonHelper.ExecuteCapture("chmod", new object[] { "774", binaryPath });
 
@@ -293,6 +305,8 @@ namespace Neon.Cadence
                             throw new IOException($"Cannot set execute permissions for [{binaryPath}]:\r\n{result.ErrorText}");
                         }
                     }
+
+                    proxyWritten = true;
                 }
             }
 
