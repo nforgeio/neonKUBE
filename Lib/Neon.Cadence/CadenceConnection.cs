@@ -289,9 +289,16 @@ namespace Neon.Cadence
                             }
                         }
                     }
-                    catch (IOException e)
+                    catch (Exception e)
                     {
-                        log.LogWarn("[cadence-proxy] binary may already exist.", e);
+                        if (File.Exists(binaryPath))
+                        {
+                            log.LogWarn($"[cadence-proxy] binary [{binaryPath}] already exists and is probably read-only.", e);
+                        }
+                        else
+                        {
+                            log.LogWarn($"[cadence-proxy] binary [{binaryPath}] cannot be written.", e);
+                        }
                     }
 
                     if (NeonHelper.IsLinux || NeonHelper.IsOSX)
