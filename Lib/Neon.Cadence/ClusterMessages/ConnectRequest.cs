@@ -30,7 +30,7 @@ using Neon.Common;
 
 // $todo(jeff.lill): Investegate adding metrics details.
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Requests the proxy establish a connection with a Cadence cluster.

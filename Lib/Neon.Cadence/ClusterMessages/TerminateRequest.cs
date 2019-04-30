@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Signals the proxy that it should terminate gracefully.  The

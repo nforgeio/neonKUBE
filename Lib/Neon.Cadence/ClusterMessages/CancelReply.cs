@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>proxy --> library:</b> Sent in response to a <see cref="CancelRequest"/>

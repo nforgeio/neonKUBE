@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Base class for all proxy requests.

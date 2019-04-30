@@ -45,6 +45,8 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
+using Neon.Cadence.Internal;
+
 namespace Neon.Cadence
 {
 #if DEBUG
@@ -285,8 +287,6 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainRegisterAsync(DomainRegisterRequest request)
         {
-
-
             await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
         }
 

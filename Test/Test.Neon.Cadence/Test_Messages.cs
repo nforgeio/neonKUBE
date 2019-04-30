@@ -26,6 +26,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;

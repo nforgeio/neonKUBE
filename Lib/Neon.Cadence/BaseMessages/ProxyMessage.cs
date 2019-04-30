@@ -39,7 +39,7 @@ using Neon.Collections;
 // We should also try to convert the serialize/deserialize methods to be async
 // and work on streams.
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// The base class for all messages transferred between the .NET Cadence client

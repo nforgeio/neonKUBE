@@ -45,6 +45,8 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
+using Neon.Cadence.Internal;
+
 namespace Neon.Cadence
 {
     /// <summary>

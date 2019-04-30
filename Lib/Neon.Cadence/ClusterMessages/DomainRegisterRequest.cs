@@ -33,7 +33,7 @@ using Neon.Common;
 // There are several more parameters we could specify but these
 // don't seem critical at this point.
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Requests that the proxy register a Cadence domain.

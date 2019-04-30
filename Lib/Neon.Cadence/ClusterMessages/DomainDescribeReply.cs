@@ -32,7 +32,7 @@ using Neon.Common;
 //
 // There's several more fields that could be handled.
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>proxy --> library:</b> Answers a <see cref="DomainDescribeRequest"/>.
