@@ -9,11 +9,15 @@ import (
 
 type (
 
-	// ConnectRequest is ProxyRequest of MessageType
-	// ConnectRequest.  It holds a reference to a
-	// ProxyRequest in memory
+	// ConnectRequest is ConnectRequest of MessageType
+	// ConnectRequest.
+	//
+	// A ConnectRequest contains a RequestId and a reference to a
+	// ProxyRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this ProxyRequest
 	ConnectRequest struct {
 		*base.ProxyRequest
+		ReplyType messages.MessageType
 	}
 )
 
@@ -36,6 +40,7 @@ func NewConnectRequest() *ConnectRequest {
 	request := new(ConnectRequest)
 	request.ProxyRequest = base.NewProxyRequest()
 	request.Type = messages.ConnectRequest
+	request.ReplyType = messages.ConnectReply
 	return request
 }
 
@@ -139,18 +144,17 @@ func (request *ConnectRequest) String() string {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetRequestID gets a request id from a ProxyMessage's properties
-//
-// returns int64 -> long as a ProxyRequest's request id from the properties map
+// GetRequestID inherits docs from ProxyRequest.GetRequestID()
 func (request *ConnectRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
-// properties
-//
-// param value int64 -> the long representation of a ProxyRequest's
-// request id to be set in the properties map
+// SetRequestID inherits docs from ProxyRequest.SetRequestID()
 func (request *ConnectRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
+}
+
+// GetReplyType inherits docs from ProxyRequest.GetReplyType()
+func (request *ConnectRequest) GetReplyType() messages.MessageType {
+	return request.ReplyType
 }

@@ -9,7 +9,10 @@ import (
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/endpoints"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cancel"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/connect"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/domain"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/heartbeat"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/terminate"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/server"
@@ -20,6 +23,11 @@ func init() {
 	connect.InitConnect()
 	initialize.InitInitialize()
 	terminate.InitTerminate()
+	cancel.InitCancel()
+	domain.InitDomainDescribe()
+	domain.InitDomainUpdate()
+	domain.InitDomainRegister()
+	heartbeat.InitHeartbeat()
 }
 
 func main() {

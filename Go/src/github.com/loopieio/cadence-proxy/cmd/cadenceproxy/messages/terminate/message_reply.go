@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
@@ -69,111 +68,91 @@ func (reply *TerminateReply) String() string {
 // -------------------------------------------------------------------------
 // IProxyReply interface methods for implementing the IProxyReply interface
 
-// GetRequestID gets a request id from a ProxyReply's ProxyMessage properties map
-//
-// returns int64 -> A long corresponding to a ProxyReply's request id
+// GetRequestID inherits docs from ProxyReply.GetRequestID()
 func (reply *TerminateReply) GetRequestID() int64 {
 	return reply.GetLongProperty("RequestId")
 }
 
-// SetRequestID sets the request id in a ProxyReply's ProxyMessage properties map
-//
-// param value int64 -> the long value to set as a ProxyReply's request id
+// SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (reply *TerminateReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
 
-// GetError gets an error message from a ProxyReply's ProxyMessage properties map
-//
-// returns *string -> a pointer to the string error message in the properties map
+// GetError inherits docs from ProxyReply.GetError()
 func (reply *TerminateReply) GetError() *string {
 	return reply.GetStringProperty("Error")
 }
 
-// SetError sets an error message in a ProxyReply's ProxyMessage properties map
-//
-// param value *string -> a pointer to the string value in memory to set in the properties map
+// SetError inherits docs from ProxyReply.SetError()
 func (reply *TerminateReply) SetError(value *string) {
 	reply.SetStringProperty("Error", value)
 }
 
-// GetErrorDetails gets error details from a ProxyReply's ProxyMessage properties map
-//
-// returns *string -> a pointer to the string error details in the properties map
+// GetErrorDetails inherits docs from ProxyReply.GetErrorDetails()
 func (reply *TerminateReply) GetErrorDetails() *string {
 	return reply.GetStringProperty("ErrorDetails")
 }
 
-// SetErrorDetails sets error details in a ProxyReply's ProxyMessage properties map
-//
-// param value *string -> a pointer to the string value in memory to set in the properties map
+// SetErrorDetails inherits docs from ProxyReply.SetErrorDetails()
 func (reply *TerminateReply) SetErrorDetails(value *string) {
 	reply.SetStringProperty("ErrorDetails", value)
 }
 
-// GetErrorType gets the CadenceErrorType as a string
-// from a ProxyReply's ProxyMessage properties
-// and returns the corresponding CadenceErrorTypes
-//
-// returns cadenceclient.CadenceErrorTypes -> the CadenceErrorTypes in the properties map
-func (reply *TerminateReply) GetErrorType() cadenceclient.CadenceErrorTypes {
+// GetErrorType inherits docs from ProxyReply.GetErrorType()
+func (reply *TerminateReply) GetErrorType() messages.CadenceErrorTypes {
 
 	// Grap the pointer to the error string in the properties map
 	errorStringPtr := reply.GetStringProperty("ErrorType")
 	if errorStringPtr == nil {
-		return cadenceclient.None
+		return messages.None
 	}
 
 	// dereference and switch block on the value
 	errorString := *errorStringPtr
 	switch errorString {
 	case "cancelled":
-		return cadenceclient.Cancelled
+		return messages.Cancelled
 	case "custom":
-		return cadenceclient.Custom
+		return messages.Custom
 	case "generic":
-		return cadenceclient.Generic
+		return messages.Generic
 	case "panic":
-		return cadenceclient.Panic
+		return messages.Panic
 	case "terminated":
-		return cadenceclient.Terminated
+		return messages.Terminated
 	case "timeout":
-		return cadenceclient.Timeout
+		return messages.Timeout
 	default:
 		err := errors.New("Not implemented exception")
 		panic(err)
 	}
 }
 
-// SetErrorType sets the string representation of a CadenceErrorTypes
-// in a ProxyReply's ProxyMessage properties map
-//
-// param value cadenceclient.CadenceErrorTypes -> the CadenceErrorTypes to set as a property value
-// in the properties map
-func (reply *TerminateReply) SetErrorType(value cadenceclient.CadenceErrorTypes) {
+// SetErrorType inherits docs from ProxyReply.SetErrorType()
+func (reply *TerminateReply) SetErrorType(value messages.CadenceErrorTypes) {
 	var typeString string
 
 	// switch block on the param value
 	switch value {
-	case cadenceclient.None:
+	case messages.None:
 		reply.Properties["ErrorType"] = nil
 		return
-	case cadenceclient.Cancelled:
+	case messages.Cancelled:
 		typeString = "cancelled"
 		break
-	case cadenceclient.Custom:
+	case messages.Custom:
 		typeString = "custom"
 		break
-	case cadenceclient.Generic:
+	case messages.Generic:
 		typeString = "generic"
 		break
-	case cadenceclient.Panic:
+	case messages.Panic:
 		typeString = "panic"
 		break
-	case cadenceclient.Terminated:
+	case messages.Terminated:
 		typeString = "terminated"
 		break
-	case cadenceclient.Timeout:
+	case messages.Timeout:
 		typeString = "timeout"
 		break
 	default:

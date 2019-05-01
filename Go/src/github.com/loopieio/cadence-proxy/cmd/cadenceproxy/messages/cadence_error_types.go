@@ -1,4 +1,4 @@
-package cadenceclient
+package messages
 
 // CadenceErrorTypes is an enumerated list of
 // all of the cadence error types

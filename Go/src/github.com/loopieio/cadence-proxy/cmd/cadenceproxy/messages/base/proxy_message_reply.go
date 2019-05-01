@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 )
 
 type (
@@ -27,8 +27,8 @@ type (
 		SetRequestID(value int64)
 		GetError() *string
 		SetError(value *string)
-		GetErrorType() cadenceclient.CadenceErrorTypes
-		SetErrorType(value cadenceclient.CadenceErrorTypes)
+		GetErrorType() messages.CadenceErrorTypes
+		SetErrorType(value messages.CadenceErrorTypes)
 		GetErrorDetails() *string
 		SetErrorDetails(value *string)
 	}
@@ -136,30 +136,30 @@ func (reply *ProxyReply) SetErrorDetails(value *string) {
 // from a ProxyReply's ProxyMessage properties
 // and returns the corresponding CadenceErrorTypes
 //
-// returns cadenceclient.CadenceErrorTypes -> the CadenceErrorTypes in the properties map
-func (reply *ProxyReply) GetErrorType() cadenceclient.CadenceErrorTypes {
+// returns messages.CadenceErrorTypes -> the CadenceErrorTypes in the properties map
+func (reply *ProxyReply) GetErrorType() messages.CadenceErrorTypes {
 
 	// Grap the pointer to the error string in the properties map
 	errorStringPtr := reply.GetStringProperty("ErrorType")
 	if errorStringPtr == nil {
-		return cadenceclient.None
+		return messages.None
 	}
 
 	// dereference and switch block on the value
 	errorString := *errorStringPtr
 	switch errorString {
 	case "cancelled":
-		return cadenceclient.Cancelled
+		return messages.Cancelled
 	case "custom":
-		return cadenceclient.Custom
+		return messages.Custom
 	case "generic":
-		return cadenceclient.Generic
+		return messages.Generic
 	case "panic":
-		return cadenceclient.Panic
+		return messages.Panic
 	case "terminated":
-		return cadenceclient.Terminated
+		return messages.Terminated
 	case "timeout":
-		return cadenceclient.Timeout
+		return messages.Timeout
 	default:
 		err := errors.New("Not implemented exception")
 		panic(err)
@@ -169,32 +169,32 @@ func (reply *ProxyReply) GetErrorType() cadenceclient.CadenceErrorTypes {
 // SetErrorType sets the string representation of a CadenceErrorTypes
 // in a ProxyReply's ProxyMessage properties map
 //
-// param value cadenceclient.CadenceErrorTypes -> the CadenceErrorTypes to set as a property value
+// param value messages.CadenceErrorTypes -> the CadenceErrorTypes to set as a property value
 // in the properties map
-func (reply *ProxyReply) SetErrorType(value cadenceclient.CadenceErrorTypes) {
+func (reply *ProxyReply) SetErrorType(value messages.CadenceErrorTypes) {
 	var typeString string
 
 	// switch block on the param value
 	switch value {
-	case cadenceclient.None:
+	case messages.None:
 		reply.Properties["ErrorType"] = nil
 		return
-	case cadenceclient.Cancelled:
+	case messages.Cancelled:
 		typeString = "cancelled"
 		break
-	case cadenceclient.Custom:
+	case messages.Custom:
 		typeString = "custom"
 		break
-	case cadenceclient.Generic:
+	case messages.Generic:
 		typeString = "generic"
 		break
-	case cadenceclient.Panic:
+	case messages.Panic:
 		typeString = "panic"
 		break
-	case cadenceclient.Terminated:
+	case messages.Terminated:
 		typeString = "terminated"
 		break
-	case cadenceclient.Timeout:
+	case messages.Timeout:
 		typeString = "timeout"
 		break
 	default:

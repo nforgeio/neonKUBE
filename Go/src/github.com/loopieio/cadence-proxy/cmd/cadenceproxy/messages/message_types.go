@@ -79,6 +79,29 @@ const (
 	/// <b>proxy --> library:</b> Sent in response to a <see cref="DomainUpdateRequest"/> message.
 	/// </summary>
 	DomainUpdateReply
+
+	/// <summary>
+	/// <b>library --> proxy:</b> Sent periodically (every second) by the library to the
+	/// proxy to verify that it is still healthy.
+	/// </summary>
+	HeartbeatRequest
+
+	/// <summary>
+	/// <b>proxy --> library:</b> Sent in response to a <see cref="HeartbeatRequest"/> message.
+	/// </summary>
+	HeartbeatReply
+
+	/// <summary>
+	/// <b>library --> proxy:</b> Sent to request that a pending operation be cancelled.
+	/// </summary>
+	CancelRequest
+
+	/// <summary>
+	/// <b>proxy --> library:</b> Sent in response to a <see cref="CancelRequest"/> message,
+	/// indicating that the operation was canceled or that it already completed or no longer
+	/// exists.
+	/// </summary>
+	CancelReply
 )
 
 const (
