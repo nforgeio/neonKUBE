@@ -1,4 +1,4 @@
-package domain
+package messages
 
 // DomainStatus is an enumerated list of
 // all of the valid cadence domain statuses
@@ -7,7 +7,7 @@ type DomainStatus int
 const (
 
 	// The status cannot be determined.
-	Unspecified DomainStatus = iota
+	StatusUnspecified DomainStatus = iota
 
 	// The domain is registered and active.
 	Registered

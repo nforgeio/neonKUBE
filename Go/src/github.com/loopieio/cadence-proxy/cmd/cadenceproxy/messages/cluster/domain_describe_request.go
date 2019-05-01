@@ -1,4 +1,4 @@
-package domain
+package cluster
 
 import (
 	"fmt"
@@ -20,17 +20,6 @@ type (
 		ReplyType messages.MessageType
 	}
 )
-
-// InitDomainDescribe is a method that adds a key/value entry into the
-// IntToMessageStruct at keys DomainDescribeRequest and DomainDescribeReply.
-// The values are new instances of a DomainDescribeRequest and DomainDescribeReply
-func InitDomainDescribe() {
-	key := int(messages.DomainDescribeRequest)
-	base.IntToMessageStruct[key] = NewDomainDescribeRequest()
-
-	key = int(messages.DomainDescribeReply)
-	base.IntToMessageStruct[key] = NewDomainDescribeReply()
-}
 
 // NewDomainDescribeRequest is the default constructor for a DomainDescribeRequest
 //

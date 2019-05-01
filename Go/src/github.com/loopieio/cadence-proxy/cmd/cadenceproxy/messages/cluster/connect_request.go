@@ -1,4 +1,4 @@
-package connect
+package cluster
 
 import (
 	"fmt"
@@ -20,17 +20,6 @@ type (
 		ReplyType messages.MessageType
 	}
 )
-
-// InitConnect is a method that adds a key/value entry into the
-// IntToMessageStruct at keys ConnectRequest and ConnectReply.
-// The values are new instances of a ConnectRequest and ConnectReply
-func InitConnect() {
-	key := int(messages.ConnectRequest)
-	base.IntToMessageStruct[key] = NewConnectRequest()
-
-	key = int(messages.ConnectReply)
-	base.IntToMessageStruct[key] = NewConnectReply()
-}
 
 // NewConnectRequest is the default constructor for a ConnectRequest
 //

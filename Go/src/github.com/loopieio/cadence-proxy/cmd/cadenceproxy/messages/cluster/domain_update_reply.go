@@ -1,4 +1,4 @@
-package terminate
+package cluster
 
 import (
 	"errors"
@@ -10,23 +10,22 @@ import (
 
 type (
 
-	// TerminateReply is a ProxyReply of MessageType
-	// TerminateReply It holds a reference to a
-	// ProxyReply in memory
-	TerminateReply struct {
+	// DomainUpdateReply is a ProxyReply of MessageType
+	// DomainUpdateReply.  It holds a reference to a ProxyReply in memory
+	DomainUpdateReply struct {
 		*base.ProxyReply
 	}
 )
 
-// NewTerminateReply is the default constructor for
-// a TerminateReply
+// NewDomainUpdateReply is the default constructor for
+// a DomainUpdateReply
 //
-// returns *TerminateReply -> pointer to a newly initialized
-// TerminateReply in memory
-func NewTerminateReply() *TerminateReply {
-	reply := new(TerminateReply)
+// returns *DomainUpdateReply -> a pointer to a newly initialized
+// DomainUpdateReply in memory
+func NewDomainUpdateReply() *DomainUpdateReply {
+	reply := new(DomainUpdateReply)
 	reply.ProxyReply = base.NewProxyReply()
-	reply.Type = messages.TerminateReply
+	reply.Type = messages.DomainUpdateReply
 	return reply
 }
 
@@ -34,30 +33,30 @@ func NewTerminateReply() *TerminateReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyMessage.Clone()
-func (reply *TerminateReply) Clone() base.IProxyMessage {
-	terminateReply := NewTerminateReply()
-	var messageClone base.IProxyMessage = terminateReply
+func (reply *DomainUpdateReply) Clone() base.IProxyMessage {
+	domainUpdateReply := NewDomainUpdateReply()
+	var messageClone base.IProxyMessage = domainUpdateReply
 	reply.CopyTo(messageClone)
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
-func (reply *TerminateReply) CopyTo(target base.IProxyMessage) {
+func (reply *DomainUpdateReply) CopyTo(target base.IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *TerminateReply) SetProxyMessage(value *base.ProxyMessage) {
+func (reply *DomainUpdateReply) SetProxyMessage(value *base.ProxyMessage) {
 	*reply.ProxyMessage = *value
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *TerminateReply) GetProxyMessage() *base.ProxyMessage {
+func (reply *DomainUpdateReply) GetProxyMessage() *base.ProxyMessage {
 	return reply.ProxyMessage
 }
 
 // String inherits docs from ProxyMessage.String()
-func (reply *TerminateReply) String() string {
+func (reply *DomainUpdateReply) String() string {
 	str := ""
 	str = fmt.Sprintf("%s\n{\n", str)
 	str = fmt.Sprintf("%s%s", str, reply.ProxyReply.String())
@@ -69,37 +68,37 @@ func (reply *TerminateReply) String() string {
 // IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetRequestID inherits docs from ProxyReply.GetRequestID()
-func (reply *TerminateReply) GetRequestID() int64 {
+func (reply *DomainUpdateReply) GetRequestID() int64 {
 	return reply.GetLongProperty("RequestId")
 }
 
 // SetRequestID inherits docs from ProxyReply.SetRequestID()
-func (reply *TerminateReply) SetRequestID(value int64) {
+func (reply *DomainUpdateReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
 
 // GetError inherits docs from ProxyReply.GetError()
-func (reply *TerminateReply) GetError() *string {
+func (reply *DomainUpdateReply) GetError() *string {
 	return reply.GetStringProperty("Error")
 }
 
 // SetError inherits docs from ProxyReply.SetError()
-func (reply *TerminateReply) SetError(value *string) {
+func (reply *DomainUpdateReply) SetError(value *string) {
 	reply.SetStringProperty("Error", value)
 }
 
 // GetErrorDetails inherits docs from ProxyReply.GetErrorDetails()
-func (reply *TerminateReply) GetErrorDetails() *string {
+func (reply *DomainUpdateReply) GetErrorDetails() *string {
 	return reply.GetStringProperty("ErrorDetails")
 }
 
 // SetErrorDetails inherits docs from ProxyReply.SetErrorDetails()
-func (reply *TerminateReply) SetErrorDetails(value *string) {
+func (reply *DomainUpdateReply) SetErrorDetails(value *string) {
 	reply.SetStringProperty("ErrorDetails", value)
 }
 
 // GetErrorType inherits docs from ProxyReply.GetErrorType()
-func (reply *TerminateReply) GetErrorType() messages.CadenceErrorTypes {
+func (reply *DomainUpdateReply) GetErrorType() messages.CadenceErrorTypes {
 
 	// Grap the pointer to the error string in the properties map
 	errorStringPtr := reply.GetStringProperty("ErrorType")
@@ -129,7 +128,7 @@ func (reply *TerminateReply) GetErrorType() messages.CadenceErrorTypes {
 }
 
 // SetErrorType inherits docs from ProxyReply.SetErrorType()
-func (reply *TerminateReply) SetErrorType(value messages.CadenceErrorTypes) {
+func (reply *DomainUpdateReply) SetErrorType(value messages.CadenceErrorTypes) {
 	var typeString string
 
 	// switch block on the param value

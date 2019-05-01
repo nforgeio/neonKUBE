@@ -1,4 +1,4 @@
-package domain
+package cluster
 
 import (
 	"fmt"
@@ -20,17 +20,6 @@ type (
 		ReplyType messages.MessageType
 	}
 )
-
-// InitDomainRegister is a method that adds a key/value entry into the
-// IntToMessageStruct at keys DomainRegisterRequest and DomainRegisterReply.
-// The values are new instances of a DomainRegisterRequest and DomainRegisterReply
-func InitDomainRegister() {
-	key := int(messages.DomainRegisterRequest)
-	base.IntToMessageStruct[key] = NewDomainRegisterRequest()
-
-	key = int(messages.DomainRegisterReply)
-	base.IntToMessageStruct[key] = NewDomainRegisterReply()
-}
 
 // NewDomainRegisterRequest is the default constructor for a DomainRegisterRequest
 //

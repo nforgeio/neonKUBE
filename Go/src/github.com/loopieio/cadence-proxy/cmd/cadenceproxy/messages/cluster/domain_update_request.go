@@ -1,4 +1,4 @@
-package domain
+package cluster
 
 import (
 	"fmt"
@@ -20,17 +20,6 @@ type (
 		ReplyType messages.MessageType
 	}
 )
-
-// InitDomainUpdate is a method that adds a key/value entry into the
-// IntToMessageStruct at keys DomainUpdateRequest and DomainUpdateReply.
-// The values are new instances of a DomainUpdateRequest and DomainUpdateReply
-func InitDomainUpdate() {
-	key := int(messages.DomainUpdateRequest)
-	base.IntToMessageStruct[key] = NewDomainUpdateRequest()
-
-	key = int(messages.DomainUpdateReply)
-	base.IntToMessageStruct[key] = NewDomainUpdateReply()
-}
 
 // NewDomainUpdateRequest is the default constructor for a DomainUpdateRequest
 //

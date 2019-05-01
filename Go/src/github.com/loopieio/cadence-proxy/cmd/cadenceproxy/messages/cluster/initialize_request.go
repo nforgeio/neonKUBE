@@ -1,4 +1,4 @@
-package initialize
+package cluster
 
 import (
 	"fmt"
@@ -20,17 +20,6 @@ type (
 		ReplyType messages.MessageType
 	}
 )
-
-// InitInitialize is a method that adds a key/value entry into the
-// IntToMessageStruct at keys InitializeRequest and InitializeReply.
-// The values are new instances of a InitializeRequest and InitializeReply
-func InitInitialize() {
-	key := int(messages.InitializeRequest)
-	base.IntToMessageStruct[key] = NewInitializeRequest()
-
-	key = int(messages.InitializeReply)
-	base.IntToMessageStruct[key] = NewInitializeReply()
-}
 
 // NewInitializeRequest is the default constructor for a InitializeRequest
 //

@@ -1,4 +1,4 @@
-package cancel
+package cluster
 
 import (
 	"fmt"
@@ -20,17 +20,6 @@ type (
 		ReplyType messages.MessageType
 	}
 )
-
-// InitCancel is a method that adds a key/value entry into the
-// IntToMessageStruct at keys CancelRequest and CancelReply.
-// The values are new instances of a CancelRequest and CancelReply
-func InitCancel() {
-	key := int(messages.CancelRequest)
-	base.IntToMessageStruct[key] = NewCancelRequest()
-
-	key = int(messages.CancelReply)
-	base.IntToMessageStruct[key] = NewCancelReply()
-}
 
 // NewCancelRequest is the default constructor for a CancelRequest
 //

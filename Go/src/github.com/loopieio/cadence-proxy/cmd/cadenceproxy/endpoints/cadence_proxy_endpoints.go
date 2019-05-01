@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
-
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
-
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+	clustermessages "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
+
 	"go.uber.org/zap"
 )
 
@@ -107,7 +106,7 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 		// and library port from the properties
 		if proxyMessage.Type == messages.InitializeRequest {
 			var initailizeRequestIProxyMessage base.IProxyMessage = message
-			v, ok := initailizeRequestIProxyMessage.(*initialize.InitializeRequest)
+			v, ok := initailizeRequestIProxyMessage.(*clustermessages.InitializeRequest)
 			if ok {
 				//_replyAddress = fmt.Sprintf("http://%s:%s/", *v.GetLibraryAddress(), *v.GetLibraryPort())
 				_replyAddress = "http://127.0.0.2:5001/"

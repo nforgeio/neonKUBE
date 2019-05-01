@@ -1,4 +1,4 @@
-package domain
+package cluster
 
 import (
 	"errors"
@@ -68,19 +68,19 @@ func (reply *DomainDescribeReply) SetDomainInfoDescription(value *string) {
 //
 // returns DomainStatus -> the DomainStatus of the Domain being described
 // from a DomainDescribeReply's properties map
-func (reply *DomainDescribeReply) GetDomainInfoStatus() DomainStatus {
+func (reply *DomainDescribeReply) GetDomainInfoStatus() messages.DomainStatus {
 	domainInfoStatusPtr := reply.GetStringProperty("DomainInfoStatus")
 	if domainInfoStatusPtr == nil {
-		return Unspecified
+		return messages.StatusUnspecified
 	}
 
 	// dereference and switch block on the value
 	domainStatus := *domainInfoStatusPtr
 	switch domainStatus {
 	case "REGISTERED":
-		return Registered
+		return messages.Registered
 	case "DEPRECATED":
-		return Deprecated
+		return messages.Deprecated
 	default:
 		err := errors.New("DomainStatus not implemented exception")
 		panic(err)
@@ -92,18 +92,18 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() DomainStatus {
 //
 // param value DomainStatus -> DomainStatus value to set
 // as the DomainDescribeReply's DomainInfoStatus in its properties map
-func (reply *DomainDescribeReply) SetDomainInfoStatus(value DomainStatus) {
+func (reply *DomainDescribeReply) SetDomainInfoStatus(value messages.DomainStatus) {
 	var statusString string
 
 	// switch block on the param value
 	switch value {
-	case Unspecified:
+	case messages.StatusUnspecified:
 		reply.Properties["DomainInfoStatus"] = nil
 		return
-	case Registered:
+	case messages.Registered:
 		statusString = "REGISTERED"
 		break
-	case Deprecated:
+	case messages.Deprecated:
 		statusString = "DEPRECATED"
 		break
 	default:

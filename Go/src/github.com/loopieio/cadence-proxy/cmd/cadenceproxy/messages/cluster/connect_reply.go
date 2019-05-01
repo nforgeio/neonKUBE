@@ -1,4 +1,4 @@
-package cancel
+package cluster
 
 import (
 	"errors"
@@ -10,75 +10,53 @@ import (
 
 type (
 
-	// CancelReply is a ProxyReply of MessageType
-	// CancelReply.  It holds a reference to a ProxyReply in memory
-	CancelReply struct {
+	// ConnectReply is a ProxyReply of MessageType
+	// ConnectReply.  It holds a reference to a ProxyReply in memory
+	ConnectReply struct {
 		*base.ProxyReply
 	}
 )
 
-// NewCancelReply is the default constructor for
-// a CancelReply
+// NewConnectReply is the default constructor for
+// a ConnectReply
 //
-// returns *CancelReply -> a pointer to a newly initialized
-// CancelReply in memory
-func NewCancelReply() *CancelReply {
-	reply := new(CancelReply)
+// returns *ConnectReply -> a pointer to a newly initialized
+// ConnectReply in memory
+func NewConnectReply() *ConnectReply {
+	reply := new(ConnectReply)
 	reply.ProxyReply = base.NewProxyReply()
-	reply.Type = messages.CancelReply
+	reply.Type = messages.ConnectReply
 	return reply
-}
-
-// GetWasCancelled gets the WasCancelled property as a bool
-// from a CancelReply's properties map
-//
-// returns bool -> a boolean from a CancelReply's properties map
-// that indicates if an operation has been cancelled
-func (reply *CancelReply) GetWasCancelled() bool {
-	return reply.GetBoolProperty("WasCancelled")
-}
-
-// SetWasCancelled sets the WasCancelled property in a
-// CancelReply's properties map
-//
-// param value bool -> the bool value to set as the WasCancelled
-// property in a CancelReply's properties map
-func (reply *CancelReply) SetWasCancelled(value bool) {
-	reply.SetBoolProperty("WasCancelled", value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyMessage.Clone()
-func (reply *CancelReply) Clone() base.IProxyMessage {
-	cancelReply := NewCancelReply()
-	var messageClone base.IProxyMessage = cancelReply
+func (reply *ConnectReply) Clone() base.IProxyMessage {
+	connectReply := NewConnectReply()
+	var messageClone base.IProxyMessage = connectReply
 	reply.CopyTo(messageClone)
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
-func (reply *CancelReply) CopyTo(target base.IProxyMessage) {
+func (reply *ConnectReply) CopyTo(target base.IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
-	v, ok := target.(*CancelReply)
-	if ok {
-		v.SetWasCancelled(reply.GetWasCancelled())
-	}
 }
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *CancelReply) SetProxyMessage(value *base.ProxyMessage) {
+func (reply *ConnectReply) SetProxyMessage(value *base.ProxyMessage) {
 	*reply.ProxyMessage = *value
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *CancelReply) GetProxyMessage() *base.ProxyMessage {
+func (reply *ConnectReply) GetProxyMessage() *base.ProxyMessage {
 	return reply.ProxyMessage
 }
 
 // String inherits docs from ProxyMessage.String()
-func (reply *CancelReply) String() string {
+func (reply *ConnectReply) String() string {
 	str := ""
 	str = fmt.Sprintf("%s\n{\n", str)
 	str = fmt.Sprintf("%s%s", str, reply.ProxyReply.String())
@@ -90,37 +68,37 @@ func (reply *CancelReply) String() string {
 // IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetRequestID inherits docs from ProxyReply.GetRequestID()
-func (reply *CancelReply) GetRequestID() int64 {
+func (reply *ConnectReply) GetRequestID() int64 {
 	return reply.GetLongProperty("RequestId")
 }
 
 // SetRequestID inherits docs from ProxyReply.SetRequestID()
-func (reply *CancelReply) SetRequestID(value int64) {
+func (reply *ConnectReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
 
 // GetError inherits docs from ProxyReply.GetError()
-func (reply *CancelReply) GetError() *string {
+func (reply *ConnectReply) GetError() *string {
 	return reply.GetStringProperty("Error")
 }
 
 // SetError inherits docs from ProxyReply.SetError()
-func (reply *CancelReply) SetError(value *string) {
+func (reply *ConnectReply) SetError(value *string) {
 	reply.SetStringProperty("Error", value)
 }
 
 // GetErrorDetails inherits docs from ProxyReply.GetErrorDetails()
-func (reply *CancelReply) GetErrorDetails() *string {
+func (reply *ConnectReply) GetErrorDetails() *string {
 	return reply.GetStringProperty("ErrorDetails")
 }
 
 // SetErrorDetails inherits docs from ProxyReply.SetErrorDetails()
-func (reply *CancelReply) SetErrorDetails(value *string) {
+func (reply *ConnectReply) SetErrorDetails(value *string) {
 	reply.SetStringProperty("ErrorDetails", value)
 }
 
 // GetErrorType inherits docs from ProxyReply.GetErrorType()
-func (reply *CancelReply) GetErrorType() messages.CadenceErrorTypes {
+func (reply *ConnectReply) GetErrorType() messages.CadenceErrorTypes {
 
 	// Grap the pointer to the error string in the properties map
 	errorStringPtr := reply.GetStringProperty("ErrorType")
@@ -150,7 +128,7 @@ func (reply *CancelReply) GetErrorType() messages.CadenceErrorTypes {
 }
 
 // SetErrorType inherits docs from ProxyReply.SetErrorType()
-func (reply *CancelReply) SetErrorType(value messages.CadenceErrorTypes) {
+func (reply *ConnectReply) SetErrorType(value messages.CadenceErrorTypes) {
 	var typeString string
 
 	// switch block on the param value
