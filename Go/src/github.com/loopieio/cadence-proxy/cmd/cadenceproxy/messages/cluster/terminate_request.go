@@ -1,4 +1,4 @@
-package terminate
+package cluster
 
 import (
 	"fmt"
@@ -9,24 +9,17 @@ import (
 
 type (
 
-	// TerminateRequest is a ProxyRequest of MessageType
-	// TerminateRequest It holds a reference to a
-	// ProxyRequest in memory
+	// TerminateRequest is ProxyRequest of MessageType
+	// TerminateRequest.
+	//
+	// A TerminateRequest contains a RequestId and a reference to a
+	// ProxyReply struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this ProxyRequest
 	TerminateRequest struct {
 		*base.ProxyRequest
+		ReplyType messages.MessageType
 	}
 )
-
-// InitTerminate is a method that adds a key/value entry into the
-// IntToMessageStruct at keys TerminateRequest and TerminateReply.
-// The values are new instances of a TerminateRequest and TerminateReply
-func InitTerminate() {
-	key := int(messages.TerminateRequest)
-	base.IntToMessageStruct[key] = NewTerminateRequest()
-
-	key = int(messages.TerminateReply)
-	base.IntToMessageStruct[key] = NewTerminateReply()
-}
 
 // NewTerminateRequest is the default constructor for
 // TerminateRequest
@@ -37,6 +30,7 @@ func NewTerminateRequest() *TerminateRequest {
 	request := new(TerminateRequest)
 	request.ProxyRequest = base.NewProxyRequest()
 	request.Type = messages.TerminateRequest
+	request.ReplyType = messages.TerminateReply
 	return request
 }
 
@@ -78,18 +72,17 @@ func (request *TerminateRequest) String() string {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetRequestID gets a request id from a ProxyMessage's properties
-//
-// returns int64 -> long as a ProxyRequest's request id from the properties map
+// GetRequestID inherits docs from ProxyRequest.GetRequestID()
 func (request *TerminateRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
-// properties
-//
-// param value int64 -> the long representation of a ProxyRequest's
-// request id to be set in the properties map
+// SetRequestID inherits docs from ProxyRequest.SetRequestID()
 func (request *TerminateRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
+}
+
+// GetReplyType inherits docs from ProxyRequest.GetReplyType()
+func (request *TerminateRequest) GetReplyType() messages.MessageType {
+	return request.ReplyType
 }

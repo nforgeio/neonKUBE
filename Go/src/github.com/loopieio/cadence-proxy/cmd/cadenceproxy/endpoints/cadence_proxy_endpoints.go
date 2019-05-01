@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/initialize"
-
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
-
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
+	clustermessages "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
+
 	"go.uber.org/zap"
 )
 
@@ -25,7 +24,7 @@ const (
 
 // ReplyAddress specifies the address that the Neon.Cadence library
 // will be listening on for replies from the cadence proxy
-var ReplyAddress string
+var _replyAddress string
 
 // ProxyMessageHandler accepts a []byte as a payload
 // Then converts it into an ProxyMessage object
@@ -107,15 +106,16 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 		// and library port from the properties
 		if proxyMessage.Type == messages.InitializeRequest {
 			var initailizeRequestIProxyMessage base.IProxyMessage = message
-			v, ok := initailizeRequestIProxyMessage.(*initialize.InitializeRequest)
+			v, ok := initailizeRequestIProxyMessage.(*clustermessages.InitializeRequest)
 			if ok {
-				ReplyAddress = fmt.Sprintf("http://%s:%s/", *v.GetLibraryAddress(), *v.GetLibraryPort())
+				//_replyAddress = fmt.Sprintf("http://%s:%s/", *v.GetLibraryAddress(), *v.GetLibraryPort())
+				_replyAddress = "http://127.0.0.2:5001/"
 
 				// $debug(jack.burns): DELETE THIS!
 				logger.Debug("InitializeRequest info",
 					zap.String("Library Address", *v.GetLibraryAddress()),
 					zap.String("LibaryPort", *v.GetLibraryPort()),
-					zap.String("Reply Address", ReplyAddress))
+					zap.String("Reply Address", _replyAddress))
 			}
 		}
 
@@ -134,7 +134,7 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 
-		resp, err := putRequest(serializedMessageCopy, ReplyAddress)
+		resp, err := putRequest(serializedMessageCopy, _replyAddress)
 		if err != nil {
 
 			// write the error and status code into response
@@ -148,7 +148,6 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Neon.Cadence Library Response",
 			zap.String("Response Status", resp.Status),
 			zap.String("Request URL", resp.Request.URL.String()))
-
 	}
 }
 
@@ -163,17 +162,17 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	// new global logger
 	logger := zap.L()
 
-	// construct the request address
-	requestAddress := fmt.Sprintf("http://%s%s", r.Host, r.URL.String())
-
 	// log when a new request has come in
-	logger.Info("Request Recieved", zap.String("Address", requestAddress), zap.String("Method", r.Method), zap.Int("ProccessId", os.Getpid()))
+	logger.Info("Request Recieved", zap.String("Address", fmt.Sprintf("http://%s%s", r.Host, r.URL.String())),
+		zap.String("Method", r.Method),
+		zap.Int("ProccessId", os.Getpid()))
 
 	// check if the content type is correct
 	if r.Header.Get("Content-Type") != _contentType {
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Incorrect Content-Type", zap.String("Content Type", r.Header.Get("Content-Type")), zap.String("Expected Content Type", _contentType))
+		logger.Debug("Incorrect Content-Type", zap.String("Content Type", r.Header.Get("Content-Type")),
+			zap.String("Expected Content Type", _contentType))
 
 		// write the error to and status code into response
 		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), _contentType)
@@ -183,7 +182,8 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method != http.MethodPut {
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Invalid HTTP Method", zap.String("Method", r.Method), zap.String("Expected", http.MethodPut))
+		logger.Debug("Invalid HTTP Method", zap.String("Method", r.Method),
+			zap.String("Expected", http.MethodPut))
 
 		// write the error and status code into the reponse
 		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPut)
@@ -207,33 +207,8 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 
-		// deserialize the payload
-		buf := bytes.NewBuffer(payload)
-		message, err := base.Deserialize(buf)
+		serializedMessageCopy, err := deserializeCloneAndSerializeMessage(payload)
 		if err != nil {
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Error deserializing input", zap.String("Error", err.Error()))
-
-			// write the error and status code into response
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error() + ".  "))
-			panic(err)
-		}
-
-		// create a clone of the message to send back
-		// as a PUT request
-		messageCopy := message.Clone()
-		proxyMessage := messageCopy.GetProxyMessage()
-
-		// serialize the cloned message into a []byte
-		// to send back over the network
-		var serializedMessageCopy []byte
-		serializedMessageCopy, err = proxyMessage.Serialize()
-		if err != nil {
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Error serializing proxy message", zap.String("Error", err.Error()))
 
 			// write the error and status code into response
 			w.WriteHeader(http.StatusInternalServerError)
@@ -246,31 +221,6 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ConfigureCadenceClientHelper takes an ProxyMessage and
-// creates a new cadence Helper instance.  The Helper is used to make
-// calls to the cadence client and holds all of the configurations
-// for actually building a cadence client instance, building a
-// cadence domain client, and configuring the TChannels on which calls
-// to the cadence server from the client will be made
-//
-// Param args map[string]*string -> the ProxyMessage Properties
-// holding the configuration data to used to initialize the
-// cadence Helper and construct the cadence client
-// and the cadence domain client
-//
-// Returns *cadence.Helper -> a pointer to a new cadence.Helper which can be used
-// to make cadence client calls to the cadence server
-// Returns err -> any errors that might be thrown during the initialization of cadence
-// Helper
-func ConfigureCadenceClientHelper(args map[string]*string) (*cadenceclient.CadenceClientHelper, error) {
-
-	var h *cadenceclient.CadenceClientHelper
-	var err error
-
-	return h, err
-
-}
-
 func putRequest(content []byte, address string) (*http.Response, error) {
 
 	// get the global logger
@@ -279,7 +229,7 @@ func putRequest(content []byte, address string) (*http.Response, error) {
 	// create a buffer with the serialized bytes to reply with
 	// and create the PUT request
 	buf := bytes.NewBuffer(content)
-	req, err := http.NewRequest(http.MethodPut, ReplyAddress, buf)
+	req, err := http.NewRequest(http.MethodPut, _replyAddress, buf)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
@@ -307,4 +257,64 @@ func putRequest(content []byte, address string) (*http.Response, error) {
 	}
 
 	return resp, nil
+}
+
+func deserializeCloneAndSerializeMessage(content []byte) ([]byte, error) {
+
+	// set logger to global logger
+	logger := zap.L()
+
+	// deserialize the payload
+	buf := bytes.NewBuffer(content)
+	message, err := base.Deserialize(buf)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Error deserializing input", zap.String("Error", err.Error()))
+		return nil, err
+	}
+
+	// create a clone of the message to send back
+	// as a PUT request
+	messageCopy := message.Clone()
+	proxyMessage := messageCopy.GetProxyMessage()
+
+	// serialize the cloned message into a []byte
+	// to send back over the network
+	var serializedMessageCopy []byte
+	serializedMessageCopy, err = proxyMessage.Serialize()
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Error serializing proxy message", zap.String("Error", err.Error()))
+		return nil, err
+	}
+
+	return serializedMessageCopy, nil
+
+}
+
+// ConfigureCadenceClientHelper takes an ProxyMessage and
+// creates a new cadence Helper instance.  The Helper is used to make
+// calls to the cadence client and holds all of the configurations
+// for actually building a cadence client instance, building a
+// cadence domain client, and configuring the TChannels on which calls
+// to the cadence server from the client will be made
+//
+// Param args map[string]*string -> the ProxyMessage Properties
+// holding the configuration data to used to initialize the
+// cadence Helper and construct the cadence client
+// and the cadence domain client
+//
+// Returns *cadence.Helper -> a pointer to a new cadence.Helper which can be used
+// to make cadence client calls to the cadence server
+// Returns err -> any errors that might be thrown during the initialization of cadence
+// Helper
+func ConfigureCadenceClientHelper(args map[string]*string) (*cadenceclient.CadenceClientHelper, error) {
+
+	var h *cadenceclient.CadenceClientHelper
+	var err error
+
+	return h, err
+
 }

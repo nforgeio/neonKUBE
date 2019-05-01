@@ -1,4 +1,4 @@
-package initialize
+package cluster
 
 import (
 	"fmt"
@@ -9,24 +9,17 @@ import (
 
 type (
 
-	// InitializeRequest is a ProxyRequest of MessageType
-	// InitializeRequest.  It holds a reference to a
-	// ProxyRequest in memory
+	// InitializeRequest is ProxyRequest of MessageType
+	// InitializeRequest.
+	//
+	// A InitializeRequest contains a RequestId and a reference to a
+	// ProxyReply struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this ProxyRequest
 	InitializeRequest struct {
 		*base.ProxyRequest
+		ReplyType messages.MessageType
 	}
 )
-
-// InitInitialize is a method that adds a key/value entry into the
-// IntToMessageStruct at keys InitializeRequest and InitializeReply.
-// The values are new instances of a InitializeRequest and InitializeReply
-func InitInitialize() {
-	key := int(messages.InitializeRequest)
-	base.IntToMessageStruct[key] = NewInitializeRequest()
-
-	key = int(messages.InitializeReply)
-	base.IntToMessageStruct[key] = NewInitializeReply()
-}
 
 // NewInitializeRequest is the default constructor for a InitializeRequest
 //
@@ -36,6 +29,7 @@ func NewInitializeRequest() *InitializeRequest {
 	request := new(InitializeRequest)
 	request.ProxyRequest = base.NewProxyRequest()
 	request.Type = messages.InitializeRequest
+	request.ReplyType = messages.InitializeReply
 	return request
 }
 
@@ -118,18 +112,17 @@ func (request *InitializeRequest) String() string {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetRequestID gets a request id from a ProxyMessage's properties
-//
-// returns int64 -> long as a ProxyRequest's request id from the properties map
+// GetRequestID inherits docs from ProxyRequest.GetRequestID()
 func (request *InitializeRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
-// properties
-//
-// param value int64 -> the long representation of a ProxyRequest's
-// request id to be set in the properties map
+// SetRequestID inherits docs from ProxyRequest.SetRequestID()
 func (request *InitializeRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
+}
+
+// GetReplyType inherits docs from ProxyRequest.GetReplyType()
+func (request *InitializeRequest) GetReplyType() messages.MessageType {
+	return request.ReplyType
 }

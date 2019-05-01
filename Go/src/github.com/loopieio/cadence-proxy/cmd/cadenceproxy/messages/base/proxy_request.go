@@ -2,6 +2,8 @@ package base
 
 import (
 	"fmt"
+
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 )
 
 type (
@@ -11,11 +13,11 @@ type (
 	// i.e. a request
 	//
 	// A ProxyRequest contains a RequestId and a reference to a
-	// ProxyMessage struct
+	// ProxyMessage struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this ProxyRequest
 	ProxyRequest struct {
-
-		// ProxyMessage is a reference to a ProxyMessage in memory
 		*ProxyMessage
+		ReplyType messages.MessageType
 	}
 
 	// IProxyRequest is an interface for all ProxyRequest message types.
@@ -25,6 +27,7 @@ type (
 	IProxyRequest interface {
 		GetRequestID() int64
 		SetRequestID(value int64)
+		GetReplyType() messages.MessageType
 	}
 )
 
@@ -94,4 +97,13 @@ func (request *ProxyRequest) GetRequestID() int64 {
 // request id to be set in the properties map
 func (request *ProxyRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
+}
+
+// GetReplyType gets the MessageType used to reply to a specific
+// ProxyRequest
+//
+// returns messages.MessageType -> the message type to reply to the
+// request with
+func (request *ProxyRequest) GetReplyType() messages.MessageType {
+	return request.ReplyType
 }

@@ -38,14 +38,14 @@ type (
 	}
 )
 
-// IntToMessageStruct is a map that maps a message type
+// MessageTypeStructMap is a map that maps a message type
 // to its corresponding Message Struct
-var IntToMessageStruct map[int]IProxyMessage
+var MessageTypeStructMap map[int]IProxyMessage
 
-// InitProxyMessage initializes the IntToMessageStruct
-// This will allow derived classes to add to IntToMessageStruct
+// InitProxyMessage initializes the MessageTypeStructMap
+// This will allow derived classes to add to MessageTypeStructMap
 func InitProxyMessage() {
-	IntToMessageStruct = make(map[int]IProxyMessage)
+	MessageTypeStructMap = make(map[int]IProxyMessage)
 }
 
 // NewProxyMessage creates a new ProxyMessage in memory, initializes
@@ -80,13 +80,13 @@ func Deserialize(buf *bytes.Buffer) (IProxyMessage, error) {
 
 	// check to see if it is a valid message type
 	// or return nil if the message type is unspecified
-	if IntToMessageStruct[int(messageType)] == nil {
+	if MessageTypeStructMap[int(messageType)] == nil {
 		errStr := fmt.Sprintf("Unexpected message type %v", messageType)
 		return nil, errors.New(errStr)
 	}
 
 	// set message to corresponding message type
-	message = IntToMessageStruct[int(messageType)].Clone()
+	message = MessageTypeStructMap[int(messageType)].Clone()
 
 	// point to message's ProxyMessage
 	pm := message.GetProxyMessage()

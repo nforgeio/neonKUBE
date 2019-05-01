@@ -143,7 +143,7 @@ Reply messages will also two more standard properties:
     * terminated
     * timeout
  
-* string ErrorMessage: This string describes the error in more detail.
+* string Error: This string describes the error in more detail.
 
 ## Message Type Hierarchy 
 
