@@ -43,7 +43,7 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 	args2 := map[string]*string{
 		"RequestId":    &strLong,
 		"ErrorType":    nil,
-		"ErrorMessage": &strs[25],
+		"Error": &strs[25],
 	}
 
 	args3 := map[string]*string{
@@ -56,7 +56,7 @@ func TestProxyMessageEncodingDecoding(t *testing.T) {
 	args4 := map[string]*string{
 		"RequestId":    &strLong,
 		"ErrorType":    &et,
-		"ErrorMessage": &utf8Str,
+		"Error": &utf8Str,
 	}
 
 	int1 := Int32ToByteSlice(1)

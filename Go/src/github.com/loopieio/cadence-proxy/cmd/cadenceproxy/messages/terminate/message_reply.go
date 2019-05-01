@@ -83,18 +83,32 @@ func (reply *TerminateReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
 
-// GetErrorMessage gets an error message from a ProxyReply's ProxyMessage properties map
+// GetError gets an error message from a ProxyReply's ProxyMessage properties map
 //
 // returns *string -> a pointer to the string error message in the properties map
-func (reply *TerminateReply) GetErrorMessage() *string {
-	return reply.GetStringProperty("ErrorMessage")
+func (reply *TerminateReply) GetError() *string {
+	return reply.GetStringProperty("Error")
 }
 
-// SetErrorMessage sets an error message in a ProxyReply's ProxyMessage properties map
+// SetError sets an error message in a ProxyReply's ProxyMessage properties map
 //
 // param value *string -> a pointer to the string value in memory to set in the properties map
-func (reply *TerminateReply) SetErrorMessage(value *string) {
-	reply.SetStringProperty("ErrorMessage", value)
+func (reply *TerminateReply) SetError(value *string) {
+	reply.SetStringProperty("Error", value)
+}
+
+// GetErrorDetails gets error details from a ProxyReply's ProxyMessage properties map
+//
+// returns *string -> a pointer to the string error details in the properties map
+func (reply *TerminateReply) GetErrorDetails() *string {
+	return reply.GetStringProperty("ErrorDetails")
+}
+
+// SetErrorDetails sets error details in a ProxyReply's ProxyMessage properties map
+//
+// param value *string -> a pointer to the string value in memory to set in the properties map
+func (reply *TerminateReply) SetErrorDetails(value *string) {
+	reply.SetStringProperty("ErrorDetails", value)
 }
 
 // GetErrorType gets the CadenceErrorType as a string

@@ -25,10 +25,12 @@ type (
 	IProxyReply interface {
 		GetRequestID() int64
 		SetRequestID(value int64)
-		GetErrorMessage() *string
-		SetErrorMessage(value *string)
+		GetError() *string
+		SetError(value *string)
 		GetErrorType() cadenceclient.CadenceErrorTypes
 		SetErrorType(value cadenceclient.CadenceErrorTypes)
+		GetErrorDetails() *string
+		SetErrorDetails(value *string)
 	}
 )
 
@@ -61,7 +63,8 @@ func (reply *ProxyReply) CopyTo(target IProxyMessage) {
 	if ok {
 		v.SetRequestID(reply.GetRequestID())
 		v.SetErrorType(reply.GetErrorType())
-		v.SetErrorMessage(reply.GetErrorMessage())
+		v.SetError(reply.GetError())
+		v.SetErrorDetails(reply.GetErrorDetails())
 	}
 }
 
@@ -101,18 +104,32 @@ func (reply *ProxyReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
 
-// GetErrorMessage gets an error message from a ProxyReply's ProxyMessage properties map
+// GetError gets an error message from a ProxyReply's ProxyMessage properties map
 //
 // returns *string -> a pointer to the string error message in the properties map
-func (reply *ProxyReply) GetErrorMessage() *string {
-	return reply.GetStringProperty("ErrorMessage")
+func (reply *ProxyReply) GetError() *string {
+	return reply.GetStringProperty("Error")
 }
 
-// SetErrorMessage sets an error message in a ProxyReply's ProxyMessage properties map
+// SetError sets an error message in a ProxyReply's ProxyMessage properties map
 //
 // param value *string -> a pointer to the string value in memory to set in the properties map
-func (reply *ProxyReply) SetErrorMessage(value *string) {
-	reply.SetStringProperty("ErrorMessage", value)
+func (reply *ProxyReply) SetError(value *string) {
+	reply.SetStringProperty("Error", value)
+}
+
+// GetErrorDetails gets error details from a ProxyReply's ProxyMessage properties map
+//
+// returns *string -> a pointer to the string error details in the properties map
+func (reply *ProxyReply) GetErrorDetails() *string {
+	return reply.GetStringProperty("ErrorDetails")
+}
+
+// SetErrorDetails sets error details in a ProxyReply's ProxyMessage properties map
+//
+// param value *string -> a pointer to the string value in memory to set in the properties map
+func (reply *ProxyReply) SetErrorDetails(value *string) {
+	reply.SetStringProperty("ErrorDetails", value)
 }
 
 // GetErrorType gets the CadenceErrorType as a string
