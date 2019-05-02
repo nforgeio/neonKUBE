@@ -44,11 +44,10 @@ using Xunit.Abstractions;
 namespace TestCodeGen.AspNet
 {
     [Route("/TestAspNetFixture")]
-    public class TestAspNetFixtureController : NeonController
+    public class TestAspNetFixtureController : NeonControllerBase
     {
         [HttpGet]
         [Route("GetString")]
-        [Produces("application/json")]
         public string GetString(string input)
         {
             return input;
@@ -56,7 +55,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetBool")]
-        [Produces("application/json")]
         public bool GetBool(bool input)
         {
             return input;
@@ -64,7 +62,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetInt")]
-        [Produces("application/json")]
         public int GetInt(int input)
         {
             return input;
@@ -72,7 +69,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetDouble")]
-        [Produces("application/json")]
         public double GetDouble(double input)
         {
             return input;
@@ -80,7 +76,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetTimeSpan")]
-        [Produces("application/json")]
         public TimeSpan GetTimeSpan(TimeSpan timespan)
         {
             return timespan;
@@ -88,7 +83,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetVersion")]
-        [Produces("application/json")]
         public Version GetVersion(Version version)
         {
             return version;
@@ -96,20 +90,18 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        [Produces("application/json")]
         public Person CreatePerson(int id, string name, int age)
         {
             return new Person()
             {
-                Id   = id,
+                Id = id,
                 Name = name,
-                Age  = age
+                Age = age
             };
         }
 
         [HttpPut]
         [Route("IncrementAge")]
-        [Produces("application/json")]
         public Person IncrementAge([FromBody] Person person)
         {
             if (person == null)
@@ -123,8 +115,37 @@ namespace TestCodeGen.AspNet
         }
 
         [HttpGet]
+        public int DefaultInt(int value = 10)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public bool DefaultBool(bool value = true)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public double DefaultDouble(double value = 1.234)
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public string DefaultString(string value = "test")
+        {
+            return value;
+        }
+
+        [HttpGet]
+        public MyEnum DefaultEnum(MyEnum value = MyEnum.Three)
+        {
+            return value;
+        }
+
+        [HttpGet]
         [Route("GetOptionalStringViaHeader_Null")]
-        [Produces("application/json")]
         public string GetOptionalStringViaHeader_Null([FromHeader(Name = "X-Test")] string value = null)
         {
             return value;
@@ -132,7 +153,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetOptionalStringViaHeader_Value")]
-        [Produces("application/json")]
         public string GetOptionalStringViaHeader_Value([FromHeader(Name = "X-Test")] string value = "Hello World!")
         {
             return value;
@@ -140,7 +160,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetOptionalStringViaQuery_Null")]
-        [Produces("application/json")]
         public string GetOptionalStringViaQuery_Null([FromQuery] string value = null)
         {
             return value;
@@ -148,7 +167,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetOptionalStringViaQuery_Value")]
-        [Produces("application/json")]
         public string GetOptionalStringViaQuery_Value([FromQuery] string value = "Hello World!")
         {
             return value;
@@ -156,7 +174,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetOptionalEnumViaHeader")]
-        [Produces("application/json")]
         public MyEnum GetOptionalEnumViaHeader([FromHeader(Name = "X-Test")] MyEnum value = MyEnum.Three)
         {
             return value;
@@ -164,7 +181,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetOptionalEnumViaQuery")]
-        [Produces("application/json")]
         public MyEnum GetOptionalEnumViaQuery([FromQuery] MyEnum value = MyEnum.Three)
         {
             return value;
@@ -172,7 +188,6 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetOptionalDoubleViaHeader")]
-        [Produces("application/json")]
         public double GetOptionalDoubleViaHeader([FromHeader(Name = "X-Test")] double value = 1.234)
         {
             return value;
@@ -180,8 +195,42 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("GetOptionalDoubleViaQuery")]
-        [Produces("application/json")]
         public double GetOptionalDoubleViaQuery([FromQuery] double value = 1.234)
+        {
+            return value;
+        }
+
+        [HttpPut]
+        [Route("GetOptionalDoubleViaBody")]
+        public double GetOptionalDoubleViaBody([FromBody] double value = 1.234)
+        {
+            return value;
+        }
+
+        [HttpPut]
+        [Route("GetOptionalStringViaBody")]
+        public string GetOptionalStringViaBody([FromBody] string value = "Hello World!")
+        {
+            return value;
+        }
+
+        [HttpPut]
+        [Route("GetStringList")]
+        public List<string> GetStringList([FromBody] List<string> value)
+        {
+            return value;
+        }
+
+        [HttpPut]
+        [Route("GetPersonList")]
+        public List<Person> GetPersonList([FromBody] List<Person> value)
+        {
+            return value;
+        }
+
+        [HttpPut]
+        [Route("GetPersonArray")]
+        public Person[] GetPersonArray([FromBody] Person[] value)
         {
             return value;
         }
@@ -236,6 +285,13 @@ namespace TestCodeGen.AspNet
             {
                 BaseAddress = fixture.BaseAddress
             };
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void ValidateController()
+        {
+            client.ValidateController<TestAspNetFixtureController>();
         }
 
         [Fact]
@@ -308,7 +364,7 @@ namespace TestCodeGen.AspNet
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public async Task ReturnPerson()
+        public async Task CreatePerson()
         {
             var person = await client.CreatePersonAsync(10, "Jeff", 58);
 
@@ -358,6 +414,88 @@ namespace TestCodeGen.AspNet
             Assert.Equal(2.345, await client.GetOptionalDoubleViaHeaderAsync(2.345));
             Assert.Equal(1.234, (await client.UnsafeGetOptionalDoubleViaHeaderAsync()).As<double>());
             Assert.Equal(2.345, (await client.UnsafeGetOptionalDoubleViaHeaderAsync(2.345)).As<double>());
+
+            Assert.Equal(1.234, await client.GetOptionalDoubleViaBodyAsync());
+            Assert.Equal(2.345, await client.GetOptionalDoubleViaBodyAsync(2.345));
+            Assert.Equal(1.234, (await client.UnsafeGetOptionalDoubleViaBodyAsync()).As<double>());
+            Assert.Equal(2.345, (await client.UnsafeGetOptionalDoubleViaBodyAsync(2.345)).As<double>());
+
+            Assert.Equal("Hello World!", await client.GetOptionalStringViaBodyAsync());
+            Assert.Equal("Goodbye World!", await client.GetOptionalStringViaBodyAsync("Goodbye World!"));
+            Assert.Equal("Hello World!", (await client.UnsafeGetOptionalStringViaBodyAsync()).As<string>());
+            Assert.Equal("Goodbye World!", (await client.UnsafeGetOptionalStringViaBodyAsync("Goodbye World!")).As<string>());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetStringList()
+        {
+            Assert.Null(await client.GetStringListAsync(null));
+            Assert.Empty(await client.GetStringListAsync(new List<string>()));
+
+            var list = new List<string>();
+
+            list.Add("zero");
+            list.Add("one");
+            list.Add("two");
+
+            Assert.Equal(list, await client.GetStringListAsync(list));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetPersonList()
+        {
+            Assert.Null(await client.GetPersonListAsync(null));
+            Assert.Empty(await client.GetPersonListAsync(new List<Person>()));
+
+            var list = new List<Person>();
+
+            list.Add(new Person()
+            {
+                Id = 1,
+                Name = "Jack",
+                Age = 10,
+                Data = new byte[] { 0, 1, 2, 3, 4 }
+            });
+
+            list.Add(new Person()
+            {
+                Id = 2,
+                Name = "Jill",
+                Age = 11,
+                Data = new byte[] { 5, 6, 7, 8, 9 }
+            });
+
+            Assert.Equal(list, await client.GetPersonListAsync(list));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task GetPersonArray()
+        {
+            Assert.Null(await client.GetPersonArrayAsync(null));
+            Assert.Empty(await client.GetPersonArrayAsync(new Person[0]));
+
+            var list = new Person[]
+            {
+                new Person()
+                {
+                    Id = 1,
+                    Name = "Jack",
+                    Age = 10,
+                    Data = new byte[] { 0, 1, 2, 3, 4 }
+                },
+                new Person()
+                {
+                    Id = 2,
+                    Name = "Jill",
+                    Age = 11,
+                    Data = new byte[] { 5, 6, 7, 8, 9 }
+                }
+            };
+
+            Assert.Equal(list, await client.GetPersonArrayAsync(list));
         }
     }
 }

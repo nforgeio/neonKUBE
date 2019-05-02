@@ -56,7 +56,7 @@ namespace Neon.Kube
         /// The Kubernetes version.
         /// </summary>
         [JsonProperty(PropertyName = "Kubernetes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Kubernetes", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubernetes", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Kubernetes { get; set; }
 
@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// The Kubernetes dashboard version;
         /// </summary>
         [JsonProperty(PropertyName = "KubernetesDashboard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubernetesDashboard", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubernetesDashboard", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubernetesDashboard { get; set; }
 
@@ -72,7 +72,7 @@ namespace Neon.Kube
         /// The Docker version.
         /// </summary>
         [JsonProperty(PropertyName = "DockerVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DockerVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "dockerVersion", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Docker { get; set; }
 
@@ -80,7 +80,7 @@ namespace Neon.Kube
         /// The Helm version.
         /// </summary>
         [JsonProperty(PropertyName = "Helm", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Helm", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "helm", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Helm { get; set; }
 
@@ -88,7 +88,7 @@ namespace Neon.Kube
         /// The Calico version.
         /// </summary>
         [JsonProperty(PropertyName = "Calico", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Calico", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "calico", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Calico { get; set; }
 
@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// The Istio version.
         /// </summary>
         [JsonProperty(PropertyName = "Istio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Istio", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Istio { get; set; }
     }

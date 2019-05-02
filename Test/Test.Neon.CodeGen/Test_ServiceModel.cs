@@ -1105,7 +1105,7 @@ namespace TestCodeGen.ServiceModel
 
                         await client.CallAsync("Test1", 1, "two", MyEnum.Three);
                         Assert.Equal("GET", requestMethod);
-                        Assert.Equal("/api/v1/service3", requestPath);
+                        Assert.Equal("/api/v1/service3/Test1", requestPath);
                         Assert.Equal("?p1=1&p2=two&p3=Three", requestQueryString);
                         Assert.Null(requestContentType);
                         Assert.Null(requestBody);
@@ -1391,7 +1391,7 @@ namespace TestCodeGen.ServiceModel
             // Verify that only [FromHeader] and [FromBody] parameters are allowed
             // to be defined as optional.
 
-            // [Default(route)] (should work)
+            // [Default(route)]: should work
 
             settings.Targets.Clear();
             settings.Targets.Add("OptionalParamController_Default");
@@ -1401,7 +1401,7 @@ namespace TestCodeGen.ServiceModel
 
             Assert.True(output.HasErrors);
 
-            // [FromHeader] (should work)
+            // [FromHeader]: should work
 
             settings.Targets.Clear();
             settings.Targets.Add("OptionalParamController_Header");
@@ -1412,7 +1412,7 @@ namespace TestCodeGen.ServiceModel
             Assert.False(output.HasErrors);
             CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
 
-            // [FromQuery] (should work)
+            // [FromQuery]: should work
 
             settings.Targets.Clear();
             settings.Targets.Add("OptionalParamController_Query");
@@ -1423,7 +1423,7 @@ namespace TestCodeGen.ServiceModel
             Assert.False(output.HasErrors);
             CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
 
-            // [FromBody] (should fail)
+            // [FromBody]: should work
 
             settings.Targets.Clear();
             settings.Targets.Add("OptionalParamController_Body");
@@ -1431,9 +1431,10 @@ namespace TestCodeGen.ServiceModel
             generator = new CodeGenerator(settings);
             output    = generator.Generate(Assembly.GetExecutingAssembly());
 
-            Assert.True(output.HasErrors);
+            Assert.False(output.HasErrors);
+            CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
 
-            // [FromRoute] (should fail)
+            // [FromRoute]: should fail
 
             settings.Targets.Clear();
             settings.Targets.Add("OptionalParamController_Route");

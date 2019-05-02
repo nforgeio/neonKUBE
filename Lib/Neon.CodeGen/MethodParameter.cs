@@ -55,11 +55,11 @@ namespace Neon.CodeGen
         /// <summary>
         /// Specifies how the parameter shoud be passed to the service endpoint.
         /// </summary>
-        public Pass Pass { get; set; } = Pass.InQuery;
+        public Pass Pass { get; set; } = Pass.AsQuery;
 
         /// <summary>
-        /// The parameter or HTTP header name to use when passing the parameter as <see cref="Pass.InQuery"/>
-        /// <see cref="Pass.InRoute"/>, or <see cref="Pass.AsHeader"/>.  This is ignored for <see cref="Pass.AsBody"/>.
+        /// The parameter or HTTP header name to use when passing the parameter as <see cref="Pass.AsQuery"/>
+        /// <see cref="Pass.AsRoute"/>, or <see cref="Pass.AsHeader"/>.  This is ignored for <see cref="Pass.AsBody"/>.
         /// </summary>
         public string SerializedName { get; set; }
 

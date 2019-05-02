@@ -171,6 +171,7 @@ namespace Neon.CodeGen
         private bool                                firstItemGenerated = true;
         private StringWriter                        writer;
         private HashSet<Type>                       convertableTypes;
+        private bool                                generateUx = false;
 
         /// <summary>
         /// Constructs a code generator.
@@ -194,6 +195,8 @@ namespace Neon.CodeGen
             }
 
             Settings.TargetNamespace = Settings.TargetNamespace ?? "Neon.CodeGen.Output";
+
+            generateUx = settings.UxFramework == UxFrameworks.Xaml;
 
             // Scan the [Neon.Common] assembly for JSON converters that implement [IEnhancedJsonConverter]
             // and initialize the [convertableTypes] hashset with the convertable types.  We'll need
@@ -494,11 +497,18 @@ namespace Neon.CodeGen
                         Output.Error($"[{serviceModelType.FullName}]: This data model defines method [{serviceMethod.Name}] that defines a route template with a constraint.  Constraints are not currently supported.");
                     }
 
-                    serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, routeAttribute.Template);
+                    if (!string.IsNullOrWhiteSpace(routeAttribute.Template))
+                    {
+                        serviceMethod.RouteTemplate = routeAttribute.Template;
+                    }
+                    else
+                    {
+                        serviceMethod.RouteTemplate = methodInfo.Name;
+                    }
                 }
                 else
                 {
-                    serviceMethod.RouteTemplate = ConcatRoutes(serviceModel.RouteTemplate, methodInfo.Name);
+                    serviceMethod.RouteTemplate = methodInfo.Name;
                 }
 
                 var httpAttribute = methodInfo.GetCustomAttribute<HttpAttribute>();
@@ -607,7 +617,7 @@ namespace Neon.CodeGen
                     {
                         fromAttributeCount++;
 
-                        methodParameter.Pass           = Pass.InQuery;
+                        methodParameter.Pass           = Pass.AsQuery;
                         methodParameter.SerializedName = fromQueryAttribute.Name ?? parameterInfo.Name;
                     }
 
@@ -617,7 +627,7 @@ namespace Neon.CodeGen
                     {
                         fromAttributeCount++;
 
-                        methodParameter.Pass           = Pass.InRoute;
+                        methodParameter.Pass           = Pass.AsRoute;
                         methodParameter.SerializedName = fromRouteAttribute.Name ?? parameterInfo.Name;
                     }
 
@@ -625,7 +635,7 @@ namespace Neon.CodeGen
                     {
                         // Default to [FromQuery] using the parameter name.
 
-                        methodParameter.Pass           = Pass.InQuery;
+                        methodParameter.Pass           = Pass.AsQuery;
                         methodParameter.SerializedName = parameterInfo.Name;
                     }
                     else if (fromAttributeCount > 1)
@@ -673,7 +683,7 @@ namespace Neon.CodeGen
 
                 if (serviceMethod.HttpMethod == "GET" && asBodyParameterCount > 0)
                 {
-                    Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] a parameter tagged with [FromBody].  This is not alowed for methods using the HTTP GET method.");
+                    Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a parameter tagged with [FromBody].  This is not allowed for methods using the HTTP GET method.");
                 }
 
                 serviceModel.Methods.Add(serviceMethod);
@@ -960,6 +970,12 @@ namespace Neon.CodeGen
             writer.WriteLine();
             writer.WriteLine($"using System;");
             writer.WriteLine($"using System.Collections.Generic;");
+
+            if (generateUx)
+            {
+                writer.WriteLine($"using System.Collections.ObjectModel;");
+            }
+
             writer.WriteLine($"using System.ComponentModel;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
@@ -974,6 +990,7 @@ namespace Neon.CodeGen
             writer.WriteLine($"using System.Threading;");
             writer.WriteLine($"using System.Threading.Tasks;");
             writer.WriteLine();
+            writer.WriteLine($"using Neon.CodeGen;");
             writer.WriteLine($"using Neon.Collections;");
             writer.WriteLine($"using Neon.Common;");
             writer.WriteLine($"using Neon.Data;");
@@ -1178,11 +1195,18 @@ namespace Neon.CodeGen
                         return;
                     }
 
-                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}, IRoundtripData";
+                    baseTypeRef = $" : {StripNamespace(dataModel.BaseTypeName)}";
                 }
-                else if (Settings.UxFeatures)
+                else
                 {
-                    baseTypeRef = " : __NotifyPropertyChanged";
+                    if (generateUx)
+                    {
+                        baseTypeRef = " : NotifyPropertyChanged, IRoundtripData";
+                    }
+                    else
+                    {
+                        baseTypeRef = " : IRoundtripData";
+                    }
                 }
 
                 if (genPersistence)
@@ -1599,7 +1623,33 @@ namespace Neon.CodeGen
                         defaultValueExpression = $" = {defaultValueExpression};";
                     }
 
-                    writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}{defaultValueExpression}");
+                    if (!generateUx)
+                    {
+                        writer.WriteLine($"        public {propertyTypeName} {property.Name} {{ get; set; }}{defaultValueExpression}");
+                    }
+                    else
+                    {
+                        writer.WriteLine($"        public {propertyTypeName} {property.Name}");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            get => __{property.Name};");
+                        writer.WriteLine($"            set");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                if (value != __{property.Name})");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    __{property.Name} = value;");
+                        writer.WriteLine($"                    base.RaisePropertyChanged();");
+                        writer.WriteLine($"                }}");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine($"        }}");
+                        writer.WriteLine();
+
+                        if (!defaultValueExpression.EndsWith(";"))
+                        {
+                            defaultValueExpression += ";";
+                        }
+
+                        writer.WriteLine($"        private {propertyTypeName} __{property.Name}{defaultValueExpression}");
+                    }
                 }
 
                 if (Settings.RoundTrip)
@@ -2101,34 +2151,32 @@ namespace Neon.CodeGen
             Covenant.Assert(clientNameSet.Count > 0);
 
             // Service models may be organized into zero or more client groups by client
-            // group name.  Service methods that are not within a client group will be
-            // generated directly within the class.  Methods within a client group will
+            // group name.  Service models that are not within a client group will be
+            // generated directly within the class.  Models within a client group will
             // be generated in subclasses within the client class.
             //
-            // We're going collate the service methods into client groups by name,
-            // with the empty name referring to methods that should appear directly
-            // within the generated service class.
+            // Note that there's a one-to-one mapping between service models and
+            // client groups.
 
-            var clientGroups = new Dictionary<string, List<ServiceMethod>>();
+            var clientGroups = new Dictionary<string, ServiceModel>();
 
             foreach (var serviceModel in serviceModels)
             {
                 var groupName = serviceModel.ClientGroup ?? string.Empty;
 
-                if (!clientGroups.TryGetValue(groupName, out var clientGroup))
+                if (clientGroups.TryGetValue(groupName, out var existingModel))
                 {
-                    clientGroups.Add(groupName, clientGroup = new List<ServiceMethod>());
+                    Output.Error($"Service model [{serviceModel.SourceType.Name}] and [{existingModel.SourceType.Name}] can both be in the same group [{groupName}].");
                 }
-
-                foreach (var serviceMethod in serviceModel.Methods)
+                else
                 {
-                    clientGroup.Add(serviceMethod);
+                    clientGroups.Add(groupName, serviceModel);
                 }
             }
 
-            var rootMethodGroups       = clientGroups.Where(cg => string.IsNullOrEmpty(cg.Key));
-            var nonRootMethodGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
-            var hasNonRootMethodGroups = nonRootMethodGroups.Any();
+            var rootClientGroup        = clientGroups.Where(cg => string.IsNullOrEmpty(cg.Key));
+            var nonRootClientGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
+            var hasNonRootClientGroups = nonRootClientGroups.Any();
 
             // $todo(jeff.lill):
             //
@@ -2151,17 +2199,27 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine();
-            writer.WriteLine($"    public partial class {clientTypeName} : IDisposable");
-            writer.WriteLine($"    {{");
 
-            if (hasNonRootMethodGroups)
+            if (rootClientGroup.Count() > 0)
+            {
+                writer.WriteLine($"    [GeneratedClient(\"{rootClientGroup.First().Value.RouteTemplate}\")]");
+            }
+
+            writer.WriteLine($"    public partial class {clientTypeName} : IDisposable, IGeneratedServiceClient");
+            writer.WriteLine($"    {{");
+            writer.WriteLine($"        /// <inheritdoc/>");
+            writer.WriteLine($"        public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
+            writer.WriteLine();
+
+            if (hasNonRootClientGroups)
             {
                 // Generate local [class] definitions for any non-root service
                 // methods here.
 
-                foreach (var clientGroup in nonRootMethodGroups)
+                foreach (var clientGroup in nonRootClientGroups)
                 {
-                    writer.WriteLine($"        public class __{clientGroup.Key}");
+                    writer.WriteLine($"        [GeneratedClient(\"{clientGroup.Value.RouteTemplate}\")]");
+                    writer.WriteLine($"        public class __{clientGroup.Key} : IGeneratedServiceClient");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            private JsonClient client;");
                     writer.WriteLine();
@@ -2169,8 +2227,11 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                this.client = client;");
                     writer.WriteLine($"            }}");
+                    writer.WriteLine();
+                    writer.WriteLine($"            /// <inheritdoc/>");
+                    writer.WriteLine($"            public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
 
-                    foreach (var serviceMethod in clientGroup.Value)
+                    foreach (var serviceMethod in clientGroup.Value.Methods)
                     {
                         GenerateServiceMethod(serviceMethod, indent: "    ");
                     }
@@ -2192,11 +2253,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"        {{");
             writer.WriteLine($"            this.client = new JsonClient(handler, disposeHandler);");
 
-            if (hasNonRootMethodGroups)
+            if (hasNonRootClientGroups)
             {
                 // Initialize the non-root method group properties.
 
-                foreach (var nonRootGroup in nonRootMethodGroups)
+                foreach (var nonRootGroup in nonRootClientGroups)
                 {
                     writer.WriteLine($"            this.{nonRootGroup.Key} = new __{nonRootGroup.Key}(this.client);");
                 }
@@ -2271,11 +2332,11 @@ namespace Neon.CodeGen
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;");
 
-            if (hasNonRootMethodGroups)
+            if (hasNonRootClientGroups)
             {
                 // Generate any service group properties.
 
-                foreach (var nonRootGroup in nonRootMethodGroups)
+                foreach (var nonRootGroup in nonRootClientGroups)
                 {
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -2285,11 +2346,11 @@ namespace Neon.CodeGen
                 }
             }
 
-            // Generate any root service methods here.
+            // Generate any root client methods here.
 
-            foreach (var rootGroup in rootMethodGroups)
+            foreach (var rootGroup in rootClientGroup)
             {
-                foreach (var serviceMethod in rootGroup.Value)
+                foreach (var serviceMethod in rootGroup.Value.Methods)
                 {
                     GenerateServiceMethod(serviceMethod);
                 }
@@ -2325,6 +2386,41 @@ namespace Neon.CodeGen
 
             foreach (var parameter in serviceMethod.Parameters)
             {
+                // Generate the [GeneratedParam] attribute with the metadata the service
+                // client validator will need to ensure that generated service methods
+                // those from the actual service implementation.
+
+                string generatedParamAttribute;
+
+                switch (parameter.Pass)
+                {
+                    case Pass.AsBody:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Body)]";
+                        break;
+
+                    case Pass.AsHeader:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Header, Name = \"{parameter.SerializedName}\")]";
+                        break;
+
+                    case Pass.AsQuery:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Query, Name = \"{parameter.SerializedName}\")]";
+                        break;
+
+                    case Pass.AsRoute:
+
+                        generatedParamAttribute = $"[GeneratedParam(PassAs.Route, Name = \"{parameter.SerializedName}\")]";
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+
+                // Generate the default value expression for optional parameters.
+
                 var defaultValueExpression = string.Empty;
 
                 if (parameter.IsOptional)
@@ -2337,22 +2433,22 @@ namespace Neon.CodeGen
                     }
                 }
 
-                sbParameters.AppendWithSeparator($"{ResolveTypeReference(parameter.ParameterInfo.ParameterType)} {parameter.Name}{defaultValueExpression}", argSeparator);
+                sbParameters.AppendWithSeparator($"{generatedParamAttribute} {ResolveTypeReference(parameter.ParameterInfo.ParameterType)} {parameter.Name}{defaultValueExpression}", argSeparator);
             }
 
-            sbParameters.AppendWithSeparator("CancellationToken cancellationToken = default", argSeparator);
-            sbParameters.AppendWithSeparator("IRetryPolicy retryPolicy = default", argSeparator);
-            sbParameters.AppendWithSeparator("LogActivity logActivity = default", argSeparator);
+            sbParameters.AppendWithSeparator("CancellationToken _cancellationToken = default", argSeparator);
+            sbParameters.AppendWithSeparator("IRetryPolicy _retryPolicy = default", argSeparator);
+            sbParameters.AppendWithSeparator("LogActivity _logActivity = default", argSeparator);
 
-            // Generate the arguments to be passed to the query methods.
+            // Generate the arguments to be passed to the client methods.
 
-            var sbArgGenerate    = new StringBuilder();   // Will hold the code required to generate the arguments.
-            var sbArguments      = new StringBuilder();   // Will hold the arguments to be passed to the [JsonClient] method.
-            var routeParameters  = new List<MethodParameter>();
-            var headerParameters = parameters.Where(p => p.Pass == Pass.AsHeader);
-            var uriRef           = $"\"{serviceMethod.RouteTemplate}\"";
+            var sbArgGenerate      = new StringBuilder();   // This holds the code required to generate the arguments.
+            var sbArguments        = new StringBuilder();   // This holds the arguments to be passed to the [JsonClient] method.
+            var routeParameters    = new List<MethodParameter>();
+            var headerParameters   = parameters.Where(p => p.Pass == Pass.AsHeader);
+            var endpointUriLiteral = $"$\"{ConcatRoutes(serviceMethod.ServiceModel.RouteTemplate, serviceMethod.RouteTemplate)}\"";
 
-            foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.InRoute))
+            foreach (var routeParameter in parameters.Where(p => p.Pass == Pass.AsRoute))
             {
                 routeParameters.Add(routeParameter);
             }
@@ -2381,10 +2477,10 @@ namespace Neon.CodeGen
                 }
 
                 // Compare the parameters without a [FromXXX] attribute against the
-                // the route template parameters by name, assigning [Pass.InRoute]
+                // the route template parameters by name, assigning [Pass.AsRoute]
                 // to any of these.
                 // 
-                // NOTE: Parameters will be assigned [Pass.InQuery] by default when
+                // NOTE: Parameters will be assigned [Pass.AsQuery] by default when
                 //       no  [FromXXX] tag was present, so all we need to do is to
                 //       check for the absence of a [FromQuery] attribute.
 
@@ -2394,14 +2490,14 @@ namespace Neon.CodeGen
 
                     if (noFromXXX && templateParameters.Contains(parameter.SerializedName))
                     {
-                        parameter.Pass = Pass.InRoute;
+                        parameter.Pass = Pass.AsRoute;
 
                         routeParameters.Add(parameter);
                     }
                 }
             }
 
-            // Only header and query parameters are allowed to be optional.
+            // Only header, body, and query parameters are allowed to be optional.
 
             foreach (var parameter in serviceMethod.Parameters)
             {
@@ -2413,20 +2509,16 @@ namespace Neon.CodeGen
                     {
                         // These are allowed.
 
-                        case Pass.Default:
+                        case Pass.AsBody:
                         case Pass.AsHeader:
-                        case Pass.InQuery:
+                        case Pass.AsQuery:
+                        case Pass.Default:
 
                             break;
 
                         // These are not allowed.
 
-                        case Pass.AsBody:
-
-                            invalidPass = "FromBody";
-                            break;
-
-                        case Pass.InRoute:
+                        case Pass.AsRoute:
 
                             invalidPass = "Route";
                             break;
@@ -2443,27 +2535,20 @@ namespace Neon.CodeGen
                 }
             }
 
-            // The query parameters include those that have [Pass.InQuery].
+            // The query parameters include those that have [Pass.AsQuery].
 
-            var queryParameters = parameters.Where(p => p.Pass == Pass.InQuery);
+            var queryParameters = parameters.Where(p => p.Pass == Pass.AsQuery);
 
             // We're ready to generate the method code.
 
             if (!string.IsNullOrEmpty(serviceMethod.RouteTemplate))
             {
-                // NOTE:
-                //
-                // When a service method has a [Route] attribute that defines a route template, 
-                // we're going to treat any parameter that has no other [FromXXX] attribute as
-                // if it was tagged by a [FromRoute] attribute.
-
                 if (sbArgGenerate.Length > 0)
                 {
                     sbArgGenerate.AppendLine();
                 }
 
                 var route     = serviceMethod.RouteTemplate;
-                var uri       = route;
                 var uriVerify = route;
 
                 foreach (var parameter in routeParameters)
@@ -2475,23 +2560,23 @@ namespace Neon.CodeGen
 
                     uriVerify = uriVerify.Replace($"{{{parameter.SerializedName}}}", parameter.Name);
 
-                    // Generate the URI template parameter.  These need to be URI encoded and
+                    // Generate the URI template parameter.  This needs to be URI encoded and
                     // note that we also need to treat Enum parameters specially to ensure that 
                     // they honor any [EnumMember] attributes.
 
                     if (parameter.ParameterInfo.ParameterType.IsEnum)
                     {
-                        uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString(NeonHelper.EnumToString({parameter.Name}))}}");
+                        endpointUriLiteral = endpointUriLiteral.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString(NeonHelper.EnumToString({parameter.Name}))}}");
                     }
                     else
                     {
                         if (parameter.ParameterInfo.ParameterType == typeof(string))
                         {
-                            uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name})}}");
+                            endpointUriLiteral = endpointUriLiteral.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name})}}");
                         }
                         else
                         {
-                            uri = uri.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name}.ToString())}}");
+                            endpointUriLiteral = endpointUriLiteral.Replace($"{{{parameter.SerializedName}}}", $"{{Uri.EscapeUriString({parameter.Name}.ToString())}}");
                         }
                     }
                 }
@@ -2500,8 +2585,6 @@ namespace Neon.CodeGen
                 {
                     Output.Error($"Service method [{serviceMethod.ServiceModel.SourceType.Name}.{serviceMethod.Name}(...)] has a malformed route [{route}] that references a method parameter that doesn't exist or has extra \"{{\" or \"}}\" characters.");
                 }
-
-                uriRef = $"$\"{uri}\"";
             }
 
             if (queryParameters.Count() > 0)
@@ -2516,11 +2599,11 @@ namespace Neon.CodeGen
 
                 if (nonOptionalQueryParameters.Count() == 0)
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary();");
+                    sbArgGenerate.AppendLine($"{indent}            var _args = new ArgDictionary();");
                 }
                 else
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var args = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            var _args = new ArgDictionary()");
                     sbArgGenerate.AppendLine($"{indent}            {{");
 
                     foreach (var parameter in nonOptionalQueryParameters)
@@ -2536,7 +2619,7 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                     sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
                     sbArgGenerate.AppendLine($"{indent}            {{");
-                    sbArgGenerate.AppendLine($"{indent}                args.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}                _args.Add(\"{parameter.SerializedName}\", {parameter.Name});");
                     sbArgGenerate.AppendLine($"{indent}            }}");
                 }
             }
@@ -2553,11 +2636,11 @@ namespace Neon.CodeGen
 
                 if (nonOptionalHeaderParameters.Count() == 0)
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary();");
+                    sbArgGenerate.AppendLine($"{indent}            var _headers = new ArgDictionary();");
                 }
                 else
                 {
-                    sbArgGenerate.AppendLine($"{indent}            var headers = new ArgDictionary()");
+                    sbArgGenerate.AppendLine($"{indent}            var _headers = new ArgDictionary()");
                     sbArgGenerate.AppendLine($"{indent}            {{");
 
                     foreach (var parameter in nonOptionalHeaderParameters)
@@ -2573,13 +2656,13 @@ namespace Neon.CodeGen
                     sbArgGenerate.AppendLine();
                     sbArgGenerate.AppendLine($"{indent}            if ({parameter.Name} != {parameter.DefaultValueLiteral})");
                     sbArgGenerate.AppendLine($"{indent}            {{");
-                    sbArgGenerate.AppendLine($"{indent}                headers.Add(\"{parameter.SerializedName}\", {parameter.Name});");
+                    sbArgGenerate.AppendLine($"{indent}                _headers.Add(\"{parameter.SerializedName}\", {parameter.Name});");
                     sbArgGenerate.AppendLine($"{indent}            }}");
                 }
             }
 
-            sbArguments.AppendWithSeparator("retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
-            sbArguments.AppendWithSeparator(uriRef, argSeparator);
+            sbArguments.AppendWithSeparator("_retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
+            sbArguments.AppendWithSeparator(endpointUriLiteral, argSeparator);
 
             if (bodyParameter != null)
             {
@@ -2595,16 +2678,16 @@ namespace Neon.CodeGen
 
             if (queryParameters.Count() > 0)
             {
-                sbArguments.AppendWithSeparator("args: args", argSeparator);
+                sbArguments.AppendWithSeparator("args: _args", argSeparator);
             }
 
             if (headerParameters.Count() > 0)
             {
-                sbArguments.AppendWithSeparator("headers: headers", argSeparator);
+                sbArguments.AppendWithSeparator("headers: _headers", argSeparator);
             }
 
-            sbArguments.AppendWithSeparator("cancellationToken: cancellationToken", argSeparator);
-            sbArguments.AppendWithSeparator("logActivity: logActivity", argSeparator);
+            sbArguments.AppendWithSeparator("cancellationToken: _cancellationToken", argSeparator);
+            sbArguments.AppendWithSeparator("logActivity: _logActivity", argSeparator);
 
             // Generate the safe and unsafe query method names and 
             // verify that each method actually supports sending
@@ -2708,7 +2791,22 @@ namespace Neon.CodeGen
                 methodName += "Async";
             }
 
+            string generatedMethodAttribute;
+            string routeTemplate;
+
+            if (string.IsNullOrEmpty(serviceMethod.RouteTemplate))
+            {
+                routeTemplate = serviceMethod.Name;
+            }
+            else
+            {
+                routeTemplate = serviceMethod.RouteTemplate;
+            }
+
+            generatedMethodAttribute = $"[GeneratedMethod(DefinedAs = \"{serviceMethod.MethodInfo.Name}\", Returns = typeof({returnType}), RouteTemplate = \"{routeTemplate}\", HttpMethod = \"{serviceMethod.HttpMethod}\")]";
+
             writer.WriteLine();
+            writer.WriteLine($"{indent}        {generatedMethodAttribute}");
             writer.WriteLine($"{indent}        public async {methodReturnType} {methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
 
@@ -2959,6 +3057,16 @@ namespace Neon.CodeGen
                     }
 
                     genericParams += genericParamType.Name;
+                }
+
+                if (generateUx)
+                {
+                    // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
+
+                    if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                    {
+                        return $"ObservableCollection<{genericParams}>";
+                    }
                 }
 
                 return $"{genericRef}<{genericParams}>";

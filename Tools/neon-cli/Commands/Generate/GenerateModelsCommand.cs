@@ -68,6 +68,10 @@ OPTIONS:
 
     --persisted                 - Generate database persistence related code.
 
+    --ux=xaml                   - Generate additional code for the specified
+                                  UX framework.  Currently, only [xaml] is
+                                  supported
+
     --no-services               - Don't generate any service clients.
 
     --targets=LIST              - Specifies the comma separated list of target 
@@ -93,7 +97,7 @@ style design conventions.  See this GitHub issue for more information:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--no-services", "--targets" }; }
+            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets" }; }
         }
 
         /// <inheritdoc/>
@@ -132,6 +136,21 @@ style design conventions.  See this GitHub issue for more information:
                 Persisted        = commandLine.HasOption("--persisted"),
                 NoServiceClients = commandLine.HasOption("--no-services")
             };
+
+            var ux = commandLine.GetOption("--ux");
+
+            if (ux != null)
+            {
+                if (ux.Equals("xaml", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    settings.UxFramework = UxFrameworks.Xaml;
+                }
+                else
+                {
+                    Console.Error.WriteLine($"*** ERROR: [--ux={ux}] does not specify one of the supported UX frameworks: XAML");
+                    Program.Exit(1);
+                }
+            }
 
             var assembly      = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
             var codeGenerator = new CodeGenerator(settings);

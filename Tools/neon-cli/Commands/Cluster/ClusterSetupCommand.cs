@@ -993,31 +993,7 @@ networking:
                             kubeContextExtension.Save();
                         });
 
-                    // Configure kube-apiserver
-
-                    foreach (var master in cluster.Masters)
-                    {
-                        try
-                        {
-                            master.InvokeIdempotentAction("setup/kube-apiserver",
-                            () =>
-                            {
-                                master.Status = "configure: kube-apiserver";
-                                master.SudoCommand(CommandBundle.FromScript(
-@"#!/bin/bash
-
-sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
-"));
-                            });
-                        }
-                        catch (Exception e)
-                        {
-                            master.Fault(NeonHelper.ExceptionError(e));
-                            master.LogException(e);
-                        }
-
-                        master.Status = "done";
-                    }
+                    firstMaster.Status = "done";
                     
 
                     // kubectl config:
@@ -1135,6 +1111,33 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         master.Status = "joined";
                     }
 
+
+                    // Configure kube-apiserver on all the masters
+
+                    foreach (var master in cluster.Masters)
+                    {
+                        try
+                        {
+                            master.InvokeIdempotentAction("setup/cluster-kube-apiserver",
+                                () =>
+                                {
+                                    master.Status = "configure: kube-apiserver";
+                                    master.SudoCommand(CommandBundle.FromScript(
+        @"#!/bin/bash
+
+sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
+"));
+                                }); 
+                        }
+                        catch (Exception e)
+                        {
+                            master.Fault(NeonHelper.ExceptionError(e));
+                            master.LogException(e);
+                        }
+
+                        master.Status = "kube-apiserver configured";
+                    }
+
                     //---------------------------------------------------------
                     // Join the remaining workers to the cluster:
 
@@ -1183,13 +1186,16 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                             else
                             {
-                                allowPodsOnMasters = cluster.Definition.Workers.Count() > 0;
+                                allowPodsOnMasters = cluster.Definition.Workers.Count() == 0;
                             }
 
                             // The [kubectl taint] command looks like it can return a non-zero exit code.
                             // We'll ignore this.
 
-                            firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+                            if (allowPodsOnMasters)
+                            {
+                                firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+                            }
                         });
 
                     // Install the network CNI.

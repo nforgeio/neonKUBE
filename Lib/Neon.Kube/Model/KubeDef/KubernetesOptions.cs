@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// version is <b>1.13.0</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Version", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "version", ApplyNamingConventions = false)]
         [DefaultValue(defaultVersion)]
         public string Version { get; set; } = defaultVersion;
 
@@ -70,7 +70,7 @@ namespace Neon.Kube
         /// will install the latest tested version of Kubernetes.
         /// </summary>
         [JsonProperty(PropertyName = "DashboardVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "DashboardVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "dashboardVersion", ApplyNamingConventions = false)]
         [DefaultValue(defaultVersion)]
         public string DashboardVersion { get; set; } = defaultDashboardVersion;
 
@@ -79,7 +79,7 @@ namespace Neon.Kube
         /// will install a reasonable version for the Kubernetes release being inbstalled.
         /// </summary>
         [JsonProperty(PropertyName = "HelmVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "HelmVersion", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "helmVersion", ApplyNamingConventions = false)]
         [DefaultValue("default")]
         public string HelmVersion { get; set; } = "default";
 
@@ -90,7 +90,7 @@ namespace Neon.Kube
         /// clusters with worker nodes.
         /// </summary>
         [JsonProperty(PropertyName = "AllowPodsOnMasters", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "AllowPodsOnMasters", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "allowPodsOnMasters", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public bool? AllowPodsOnMasters { get; set; } = null;
 
@@ -137,8 +137,8 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "ApiLoadBalancer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ApiLoadBalancer", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "apiLoadBalancer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "apiLoadBalancer", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ApiLoadBalancer { get; set; } = null;
 

@@ -69,7 +69,7 @@ namespace Neon.Kube
         /// a gewnerated unique value.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ClusterId", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "clusterId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public Guid ClusterId { get; set; } = Guid.NewGuid();
 
@@ -77,7 +77,7 @@ namespace Neon.Kube
         /// The cluster definition.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterDefinition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ClusterDefinition", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "clusterDefinition", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public ClusterDefinition ClusterDefinition { get; set; }
 
@@ -86,7 +86,7 @@ namespace Neon.Kube
         /// provisoning additional clsuter nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SetupDetails", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SetupDetails", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "setupDetails", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public KubeSetupDetails SetupDetails { get; set; } = new KubeSetupDetails();
 
@@ -94,7 +94,7 @@ namespace Neon.Kube
         /// The SSH root username.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SshUsername", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "sshUsername", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SshUsername { get; set; }
 
@@ -102,7 +102,7 @@ namespace Neon.Kube
         /// The SSH root password.
         /// </summary>
         [JsonProperty(PropertyName = "SshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SshPassword", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "sshPassword", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string SshPassword { get; set; }
 
@@ -131,7 +131,7 @@ namespace Neon.Kube
         /// The custom certificate generated for the Kubernetes dashboard PEM.
         /// </summary>
         [JsonProperty(PropertyName = "KubernetesDashboardCertificate")]
-        [YamlMember(Alias = "KubernetesDashboardCertificate", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "kubernetesDashboardCertificate", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string KubernetesDashboardCertificate { get; set; }
 
@@ -140,7 +140,7 @@ namespace Neon.Kube
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>
         [JsonProperty(PropertyName = "SshNodeFingerprint")]
-        [YamlMember(Alias = "SshNodeFingerprint", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "sshNodeFingerprint", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string SshNodeFingerprint { get; set; }
 
@@ -148,7 +148,7 @@ namespace Neon.Kube
         /// The SSH RSA private key used to secure the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshNodePrivateKey")]
-        [YamlMember(Alias = "SshNodePrivateKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "sshNodePrivateKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string SshNodePrivateKey { get; set; }
 
@@ -156,7 +156,7 @@ namespace Neon.Kube
         /// The SSH RSA private key used to secure the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "SshNodePublicKey")]
-        [YamlMember(Alias = "SshNodePublicKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "sshNodePublicKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public string SshNodePublicKey { get; set; }
 
@@ -165,7 +165,7 @@ namespace Neon.Kube
         /// authenticate an SSH session with a cluster node.
         /// </summary>
         [JsonProperty(PropertyName = "SshClientKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "SshClientKey", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "sshClientKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public SshClientKey SshClientKey { get; set; }
 

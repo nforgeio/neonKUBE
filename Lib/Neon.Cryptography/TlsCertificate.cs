@@ -634,7 +634,7 @@ subjectAltName         = @alt_names
         /// The public certificate as PEM encoded text.
         /// </summary>
         [JsonProperty(PropertyName = "CertPem", Required = Required.Always | Required.DisallowNull)]
-        [YamlMember(Alias = "CertPem", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "certPem", ApplyNamingConventions = false)]
         public string CertPem { get; set; }
 
         /// <summary>
@@ -662,7 +662,7 @@ subjectAltName         = @alt_names
         /// is not present.
         /// </summary>
         [JsonProperty(PropertyName = "KeyPem", Required = Required.Always | Required.DisallowNull)]
-        [YamlMember(Alias = "KeyPem", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "keyPem", ApplyNamingConventions = false)]
         public string KeyPem { get; set; }
 
         /// <summary>
@@ -728,14 +728,14 @@ subjectAltName         = @alt_names
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "FriendlyName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "FriendlyName", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "friendlyName", ApplyNamingConventions = false)]
         public string FriendlyName { get; set; }
 
         /// <summary>
         /// The date when the certificate becomes valid (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "ValidFrom", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ValidFrom", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "validFrom", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public DateTime? ValidFrom { get; set; }
 
@@ -743,7 +743,7 @@ subjectAltName         = @alt_names
         /// The date when the certificate expires (or <c>null</c>).
         /// </summary>
         [JsonProperty(PropertyName = "ValidUntil", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ValidUntil", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "validUntil", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public DateTime? ValidUntil { get; set; }
 
@@ -754,7 +754,7 @@ subjectAltName         = @alt_names
         /// <c>null</c> or empty if the hostname(s) are unknown.
         /// </summary>
         [JsonProperty(PropertyName = "Hosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Hosts", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "hosts", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<string> Hosts { get; set; } = new List<string>();
 
@@ -762,7 +762,7 @@ subjectAltName         = @alt_names
         /// The certificate thumbprint.
         /// </summary>
         [JsonProperty(PropertyName = "Thumbprint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Thumbprint", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "thumbprint", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Thumbprint { get; set; }
 

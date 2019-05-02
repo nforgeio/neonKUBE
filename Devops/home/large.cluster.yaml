@@ -1,36 +1,36 @@
-Name: home-large
-Datacenter: woodinville
-Environment: development
-TimeSources:
+name: home-large
+datacenter: woodinville
+environment: development
+timeSources:
 - pool.ntp.org
-AllowUnitTesting: true
-Kubernetes:
-  AllowPodsOnMasters: false
-Hosting:
-  Environment: hyperv-local
-  VmDriveFolder: D:\\VM
-Network:
-  PremiseSubnet: 10.0.0.0/16
-  NodesSubnet: 10.0.0.0/16
-NodeOptions:
-   Upgrade: none
-   PasswordLength: 20
-Nodes:
-   master-0:
-     Role: master
-     PrivateAddress: 10.0.0.30
-   master-1:
-     Role: master
-     PrivateAddress: 10.0.0.31
-   master-2:
-     Role: master
-     PrivateAddress: 10.0.0.32
-   worker-0:
-     Role: worker
-     PrivateAddress: 10.0.0.40
-   worker-1:
-     Role: worker
-     PrivateAddress: 10.0.0.41
-   worker-2:
-     Role: worker
-     PrivateAddress: 10.0.0.42
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: false
+hosting:
+  environment: hyperv-local
+  vmDriveFolder: D:\\VM
+network:
+  premiseSubnet: 10.0.0.0/16
+  nodesSubnet: 10.0.0.0/16
+nodeOptions:
+  upgrade: none
+  passwordLength: 20
+nodes:
+  master-0:
+    role: master
+    privateAddress: 10.0.0.30
+  master-1:
+    role: master
+    privateAddress: 10.0.0.31
+  master-2:
+    role: master
+    privateAddress: 10.0.0.32
+  worker-0:
+    role: worker
+    privateAddress: 10.0.0.40
+  worker-1:
+    role: worker
+    privateAddress: 10.0.0.41
+  worker-2:
+    role: worker
+    privateAddress: 10.0.0.42

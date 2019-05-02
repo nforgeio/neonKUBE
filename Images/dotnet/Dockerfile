@@ -29,7 +29,7 @@
 # rebuild the image to pick up the latest point release.
 
 ARG         VERSION
-FROM        microsoft/dotnet:${VERSION}
+FROM        mcr.microsoft.com/dotnet/core/runtime:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 

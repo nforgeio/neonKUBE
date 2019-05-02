@@ -68,7 +68,7 @@ namespace Neon.Kube
         /// The file text.
         /// </summary>
         [JsonProperty(PropertyName = "Text", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Text", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [YamlMember(Alias = "text", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Text { get; set; }
 
@@ -76,14 +76,14 @@ namespace Neon.Kube
         /// The file permissions.
         /// </summary>
         [JsonProperty(PropertyName = "Permissions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Permissions", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "permissions", ApplyNamingConventions = false)]
         public string Permissions { get; set; }
 
         /// <summary>
         /// The file owner.
         /// </summary>
         [JsonProperty(PropertyName = "Owner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "Owner", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "owner", ApplyNamingConventions = false)]
         public string Owner { get; set; }
     }
 }

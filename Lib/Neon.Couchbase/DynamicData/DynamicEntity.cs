@@ -27,6 +27,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Couchbase.DynamicData.Internal;
+using Neon.Data;
 
 namespace Neon.Couchbase.DynamicData
 {
@@ -677,7 +678,7 @@ namespace Neon.Couchbase.DynamicData
         /// <inheritdoc/>
         void IDynamicEntity._OnPropertyChanged(string propertyName)
         {
-            OnPropertyChanged(propertyName);
+            RaisePropertyChanged(propertyName);
             _OnChanged();
         }
     }
