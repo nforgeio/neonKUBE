@@ -10,7 +10,6 @@ import (
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
-	clustermessages "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
 
 	"go.uber.org/zap"
 )
@@ -86,107 +85,8 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// deserialize the payload
-	buf := bytes.NewBuffer(payload)
-
-	// new IProxyMessage to deserialize the request body into
-	message, err := base.Deserialize(buf)
+	err = proccessProxyMessage(payload, w)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Error deserializing input", zap.String("Error", err.Error()))
-
-		// write the error and status code into response
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		panic(err)
-	}
-
-	// get the proxy message from the IProxyMessage
-	proxyMessage := message.GetProxyMessage()
-
-	// if initialization request then extract the library address
-	// and library port from the properties
-	if proxyMessage.Type == messages.InitializeRequest {
-		var initailizeRequestIProxyMessage base.IProxyMessage = message
-		v, ok := initailizeRequestIProxyMessage.(*clustermessages.InitializeRequest)
-		if ok {
-			_replyAddress = fmt.Sprintf("http://%s:%s/", *v.GetLibraryAddress(), *v.GetLibraryPort())
-
-			// $debug(jack.burns): DELETE THIS!
-			//_replyAddress = "http://127.0.0.2:5001/"
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("InitializeRequest info",
-				zap.String("Library Address", *v.GetLibraryAddress()),
-				zap.String("LibaryPort", *v.GetLibraryPort()),
-				zap.String("Reply Address", _replyAddress))
-		}
-	}
-
-	// determine whether the input request is a ProxyReply or ProxyRequest
-	switch messageSwitch := message.(type) {
-
-	// Nil type value
-	case nil:
-		err := fmt.Errorf("nil type for incoming ProxyMessage: %v", messageSwitch)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		panic(err)
-
-	// IProxyRequest
-	case base.IProxyRequest:
-
-		// get the correct reply type and initialize a new
-		// reply
-		key := int(messageSwitch.GetReplyType())
-		reply := base.MessageTypeStructMap[key].Clone()
-		v, ok := reply.(base.IProxyReply)
-		if ok {
-			v.SetRequestID(messageSwitch.GetRequestID())
-			v.SetError(nil)
-			v.SetErrorDetails(nil)
-			v.SetErrorType(messages.None)
-		}
-
-		// Get the pointer to the ProxyMessage
-		proxyMessage := reply.GetProxyMessage()
-
-		// serialize the cloned message into a []byte
-		// to send back over the network
-		serializedMessage, err := proxyMessage.Serialize()
-		if err != nil {
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Error serializing proxy message", zap.String("Error", err.Error()))
-
-			// write the error and status code into response
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			panic(err)
-		}
-
-		resp, err := putRequest(serializedMessage, _replyAddress)
-		if err != nil {
-
-			// write the error and status code into response
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			panic(err)
-		}
-		defer resp.Body.Close()
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Neon.Cadence Library Response",
-			zap.String("Response Status", resp.Status),
-			zap.String("Request URL", resp.Request.URL.String()))
-
-	// IProxyReply
-	case base.IProxyReply:
-		// Reply recieved
-		w.Write([]byte("Reply Recieved and Deserialized Successfully"))
-		return
-
-	// Unrecognized type
-	default:
-		err := fmt.Errorf("could not complete type assertion: %v", messageSwitch)
-		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)
 	}
 }
@@ -251,7 +151,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	serializedMessageCopy, err := deserializeCloneAndSerializeMessage(payload)
+	serializedMessageCopy, err := cloneForEcho(payload)
 	if err != nil {
 
 		// write the error and status code into response
@@ -261,6 +161,120 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 
 	// respond with the serialize message copy
 	w.Write(serializedMessageCopy)
+}
+
+func proccessProxyMessage(payload []byte, w http.ResponseWriter) error {
+
+	// set logger
+	logger := zap.L()
+
+	// deserialize the payload
+	buf := bytes.NewBuffer(payload)
+
+	// new IProxyMessage to deserialize the request body into
+	message, err := base.Deserialize(buf)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Error deserializing input", zap.String("Error", err.Error()))
+
+		// write the error and status code into response
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return err
+	}
+
+	// get the proxy message from the IProxyMessage
+	proxyMessage := message.GetProxyMessage()
+
+	// if initialization request then extract the library address
+	// and library port from the properties
+	if proxyMessage.Type == messages.InitializeRequest {
+		address := *proxyMessage.GetStringProperty("LibraryAddress")
+		port := *proxyMessage.GetStringProperty("LibraryPort")
+		_replyAddress = fmt.Sprintf("http://%s:%s/",
+			address,
+			port,
+		)
+
+		// $debug(jack.burns): DELETE THIS!
+		//_replyAddress = "http://127.0.0.2:5001/"
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("InitializeRequest info",
+			zap.String("Library Address", address),
+			zap.String("LibaryPort", port),
+			zap.String("Reply Address", _replyAddress),
+		)
+	}
+
+	// determine whether the input request is a ProxyReply or ProxyRequest
+	switch messageSwitch := message.(type) {
+
+	// Nil type value
+	case nil:
+		err := fmt.Errorf("nil type for incoming ProxyMessage: %v", messageSwitch)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return err
+
+	// IProxyRequest
+	case base.IProxyRequest:
+
+		// get the correct reply type and initialize a new
+		// reply
+		key := int(messageSwitch.GetReplyType())
+		reply := base.MessageTypeStructMap[key].Clone()
+		v, ok := reply.(base.IProxyReply)
+		if ok {
+			v.SetRequestID(messageSwitch.GetRequestID())
+			v.SetError(nil)
+			v.SetErrorDetails(nil)
+			v.SetErrorType(messages.None)
+		}
+
+		// Get the pointer to the ProxyMessage
+		proxyMessage := reply.GetProxyMessage()
+
+		// serialize the cloned message into a []byte
+		// to send back over the network
+		serializedMessage, err := proxyMessage.Serialize()
+		if err != nil {
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Error serializing proxy message", zap.String("Error", err.Error()))
+
+			// write the error and status code into response
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return err
+		}
+
+		resp, err := putRequest(serializedMessage, _replyAddress)
+		if err != nil {
+
+			// write the error and status code into response
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return err
+		}
+		defer resp.Body.Close()
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Neon.Cadence Library Response",
+			zap.String("Response Status", resp.Status),
+			zap.String("Request URL", resp.Request.URL.String()))
+
+	// IProxyReply
+	case base.IProxyReply:
+		// Reply recieved
+		w.Write([]byte("Reply Recieved and Deserialized Successfully"))
+		return nil
+
+	// Unrecognized type
+	default:
+		err := fmt.Errorf("could not complete type assertion: %v", messageSwitch)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return err
+	}
+
+	return nil
 }
 
 func putRequest(content []byte, address string) (*http.Response, error) {
@@ -301,7 +315,7 @@ func putRequest(content []byte, address string) (*http.Response, error) {
 	return resp, nil
 }
 
-func deserializeCloneAndSerializeMessage(content []byte) ([]byte, error) {
+func cloneForEcho(content []byte) ([]byte, error) {
 
 	// set logger to global logger
 	logger := zap.L()
