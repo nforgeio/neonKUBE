@@ -18,13 +18,17 @@ The Neon.Cadence library manages the lifecyle of the Cadence Proxy process in pr
 
 ## Cadence Proxy Command Line
 
-The Neon.Cadence library will persist Cadence Proxy executable to disk using a file name appropriate for the current platform: cadence-proxy.exe for Windows and just cadence-proxy for Linux and OSX and then start the proxy via a command like like:
+The Neon.Cadence library will persist Cadence Proxy executable to disk using a file name appropriate for the current platform: **cadence-proxy.exe** for Windows and just **cadence-proxy** for Linux and OSX and then start the proxy via a command like like:
 
 ```
-cadence-proxy 127.0.0.1:5555
+cadence-proxy --listen 127.0.0.1:5555 [--log-level level] [--debug]
 ```
 
-where the argument specifies the network endpoint where the Cadence Proxy will listen for requests.
+* `--listen` is required and specifies the network endpoint where the cadence-proxy will listen for requests
+* `--log-level` is optional specifies the logging level, one of: panic, fatal, error, warn, or debug. This should default to info when not passed.
+* `--debug` is optional and indicates that the cadence-proxy should run in debug mode.
+
+**Note:** The cadence-client will dynamically select an unused ephemeral network ports at runtime by default.
 
 ## Cadence Client/Proxy Communication 
 
@@ -36,19 +40,19 @@ The low-level Client/proxy communication protocol is one-way: the client can sen
 
 The Cadence Library and Proxy will both listen for HTTP PUT requests on a specified IP address and port and each of these will initially support two endpoint URI paths:
 
-* "/": Is where normal communication between the library and proxy takes place. Messages PUT to here will be process and if the request is valid, result in the PUT of a reply to the other side.
+* **"/":** Is where normal communication between the library and proxy takes place. Messages PUT to here will be process and if the request is valid, result in the PUT of a reply to the other side.
 
-* "/echo": Is a special testing endpoint. Messages PUT to this endpoint are to be deserialized, copied to a new message of the same type which should be serialized and returned as the PUT response. This is used for integration to verify that both the library and proxy have implemented serialization correctly. This endpoint performs no other function.
+* **"/echo":** Is a special testing endpoint. Messages PUT to this endpoint are to be deserialized, copied to a new message of the same type which should be serialized and returned as the PUT response. This is used for integration to verify that both the library and proxy have implemented serialization correctly. This endpoint performs no other function.
 
 ## Cadence Terminology
 
-* Workflow: These orchestrate one or more activities each of which performs an idempotent task. Workflows are started with zero or more parameters and then schedule a sequence of activities based on the input parameters and the results from already completed activities.
+* **Workflow:** These orchestrate one or more activities each of which performs an idempotent task. Workflows are started with zero or more parameters and then schedule a sequence of activities based on the input parameters and the results from already completed activities.
 
-* Activity: These perform the actual work for a workflow. Activities are fundamentally idempotent and Cadence ensures that any given activity is executed only once and that its results are persisted so that the same results will be returned when an already-completed activity is replayed.
+* **Activity:** These perform the actual work for a workflow. Activities are fundamentally idempotent and Cadence ensures that any given activity is executed only once and that its results are persisted so that the same results will be returned when an already-completed activity is replayed.
 
-* Signal: Cadence provides a way to asynchronously send signals to a workflow. Signals are named by a string and also include a string as the payload.
+* **Signal:** Cadence provides a way to asynchronously send signals to a workflow. Signals are named by a string and also include a string as the payload.
 
-* Signal Channel: Workflows configure themselves to receive signals by creating a signal channel named for the desired signal.
+* **Signal Channel:** Workflows configure themselves to receive signals by creating a signal channel named for the desired signal.
 
 ## Cadence Proxy Message Format
 
@@ -112,15 +116,15 @@ NOTE: It is possible that some properties may not be serialized for a message. T
 ## Common Property Type Serialization
 Both the Cadence Proxy and Library will need to agree on how certain common property types will be formatted as strings within message properties. Here's what we're going to do for various types:
 
-* boolean: These will be serialized as either "true" or "false" (lowercase).
+* **boolean:** These will be serialized as either "true" or "false" (lowercase).
 
-* integer: These will be serialized as you'd expect with an optional leading "-" for negative numbers. Note that a leading "+" is not allowed.
+* **integer:** These will be serialized as you'd expect with an optional leading "-" for negative numbers. Note that a leading "+" is not allowed.
 
-* floating point: These will be serialized like 1.2345 with an optional leading "+-" sign. There must be at least one digit before the decimal point. Note that the decimal point must be omitted if there are no fractional digits and that the decimal point must be a period (not a comma or anything else used for other cultures). Invalid numbers will be serialized as "NaN". Scientific notation is also supported.
+* **floating point:** These will be serialized like 1.2345 with an optional leading "+-" sign. There must be at least one digit before the decimal point. Note that the decimal point must be omitted if there are no fractional digits and that the decimal point must be a period (not a comma or anything else used for other cultures). Invalid numbers will be serialized as "NaN". Scientific notation is also supported.
 
-* date/time: We're going to use a varient of RFC 3389 for serializing date/time values. All date/times will be rendered relative to UTC and will be formatted like: "yyyy-MM-ddTHH:mm:ss.fffZ" to provide millisecond precision.
+* **date/time:** We're going to use a varient of RFC 3389 for serializing date/time values. All date/times will be rendered relative to UTC and will be formatted like: "yyyy-MM-ddTHH:mm:ss.fffZ" to provide millisecond precision.
 
-* time span: We're going to express these as a 64-bit integer number of ticks, where a single tick equals 100 nanoseconds (the .NET standard).
+* **time span:** We're going to express these as a 64-bit integer number of ticks, where a single tick equals 100 nanoseconds (the .NET standard).
 
 ## Request and Reply Messages
 
@@ -134,7 +138,7 @@ All request and response messages will include a RequestId property the uniquely
 
 Reply messages will also two more standard properties:
 
-* string ErrorType: This will be non-NULL if the requested operation failed due to an error. This will be one of the following strings indicating the type of error encountered:
+* **string ErrorType:** This will be non-NULL if the requested operation failed due to an error. This will be one of the following strings indicating the type of error encountered:
 
     * cancelled
     * custom
@@ -143,7 +147,8 @@ Reply messages will also two more standard properties:
     * terminated
     * timeout
  
-* string Error: This string describes the error in more detail.
+* **string Error:** This string describes the error in more detail.
+* **string ErrorDetails:** Optional additional error details (aka the "error message").
 
 ## Message Type Hierarchy 
 

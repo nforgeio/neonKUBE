@@ -52,11 +52,13 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 			zap.String("Expected Content Type", _contentType))
 
 		// write the error to and status code into response
-		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), _contentType)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(errStr + ".  "))
+		err := fmt.Errorf("incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), _contentType)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 
-	} else if r.Method != http.MethodPut {
+	}
+
+	if r.Method != http.MethodPut {
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Invalid HTTP Method",
@@ -64,82 +66,108 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 			zap.String("Expected", http.MethodPut))
 
 		// write the error and status code into the reponse
-		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPut)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(errStr + ".  "))
+		err := fmt.Errorf("invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPut)
+		http.Error(w, err.Error(), http.StatusMethodNotAllowed)
+		return
 
-	} else {
+	}
 
-		// create an empty []byte and read the
-		// request body into it if not nil
-		var payload []byte
-		payload, err := ioutil.ReadAll(r.Body)
-		if err != nil {
+	// create an empty []byte and read the
+	// request body into it if not nil
+	var payload []byte
+	payload, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Null request body", zap.String("Error", err.Error()))
+
+		// write the error and status code into response
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		panic(err)
+	}
+
+	// deserialize the payload
+	buf := bytes.NewBuffer(payload)
+
+	// new IProxyMessage to deserialize the request body into
+	message, err := base.Deserialize(buf)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Error deserializing input", zap.String("Error", err.Error()))
+
+		// write the error and status code into response
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		panic(err)
+	}
+
+	// get the proxy message from the IProxyMessage
+	proxyMessage := message.GetProxyMessage()
+
+	// if initialization request then extract the library address
+	// and library port from the properties
+	if proxyMessage.Type == messages.InitializeRequest {
+		var initailizeRequestIProxyMessage base.IProxyMessage = message
+		v, ok := initailizeRequestIProxyMessage.(*clustermessages.InitializeRequest)
+		if ok {
+			_replyAddress = fmt.Sprintf("http://%s:%s/", *v.GetLibraryAddress(), *v.GetLibraryPort())
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Null request body", zap.String("Error", err.Error()))
-
-			// write the error and status code into response
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error() + ".  "))
-			panic(err)
-		}
-
-		// deserialize the payload
-		buf := bytes.NewBuffer(payload)
-		message, err := base.Deserialize(buf)
-		if err != nil {
+			//_replyAddress = "http://127.0.0.2:5001/"
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Error deserializing input", zap.String("Error", err.Error()))
+			logger.Debug("InitializeRequest info",
+				zap.String("Library Address", *v.GetLibraryAddress()),
+				zap.String("LibaryPort", *v.GetLibraryPort()),
+				zap.String("Reply Address", _replyAddress))
+		}
+	}
 
-			// write the error and status code into response
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error() + ".  "))
-			panic(err)
+	// determine whether the input request is a ProxyReply or ProxyRequest
+	switch messageSwitch := message.(type) {
+
+	// Nil type value
+	case nil:
+		err := fmt.Errorf("nil type for incoming ProxyMessage: %v", messageSwitch)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		panic(err)
+
+	// IProxyRequest
+	case base.IProxyRequest:
+
+		// get the correct reply type and initialize a new
+		// reply
+		key := int(messageSwitch.GetReplyType())
+		reply := base.MessageTypeStructMap[key].Clone()
+		v, ok := reply.(base.IProxyReply)
+		if ok {
+			v.SetRequestID(messageSwitch.GetRequestID())
+			v.SetError(nil)
+			v.SetErrorDetails(nil)
+			v.SetErrorType(messages.None)
 		}
 
-		// get the proxy message from the IProxyMessage
-		proxyMessage := message.GetProxyMessage()
-
-		// if initialization request then extract the library address
-		// and library port from the properties
-		if proxyMessage.Type == messages.InitializeRequest {
-			var initailizeRequestIProxyMessage base.IProxyMessage = message
-			v, ok := initailizeRequestIProxyMessage.(*clustermessages.InitializeRequest)
-			if ok {
-				//_replyAddress = fmt.Sprintf("http://%s:%s/", *v.GetLibraryAddress(), *v.GetLibraryPort())
-				_replyAddress = "http://127.0.0.2:5001/"
-
-				// $debug(jack.burns): DELETE THIS!
-				logger.Debug("InitializeRequest info",
-					zap.String("Library Address", *v.GetLibraryAddress()),
-					zap.String("LibaryPort", *v.GetLibraryPort()),
-					zap.String("Reply Address", _replyAddress))
-			}
-		}
+		// Get the pointer to the ProxyMessage
+		proxyMessage := reply.GetProxyMessage()
 
 		// serialize the cloned message into a []byte
 		// to send back over the network
-		var serializedMessageCopy []byte
-		serializedMessageCopy, err = proxyMessage.Serialize()
+		serializedMessage, err := proxyMessage.Serialize()
 		if err != nil {
 
 			// $debug(jack.burns): DELETE THIS!
 			logger.Debug("Error serializing proxy message", zap.String("Error", err.Error()))
 
 			// write the error and status code into response
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error() + ".  "))
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			panic(err)
 		}
 
-		resp, err := putRequest(serializedMessageCopy, _replyAddress)
+		resp, err := putRequest(serializedMessage, _replyAddress)
 		if err != nil {
 
 			// write the error and status code into response
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error() + ".  "))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			panic(err)
 		}
 		defer resp.Body.Close()
@@ -148,6 +176,18 @@ func ProxyMessageHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Debug("Neon.Cadence Library Response",
 			zap.String("Response Status", resp.Status),
 			zap.String("Request URL", resp.Request.URL.String()))
+
+	// IProxyReply
+	case base.IProxyReply:
+		// Reply recieved
+		w.Write([]byte("Reply Recieved and Deserialized Successfully"))
+		return
+
+	// Unrecognized type
+	default:
+		err := fmt.Errorf("could not complete type assertion: %v", messageSwitch)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		panic(err)
 	}
 }
 
@@ -168,57 +208,59 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 		zap.Int("ProccessId", os.Getpid()))
 
 	// check if the content type is correct
+	// check if the content type is correct
 	if r.Header.Get("Content-Type") != _contentType {
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Incorrect Content-Type", zap.String("Content Type", r.Header.Get("Content-Type")),
+		logger.Debug("Incorrect Content-Type",
+			zap.String("Content Type", r.Header.Get("Content-Type")),
 			zap.String("Expected Content Type", _contentType))
 
 		// write the error to and status code into response
-		errStr := fmt.Sprintf("Incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), _contentType)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(errStr + ".  "))
+		err := fmt.Errorf("incorrect Content-Type %s. Content must be %s", r.Header.Get("Content-Type"), _contentType)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 
-	} else if r.Method != http.MethodPut {
+	}
+
+	if r.Method != http.MethodPut {
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Invalid HTTP Method", zap.String("Method", r.Method),
+		logger.Debug("Invalid HTTP Method",
+			zap.String("Method", r.Method),
 			zap.String("Expected", http.MethodPut))
 
 		// write the error and status code into the reponse
-		errStr := fmt.Sprintf("Invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPut)
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte(errStr + ".  "))
+		err := fmt.Errorf("invalid HTTP Method: %s, must be HTTP Metho: %s", r.Method, http.MethodPut)
+		http.Error(w, err.Error(), http.StatusMethodNotAllowed)
+		return
 
-	} else {
-
-		// create an empty []byte and read the
-		// request body into it if not nil
-		var payload []byte
-		payload, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Null request body", zap.String("Error", err.Error()))
-
-			// write the error and status code into response
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error() + ".  "))
-			panic(err)
-		}
-
-		serializedMessageCopy, err := deserializeCloneAndSerializeMessage(payload)
-		if err != nil {
-
-			// write the error and status code into response
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(err.Error() + ".  "))
-			panic(err)
-		}
-
-		// respond with the serialize message copy
-		w.Write(serializedMessageCopy)
 	}
+
+	// create an empty []byte and read the
+	// request body into it if not nil
+	var payload []byte
+	payload, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Null request body", zap.String("Error", err.Error()))
+
+		// write the error and status code into response
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		panic(err)
+	}
+
+	serializedMessageCopy, err := deserializeCloneAndSerializeMessage(payload)
+	if err != nil {
+
+		// write the error and status code into response
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		panic(err)
+	}
+
+	// respond with the serialize message copy
+	w.Write(serializedMessageCopy)
 }
 
 func putRequest(content []byte, address string) (*http.Response, error) {
@@ -281,8 +323,7 @@ func deserializeCloneAndSerializeMessage(content []byte) ([]byte, error) {
 
 	// serialize the cloned message into a []byte
 	// to send back over the network
-	var serializedMessageCopy []byte
-	serializedMessageCopy, err = proxyMessage.Serialize()
+	serializedMessageCopy, err := proxyMessage.Serialize()
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
