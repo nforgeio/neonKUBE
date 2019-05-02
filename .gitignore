@@ -95,3 +95,4 @@ GeneratedTypes.cs
 /Go/bin
 /Go/src/github.com/*/*/vendor/*
 *.test
+/Test/Test.Neon.Models/GeneratedUxTypes.cs
