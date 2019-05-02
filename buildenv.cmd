@@ -63,6 +63,7 @@ REM smart enough to only add directories that actually exist.
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_ROOT%\External\OpenSSL"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
+%NF_TOOLBIN%\pathtool -dedup -system -add "C:\cygwin64\bin"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\7-Zip"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\7-Zip"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\PuTTY"
