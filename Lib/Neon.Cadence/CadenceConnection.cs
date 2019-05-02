@@ -293,7 +293,14 @@ namespace Neon.Cadence
 
                     try
                     {
-                        using (var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath))
+                        var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath);
+
+                        if (resourceStream == null)
+                        {
+                            throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadency-proxy].");
+                        }
+
+                        using (resourceStream)
                         {
                             using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
                             {

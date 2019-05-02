@@ -50,7 +50,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\" />
+    <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
+    <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
+    <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
   </ItemGroup>
 
 </Project>
