@@ -25,6 +25,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -46,6 +47,26 @@ namespace Neon.Net
 
         private static LinearRetryPolicy retryFile     = new LinearRetryPolicy(typeof(IOException), maxAttempts: maxAttempts, retryInterval: retryInterval);
         private static LinearRetryPolicy retryReady    = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: maxAttempts, retryInterval: retryInterval);
+
+        /// <summary>
+        /// Regex for verifying DNS hostnames.
+        /// </summary>
+        public static Regex DnsHostRegex { get; private set; } = new Regex(@"^(([a-z0-9]|[a-z0-9][a-z0-9\-_]){1,61})(\.([a-z0-9]|[a-z0-9][a-z0-9\-_]){1,61})*$", RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// Verifies that a string is a valid DNS hostname.
+        /// </summary>
+        /// <param name="host">The string being tested.</param>
+        /// <returns><c>true</c> if the hostname is valid.</returns>
+        public static bool IsValidHost(string host)
+        {
+            if (string.IsNullOrEmpty(host) || host.Length > 255)
+            {
+                return false;
+            }
+
+            return DnsHostRegex.IsMatch(host);
+        }
 
         /// <summary>
         /// Determines whether two IP addresses are equal.

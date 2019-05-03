@@ -34,6 +34,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Net;
 
 namespace Neon.Kube
 {
@@ -840,7 +841,7 @@ namespace Neon.Kube
 
                 if (domain != null)
                 {
-                    if (!ClusterDefinition.DnsHostRegex.IsMatch(domain))
+                    if (!NetHelper.IsValidHost(domain))
                     {
                         throw new ClusterDefinitionException($"Custom node label [{item.Key}] has an invalid reverse domain prefix.");
                     }
