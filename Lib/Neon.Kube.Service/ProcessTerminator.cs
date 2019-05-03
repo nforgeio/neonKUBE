@@ -170,6 +170,56 @@ namespace Neon.Kube.Service
         }
 
         /// <summary>
+        /// Emulates a signal instructing the service to close.  This will typically be used
+        /// for unitb testing services.
+        /// </summary>
+        /// <exception cref="TimeoutException">
+        /// Thrown if the service did not exit gracefully in time before it would have 
+        /// been killed (e.g. by Kubernetes or Docker).
+        /// </exception>
+        public void Signal()
+        {
+            if (readyToExit)
+            {
+                // Application has already indicated that it has terminated.
+
+                return;
+            }
+
+            var isTerminating = terminating;
+
+            terminating = true;
+
+            if (isTerminating)
+            {
+                return;     // Already terminating.
+            }
+
+            log?.LogInfo(() => $"Emulated stop request: [timeout={Timeout}]");
+
+            cts.Cancel();
+
+            lock (handlers)
+            {
+                foreach (var handler in handlers)
+                {
+                    new Thread(new ThreadStart(handler)).Start();
+                }
+            }
+
+            try
+            {
+                NeonHelper.WaitFor(() => readyToExit, Timeout);
+                log?.LogInfo(() => "Process stopped gracefully.");
+            }
+            catch (TimeoutException)
+            {
+                log?.LogWarn(() => $"Process did not stop within [{Timeout}].");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Cleanly terminates the current process (for internal use).
         /// </summary>
         /// <param name="exitCode">Optional process exit code (defaults to <b>0</b>).</param>
