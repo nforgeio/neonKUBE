@@ -15,9 +15,10 @@ import (
 // a reference to an existing zap.Logger,
 // and a reference to an existing chi.Mux
 type Instance struct {
-	httpServer *http.Server
-	Logger     *zap.Logger
-	Router     *chi.Mux
+	httpServer      *http.Server
+	Logger          *zap.Logger
+	Router          *chi.Mux
+	ShutdownChannel chan bool
 }
 
 // NewInstance initializes a new instance of the server Instance
@@ -33,8 +34,9 @@ func NewInstance(addr string) *Instance {
 
 	// do any server instance setup here
 	s := &Instance{
-		Router:     router,
-		httpServer: &http.Server{Addr: addr, Handler: router},
+		Router:          router,
+		httpServer:      &http.Server{Addr: addr, Handler: router},
+		ShutdownChannel: make(chan bool),
 	}
 
 	return s
@@ -51,31 +53,27 @@ func (s *Instance) Start() {
 	s.Logger = zap.L()
 	s.Logger.Info("Server Details",
 		zap.String("Address", s.httpServer.Addr),
-		zap.Int("ProccessId", os.Getpid()))
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// listen and serve (for your country)
-	err := s.httpServer.ListenAndServe()
-
-	// Clean shutdown is the server unexpectedly shuts down
-	if err != http.ErrServerClosed {
-		s.Logger.Error("Http Server Stopped Unexpenctedly", zap.Error(err))
-		s.Shutdown()
-	} else {
-		s.Logger.Error("Http Server Stoppped", zap.Error(err))
-	}
-}
-
-// Shutdown shuts the server instance down gracefully if possible
-func (s *Instance) Shutdown() {
-	if s.httpServer != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		err := s.httpServer.Shutdown(ctx)
-		if err != nil {
-			s.Logger.Error("Failed to shutdown http server gracefully", zap.Error(err))
-		} else {
-			s.httpServer = nil
+	go func() {
+		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			s.Logger.Fatal("http server stopped unexpenctedly", zap.Error(err))
 		}
+	}()
+
+	// wait for the shutdown signal from a terminate request
+	<-s.ShutdownChannel
+
+	// create the context and the cancelFunc to shut down the server instance
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// try and do a graceful shutdown if possible from context
+	if err := s.httpServer.Shutdown(ctx); err != nil {
+		s.Logger.Fatal("could not gracefully shut server down", zap.Error(err))
 	}
+	s.Logger.Info("server gracefully shutting down")
+
 }

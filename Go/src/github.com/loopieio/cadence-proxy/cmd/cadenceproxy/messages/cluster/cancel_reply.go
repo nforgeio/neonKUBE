@@ -61,8 +61,7 @@ func (reply *CancelReply) Clone() base.IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *CancelReply) CopyTo(target base.IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
-	v, ok := target.(*CancelReply)
-	if ok {
+	if v, ok := target.(*CancelReply); ok {
 		v.SetWasCancelled(reply.GetWasCancelled())
 	}
 }
@@ -86,18 +85,18 @@ func (reply *CancelReply) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetRequestID inherits docs from ProxyReply.GetRequestID()
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *CancelReply) GetRequestID() int64 {
 	return reply.GetLongProperty("RequestId")
 }
 
-// SetRequestID inherits docs from ProxyReply.SetRequestID()
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *CancelReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError inherits docs from ProxyReply.GetError()
 func (reply *CancelReply) GetError() *string {
@@ -144,7 +143,7 @@ func (reply *CancelReply) GetErrorType() messages.CadenceErrorTypes {
 	case "timeout":
 		return messages.Timeout
 	default:
-		err := errors.New("Not implemented exception")
+		err := errors.New("not implemented exception")
 		panic(err)
 	}
 }
@@ -160,25 +159,19 @@ func (reply *CancelReply) SetErrorType(value messages.CadenceErrorTypes) {
 		return
 	case messages.Cancelled:
 		typeString = "cancelled"
-		break
 	case messages.Custom:
 		typeString = "custom"
-		break
 	case messages.Generic:
 		typeString = "generic"
-		break
 	case messages.Panic:
 		typeString = "panic"
-		break
 	case messages.Terminated:
 		typeString = "terminated"
-		break
 	case messages.Timeout:
 		typeString = "timeout"
-		break
 	default:
 		// panic if type is not recognized or implemented yet
-		err := errors.New("Not implemented exception")
+		err := errors.New("not implemented exception")
 		panic(err)
 	}
 

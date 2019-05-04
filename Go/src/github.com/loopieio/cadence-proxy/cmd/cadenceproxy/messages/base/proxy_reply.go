@@ -23,8 +23,6 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyReply
 	IProxyReply interface {
-		GetRequestID() int64
-		SetRequestID(value int64)
 		GetError() *string
 		SetError(value *string)
 		GetErrorType() messages.CadenceErrorTypes
@@ -42,6 +40,12 @@ type (
 func NewProxyReply() *ProxyReply {
 	reply := new(ProxyReply)
 	reply.ProxyMessage = NewProxyMessage()
+
+	// set the ProxyReply error fields
+	reply.SetErrorType(messages.None)
+	reply.SetError(nil)
+	reply.SetErrorDetails(nil)
+
 	return reply
 }
 
@@ -59,9 +63,7 @@ func (reply *ProxyReply) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *ProxyReply) CopyTo(target IProxyMessage) {
 	reply.ProxyMessage.CopyTo(target)
-	v, ok := target.(IProxyReply)
-	if ok {
-		v.SetRequestID(reply.GetRequestID())
+	if v, ok := target.(IProxyReply); ok {
 		v.SetErrorType(reply.GetErrorType())
 		v.SetError(reply.GetError())
 		v.SetErrorDetails(reply.GetErrorDetails())
@@ -83,26 +85,22 @@ func (reply *ProxyReply) String() string {
 	str := ""
 	str = fmt.Sprintf("%s\n", str)
 	str = fmt.Sprintf("%s%s", str, reply.ProxyMessage.String())
-	str = fmt.Sprintf("%s", str)
+	str = fmt.Sprintf("%s\n", str)
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetRequestID gets a request id from a ProxyReply's ProxyMessage properties map
-//
-// returns int64 -> A long corresponding to a ProxyReply's request id
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *ProxyReply) GetRequestID() int64 {
 	return reply.GetLongProperty("RequestId")
 }
 
-// SetRequestID sets the request id in a ProxyReply's ProxyMessage properties map
-//
-// param value int64 -> the long value to set as a ProxyReply's request id
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *ProxyReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError gets an error message from a ProxyReply's ProxyMessage properties map
 //
@@ -161,7 +159,7 @@ func (reply *ProxyReply) GetErrorType() messages.CadenceErrorTypes {
 	case "timeout":
 		return messages.Timeout
 	default:
-		err := errors.New("Not implemented exception")
+		err := errors.New("not implemented exception")
 		panic(err)
 	}
 }
@@ -181,25 +179,19 @@ func (reply *ProxyReply) SetErrorType(value messages.CadenceErrorTypes) {
 		return
 	case messages.Cancelled:
 		typeString = "cancelled"
-		break
 	case messages.Custom:
 		typeString = "custom"
-		break
 	case messages.Generic:
 		typeString = "generic"
-		break
 	case messages.Panic:
 		typeString = "panic"
-		break
 	case messages.Terminated:
 		typeString = "terminated"
-		break
 	case messages.Timeout:
 		typeString = "timeout"
-		break
 	default:
 		// panic if type is not recognized or implemented yet
-		err := errors.New("Not implemented exception")
+		err := errors.New("not implemented exception")
 		panic(err)
 	}
 

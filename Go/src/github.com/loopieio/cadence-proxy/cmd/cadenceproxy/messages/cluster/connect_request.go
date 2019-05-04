@@ -51,24 +51,6 @@ func (request *ConnectRequest) SetEndpoints(value *string) {
 	request.SetStringProperty("Endpoints", value)
 }
 
-// GetDomain gets a ConnectRequest's domain value from
-// its nested properties map
-//
-// returns *string -> a pointer to a string in memory holding the value
-// of a ConnectRequest's domain
-func (request *ConnectRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
-}
-
-// SetDomain sets a ConnectionRequest's domain in
-// its nested properties map
-//
-// param value *string -> a pointer to a string in memory
-// that holds the value to be set in the properties map
-func (request *ConnectRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
-}
-
 // GetIdentity gets a ConnectRequest's identity value from
 // its nested properties map
 //
@@ -103,10 +85,8 @@ func (request *ConnectRequest) Clone() base.IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *ConnectRequest) CopyTo(target base.IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
-	v, ok := target.(*ConnectRequest)
-	if ok {
+	if v, ok := target.(*ConnectRequest); ok {
 		v.SetEndpoints(request.GetEndpoints())
-		v.SetDomain(request.GetDomain())
 		v.SetIdentity(request.GetIdentity())
 	}
 }
@@ -130,18 +110,18 @@ func (request *ConnectRequest) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *ConnectRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *ConnectRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *ConnectRequest) GetReplyType() messages.MessageType {

@@ -82,7 +82,7 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() messages.DomainStatus {
 	case "DEPRECATED":
 		return messages.Deprecated
 	default:
-		err := errors.New("DomainStatus not implemented exception")
+		err := errors.New("domainStatus not implemented exception")
 		panic(err)
 	}
 }
@@ -102,14 +102,12 @@ func (reply *DomainDescribeReply) SetDomainInfoStatus(value messages.DomainStatu
 		return
 	case messages.Registered:
 		statusString = "REGISTERED"
-		break
 	case messages.Deprecated:
 		statusString = "DEPRECATED"
-		break
 	default:
 
 		// panic if type is not recognized or implemented yet
-		err := errors.New("Not implemented exception")
+		err := errors.New("not implemented exception")
 		panic(err)
 	}
 
@@ -186,8 +184,7 @@ func (reply *DomainDescribeReply) Clone() base.IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *DomainDescribeReply) CopyTo(target base.IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
-	v, ok := target.(*DomainDescribeReply)
-	if ok {
+	if v, ok := target.(*DomainDescribeReply); ok {
 		v.SetDomainInfoName(reply.GetDomainInfoName())
 		v.SetConfigurationEmitMetrics(reply.GetConfigurationEmitMetrics())
 		v.SetConfigurationRetentionDays(reply.GetConfigurationRetentionDays())
@@ -216,18 +213,18 @@ func (reply *DomainDescribeReply) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetRequestID inherits docs from ProxyReply.GetRequestID()
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *DomainDescribeReply) GetRequestID() int64 {
 	return reply.GetLongProperty("RequestId")
 }
 
-// SetRequestID inherits docs from ProxyReply.SetRequestID()
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *DomainDescribeReply) SetRequestID(value int64) {
 	reply.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError inherits docs from ProxyReply.GetError()
 func (reply *DomainDescribeReply) GetError() *string {
@@ -274,7 +271,7 @@ func (reply *DomainDescribeReply) GetErrorType() messages.CadenceErrorTypes {
 	case "timeout":
 		return messages.Timeout
 	default:
-		err := errors.New("Not implemented exception")
+		err := errors.New("not implemented exception")
 		panic(err)
 	}
 }
@@ -290,25 +287,19 @@ func (reply *DomainDescribeReply) SetErrorType(value messages.CadenceErrorTypes)
 		return
 	case messages.Cancelled:
 		typeString = "cancelled"
-		break
 	case messages.Custom:
 		typeString = "custom"
-		break
 	case messages.Generic:
 		typeString = "generic"
-		break
 	case messages.Panic:
 		typeString = "panic"
-		break
 	case messages.Terminated:
 		typeString = "terminated"
-		break
 	case messages.Timeout:
 		typeString = "timeout"
-		break
 	default:
 		// panic if type is not recognized or implemented yet
-		err := errors.New("Not implemented exception")
+		err := errors.New("not implemented exception")
 		panic(err)
 	}
 

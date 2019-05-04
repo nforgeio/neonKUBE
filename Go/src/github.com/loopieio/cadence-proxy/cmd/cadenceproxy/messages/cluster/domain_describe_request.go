@@ -67,8 +67,7 @@ func (request *DomainDescribeRequest) Clone() base.IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *DomainDescribeRequest) CopyTo(target base.IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
-	v, ok := target.(*DomainDescribeRequest)
-	if ok {
+	if v, ok := target.(*DomainDescribeRequest); ok {
 		v.SetName(request.GetName())
 	}
 }
@@ -92,18 +91,18 @@ func (request *DomainDescribeRequest) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *DomainDescribeRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *DomainDescribeRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *DomainDescribeRequest) GetReplyType() messages.MessageType {
