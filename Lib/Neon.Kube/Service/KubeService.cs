@@ -107,7 +107,7 @@ namespace Neon.Kube.Service
     /// <para>
     /// For production, <see cref="GetConfigFilePath(string)"/> will simply return the file
     /// path passed so that the configuration file located there will referenced.  For
-    /// test, <see cref="GetConfigFilePath(string)"/> will return the path specified by
+    /// testing, <see cref="GetConfigFilePath(string)"/> will return the path specified by
     /// an earlier call to <see cref="SetConfigFilePath(string, string)"/> or to a
     /// temporary file initialized by previous calls to <see cref="SetConfigFile(string, string)"/>
     /// or <see cref="SetConfigFile(string, byte[])"/>.  This indirection provides a 
@@ -118,10 +118,10 @@ namespace Neon.Kube.Service
     public abstract class KubeService : IDisposable
     {
         //---------------------------------------------------------------------
-        // Private classes
+        // Private types
 
         /// <summary>
-        /// Holdes information about configuration files.
+        /// Holds information about configuration files.
         /// </summary>
         private sealed class FileInfo : IDisposable
         {
@@ -159,21 +159,26 @@ namespace Neon.Kube.Service
         private object                          syncLock = new object();
         private bool                            isRunning;
         private bool                            isDisposed;
+        private bool                            stopPending;
         private Dictionary<string, string>      environmentVariables;
         private Dictionary<string, FileInfo>    configFiles;
 
         /// <summary>
-        /// Protected constructor.
+        /// Constructor.
         /// </summary>
-        /// <param name="name">Specifies the service name.</param>
-        /// <param name="version">Specifies the service version.</param>
-        public KubeService(string name, string version)
+        /// <param name="description">The service description.</param>
+        public KubeService(KubeServiceDescription description)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(description != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(description.Name));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(description.Port));
+
+            description.PathPrefix = description.PathPrefix ?? string.Empty;
+
+            this.Description = description;
+            this.BaseUri     = new Uri($"http://{description.Name}:{description.Port}{description.PathPrefix}");
 
             this.InProduction         = Environment.GetEnvironmentVariable("DEV_WORKSTATION") == null;
-            this.Name                 = name;
-            this.Version              = !string.IsNullOrWhiteSpace(version) ? version.Trim() : "0.0.0-unknown";
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
@@ -222,20 +227,32 @@ namespace Neon.Kube.Service
 
         /// <summary>
         /// Returns <c>true</c> when the service is running in production,
-        /// when the actual <b>DEV_WORKSTATION</b> environment variable is
+        /// when the <b>DEV_WORKSTATION</b> environment variable is
         /// <b>not defined</b>.
         /// </summary>
         public bool InProduction { get; private set; }
 
         /// <summary>
-        /// Returns the service name.
+        /// Returns <c>true</c> when the service is running in development
+        /// or test mode, when the <b>DEV_WORKSTATION</b> environment variable is
+        /// <b>defined</b>.
         /// </summary>
-        public string Name { get; private set; }
+        public bool InDevelopment => !InProduction;
 
         /// <summary>
-        /// Returns the service version.
+        /// Returns the service description.
         /// </summary>
-        public string Version { get; private set; }
+        public KubeServiceDescription Description { get; private set; }
+
+        /// <summary>
+        /// Returns the service name.
+        /// </summary>
+        public string Name => Description.Name;
+
+        /// <summary>
+        /// Returns the base URI to be used to access the service from within a Kubernetes cluster.
+        /// </summary>
+        public Uri BaseUri { get; private set; }
 
         /// <summary>
         /// The service logger.
@@ -302,12 +319,26 @@ namespace Neon.Kube.Service
 
             // This call actually implements the service.
 
-            await OnRunAsync();
+            try
+            {
+                await OnRunAsync();
+
+                ExitCode = 0;
+            }
+            catch (ProgramExitException e)
+            {
+                ExitCode = e.ExitCode;
+            }
         }
 
         /// <summary>
         /// Stops the service if it's not already stopped.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if another stop request is already pending.</exception>
+        /// <exception cref="TimeoutException">
+        /// Thrown if the service did not exit gracefully in time before it would have 
+        /// been killed (e.g. by Kubernetes or Docker).
+        /// </exception>
         /// <remarks>
         /// <note>
         /// It is not possible to restart a service after it's been stopped.
@@ -319,7 +350,26 @@ namespace Neon.Kube.Service
         /// </remarks>
         public virtual void Stop()
         {
+            lock (syncLock)
+            {
+                if (stopPending)
+                {
+                    throw new InvalidOperationException($"A stop request for [{Name}] is already pending.");
+                }
+
+                if (!isRunning)
+                {
+                    return;
+                }
+            }
+
+            Terminator.Signal();
         }
+
+        /// <summary>
+        /// Returns the exit code returned by the service.
+        /// </summary>
+        public int ExitCode { get; private set; }
 
         /// <summary>
         /// Called to actually implement the service.
@@ -328,23 +378,15 @@ namespace Neon.Kube.Service
         protected abstract Task OnRunAsync();
 
         /// <summary>
-        /// Called after the service has returned from its <see cref="OnRunAsync"/>
-        /// implementation to give the service a chance to gracefully release
-        /// any resources (like closing files or listening dockets, flushing and
-        /// closing files, or proactively releasing other resources.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        protected abstract Task OnStoppedAsync();
-
-        /// <summary>
         /// Sets or deletes a service environment variable.
         /// </summary>
         /// <param name="name">The variable name (case sensitive).</param>
         /// <param name="value">The variable value or <c>null</c> to remove the variable.</param>
         /// <remarks>
         /// <note>
-        /// Environment variable names are case sensitive because this is how Linux
-        /// treats them and it's very common to be deploying services to Linux.
+        /// Environment variable names are to be considered to be case sensitive since
+        /// this is how Linux treats them and it's very common to be deploying services
+        /// to Linux.
         /// </note>
         /// </remarks>
         public void SetEnvironmentVariable(string name, string value)

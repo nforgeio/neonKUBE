@@ -62,11 +62,6 @@ namespace Neon.Kube
         public static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// Regex for verifying DNS hostnames.
-        /// </summary>
-        public static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9_]))*$", RegexOptions.IgnoreCase);
-
-        /// <summary>
         /// The prefix reserved for neonKUBE related daemon, image, and pod labels.
         /// </summary>
         public const string ReservedLabelPrefix = "neonkube.io/";
@@ -624,7 +619,7 @@ namespace Neon.Kube
                 {
                     var fields = endpoint.Split(':');
 
-                    if (!IPAddress.TryParse(fields[0], out var address) && !ClusterDefinition.DnsHostRegex.IsMatch(fields[0]))
+                    if (!IPAddress.TryParse(fields[0], out var address) && !NetHelper.IsValidHost(fields[0]))
                     {
                         throw new ClusterDefinitionException($"Invalid IP address or HOSTNAME [{fields[0]}] in [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}].");
                     }

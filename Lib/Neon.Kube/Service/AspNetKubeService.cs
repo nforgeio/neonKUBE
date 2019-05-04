@@ -33,12 +33,11 @@ namespace Neon.Kube
     public abstract class AspNetKubeService : KubeService
     {
         /// <summary>
-        /// 
+        /// Constructor.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="version"></param>
-        public AspNetKubeService(string name, string version)
-            : base(name, version)
+        /// <param name="description">The service description.</param>
+        public AspNetKubeService(KubeServiceDescription description)
+            : base(description)
         {
         }
     }

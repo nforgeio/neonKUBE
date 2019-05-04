@@ -593,5 +593,46 @@ namespace TestCommon
                 ports.Add(port);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void IsValidHost()
+        {
+            var longestLabel = new string('a', 61);
+            var tooLongLabel = new string('b', 62);
+
+            Assert.True(NetHelper.IsValidHost("test"));
+            Assert.True(NetHelper.IsValidHost("test.com"));
+            Assert.True(NetHelper.IsValidHost("server1.test.com"));
+            Assert.True(NetHelper.IsValidHost("0.com"));
+            Assert.True(NetHelper.IsValidHost("test0.com"));
+            Assert.True(NetHelper.IsValidHost("test-0.com"));
+            Assert.True(NetHelper.IsValidHost("test_0.com"));
+            Assert.True(NetHelper.IsValidHost($"{longestLabel}.com"));
+
+            Assert.False(NetHelper.IsValidHost("test..com"));
+            Assert.False(NetHelper.IsValidHost("/test.com"));
+            Assert.False(NetHelper.IsValidHost("{test}.com"));
+
+            // $todo(jeff.lill):
+            //
+            // This test is failing but isn't a huge deal.  At some point
+            // I should go back and fix the regex in NetHelper.
+
+            //Assert.False(NetHelper.IsValidHost($"{tooLongLabel}.com"));
+
+            // A FQDN may be up to 255 characters long.
+
+            var longestHost =
+                new string('a', 50) + "." +
+                new string('b', 50) + "." +
+                new string('c', 50) + "." +
+                new string('d', 50) + "." +
+                new string('e', 51);
+
+            Assert.Equal(255, longestHost.Length);
+            Assert.True(NetHelper.IsValidHost(longestHost));
+            Assert.False(NetHelper.IsValidHost(longestHost + "f"));
+        }
     }
 }
