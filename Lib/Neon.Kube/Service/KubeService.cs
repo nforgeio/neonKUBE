@@ -45,22 +45,18 @@ namespace Neon.Kube.Service
     /// </para>
     /// <para>
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
-    /// and optionally implement the <see cref="OnRunAsync"/> and <see cref="OnStoppedAsync"/> methods.
-    /// <see cref="OnRunAsync"/> will be called when your service is started.  This is where 
-    /// you'll implement your service.  Note that your <see cref="OnRunAsync"/> method should
-    /// not return until the <see cref="Terminator"/> signals a stop.
+    /// and optionally implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be
+    /// called when your service is started.  This is where you'll implement your service.  Note that your 
+    /// <see cref="OnRunAsync"/> method should not return until the <see cref="Terminator"/> signals a stop.
     /// </para>
     /// <note>
-    /// All services must properly handle <see cref="Terminator"/> stop signals and/or
-    /// <see cref="OnStoppedAsync"/> calls so unit tests will work.  Your <see cref="OnRunAsync"/>
-    /// method must return within a brief period of time (30 seconds by default) to avoid
-    /// having your tests being forced to stop.  This is probably the trickiest implementation
+    /// All services must properly handle <see cref="Terminator"/> stop signals so unit tests will work. 
+    /// Your <see cref="OnRunAsync"/> method must return within a brief period of time (30 seconds by default) 
+    /// to avoid having your tests being forced to stop.  This is probably the trickiest implementation
     /// task.  For truly asynchronous service implementations, you should consider passing
     /// the <see cref="ProcessTerminator.CancellationToken"/> to all async methods you
     /// call and then handle any <see cref="TaskCanceledException"/> exceptions thrown by
-    /// returning from <see cref="OnRunAsync"/>.  <see cref="OnStoppedAsync"/> will be called
-    /// after <see cref="OnRunAsync"/> returns, giving the service a chance to gracefully
-    /// terminate (like closing database connections and disposing resources).
+    /// returning from <see cref="OnRunAsync"/>.
     /// </note>
     /// <note>
     /// This class uses the <b>DEV_WORKSTATION</b> environment variable to determine whether
@@ -171,13 +167,8 @@ namespace Neon.Kube.Service
         {
             Covenant.Requires<ArgumentNullException>(description != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(description.Name));
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(description.Port));
 
-            description.PathPrefix = description.PathPrefix ?? string.Empty;
-
-            this.Description = description;
-            this.BaseUri     = new Uri($"http://{description.Name}:{description.Port}{description.PathPrefix}");
-
+            this.Description          = description;
             this.InProduction         = Environment.GetEnvironmentVariable("DEV_WORKSTATION") == null;
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
@@ -247,12 +238,40 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Returns the service name.
         /// </summary>
-        public string Name => Description.Name;
+        public string Name => Description?.Name;
 
         /// <summary>
-        /// Returns the base URI to be used to access the service from within a Kubernetes cluster.
+        /// <para>
+        /// For services with only a single network endpoint, this returns the base
+        /// URI to be used to access the service.
+        /// </para>
+        /// <note>
+        /// This will throw a <see cref="InvalidOperationException"/> if the service
+        /// defines no endpoints or more than one endpoint.
+        /// </note>
         /// </summary>
-        public Uri BaseUri { get; private set; }
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the service does not define a single endpoint or <see cref="Description"/> is not set.
+        /// </exception>
+        public string BaseUri
+        {
+            get
+            {
+                if (Description == null)
+                {
+                    throw new InvalidOperationException($"The {nameof(BaseUri)} property requires that [{nameof(Description)} be set.");
+                }
+
+                if (Description.Endpoints.Count == 1)
+                {
+                    return Description.Endpoints.First().Value.Uri;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"The {nameof(BaseUri)} property requires that the service be defined with exactly one endpoint.");
+                }
+            }
+        }
 
         /// <summary>
         /// The service logger.
@@ -413,7 +432,7 @@ namespace Neon.Kube.Service
         /// Returns the value of an environment variable.
         /// </summary>
         /// <param name="name">The environment variable name (case sensitive).</param>
-        /// <returns>The variable value or <c>null</c> if the veriable doesn't exist.</returns>
+        /// <returns>The variable value or <c>null</c> if the variable doesn't exist.</returns>
         public string GetEnvironmentVariable(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));

@@ -17,14 +17,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.OpenApi.Models;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -48,27 +55,69 @@ namespace Neon.Kube.Service
         /// <summary>
         /// The service name as deployed to Kubernetes.
         /// </summary>
+        [JsonProperty(PropertyName = "Name", Required = Required.Always)]
+        [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
 
         /// <summary>
-        /// For <see cref="AspNetKubeService"/> services, this specifies the path
-        /// prefix to prepended to URIs accessing this service.  This defaults to
-        /// the empty string.
+        /// The Kubernetes namespace where the service is deployed.  This defaults to <b>"default"</b>.
         /// </summary>
-        public string PathPrefix { get; set; } = string.Empty;
+        [JsonProperty(PropertyName = "Namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "namespace", ApplyNamingConventions = false)]
+        [DefaultValue("default")]
+        public string Namespace { get; set; } = "default";
 
         /// <summary>
-        /// For <see cref="AspNetKubeService"/> services, this specifies the network
-        /// port to be used for URIs accessing this service.  This defaults to <b>80</b>.
+        /// The cluster's configured domain (aka zone).  This defaults to <b>"cluster.local"</b>.
         /// </summary>
-        public int Port { get; set; } = 80;
+        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
+        [DefaultValue("cluster.local")]
+        public string Domain { get; set; } = "cluster.local";
 
         /// <summary>
-        /// For <see cref="AspNetKubeService"/> services, this is set to the 
-        /// metadata used for Swagger related purposes.  This defaults to a
-        /// new <see cref="OpenApiInfo"/> with all properties set to their
-        /// defaults.
+        /// When set, this overrides <see cref="Name"/>, <see cref="Namespace"/>, and
+        /// <see cref="Domain"/> when generating the <see cref="Hostname"/> result.
+        /// This is typically set when testing on a local machine.  This defaults
+        /// to <c>null</c>.
         /// </summary>
-        public OpenApiInfo ApiInfo { get; set; } = new OpenApiInfo();
+        [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "address", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public IPAddress Address { get; set; }
+
+        /// <summary>
+        /// Returns the hostname to be used to communcate with this service.  When deployed
+        /// to a Kubernetes cluster, this will be formed from <see cref="Name"/>, <see cref="Namespace"/>,
+        /// and <see cref="Domain"/>.  When testing and <see cref="Address"/> is not <c>null</c>,
+        /// then this will simply be the address converted to a string.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string Hostname
+        {
+            get
+            {
+                if (Address != null)
+                {
+                    return Address.ToString();
+                }
+                else
+                {
+                    Covenant.Assert(!string.IsNullOrEmpty(Name));
+                    Covenant.Assert(!string.IsNullOrEmpty(Namespace));
+                    Covenant.Assert(!string.IsNullOrEmpty(Domain));
+
+                    return $"{Name}.{Namespace}.{Domain}";
+                }
+            }
+        }
+
+        /// <summary>
+        /// The service's network endpoints.
+        /// </summary>
+        [JsonProperty(PropertyName = "Endpoints", Required = Required.Always)]
+        [YamlMember(Alias = "endpoints", ApplyNamingConventions = false)]
+        public Dictionary<string, KubeServiceEndpoint> Endpoints { get; set; } = new Dictionary<string, KubeServiceEndpoint>();
     }
 }
