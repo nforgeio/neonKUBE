@@ -319,9 +319,9 @@ namespace Couchbase.Lite
         private JObject                             jObject;                // The content JObject
         private bool                                wasDeleted;
         private Dictionary<string, bool>            deletedAttachments;     // Workaround for https://github.com/couchbase/couchbase-lite-net/issues/661
-        private HashSet<string>                     attachmentTracking;     // Set of case insenstive binder attachment names we'll be tracking
+        private HashSet<string>                     attachmentTracking;     // Set of case insensitive binder attachment names we'll be tracking
                                                                             // or NULL for non-binder documents.
-        private Dictionary<string, AttachmentInfo>  binderAttachments;      // Maps case insenstive attachment names to attachment information for
+        private Dictionary<string, AttachmentInfo>  binderAttachments;      // Maps case insensitive attachment names to attachment information for
                                                                             // binder documents or NULL for non-binder documents.
 
         // This counter is used to disable read-only tests by the [Changed] event handler

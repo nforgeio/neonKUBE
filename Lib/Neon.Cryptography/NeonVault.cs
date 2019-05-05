@@ -61,7 +61,7 @@ namespace Neon.Cryptography
     /// constructor.
     /// </para>
     /// <note>
-    /// Password names are case insenstive and will always be converted to lowercase
+    /// Password names are case insensitive and will always be converted to lowercase
     /// using the invariant culture.  Password names may include alphanumeric characters
     /// plus dashs, dots, or underscores.
     /// </note>

@@ -147,7 +147,7 @@ namespace Neon.Diagnostics
         /// <param name="level">The level string or <c>null</c>.</param>
         /// <remarks>
         /// <para>
-        /// This method recognizes the following case insenstive values: <b>CRITICAL</b>,
+        /// This method recognizes the following case insensitive values: <b>CRITICAL</b>,
         /// <b>SERROR</b>, <b>ERROR</b>, <b>WARN</b>, <b>WARNING</b>, <b>INFO</b>, <b>SINFO</b>,
         /// <b>INFORMATION</b>, <b>DEBUG</b>, or <b>NONE</b>.
         /// </para>

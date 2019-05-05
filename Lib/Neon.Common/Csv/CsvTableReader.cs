@@ -34,7 +34,7 @@ namespace Neon.Csv
     /// <para>
     /// Initialize an instance by passing a <see cref="CsvReader" />, stream, string, or file path to the 
     /// constructor.  The constructor will read the first row of the file and initialize the <see cref="ColumnMap" />
-    /// dictionary which maps the case insenstive column name to the zero based index of the
+    /// dictionary which maps the case insensitive column name to the zero based index of the
     /// column in the table.
     /// </para>
     /// <para>
