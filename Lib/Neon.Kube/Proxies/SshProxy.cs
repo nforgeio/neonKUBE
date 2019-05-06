@@ -996,6 +996,16 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             sshClient.Connect();
                         }
 
+                        // We need to make sure requiretty is turned off and that sudo can execute commands without a password.
+                        // The sleeps are required when using the ShellStream, otherwise the commands won't work.
+                        using (var sh = sshClient.CreateShellStream("terminal", 80, 40, 80, 40, 1024))
+                        {
+                            sh.WriteLine("grep -qxF 'Defaults !requiretty' /etc/sudoers.d/notty || echo 'Defaults !requiretty' >> /etc/sudoers.d/notty");
+                            Thread.Sleep(500);
+                            sh.WriteLine("grep -qxF '%sudo    ALL=NOPASSWD: ALL' /etc/sudoers.d/nopasswd || echo '%sudo    ALL=NOPASSWD: ALL' >> /etc/sudoers.d/nopasswd");
+                            Thread.Sleep(500);
+                        }
+
                         if (createHomeFolders)
                         {
                             sshClient.RunCommand($"mkdir -f {KubeHostFolders.Download(Username)}");
@@ -1079,6 +1089,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             //    PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
             //    VERSION_CODENAME=bionic
             //    UBUNTU_CODENAME=bionic
+
 
             var osRelease = DownloadText("/etc/os-release");
 
