@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeServiceEndpoint.cs
+// FILE:	    ServiceEndpoint.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,14 +17,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Microsoft.OpenApi.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -35,23 +34,22 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
-using System.ComponentModel;
 
-namespace Neon.Kube.Service
+namespace Neon.Service
 {
     /// <summary>
-    /// Describes a network endpoint for a <see cref="KubeService"/> or <see cref="AspNetKubeService"/>.
+    /// Describes a network endpoint for remote service.
     /// </summary>
-    public class KubeServiceEndpoint
+    public class ServiceEndpoint
     {
-        private KubeServiceDescription  serviceDescription;
+        private ServiceDescription  serviceDescription;
         private string                  pathPrefix = string.Empty;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="serviceDescription">The parent service description.</param>
-        public KubeServiceEndpoint(KubeServiceDescription serviceDescription)
+        public ServiceEndpoint(ServiceDescription serviceDescription)
         {
             Covenant.Requires<ArgumentNullException>(serviceDescription != null);
 
@@ -67,16 +65,16 @@ namespace Neon.Kube.Service
 
         /// <summary>
         /// Specifies the network protocol implemented by this endpoint.
-        /// This defaults to <see cref="KubeServiceEndpointProtocol.Http"/>.
+        /// This defaults to <see cref="ServiceEndpointProtocol.Http"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Protocol", Required = Required.Always)]
         [YamlMember(Alias = "protocol", ApplyNamingConventions = false)]
-        public KubeServiceEndpointProtocol Protocol { get; set; } = KubeServiceEndpointProtocol.Http;
+        public ServiceEndpointProtocol Protocol { get; set; } = ServiceEndpointProtocol.Http;
 
         /// <summary>
-        /// For <see cref="AspNetKubeService"/> services, this specifies the path
-        /// prefix to prepended to URIs accessing this service.  This defaults to
-        /// an empty string.  This has meaning only for the HTTP and HTTPS protocols.
+        /// This specifies the path prefix to prepended to URIs accessing this service. 
+        /// This defaults to an empty string.  This has meaning only for the HTTP and 
+        /// HTTPS protocols.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -108,54 +106,92 @@ namespace Neon.Kube.Service
         }
 
         /// <summary>
-        /// For <see cref="AspNetKubeService"/> services, this specifies the network
-        /// port to be used for URIs accessing this service.  This defaults to <b>80</b>.
+        /// This specifies the network port to be used for URIs accessing this service.  This defaults to <b>0</b>
+        /// (which is not a valid port).
         /// </summary>
         [JsonProperty(PropertyName = "Port", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "port", ApplyNamingConventions = false)]
-        [DefaultValue(80)]
-        public int Port { get; set; } = 80;
+        [DefaultValue(0)]
+        public int Port { get; set; } = 0;
 
         /// <summary>
         /// <para>
-        /// For <see cref="AspNetKubeService"/> services, this is set to the 
-        /// metadata used for Swagger related purposes.  This defaults to 
-        /// <c>null</c>.
+        /// ASP.NET services, this can be set to the metadata used for Swagger documentation
+        /// generation related purposes.  This defaults to <c>null</c>.
         /// </para>
         /// <note>
         /// This property is not read from JSON or YAML. 
         /// </note>
         /// </summary>
-        public OpenApiInfo ApiInfo { get; set; } = null;
+        [JsonIgnore]
+        [YamlIgnore]
+        public ServiceApiInfo ApiInfo { get; set; } = null;
 
         /// <summary>
+        /// <para>
         /// Returns the URI for the endpoint.  For HTTP and HTTPS endpoints, this will
-        /// include the service hostname returned by the parent <see cref="KubeServiceDescription"/>,
+        /// include the service hostname returned by the parent <see cref="ServiceDescription"/>,
         /// along with the port and path prefix.  For TCP and UDP protocols, this will
-        /// use the <b>TCP://</b> or <b>udp://</b> scheme along with the hostname and
-        /// port.  The path prefix is ignored for these.
+        /// use the <b>tcp://</b> or <b>udp://</b> scheme along with the hostname and
+        /// just the port.  The path prefix is ignored for TCP and UDP.
+        /// </para>
+        /// <para>
+        /// When <see cref="Port"/> is zero for HTTP or HTTPS endpoints, the URL returned 
+        /// will use the default port for thbe protocol (80/443).  For TCP and UDP protocols,
+        /// the port must be a valid non-zero network port.
+        /// </para>
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown when <see cref="Port"/> is not valid for the endpoint protocol.</exception>
         [JsonIgnore]
         [YamlIgnore]
         public string Uri
         {
             get
             {
+                if (Port != 0 && !NetHelper.IsValidPort(Port))
+                {
+                    throw new ArgumentException($"Invalid network port [{Port}].");
+                }
+
                 switch (Protocol)
                 {
-                    case KubeServiceEndpointProtocol.Http:
+                    case ServiceEndpointProtocol.Http:
 
-                        return $"http://{serviceDescription.Hostname}:{Port}/{PathPrefix}";
+                        if (Port == 0)
+                        {
+                            return $"http://{serviceDescription.Hostname}/{PathPrefix}";
+                        }
+                        else
+                        {
+                            return $"http://{serviceDescription.Hostname}:{Port}/{PathPrefix}";
+                        }
 
-                    case KubeServiceEndpointProtocol.Https:
+                    case ServiceEndpointProtocol.Https:
 
-                        return $"https://{serviceDescription.Hostname}:{Port}/{PathPrefix}";
+                        if (Port == 0)
+                        {
+                            return $"https://{serviceDescription.Hostname}/{PathPrefix}";
+                        }
+                        else
+                        {
+                            return $"https://{serviceDescription.Hostname}:{Port}/{PathPrefix}";
+                        }
 
-                    case KubeServiceEndpointProtocol.Tcp:
+                    case ServiceEndpointProtocol.Tcp:
+
+                        if (Port == 0)
+                        {
+                            throw new ArgumentException("TCP endpoints require a non-zero port.");
+                        }
 
                         return $"tcp://{serviceDescription.Hostname}:{Port}";
 
-                    case KubeServiceEndpointProtocol.Udp:
+                    case ServiceEndpointProtocol.Udp:
+
+                        if (Port == 0)
+                        {
+                            throw new ArgumentException("UDP endpoints require a non-zero port.");
+                        }
 
                         return $"udp://{serviceDescription.Hostname}:{Port}";
 

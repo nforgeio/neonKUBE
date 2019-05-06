@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeServiceEndpointProtocol.cs
+// FILE:	    ServiceApiLicense.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -24,38 +25,32 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 
-namespace Neon.Kube.Service
+namespace Neon.Service
 {
     /// <summary>
-    /// Enumerats the network protocols that can be implemented by a <see cref="KubeServiceEndpoint"/>.
+    /// Holds the license information for a service API.  This maps closely
+    /// to the <b>Microsoft.OpenApi.Models.OpenApiLicense</b> class.
     /// </summary>
-    public enum KubeServiceEndpointProtocol
+    public class ServiceApiLicense
     {
         /// <summary>
-        /// HTTP.
+        /// License name.
         /// </summary>
-        Http = 0,
+        public string Name { get; set; }
 
         /// <summary>
-        /// HTTPS.
+        /// The URL pointing to the licence information.
         /// </summary>
-        Https,
-
-        /// <summary>
-        /// TCP.
-        /// </summary>
-        Tcp,
-
-        /// <summary>
-        /// UDP.
-        /// </summary>
-        Udp
+        public Uri Url { get; set; }
     }
 }

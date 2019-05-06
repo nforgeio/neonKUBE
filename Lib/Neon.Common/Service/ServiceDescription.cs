@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeServiceDescription.cs
+// FILE:	    ServiceDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,8 +26,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.OpenApi.Models;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -38,17 +36,17 @@ using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 
-namespace Neon.Kube.Service
+namespace Neon.Service
 {
     /// <summary>
-    /// Describes a <see cref="KubeService"/> or <see cref="AspNetKubeService"/>.
+    /// Describes a remote service.
     /// </summary>
-    public class KubeServiceDescription
+    public class ServiceDescription
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public KubeServiceDescription()
+        public ServiceDescription()
         {
         }
 
@@ -118,6 +116,6 @@ namespace Neon.Kube.Service
         /// </summary>
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Always)]
         [YamlMember(Alias = "endpoints", ApplyNamingConventions = false)]
-        public Dictionary<string, KubeServiceEndpoint> Endpoints { get; set; } = new Dictionary<string, KubeServiceEndpoint>();
+        public Dictionary<string, ServiceEndpoint> Endpoints { get; set; } = new Dictionary<string, ServiceEndpoint>();
     }
 }

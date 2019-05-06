@@ -28,12 +28,12 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.Service;
 
 namespace Neon.Kube.Service
 {
     /// <summary>
-    /// Base class for Kubernetes services that don't expose an ASP.NET endpoint.
-    /// Use the derived <see cref="AspNetKubeService"/> for ASP.NET services.
+    /// Base class for Kubernetes services that wish to use the neonKUBE unit testing conventions.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -45,13 +45,13 @@ namespace Neon.Kube.Service
     /// </para>
     /// <para>
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
-    /// and optionally implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be
-    /// called when your service is started.  This is where you'll implement your service.  Note that your 
-    /// <see cref="OnRunAsync"/> method should not return until the <see cref="Terminator"/> signals a stop.
+    /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
+    /// your service is started.  This is where you'll implement your service.  Note that your 
+    /// <see cref="OnRunAsync"/> method should not return until the <see cref="Terminator"/> signals it to stop.
     /// </para>
     /// <note>
-    /// All services must properly handle <see cref="Terminator"/> stop signals so unit tests will work. 
-    /// Your <see cref="OnRunAsync"/> method must return within a brief period of time (30 seconds by default) 
+    /// All services should properly handle <see cref="Terminator"/> stop signals so unit tests will terminate
+    /// promptly.  Your terminatebhandler method must return within a set period of time (30 seconds by default) 
     /// to avoid having your tests being forced to stop.  This is probably the trickiest implementation
     /// task.  For truly asynchronous service implementations, you should consider passing
     /// the <see cref="ProcessTerminator.CancellationToken"/> to all async methods you
@@ -62,8 +62,10 @@ namespace Neon.Kube.Service
     /// This class uses the <b>DEV_WORKSTATION</b> environment variable to determine whether
     /// the service is running in test mode or not.  This variable will typically be defined
     /// on developer workstations as well as CI/CD machines.  This variable must never be
-    /// defined for production environments.
+    /// defined for production environments.  You can use the <see cref="InProduction"/>
+    /// or <see cref="InDevelopment"/> properties to determine check this.
     /// </note>
+    /// <para><b>CONFIGURATION</b></para>
     /// <para>
     /// Services are generally configured using environment variables and/or configuration
     /// files.  In production, environment variables will actually come from the environment
@@ -84,7 +86,7 @@ namespace Neon.Kube.Service
     /// environments. 
     /// </para>
     /// <para>
-    /// Services should use the <see cref="GetEnvironmentVariable(string)"/> method to 
+    /// Services should use the <see cref="GetEnvironmentVariable(string, string)"/> method to 
     /// retrieve important environment variables rather than using <see cref="Environment.GetEnvironmentVariable(string)"/>.
     /// In production, this simply returns the variable directly from the current process.
     /// For test, the environment variable will be returned from a local dictionary
@@ -110,6 +112,39 @@ namespace Neon.Kube.Service
     /// consistent way to run services in production as well as in tests, including tests
     /// running multiple services simultaneously.
     /// </para>
+    /// <para><b>LOGGING</b></para>
+    /// <para>
+    /// Each <see cref="KubeService"/> instance maintains its own <see cref="LogManager"/>
+    /// instance with the a default logger created at <see cref="Log"/>.  The log manager
+    /// is initialized using the <b>LOG_LEVEL</b> environment variable value which defaults
+    /// to <b>info</b> when not present.  <see cref="LogLevel"/> for the possible values.
+    /// </para>
+    /// <para>
+    /// Note that the <see cref="Neon.Diagnostics.LogManager.Default"/> log manager will
+    /// also be initialized with the log level when the service is running in a production
+    /// environment so that logging in production works completely as expected.
+    /// </para>
+    /// <para>
+    /// For development environments, the <see cref="Neon.Diagnostics.LogManager.Default"/>
+    /// instance's log level will not be modified.  This means that loggers created from
+    /// <see cref="Neon.Diagnostics.LogManager.Default"/> may not use the same log
+    /// level as the service itself.  This means that library classes that create their
+    /// own loggers won't honor the service log level.  This is an unfortunate consequence
+    /// of running emulated services in the same process.
+    /// </para>
+    /// <para>
+    /// There are two ways to mitigate this.  First, any source code defined within the 
+    /// service project should be designed to create loggers from the service's <see cref="LogManager"/>
+    /// rather than using the global one.  Second, you can configure your unit test to
+    /// set the desired log level like:
+    /// </para>
+    /// <code language="C#">
+    /// LogManager.Default.SetLogLevel(LogLevel.Debug));
+    /// </code>
+    /// <note>
+    /// Setting the global default log level like this will impact loggers created for all
+    /// emulated services, but this shouldn't be a problem for more situations.
+    /// </note>
     /// </remarks>
     public abstract class KubeService : IDisposable
     {
@@ -163,7 +198,23 @@ namespace Neon.Kube.Service
         /// Constructor.
         /// </summary>
         /// <param name="description">The service description.</param>
-        public KubeService(KubeServiceDescription description)
+        /// <param name="branch">Optionally specifies the build branch.</param>
+        /// <param name="commit">Optionally specifies the branch commit.</param>
+        /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
+        /// <remarks>
+        /// <para>
+        /// For those of you using Git for source control, you'll want to pass the
+        /// information about the branch and latest commit you're you service was
+        /// built from here.  We use the <a href="https://www.nuget.org/packages/GitInfo/">GitInfo</a>
+        /// nuget package to obtain this information from the local Git repository.
+        /// </para>
+        /// <para>
+        /// Alternatively, you could try to map properties from your source
+        /// control environment to these parameters, pass a more fixed version
+        /// string as <paramref name="branch"/>, or simply ignore these parameters.
+        /// </para>
+        /// </remarks>
+        public KubeService(ServiceDescription description, string branch = null, string commit = null, bool isDirty = false)
         {
             Covenant.Requires<ArgumentNullException>(description != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(description.Name));
@@ -173,6 +224,25 @@ namespace Neon.Kube.Service
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
+
+            // Git version info:
+
+            this.GitVersion = null;
+
+            if (!string.IsNullOrEmpty(branch))
+            {
+                this.GitVersion = branch;
+
+                if (!string.IsNullOrEmpty(commit))
+                {
+                    this.GitVersion += $"-{commit}";
+                }
+
+                if (isDirty)
+                {
+                    this.GitVersion += $"-dirty";
+                }
+            }
         }
 
         /// <summary>
@@ -203,7 +273,12 @@ namespace Neon.Kube.Service
                 }
 
                 isDisposed = true;
+            }
 
+            Stop();
+
+            lock(syncLock)
+            {
                 foreach (var item in configFiles.Values)
                 {
                     item.Dispose();
@@ -233,25 +308,37 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Returns the service description.
         /// </summary>
-        public KubeServiceDescription Description { get; private set; }
+        public ServiceDescription Description { get; private set; }
 
         /// <summary>
         /// Returns the service name.
         /// </summary>
-        public string Name => Description?.Name;
+        public string Name => Description.Name;
+
+        /// <summary>
+        /// Returns GIT branch and commit the service was built from as
+        /// well as an optional indication the the build branch had 
+        /// uncomitted changes (e.g. was dirty).
+        /// </summary>
+        public string GitVersion { get; private set; }
+
+        /// <summary>
+        /// Returns the dictionary mapping case sensitive service endpoint names to endpoint information.
+        /// </summary>
+        public Dictionary<string, ServiceEndpoint> Endpoints => Description.Endpoints;
 
         /// <summary>
         /// <para>
-        /// For services with only a single network endpoint, this returns the base
+        /// For services with exactly one network endpoint, this returns the base
         /// URI to be used to access the service.
         /// </para>
         /// <note>
         /// This will throw a <see cref="InvalidOperationException"/> if the service
-        /// defines no endpoints or more than one endpoint.
+        /// defines no endpoints or multiple endpoints.
         /// </note>
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the service does not define a single endpoint or <see cref="Description"/> is not set.
+        /// Thrown when the service does not define exactly one endpoint or <see cref="Description"/> is not set.
         /// </exception>
         public string BaseUri
         {
@@ -259,7 +346,7 @@ namespace Neon.Kube.Service
             {
                 if (Description == null)
                 {
-                    throw new InvalidOperationException($"The {nameof(BaseUri)} property requires that [{nameof(Description)} be set.");
+                    throw new InvalidOperationException($"The {nameof(BaseUri)} property requires that [{nameof(Description)} be set and have exactly one endpoint.");
                 }
 
                 if (Description.Endpoints.Count == 1)
@@ -274,9 +361,14 @@ namespace Neon.Kube.Service
         }
 
         /// <summary>
-        /// The service logger.
+        /// Returns the service's log manager.
         /// </summary>
-        public INeonLogger Log { get; set; }
+        public ILogManager LogManager { get; private set; }
+
+        /// <summary>
+        /// Returns the service's default logger.
+        /// </summary>
+        public INeonLogger Log { get; private set; }
 
         /// <summary>
         /// Returns the service's <see cref="ProcessTerminator"/>.  This can be used
@@ -285,10 +377,10 @@ namespace Neon.Kube.Service
         public ProcessTerminator Terminator { get; private set; }
 
         /// <summary>
-        /// <para>
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
-        /// where the service will be actually be implemented.
-        /// </para>
+        /// which actually implements the service.
+        /// </summary>
+        /// <remarks>
         /// <note>
         /// For production, this method will not return until the service is expicitly 
         /// stopped via a call to <see cref="Stop"/> or the <see cref="Terminator"/> 
@@ -312,14 +404,14 @@ namespace Neon.Kube.Service
         /// This You'll need to perform this check frequently so you may need
         /// to use timeouts to prevent blocking code from blocking for too long.
         /// </para>
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// </remarks>
+        /// <returns>The service exit code.</returns>
         /// <remarks>
         /// <note>
         /// It is not possible to restart a service after it's been stopped.
         /// </note>
         /// </remarks>
-        public async virtual Task RunAsync()
+        public async virtual Task<int> RunAsync()
         {
             lock (syncLock)
             {
@@ -336,6 +428,14 @@ namespace Neon.Kube.Service
                 isRunning = true;
             }
 
+            // Initialize the logger.
+
+            LogManager = new LogManager(parseLogLevel: false);
+            LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
+
+            Log = LogManager.GetLogger();
+            Log.LogInfo(() => $"Starting [{Name}:{GitVersion}]");
+
             // This call actually implements the service.
 
             try
@@ -344,10 +444,24 @@ namespace Neon.Kube.Service
 
                 ExitCode = 0;
             }
+            catch (TaskCanceledException)
+            {
+                // Ignore these as a normal consequence of a service
+                // being signalled to terminate.
+
+                ExitCode = 0;
+            }
             catch (ProgramExitException e)
             {
                 ExitCode = e.ExitCode;
             }
+
+            // Give the service its last rights.
+
+            Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
+            Terminator.ReadyToExit();
+
+            return ExitCode;
         }
 
         /// <summary>
@@ -380,6 +494,8 @@ namespace Neon.Kube.Service
                 {
                     return;
                 }
+
+                stopPending = true;
             }
 
             Terminator.Signal();
@@ -393,8 +509,12 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Called to actually implement the service.
         /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        protected abstract Task OnRunAsync();
+        /// <returns>The the progam exit code.</returns>
+        /// <remarks>
+        /// This method should return the program exit code or throw a <see cref="ProgramExitException"/>
+        /// to exit with the program exit code.
+        /// </remarks>
+        protected abstract Task<int> OnRunAsync();
 
         /// <summary>
         /// Sets or deletes a service environment variable.
@@ -432,8 +552,9 @@ namespace Neon.Kube.Service
         /// Returns the value of an environment variable.
         /// </summary>
         /// <param name="name">The environment variable name (case sensitive).</param>
-        /// <returns>The variable value or <c>null</c> if the variable doesn't exist.</returns>
-        public string GetEnvironmentVariable(string name)
+        /// <param name="def">The value to be returned when the environment variable doesn't exist (defaults to <c>null</c>).</param>
+        /// <returns>The variable value or <paramref name="def"/> if the variable doesn't exist.</returns>
+        public string GetEnvironmentVariable(string name, string def = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
@@ -450,7 +571,7 @@ namespace Neon.Kube.Service
                 }
                 else
                 {
-                    return null;
+                    return def;
                 }
             }
         }
@@ -548,8 +669,7 @@ namespace Neon.Kube.Service
         }
 
         /// <summary>
-        /// Returns the physical path for the confguration file whose logical path
-        /// is specified.
+        /// Returns the physical path for the confguration file whose logical path is specified.
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <returns>The physical path for the configuration file.</returns>

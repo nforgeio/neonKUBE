@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -61,7 +61,6 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Service\Neon.Kube.Service.csproj" />
   </ItemGroup>
 
   <ItemGroup>

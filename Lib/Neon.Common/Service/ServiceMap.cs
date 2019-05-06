@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AspNetKubeService.cs
+// FILE:	    ServiceMap.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,28 +17,27 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Kube.Service;
+using Neon.Diagnostics;
+using Neon.IO;
 using Neon.Net;
 
-namespace Neon.Kube
+namespace Neon.Service
 {
     /// <summary>
-    /// Base class for Kubernetes services that expose an ASP.NET endpoint.
+    /// Describes a collection of services deployed to Kubernetes or that run in
+    /// a simulated unit test environment.  This is simply a dictionary mapping
+    /// case sensitive service names to <see cref="ServiceDescription"/>
+    /// records for each service.
     /// </summary>
-    public abstract class AspNetKubeService : KubeService
+    public class ServiceMap : Dictionary<string, ServiceDescription>
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="description">The service description.</param>
-        public AspNetKubeService(KubeServiceDescription description)
-            : base(description)
-        {
-        }
     }
 }
