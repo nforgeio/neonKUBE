@@ -377,6 +377,28 @@ namespace Neon.Kube.Service
         public ProcessTerminator Terminator { get; private set; }
 
         /// <summary>
+        /// Returns the list of command line arguments passed to the service.  This
+        /// defaults to an empty list.
+        /// </summary>
+        public List<string> Arguments { get; private set; } = new List<string>();
+
+        /// <summary>
+        /// Initializes <see cref="Arguments"/> with the command line arguments passed.
+        /// </summary>
+        /// <param name="args">The arguments.</param>
+        public void SetArguments(IEnumerable<string> args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null);
+
+            Arguments.Clear();
+
+            foreach (var arg in args)
+            {
+                Arguments.Add(arg);
+            }
+        }
+
+        /// <summary>
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
         /// which actually implements the service.
         /// </summary>
