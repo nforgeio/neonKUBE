@@ -1468,18 +1468,14 @@ done
 helm template install/kubernetes/helm/istio \
     --name istio \
     --namespace istio-system \
-    --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml \
     --set istio_cni.enabled=true \
     --set global.proxy.accessLogFile=/dev/stdout \
     --set kiali.enabled=true \
     --set tracing.enabled=true \
     --set grafana.enabled=true \
-    --set gateways.istio-ingressgateway.sds.enabled=true \
-    --set global.k8sIngress.enabled=true \
-    --set global.k8sIngress.enableHttps=true \
-    --set global.k8sIngress.gatewayName=ingressgateway \
     --set certmanager.enabled=true \
     --set certmanager.email=mailbox@donotuseexample.com \
+    --set gateways.istio-ingressgateway.sds.enabled=true \
     --set gateways.istio-ingressgateway.type=NodePort \
     --set gateways.istio-ingressgateway.ports[0].targetPort=80 \
     --set gateways.istio-ingressgateway.ports[0].port=80 \
@@ -1490,6 +1486,7 @@ helm template install/kubernetes/helm/istio \
     --set gateways.istio-ingressgateway.ports[1].port=443 \
     --set gateways.istio-ingressgateway.ports[1].name=https \
     --set gateways.istio-ingressgateway.ports[1].nodePort=30443 \
+    \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
