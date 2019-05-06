@@ -180,9 +180,8 @@ namespace Neon.Xunit
 
         /// <summary>
         /// <para>
-        /// Loads settings formatted as <c>NAME=VALUE</c> from a text file into environment
-        /// variables.  The file will be decrypted using <see cref="NeonVault"/> if
-        /// necessary.
+        /// Loads environment variables formatted as <c>NAME=VALUE</c> from a text file into environment
+        /// variables.  The file will be decrypted using <see cref="NeonVault"/> if necessary.
         /// </para>
         /// <note>
         /// Blank lines and lines beginning with '#' will be ignored.

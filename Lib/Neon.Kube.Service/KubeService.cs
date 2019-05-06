@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
@@ -95,6 +96,11 @@ namespace Neon.Kube.Service
     /// time with each being presented their own environment variables.
     /// </para>
     /// <para>
+    /// You may also use the <see cref="LoadEnvironmentVariables(string, Func{string, string})"/>
+    /// method to load environment variables from a text file (potentially encrypted via
+    /// <see cref="NeonVault"/>.  This will typically be done only for unit tests.
+    /// </para>
+    /// <para>
     /// Configuration files work similarily.  You'll use <see cref="GetConfigFilePath(string)"/>
     /// to map a logical file path to a physical path.  The logical file path is typically
     /// specified as the path where the configuration file will be located in production.
@@ -111,6 +117,10 @@ namespace Neon.Kube.Service
     /// or <see cref="SetConfigFile(string, byte[])"/>.  This indirection provides a 
     /// consistent way to run services in production as well as in tests, including tests
     /// running multiple services simultaneously.
+    /// </para>
+    /// <para>
+    /// You can also use <see cref="LoadConfigFile(string, string, Func{string, string})"/>
+    /// during unit testing to load a potentially encrypted configuration file.
     /// </para>
     /// <para><b>LOGGING</b></para>
     /// <para>
@@ -539,6 +549,72 @@ namespace Neon.Kube.Service
         protected abstract Task<int> OnRunAsync();
 
         /// <summary>
+        /// <para>
+        /// Loads environment variables formatted as <c>NAME=VALUE</c> from a text file as service
+        /// environment variables.  The file will be decrypted using <see cref="NeonVault"/> if necessary.
+        /// </para>
+        /// <note>
+        /// Blank lines and lines beginning with '#' will be ignored.
+        /// </note>
+        /// </summary>
+        /// <param name="path">The input file path.</param>
+        /// <param name="passwordProvider">
+        /// Optionally specifies the password provider functio to be used to locate the
+        /// password required to decrypt the source file when necessary.  The password will 
+        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// <paramref name="passwordProvider"/> is <c>null</c>.
+        /// </param>
+        /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
+        /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
+        public void LoadEnvironmentVariables(string path, Func<string, string> passwordProvider = null)
+        {
+            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException($"File not found: {path}");
+            }
+
+            var vault = new NeonVault(passwordProvider);
+            var bytes = vault.Decrypt(path);
+
+            using (var ms = new MemoryStream(bytes))
+            {
+                using (var reader = new StreamReader(ms))
+                {
+                    var lineNumber = 1;
+
+                    foreach (var rawLine in reader.Lines())
+                    {
+                        var line = rawLine.Trim();
+
+                        if (line.Length == 0 || line.StartsWith("#"))
+                        {
+                            continue;
+                        }
+
+                        var fields = line.Split(new char[] { '=' }, 2);
+
+                        if (fields.Length != 2)
+                        {
+                            throw new FormatException($"[{path}:{lineNumber}]: Invalid input: {line}");
+                        }
+
+                        var name  = fields[0].Trim();
+                        var value = fields[1].Trim();
+
+                        if (name.Length == 0)
+                        {
+                            throw new FormatException($"[{path}:{lineNumber}]: Setting name cannot be blank.");
+                        }
+
+                        Environment.SetEnvironmentVariable(name, value);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Sets or deletes a service environment variable.
         /// </summary>
         /// <param name="name">The variable name (case sensitive).</param>
@@ -606,8 +682,14 @@ namespace Neon.Kube.Service
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <param name="physicalPath">The physical path to the file on the local workstation.</param>
+        /// <param name="passwordProvider">
+        /// Optionally specifies the password provider functio to be used to locate the
+        /// password required to decrypt the source file when necessary.  The password will 
+        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// <paramref name="passwordProvider"/> is <c>null</c>.
+        /// </param>
         /// <exception cref="FileNotFoundException">Thrown if there's no file at <paramref name="physicalPath"/>.</exception>
-        public void SetConfigFilePath(string logicalPath, string physicalPath)
+        public void SetConfigFilePath(string logicalPath, string physicalPath, Func<string, string> passwordProvider = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(physicalPath));
@@ -617,15 +699,12 @@ namespace Neon.Kube.Service
                 throw new FileNotFoundException($"Physical configuration file [{physicalPath}] does not exist.");
             }
 
-            lock (syncLock)
-            {
-                if (configFiles.TryGetValue(logicalPath, out var fileInfo))
-                {
-                    fileInfo.Dispose();
-                }
+            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
 
-                configFiles[logicalPath] = new FileInfo() { PhysicalPath = physicalPath };
-            }
+            var vault = new NeonVault(passwordProvider);
+            var bytes = vault.Decrypt(physicalPath);
+
+            SetConfigFile(logicalPath, bytes);
         }
 
         /// <summary>
