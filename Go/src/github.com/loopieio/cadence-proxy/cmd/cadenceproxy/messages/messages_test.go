@@ -34,6 +34,9 @@ const (
 	_listenAddress = "127.0.0.1:5000"
 )
 
+// --------------------------------------------------------------------------
+// Test suite methods.  Set up the test suite and entrypoint for test suite
+
 func TestUnitTestSuite(t *testing.T) {
 
 	// setup the suite
@@ -96,6 +99,60 @@ func (s *UnitTestSuite) setupTestSuiteMessagesMap() {
 	base.InitProxyMessage()
 	cluster.FillMessageTypeStructMap()
 }
+
+// --------------------------------------------------------------------------
+// Test the ProxyMessage helper methods
+
+func (s *UnitTestSuite) TestPropertyHelpers() {
+
+	// verify that the property helper methods work as expected
+	message := base.NewProxyMessage()
+
+	// verify that non-existant property values return the default for the requested type
+	s.Nil(message.GetStringProperty("foo"))
+	s.Equal(int32(0), message.GetIntProperty("foo"))
+	s.Equal(int64(0), message.GetLongProperty("foo"))
+	s.False(message.GetBoolProperty("foo"))
+	s.Equal(0.0, message.GetDoubleProperty("foo"))
+	s.Equal(times.ParseIso8601UTC(times.ToIso8601UTC(time.Time{})), message.GetDateTimeProperty("foo"))
+	s.Equal(time.Duration(0)*time.Nanosecond, message.GetTimeSpanProperty("foo"))
+
+	// Verify that we can override default values for non-existant properties.
+
+	s.Equal(int32(123), message.GetIntProperty("foo", int32(123)))
+	s.Equal(int64(456), message.GetLongProperty("foo", int64(456)))
+	s.True(message.GetBoolProperty("foo", true))
+	s.Equal(float64(123.456), message.GetDoubleProperty("foo", float64(123.456)))
+	s.Equal(time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC), message.GetDateTimeProperty("foo", time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC)))
+	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo", time.Second*123))
+
+	// verify that we can write and then read properties
+	str := "bar"
+	message.SetStringProperty("foo", &str)
+	s.Equal("bar", *message.GetStringProperty("foo"))
+
+	message.SetIntProperty("foo", int32(123))
+	s.Equal(int32(123), message.GetIntProperty("foo"))
+
+	message.SetLongProperty("foo", int64(456))
+	s.Equal(int64(456), message.GetLongProperty("foo"))
+
+	message.SetBoolProperty("foo", true)
+	s.True(message.GetBoolProperty("foo"))
+
+	message.SetDoubleProperty("foo", 123.456)
+	s.Equal(123.456, message.GetDoubleProperty("foo"))
+
+	date := time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC)
+	message.SetDateTimeProperty("foo", date)
+	s.Equal(date, message.GetDateTimeProperty("foo"))
+
+	message.SetTimeSpanProperty("foo", time.Second*123)
+	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo"))
+}
+
+// --------------------------------------------------------------------------
+// Test the base messages (ProxyMessage, ProxyRequest, ProxyReply)
 
 // TestProxyMessage ensures that we can
 // serializate and deserialize a base ProxyMessage
@@ -162,55 +219,6 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		s.Nil(v.Attachments[2])
 	}
 }
-
-func (s *UnitTestSuite) TestPropertyHelpers() {
-
-	// verify that the property helper methods work as expected
-	message := base.NewProxyMessage()
-
-	// verify that non-existant property values return the default for the requested type
-	s.Nil(message.GetStringProperty("foo"))
-	s.Equal(int32(0), message.GetIntProperty("foo"))
-	s.Equal(int64(0), message.GetLongProperty("foo"))
-	s.False(message.GetBoolProperty("foo"))
-	s.Equal(0.0, message.GetDoubleProperty("foo"))
-	s.Equal(times.ParseIso8601UTC(times.ToIso8601UTC(time.Time{})), message.GetDateTimeProperty("foo"))
-	s.Equal(time.Duration(0)*time.Nanosecond, message.GetTimeSpanProperty("foo"))
-
-	// Verify that we can override default values for non-existant properties.
-
-	s.Equal(int32(123), message.GetIntProperty("foo", int32(123)))
-	s.Equal(int64(456), message.GetLongProperty("foo", int64(456)))
-	s.True(message.GetBoolProperty("foo", true))
-	s.Equal(float64(123.456), message.GetDoubleProperty("foo", float64(123.456)))
-	s.Equal(time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC), message.GetDateTimeProperty("foo", time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC)))
-	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo", time.Second*123))
-
-	// verify that we can write and then read properties
-	str := "bar"
-	message.SetStringProperty("foo", &str)
-	s.Equal("bar", *message.GetStringProperty("foo"))
-
-	message.SetIntProperty("foo", int32(123))
-	s.Equal(int32(123), message.GetIntProperty("foo"))
-
-	message.SetLongProperty("foo", int64(456))
-	s.Equal(int64(456), message.GetLongProperty("foo"))
-
-	message.SetBoolProperty("foo", true)
-	s.True(message.GetBoolProperty("foo"))
-
-	message.SetDoubleProperty("foo", 123.456)
-	s.Equal(123.456, message.GetDoubleProperty("foo"))
-
-	date := time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC)
-	message.SetDateTimeProperty("foo", date)
-	s.Equal(date, message.GetDateTimeProperty("foo"))
-
-	message.SetTimeSpanProperty("foo", time.Second*123)
-	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo"))
-}
-
 func (s *UnitTestSuite) TestProxyRequest() {
 
 	// Ensure that we can serialize and deserialize request messages
@@ -294,6 +302,9 @@ func (s *UnitTestSuite) TestProxyReply() {
 	}
 }
 
+// --------------------------------------------------------------------------
+// Test all implemented message types
+
 func (s *UnitTestSuite) echoToConnection(message base.IProxyMessage) (base.IProxyMessage, error) {
 	proxyMessage := message.GetProxyMessage()
 	content, err := proxyMessage.Serialize(false)
@@ -357,6 +368,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		str := "1.2.3.4"
 		v.SetLibraryAddress(&str)
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
+
 		v.SetLibraryPort(int32(666))
 		s.Equal(int32(666), v.GetLibraryPort())
 	}
@@ -389,6 +401,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 func (s *UnitTestSuite) TestInitializeReply() {
 	var message base.IProxyMessage = cluster.NewInitializeReply()
 	proxyMessage := message.GetProxyMessage()
+
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
@@ -406,6 +419,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
+
 		v.SetErrorType(messages.Custom)
 		s.Equal(messages.Custom, v.GetErrorType())
 
@@ -442,5 +456,355 @@ func (s *UnitTestSuite) TestInitializeReply() {
 		s.Equal(messages.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+}
+func (s *UnitTestSuite) TestConnectRequest() {
+
+	var message base.IProxyMessage = cluster.NewConnectRequest()
+	if v, ok := message.(*cluster.ConnectRequest); ok {
+		s.Equal(messages.ConnectReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.ConnectRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetEndpoints())
+		s.Nil(v.GetIdentity())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		endpointsStr := "1.1.1.1:555,2.2.2.2:5555"
+		v.SetEndpoints(&endpointsStr)
+		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
+
+		identityStr := "my-identity"
+		v.SetIdentity(&identityStr)
+		s.Equal("my-identity", *v.GetIdentity())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.ConnectRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
+		s.Equal("my-identity", *v.GetIdentity())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.ConnectRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
+		s.Equal("my-identity", *v.GetIdentity())
+	}
+}
+
+func (s *UnitTestSuite) TestConnectReply() {
+	var message base.IProxyMessage = cluster.NewConnectReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.ConnectReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(messages.None, v.GetErrorType())
+		s.Nil(v.GetError())
+		s.Nil(v.GetErrorDetails())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetErrorType(messages.Custom)
+		s.Equal(messages.Custom, v.GetErrorType())
+
+		errStr := "MyError"
+		v.SetError(&errStr)
+		s.Equal("MyError", *v.GetError())
+
+		errDetailsStr := "MyError Details"
+		v.SetErrorDetails(&errDetailsStr)
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.ConnectReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.ConnectReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainDescribeRequest() {
+
+	var message base.IProxyMessage = cluster.NewDomainDescribeRequest()
+	if v, ok := message.(*cluster.DomainDescribeRequest); ok {
+		s.Equal(messages.DomainDescribeReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainDescribeRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetName())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		nameStr := "my-domain"
+		v.SetName(&nameStr)
+		s.Equal("my-domain", *v.GetName())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainDescribeRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainDescribeRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainDescribeReply() {
+	var message base.IProxyMessage = cluster.NewDomainDescribeReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainDescribeReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(messages.None, v.GetErrorType())
+		s.Nil(v.GetError())
+		s.Nil(v.GetErrorDetails())
+		s.False(v.GetConfigurationEmitMetrics())
+		s.Equal(int32(0), v.GetConfigurationRetentionDays())
+		s.Nil(v.GetDomainInfoName())
+		s.Nil(v.GetDomainInfoDescription())
+		s.Nil(v.GetDomainInfoOwnerEmail())
+		s.Equal(messages.StatusUnspecified, v.GetDomainInfoStatus())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetErrorType(messages.Custom)
+		s.Equal(messages.Custom, v.GetErrorType())
+
+		errStr := "MyError"
+		v.SetError(&errStr)
+		s.Equal("MyError", *v.GetError())
+
+		errDetailsStr := "MyError Details"
+		v.SetErrorDetails(&errDetailsStr)
+		s.Equal("MyError Details", *v.GetErrorDetails())
+
+		v.SetConfigurationEmitMetrics(true)
+		s.True(v.GetConfigurationEmitMetrics())
+
+		v.SetConfigurationRetentionDays(int32(7))
+		s.Equal(int32(7), v.GetConfigurationRetentionDays())
+
+		domainInfoNameStr := "my-name"
+		v.SetDomainInfoName(&domainInfoNameStr)
+		s.Equal("my-name", *v.GetDomainInfoName())
+
+		domainInfoDescriptionStr := "my-description"
+		v.SetDomainInfoDescription(&domainInfoDescriptionStr)
+		s.Equal("my-description", *v.GetDomainInfoDescription())
+
+		v.SetDomainInfoStatus(messages.Deprecated)
+		s.Equal(messages.Deprecated, v.GetDomainInfoStatus())
+
+		domainInfoOwnerEmailStr := "joe@bloe.com"
+		v.SetDomainInfoOwnerEmail(&domainInfoOwnerEmailStr)
+		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainDescribeReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+		s.Equal("my-name", *v.GetDomainInfoName())
+		s.Equal("my-description", *v.GetDomainInfoDescription())
+		s.Equal(messages.Deprecated, v.GetDomainInfoStatus())
+		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
+		s.Equal(int32(7), v.GetConfigurationRetentionDays())
+		s.True(v.GetConfigurationEmitMetrics())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainDescribeReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+		s.Equal("my-name", *v.GetDomainInfoName())
+		s.Equal("my-description", *v.GetDomainInfoDescription())
+		s.Equal(messages.Deprecated, v.GetDomainInfoStatus())
+		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
+		s.Equal(int32(7), v.GetConfigurationRetentionDays())
+		s.True(v.GetConfigurationEmitMetrics())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainRegisterRequest() {
+
+	var message base.IProxyMessage = cluster.NewDomainRegisterRequest()
+	if v, ok := message.(*cluster.DomainRegisterRequest); ok {
+		s.Equal(messages.DomainRegisterReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainRegisterRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetName())
+		s.Nil(v.GetDescription())
+		s.Nil(v.GetOwnerEmail())
+		s.False(v.GetEmitMetrics())
+		s.Equal(int32(0), v.GetRetentionDays())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		nameStr := "my-domain"
+		v.SetName(&nameStr)
+		s.Equal("my-domain", *v.GetName())
+
+		descriptionStr := "my-description"
+		v.SetDescription(&descriptionStr)
+		s.Equal("my-description", *v.GetDescription())
+
+		ownerEmailStr := "my-email"
+		v.SetOwnerEmail(&ownerEmailStr)
+		s.Equal("my-email", *v.GetOwnerEmail())
+
+		v.SetEmitMetrics(true)
+		s.True(v.GetEmitMetrics())
+
+		v.SetRetentionDays(int32(14))
+		s.Equal(int32(14), v.GetRetentionDays())
+
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainRegisterRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-description", *v.GetDescription())
+		s.Equal("my-email", *v.GetOwnerEmail())
+		s.True(v.GetEmitMetrics())
+		s.Equal(int32(14), v.GetRetentionDays())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainRegisterRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-description", *v.GetDescription())
+		s.Equal("my-email", *v.GetOwnerEmail())
+		s.True(v.GetEmitMetrics())
+		s.Equal(int32(14), v.GetRetentionDays())
 	}
 }
