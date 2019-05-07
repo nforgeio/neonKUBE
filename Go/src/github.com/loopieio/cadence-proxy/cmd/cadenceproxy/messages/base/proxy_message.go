@@ -105,30 +105,20 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 			err := fmt.Errorf("unexpected message type %v", messageType)
 			return nil, err
 		}
+
+		// if the message is a valid type then create a
+		// new instance of the specified message type
 		message = MessageTypeStructMap[int(messageType)].Clone()
 
 	} else {
-		if len(typeCode) > 0 {
-			switch typeCode[0] {
-			case "ProxyRequest":
-				message = NewProxyRequest()
-			case "ProxyReply":
-				message = NewProxyReply()
-			default:
-				message = NewProxyMessage()
-			}
-		} else {
-			message = NewProxyMessage()
-		}
+		message = handleUnspecifiedMessageType(typeCode)
 	}
 
 	// point to message's ProxyMessage
-	proxyMessage := message.GetProxyMessage()
-
 	// get property count
-	propertyCount := int(readInt32(buf))
-
 	// set the properties
+	proxyMessage := message.GetProxyMessage()
+	propertyCount := int(readInt32(buf))
 	for i := 0; i < propertyCount; i++ {
 		key := readString(buf)
 		value := readString(buf)
@@ -136,9 +126,8 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 	}
 
 	// get attachment count
-	attachmentCount := int(readInt32(buf))
-
 	// set the attachments
+	attachmentCount := int(readInt32(buf))
 	for i := 0; i < attachmentCount; i++ {
 		length := int(readInt32(buf))
 		if length == -1 {
@@ -150,8 +139,22 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 		}
 	}
 
-	// return the message and a nil error
 	return message, nil
+}
+
+func handleUnspecifiedMessageType(typeCode []string) IProxyMessage {
+	if len(typeCode) > 0 {
+		switch typeCode[0] {
+		case "ProxyRequest":
+			return NewProxyRequest()
+		case "ProxyReply":
+			return NewProxyReply()
+		default:
+			return NewProxyMessage()
+		}
+	} else {
+		return NewProxyMessage()
+	}
 }
 
 func writeInt32(w io.Writer, value int32) {
