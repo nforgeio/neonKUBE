@@ -26,10 +26,13 @@ using System.Reflection;
 using System.Text;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Collections;
+using Neon.Data;
 
 // $todo(jeff.lill)
 //
@@ -123,6 +126,11 @@ namespace Neon.Cadence.Internal
     /// content-type.  Note that request responses in both directions never
     /// include any content.
     /// </para>
+    /// <para>
+    /// Note that more complex message property may be passed as JSON strings
+    /// that can be serialized and deserialized via the <see cref="GetJsonProperty{T}(string)"/>
+    /// and <see cref="SetJsonProperty{T}(string, T)"/> helper methods.
+    /// </para>
     /// </remarks>
     [ProxyMessage(MessageTypes.Unspecified)]
     internal class ProxyMessage
@@ -143,6 +151,7 @@ namespace Neon.Cadence.Internal
         // any additional locking.
         private static Dictionary<int, Type> intToMessageClass;
 
+        // This referernces the [Neon.Cadence] assembly.
         private static Assembly cadenceAssembly;
 
         /// <summary>
@@ -311,6 +320,7 @@ namespace Neon.Cadence.Internal
         }
 
         //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Default constructor.
@@ -318,8 +328,6 @@ namespace Neon.Cadence.Internal
         public ProxyMessage()
         {
         }
-
-        // Instance members
 
         /// <summary>
         /// Indicates the message type, one of the <see cref="MessageTypes"/> values.
@@ -564,6 +572,37 @@ namespace Neon.Cadence.Internal
             }
         }
 
+        /// <summary>
+        /// Helper method for retrieving a complex property serialized as a JSON string.
+        /// </summary>
+        /// <typeparam name="T">The property type.</typeparam>
+        /// <param name="key">The property key.</param>
+        /// <returns>The parsed value if the property exists or <c>null</c>.</returns>
+        internal T GetJsonProperty<T>(string key)
+            where T : class, new()
+        {
+            if (Properties.TryGetValue(key, out var value))
+            {
+                if (value == null)
+                {
+                    return null;
+                }
+
+                if (typeof(T).Implements<IRoundtripData>())
+                {
+                    return RoundtripDataFactory.CreateFrom<T>(JObject.Parse(value));
+                }
+                else
+                {
+                    return NeonHelper.JsonDeserialize<T>(value, strict: true);
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Helper methods derived classes can use for setting typed message properties.
 
@@ -647,6 +686,38 @@ namespace Neon.Cadence.Internal
         internal void SetTimeSpanProperty(string key, TimeSpan value)
         {
             Properties[key] = value.Ticks.ToString(CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Helper method for setting a complex property as JSON.
+        /// </summary>
+        /// <typeparam name="T">The property type.</typeparam>
+        /// <param name="key">The property key.</param>
+        /// <param name="value">The property value.</param>
+        internal void SetJsonProperty<T>(string key, T value)
+            where T : class, new()
+        {
+            string json;
+
+            if (value == null)
+            {
+                json = null;
+            }
+            else
+            {
+                var roundtrip = value as IRoundtripData;
+
+                if (roundtrip != null)
+                {
+                    json = roundtrip.ToString();
+                }
+                else
+                {
+                    json = NeonHelper.JsonSerialize(value);
+                }
+            }
+
+            Properties[key] = json;
         }
     }
 }
