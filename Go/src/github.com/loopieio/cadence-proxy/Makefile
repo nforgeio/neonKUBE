@@ -9,7 +9,7 @@ PROJECT_ROOT = github.com/loopieio/cadence-proxy
 BUILD_DIR := $(NF_ROOT)/Build/
 COMPRESSED_DIR := $(NF_ROOT)/Lib/Neon.Cadence/Resources
 APP_DIR=./cmd/cadenceproxy
-TEST_DIRS=./cmd/cadenceproxy/messages/base
+TEST_DIRS=./cmd/cadenceproxy/messages
 ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
 NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
 
