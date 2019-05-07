@@ -12,9 +12,9 @@ import (
 
 const (
 
-	// _contentType is the content type to be used for HTTP requests
+	// ContentType is the content type to be used for HTTP requests
 	// encapsulationg a ProxyMessage
-	_contentType = "application/x-neon-cadence-proxy"
+	ContentType = "application/x-neon-cadence-proxy"
 )
 
 var (
@@ -58,16 +58,16 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 	)
 
 	// check if the content type is correct
-	if r.Header.Get("Content-Type") != _contentType {
+	if r.Header.Get("Content-Type") != ContentType {
 		err := fmt.Errorf("incorrect Content-Type %s. Content must be %s",
 			r.Header.Get("Content-Type"),
-			_contentType,
+			ContentType,
 		)
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Incorrect Content-Type",
 			zap.String("Content Type", r.Header.Get("Content-Type")),
-			zap.String("Expected Content Type", _contentType),
+			zap.String("Expected Content Type", ContentType),
 			zap.Error(err),
 		)
 

@@ -37,7 +37,7 @@ var (
 // param r *http.Request
 func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
-	// grab the zap global logger
+	// grab the logger from the server instance
 	logger = Instance.Logger
 
 	// check if the request has the correct content type
@@ -72,7 +72,8 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	// check to see if terminate is true, if it is then gracefully
-	// shut down the server instance
+	// shut down the server instance by sending a truth bool value
+	// to the instance's ShutdownChannel
 	if terminate {
 		Instance.ShutdownChannel <- true
 	}
@@ -87,7 +88,7 @@ func proccessIncomingMessage(payload []byte) (int, error) {
 	buf := bytes.NewBuffer(payload)
 
 	// new IProxyMessage to deserialize the request body into
-	message, err := base.Deserialize(buf)
+	message, err := base.Deserialize(buf, false)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
@@ -156,7 +157,7 @@ func putReply(content []byte, address string) (*http.Response, error) {
 	}
 
 	// set the request header to specified content type
-	req.Header.Set("Content-Type", _contentType)
+	req.Header.Set("Content-Type", ContentType)
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Neon.Cadence Library request",
@@ -251,7 +252,7 @@ func handleIProxyRequest(request base.IProxyMessage) (int, error) {
 
 	// serialize the reply message into a []byte
 	// to send back over the network
-	serializedMessage, err := replyProxyMessage.Serialize()
+	serializedMessage, err := replyProxyMessage.Serialize(false)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
@@ -346,8 +347,8 @@ func handleHeartbeatRequest(request base.IProxyMessage) error {
 func handleInitializeRequest(request base.IProxyMessage) error {
 	if initializeRequest, ok := request.(*cluster.InitializeRequest); ok {
 		address := *initializeRequest.GetLibraryAddress()
-		port := *initializeRequest.GetLibraryPort()
-		replyAddress = fmt.Sprintf("http://%s:%s/",
+		port := initializeRequest.GetLibraryPort()
+		replyAddress = fmt.Sprintf("http://%s:%d/",
 			address,
 			port,
 		)
@@ -358,7 +359,7 @@ func handleInitializeRequest(request base.IProxyMessage) error {
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("InitializeRequest info",
 			zap.String("Library Address", address),
-			zap.String("LibaryPort", port),
+			zap.Int32("LibaryPort", port),
 			zap.String("Reply Address", replyAddress),
 		)
 

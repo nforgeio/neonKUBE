@@ -62,7 +62,7 @@ func cloneForEcho(content []byte) ([]byte, error) {
 
 	// deserialize the payload
 	buf := bytes.NewBuffer(content)
-	message, err := base.Deserialize(buf)
+	message, err := base.Deserialize(buf, false)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
@@ -77,7 +77,7 @@ func cloneForEcho(content []byte) ([]byte, error) {
 
 	// serialize the cloned message into a []byte
 	// to send back over the network
-	serializedMessageCopy, err := proxyMessage.Serialize()
+	serializedMessageCopy, err := proxyMessage.Serialize(false)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
