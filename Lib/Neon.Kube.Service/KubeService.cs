@@ -230,7 +230,7 @@ namespace Neon.Kube.Service
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(description.Name));
 
             this.Description          = description;
-            this.InProduction         = Environment.GetEnvironmentVariable("DEV_WORKSTATION") == null;
+            this.InProduction         = NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
@@ -559,7 +559,7 @@ namespace Neon.Kube.Service
         /// </summary>
         /// <param name="path">The input file path.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
@@ -683,7 +683,7 @@ namespace Neon.Kube.Service
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <param name="physicalPath">The physical path to the file on the local workstation.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.

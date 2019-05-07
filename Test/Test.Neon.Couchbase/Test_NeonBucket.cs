@@ -142,7 +142,7 @@ namespace TestCouchbase
                 }
 
                 // Verify the behavior of the DEV_WORKSTATION variable when we
-                // don't explicitly override the duribility constraints.
+                // don't explicitly override the durability constraints.
 
                 Environment.SetEnvironmentVariable("DEV_WORKSTATION", null);
 

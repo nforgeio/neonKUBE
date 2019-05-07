@@ -42,19 +42,24 @@ namespace Neon.Service
     /// </summary>
     public class ServiceEndpoint
     {
-        private ServiceDescription  serviceDescription;
-        private string                  pathPrefix = string.Empty;
+        private string pathPrefix = string.Empty;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="serviceDescription">The parent service description.</param>
-        public ServiceEndpoint(ServiceDescription serviceDescription)
+        public ServiceEndpoint()
         {
-            Covenant.Requires<ArgumentNullException>(serviceDescription != null);
-
-            this.serviceDescription = serviceDescription;
         }
+
+        /// <summary>
+        /// <para>
+        /// The parent <see cref="ServiceDescription"/>.
+        /// </para>
+        /// <note>
+        /// This must be initialized berfore attempting to reference the endpoint.
+        /// </note>
+        /// </summary>
+        public ServiceDescription ServiceDescription { get; set; }
 
         /// <summary>
         /// The endpoint name.  This defaults to the empty string.
@@ -114,14 +119,16 @@ namespace Neon.Service
         [DefaultValue(0)]
         public int Port { get; set; } = 0;
 
+        // $todo(jeff.lill): 
+        //
+        // We're not doing anything with Swagger documentation yet because
+        // we'd have to figure out where the generatedf code comment XML
+        // files are and ensure that they're included in the generated
+        // images by [core-layers] or whatever.
+
         /// <summary>
-        /// <para>
         /// ASP.NET services, this can be set to the metadata used for Swagger documentation
         /// generation related purposes.  This defaults to <c>null</c>.
-        /// </para>
-        /// <note>
-        /// This property is not read from JSON or YAML. 
-        /// </note>
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -153,28 +160,33 @@ namespace Neon.Service
                     throw new ArgumentException($"Invalid network port [{Port}].");
                 }
 
+                if (ServiceDescription == null)
+                {
+                    throw new InvalidOperationException($"The [{nameof(ServiceEndpoint)}.{nameof(ServiceDescription)}] property has not been set.");
+                }
+
                 switch (Protocol)
                 {
                     case ServiceEndpointProtocol.Http:
 
                         if (Port == 0)
                         {
-                            return $"http://{serviceDescription.Hostname}/{PathPrefix}";
+                            return $"http://{ServiceDescription.Hostname}/{PathPrefix}";
                         }
                         else
                         {
-                            return $"http://{serviceDescription.Hostname}:{Port}/{PathPrefix}";
+                            return $"http://{ServiceDescription.Hostname}:{Port}/{PathPrefix}";
                         }
 
                     case ServiceEndpointProtocol.Https:
 
                         if (Port == 0)
                         {
-                            return $"https://{serviceDescription.Hostname}/{PathPrefix}";
+                            return $"https://{ServiceDescription.Hostname}/{PathPrefix}";
                         }
                         else
                         {
-                            return $"https://{serviceDescription.Hostname}:{Port}/{PathPrefix}";
+                            return $"https://{ServiceDescription.Hostname}:{Port}/{PathPrefix}";
                         }
 
                     case ServiceEndpointProtocol.Tcp:
@@ -184,7 +196,7 @@ namespace Neon.Service
                             throw new ArgumentException("TCP endpoints require a non-zero port.");
                         }
 
-                        return $"tcp://{serviceDescription.Hostname}:{Port}";
+                        return $"tcp://{ServiceDescription.Hostname}:{Port}";
 
                     case ServiceEndpointProtocol.Udp:
 
@@ -193,7 +205,7 @@ namespace Neon.Service
                             throw new ArgumentException("UDP endpoints require a non-zero port.");
                         }
 
-                        return $"udp://{serviceDescription.Hostname}:{Port}";
+                        return $"udp://{ServiceDescription.Hostname}:{Port}";
 
                     default:
 

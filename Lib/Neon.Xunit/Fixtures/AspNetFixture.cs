@@ -164,6 +164,8 @@ namespace Neon.Xunit
         public void Start<TStartup>(Action<IWebHostBuilder> hostConfigurator = null, int port = 0, TestOutputWriter logWriter = null, LogLevel logLevel = LogLevel.None)
             where TStartup : class
         {
+            base.CheckDisposed();
+
             base.Start(
                 () =>
                 {
@@ -214,6 +216,8 @@ namespace Neon.Xunit
             this.hostConfigurator = hostConfigurator;
             this.logWriter        = logWriter;
             this.logLevel         = logLevel;
+
+            base.CheckWithinAction();
 
             if (IsRunning)
             {

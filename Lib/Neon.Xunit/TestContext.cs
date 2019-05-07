@@ -123,7 +123,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="path">The input file path.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
@@ -189,7 +189,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="path">The input file path.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
@@ -251,7 +251,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="path">The file path.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
