@@ -1,4 +1,4 @@
-.PHONY: test bins clean neon-library-test
+.PHONY: test bins clean
 default: test
 
 # export to the path
@@ -9,10 +9,15 @@ PROJECT_ROOT = github.com/loopieio/cadence-proxy
 BUILD_DIR := $(NF_ROOT)/Build/
 COMPRESSED_DIR := $(NF_ROOT)/Lib/Neon.Cadence/Resources
 APP_DIR=./cmd/cadenceproxy
+
+# test dirs
 NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
+BASE_TEST_DIR=./cmd/cadenceproxy/messages/base
+CLUSTER_TEST_DIR=./cmd/cadenceproxy/messages/cluster
 TEST_DIRS=./cmd/cadenceproxy/messages/base \
-		./cmd/cadenceproxy/messages/cluster \
-		
+		./cmd/cadenceproxy/messages/cluster
+
+# Gather all source code		
 ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
 
 # programs in the /cmd dir to build
@@ -44,18 +49,28 @@ cadenceproxy: cadence-proxy-linux \
 bins: cadenceproxy \
 
 test: bins
-	@rm -f test/cadence-proxy.test
-	@rm -f test/logs/test.log
-	@echo $(TEST_DIRS)
-	@for dir in $(TEST_DIRS); do \
-		go test -race -v -o test/cadence-proxy.test -coverprofile test/logs/cover.out "$$dir" | tee -a test/logs/test.log; \
-	done;
+	rm -f test/base.test
+	rm -f test/cluster.test
+	rm -f test/logs/test.log
+	echo $(TEST_DIRS)
+
+	go test -v -o test/base.test -coverprofile test/logs/base-cover.out $(BASE_TEST_DIR) | tee -a test/logs/test.log
+	go tool cover -html=test/logs/base-cover.out -o test/logs/base-cover.html
+
+	go test -v -o test/cluster.test -coverprofile test/logs/cluster-cover.out $(CLUSTER_TEST_DIR) | tee -a test/logs/test.log; \
+	go tool cover -html=test/logs/cluster-cover.out -o test/logs/cluster-cover.html; \
 	
 clean:
 	rm -Rf bin/*
-	rm -f test/cadence-proxy.test
+	rm -f test/base.test
+	rm -f test/cluster.test
+
 	rm -f test/logs/test.log
-	rm -f test/logs/cover.out
+	rm -f test/logs/base-cover.out
+	rm -f test/logs/base-cover.html
+	rm -f test/logs/cluster-cover.out
+	rm -f test/logs/cluster-cover.html
+
 	rm -f $(BUILD_DIR)/$(WIN)
 	rm -f $(BUILD_DIR)/$(LINUX)
 	rm -f $(BUILD_DIR)/$(OSX)
