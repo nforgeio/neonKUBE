@@ -1,4 +1,4 @@
-package messages_test
+package cluster_test
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a3linux/amazon-ssm-agent/agent/times"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
@@ -98,208 +97,6 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 func (s *UnitTestSuite) setupTestSuiteMessagesMap() {
 	base.InitProxyMessage()
 	cluster.FillMessageTypeStructMap()
-}
-
-// --------------------------------------------------------------------------
-// Test the ProxyMessage helper methods
-
-func (s *UnitTestSuite) TestPropertyHelpers() {
-
-	// verify that the property helper methods work as expected
-	message := base.NewProxyMessage()
-
-	// verify that non-existant property values return the default for the requested type
-	s.Nil(message.GetStringProperty("foo"))
-	s.Equal(int32(0), message.GetIntProperty("foo"))
-	s.Equal(int64(0), message.GetLongProperty("foo"))
-	s.False(message.GetBoolProperty("foo"))
-	s.Equal(0.0, message.GetDoubleProperty("foo"))
-	s.Equal(times.ParseIso8601UTC(times.ToIso8601UTC(time.Time{})), message.GetDateTimeProperty("foo"))
-	s.Equal(time.Duration(0)*time.Nanosecond, message.GetTimeSpanProperty("foo"))
-
-	// Verify that we can override default values for non-existant properties.
-
-	s.Equal(int32(123), message.GetIntProperty("foo", int32(123)))
-	s.Equal(int64(456), message.GetLongProperty("foo", int64(456)))
-	s.True(message.GetBoolProperty("foo", true))
-	s.Equal(float64(123.456), message.GetDoubleProperty("foo", float64(123.456)))
-	s.Equal(time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC), message.GetDateTimeProperty("foo", time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC)))
-	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo", time.Second*123))
-
-	// verify that we can write and then read properties
-	str := "bar"
-	message.SetStringProperty("foo", &str)
-	s.Equal("bar", *message.GetStringProperty("foo"))
-
-	message.SetIntProperty("foo", int32(123))
-	s.Equal(int32(123), message.GetIntProperty("foo"))
-
-	message.SetLongProperty("foo", int64(456))
-	s.Equal(int64(456), message.GetLongProperty("foo"))
-
-	message.SetBoolProperty("foo", true)
-	s.True(message.GetBoolProperty("foo"))
-
-	message.SetDoubleProperty("foo", 123.456)
-	s.Equal(123.456, message.GetDoubleProperty("foo"))
-
-	date := time.Date(2019, time.April, 14, 0, 0, 0, 0, time.UTC)
-	message.SetDateTimeProperty("foo", date)
-	s.Equal(date, message.GetDateTimeProperty("foo"))
-
-	message.SetTimeSpanProperty("foo", time.Second*123)
-	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo"))
-}
-
-// --------------------------------------------------------------------------
-// Test the base messages (ProxyMessage, ProxyRequest, ProxyReply)
-
-// TestProxyMessage ensures that we can
-// serializate and deserialize a base ProxyMessage
-func (s *UnitTestSuite) TestProxyMessage() {
-
-	// empty buffer to create empty proxy message
-	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := base.Deserialize(buf, true)
-	s.NoError(err)
-	s.NotNil(message)
-
-	if v, ok := message.(*base.ProxyMessage); ok {
-		s.Equal(messages.Unspecified, v.Type)
-		s.Empty(v.Properties)
-		s.Empty(v.Attachments)
-	}
-
-	// new proxy message to fill
-	message = base.NewProxyMessage()
-
-	if v, ok := message.(*base.ProxyMessage); ok {
-
-		// fill the properties map
-		p1 := "1"
-		p2 := "2"
-		p3 := ""
-		v.Properties["One"] = &p1
-		v.Properties["Two"] = &p2
-		v.Properties["Empty"] = &p3
-		v.Properties["Nil"] = nil
-
-		// fill the attachments map
-		v.Attachments = append(v.Attachments, []byte{0, 1, 2, 3, 4})
-		v.Attachments = append(v.Attachments, make([]byte, 0))
-		v.Attachments = append(v.Attachments, nil)
-
-		// serialize the new message
-		serializedMessage, err := v.Serialize(true)
-		s.NoError(err)
-
-		// byte buffer to deserialize
-		buf = bytes.NewBuffer(serializedMessage)
-	}
-
-	// deserialize
-	message, err = base.Deserialize(buf, true)
-	s.NoError(err)
-
-	// check that the values are the same
-	if v, ok := message.(*base.ProxyMessage); ok {
-
-		// type and property values
-		s.Equal(messages.Unspecified, v.Type)
-		s.Equal(4, len(v.Properties))
-		s.Equal("1", *v.Properties["One"])
-		s.Equal("2", *v.Properties["Two"])
-		s.Empty(v.Properties["Empty"])
-		s.Nil(v.Properties["Nil"])
-
-		// attachment values
-		s.Equal(3, len(v.Attachments))
-		s.Equal([]byte{0, 1, 2, 3, 4}, v.Attachments[0])
-		s.Empty(v.Attachments[1])
-		s.Nil(v.Attachments[2])
-	}
-}
-func (s *UnitTestSuite) TestProxyRequest() {
-
-	// Ensure that we can serialize and deserialize request messages
-
-	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := base.Deserialize(buf, true, "ProxyRequest")
-	s.NoError(err)
-	s.NotNil(message)
-
-	if v, ok := message.(*base.ProxyRequest); ok {
-		s.Equal(int64(0), v.GetRequestID())
-
-		// Round-trip
-		v.SetRequestID(int64(555))
-		s.Equal(int64(555), v.GetRequestID())
-
-		// serialize the new message
-		serializedMessage, err := v.Serialize(true)
-		s.NoError(err)
-
-		// byte buffer to deserialize
-		buf = bytes.NewBuffer(serializedMessage)
-	}
-
-	message, err = base.Deserialize(buf, true, "ProxyRequest")
-	s.NoError(err)
-	s.NotNil(message)
-
-	if v, ok := message.(*base.ProxyRequest); ok {
-		s.Equal(int64(555), v.GetRequestID())
-	}
-}
-
-func (s *UnitTestSuite) TestProxyReply() {
-
-	// Ensure that we can serialize and deserialize reply messages
-
-	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := base.Deserialize(buf, true, "ProxyReply")
-	s.NoError(err)
-	s.NotNil(message)
-
-	if v, ok := message.(*base.ProxyReply); ok {
-		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
-		s.Nil(v.GetError())
-		s.Nil(v.GetErrorDetails())
-
-		// Round-trip
-		v.SetRequestID(int64(555))
-		v.SetErrorType(messages.Custom)
-
-		str1 := "MyError"
-		str2 := "MyError Details"
-		v.SetError(&str1)
-		v.SetErrorDetails(&str2)
-
-		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
-		s.Equal("MyError", *v.GetError())
-		s.Equal("MyError Details", *v.GetErrorDetails())
-
-		// serialize the new message
-		serializedMessage, err := v.Serialize(true)
-		s.NoError(err)
-
-		// byte buffer to deserialize
-		buf = bytes.NewBuffer(serializedMessage)
-	}
-
-	message, err = base.Deserialize(buf, true, "ProxyReply")
-	s.NoError(err)
-	s.NotNil(message)
-
-	if v, ok := message.(*base.ProxyReply); ok {
-		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
-		s.Equal("MyError", *v.GetError())
-		s.Equal("MyError Details", *v.GetErrorDetails())
-	}
 }
 
 // --------------------------------------------------------------------------
@@ -806,5 +603,536 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 		s.Equal("my-email", *v.GetOwnerEmail())
 		s.True(v.GetEmitMetrics())
 		s.Equal(int32(14), v.GetRetentionDays())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainRegisterReply() {
+	var message base.IProxyMessage = cluster.NewDomainRegisterReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainRegisterReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(messages.None, v.GetErrorType())
+		s.Nil(v.GetError())
+		s.Nil(v.GetErrorDetails())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetErrorType(messages.Custom)
+		s.Equal(messages.Custom, v.GetErrorType())
+
+		errStr := "MyError"
+		v.SetError(&errStr)
+		s.Equal("MyError", *v.GetError())
+
+		errDetailsStr := "MyError Details"
+		v.SetErrorDetails(&errDetailsStr)
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainRegisterReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainRegisterReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainUpdateRequest() {
+
+	var message base.IProxyMessage = cluster.NewDomainUpdateRequest()
+	if v, ok := message.(*cluster.DomainUpdateRequest); ok {
+		s.Equal(messages.DomainUpdateReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainUpdateRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetName())
+		s.Nil(v.GetUpdatedInfoDescription())
+		s.Nil(v.GetUpdatedInfoOwnerEmail())
+		s.False(v.GetConfigurationEmitMetrics())
+		s.Equal(int32(0), v.GetConfigurationRetentionDays())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		nameStr := "my-domain"
+		v.SetName(&nameStr)
+		s.Equal("my-domain", *v.GetName())
+
+		descriptionStr := "my-description"
+		v.SetUpdatedInfoDescription(&descriptionStr)
+		s.Equal("my-description", *v.GetUpdatedInfoDescription())
+
+		ownerEmailStr := "my-email"
+		v.SetUpdatedInfoOwnerEmail(&ownerEmailStr)
+		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
+
+		v.SetConfigurationEmitMetrics(true)
+		s.True(v.GetConfigurationEmitMetrics())
+
+		v.SetConfigurationRetentionDays(int32(14))
+		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainUpdateRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-description", *v.GetUpdatedInfoDescription())
+		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
+		s.True(v.GetConfigurationEmitMetrics())
+		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainUpdateRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-description", *v.GetUpdatedInfoDescription())
+		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
+		s.True(v.GetConfigurationEmitMetrics())
+		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainUpdateReply() {
+	var message base.IProxyMessage = cluster.NewDomainUpdateReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainUpdateReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(messages.None, v.GetErrorType())
+		s.Nil(v.GetError())
+		s.Nil(v.GetErrorDetails())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetErrorType(messages.Custom)
+		s.Equal(messages.Custom, v.GetErrorType())
+
+		errStr := "MyError"
+		v.SetError(&errStr)
+		s.Equal("MyError", *v.GetError())
+
+		errDetailsStr := "MyError Details"
+		v.SetErrorDetails(&errDetailsStr)
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainUpdateReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.DomainUpdateReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+}
+
+func (s *UnitTestSuite) TestTerminateRequest() {
+
+	var message base.IProxyMessage = cluster.NewTerminateRequest()
+	if v, ok := message.(*cluster.TerminateRequest); ok {
+		s.Equal(messages.TerminateReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.TerminateRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.TerminateRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.TerminateRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+	}
+}
+
+func (s *UnitTestSuite) TestTerminateReply() {
+	var message base.IProxyMessage = cluster.NewTerminateReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.TerminateReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(messages.None, v.GetErrorType())
+		s.Nil(v.GetError())
+		s.Nil(v.GetErrorDetails())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetErrorType(messages.Custom)
+		s.Equal(messages.Custom, v.GetErrorType())
+
+		errStr := "MyError"
+		v.SetError(&errStr)
+		s.Equal("MyError", *v.GetError())
+
+		errDetailsStr := "MyError Details"
+		v.SetErrorDetails(&errDetailsStr)
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.TerminateReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.TerminateReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+}
+
+func (s *UnitTestSuite) TestHeartbeatRequest() {
+
+	var message base.IProxyMessage = cluster.NewHeartbeatRequest()
+	if v, ok := message.(*cluster.HeartbeatRequest); ok {
+		s.Equal(messages.HeartbeatReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.HeartbeatRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.HeartbeatRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.HeartbeatRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+	}
+}
+
+func (s *UnitTestSuite) TestHeartbeatReply() {
+	var message base.IProxyMessage = cluster.NewHeartbeatReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.HeartbeatReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(messages.None, v.GetErrorType())
+		s.Nil(v.GetError())
+		s.Nil(v.GetErrorDetails())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetErrorType(messages.Custom)
+		s.Equal(messages.Custom, v.GetErrorType())
+
+		errStr := "MyError"
+		v.SetError(&errStr)
+		s.Equal("MyError", *v.GetError())
+
+		errDetailsStr := "MyError Details"
+		v.SetErrorDetails(&errDetailsStr)
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.HeartbeatReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.HeartbeatReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+	}
+}
+
+func (s *UnitTestSuite) TestCancelRequest() {
+
+	var message base.IProxyMessage = cluster.NewCancelRequest()
+	if v, ok := message.(*cluster.CancelRequest); ok {
+		s.Equal(messages.CancelReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.CancelRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int64(0), v.GetTargetRequestID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetTargetRequestID(int64(666))
+		s.Equal(int64(666), v.GetTargetRequestID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.CancelRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetTargetRequestID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.CancelRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetTargetRequestID())
+	}
+}
+
+func (s *UnitTestSuite) TestCancelReply() {
+	var message base.IProxyMessage = cluster.NewCancelReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.CancelReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(messages.None, v.GetErrorType())
+		s.Nil(v.GetError())
+		s.Nil(v.GetErrorDetails())
+		s.False(v.GetWasCancelled())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetErrorType(messages.Custom)
+		s.Equal(messages.Custom, v.GetErrorType())
+
+		errStr := "MyError"
+		v.SetError(&errStr)
+		s.Equal("MyError", *v.GetError())
+
+		errDetailsStr := "MyError Details"
+		v.SetErrorDetails(&errDetailsStr)
+		s.Equal("MyError Details", *v.GetErrorDetails())
+
+		v.SetWasCancelled(true)
+		s.True(v.GetWasCancelled())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = base.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.CancelReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+		s.True(v.GetWasCancelled())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*cluster.CancelReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal("MyError", *v.GetError())
+		s.Equal("MyError Details", *v.GetErrorDetails())
+		s.True(v.GetWasCancelled())
 	}
 }

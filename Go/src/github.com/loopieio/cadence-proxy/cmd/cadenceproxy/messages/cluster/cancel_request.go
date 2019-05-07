@@ -36,19 +36,19 @@ func NewCancelRequest() *CancelRequest {
 // GetTargetRequestID gets a CancelRequest's TargetRequestId value
 // from its properties map
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a CancelRequest's TargetRequestId
-func (request *CancelRequest) GetTargetRequestID() *string {
-	return request.GetStringProperty("TargetRequestId")
+// returns int64 -> a long representing the target to cancels requestID that is
+// in a CancelRequest's properties map
+func (request *CancelRequest) GetTargetRequestID() int64 {
+	return request.GetLongProperty("TargetRequestId")
 }
 
 // SetTargetRequestID sets a CancelRequest's TargetRequestId value
 // in its properties map
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
-func (request *CancelRequest) SetTargetRequestID(value *string) {
-	request.SetStringProperty("TargetRequestId", value)
+// param value int64 -> a long value to be set in the properties map as a
+// CancelRequest's TargetRequestId
+func (request *CancelRequest) SetTargetRequestID(value int64) {
+	request.SetLongProperty("TargetRequestId", value)
 }
 
 // -------------------------------------------------------------------------

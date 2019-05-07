@@ -9,9 +9,11 @@ PROJECT_ROOT = github.com/loopieio/cadence-proxy
 BUILD_DIR := $(NF_ROOT)/Build/
 COMPRESSED_DIR := $(NF_ROOT)/Lib/Neon.Cadence/Resources
 APP_DIR=./cmd/cadenceproxy
-TEST_DIRS=./cmd/cadenceproxy/messages
-ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
 NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
+TEST_DIRS=./cmd/cadenceproxy/messages/base \
+		./cmd/cadenceproxy/messages/cluster \
+		
+ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
 
 # programs in the /cmd dir to build
 PROGS = cadenceproxy
@@ -46,13 +48,14 @@ test: bins
 	@rm -f test/logs/test.log
 	@echo $(TEST_DIRS)
 	@for dir in $(TEST_DIRS); do \
-		go test -race -v -o test/cadence-proxy.test "$$dir" | tee -a test/logs/test.log; \
+		go test -race -v -o test/cadence-proxy.test -coverprofile test/logs/cover.out "$$dir" | tee -a test/logs/test.log; \
 	done;
 	
 clean:
 	rm -Rf bin/*
 	rm -f test/cadence-proxy.test
 	rm -f test/logs/test.log
+	rm -f test/logs/cover.out
 	rm -f $(BUILD_DIR)/$(WIN)
 	rm -f $(BUILD_DIR)/$(LINUX)
 	rm -f $(BUILD_DIR)/$(OSX)
