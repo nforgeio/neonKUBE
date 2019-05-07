@@ -34,13 +34,30 @@ using Neon.IO;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
+using Newtonsoft.Json;
+using Test.Neon.Models;
 using Xunit;
 
 namespace TestCadence
 {
     public sealed class Test_Messages : IClassFixture<CadenceFixture>, IDisposable
     {
-        CadenceFixture      fixture;
+        //---------------------------------------------------------------------
+        // Local types
+
+        public class ComplexType
+        {
+            [JsonProperty(PropertyName = "Name")]
+            public string Name { get; set; }
+
+            [JsonProperty(PropertyName = "Value")]
+            public string Value { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        CadenceFixture fixture;
         CadenceConnection   connection;
         HttpClient          proxyClient;
 
@@ -56,6 +73,7 @@ namespace TestCadence
                 DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
                 DebugDisableHeartbeats = false,
+                DebugEmulateProxy      = true,
                 //--------------------------------
             };
 
@@ -107,6 +125,9 @@ namespace TestCadence
                 message.Properties.Add("Empty", string.Empty);
                 message.Properties.Add("Null", null);
 
+                message.SetJsonProperty("Complex", new ComplexType() { Name = "foo", Value = "bar" });
+                message.SetJsonProperty("Person", new Person() { Name = "Jack", Age = 10 });
+
                 message.Attachments.Add(new byte[] { 0, 1, 2, 3, 4 });
                 message.Attachments.Add(new byte[0]);
                 message.Attachments.Add(null);
@@ -117,11 +138,19 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
                 Assert.Equal(MessageTypes.Unspecified, message.Type);
-                Assert.Equal(4, message.Properties.Count);
+                Assert.Equal(6, message.Properties.Count);
                 Assert.Equal("1", message.Properties["One"]);
                 Assert.Equal("2", message.Properties["Two"]);
                 Assert.Empty(message.Properties["Empty"]);
                 Assert.Null(message.Properties["Null"]);
+
+                var complex = message.GetJsonProperty<ComplexType>("Complex");
+                Assert.Equal("foo", complex.Name);
+                Assert.Equal("bar", complex.Value);
+
+                var person = message.GetJsonProperty<Person>("Person");
+                Assert.Equal("Jack", person.Name);
+                Assert.Equal(10, person.Age);
 
                 Assert.Equal(3, message.Attachments.Count);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Attachments[0]);
