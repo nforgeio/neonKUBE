@@ -42,7 +42,6 @@ namespace TestCadence
 {
     public partial class Test_Messages
     {
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void TestWorkflowRegisterRequest()
@@ -185,6 +184,8 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Domain);
                 Assert.Null(message.Name);
+                Assert.Null(message.Args);
+                Assert.Null(message.Options);
 
                 // Round-trip
 
@@ -192,9 +193,13 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.Name = "Foo";
                 message.Args = new Dictionary<string, object>() { { "hello", "world!" } };
+                message.Options = new StartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = "100s" };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
+                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -206,6 +211,9 @@ namespace TestCadence
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal("world!", message.Args["hello"]);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -215,6 +223,9 @@ namespace TestCadence
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal("world!", message.Args["hello"]);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -223,6 +234,9 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
+                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal("my-list", message.Options.TaskList);
+                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
                 Assert.Equal("world!", message.Args["hello"]);
             }
         }
@@ -246,6 +260,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(TimeSpan.Zero, message.DecisionTimeout);
                 Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
                 Assert.Null(message.ErrorDetails);
@@ -254,6 +269,8 @@ namespace TestCadence
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.DecisionTimeout = TimeSpan.FromMinutes(120);
+                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
                 message.ErrorType = CadenceErrorTypes.Custom;
                 Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
                 message.Error = "MyError";
@@ -268,6 +285,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
                 Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
                 Assert.Equal("MyError", message.Error);
                 Assert.Equal("MyError Details", message.ErrorDetails);
@@ -277,6 +295,7 @@ namespace TestCadence
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
                 Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
                 Assert.Equal("MyError", message.Error);
                 Assert.Equal("MyError Details", message.ErrorDetails);
@@ -286,6 +305,7 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
                 Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
                 Assert.Equal("MyError", message.Error);
                 Assert.Equal("MyError Details", message.ErrorDetails);

@@ -44,6 +44,15 @@ namespace Neon.Cadence.Internal
             Type = MessageTypes.WorkflowExecuteReply;
         }
 
+        /// <summary>
+        /// Returns the workflow's <b>TaskStartToCloseTimeout</b>.
+        /// </summary>
+        public TimeSpan DecisionTimeout
+        {
+            get => GetTimeSpanProperty("DecisionTimeout");
+            set => SetTimeSpanProperty("DecisionTimeout", value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -58,6 +67,10 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
+
+            var typedTarget = (WorkflowExecuteReply)target;
+
+            typedTarget.DecisionTimeout = this.DecisionTimeout;
         }
     }
 }

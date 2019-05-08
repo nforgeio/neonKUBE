@@ -54,8 +54,9 @@ namespace Neon.Cadence.Internal
         /// ID - The business identifier of the workflow execution.
         /// Optional: defaulted to a uuid.
         /// </summary>
-        [JsonProperty(PropertyName = "id", Required = Required.Always)]
-        public string ID { get; set; }
+        [JsonProperty(PropertyName = "id", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string ID { get; set; } = null;
 
         /// <summary>
         /// TaskList - The decisions of the workflow are scheduled on this queue.

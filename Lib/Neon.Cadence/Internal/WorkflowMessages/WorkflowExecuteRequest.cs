@@ -100,8 +100,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteRequest)target;
 
-            typedTarget.Domain = this.Domain;
-            typedTarget.Name   = this.Name;
+            typedTarget.Domain  = this.Domain;
+            typedTarget.Name    = this.Name;
+            typedTarget.Options = this.Options;
 
             if (this.Args != null)
             {

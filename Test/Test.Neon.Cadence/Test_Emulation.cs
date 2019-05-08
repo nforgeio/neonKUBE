@@ -181,10 +181,10 @@ namespace TestCadence
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 Assert.False(connectionClosed);
 
-                // Disable heartbeat monitoring so we can verify that
+                // Disable heartbeat responses so we can verify that
                 // the connection is closed gracefully.
 
-                connection.Settings.DebugDisableHeartbeats = true;
+                connection.Settings.DebugIgnoreHeartbeats = true;
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 Assert.True(connectionClosed);
@@ -192,7 +192,7 @@ namespace TestCadence
             }
             finally
             {
-                connection.Settings.DebugDisableHeartbeats = false;
+                connection.Settings.DebugIgnoreHeartbeats = false;
             }
         }
 
