@@ -95,7 +95,6 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 }
 
 func (s *UnitTestSuite) setupTestSuiteMessagesMap() {
-	base.InitProxyMessage()
 	cluster.FillMessageTypeStructMap()
 }
 

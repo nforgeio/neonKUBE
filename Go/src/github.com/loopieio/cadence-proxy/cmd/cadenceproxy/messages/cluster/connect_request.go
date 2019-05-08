@@ -12,7 +12,7 @@ type (
 	// ConnectRequest is ConnectRequest of MessageType
 	// ConnectRequest.
 	//
-	// A ConnectRequest contains a RequestId and a reference to a
+	// A ConnectRequest contains a reference to a
 	// ProxyRequest struct in memory and ReplyType, which is
 	// the corresponding MessageType for replying to this ProxyRequest
 	ConnectRequest struct {
