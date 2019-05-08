@@ -123,7 +123,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="path">The input file path.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
@@ -180,9 +180,8 @@ namespace Neon.Xunit
 
         /// <summary>
         /// <para>
-        /// Loads settings formatted as <c>NAME=VALUE</c> from a text file into environment
-        /// variables.  The file will be decrypted using <see cref="NeonVault"/> if
-        /// necessary.
+        /// Loads environment variables formatted as <c>NAME=VALUE</c> from a text file into environment
+        /// variables.  The file will be decrypted using <see cref="NeonVault"/> if necessary.
         /// </para>
         /// <note>
         /// Blank lines and lines beginning with '#' will be ignored.
@@ -190,7 +189,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="path">The input file path.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
@@ -252,7 +251,7 @@ namespace Neon.Xunit
         /// </summary>
         /// <param name="path">The file path.</param>
         /// <param name="passwordProvider">
-        /// Optionally specifies the password provider functio to be used to locate the
+        /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
         /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.

@@ -185,7 +185,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedHeartbeatAsync(HeartbeatRequest request)
         {
-            if (Settings.DebugDisableHeartbeats)
+            if (Settings.DebugIgnoreHeartbeats)
             {
                 // Ignore heartbeats so unit tests can verify the correct behavior.
 
@@ -243,32 +243,19 @@ namespace Neon.Cadence
 
                 if (string.IsNullOrEmpty(request.Name))
                 {
-                    reply.ErrorType = CadenceErrorTypes.Generic;
-                    reply.Error     = new CadenceEntityNotExistsException(null).CadenceError;
+                    reply.Error = new CadenceEntityNotExistsException("Invalid name.").ToCadenceError();
 
                     await EmulatedLibraryClient.SendReplyAsync(request, reply);
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(request.Name))
-                {
-                    domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
+                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
 
-                    if (domain == null)
-                    {
-                        reply.ErrorDetails = $"Domain [name={request.Name}] does not exist.";
-                    }
+                if (domain == null)
+                {
+                    reply.Error = new CadenceEntityNotExistsException($"Domain [name={request.Name}] does not exist.").ToCadenceError();
                 }
                 else
-                {
-                    reply.ErrorType = CadenceErrorTypes.Generic;
-                    reply.Error     = new CadenceEntityNotExistsException(null).CadenceError;
-
-                    await EmulatedLibraryClient.SendReplyAsync(request, reply);
-                    return;
-                }
-
-                if (domain != null)
                 {
                     reply.DomainInfoName             = domain.Name;
                     reply.DomainInfoOwnerEmail       = domain.OwnerEmail;
@@ -276,11 +263,6 @@ namespace Neon.Cadence
                     reply.DomainInfoDescription      = domain.Description;
                     reply.ConfigurationEmitMetrics   = domain.EmitMetrics;
                     reply.ConfigurationRetentionDays = domain.RetentionDays;
-                }
-                else
-                {
-                    reply.ErrorType = CadenceErrorTypes.Generic;
-                    reply.Error     = new CadenceEntityNotExistsException(null).CadenceError;
                 }
 
                 await EmulatedLibraryClient.SendReplyAsync(request, reply);
@@ -301,8 +283,7 @@ namespace Neon.Cadence
                     await EmulatedLibraryClient.SendReplyAsync(request,
                         new DomainRegisterReply()
                         {
-                            Error        = new CadenceBadRequestException(null).CadenceError,
-                            ErrorDetails = "Domain name is required."
+                            Error = new CadenceBadRequestException("Invalid name.").ToCadenceError()
                         });
 
                     await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
@@ -314,8 +295,7 @@ namespace Neon.Cadence
                     await EmulatedLibraryClient.SendReplyAsync(request,
                         new DomainRegisterReply()
                         {
-                            Error        = new CadenceDomainAlreadyExistsException(null).CadenceError,
-                            ErrorDetails = $"Domain [{request.Name}] already exists."
+                            Error = new CadenceDomainAlreadyExistsException($"Domain [{request.Name}] already exists.").ToCadenceError()
                         });
 
                     await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
@@ -351,9 +331,7 @@ namespace Neon.Cadence
 
                 if (string.IsNullOrEmpty(request.Name))
                 {
-                    reply.ErrorType    = CadenceErrorTypes.Generic;
-                    reply.Error        = new CadenceBadRequestException(null).CadenceError;
-                    reply.ErrorDetails = "Domain name is required.";
+                    reply.Error = new CadenceBadRequestException("Domain name is required.").ToCadenceError();
 
                     await EmulatedLibraryClient.SendReplyAsync(request, reply);
                     return;
@@ -363,9 +341,7 @@ namespace Neon.Cadence
 
                 if (domain == null)
                 {
-                    reply.ErrorType    = CadenceErrorTypes.Generic;
-                    reply.Error        = new CadenceEntityNotExistsException(null).CadenceError;
-                    reply.ErrorDetails = $"Domain [name={request.Name}] does not exist.";
+                    reply.Error = new CadenceEntityNotExistsException($"Domain [name={request.Name}] does not exist.").ToCadenceError();
 
                     await EmulatedLibraryClient.SendReplyAsync(request, reply);
                     return;

@@ -848,7 +848,7 @@ namespace Neon.Xunit
 
             // Add the DEV_WORKSTATION=1 environment variable if it's set on the local workstation.
 
-            if (Environment.GetEnvironmentVariable("DEV_WORKSTATION") == "1")
+            if (NeonHelper.IsDevWorkstation)
             {
                 extraArgs.Add("--env");
                 extraArgs.Add("DEV_WORKSTATION=1");
@@ -1102,7 +1102,7 @@ namespace Neon.Xunit
 
             // Add the DEV_WORKSTATION=1 environment variable if it's set on the local workstation.
 
-            if (Environment.GetEnvironmentVariable("DEV_WORKSTATION") == "1")
+            if (NeonHelper.IsDevWorkstation)
             {
                 extraArgs.Add("--env");
                 extraArgs.Add("DEV_WORKSTATION=1");

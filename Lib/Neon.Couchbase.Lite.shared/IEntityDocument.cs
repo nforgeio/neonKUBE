@@ -58,7 +58,7 @@ namespace Couchbase.Lite
         /// <b>INTERNAL USE ONLY:</b> Used to initialize the set of attachment names derived
         /// document classes will track via their <see cref="EntityDocument{TEntity}.AttachmentEvent"/>.
         /// </summary>
-        /// <param name="attachmentNames">The case insenstive set of attachment names.</param>
+        /// <param name="attachmentNames">The case insensitive set of attachment names.</param>
         void SetAttachmentTracking(HashSet<string> attachmentNames);
     }
 }

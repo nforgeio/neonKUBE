@@ -93,6 +93,8 @@ namespace Neon.Xunit
             string   name  = "nats-test",
             string[] args  = null)
         {
+            base.CheckDisposed();
+
             return base.Start(
                 () =>
                 {

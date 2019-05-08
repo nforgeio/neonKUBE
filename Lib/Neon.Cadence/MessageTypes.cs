@@ -151,12 +151,12 @@ namespace Neon.Cadence
         /// <summary>
         /// <b>library --> proxy:</b> Starts a workflow.
         /// </summary>
-        WorkflowStartRequest = 102,
+        WorkflowExecuteRequest = 102,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowStartRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowExecuteRequest"/> message.
         /// </summary>
-        WorkflowStartReply = 103,
+        WorkflowExecuteReply = 103,
 
         /// <summary>
         /// <b>library --> proxy:</b> Signals a workflow.

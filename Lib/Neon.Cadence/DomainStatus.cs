@@ -55,6 +55,12 @@ namespace Neon.Cadence
         /// has been satisified.
         /// </summary>
         [EnumMember(Value = "DEPRECATED")]
-        Deprecated
+        Deprecated,
+
+        /// <summary>
+        /// The domain is deleted.
+        /// </summary>
+        [EnumMember(Value = "DELETED")]
+        Deleted
     }
 }

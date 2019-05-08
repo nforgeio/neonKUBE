@@ -15,6 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// $todo(jeff.lill): Remove this after we actually implement htis hosting manager.
+
+#pragma warning disable CS0169
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
