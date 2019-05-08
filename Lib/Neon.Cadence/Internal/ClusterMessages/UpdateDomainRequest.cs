@@ -45,7 +45,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Holds the changes to be made to a Cadence domain.

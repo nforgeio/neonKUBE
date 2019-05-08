@@ -45,7 +45,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Domain registration details.
