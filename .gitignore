@@ -94,6 +94,7 @@ GeneratedUxTypes.cs
 ###################
 *.test
 Go/pkg/**
+Go/**/test/logs/**
 
 ####################
 ### Neon.Cadence ###

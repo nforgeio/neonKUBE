@@ -1,10 +1,15 @@
 package endpoints
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
 
+// Debug is a bool value that is set in main
+// it indicates whether or not to use debugging middleware
+// in the chi.Router
 var Debug bool
 
 // SetupRoutes sets up the chi middleware
@@ -26,10 +31,35 @@ func SetupRoutes(router *chi.Mux) {
 		}
 
 		// cadence-proxy endpoints
-		router.Put("/", ProxyMessageHandler)
+		router.Put("/", MessageHandler)
 		router.Put("/echo", EchoHandler)
 
 		// endpoints for test paths
 		router.Mount("/test", TestRouter())
 	})
+}
+
+//TestRouter that one could ping to test if the API is alive
+func TestRouter() http.Handler {
+	router := chi.NewRouter()
+
+	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write([]byte("WE ARE HERE, WE ARE HERE, WE ARE HERE!!!!"))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write([]byte("pong"))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	router.Get("/panic", func(w http.ResponseWriter, r *http.Request) {
+		panic("test")
+	})
+
+	return router
 }

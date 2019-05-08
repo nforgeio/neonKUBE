@@ -32,6 +32,12 @@ namespace Neon.Retry
     public interface IRetryPolicy
     {
         /// <summary>
+        /// Returns the optional policy timeout.  When present, this specifies the
+        /// maximum time the policy will continue retrying the operation.
+        /// </summary>
+        TimeSpan? Timeout { get; }
+
+        /// <summary>
         /// Returns a copy of the retry policy.
         /// </summary>
         /// <returns>The policy copy.</returns>
@@ -61,6 +67,8 @@ namespace Neon.Retry
     [ContractClassFor(typeof(IRetryPolicy))]
     internal abstract class IRetryPolicyContract : IRetryPolicy
     {
+        public TimeSpan? Timeout => null;
+
         public IRetryPolicy Clone()
         {
             return null;

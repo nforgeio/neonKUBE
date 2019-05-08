@@ -69,18 +69,18 @@ func (request *TerminateRequest) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *TerminateRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *TerminateRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *TerminateRequest) GetReplyType() messages.MessageType {

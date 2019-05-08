@@ -49,10 +49,6 @@ type (
 	}
 )
 
-// LogLevel decides which log level
-// to use
-var LogLevel string
-
 // domainCreated is a flag that prevents a CadenceClientHelper from
 // creating a new domain client and registering an existing domain
 var domainCreated bool

@@ -550,7 +550,7 @@ namespace Neon.Cadence
 
             closingConnection = true;
 
-            if (ProxyProcess != null && !Settings.DebugDisableHandshakes)
+            if (!Settings.DebugDisableHandshakes)
             {
                 try
                 {
@@ -567,7 +567,7 @@ namespace Neon.Cadence
                         // Ignoring these.
                     }
 
-                    if (!ProxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
+                    if (ProxyProcess != null && !ProxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
                     {
                         log.LogWarn(() => $"[cadence-proxy]: Did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
                         ProxyProcess.Kill();

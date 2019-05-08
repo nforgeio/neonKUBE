@@ -187,14 +187,6 @@
   version = "v1.2"
 
 [[projects]]
-  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
-  name = "github.com/pkg/errors"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
-  version = "v0.8.1"
-
-[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -267,11 +259,13 @@
   version = "v0.1.1"
 
 [[projects]]
-  digest = "1:0bcc464dabcfad5393daf87c3f8142911d0f6c52569b837e91a1c15e890265f3"
+  digest = "1:288e2ba4192b77ec619875ab54d82e2179ca8978e8baa690dcb4343a4a1f4da7"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "mock",
+    "require",
+    "suite",
   ]
   pruneopts = "UT"
   revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
@@ -575,7 +569,7 @@
     "github.com/go-chi/chi",
     "github.com/go-chi/chi/middleware",
     "github.com/google/uuid",
-    "github.com/pkg/errors",
+    "github.com/stretchr/testify/suite",
     "github.com/uber-go/tally",
     "go.uber.org/cadence/.gen/go/cadence/workflowserviceclient",
     "go.uber.org/cadence/.gen/go/shared",

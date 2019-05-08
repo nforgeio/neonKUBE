@@ -146,212 +146,202 @@ namespace Neon.Cadence
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRegisterRequest"/> message.
         /// </summary>
-        WorkflowRegisterflowReply = 101,
+        WorkflowRegisterReply = 101,
 
         /// <summary>
         /// <b>library --> proxy:</b> Starts a workflow.
         /// </summary>
-        WorkflowStartWorkflowRequest = 102,
+        WorkflowExecuteRequest = 102,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowStartWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowExecuteRequest"/> message.
         /// </summary>
-        WorkflowStartWorkflowReply = 103,
-
-        /// <summary>
-        /// <b>library --> proxy:</b> Executes a workflow.
-        /// </summary>
-        WorkflowExecuteWorkflowRequest = 104,
-
-        /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowExecuteWorkflowRequest"/> message.
-        /// </summary>
-        WorkflowExecuteWorkflowReply = 105,
+        WorkflowExecuteReply = 103,
 
         /// <summary>
         /// <b>library --> proxy:</b> Signals a workflow.
         /// </summary>
-        WorkflowSignalWorkflowRequest = 106,
+        WorkflowSignalWorkflowRequest = 104,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWorkflowRequest"/> message.
         /// </summary>
-        WorkflowSignalWorkslowReply = 107,
+        WorkflowSignalReply = 105,
 
         /// <summary>
         /// <b>library --> proxy:</b> Signals a workflow, starting it if necessary.
         /// </summary>
-        WorkflowSignalWorkflowWithStartRequest = 108,
+        WorkflowSignalWithStartRequest = 106,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWorkflowWithStartRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWithStartRequest"/> message.
         /// </summary>
-        WorkflowSignalWorkflowWithStartReply = 109,
+        WorkflowSignalWithStartReply = 107,
 
         /// <summary>
         /// <b>library --> proxy:</b> Cancels a workflow.
         /// </summary>
-        WorkflowCancelWorkflowRequest = 110,
+        WorkflowCancelRequest = 108,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCancelWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCancelRequest"/> message.
         /// </summary>
-        WorkflowCancelWorkflowReply = 111,
+        WorkflowCancelReply = 109,
 
         /// <summary>
         /// <b>library --> proxy:</b> Terminates a workflow.
         /// </summary>
-        WorkflowTerminateWorkflowRequest = 112,
+        WorkflowTerminateRequest = 110,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowTerminateWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowTerminateRequest"/> message.
         /// </summary>
-        WorkflowTerminateWorkflowReply = 113,
+        WorkflowTerminateReply = 111,
 
         /// <summary>
         /// <b>library --> proxy:</b> Requests the a workflow's history.
         /// </summary>
-        WorkflowGetWorkflowHistoryRequest = 114,
+        WorkflowGetHistoryRequest = 112,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowGetWorkflowHistoryRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowGetHistoryRequest"/> message.
         /// </summary>
-        WorkflowGetWorkflowHistoryReply = 115,
+        WorkflowGetWorkflowHistoryReply = 113,
 
         /// <summary>
         /// <b>library --> proxy:</b> Indicates that an activity has completed.
         /// </summary>
-        WorkflowCompleteActivityRequest = 116,
+        WorkflowCompleteActivityRequest = 114,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCompleteActivityRequest"/> message.
         /// </summary>
-        WorkflowCompleteActivityReply = 117,
+        WorkflowCompleteActivityReply = 115,
 
         /// <summary>
         /// <b>library --> proxy:</b> Indicates that the activity with a specified ID as completed has completed.
         /// </summary>
-        WorkflowCompleteActivityByIdRequest = 118,
+        WorkflowCompleteActivityByIdRequest = 116,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCompleteActivityByIdRequest"/> message.
         /// </summary>
-        WorkflowCompleteActivityByIdReply = 119,
+        WorkflowCompleteActivityByIdReply = 117,
 
         /// <summary>
         /// <b>library --> proxy:</b> Records an activity heartbeat.
         /// </summary>
-        WorkflowRecordActivityHeartbeatRequest = 120,
+        WorkflowRecordActivityHeartbeatRequest = 118,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatRequest"/> message.
         /// </summary>
-        WorkflowRecordActivityHeartbeatReply = 121,
+        WorkflowRecordActivityHeartbeatReply = 119,
 
         /// <summary>
         /// <b>library --> proxy:</b> Records a heartbeat for an activity specified by ID.
         /// </summary>
-        WorkflowRecordActivityHeartbeatByIdRequest = 122,
+        WorkflowRecordActivityHeartbeatByIdRequest = 120,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatByIdRequest"/> message.
         /// </summary>
-        WorkflowRecordActivityHeartbeatByIdReply = 123,
+        WorkflowRecordActivityHeartbeatByIdReply = 121,
 
         /// <summary>
         /// <b>library --> proxy:</b> Requests the list of closed workflows.
         /// </summary>
-        WorkflowListClosedWorkflowRequest = 124,
+        WorkflowListClosedRequest = 122,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListClosedWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListClosedRequest"/> message.
         /// </summary>
-        WorkflowListClosedWorkflowReply = 125,
+        WorkflowListClosedReply = 123,
 
         /// <summary>
         /// <b>library --> proxy:</b> Requests the list of open workflows.
         /// </summary>
-        WorkflowListOpenWorkflowRequest = 126,
+        WorkflowListOpenWorkflowRequest = 124,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListOpenWorkflowRequest"/> message.
         /// </summary>
-        WorkflowListOpenWorkflowReply = 127,
+        WorkflowListOpenReply = 125,
 
         /// <summary>
         /// <b>library --> proxy:</b> Queries a workflow's last execution.
         /// </summary>
-        WorkflowQueryWorkflowRequest = 128,
+        WorkflowQueryRequest = 126,
 
         /// <summary>
-        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowQueryWorkflowRequest"/> message.
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowQueryRequest"/> message.
         /// </summary>
-        WorkflowQueryWorkflowReply = 129,
+        WorkflowQueryReply = 127,
 
         /// <summary>
         /// <b>library --> proxy:</b> Returns information about a worflow execution.
         /// </summary>
-        WorkflowDescribeWorkflowExecutionRequest = 130,
+        WorkflowDescribeWorkflowExecutionRequest = 128,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowDescribeWorkflowExecutionRequest"/> message.
         /// </summary>
-        WorkflowDescribeWorkflowExecutionReply = 131,
+        WorkflowDescribexecutionReply = 129,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
         [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListRequest = 132,
+        WorkflowDescribeTaskListRequest = 130,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
         [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListReply = 133,
+        WorkflowDescribeTaskListReply = 131,
 
         /// <summary>
         /// <b>proxy --> library:</b> Commands the client library and associated .NET application
         /// to process a workflow instance.
         /// </summary>
-        WorkflowInvokeRequest = 134,
+        WorkflowInvokeRequest = 132,
 
         /// <summary>
         /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
         /// </summary>
-        WorkflowInvokeReply = 135,
+        WorkflowInvokeReply = 133,
 
         /// <summary>
         /// <b>proxy --> library:</b> Initiates execution of a child workflow.
         /// </summary>
-        WorkflowExecuteChildRequest = 136,
+        WorkflowExecuteChildRequest = 134,
 
         /// <summary>
         /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
         /// </summary>
-        WorkflowExecuteChildReply = 137,
+        WorkflowExecuteChildReply = 135,
 
         /// <summary>
         /// <b>library --> proxy:</b> Indicates that .NET application wishes to consume signals from
         /// a named channel.  Any signals received by the proxy will be forwarded to the
         /// library via <see cref="WorkflowSignalReceivedRequest"/> messages.
         /// </summary>
-        WorkflowSignalSubscribeRequest = 138,
+        WorkflowSignalSubscribeRequest = 136,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalSubscribeRequest"/> message.
         /// </summary>
-        WorkflowSignalSubscribeReply = 139,
+        WorkflowSignalSubscribeReply = 137,
 
         /// <summary>
         /// <b>proxy --> library:</b> Send when a signal is received by the proxy on a subscribed channel.
         /// </summary>
-        WorkflowSignalReceivedRequest = 140,
+        WorkflowSignalReceivedRequest = 138,
 
         /// <summary>
         /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
         /// </summary>
-        WorkflowSignalReceivedReply = 141,
+        WorkflowSignalReceivedReply = 139,
 
         /// <summary>
         /// <para>
@@ -368,12 +358,12 @@ namespace Neon.Cadence
         /// value from the execution history.
         /// </para>
         /// </summary>
-        WorkflowSideEffectRequest = 142,
+        WorkflowSideEffectRequest = 140,
 
         /// <summary>
         /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
         /// </summary>
-        WorkflowSideEffectReply = 143,
+        WorkflowSideEffectReply = 141,
 
         /// <summary>
         /// <b>proxy --> library:</b> Sent by the proxy to the library the first time a side effect
@@ -381,12 +371,12 @@ namespace Neon.Cadence
         /// side effect value to be persisted in the workflow history and returned back to
         /// the the .NET workflow application.
         /// </summary>
-        WorkflowSideEffectInvokeRequest = 144,
+        WorkflowSideEffectInvokeRequest = 142,
 
         /// <summary>
         /// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
         /// </summary>
-        WorkflowSideEffectInvokeReply = 145,
+        WorkflowSideEffectInvokeReply = 143,
 
         //---------------------------------------------------------------------
         // Activity messages

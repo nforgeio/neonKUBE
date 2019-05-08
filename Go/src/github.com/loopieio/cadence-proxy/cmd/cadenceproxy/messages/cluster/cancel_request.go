@@ -36,19 +36,19 @@ func NewCancelRequest() *CancelRequest {
 // GetTargetRequestID gets a CancelRequest's TargetRequestId value
 // from its properties map
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a CancelRequest's TargetRequestId
-func (request *CancelRequest) GetTargetRequestID() *string {
-	return request.GetStringProperty("TargetRequestId")
+// returns int64 -> a long representing the target to cancels requestID that is
+// in a CancelRequest's properties map
+func (request *CancelRequest) GetTargetRequestID() int64 {
+	return request.GetLongProperty("TargetRequestId")
 }
 
 // SetTargetRequestID sets a CancelRequest's TargetRequestId value
 // in its properties map
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
-func (request *CancelRequest) SetTargetRequestID(value *string) {
-	request.SetStringProperty("TargetRequestId", value)
+// param value int64 -> a long value to be set in the properties map as a
+// CancelRequest's TargetRequestId
+func (request *CancelRequest) SetTargetRequestID(value int64) {
+	request.SetLongProperty("TargetRequestId", value)
 }
 
 // -------------------------------------------------------------------------
@@ -67,8 +67,7 @@ func (request *CancelRequest) Clone() base.IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *CancelRequest) CopyTo(target base.IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
-	v, ok := target.(*CancelRequest)
-	if ok {
+	if v, ok := target.(*CancelRequest); ok {
 		v.SetTargetRequestID(request.GetTargetRequestID())
 	}
 }
@@ -92,18 +91,18 @@ func (request *CancelRequest) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *CancelRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *CancelRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *CancelRequest) GetReplyType() messages.MessageType {

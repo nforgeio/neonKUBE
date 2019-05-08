@@ -6,14 +6,14 @@ type DomainStatus int
 
 const (
 
-	// The status cannot be determined.
+	// StatusUnspecified indicates that the status cannot be determined.
 	StatusUnspecified DomainStatus = iota
 
-	// The domain is registered and active.
+	// Registered indicates that the domain is registered and active.
 	Registered
 
-	// The domain is closed for new workflows but will remain
-	// until already running workflows are completed and the
+	// Deprecated indicates that the domain is closed for new workflows
+	// but will remain until already running workflows are completed and the
 	// history retention period for the last executed workflow
 	// has been satisified.
 	Deprecated

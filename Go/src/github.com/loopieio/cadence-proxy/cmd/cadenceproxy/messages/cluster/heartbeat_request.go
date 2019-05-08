@@ -69,18 +69,18 @@ func (request *HeartbeatRequest) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *HeartbeatRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *HeartbeatRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *HeartbeatRequest) GetReplyType() messages.MessageType {

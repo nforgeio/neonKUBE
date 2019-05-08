@@ -444,7 +444,7 @@ namespace TestCommon
 
             // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
-            await Task.Delay(0);
+            await Task.CompletedTask;
         }
 
         [Fact(Skip = "TODO")]
@@ -455,7 +455,7 @@ namespace TestCommon
 
             // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
-            await Task.Delay(0);
+            await Task.CompletedTask;
         }
 
         [Fact(Skip = "TODO")]
@@ -466,7 +466,7 @@ namespace TestCommon
 
             // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
 
-            await Task.Delay(0);
+            await Task.CompletedTask;
         }
     }
 }

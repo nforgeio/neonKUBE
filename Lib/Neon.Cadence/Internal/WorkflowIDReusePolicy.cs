@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegisterDomainRequest.cs
+// FILE:	    WorkflowIDReusePolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,53 +18,42 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
+using Neon.Retry;
+using Neon.Time;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain.
+    /// Enumerates the workflow ID reuse policies.
     /// </summary>
-    public class UpdateDomainRequest
+    public static class WorkflowIDReusePolicy
     {
         /// <summary>
-        /// The domain name.
+        /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution
+        /// when workflow not running, and the last execution close state is in
+        /// [terminated, cancelled, timeouted, failed].
         /// </summary>
-        public string Name { get; set; }
+        public const int WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0;
 
         /// <summary>
-        /// The updated basic domain properties.
+        /// WorkflowIDReusePolicyAllowDuplicate allow start a workflow execution using
+        /// the same workflow ID,when workflow not running.
         /// </summary>
-        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
+        public const int WorkflowIDReusePolicyAllowDuplicate = 1;
 
         /// <summary>
-        /// The updated domain confifuration.
+        /// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution
+        /// using the same workflow ID at all.
         /// </summary>
-        public DomainConfiguation Configuration { get; set; } = new DomainConfiguation();
+        public const int orkflowIDReusePolicyRejectDuplicate = 2;
     }
 }

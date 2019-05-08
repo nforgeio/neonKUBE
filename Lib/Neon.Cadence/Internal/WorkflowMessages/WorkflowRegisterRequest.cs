@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyMessage.cs
+// FILE:	    WorkflowRegisterRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,32 +28,52 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-// $todo(jeff.lill)
-//
-// Performance could be improved by maintaining output stream and buffer pools
-// rather than allocating these every time.
-
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Used to tag proxy message class implementations and also associate
-    /// the message class with the message type code.
+    /// <b>library --> proxy:</b> Registers a workflow handler by name.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    internal class ProxyMessageAttribute : Attribute
+    [ProxyMessage(MessageTypes.WorkflowRegisterRequest)]
+    internal class WorkflowRegisterRequest : ProxyRequest
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
-        /// <param name="type">Specifies the message type to be used when serializing the tagged message.</param>
-        public ProxyMessageAttribute(MessageTypes type)
+        public WorkflowRegisterRequest()
         {
-            this.Type = type;
+            Type = MessageTypes.WorkflowRegisterRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.WorkflowRegisterReply;
+
         /// <summary>
-        /// Returns the associated message type code.
+        /// Identifies the workflow implementation.
         /// </summary>
-        public MessageTypes Type { get; private set; }
+        public string Name
+        {
+            get => GetStringProperty("Name");
+            set => SetStringProperty("Name", value);
+        }
+
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new WorkflowRegisterRequest();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+
+            var typedTarget = (WorkflowRegisterRequest)target;
+
+            typedTarget.Name = this.Name;
+        }
     }
 }

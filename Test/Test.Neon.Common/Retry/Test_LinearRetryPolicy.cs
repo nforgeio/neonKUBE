@@ -87,7 +87,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new TransientException();
                         });
                 });
@@ -110,7 +110,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new TransientException();
                         });
                 });
@@ -133,7 +133,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new NotImplementedException();
                         });
                 });
@@ -155,7 +155,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new NotImplementedException();
                         });
                 });
@@ -177,7 +177,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
 
                             if (times.Count < 2)
                             {
@@ -208,7 +208,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
 
                             if (times.Count < 2)
                             {
@@ -237,7 +237,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     success = true;
                 });
@@ -251,13 +251,13 @@ namespace TestCommon
         public async Task SuccessImmediate_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
-            var times   = new List<DateTime>();
+            var times  = new List<DateTime>();
 
             var success = await policy.InvokeAsync(
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     return "WOOHOO!";
                 });
@@ -278,7 +278,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -297,14 +297,14 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessDelayed_Result()
         {
-            var policy  = new LinearRetryPolicy(TransientDetector);
-            var times   = new List<DateTime>();
+            var policy = new LinearRetryPolicy(TransientDetector);
+            var times  = new List<DateTime>();
 
             var success = await policy.InvokeAsync(
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -323,15 +323,15 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessDelayedByType()
         {
-            var policy = new LinearRetryPolicy(typeof(NotReadyException));
-            var times = new List<DateTime>();
+            var policy  = new LinearRetryPolicy(typeof(NotReadyException));
+            var times   = new List<DateTime>();
             var success = false;
 
             await policy.InvokeAsync(
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -358,7 +358,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -385,7 +385,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -422,7 +422,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -451,7 +451,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -464,6 +464,33 @@ namespace TestCommon
             Assert.Equal("WOOHOO!", success);
             Assert.Equal(policy.MaxAttempts, times.Count);
             VerifyIntervals(times, policy);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task Timeout()
+        {
+            var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2), timeout: TimeSpan.FromSeconds(5));
+            var times  = new List<DateTime>();
+
+            Assert.Equal(4, policy.MaxAttempts);
+            Assert.Equal(TimeSpan.FromSeconds(2), policy.RetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(5), policy.Timeout);
+
+            await Assert.ThrowsAsync<TransientException>(
+                async () =>
+                {
+                    await policy.InvokeAsync(
+                        async () =>
+                        {
+                            times.Add(DateTime.UtcNow);
+                            await Task.CompletedTask;
+
+                            throw new TransientException();
+                        });
+                });
+
+            Assert.Equal(4, times.Count);
         }
     }
 }

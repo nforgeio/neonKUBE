@@ -48,6 +48,9 @@ namespace Neon.Retry
         }
 
         /// <inheritdoc/>
+        public TimeSpan? Timeout => null;
+
+        /// <inheritdoc/>
         public IRetryPolicy Clone()
         {
             // The class is invariant we can safely return ourself.

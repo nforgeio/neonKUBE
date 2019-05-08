@@ -25,8 +25,6 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
-		GetRequestID() int64
-		SetRequestID(value int64)
 		GetReplyType() messages.MessageType
 	}
 )
@@ -55,10 +53,6 @@ func (request *ProxyRequest) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	request.ProxyMessage.CopyTo(target)
-	v, ok := target.(IProxyRequest)
-	if ok {
-		v.SetRequestID(request.GetRequestID())
-	}
 }
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
@@ -80,24 +74,18 @@ func (request *ProxyRequest) String() string {
 	return str
 }
 
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetRequestID gets a request id from a ProxyMessage's properties
-//
-// returns int64 -> long as a ProxyRequest's request id from the properties map
+// GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *ProxyRequest) GetRequestID() int64 {
 	return request.GetLongProperty("RequestId")
 }
 
-// SetRequestID sets a request id in a ProxyRequest's ProxyMessage
-// properties
-//
-// param value int64 -> the long representation of a ProxyRequest's
-// request id to be set in the properties map
+// SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *ProxyRequest) SetRequestID(value int64) {
 	request.SetLongProperty("RequestId", value)
 }
+
+// -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType gets the MessageType used to reply to a specific
 // ProxyRequest
