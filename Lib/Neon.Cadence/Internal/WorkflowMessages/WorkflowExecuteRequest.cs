@@ -74,6 +74,15 @@ namespace Neon.Cadence.Internal
             set => SetJsonProperty<Dictionary<string, object>>("Args", value);
         }
 
+        /// <summary>
+        /// The workflow start options.
+        /// </summary>
+        public StartWorkflowOptions Options
+        {
+            get => GetJsonProperty<StartWorkflowOptions>("Options");
+            set => SetJsonProperty<StartWorkflowOptions>("Options", value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
