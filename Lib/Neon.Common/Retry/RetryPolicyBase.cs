@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Common;
 using Neon.Diagnostics;
 
 namespace Neon.Retry
@@ -32,18 +33,46 @@ namespace Neon.Retry
     public abstract class RetryPolicyBase : IRetryPolicy
     {
         private INeonLogger log;
+        private DateTime    utcDeadline;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
-        public RetryPolicyBase(string sourceModule = null)
+        /// <param name="timeout">Optionally specifies the maximum time the operation should be retried (defaults to no limit).</param>
+        public RetryPolicyBase(string sourceModule = null, TimeSpan? timeout = null)
         {
             if (!string.IsNullOrEmpty(sourceModule))
             {
-                log = LogManager.Default.GetLogger(sourceModule);
+                this.log = LogManager.Default.GetLogger(sourceModule);
+            }
+
+            if (timeout != null && timeout >= TimeSpan.Zero)
+            {
+                this.Timeout = timeout;
+
+                // Compute the UTC deadline, taking care not not to
+                // exceed the end-of-time.
+
+                var utcNow = DateTime.UtcNow;
+
+                if (timeout >= DateTime.MaxValue - utcNow)
+                {
+                    utcDeadline = DateTime.MaxValue;
+                }
+                else
+                {
+                    utcDeadline = utcNow + timeout.Value;
+                }
+            }
+            else
+            {
+                utcDeadline = DateTime.MaxValue;
             }
         }
+
+        /// <inheritdoc/>
+        public TimeSpan? Timeout { get; private set; }
 
         /// <inheritdoc/>
         public abstract IRetryPolicy Clone();
@@ -62,6 +91,35 @@ namespace Neon.Retry
         protected void LogTransient(Exception e)
         {
             log?.LogWarn("[transient-retry]", e);
+        }
+
+        /// <summary>
+        /// Adjusts the delay <see cref="TimeSpan"/> passed to ensure such
+        /// that delaying the next retry won't exceed the overall retry
+        /// timeout (if specified).
+        /// </summary>
+        /// <param name="delay">The requested delay.</param>
+        /// <returns>The adjusted delay.</returns>
+        /// <remarks>
+        /// <note>
+        /// If the result is <see cref="TimeSpan.Zero"/> or negative, the
+        /// calling retry policy should immediately stop retrying.
+        /// </note>
+        /// </remarks>
+        protected TimeSpan AdjustDelay(TimeSpan delay)
+        {
+            Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero);
+
+            var maxDelay = utcDeadline - DateTime.UtcNow;
+
+            if (delay > maxDelay)
+            {
+                return maxDelay;
+            }
+            else
+            {
+                return delay;
+            }
         }
     }
 }

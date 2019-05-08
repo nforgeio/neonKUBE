@@ -251,7 +251,7 @@ namespace TestCommon
         public async Task SuccessImmediate_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
-            var times   = new List<DateTime>();
+            var times  = new List<DateTime>();
 
             var success = await policy.InvokeAsync(
                 async () =>
@@ -297,8 +297,8 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessDelayed_Result()
         {
-            var policy  = new LinearRetryPolicy(TransientDetector);
-            var times   = new List<DateTime>();
+            var policy = new LinearRetryPolicy(TransientDetector);
+            var times  = new List<DateTime>();
 
             var success = await policy.InvokeAsync(
                 async () =>
@@ -323,8 +323,8 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessDelayedByType()
         {
-            var policy = new LinearRetryPolicy(typeof(NotReadyException));
-            var times = new List<DateTime>();
+            var policy  = new LinearRetryPolicy(typeof(NotReadyException));
+            var times   = new List<DateTime>();
             var success = false;
 
             await policy.InvokeAsync(
@@ -464,6 +464,33 @@ namespace TestCommon
             Assert.Equal("WOOHOO!", success);
             Assert.Equal(policy.MaxAttempts, times.Count);
             VerifyIntervals(times, policy);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task Timeout()
+        {
+            var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2), timeout: TimeSpan.FromSeconds(5));
+            var times  = new List<DateTime>();
+
+            Assert.Equal(4, policy.MaxAttempts);
+            Assert.Equal(TimeSpan.FromSeconds(2), policy.RetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(5), policy.Timeout);
+
+            await Assert.ThrowsAsync<TransientException>(
+                async () =>
+                {
+                    await policy.InvokeAsync(
+                        async () =>
+                        {
+                            times.Add(DateTime.UtcNow);
+                            await Task.Delay(0);
+
+                            throw new TransientException();
+                        });
+                });
+
+            Assert.Equal(4, times.Count);
         }
     }
 }

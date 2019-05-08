@@ -477,5 +477,33 @@ namespace TestCommon
             Assert.Equal(policy.MaxAttempts, times.Count);
             VerifyIntervals(times, policy);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task Timeout()
+        {
+            var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(2));
+            var times  = new List<DateTime>();
+
+            Assert.Equal(6, policy.MaxAttempts);
+            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(2), policy.Timeout);
+
+            await Assert.ThrowsAsync<TransientException>(
+                async () =>
+                {
+                    await policy.InvokeAsync(
+                        async () =>
+                        {
+                            times.Add(DateTime.UtcNow);
+                            await Task.Delay(0);
+
+                            throw new TransientException();
+                        });
+                });
+
+            Assert.True(times.Count < 6);
+        }
     }
 }
