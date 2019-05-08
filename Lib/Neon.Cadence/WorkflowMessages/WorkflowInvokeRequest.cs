@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRequest.cs
+// FILE:	    WorkflowInvokeRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,31 +31,44 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow requests.
+    /// <b>proxy --> library:</b> Invokes a workflow instance.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.WorkflowInvokeRequest)]
+    internal class WorkflowInvokeRequest : WorkflowContextRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowRequest()
+        public WorkflowInvokeRequest()
         {
+            Type = MessageTypes.WorkflowInvokeRequest;
+        }
+
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
+
+        /// <summary>
+        /// Identifies the workflow implementation to be started.
+        /// </summary>
+        public string Name
+        {
+            get => GetStringProperty("Name");
+            set => SetStringProperty("Name", value);
         }
 
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this request.
+        /// The workflow arguments dictionary (or <c>null</c>).
         /// </summary>
-        public long WorkflowContextId
+        public Dictionary<string, object> Args
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetJsonProperty<Dictionary<string, object>>("Args");
+            set => SetJsonProperty<Dictionary<string, object>>("Args", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowRequest();
+            var clone = new WorkflowInvokeRequest();
 
             CopyTo(clone);
 
@@ -67,9 +80,21 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowRequest)target;
+            var typedTarget = (WorkflowInvokeRequest)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.Name = this.Name;
+
+            if (this.Args != null)
+            {
+                var clonedArgs = new Dictionary<string, object>();
+
+                foreach (var arg in this.Args)
+                {
+                    clonedArgs.Add(arg.Key, arg.Value);
+                }
+
+                typedTarget.Args = clonedArgs;
+            }
         }
     }
 }

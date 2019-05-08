@@ -603,6 +603,28 @@ namespace Neon.Cadence.Internal
             }
         }
 
+        /// <summary>
+        /// Helper method for retrieving a byte array property.
+        /// </summary>
+        /// <param name="key">The property key.</param>]
+        /// <returns>The byte array or <c>null</c>.</returns>
+        internal byte[] GetBytesProperty(string key)
+        {
+            if (Properties.TryGetValue(key, out var value))
+            {
+                if (value == null)
+                {
+                    return null;
+                }
+
+                return Convert.FromBase64String(value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Helper methods derived classes can use for setting typed message properties.
 
@@ -718,6 +740,23 @@ namespace Neon.Cadence.Internal
             }
 
             Properties[key] = json;
+        }
+
+        /// <summary>
+        /// Helper method for setting a byte array property.
+        /// </summary>
+        /// <param name="key">The property key.</param>
+        /// <param name="value">The property value.</param>
+        internal void SetBytesProperty(string key, byte[] value)
+        {
+            if (value == null)
+            {
+                Properties[key] = null;
+            }
+            else
+            {
+                Properties[key] = Convert.ToBase64String(value);
+            }
         }
     }
 }

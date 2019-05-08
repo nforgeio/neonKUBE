@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRequest.cs
+// FILE:	    WorkflowRegisterRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,31 +31,35 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow replies.
+    /// <b>library --> proxy:</b> Registers a workflow handler by name.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowReply : ProxyReply
+    [ProxyMessage(MessageTypes.WorkflowRegisterRequest)]
+    internal class WorkflowRegisterRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowReply()
+        public WorkflowRegisterRequest()
         {
+            Type = MessageTypes.WorkflowRegisterRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.WorkflowRegisterReply;
+
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this reply.
+        /// Identifies the workflow implementation.
         /// </summary>
-        public long WorkflowContextId
+        public string Name
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetStringProperty("Name");
+            set => SetStringProperty("Name", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowReply();
+            var clone = new WorkflowRegisterRequest();
 
             CopyTo(clone);
 
@@ -67,9 +71,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowReply)target;
+            var typedTarget = (WorkflowRegisterRequest)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.Name = this.Name;
         }
     }
 }
