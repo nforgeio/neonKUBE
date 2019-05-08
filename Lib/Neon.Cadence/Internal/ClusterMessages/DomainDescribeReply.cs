@@ -29,10 +29,6 @@ using YamlDotNet.Serialization;
 using Neon.Cadence;
 using Neon.Common;
 
-// $todo(jeff.lill):
-//
-// There's several more fields that could be handled.
-
 namespace Neon.Cadence.Internal
 {
     /// <summary>
