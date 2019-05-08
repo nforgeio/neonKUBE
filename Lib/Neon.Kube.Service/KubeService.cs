@@ -48,7 +48,9 @@ namespace Neon.Kube.Service
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
     /// your service is started.  This is where you'll implement your service.  Note that your 
-    /// <see cref="OnRunAsync"/> method should not return until the <see cref="Terminator"/> signals it to stop.
+    /// <see cref="OnRunAsync"/> method should generally not return until the <see cref="Terminator"/>
+    /// signals it to stop.  Alternatively, you can throw a <see cref="ProgramExitException"/> with
+    /// a process exit code to terminate your service.
     /// </para>
     /// <note>
     /// All services should properly handle <see cref="Terminator"/> stop signals so unit tests will terminate
@@ -70,15 +72,15 @@ namespace Neon.Kube.Service
     /// <para>
     /// Services are generally configured using environment variables and/or configuration
     /// files.  In production, environment variables will actually come from the environment
-    /// after having been initialized by the container image or set by Kubernetes when
+    /// after having been initialized by the container image or passed by Kubernetes when
     /// starting the service container.  Environment variables are retrieved by name
     /// (case sensitive).
     /// </para>
     /// <para>
     /// Configuration files work the same way.  They are either present in the service 
-    /// container image or passed to the container as a secret or config file by Kubernetes. 
-    /// Configuration files are specified by their path (case sensitive) as located within
-    /// the running container.
+    /// container image or mounted to the container as a secret or config file by Kubernetes. 
+    /// Configuration files are specified by their path (case sensitive) within the
+    /// running container.
     /// </para>
     /// <para>
     /// This class provides some abstractions for managing environment variables and 
@@ -90,7 +92,7 @@ namespace Neon.Kube.Service
     /// Services should use the <see cref="GetEnvironmentVariable(string, string)"/> method to 
     /// retrieve important environment variables rather than using <see cref="Environment.GetEnvironmentVariable(string)"/>.
     /// In production, this simply returns the variable directly from the current process.
-    /// For test, the environment variable will be returned from a local dictionary
+    /// For tests, the environment variable will be returned from a local dictionary
     /// that was expicitly initialized by calls to <see cref="SetEnvironmentVariable(string, string)"/>.
     /// This local dictionary allows the testing of multiple services at the same
     /// time with each being presented their own environment variables.
@@ -98,15 +100,15 @@ namespace Neon.Kube.Service
     /// <para>
     /// You may also use the <see cref="LoadEnvironmentVariables(string, Func{string, string})"/>
     /// method to load environment variables from a text file (potentially encrypted via
-    /// <see cref="NeonVault"/>.  This will typically be done only for unit tests.
+    /// <see cref="NeonVault"/>).  This will typically be done only for unit tests.
     /// </para>
     /// <para>
     /// Configuration files work similarily.  You'll use <see cref="GetConfigFilePath(string)"/>
     /// to map a logical file path to a physical path.  The logical file path is typically
     /// specified as the path where the configuration file will be located in production.
     /// This can be any valid path with in a running production container and since we're
-    /// currently Linux centric, will typically be a Linux file path like <c>/myconfig.yaml</c>
-    /// or <c>/var/run/myconfig.yaml</c>.
+    /// currently Linux centric, will typically be a Linux file path like <c>/etc/MYSERVICE.yaml</c>
+    /// or <c>/etc/MYSERVICE/config.yaml</c>.
     /// </para>
     /// <para>
     /// For production, <see cref="GetConfigFilePath(string)"/> will simply return the file
@@ -122,6 +124,55 @@ namespace Neon.Kube.Service
     /// You can also use <see cref="LoadConfigFile(string, string, Func{string, string})"/>
     /// during unit testing to load a potentially encrypted configuration file.
     /// </para>
+    /// <para><b>SERVICE TERMINATION</b></para>
+    /// <para>
+    /// All services, especially those that create unmanaged resources like ASP.NET services,
+    /// sockets, NATS clients, HTTP clients, thread etc. should override and implement 
+    /// <see cref="Dispose(bool)"/>  to ensure that any of these resources are proactively 
+    /// disposed.  Your method should call the base class version of the method first before 
+    /// disposing these resources.
+    /// </para>
+    /// <code language="C#">
+    /// protected override Dispose(bool disposing)
+    /// {
+    ///     base.Dispose(disposing);
+    ///     
+    ///     if (appHost != null)
+    ///     {
+    ///         appHost.Dispose();
+    ///         appHost = null;
+    ///     }
+    /// }
+    /// </code>
+    /// <para>
+    /// The <b>disposing</b> parameter is passed as <c>true</c> when the base <see cref="KubeService.Dispose()"/>
+    /// method was called or <c>false</c> if the garbage collector is finalizing the instance
+    /// before discarding it.  The difference is subtle and most services can safely ignore
+    /// this parameter (other than passing it through to the base <see cref="Dispose(bool)"/>
+    /// method).
+    /// </para>
+    /// <para>
+    /// In the example above, the service implements an ASP.NET web service where <c>appHost</c>
+    /// was initialized as the <c>IWebHost</c> actually implementing the web service.  The code
+    /// ensures that the <c>appHost</c> isn't already disposed before disposing it.  This will
+    /// stop the web service and release the underlying listening socket.  You'll want to do
+    /// something like this for any other unmanaged resources your service might hold.
+    /// </para>
+    /// <note>
+    /// <para>
+    /// It's very important that you take care to dispose things like running web services and
+    /// listening sockets within your <see cref="Dispose(bool)"/> method.  You also need to
+    /// ensure that any threads you've created are terminated.  This means that you'll need
+    /// a way to signal threads to exit and then wait for them to actually exit.
+    /// </para>
+    /// <para>
+    /// This is important when testing your services with a unit testing framework like
+    /// Xunit because frameworks like this run all tests within the same Test Runner
+    /// process and leaving something like a listening socket open on a port (say port 80)
+    /// may prevent a subsequent test from running successfully due to it not being able 
+    /// to open its listening socket on port 80. 
+    /// </para>
+    /// </note>
     /// <para><b>LOGGING</b></para>
     /// <para>
     /// Each <see cref="KubeService"/> instance maintains its own <see cref="LogManager"/>
@@ -316,14 +367,14 @@ namespace Neon.Kube.Service
         public bool InDevelopment => !InProduction;
 
         /// <summary>
-        /// Returns the service description.
-        /// </summary>
-        public ServiceDescription Description { get; private set; }
-
-        /// <summary>
         /// Returns the service name.
         /// </summary>
         public string Name => Description.Name;
+
+        /// <summary>
+        /// Returns the service description.
+        /// </summary>
+        public ServiceDescription Description { get; private set; }
 
         /// <summary>
         /// Returns GIT branch and commit the service was built from as
