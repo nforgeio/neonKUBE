@@ -39,6 +39,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;

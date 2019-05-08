@@ -30,6 +30,7 @@ using Newtonsoft.Json.Linq;
 
 using YamlDotNet.Serialization;
 
+using Neon.Cadence;
 using Neon.Common;
 using Neon.Collections;
 using Neon.Data;

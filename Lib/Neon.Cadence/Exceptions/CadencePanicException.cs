@@ -33,5 +33,8 @@ namespace Neon.Cadence
             : base(message, innerException)
         {
         }
+
+        /// <inheritdoc/>
+        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Panic;
     }
 }

@@ -166,21 +166,15 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
-                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
-                message.ErrorType = CadenceErrorTypes.Custom;
-                message.Error = "MyError";
-                message.ErrorDetails = "MyError Details";
+                message.Error = new CadenceError("MyError");
 
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -189,9 +183,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
             }
         }
 
@@ -257,21 +249,15 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
-                Assert.Null(message.ErrorDetails);
                 Assert.Equal(0, message.ActivityContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.ErrorType = CadenceErrorTypes.Custom;
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                message.Error = "MyError";
-                Assert.Equal("MyError", message.Error);
-                message.ErrorDetails = "MyError Details";
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
                 message.ActivityContextId = 666;
                 Assert.Equal(666, message.ActivityContextId);
 
@@ -282,9 +268,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ActivityContextId);
             }
         }
@@ -351,21 +335,15 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
-                Assert.Null(message.ErrorDetails);
                 Assert.Equal(0, message.WorkflowContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.ErrorType = CadenceErrorTypes.Custom;
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                message.Error = "MyError";
-                Assert.Equal("MyError", message.Error);
-                message.ErrorDetails = "MyError Details";
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
                 message.WorkflowContextId = 666;
                 Assert.Equal(666, message.WorkflowContextId);
 
@@ -376,9 +354,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.WorkflowContextId);
             }
         }

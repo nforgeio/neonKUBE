@@ -26,6 +26,7 @@ using System.Text;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
+using Neon.Cadence;
 using Neon.Common;
 
 namespace Neon.Cadence.Internal
@@ -53,67 +54,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Optionally indicates the error type.
+        /// Optionally indicates that the request failed.
         /// </summary>
-        public CadenceErrorTypes ErrorType
+        public CadenceError Error
         {
-            get
-            {
-                switch (GetStringProperty("ErrorType"))
-                {
-                    case null:          return CadenceErrorTypes.None;
-                    case "cancelled":   return CadenceErrorTypes.Cancelled;
-                    case "custom":      return CadenceErrorTypes.Custom;
-                    case "generic":     return CadenceErrorTypes.Generic;
-                    case "panic":       return CadenceErrorTypes.Panic;
-                    case "terminated":  return CadenceErrorTypes.Terminated;
-                    case "timeout":     return CadenceErrorTypes.Timeout;
-
-                    default:
-
-                        throw new NotImplementedException();
-                }
-            }
-
-            set
-            {
-                string typeString;
-
-                switch (value)
-                {
-                    case CadenceErrorTypes.None:        typeString = null;          break;
-                    case CadenceErrorTypes.Cancelled:   typeString = "cancelled";   break;
-                    case CadenceErrorTypes.Custom:      typeString = "custom";      break;
-                    case CadenceErrorTypes.Generic:     typeString = "generic";     break;
-                    case CadenceErrorTypes.Panic:       typeString = "panic";       break;
-                    case CadenceErrorTypes.Terminated:  typeString = "terminated";  break;
-                    case CadenceErrorTypes.Timeout:     typeString = "timeout";     break;
-
-                    default:
-
-                        throw new NotImplementedException();
-                }
-
-                SetStringProperty("ErrorType", typeString);
-            }
-        }
-
-        /// <summary>
-        /// Optionally identifies the specific error.
-        /// </summary>
-        public string Error
-        {
-            get => GetStringProperty("Error");
-            set => SetStringProperty("Error", value);
-        }
-
-        /// <summary>
-        /// Optionally specifies additional error details.
-        /// </summary>
-        public string ErrorDetails
-        {
-            get => GetStringProperty("ErrorDetails");
-            set => SetStringProperty("ErrorDetails", value);
+            get => GetJsonProperty<CadenceError>("Error");
+            set => SetJsonProperty<CadenceError>("Error", value);
         }
 
         /// <inheritdoc/>
@@ -133,10 +79,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ProxyReply)target;
 
-            typedTarget.RequestId    = this.RequestId;
-            typedTarget.ErrorType    = this.ErrorType;
-            typedTarget.Error        = this.Error;
-            typedTarget.ErrorDetails = this.ErrorDetails;
+            typedTarget.RequestId = this.RequestId;
+            typedTarget.Error     = this.Error;
         }
 
         /// <summary>
@@ -144,9 +88,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public void ThrowOnError()
         {
-            if (!string.IsNullOrEmpty(Error))
+            var error = this.Error;
+
+            if (error != null)
             {
-                throw CadenceException.Create(ErrorType, Error, ErrorDetails);
+                throw error.ToException();
             }
         }
     }

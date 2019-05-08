@@ -26,6 +26,7 @@ using System.Text;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
+using Neon.Cadence;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
@@ -35,7 +36,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Enumerates the workflow ID reuse policies.
     /// </summary>
-    public static class WorkflowIDReusePolicy
+    internal static class WorkflowIDReusePolicy
     {
         /// <summary>
         /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution

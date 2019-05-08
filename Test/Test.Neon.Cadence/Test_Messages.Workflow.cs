@@ -115,20 +115,14 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowRegisterReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
-                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.ErrorType = CadenceErrorTypes.Custom;
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                message.Error = "MyError";
-                Assert.Equal("MyError", message.Error);
-                message.ErrorDetails = "MyError Details";
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -137,27 +131,21 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowRegisterReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
             }
         }
 
@@ -261,9 +249,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(TimeSpan.Zero, message.DecisionTimeout);
-                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
-                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
@@ -271,12 +257,8 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.DecisionTimeout = TimeSpan.FromMinutes(120);
                 Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
-                message.ErrorType = CadenceErrorTypes.Custom;
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                message.Error = "MyError";
-                Assert.Equal("MyError", message.Error);
-                message.ErrorDetails = "MyError Details";
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -286,9 +268,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -296,9 +276,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -306,9 +284,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
             }
         }
 
@@ -396,20 +372,14 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Result);
-                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
                 Assert.Null(message.Error);
-                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.ErrorType = CadenceErrorTypes.Custom;
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                message.Error = "MyError";
-                Assert.Equal("MyError", message.Error);
-                message.ErrorDetails = "MyError Details";
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -418,27 +388,21 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowInvokeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
-                Assert.Equal("MyError", message.Error);
-                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.Equal("MyError", message.Error.String);
             }
         }
     }

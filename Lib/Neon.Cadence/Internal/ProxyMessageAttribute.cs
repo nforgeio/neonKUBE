@@ -26,6 +26,7 @@ using System.Text;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
+using Neon.Cadence;
 using Neon.Common;
 
 // $todo(jeff.lill)

@@ -37,12 +37,6 @@ namespace Neon.Cadence
     public enum CadenceErrorTypes
     {
         /// <summary>
-        /// Indicates that there was no error.
-        /// </summary>
-        [EnumMember(Value = "none")]
-        None = 0,
-
-        /// <summary>
         /// An operation was cancelled.
         /// </summary>
         [EnumMember(Value = "cancelled")]
