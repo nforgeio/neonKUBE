@@ -277,7 +277,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task GlobalDomain()
+        public async Task Domain()
         {
             // Exercise the Cadence global domain operations.
 
