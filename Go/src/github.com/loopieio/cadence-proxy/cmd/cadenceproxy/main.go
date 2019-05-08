@@ -8,13 +8,11 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/endpoints"
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 	clustermessages "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/server"
 )
 
 func init() {
-	base.InitProxyMessage()
 	clustermessages.FillMessageTypeStructMap()
 }
 

@@ -23,7 +23,6 @@ const (
 type WorkflowClientBuilder struct {
 	hostPort      string
 	domain        string
-	serviceName   string
 	dispatcher    *yarpc.Dispatcher
 	Logger        *zap.Logger
 	clientOptions *client.Options
@@ -49,13 +48,8 @@ func (b *WorkflowClientBuilder) SetDomain(domain string) *WorkflowClientBuilder 
 }
 
 // SetDispatcher sets the dispatcher for the builder
-func (b *WorkflowClientBuilder) SetDispatcher(dispatcherConfig *yarpc.Config) *WorkflowClientBuilder {
-	if dispatcherConfig == nil {
-		b.dispatcher = nil
-	} else {
-		b.dispatcher = yarpc.NewDispatcher(*dispatcherConfig)
-	}
-
+func (b *WorkflowClientBuilder) SetDispatcher(dispatcher *yarpc.Dispatcher) *WorkflowClientBuilder {
+	b.dispatcher = dispatcher
 	return b
 }
 
@@ -66,16 +60,10 @@ func (b *WorkflowClientBuilder) SetClientOptions(opts *client.Options) *Workflow
 	// set defaults for client options
 	if opts == nil {
 		b.clientOptions.MetricsScope = tally.NoopScope
-		b.clientOptions.Identity = fmt.Sprintf("%s__%s", b.serviceName, uuid.New().String())
+		b.clientOptions.Identity = fmt.Sprintf("%s__%s", _cadenceFrontendService, uuid.New().String())
 	}
+
 	b.clientOptions = opts
-
-	return b
-}
-
-// SetServiceName sets the service name for the builder
-func (b *WorkflowClientBuilder) SetServiceName(serviceName string) *WorkflowClientBuilder {
-	b.serviceName = serviceName
 	return b
 }
 
@@ -86,8 +74,7 @@ func (b *WorkflowClientBuilder) BuildCadenceClient() (client.Client, error) {
 		return nil, err
 	}
 
-	return client.NewClient(
-		service, b.domain, b.clientOptions), nil
+	return client.NewClient(service, b.domain, b.clientOptions), nil
 }
 
 // BuildCadenceDomainClient builds a domain client to cadence service
@@ -97,8 +84,7 @@ func (b *WorkflowClientBuilder) BuildCadenceDomainClient() (client.DomainClient,
 		return nil, err
 	}
 
-	return client.NewDomainClient(
-		service, b.clientOptions), nil
+	return client.NewDomainClient(service, b.clientOptions), nil
 }
 
 // BuildServiceClient builds a rpc service client to cadence service
@@ -108,10 +94,15 @@ func (b *WorkflowClientBuilder) BuildServiceClient() (workflowserviceclient.Inte
 	}
 
 	if b.dispatcher == nil {
-		b.Logger.Fatal("No RPC dispatcher provided to create a connection to Cadence Service")
+		err := fmt.Errorf("no RPC dispatcher provided to create a connection to Cadence Service")
+
+		// $debug(jack.burns): DELETE THIS!
+		b.Logger.Debug("error building service client", zap.Error(err))
+		return nil, err
+
 	}
 
-	return workflowserviceclient.New(b.dispatcher.ClientConfig(b.serviceName)), nil
+	return workflowserviceclient.New(b.dispatcher.ClientConfig(_cadenceFrontendService)), nil
 }
 
 // build builds the transport channels and dispatcher
@@ -132,29 +123,35 @@ func (b *WorkflowClientBuilder) build() error {
 		tchannel.Logger(b.Logger))
 
 	if err != nil {
-		b.Logger.Fatal("Failed to create transport channel", zap.Error(err))
+
+		// $debug(jack.burns): DELETE THIS!
+		b.Logger.Debug("Failed to create transport channel", zap.Error(err))
+		return err
 	}
 
+	// $debug(jack.burns): DELETE THIS!
 	b.Logger.Debug("Creating RPC dispatcher outbound",
-		zap.String("ServiceName", b.serviceName),
+		zap.String("ServiceName", _cadenceFrontendService),
 		zap.String("HostPort", b.hostPort))
 
-	if b.dispatcher == nil {
-		b.dispatcher = yarpc.NewDispatcher(yarpc.Config{
-			Name: _cadenceClientName,
-			Outbounds: yarpc.Outbounds{
-				b.serviceName: {Unary: ch.NewSingleOutbound(b.hostPort)},
-			},
-		})
-	}
+	b.dispatcher = yarpc.NewDispatcher(yarpc.Config{
+		Name: _cadenceClientName,
+		Outbounds: yarpc.Outbounds{
+			_cadenceFrontendService: {Unary: ch.NewSingleOutbound(b.hostPort)},
+		},
+	})
 
 	if b.dispatcher != nil {
 		if err := b.dispatcher.Start(); err != nil {
-			b.Logger.Fatal("Failed to create outbound transport channel: %v", zap.Error(err))
+
+			// $debug(jack.burns): DELETE THIS!
+			b.Logger.Debug("Failed to create outbound transport channel: %v", zap.Error(err))
+			return err
 		}
 
+		// $debug(jack.burns): DELETE THIS!
 		b.Logger.Debug("Created outbound transport channel/RPC dispatcher outbound",
-			zap.String("ServiceName", b.serviceName),
+			zap.String("ServiceName", _cadenceFrontendService),
 			zap.String("HostPort", b.hostPort))
 	}
 

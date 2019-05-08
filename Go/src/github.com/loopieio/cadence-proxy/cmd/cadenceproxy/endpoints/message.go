@@ -2,9 +2,15 @@ package endpoints
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"go.uber.org/cadence"
+
+	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+	"go.uber.org/cadence/client"
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
 
@@ -133,6 +139,7 @@ func createReplyMessage(request base.IProxyMessage) (base.IProxyMessage, error) 
 		key := int(v.GetReplyType())
 		proxyMessage := base.MessageTypeStructMap[key].Clone()
 		proxyMessage.SetRequestID(request.GetRequestID())
+
 		return proxyMessage, nil
 	}
 
@@ -190,41 +197,42 @@ func handleIProxyRequest(request base.IProxyMessage) (int, error) {
 
 	// error for catching exceptions in the switch block
 	var err error
+	var reply base.IProxyMessage
 
 	// handle the messages individually based on their message type
 	switch requestProxyMessage.Type {
 
 	// InitializeRequest
 	case messages.InitializeRequest:
-		err = handleInitializeRequest(request)
+		reply, err = handleInitializeRequest(request)
 
 	// HeartbeatRequest
 	case messages.HeartbeatRequest:
-		err = handleHeartbeatRequest(request)
+		reply, err = handleHeartbeatRequest(request)
 
 	// CancelRequest
 	case messages.CancelRequest:
-		err = handleCancelRequest(request)
+		reply, err = handleCancelRequest(request)
 
 	// ConnectRequest
 	case messages.ConnectRequest:
-		err = handleConnectRequest(request)
+		reply, err = handleConnectRequest(request)
 
 	// DomainDescribeRequest
 	case messages.DomainDescribeRequest:
-		err = handleDomainDescribeRequest(request)
+		reply, err = handleDomainDescribeRequest(request)
 
 	// DomainRegisterRequest
 	case messages.DomainRegisterRequest:
-		err = handleDomainRegisterRequest(request)
+		reply, err = handleDomainRegisterRequest(request)
 
 	// DomainUpdateRequest
 	case messages.DomainUpdateRequest:
-		err = handleDomainUpdateRequest(request)
+		reply, err = handleDomainUpdateRequest(request)
 
 	// TerminateRequest
 	case messages.TerminateRequest:
-		err = handleTerminateRequest(request)
+		reply, err = handleTerminateRequest(request)
 
 	// Undefined message type
 	default:
@@ -237,12 +245,6 @@ func handleIProxyRequest(request base.IProxyMessage) (int, error) {
 
 	// catch any errors that may have occurred
 	// in the switch block
-	if err != nil {
-		return http.StatusBadRequest, err
-	}
-
-	// create the reply to the incoming request
-	reply, err := createReplyMessage(request)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
@@ -277,75 +279,380 @@ func handleIProxyRequest(request base.IProxyMessage) (int, error) {
 	return resp.StatusCode, nil
 }
 
-func handleActivityRequest(request base.IProxyMessage) error {
+func handleActivityRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
 	err := fmt.Errorf("not implemented exception for message type ActivityRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling ActivityRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleCancelRequest(request base.IProxyMessage) error {
+func handleCancelRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
 	err := fmt.Errorf("not implemented exception for message type CancelRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling CancelRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleConnectRequest(request base.IProxyMessage) error {
-	err := fmt.Errorf("not implemented exception for message type ConnectRequest")
+func handleConnectRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
+	if connectRequest, ok := request.(*cluster.ConnectRequest); ok {
+
+		reply, err := createReplyMessage(connectRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		endpoints := *connectRequest.GetEndpoints()
+		identity := *connectRequest.GetIdentity()
+
+		// client options
+		opts := client.Options{
+			Identity: identity,
+		}
+
+		// setup the CadenceClientHelper
+		cadenceclient.ClientHelper = cadenceclient.NewCadenceClientHelper()
+		cadenceclient.ClientHelper.SetHostPort(endpoints)
+		cadenceclient.ClientHelper.SetClientOptions(&opts)
+
+		err = cadenceclient.ClientHelper.SetupServiceConfig()
+		if err != nil {
+
+			// set the client helper to nil indicating that
+			// there is no connection that has been made to the cadence
+			// server
+			cadenceclient.ClientHelper = nil
+
+			// set the error type for a bad connection request to cadence server
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "could not complete the service configuration setup for the CadenceClientHelper"
+
+			if connectReply, ok := reply.(*cluster.ConnectReply); ok {
+				connectReply.SetErrorType(messages.Custom)
+				connectReply.SetError(&errStr)
+				connectReply.SetErrorDetails(&details)
+			}
+		}
+
+		return reply, nil
+	}
+
+	err := fmt.Errorf("unhandled exception during type assertion of ConnectRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling ConnectRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleDomainDescribeRequest(request base.IProxyMessage) error {
+func handleDomainDescribeRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
+	if domainDescribeRequest, ok := request.(*cluster.DomainDescribeRequest); ok {
+
+		// create the reply to Neon.Cadence library
+		reply, err := createReplyMessage(domainDescribeRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		// check to see if a connection has been made with the
+		// cadence client
+		if cadenceclient.ClientHelper == nil {
+
+			// set the error type for a bad connection request to cadence server
+			err := fmt.Errorf("no cadence service connection")
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "cadence client service not configured"
+
+			if domainDescribeReply, ok := reply.(*cluster.DomainDescribeReply); ok {
+				domainDescribeReply.SetErrorType(messages.Custom)
+				domainDescribeReply.SetError(&errStr)
+				domainDescribeReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+		}
+
+		// build the domain client using a configured CadenceClientHelper instance
+		domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+		if err != nil {
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "could not build domain client"
+
+			if domainDescribeReply, ok := reply.(*cluster.DomainDescribeReply); ok {
+				domainDescribeReply.SetErrorType(messages.Custom)
+				domainDescribeReply.SetError(&errStr)
+				domainDescribeReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+
+		}
+
+		// send a describe domain request to the cadence server
+		describeDomainResponse, err := domainClient.Describe(context.Background(), *domainDescribeRequest.GetName())
+		if err != nil {
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "failed to describe domain"
+
+			if domainDescribeReply, ok := reply.(*cluster.DomainDescribeReply); ok {
+				domainDescribeReply.SetErrorType(messages.Custom)
+				domainDescribeReply.SetError(&errStr)
+				domainDescribeReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+		}
+
+		if domainDescribeReply, ok := reply.(*cluster.DomainDescribeReply); ok {
+			domainDescribeReply.SetDomainInfoName(describeDomainResponse.DomainInfo.Name)
+			domainDescribeReply.SetDomainInfoDescription(describeDomainResponse.DomainInfo.Description)
+
+			domainStatusStr := describeDomainResponse.DomainInfo.GetStatus().String()
+			domainStatus := messages.StringToDomainStatus(domainStatusStr)
+			domainDescribeReply.SetDomainInfoStatus(domainStatus)
+			domainDescribeReply.SetDomainInfoOwnerEmail(describeDomainResponse.DomainInfo.OwnerEmail)
+		}
+
+		return reply, nil
+	}
+
 	err := fmt.Errorf("not implemented exception for message type DomainDescribeRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling DomainDescribeRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleDomainRegisterRequest(request base.IProxyMessage) error {
-	err := fmt.Errorf("not implemented exception for message type DomainRegisterRequest")
+func handleDomainRegisterRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
+	if domainRegisterRequest, ok := request.(*cluster.DomainRegisterRequest); ok {
+
+		// create the reply to Neon.Cadence library
+		reply, err := createReplyMessage(domainRegisterRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		// check to see if a connection has been made with the
+		// cadence client
+		if cadenceclient.ClientHelper == nil {
+
+			// set the error type for a bad connection request to cadence server
+			err = fmt.Errorf("no cadence service connection. Try submitting a ConnectRequest")
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "cadence client service not configured"
+
+			if domainRegisterReply, ok := reply.(*cluster.DomainRegisterReply); ok {
+				domainRegisterReply.SetErrorType(messages.Custom)
+				domainRegisterReply.SetError(&errStr)
+				domainRegisterReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+		}
+
+		// build the domain client using a configured CadenceClientHelper instance
+		domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+		if err != nil {
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "could not build domain client"
+
+			if domainRegisterReply, ok := reply.(*cluster.DomainRegisterReply); ok {
+				domainRegisterReply.SetErrorType(messages.Custom)
+				domainRegisterReply.SetError(&errStr)
+				domainRegisterReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+		}
+
+		// create a new cadence domain RegisterDomainRequest for
+		// registering a new domain
+		emitMetrics := domainRegisterRequest.GetEmitMetrics()
+		retentionDays := domainRegisterRequest.GetRetentionDays()
+		registerRequest := cadenceshared.RegisterDomainRequest{
+			Name:                                   domainRegisterRequest.GetName(),
+			Description:                            domainRegisterRequest.GetDescription(),
+			OwnerEmail:                             domainRegisterRequest.GetOwnerEmail(),
+			EmitMetric:                             &emitMetrics,
+			WorkflowExecutionRetentionPeriodInDays: &retentionDays,
+		}
+
+		// register the domain using the RegisterDomainRequest
+		err = domainClient.Register(context.Background(), &registerRequest)
+		if err != nil {
+
+			// if the error was anything but DomainAlreadyExistsError then
+			// add custom errors to the reply
+			if _, ok := err.(*cadenceshared.DomainAlreadyExistsError); !ok {
+
+				// $debug(jack.burns): DELETE THIS!
+				logger.Debug("failed to register domain",
+					zap.String("Domain Name", registerRequest.GetName()),
+					zap.Error(err),
+				)
+
+				// set the error message
+				customError := cadence.NewCustomError(err.Error())
+				errStr := customError.Error()
+				details := "failed to register domain"
+
+				if domainRegisterReply, ok := reply.(*cluster.DomainRegisterReply); ok {
+					domainRegisterReply.SetErrorType(messages.Custom)
+					domainRegisterReply.SetError(&errStr)
+					domainRegisterReply.SetErrorDetails(&details)
+				}
+
+				return reply, nil
+			}
+		}
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("domain successfully registered", zap.String("Domain Name", registerRequest.GetName()))
+
+		return reply, nil
+	}
+
+	err := fmt.Errorf("unhandled exception during type assertion of DomainRegisterRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling DomainRegisterRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleDomainUpdateRequest(request base.IProxyMessage) error {
+func handleDomainUpdateRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
+	if domainUpdateRequest, ok := request.(*cluster.DomainUpdateRequest); ok {
+
+		// create the reply to Neon.Cadence library
+		reply, err := createReplyMessage(domainUpdateRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		// check to see if a connection has been made with the
+		// cadence client
+		if cadenceclient.ClientHelper == nil {
+
+			// set the error type for a bad connection request to cadence server
+			err = fmt.Errorf("no cadence service connection. Try submitting a ConnectRequest")
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "cadence client service not configured"
+
+			if domainUpdateReply, ok := reply.(*cluster.DomainUpdateReply); ok {
+				domainUpdateReply.SetErrorType(messages.Custom)
+				domainUpdateReply.SetError(&errStr)
+				domainUpdateReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+		}
+
+		// build the domain client using a configured CadenceClientHelper instance
+		domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+		if err != nil {
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "could not build domain client"
+
+			if domainUpdateReply, ok := reply.(*cluster.DomainUpdateReply); ok {
+				domainUpdateReply.SetErrorType(messages.Custom)
+				domainUpdateReply.SetError(&errStr)
+				domainUpdateReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+		}
+
+		// create a new cadence domain UpdateDomainRequest for
+		// Updating a new domain
+		configuration := new(cadenceshared.DomainConfiguration)
+		configurationEmitMetrics := domainUpdateRequest.GetConfigurationEmitMetrics()
+		configurationRetentionDays := domainUpdateRequest.GetConfigurationRetentionDays()
+		configuration.EmitMetric = &configurationEmitMetrics
+		configuration.WorkflowExecutionRetentionPeriodInDays = &configurationRetentionDays
+
+		updatedInfo := new(cadenceshared.UpdateDomainInfo)
+		updatedInfo.Description = domainUpdateRequest.GetUpdatedInfoDescription()
+		updatedInfo.OwnerEmail = domainUpdateRequest.GetUpdatedInfoOwnerEmail()
+
+		updateRequest := cadenceshared.UpdateDomainRequest{
+			Name:          domainUpdateRequest.GetName(),
+			Configuration: configuration,
+			UpdatedInfo:   updatedInfo,
+		}
+
+		// Update the domain using the UpdateDomainRequest
+		err = domainClient.Update(context.Background(), &updateRequest)
+		if err != nil {
+
+			// set the error message
+			customError := cadence.NewCustomError(err.Error())
+			errStr := customError.Error()
+			details := "failed to Update domain"
+
+			if domainUpdateReply, ok := reply.(*cluster.DomainUpdateReply); ok {
+				domainUpdateReply.SetErrorType(messages.Custom)
+				domainUpdateReply.SetError(&errStr)
+				domainUpdateReply.SetErrorDetails(&details)
+			}
+
+			return reply, nil
+		}
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("domain successfully Updated", zap.String("Domain Name", updateRequest.GetName()))
+
+		return reply, nil
+	}
+
 	err := fmt.Errorf("not implemented exception for message type DomainUpdateRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling DomainUpdateRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleHeartbeatRequest(request base.IProxyMessage) error {
-	if _, ok := request.(*cluster.HeartbeatRequest); ok {
-		return nil
+func handleHeartbeatRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
+	if heartbeatRequest, ok := request.(*cluster.HeartbeatRequest); ok {
+		reply, err := createReplyMessage(heartbeatRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		return reply, nil
 	}
 
 	err := fmt.Errorf("unhandled exception during type assertion of HeartbeatRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling HeartbeatRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleInitializeRequest(request base.IProxyMessage) error {
+func handleInitializeRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
+
 	if initializeRequest, ok := request.(*cluster.InitializeRequest); ok {
+
+		// new InitializeReply
+		reply, err := createReplyMessage(initializeRequest)
+		if err != nil {
+			return nil, err
+		}
+
+		// get the port and address from the InitializeRequest
 		address := *initializeRequest.GetLibraryAddress()
 		port := initializeRequest.GetLibraryPort()
 		replyAddress = fmt.Sprintf("http://%s:%d/",
@@ -363,40 +670,44 @@ func handleInitializeRequest(request base.IProxyMessage) error {
 			zap.String("Reply Address", replyAddress),
 		)
 
-		return nil
+		return reply, nil
 	}
 
 	err := fmt.Errorf("unhandled exception during type assertion of InitializeRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling InitializeRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 
-func handleTerminateRequest(request base.IProxyMessage) error {
+func handleTerminateRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
 
-	if _, ok := request.(*cluster.TerminateRequest); ok {
+	if terminateRequest, ok := request.(*cluster.TerminateRequest); ok {
+		reply, err := createReplyMessage(terminateRequest)
+		if err != nil {
+			return nil, err
+		}
 
 		// setting terminate to true indicates that after the TerminateReply is sent,
 		// the server instance should gracefully shut down
 		terminate = true
-		return nil
+		return reply, nil
 	}
 
 	err := fmt.Errorf("not implemented exception for message type TerminateRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling TerminateRequest", zap.Error(err))
-	return err
+	return nil, err
 }
 
-func handleWorkflowRequest(request base.IProxyMessage) error {
+func handleWorkflowRequest(request base.IProxyMessage) (base.IProxyMessage, error) {
 	err := fmt.Errorf("not implemented exception for message type WorkflowRequest")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling WorkflowRequest", zap.Error(err))
-	return err
+	return nil, err
 
 }
 

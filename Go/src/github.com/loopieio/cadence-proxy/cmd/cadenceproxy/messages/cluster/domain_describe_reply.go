@@ -81,6 +81,8 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() messages.DomainStatus {
 		return messages.Registered
 	case "DEPRECATED":
 		return messages.Deprecated
+	case "DELETED":
+		return messages.Deleted
 	default:
 		err := errors.New("domainStatus not implemented exception")
 		panic(err)
@@ -104,6 +106,8 @@ func (reply *DomainDescribeReply) SetDomainInfoStatus(value messages.DomainStatu
 		statusString = "REGISTERED"
 	case messages.Deprecated:
 		statusString = "DEPRECATED"
+	case messages.Deleted:
+		statusString = "DELETED"
 	default:
 
 		// panic if type is not recognized or implemented yet

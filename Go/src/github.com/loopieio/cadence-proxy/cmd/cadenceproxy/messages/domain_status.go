@@ -1,5 +1,7 @@
 package messages
 
+import "fmt"
+
 // DomainStatus is an enumerated list of
 // all of the valid cadence domain statuses
 type DomainStatus int
@@ -17,6 +19,9 @@ const (
 	// history retention period for the last executed workflow
 	// has been satisified.
 	Deprecated
+
+	// Deleted indicates that a cadence domain has been deleted
+	Deleted
 )
 
 func (t DomainStatus) String() string {
@@ -24,5 +29,22 @@ func (t DomainStatus) String() string {
 		"UNSPECIFIED",
 		"REGISTERED",
 		"DEPRECATED",
+		"DELETED",
 	}[t]
+}
+
+func StringToDomainStatus(value string) DomainStatus {
+	switch value {
+	case "UNSPECIFIED":
+		return StatusUnspecified
+	case "REGISTERED":
+		return Registered
+	case "DEPRECATED":
+		return Deprecated
+	case "DELETED":
+		return Deleted
+	default:
+		err := fmt.Errorf("unknown string value %s for %s", value, "DomainStatus")
+		panic(err)
+	}
 }

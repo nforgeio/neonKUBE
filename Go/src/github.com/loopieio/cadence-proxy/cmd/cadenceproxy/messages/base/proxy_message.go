@@ -51,14 +51,8 @@ var (
 
 	// MessageTypeStructMap is a map that maps a message type
 	// to its corresponding Message Struct
-	MessageTypeStructMap map[int]IProxyMessage
+	MessageTypeStructMap map[int]IProxyMessage = make(map[int]IProxyMessage)
 )
-
-// InitProxyMessage initializes the MessageTypeStructMap
-// This will allow derived classes to add to MessageTypeStructMap
-func InitProxyMessage() {
-	MessageTypeStructMap = make(map[int]IProxyMessage)
-}
 
 // NewProxyMessage creates a new ProxyMessage in memory, initializes
 // its Properties map and Attachments [][]byte
