@@ -97,7 +97,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new TransientException();
                         });
                 });
@@ -120,7 +120,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new TransientException();
                         });
                 });
@@ -143,7 +143,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new NotImplementedException();
                         });
                 });
@@ -165,7 +165,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
                             throw new NotImplementedException();
                         });
                 });
@@ -187,7 +187,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
 
                             if (times.Count < 2)
                             {
@@ -218,7 +218,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
 
                             if (times.Count < 2)
                             {
@@ -247,7 +247,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     success = true;
                 });
@@ -267,7 +267,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     return "WOOHOO!";
                 });
@@ -288,7 +288,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -314,7 +314,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -341,7 +341,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -368,7 +368,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -395,7 +395,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -433,7 +433,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -463,7 +463,7 @@ namespace TestCommon
                 async () =>
                 {
                     times.Add(DateTime.UtcNow);
-                    await Task.Delay(0);
+                    await Task.CompletedTask;
 
                     if (times.Count < policy.MaxAttempts)
                     {
@@ -497,7 +497,7 @@ namespace TestCommon
                         async () =>
                         {
                             times.Add(DateTime.UtcNow);
-                            await Task.Delay(0);
+                            await Task.CompletedTask;
 
                             throw new TransientException();
                         });
