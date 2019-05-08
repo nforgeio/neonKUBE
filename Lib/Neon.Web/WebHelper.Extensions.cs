@@ -18,6 +18,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 using Microsoft.AspNetCore;
@@ -29,6 +30,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
@@ -50,6 +52,31 @@ namespace Neon.Web
             return $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
         }
 
+        /// <summary>
+        /// Returns the source IP address for an HTTP request.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns>The source IP address (as a string) or <c>null</c> if this couldn't be determined.</returns>
+        private static string GetSourceAddress(this HttpRequest request)
+        {
+            string address = null;
+
+            if (request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
+            {
+                if (forwardedFor.Count > 0)
+                {
+                    address = forwardedFor.First();
+                }
+            }
+
+            if (address == null)
+            {
+                address = request.HttpContext.Connection.RemoteIpAddress.ToString();
+            }
+
+            return address;
+        }
+        
         //---------------------------------------------------------------------
         // IMvcBuilder extensions
 

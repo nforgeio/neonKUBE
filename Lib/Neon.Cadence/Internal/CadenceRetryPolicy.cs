@@ -99,8 +99,8 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Coefficient used to calculate the next retry backoff interval.
-        // The next retry interval is previous interval multiplied by this coefficient.
-        // Must be 1 or larger. Default is 2.0.
+        /// The next retry interval is previous interval multiplied by this coefficient.
+        /// Must be 1 or larger. Default is 2.0.
         /// </summary>
         [JsonProperty(PropertyName = "BackoffCoefficient", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(2.0)]
