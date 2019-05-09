@@ -8,6 +8,7 @@ import (
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
 
@@ -200,13 +201,13 @@ func (s *UnitTestSuite) TestProxyReply() {
 
 	if v, ok := message.(*base.ProxyReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetErrorType(messages.Custom)
+		v.SetErrorType(cadenceerrors.Custom)
 
 		str1 := "MyError"
 		str2 := "MyError Details"
@@ -214,7 +215,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 		v.SetErrorDetails(&str2)
 
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 
@@ -233,7 +234,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 	if v, ok := message.(*base.ProxyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}

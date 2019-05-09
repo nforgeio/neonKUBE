@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/domain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
@@ -68,21 +70,21 @@ func (reply *DomainDescribeReply) SetDomainInfoDescription(value *string) {
 //
 // returns DomainStatus -> the DomainStatus of the Domain being described
 // from a DomainDescribeReply's properties map
-func (reply *DomainDescribeReply) GetDomainInfoStatus() messages.DomainStatus {
+func (reply *DomainDescribeReply) GetDomainInfoStatus() domain.DomainStatus {
 	domainInfoStatusPtr := reply.GetStringProperty("DomainInfoStatus")
 	if domainInfoStatusPtr == nil {
-		return messages.StatusUnspecified
+		return domain.Unspecified
 	}
 
 	// dereference and switch block on the value
 	domainStatus := *domainInfoStatusPtr
 	switch domainStatus {
 	case "REGISTERED":
-		return messages.Registered
+		return domain.Registered
 	case "DEPRECATED":
-		return messages.Deprecated
+		return domain.Deprecated
 	case "DELETED":
-		return messages.Deleted
+		return domain.Deleted
 	default:
 		err := errors.New("domainStatus not implemented exception")
 		panic(err)
@@ -94,19 +96,19 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() messages.DomainStatus {
 //
 // param value DomainStatus -> DomainStatus value to set
 // as the DomainDescribeReply's DomainInfoStatus in its properties map
-func (reply *DomainDescribeReply) SetDomainInfoStatus(value messages.DomainStatus) {
+func (reply *DomainDescribeReply) SetDomainInfoStatus(value domain.DomainStatus) {
 	var statusString string
 
 	// switch block on the param value
 	switch value {
-	case messages.StatusUnspecified:
+	case domain.Unspecified:
 		reply.Properties["DomainInfoStatus"] = nil
 		return
-	case messages.Registered:
+	case domain.Registered:
 		statusString = "REGISTERED"
-	case messages.Deprecated:
+	case domain.Deprecated:
 		statusString = "DEPRECATED"
-	case messages.Deleted:
+	case domain.Deleted:
 		statusString = "DELETED"
 	default:
 
@@ -251,29 +253,29 @@ func (reply *DomainDescribeReply) SetErrorDetails(value *string) {
 }
 
 // GetErrorType inherits docs from ProxyReply.GetErrorType()
-func (reply *DomainDescribeReply) GetErrorType() messages.CadenceErrorTypes {
+func (reply *DomainDescribeReply) GetErrorType() cadenceerrors.CadenceErrorTypes {
 
 	// Grap the pointer to the error string in the properties map
 	errorStringPtr := reply.GetStringProperty("ErrorType")
 	if errorStringPtr == nil {
-		return messages.None
+		return cadenceerrors.None
 	}
 
 	// dereference and switch block on the value
 	errorString := *errorStringPtr
 	switch errorString {
 	case "cancelled":
-		return messages.Cancelled
+		return cadenceerrors.Cancelled
 	case "custom":
-		return messages.Custom
+		return cadenceerrors.Custom
 	case "generic":
-		return messages.Generic
+		return cadenceerrors.Generic
 	case "panic":
-		return messages.Panic
+		return cadenceerrors.Panic
 	case "terminated":
-		return messages.Terminated
+		return cadenceerrors.Terminated
 	case "timeout":
-		return messages.Timeout
+		return cadenceerrors.Timeout
 	default:
 		err := errors.New("not implemented exception")
 		panic(err)
@@ -281,25 +283,25 @@ func (reply *DomainDescribeReply) GetErrorType() messages.CadenceErrorTypes {
 }
 
 // SetErrorType inherits docs from ProxyReply.SetErrorType()
-func (reply *DomainDescribeReply) SetErrorType(value messages.CadenceErrorTypes) {
+func (reply *DomainDescribeReply) SetErrorType(value cadenceerrors.CadenceErrorTypes) {
 	var typeString string
 
 	// switch block on the param value
 	switch value {
-	case messages.None:
+	case cadenceerrors.None:
 		reply.Properties["ErrorType"] = nil
 		return
-	case messages.Cancelled:
+	case cadenceerrors.Cancelled:
 		typeString = "cancelled"
-	case messages.Custom:
+	case cadenceerrors.Custom:
 		typeString = "custom"
-	case messages.Generic:
+	case cadenceerrors.Generic:
 		typeString = "generic"
-	case messages.Panic:
+	case cadenceerrors.Panic:
 		typeString = "panic"
-	case messages.Terminated:
+	case cadenceerrors.Terminated:
 		typeString = "terminated"
-	case messages.Timeout:
+	case cadenceerrors.Timeout:
 		typeString = "timeout"
 	default:
 		// panic if type is not recognized or implemented yet

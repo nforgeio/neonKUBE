@@ -12,6 +12,8 @@ import (
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/domain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
 
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
@@ -332,7 +334,7 @@ func handleConnectRequest(request base.IProxyMessage) (base.IProxyMessage, error
 			details := "could not complete the service configuration setup for the CadenceClientHelper"
 
 			if connectReply, ok := reply.(*cluster.ConnectReply); ok {
-				connectReply.SetErrorType(messages.Custom)
+				connectReply.SetErrorType(cadenceerrors.Custom)
 				connectReply.SetError(&errStr)
 				connectReply.SetErrorDetails(&details)
 			}
@@ -369,7 +371,7 @@ func handleDomainDescribeRequest(request base.IProxyMessage) (base.IProxyMessage
 			details := "cadence client service not configured"
 
 			if domainDescribeReply, ok := reply.(*cluster.DomainDescribeReply); ok {
-				domainDescribeReply.SetErrorType(messages.Custom)
+				domainDescribeReply.SetErrorType(cadenceerrors.Custom)
 				domainDescribeReply.SetError(&errStr)
 				domainDescribeReply.SetErrorDetails(&details)
 			}
@@ -385,7 +387,7 @@ func handleDomainDescribeRequest(request base.IProxyMessage) (base.IProxyMessage
 			details := "could not build domain client"
 
 			if domainDescribeReply, ok := reply.(*cluster.DomainDescribeReply); ok {
-				domainDescribeReply.SetErrorType(messages.Custom)
+				domainDescribeReply.SetErrorType(cadenceerrors.Custom)
 				domainDescribeReply.SetError(&errStr)
 				domainDescribeReply.SetErrorDetails(&details)
 			}
@@ -402,7 +404,7 @@ func handleDomainDescribeRequest(request base.IProxyMessage) (base.IProxyMessage
 			details := "failed to describe domain"
 
 			if domainDescribeReply, ok := reply.(*cluster.DomainDescribeReply); ok {
-				domainDescribeReply.SetErrorType(messages.Custom)
+				domainDescribeReply.SetErrorType(cadenceerrors.Custom)
 				domainDescribeReply.SetError(&errStr)
 				domainDescribeReply.SetErrorDetails(&details)
 			}
@@ -415,7 +417,7 @@ func handleDomainDescribeRequest(request base.IProxyMessage) (base.IProxyMessage
 			domainDescribeReply.SetDomainInfoDescription(describeDomainResponse.DomainInfo.Description)
 
 			domainStatusStr := describeDomainResponse.DomainInfo.GetStatus().String()
-			domainStatus := messages.StringToDomainStatus(domainStatusStr)
+			domainStatus := domain.StringToDomainStatus(domainStatusStr)
 			domainDescribeReply.SetDomainInfoStatus(domainStatus)
 			domainDescribeReply.SetDomainInfoOwnerEmail(describeDomainResponse.DomainInfo.OwnerEmail)
 		}
@@ -451,7 +453,7 @@ func handleDomainRegisterRequest(request base.IProxyMessage) (base.IProxyMessage
 			details := "cadence client service not configured"
 
 			if domainRegisterReply, ok := reply.(*cluster.DomainRegisterReply); ok {
-				domainRegisterReply.SetErrorType(messages.Custom)
+				domainRegisterReply.SetErrorType(cadenceerrors.Custom)
 				domainRegisterReply.SetError(&errStr)
 				domainRegisterReply.SetErrorDetails(&details)
 			}
@@ -467,7 +469,7 @@ func handleDomainRegisterRequest(request base.IProxyMessage) (base.IProxyMessage
 			details := "could not build domain client"
 
 			if domainRegisterReply, ok := reply.(*cluster.DomainRegisterReply); ok {
-				domainRegisterReply.SetErrorType(messages.Custom)
+				domainRegisterReply.SetErrorType(cadenceerrors.Custom)
 				domainRegisterReply.SetError(&errStr)
 				domainRegisterReply.SetErrorDetails(&details)
 			}
@@ -507,7 +509,7 @@ func handleDomainRegisterRequest(request base.IProxyMessage) (base.IProxyMessage
 				details := "failed to register domain"
 
 				if domainRegisterReply, ok := reply.(*cluster.DomainRegisterReply); ok {
-					domainRegisterReply.SetErrorType(messages.Custom)
+					domainRegisterReply.SetErrorType(cadenceerrors.Custom)
 					domainRegisterReply.SetError(&errStr)
 					domainRegisterReply.SetErrorDetails(&details)
 				}
@@ -550,7 +552,7 @@ func handleDomainUpdateRequest(request base.IProxyMessage) (base.IProxyMessage, 
 			details := "cadence client service not configured"
 
 			if domainUpdateReply, ok := reply.(*cluster.DomainUpdateReply); ok {
-				domainUpdateReply.SetErrorType(messages.Custom)
+				domainUpdateReply.SetErrorType(cadenceerrors.Custom)
 				domainUpdateReply.SetError(&errStr)
 				domainUpdateReply.SetErrorDetails(&details)
 			}
@@ -566,7 +568,7 @@ func handleDomainUpdateRequest(request base.IProxyMessage) (base.IProxyMessage, 
 			details := "could not build domain client"
 
 			if domainUpdateReply, ok := reply.(*cluster.DomainUpdateReply); ok {
-				domainUpdateReply.SetErrorType(messages.Custom)
+				domainUpdateReply.SetErrorType(cadenceerrors.Custom)
 				domainUpdateReply.SetError(&errStr)
 				domainUpdateReply.SetErrorDetails(&details)
 			}
@@ -602,7 +604,7 @@ func handleDomainUpdateRequest(request base.IProxyMessage) (base.IProxyMessage, 
 			details := "failed to Update domain"
 
 			if domainUpdateReply, ok := reply.(*cluster.DomainUpdateReply); ok {
-				domainUpdateReply.SetErrorType(messages.Custom)
+				domainUpdateReply.SetErrorType(cadenceerrors.Custom)
 				domainUpdateReply.SetError(&errStr)
 				domainUpdateReply.SetErrorDetails(&details)
 			}

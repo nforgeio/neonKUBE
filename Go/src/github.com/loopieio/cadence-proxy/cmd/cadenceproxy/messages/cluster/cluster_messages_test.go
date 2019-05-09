@@ -11,6 +11,8 @@ import (
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/domain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
 
@@ -207,7 +209,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 	if v, ok := message.(*cluster.InitializeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 
@@ -216,8 +218,8 @@ func (s *UnitTestSuite) TestInitializeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -238,7 +240,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 	if v, ok := message.(*cluster.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -249,7 +251,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 	if v, ok := message.(*cluster.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -326,7 +328,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 	if v, ok := message.(*cluster.ConnectReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 
@@ -335,8 +337,8 @@ func (s *UnitTestSuite) TestConnectReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -357,7 +359,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 	if v, ok := message.(*cluster.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -368,7 +370,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 	if v, ok := message.(*cluster.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -439,7 +441,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 
 	if v, ok := message.(*cluster.DomainDescribeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 		s.False(v.GetConfigurationEmitMetrics())
@@ -447,15 +449,15 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Nil(v.GetDomainInfoName())
 		s.Nil(v.GetDomainInfoDescription())
 		s.Nil(v.GetDomainInfoOwnerEmail())
-		s.Equal(messages.StatusUnspecified, v.GetDomainInfoStatus())
+		s.Equal(domain.Unspecified, v.GetDomainInfoStatus())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -479,8 +481,8 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		v.SetDomainInfoDescription(&domainInfoDescriptionStr)
 		s.Equal("my-description", *v.GetDomainInfoDescription())
 
-		v.SetDomainInfoStatus(messages.Deprecated)
-		s.Equal(messages.Deprecated, v.GetDomainInfoStatus())
+		v.SetDomainInfoStatus(domain.Deprecated)
+		s.Equal(domain.Deprecated, v.GetDomainInfoStatus())
 
 		domainInfoOwnerEmailStr := "joe@bloe.com"
 		v.SetDomainInfoOwnerEmail(&domainInfoOwnerEmailStr)
@@ -497,12 +499,12 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 
 	if v, ok := message.(*cluster.DomainDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(messages.Deprecated, v.GetDomainInfoStatus())
+		s.Equal(domain.Deprecated, v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -514,12 +516,12 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 
 	if v, ok := message.(*cluster.DomainDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(messages.Deprecated, v.GetDomainInfoStatus())
+		s.Equal(domain.Deprecated, v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -618,7 +620,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 
 	if v, ok := message.(*cluster.DomainRegisterReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 
@@ -627,8 +629,8 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -649,7 +651,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 
 	if v, ok := message.(*cluster.DomainRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -660,7 +662,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 
 	if v, ok := message.(*cluster.DomainRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -758,7 +760,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 
 	if v, ok := message.(*cluster.DomainUpdateReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 
@@ -767,8 +769,8 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -789,7 +791,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 
 	if v, ok := message.(*cluster.DomainUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -800,7 +802,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 
 	if v, ok := message.(*cluster.DomainUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -864,7 +866,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 	if v, ok := message.(*cluster.TerminateReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 
@@ -873,8 +875,8 @@ func (s *UnitTestSuite) TestTerminateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -895,7 +897,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 	if v, ok := message.(*cluster.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -906,7 +908,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 	if v, ok := message.(*cluster.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -970,7 +972,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 	if v, ok := message.(*cluster.HeartbeatReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 
@@ -979,8 +981,8 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -1001,7 +1003,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 	if v, ok := message.(*cluster.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -1012,7 +1014,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 	if v, ok := message.(*cluster.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 	}
@@ -1082,7 +1084,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 
 	if v, ok := message.(*cluster.CancelReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messages.None, v.GetErrorType())
+		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
 		s.Nil(v.GetErrorDetails())
 		s.False(v.GetWasCancelled())
@@ -1092,8 +1094,8 @@ func (s *UnitTestSuite) TestCancelReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetErrorType(messages.Custom)
-		s.Equal(messages.Custom, v.GetErrorType())
+		v.SetErrorType(cadenceerrors.Custom)
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 
 		errStr := "MyError"
 		v.SetError(&errStr)
@@ -1117,7 +1119,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 
 	if v, ok := message.(*cluster.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 		s.True(v.GetWasCancelled())
@@ -1129,7 +1131,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 
 	if v, ok := message.(*cluster.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messages.Custom, v.GetErrorType())
+		s.Equal(cadenceerrors.Custom, v.GetErrorType())
 		s.Equal("MyError", *v.GetError())
 		s.Equal("MyError Details", *v.GetErrorDetails())
 		s.True(v.GetWasCancelled())

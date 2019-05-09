@@ -1,4 +1,4 @@
-package messages
+package domain
 
 import "fmt"
 
@@ -9,7 +9,7 @@ type DomainStatus int
 const (
 
 	// StatusUnspecified indicates that the status cannot be determined.
-	StatusUnspecified DomainStatus = iota
+	Unspecified DomainStatus = iota
 
 	// Registered indicates that the domain is registered and active.
 	Registered
@@ -36,7 +36,7 @@ func (t DomainStatus) String() string {
 func StringToDomainStatus(value string) DomainStatus {
 	switch value {
 	case "UNSPECIFIED":
-		return StatusUnspecified
+		return Unspecified
 	case "REGISTERED":
 		return Registered
 	case "DEPRECATED":

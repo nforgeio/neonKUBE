@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
@@ -98,29 +99,29 @@ func (reply *DomainUpdateReply) SetErrorDetails(value *string) {
 }
 
 // GetErrorType inherits docs from ProxyReply.GetErrorType()
-func (reply *DomainUpdateReply) GetErrorType() messages.CadenceErrorTypes {
+func (reply *DomainUpdateReply) GetErrorType() cadenceerrors.CadenceErrorTypes {
 
 	// Grap the pointer to the error string in the properties map
 	errorStringPtr := reply.GetStringProperty("ErrorType")
 	if errorStringPtr == nil {
-		return messages.None
+		return cadenceerrors.None
 	}
 
 	// dereference and switch block on the value
 	errorString := *errorStringPtr
 	switch errorString {
 	case "cancelled":
-		return messages.Cancelled
+		return cadenceerrors.Cancelled
 	case "custom":
-		return messages.Custom
+		return cadenceerrors.Custom
 	case "generic":
-		return messages.Generic
+		return cadenceerrors.Generic
 	case "panic":
-		return messages.Panic
+		return cadenceerrors.Panic
 	case "terminated":
-		return messages.Terminated
+		return cadenceerrors.Terminated
 	case "timeout":
-		return messages.Timeout
+		return cadenceerrors.Timeout
 	default:
 		err := errors.New("not implemented exception")
 		panic(err)
@@ -128,25 +129,25 @@ func (reply *DomainUpdateReply) GetErrorType() messages.CadenceErrorTypes {
 }
 
 // SetErrorType inherits docs from ProxyReply.SetErrorType()
-func (reply *DomainUpdateReply) SetErrorType(value messages.CadenceErrorTypes) {
+func (reply *DomainUpdateReply) SetErrorType(value cadenceerrors.CadenceErrorTypes) {
 	var typeString string
 
 	// switch block on the param value
 	switch value {
-	case messages.None:
+	case cadenceerrors.None:
 		reply.Properties["ErrorType"] = nil
 		return
-	case messages.Cancelled:
+	case cadenceerrors.Cancelled:
 		typeString = "cancelled"
-	case messages.Custom:
+	case cadenceerrors.Custom:
 		typeString = "custom"
-	case messages.Generic:
+	case cadenceerrors.Generic:
 		typeString = "generic"
-	case messages.Panic:
+	case cadenceerrors.Panic:
 		typeString = "panic"
-	case messages.Terminated:
+	case cadenceerrors.Terminated:
 		typeString = "terminated"
-	case messages.Timeout:
+	case cadenceerrors.Timeout:
 		typeString = "timeout"
 	default:
 		// panic if type is not recognized or implemented yet
