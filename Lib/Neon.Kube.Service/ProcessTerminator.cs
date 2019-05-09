@@ -161,6 +161,11 @@ namespace Neon.Kube.Service
         }
 
         /// <summary>
+        /// Returns <c>true</c> when the application has been signalled to terminate.
+        /// </summary>
+        public bool TerminateNow => CancellationToken.IsCancellationRequested;
+
+        /// <summary>
         /// Indicates that the application has gracefully stopped and is 
         /// ready to be terminated.
         /// </summary>
