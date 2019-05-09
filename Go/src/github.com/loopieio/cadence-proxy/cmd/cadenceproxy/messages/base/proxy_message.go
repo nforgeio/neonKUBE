@@ -3,6 +3,7 @@ package base
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -51,7 +52,7 @@ var (
 
 	// MessageTypeStructMap is a map that maps a message type
 	// to its corresponding Message Struct
-	MessageTypeStructMap map[int]IProxyMessage = make(map[int]IProxyMessage)
+	MessageTypeStructMap = make(map[int]IProxyMessage)
 )
 
 // NewProxyMessage creates a new ProxyMessage in memory, initializes
@@ -178,7 +179,6 @@ func writeString(buf *bytes.Buffer, value *string) {
 }
 
 func readString(buf *bytes.Buffer) *string {
-
 	var strPtr *string
 	length := int(readInt32(buf))
 	if length == -1 {
@@ -446,6 +446,30 @@ func (proxyMessage *ProxyMessage) GetTimeSpanProperty(key string, def ...time.Du
 	return d * time.Nanosecond
 }
 
+// GetJSONProperty is a helper method for retrieving a complex property serialized
+// as a JSON string
+func (proxyMessage *ProxyMessage) GetJSONProperty(key string, deserializeTo interface{}) error {
+	if proxyMessage.Properties[key] == nil {
+		return fmt.Errorf("nil value at key %s in ProxyMessage.Properties map", key)
+	}
+
+	err := json.Unmarshal([]byte(*proxyMessage.Properties[key]), deserializeTo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetBytesProperty is a helper method for retrieving a []byte property
+func (proxyMessage *ProxyMessage) GetBytesProperty(key string) []byte {
+	if proxyMessage.Properties[key] == nil {
+		return nil
+	}
+
+	return nil
+}
+
 //---------------------------------------------------------------------
 // Helper methods derived classes can use for setting typed message properties.
 
@@ -489,4 +513,23 @@ func (proxyMessage *ProxyMessage) SetDateTimeProperty(key string, value time.Tim
 func (proxyMessage *ProxyMessage) SetTimeSpanProperty(key string, value time.Duration) {
 	timeSpan := strconv.FormatInt(value.Nanoseconds()/100, 10)
 	proxyMessage.Properties[key] = &timeSpan
+}
+
+// SetJSONProperty is a helper method for setting a complex property as JSON
+func (proxyMessage *ProxyMessage) SetJSONProperty(key string, value interface{}) error {
+	var jsonPtr *string
+	if value == nil {
+		jsonPtr = nil
+
+	} else {
+		bytes, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+
+		*jsonPtr = string(bytes)
+	}
+
+	proxyMessage.Properties[key] = jsonPtr
+	return nil
 }
