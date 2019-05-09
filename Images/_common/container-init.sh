@@ -1,15 +1,16 @@
-#!/bin/bash -e
+#!/bin/sh
 #------------------------------------------------------------------------------
 # Standard container initialization script.
 #
 # USAGE: ./container-init.sh
 
+. ./log-info.sh "Container started."
 
 envoy_end=$((SECONDS+300))
 
-if [[ -z "${DEV_WORKSTATION}" ]]; then
+if [ -z "${DEV_WORKSTATION+x}" ]; then
   . ./log-info.sh "Running in Kubernetes with Istio enabled."
-  until curl --head --silent --output /dev/null localhost:15000
+  until wget -q --spider 127.0.0.1:15000
   do
     if [ $SECONDS -gt $envoy_end ]; then
       . ./log-error.sh "Envoy Sidecar not available, exiting."
@@ -24,5 +25,10 @@ else
 fi
 
 . ./log-info.sh "Envoy Sidecar available."
+
+if [ ! -z "${ENVOY_LOGLEVEL+x}" ]; then
+  . ./log-info.sh "Setting Envoy log level to debug."
+  wget --post-data="" -O - "127.0.0.1:15000/logging?level=${ENVOY_LOGLEVEL}"
+fi
 
 exit 0
