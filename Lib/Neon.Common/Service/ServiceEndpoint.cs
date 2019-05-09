@@ -99,7 +99,7 @@ namespace Neon.Service
                 {
                     this.pathPrefix = string.Empty;
                 }
-                else if (pathPrefix[0] == '/')
+                else if (value[0] == '/')
                 {
                     this.pathPrefix = value.Substring(1);
                 }
@@ -151,7 +151,7 @@ namespace Neon.Service
         /// <exception cref="ArgumentException">Thrown when <see cref="Port"/> is not valid for the endpoint protocol.</exception>
         [JsonIgnore]
         [YamlIgnore]
-        public string Uri
+        public Uri Uri
         {
             get
             {
@@ -171,22 +171,22 @@ namespace Neon.Service
 
                         if (Port == 0)
                         {
-                            return $"http://{ServiceDescription.Hostname}/{PathPrefix}";
+                            return new Uri($"http://{ServiceDescription.Hostname}/{PathPrefix}");
                         }
                         else
                         {
-                            return $"http://{ServiceDescription.Hostname}:{Port}/{PathPrefix}";
+                            return new Uri($"http://{ServiceDescription.Hostname}:{Port}/{PathPrefix}");
                         }
 
                     case ServiceEndpointProtocol.Https:
 
                         if (Port == 0)
                         {
-                            return $"https://{ServiceDescription.Hostname}/{PathPrefix}";
+                            return new Uri($"https://{ServiceDescription.Hostname}/{PathPrefix}");
                         }
                         else
                         {
-                            return $"https://{ServiceDescription.Hostname}:{Port}/{PathPrefix}";
+                            return new Uri($"https://{ServiceDescription.Hostname}:{Port}/{PathPrefix}");
                         }
 
                     case ServiceEndpointProtocol.Tcp:
@@ -196,7 +196,7 @@ namespace Neon.Service
                             throw new ArgumentException("TCP endpoints require a non-zero port.");
                         }
 
-                        return $"tcp://{ServiceDescription.Hostname}:{Port}";
+                        return new Uri($"tcp://{ServiceDescription.Hostname}:{Port}");
 
                     case ServiceEndpointProtocol.Udp:
 
@@ -205,7 +205,7 @@ namespace Neon.Service
                             throw new ArgumentException("UDP endpoints require a non-zero port.");
                         }
 
-                        return $"udp://{ServiceDescription.Hostname}:{Port}";
+                        return new Uri($"udp://{ServiceDescription.Hostname}:{Port}");
 
                     default:
 

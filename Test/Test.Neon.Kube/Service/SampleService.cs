@@ -44,54 +44,53 @@ using Xunit;
 namespace TestKube
 {
     /// <summary>
+    /// Startup class for <see cref="SampleService"/>.
+    /// </summary>
+    public class SampleServiceStartup
+    {
+        private SampleService service;
+
+        public SampleServiceStartup(IConfiguration configuration, SampleService service)
+        {
+            this.Configuration = configuration;
+            this.service       = service;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            // Forward all requests to the parent service to have them
+            // handled there.
+
+            app.Run(async context => await service.OnWebRequest(context));
+        }
+    }
+
+    /// <summary>
     /// Implements a simple web service used for testing <see cref="KubeService"/>
     /// and <see cref="KubeServiceFixture{TService}"/>.
     /// </summary>
     public class SampleService : KubeService
     {
-        //---------------------------------------------------------------------
-        // Local types
-
-        public class Startup
-        {
-            private SampleService service;
-
-            public Startup(IConfiguration configuration, SampleService service)
-            {
-                this.Configuration = configuration;
-                this.service       = service;
-            }
-
-            public IConfiguration Configuration { get; }
-
-            public void ConfigureServices(IServiceCollection services)
-            {
-            }
-
-            public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-            {
-                // Forward all requests to the parent service to have them
-                // handled there.
-
-                app.Run(async context => await service.OnWebRequest(context));
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private IWebHost    webHost;
         private Thread      thread;
+        private Task        task;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="description">The service description.</param>
+        /// <param name="serviceMap">The service map.</param>
+        /// <param name="name">The service name.</param>
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
-        public SampleService(ServiceDescription description, string branch = null, string commit = null, bool isDirty = false)
-            : base(description, branch, commit, isDirty)
+        public SampleService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
+            : base(serviceMap, name, branch, commit, isDirty)
         {
         }
 
@@ -114,11 +113,12 @@ namespace TestKube
         {
             // Start the web service.
 
-            var endpoint = Description.Endpoints["default"];
+            var endpoint = Description.Endpoints.Default;
 
             webHost = new WebHostBuilder()
-                .UseStartup<Startup>()
+                .UseStartup<SampleServiceStartup>()
                 .UseKestrel(options => options.Listen(Description.Address, endpoint.Port))
+                .ConfigureServices(services => services.AddSingleton(typeof(SampleService), this))
                 .Build();
 
             webHost.Start();
@@ -128,14 +128,18 @@ namespace TestKube
             thread = new Thread(new ThreadStart(ThreadFunc));
             thread.Start();
 
-            // Start the worker task.  Note that this call won't return
-            // until the task completes.
+            // Start the service task 
 
-            Task.Run(() => TaskFunc()).Wait();
+            task = Task.Run(async () => await TaskFunc());
 
-            // Wait for the worker thread to exit.
+            // Wait for the process terminator to signal that the service is stopping.
+
+            await Terminator.StopEvent.WaitAsync();
+
+            // Wait for the service thread and task to exit.
 
             thread.Join();
+            await task;
 
             // Return the exit code specified by the configuration.
 
@@ -189,11 +193,11 @@ namespace TestKube
             {
                 try
                 {
-                    // Note that we're sleeping here for 365 days!  This simulates
+                    // Note that we're sleeping here for 1 day!  This simulates
                     // service that's waiting (for a potentially long period of time)
                     // for something to do.
 
-                    await Task.Delay(TimeSpan.FromDays(365), Terminator.CancellationToken);
+                    await Task.Delay(TimeSpan.FromDays(1), Terminator.CancellationToken);
                 }
                 catch (TaskCanceledException)
                 {

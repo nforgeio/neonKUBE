@@ -143,15 +143,6 @@ namespace Neon.Xunit
                     Reset();
                 }
 
-                if (Service != null)
-                {
-                    StopService();
-                    Service.Dispose();
-                    Service = null;
-                }
-
-                ClearCaches(disposing: true);
-
                 GC.SuppressFinalize(this);
             }
         }
@@ -237,6 +228,7 @@ namespace Neon.Xunit
             {
                 Service.Terminator.Signal();
                 serviceTask.Wait();
+                Service.Dispose();
 
                 Service     = null;
                 serviceTask = null;
@@ -246,17 +238,15 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override void Reset()
         {
-            if (!IsDisposed)
-            {
-                StopService();
-            }
+            StopService();
+            ClearCaches(disposing: true);
         }
 
         /// <summary>
         /// Returns a <see cref="HttpClient"/> instance configured to communicate with the
         /// service via the named HTTP/HTTPS endpoint.
         /// </summary>
-        /// <param name="endpointName">The HTTP/HTTPS endpoint name as defined by the service description.</param>
+        /// <param name="endpointName">Optionally specifies HTTP/HTTPS endpoint name as defined by the service description (defaults to <see cref="string.Empty"/>).</param>
         /// <param name="handler">Optionally specifies a custom HTTP handler.</param>
         /// <returns>The configured <see cref="HttpClient"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the named endpoint doesn't exist.</exception>
@@ -275,13 +265,15 @@ namespace Neon.Xunit
         /// the service fixture is restarted.
         /// </note>
         /// <note>
-        /// The optional <paramref name="handler"/> passed will also be disposed when fixture
-        /// is restarted or disposed.
+        /// Do not dispose the client returned since it will be cached by the fixture and
+        /// then be disposed when the fixture is restarted or disposed.  The optional 
+        /// <paramref name="handler"/> passed will also be disposed when fixture will
+        /// also be disposed automatically.
         /// </note>
         /// </remarks>
-        public HttpClient GetHttpClient(string endpointName, HttpClientHandler handler = null)
+        public HttpClient GetHttpClient(string endpointName = "", HttpClientHandler handler = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(endpointName));
+            Covenant.Requires<ArgumentNullException>(endpointName != null);
 
             if (!Service.Description.Endpoints.TryGetValue(endpointName, out var endpoint))
             {
@@ -302,7 +294,12 @@ namespace Neon.Xunit
                         handler = new HttpClientHandler();
                     }
 
-                    client = new HttpClient(handler, disposeHandler: true);
+                    client = new HttpClient(handler, disposeHandler: true)
+                    {
+                        BaseAddress = endpoint.Uri
+                    };
+
+                    httpClientCache.Add(endpointName, client);
                 }
 
                 return client;
@@ -313,7 +310,7 @@ namespace Neon.Xunit
         /// Returns a <see cref="JsonClient"/> instance configured to communicate with the
         /// service via the named HTTP/HTTPS endpoint.
         /// </summary>
-        /// <param name="endpointName">The HTTP/HTTPS endpoint name as defined by the service description.</param>
+        /// <param name="endpointName">Optionally specifies HTTP/HTTPS endpoint name as defined by the service description (defaults to <see cref="string.Empty"/>).</param>
         /// <param name="handler">Optionally specifies a custom HTTP handler.</param>
         /// <returns>The configured <see cref="HttpClient"/>.</returns>
         /// <remarks>
@@ -327,12 +324,45 @@ namespace Neon.Xunit
         /// the service fixture is restarted.
         /// </note>
         /// <note>
-        /// The optional <paramref name="handler"/> passed will also be disposed when fixture
-        /// is restarted or disposed.
+        /// Do not dispose the client returned since it will be cached by the fixture and
+        /// then be disposed when the fixture is restarted or disposed.  The optional 
+        /// <paramref name="handler"/> passed will also be disposed when fixture will
+        /// also be disposed automatically.
         /// </note>
         /// </remarks>
-        public HttpClient GetJsonClient(string endpointName, HttpClientHandler handler = null)
+        public JsonClient GetJsonClient(string endpointName = "", HttpClientHandler handler = null)
         {
+            Covenant.Requires<ArgumentNullException>(endpointName != null);
+
+            if (!Service.Description.Endpoints.TryGetValue(endpointName, out var endpoint))
+            {
+                throw new KeyNotFoundException($"Endpoint [{endpointName}] not found.");
+            }
+
+            if (endpoint.Protocol != ServiceEndpointProtocol.Http && endpoint.Protocol != ServiceEndpointProtocol.Https)
+            {
+                throw new InvalidOperationException($"Cannot create a [{nameof(JsonClient)}] for an endpoint using the [{endpoint.Protocol}] protocol.");
+            }
+
+            lock (syncLock)
+            {
+                if (!jsonClientCache.TryGetValue(endpointName, out var client))
+                {
+                    if (handler == null)
+                    {
+                        handler = new HttpClientHandler();
+                    }
+
+                    client = new JsonClient(handler, disposeHandler: true)
+                    {
+                        BaseAddress = endpoint.Uri
+                    };
+
+                    jsonClientCache.Add(endpointName, client);
+                }
+
+                return client;
+            }
         }
     }
 }

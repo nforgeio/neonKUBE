@@ -35,6 +35,10 @@ using Xunit;
 
 namespace TestKube
 {
+    /// <summary>
+    /// Demonstrates how to test a <see cref="KubService"/> that has a single HTTP endpoint
+    /// and that also exercises environment variable and file based configuration.
+    /// </summary>
     public class Test_SampleService : IClassFixture<KubeServiceFixture<SampleService>>
     {
         private KubeServiceFixture<SampleService>   fixture;
@@ -45,7 +49,7 @@ namespace TestKube
             fixture.Start(
                 () =>
                 {
-                    return new SampleService(GetServiceDescription(), ThisAssembly.Git.BaseTag, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty);
+                    return new SampleService(CreateServiceMap(), "sample-service", ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty);
                 });
 
             this.fixture = fixture;
@@ -53,32 +57,38 @@ namespace TestKube
         }
 
         /// <summary>
-        /// Returns the service description.
+        /// Returns the service map.
         /// </summary>
-        private ServiceDescription GetServiceDescription()
+        private ServiceMap CreateServiceMap()
         {
             var description = new ServiceDescription()
             {
-                Name    = nameof(SampleService),
+                Name    = "sample-service",
                 Address = IPAddress.Parse("127.0.0.10")
             };
 
-            description.Endpoints.Add("default",
+            description.Endpoints.Add(
                 new ServiceEndpoint()
                 {
-                    Name       = "default",
                     Protocol   = ServiceEndpointProtocol.Http,
                     PathPrefix = "/",
                     Port       = 666
                 });
 
-            return description;
+            var serviceMap = new ServiceMap();
+
+            serviceMap.Add(description);
+
+            return serviceMap;
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
-        public void Parse()
+        public async Task Test()
         {
+            var client = fixture.GetHttpClient();
+
+            Assert.Equal("Hello World!", await client.GetStringAsync("/"));
         }
     }
 }

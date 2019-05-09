@@ -258,10 +258,15 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="description">The service description.</param>
+        /// <param name="serviceMap">The service map describing this service and potentially other services.</param>
+        /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if there is no service description for <paramref name="name"/>
+        /// within <see cref="serviceMap"/>.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// For those of you using Git for source control, you'll want to pass the
@@ -275,11 +280,23 @@ namespace Neon.Kube.Service
         /// <paramref name="branch"/>, or simply ignore these parameters.
         /// </para>
         /// </remarks>
-        public KubeService(ServiceDescription description, string branch = null, string commit = null, bool isDirty = false)
+        public KubeService(
+            ServiceMap  serviceMap, 
+            string      name, 
+            string      branch        = null, 
+            string      commit        = null, 
+            bool        isDirty       = false,
+            bool        noProcessExit = false)
         {
-            Covenant.Requires<ArgumentNullException>(description != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(description.Name));
+            Covenant.Requires<ArgumentNullException>(serviceMap != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
+            if (!serviceMap.TryGetValue(name, out var description))
+            {
+                throw new KeyNotFoundException($"The service map does not include a service definition for [{name}].");
+            }
+
+            this.ServiceMap           = serviceMap;
             this.Description          = description;
             this.InProduction         = NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
@@ -372,7 +389,12 @@ namespace Neon.Kube.Service
         public string Name => Description.Name;
 
         /// <summary>
-        /// Returns the service description.
+        /// Returns the service map.
+        /// </summary>
+        public ServiceMap ServiceMap { get; private set; }
+
+        /// <summary>
+        /// Returns the service description for this service.
         /// </summary>
         public ServiceDescription Description { get; private set; }
 
@@ -401,7 +423,7 @@ namespace Neon.Kube.Service
         /// <exception cref="InvalidOperationException">
         /// Thrown when the service does not define exactly one endpoint or <see cref="Description"/> is not set.
         /// </exception>
-        public string BaseUri
+        public Uri BaseUri
         {
             get
             {
@@ -463,6 +485,11 @@ namespace Neon.Kube.Service
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
         /// which actually implements the service.
         /// </summary>
+        /// <param name="disableProcessExit">
+        /// Optionally specifies that the hosting process should not be terminated 
+        /// when the service exists.  This is typically used for testing or debugging.
+        /// This defaults to <c>false</c>.
+        /// </param>
         /// <remarks>
         /// <note>
         /// For production, this method will not return until the service is expicitly 
@@ -494,7 +521,7 @@ namespace Neon.Kube.Service
         /// It is not possible to restart a service after it's been stopped.
         /// </note>
         /// </remarks>
-        public async virtual Task<int> RunAsync()
+        public async virtual Task<int> RunAsync(bool disableProcessExit = false)
         {
             lock (syncLock)
             {
@@ -511,6 +538,14 @@ namespace Neon.Kube.Service
                 isRunning = true;
             }
 
+            // [disableProcessExit] will be typically passed as true when testing or
+            // debugging.  We'll let the terminator know so it won't do this.
+
+            if (disableProcessExit)
+            {
+                Terminator.DisableProcessExit = true;
+            }
+
             // Initialize the logger.
 
             LogManager = new LogManager(parseLogLevel: false);
@@ -519,7 +554,7 @@ namespace Neon.Kube.Service
             Log = LogManager.GetLogger();
             Log.LogInfo(() => $"Starting [{Name}:{GitVersion}]");
 
-            // This call actually implements the service.
+            // Start and run the service.
 
             try
             {
@@ -538,8 +573,12 @@ namespace Neon.Kube.Service
             {
                 ExitCode = e.ExitCode;
             }
+            catch (Exception e)
+            {
+                Log.LogError(e);
+            }
 
-            // Give the service its last rights.
+            // Perform last rights for the service before it passes away.
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
             Terminator.ReadyToExit();

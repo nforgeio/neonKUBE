@@ -166,6 +166,12 @@ namespace Neon.Kube.Service
         public bool TerminateNow => CancellationToken.IsCancellationRequested;
 
         /// <summary>
+        /// Optionally indicates that the terminator should not actually terminate
+        /// the hosting process.  This is typically enabled for testing or debugging.
+        /// </summary>
+        public bool DisableProcessExit { get; set; }
+
+        /// <summary>
         /// Indicates that the application has gracefully stopped and is 
         /// ready to be terminated.
         /// </summary>
@@ -212,6 +218,8 @@ namespace Neon.Kube.Service
                 }
             }
 
+            StopEvent.Set();
+
             try
             {
                 NeonHelper.WaitFor(() => readyToExit, Timeout);
@@ -223,6 +231,12 @@ namespace Neon.Kube.Service
                 throw;
             }
         }
+
+        /// <summary>
+        /// Returns the <see cref="AsyncManualResetEvent"/> that will be raised when
+        /// the service is being stopped.
+        /// </summary>
+        public AsyncManualResetEvent StopEvent { get; private set; } = new AsyncManualResetEvent();
 
         /// <summary>
         /// Cleanly terminates the current process (for internal use).
@@ -266,6 +280,8 @@ namespace Neon.Kube.Service
                 }
             }
 
+            StopEvent.Set();
+
             try
             {
                 NeonHelper.WaitFor(() => readyToExit, Timeout);
@@ -276,7 +292,10 @@ namespace Neon.Kube.Service
                 log?.LogWarn(() => $"Process did not stop within [{Timeout}].");
             }
 
-            Environment.Exit(exitCode);
+            if (!DisableProcessExit)
+            {
+                Environment.Exit(exitCode);
+            }
         }
 
         /// <summary>
@@ -290,7 +309,11 @@ namespace Neon.Kube.Service
                 // Application has already indicated that it has terminated so we don't
                 // need to go through the normal shutdown sequence.
 
-                Environment.Exit(exitCode);
+                if (!DisableProcessExit)
+                {
+                    Environment.Exit(exitCode);
+                }
+                
                 return;
             }
 

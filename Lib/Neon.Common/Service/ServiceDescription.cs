@@ -116,6 +116,6 @@ namespace Neon.Service
         /// </summary>
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Always)]
         [YamlMember(Alias = "endpoints", ApplyNamingConventions = false)]
-        public Dictionary<string, ServiceEndpoint> Endpoints { get; set; } = new Dictionary<string, ServiceEndpoint>();
+        public ServiceEndpoints Endpoints { get; set; } = new ServiceEndpoints();
     }
 }
