@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Base class for all proxy requests.
@@ -53,7 +53,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Indicates the error type.
+        /// Optionally indicates the error type.
         /// </summary>
         public CadenceErrorTypes ErrorType
         {
@@ -99,12 +99,21 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Describes the error in more detail.
+        /// Optionally identifies the specific error.
         /// </summary>
-        public string ErrorMessage
+        public string Error
         {
-            get => GetStringProperty("ErrorMessage");
-            set => SetStringProperty("ErrorMessage", value);
+            get => GetStringProperty("Error");
+            set => SetStringProperty("Error", value);
+        }
+
+        /// <summary>
+        /// Optionally specifies additional error details.
+        /// </summary>
+        public string ErrorDetails
+        {
+            get => GetStringProperty("ErrorDetails");
+            set => SetStringProperty("ErrorDetails", value);
         }
 
         /// <inheritdoc/>
@@ -126,7 +135,19 @@ namespace Neon.Cadence
 
             typedTarget.RequestId    = this.RequestId;
             typedTarget.ErrorType    = this.ErrorType;
-            typedTarget.ErrorMessage = this.ErrorMessage;
+            typedTarget.Error        = this.Error;
+            typedTarget.ErrorDetails = this.ErrorDetails;
+        }
+
+        /// <summary>
+        /// Throws the related exception if the reply is reporting an error.
+        /// </summary>
+        public void ThrowOnError()
+        {
+            if (!string.IsNullOrEmpty(Error))
+            {
+                throw CadenceException.Create(ErrorType, Error, ErrorDetails);
+            }
         }
     }
 }

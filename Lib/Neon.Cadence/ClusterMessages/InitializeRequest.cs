@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Informs the proxy of the network endpoint
@@ -45,9 +45,12 @@ namespace Neon.Cadence
             Type = MessageTypes.InitializeRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.InitializeReply;
+
         /// <summary>
         /// The IP address where the Cadence Library is listening for proxy messages
-        /// send by the Cadence Proxy.
+        /// send by the <b>cadence-proxy</b>.
         /// </summary>
         public string LibraryAddress
         {
@@ -57,7 +60,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// The port where the Cadence Library is listening for proxy messages
-        /// send by the Cadence Proxy.
+        /// send by the <b>cadence-proxy</b>.
         /// </summary>
         public int LibraryPort
         {

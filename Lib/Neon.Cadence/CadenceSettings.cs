@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
+using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
@@ -42,7 +43,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Specifies rhe connection mode.  User applications should use
+        /// Specifies the connection mode.  User applications should use
         /// the default: <see cref="ConnectionMode.Normal"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -65,10 +66,121 @@ namespace Neon.Cadence
         public List<Uri> Servers { get; set; } = new List<Uri>();
 
         /// <summary>
-        /// The port where the client will listen for traffic from the associated Cadency Proxy.
-        /// This default to 0 which specifies that we'll let the operating system choose an
-        /// unused ephermal port.
+        /// Optionally specifies the port where the client will listen for traffic from the 
+        /// associated Cadency Proxy.  This defaults to 0 which specifies that lets the 
+        /// operating system choose an unused ephermal port.
         /// </summary>
-        public int ListenPort { get; set; }
+        [JsonProperty(PropertyName = "ListenPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "listenPort", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int ListenPort { get; set; } = 0;
+
+        /// <summary>
+        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
+        /// to indicate that it has received a proxy request message by returning an
+        /// OK response.  The proxy will be considered to be unhealthy when this 
+        /// happens.  This defaults to <b>5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ProxyTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "proxyTimeout", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public TimeSpan ProxyTimeout { get; set; } = default;
+
+        /// <summary>
+        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
+        /// to gracefully close its Cadence cluster connection and terminate.  The proxy
+        /// will be forceably killed when this time is exceeded.  This defaults to
+        /// <b>30 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "TerminateTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "terminateTimeout", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public TimeSpan TerminateTimeout { get; set; } = default;
+
+        /// <summary>
+        /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
+        /// will be written before starting it.  This defaults to <c>null</c> which specifies
+        /// that the binary will be written to the same folder where the <b>Neon.Cadence</b>
+        /// assembly resides.  This folder may not be writable by the current user so this
+        /// allows you to specify an alternative folder.
+        /// </summary>
+        [JsonProperty(PropertyName = "BinaryFolder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "binaryFolder", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string BinaryFolder { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies the logging level for the associated <b>cadence-proxy</b>.
+        /// The supported values are <b>panic</b>, <b>fatal</b>, <b>error</b>, <b>warn</b>, 
+        /// and <b>debug</b>.  This defaults to <b>info</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogLevel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logLevel", ApplyNamingConventions = false)]
+        [DefaultValue("info")]
+        public string LogLevel { get; set; } = "info";
+
+        /// <summary>
+        /// Optionally specifies that the connection should run in DEBUG mode.  This currently
+        /// launches the <b>cadence-proxy</b> with a command window (on Windows only) to make 
+        /// it easy to see any output it generates and also has <b>cadence-proxy</b>.  This
+        /// defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Debug", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Debug { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
+        /// already be running for debugging purposes.  When this is <c>true</c>, the 
+        /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and
+        /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.2:5000</b>.
+        /// This defaults to <c>false.</c>
+        /// </summary>
+        internal bool DebugPrelaunched { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-client</b>
+        /// will not perform the <see cref="InitializeRequest"/>/<see cref="InitializeReply"/>
+        /// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes 
+        /// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
+        /// <c>false</c>.
+        /// </summary>
+        internal bool DebugDisableHandshakes { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally specifies that the real <b>cadence-proxy</b>
+        /// should not be started and a partially implemented local emulation should be started 
+        /// in its place.  This is used internally for low-level testing and should never be 
+        /// enabled for production (because it won't work).
+        /// </summary>
+        internal bool DebugEmulateProxy { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
+        /// useful while debugging the library but should never be set for production.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        internal bool DebugDisableHeartbeats { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
+        /// useful while debugging the library but should never be set for production.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        internal bool DebugIgnoreTimeouts { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
+        /// emulated <b>cadence-proxy</b> for testing purposes.
+        /// </summary>
+        internal bool DebugIgnoreHeartbeats { get; set; } = false;
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally specifies the timeout to use for 
+        /// HTTP requests made to the <b>cadence-proxy</b>.  This defaults to
+        /// <b>5 seconds</b>.
+        /// </summary>
+        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(5);
     }
 }

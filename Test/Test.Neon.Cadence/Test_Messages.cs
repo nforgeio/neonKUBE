@@ -26,6 +26,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
@@ -37,22 +38,41 @@ using Xunit;
 
 namespace TestCadence
 {
-    public class Test_Messages : IClassFixture<CadenceFixture>
+    public sealed class Test_Messages : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture      fixture;
         CadenceConnection   connection;
+        HttpClient          proxyClient;
 
         public Test_Messages(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {
-                Mode = ConnectionMode.ListenOnly
+                Mode  = ConnectionMode.ListenOnly,
+                Debug = true,
+
+                //--------------------------------
+                // $debug(jeff.lill): DELETE THIS!
+                DebugPrelaunched       = false,
+                DebugDisableHandshakes = false,
+                DebugDisableHeartbeats = true,
+                //--------------------------------
             };
 
             fixture.Start(settings);
 
-            this.fixture    = fixture;
-            this.connection = fixture.Connection;
+            this.fixture     = fixture;
+            this.connection  = fixture.Connection;
+            this.proxyClient = new HttpClient() { BaseAddress = connection.ProxyUri };
+        }
+
+        public void Dispose()
+        {
+            if (proxyClient != null)
+            {
+                proxyClient.Dispose();
+                proxyClient = null;
+            }
         }
 
         [Fact]
@@ -222,11 +242,21 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
+                message.ErrorType = CadenceErrorTypes.Custom;
+                message.Error = "MyError";
+                message.ErrorDetails = "MyError Details";
+
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -235,6 +265,9 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
             }
         }
 
@@ -300,12 +333,21 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
                 Assert.Equal(0, message.ActivityContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
                 message.ActivityContextId = 666;
                 Assert.Equal(666, message.ActivityContextId);
 
@@ -316,6 +358,9 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
                 Assert.Equal(666, message.ActivityContextId);
             }
         }
@@ -382,12 +427,21 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
                 Assert.Equal(0, message.WorkflowContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
                 message.WorkflowContextId = 666;
                 Assert.Equal(666, message.WorkflowContextId);
 
@@ -398,13 +452,16 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
                 Assert.Equal(666, message.WorkflowContextId);
             }
         }
 
         /// <summary>
-        /// Transmits a message to the connection's web server and then verifies that
-        /// the response matches.
+        /// Transmits a message to the local <b>cadence-client</b> web server and then 
+        /// verifies that the response matches.
         /// </summary>
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message to be checked.</param>
@@ -431,6 +488,35 @@ namespace TestCadence
             return ProxyMessage.Deserialize<TMessage>(response.Content.ReadAsStreamAsync().Result);
         }
 
+        /// <summary>
+        /// Transmits a message to the connection's associated <b>cadence-proxy</b> 
+        /// and then verifies that the response matches.
+        /// </summary>
+        /// <typeparam name="TMessage">The message type.</typeparam>
+        /// <param name="message">The message to be checked.</param>
+        /// <returns>The received echo message.</returns>
+        private TMessage EchoToProxy<TMessage>(TMessage message)
+            where TMessage : ProxyMessage, new()
+        {
+            var bytes   = message.Serialize();
+            var content = new ByteArrayContent(bytes);
+
+            content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
+
+            var request = new HttpRequestMessage(HttpMethod.Put, "/echo")
+            {
+                Content = content
+            };
+
+            var response = proxyClient.SendAsync(request).Result;
+
+            response.EnsureSuccessStatusCode();
+
+            bytes = response.Content.ReadAsByteArrayAsync().Result;
+
+            return ProxyMessage.Deserialize<TMessage>(response.Content.ReadAsStreamAsync().Result);
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void TestInitializeRequest()
@@ -439,9 +525,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new InitializeRequest();
+
+                Assert.Equal(MessageTypes.InitializeReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -479,6 +567,14 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("1.2.3.4", message.LibraryAddress);
+                Assert.Equal(666, message.LibraryPort);
             }
         }
 
@@ -490,9 +586,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new InitializeReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -501,11 +597,20 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<InitializeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -514,12 +619,24 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<InitializeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
             }
         }
 
@@ -531,9 +648,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new ConnectRequest();
+
+                Assert.Equal(MessageTypes.ConnectReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -543,7 +662,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Endpoints);
-                Assert.Null(message.Domain);
                 Assert.Null(message.Identity);
 
                 // Round-trip
@@ -552,8 +670,6 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Endpoints = "1.1.1.1:555,2.2.2.2:5555";
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
-                message.Domain = "my-domain";
-                Assert.Equal("my-domain", message.Domain);
                 message.Identity = "my-identity";
                 Assert.Equal("my-identity", message.Identity);
 
@@ -565,7 +681,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
-                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-identity", message.Identity);
 
                 // Echo the message via the connection's web server and verify.
@@ -574,7 +689,14 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-identity", message.Identity);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
                 Assert.Equal("my-identity", message.Identity);
             }
         }
@@ -587,9 +709,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new ConnectReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -598,11 +720,20 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ConnectReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -617,12 +748,27 @@ namespace TestCadence
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
             }
         }
 
@@ -634,9 +780,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainDescribeRequest();
+
+                Assert.Equal(MessageTypes.DomainDescribeReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -646,7 +794,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
-                Assert.Null(message.Uuid);
 
                 // Round-trip
 
@@ -654,8 +801,6 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Name = "my-domain";
                 Assert.Equal("my-domain", message.Name);
-                message.Uuid = "my-uuid";
-                Assert.Equal("my-uuid", message.Uuid);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -665,7 +810,6 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
-                Assert.Equal("my-uuid", message.Uuid);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -673,7 +817,13 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
-                Assert.Equal("my-uuid", message.Uuid);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-domain", message.Name);
             }
         }
 
@@ -685,9 +835,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainDescribeReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -696,26 +846,38 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainDescribeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Null(message.Name);
-                Assert.Null(message.Description);
-                Assert.Null(message.Status);
-                Assert.Null(message.OwnerEmail);
-                Assert.Null(message.Uuid);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
+                Assert.False(message.ConfigurationEmitMetrics);
+                Assert.Equal(0, message.ConfigurationRetentionDays);
+                Assert.Null(message.DomainInfoName);
+                Assert.Null(message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Unspecified, message.DomainInfoStatus);
+                Assert.Null(message.DomainInfoOwnerEmail);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.Name = "my-name";
-                Assert.Equal("my-name", message.Name);
-                message.Description = "my-description";
-                Assert.Equal("my-description", message.Description);
-                message.Status = "DEPRECATED";
-                Assert.Equal("DEPRECATED", message.Status);
-                message.OwnerEmail = "joe@bloe.com";
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
-                message.Uuid = "my-uuid";
-                Assert.Equal("my-uuid", message.Uuid);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
+                message.ConfigurationEmitMetrics = true;
+                Assert.True(message.ConfigurationEmitMetrics);
+                message.ConfigurationRetentionDays = 7;
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                message.DomainInfoName = "my-name";
+                Assert.Equal("my-name", message.DomainInfoName);
+                message.DomainInfoDescription = "my-description";
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                message.DomainInfoStatus = DomainStatus.Deprecated;
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                message.DomainInfoOwnerEmail = "joe@bloe.com";
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -724,22 +886,45 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainDescribeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal("DEPRECATED", message.Status);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
-                Assert.Equal("my-uuid", message.Uuid);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-name", message.DomainInfoName);
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal("DEPRECATED", message.Status);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
-                Assert.Equal("my-uuid", message.Uuid);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-name", message.DomainInfoName);
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+                Assert.Equal("my-name", message.DomainInfoName);
+                Assert.Equal("my-description", message.DomainInfoDescription);
+                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
+                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
             }
         }
 
@@ -751,9 +936,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainRegisterRequest();
+
+                Assert.Equal(MessageTypes.DomainRegisterReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -806,6 +993,17 @@ namespace TestCadence
                 Assert.Equal("my-email", message.OwnerEmail);
                 Assert.True(message.EmitMetrics);
                 Assert.Equal(14, message.RetentionDays);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-description", message.Description);
+                Assert.Equal("my-email", message.OwnerEmail);
+                Assert.True(message.EmitMetrics);
+                Assert.Equal(14, message.RetentionDays);
             }
         }
 
@@ -817,9 +1015,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainRegisterReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -828,11 +1026,20 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainRegisterReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -841,12 +1048,27 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainRegisterReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
             }
         }
 
@@ -858,9 +1080,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainUpdateRequest();
+
+                Assert.Equal(MessageTypes.DomainUpdateReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -870,9 +1094,10 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
-                Assert.Null(message.NewName);
-                Assert.Null(message.Description);
-                Assert.Null(message.OwnerEmail);
+                Assert.Null(message.UpdatedInfoDescription);
+                Assert.Null(message.UpdatedInfoOwnerEmail);
+                Assert.False(message.ConfigurationEmitMetrics);
+                Assert.Equal(0, message.ConfigurationRetentionDays);
 
                 // Round-trip
 
@@ -880,12 +1105,14 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Name = "my-name";
                 Assert.Equal("my-name", message.Name);
-                message.NewName = "my-newname";
-                Assert.Equal("my-newname", message.NewName);
-                message.Description = "my-description";
-                Assert.Equal("my-description", message.Description);
-                message.OwnerEmail = "joe@bloe.com";
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                message.UpdatedInfoDescription = "my-description";
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                message.UpdatedInfoOwnerEmail = "joe@bloe.com";
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                message.ConfigurationEmitMetrics = true;
+                Assert.True(message.ConfigurationEmitMetrics);
+                message.ConfigurationRetentionDays = 7;
+                Assert.Equal(7, message.ConfigurationRetentionDays);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -895,9 +1122,10 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-newname", message.NewName);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -905,9 +1133,21 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-name", message.Name);
-                Assert.Equal("my-newname", message.NewName);
-                Assert.Equal("my-description", message.Description);
-                Assert.Equal("joe@bloe.com", message.OwnerEmail);
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-description", message.UpdatedInfoDescription);
+                Assert.Equal("joe@bloe.com", message.UpdatedInfoOwnerEmail);
+                Assert.True(message.ConfigurationEmitMetrics);
+                Assert.Equal(7, message.ConfigurationRetentionDays);
             }
         }
 
@@ -919,9 +1159,9 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new DomainUpdateReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -930,11 +1170,20 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainUpdateReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -943,12 +1192,27 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<DomainUpdateReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
             }
         }
 
@@ -960,9 +1224,11 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new TerminateRequest();
+
+                Assert.Equal(MessageTypes.TerminateReply, message.ReplyType);
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -988,6 +1254,12 @@ namespace TestCadence
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
             }
@@ -1001,15 +1273,82 @@ namespace TestCadence
 
             using (var stream = new MemoryStream())
             {
-                // Empty message.
-
                 message = new TerminateReply();
+
+                // Empty message.
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestHeartbeatRequest()
+        {
+            HeartbeatRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new HeartbeatRequest();
+
+                Assert.Equal(MessageTypes.HeartbeatReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<HeartbeatRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
 
@@ -1022,13 +1361,210 @@ namespace TestCadence
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<HeartbeatRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);            }
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestHeartbeatReply()
+        {
+            HeartbeatReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new HeartbeatReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<HeartbeatReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<HeartbeatReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestCancelRequest()
+        {
+            CancelRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new CancelRequest();
+
+                Assert.Equal(MessageTypes.CancelReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<CancelRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                message.TargetRequestId = 666;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<CancelRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.TargetRequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.TargetRequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.TargetRequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void TestCancelReply()
+        {
+            CancelReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new CancelReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<CancelReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.None, message.ErrorType);
+                Assert.Null(message.Error);
+                Assert.Null(message.ErrorDetails);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.ErrorType = CadenceErrorTypes.Custom;
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                message.Error = "MyError";
+                Assert.Equal("MyError", message.Error);
+                message.ErrorDetails = "MyError Details";
+                Assert.Equal("MyError Details", message.ErrorDetails);
+                message.WasCancelled = true;
+                Assert.True(message.WasCancelled);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<CancelReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.True(message.WasCancelled);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+                Assert.True(message.WasCancelled);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.True(message.WasCancelled);
+                Assert.Equal(CadenceErrorTypes.Custom, message.ErrorType);
+                Assert.Equal("MyError", message.Error);
+                Assert.Equal("MyError Details", message.ErrorDetails);
+            }
         }
     }
 }

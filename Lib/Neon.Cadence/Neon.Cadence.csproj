@@ -36,11 +36,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\cadence-proxy.linux.gz" />
+    <None Remove="Resources\cadence-proxy.osx.gz" />
+    <None Remove="Resources\cadence-proxy.win.exe.gz" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
 
 </Project>

@@ -39,9 +39,11 @@ RUN go get -u github.com/golang/dep/cmd/dep \
     && git checkout $VERSION && make bins_nothrift
 
 # Final Cadence image
-FROM debian:jessie
+# open-jdk-8 debian9 stretch
+FROM openjdk:8u212-jdk-stretch
 
 # BASIC COMMON LIBRARY INSTALLATIONS
+# CQLSH installation
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gettext-base \
         wget \
@@ -51,19 +53,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python-pip \
         mysql-client \
         curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# CQLSH INSTALLATION
-RUN pip install cqlsh
-
-## JAVA INSTALLATION
-RUN apt-get update \
-    && echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections \
-    && echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" > /etc/apt/sources.list.d/webupd8team-java-trusty.list \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 \
-    && apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes --no-install-recommends oracle-java8-installer \
-    && apt-get clean all
+        python-setuptools \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install wheel \
+    && pip install cqlsh
 
 # CASSANDRA INSTALLATION
 RUN apt-get update \

@@ -80,10 +80,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Couchbase", "Lib\Neon.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3D01B-F890-4F0A-88F1-5F87E5D1F198}"
 	ProjectSection(SolutionItems) = preProject
+		ToolBin\neon-build.cmd = ToolBin\neon-build.cmd
 		ToolBin\neonkube-build.cmd = ToolBin\neonkube-build.cmd
 		ToolBin\neonkube-build.ps1 = ToolBin\neonkube-build.ps1
 		ToolBin\nuget-neonforge-local.ps1 = ToolBin\nuget-neonforge-local.ps1
 		ToolBin\nuget-neonforge-public.ps1 = ToolBin\nuget-neonforge-public.ps1
+		ToolBin\text.cmd = ToolBin\text.cmd
+		ToolBin\unix-text.cmd = ToolBin\unix-text.cmd
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core-layers", "Tools\core-layers\core-layers.csproj", "{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}"
@@ -207,6 +210,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Couchbase", "Test\Test.Neon.Couchbase\Test.Neon.Couchbase.csproj", "{D3AA09B8-9C4D-42DC-83CE-E2F319EB6287}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cadence", "Lib\Neon.Cadence\Neon.Cadence.csproj", "{9390BB49-A4BD-490A-ABC3-AF28745D6003}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {C2071335-AFDF-4643-93A2-EAC482E90E73}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cadence", "Test\Test.Neon.Cadence\Test.Neon.Cadence.csproj", "{4077F366-4847-4210-9BBA-D2C76E983367}"
 EndProject
@@ -214,8 +220,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cadence", "Lib\N
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Go", "Go", "{F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}"
 	ProjectSection(SolutionItems) = preProject
-		Go\build-proxy.ps1 = Go\build-proxy.ps1
-		Go\build-proxy.sh = Go\build-proxy.sh
+		Go\build-all.ps1 = Go\build-all.ps1
+		Go\build-cadence-proxy.ps1 = Go\build-cadence-proxy.ps1
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoBuilder", "Go\GoBuilder\GoBuilder.csproj", "{C2071335-AFDF-4643-93A2-EAC482E90E73}"

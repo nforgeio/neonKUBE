@@ -28,7 +28,9 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+// $todo(jeff.lill): Investegate adding metrics details.
+
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Requests the proxy establish a connection with a Cadence cluster.
@@ -45,6 +47,9 @@ namespace Neon.Cadence
             Type = MessageTypes.ConnectRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.ConnectReply;
+
         /// <summary>
         /// <para>
         /// The Cadence server network endpoints separated by commas.
@@ -60,15 +65,6 @@ namespace Neon.Cadence
         {
             get => GetStringProperty("Endpoints");
             set => SetStringProperty("Endpoints", value);
-        }
-
-        /// <summary>
-        /// The target Cadence domain.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
         }
 
         /// <summary>
@@ -98,7 +94,6 @@ namespace Neon.Cadence
             var typedTarget = (ConnectRequest)target;
 
             typedTarget.Endpoints = this.Endpoints;
-            typedTarget.Domain    = this.Domain;
             typedTarget.Identity  = this.Identity;
         }
     }

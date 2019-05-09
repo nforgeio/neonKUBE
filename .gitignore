@@ -56,7 +56,7 @@
 # !**/packages/repositories.config
 
 # Random [.rnd] files are generated sometimes while building Docker
-# images.  I'm not sure where they're comming from and deleting them
+# images.  I'm not sure where they're coming from and deleting them
 # in the image build scripts doesn't always seem to take.  We'll
 # just ignore these.
 
@@ -89,11 +89,18 @@ GeneratedEntities.cs
 GeneratedTypes.cs
 GeneratedUxTypes.cs
 
-##################
-### Go Project ###
-##################
-/Go/pkg
-/Go/bin
-/Go/src/github.com/*/*/vendor/*
+###################
+### Go Projects ###
+###################
 *.test
+Go/pkg/**
+
+####################
+### Neon.Cadence ###
+####################
+
+# These files are created during the build and will be embedded
+# into the [Neon.Cadence] assembly as resources.
+
+/Lib/Neon.Cadence/Resources/**
 /Test/Test.Neon.Models/GeneratedUxTypes.cs

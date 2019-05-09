@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
@@ -45,6 +45,9 @@ namespace Neon.Cadence
         {
             Type = MessageTypes.TerminateRequest;
         }
+
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.TerminateReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()

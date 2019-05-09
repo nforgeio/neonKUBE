@@ -570,5 +570,28 @@ namespace TestCommon
             Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint(""));
             Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint(null));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void GetUnusedTcpPort()
+        {
+            // Verify that we can obtain 100 unique ports on [127.0.0.2].
+            // Note that this is a tiny bit fragile because it's possible,
+            // but unlikely that there aren't enough free ports on that
+            // interface or that the OS will cycle through the free ports
+            // before we're done.
+
+            var address = IPAddress.Parse("127.0.0.2");
+            var ports   = new HashSet<int>();
+
+            for (int i = 0; i < 100; i++)
+            {
+                var port = NetHelper.GetUnusedTcpPort(address);
+
+                Assert.DoesNotContain(ports, p => p == port);
+
+                ports.Add(port);
+            }
+        }
     }
 }

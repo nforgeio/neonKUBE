@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Requests the details for a named domain.
@@ -44,24 +44,16 @@ namespace Neon.Cadence
             Type = MessageTypes.DomainDescribeRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.DomainDescribeReply;
+
         /// <summary>
-        /// The target Cadence domain name (one of <see cref="Name"/> or <see cref="Uuid"/>
-        /// must be specified.
+        /// The target Cadence domain name.
         /// </summary>
         public string Name
         {
             get => GetStringProperty("Name");
             set => SetStringProperty("Name", value);
-        }
-
-        /// <summary>
-        /// The target Cadence domain UUID (one of <see cref="Name"/> or <see cref="Uuid"/>
-        /// must be specified.
-        /// </summary>
-        public string Uuid
-        {
-            get => GetStringProperty("Uuid");
-            set => SetStringProperty("Uuid", value);
         }
 
         /// <inheritdoc/>
@@ -82,7 +74,6 @@ namespace Neon.Cadence
             var typedTarget = (DomainDescribeRequest)target;
 
             typedTarget.Name = this.Name;
-            typedTarget.Uuid = this.Uuid;
         }
     }
 }

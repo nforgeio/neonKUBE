@@ -37,17 +37,17 @@ neon-build clean
 Deletes all of the [bin] and [obj] folders within the repo and
 also clears the [Build] folder.
 
-Builds a neonKUBE Installer
----------------------------
 neon-build build-installer PLATFORM [--kube-version=VERSION]
+------------------------------------------------------------
+Builds a neonKUBE Installer
 
-Removes cached components
--------------------------
+Removes cached components:
+--------------------------
 neon-build clear PLATFORM
 
-Downloads KUBE PLATFORM components (if not already present)
------------------------------------------------------------
 neon-build download PLATFORM [--kube-version=VERSION]
+-----------------------------------------------------
+Downloads KUBE PLATFORM components (if not already present):
 
 ARGUMENTS:
 
@@ -60,6 +60,26 @@ OPTIONS:
     --kube-version  - optionally specifies the Kubernetes version
                       to be installed.  This defaults to the version
                       read from [$/kube-version.txt].
+
+neon-build gzip SOURCE TARGET
+-----------------------------
+Compresses a file using GZIP if the target doesn't exist or is
+older than the source.
+
+ARGUMENTS:
+
+    SOURCE          - path to the (uncompressed) source file.
+    TARGET          - path to the (compressed) target file.
+
+neon-build copy SOURCE TARGET
+-----------------------------
+Copies a file if the target doesn't exist or is older than the source.
+
+ARGUMENTS:
+
+    SOURCE          - path to the (uncompressed) source file.
+    TARGET          - path to the (compressed) target file.
+
 ";
         private static CommandLine commandLine;
 
@@ -114,12 +134,18 @@ OPTIONS:
 
                         foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "bin", SearchOption.AllDirectories))
                         {
-                            NeonHelper.DeleteFolder(folder);
+                            if (Directory.Exists(folder))
+                            {
+                                NeonHelper.DeleteFolder(folder);
+                            }
                         }
 
                         foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "obj", SearchOption.AllDirectories))
                         {
-                            NeonHelper.DeleteFolder(folder);
+                            if (Directory.Exists(folder))
+                            {
+                                NeonHelper.DeleteFolder(folder);
+                            }
                         }
 
                         break;
@@ -186,6 +212,84 @@ OPTIONS:
 
                         EnsureOption("--kube-version", Program.DefaultKubernetesVersion);
                         helper.Download();
+                        break;
+
+                    case "copy":
+
+                        {
+                            var sourcePath = commandLine.Arguments.ElementAtOrDefault(1);
+                            var targetPath = commandLine.Arguments.ElementAtOrDefault(2);
+
+                            if (sourcePath == null)
+                            {
+                                Console.Error.WriteLine("*** ERROR: SOURCE argument is required.");
+                                Program.Exit(1);
+                            }
+
+                            if (targetPath == null)
+                            {
+                                Console.Error.WriteLine("*** ERROR: TARGET argument is required.");
+                                Program.Exit(1);
+                            }
+
+                            if (!File.Exists(sourcePath))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: SOURCE file [{sourcePath}] does not exist.");
+                                Program.Exit(1);
+                            }
+
+                            Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
+
+                            if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) <= File.GetLastWriteTimeUtc(sourcePath))
+                            {
+                                Console.WriteLine($"File [{targetPath}] is up to date.");
+                                Program.Exit(0);
+                            }
+
+                            Console.WriteLine($"COPY: [{sourcePath}] --> [{targetPath}].");
+                            File.Copy(sourcePath, targetPath);
+                        }
+                        break;
+
+                    case "gzip":
+
+                        {
+                            var sourcePath = commandLine.Arguments.ElementAtOrDefault(1);
+                            var targetPath = commandLine.Arguments.ElementAtOrDefault(2);
+
+                            if (sourcePath == null)
+                            {
+                                Console.Error.WriteLine("*** ERROR: SOURCE argument is required.");
+                                Program.Exit(1);
+                            }
+
+                            if (targetPath == null)
+                            {
+                                Console.Error.WriteLine("*** ERROR: TARGET argument is required.");
+                                Program.Exit(1);
+                            }
+
+                            if (!File.Exists(sourcePath))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: SOURCE file [{sourcePath}] does not exist.");
+                                Program.Exit(1);
+                            }
+
+                            Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
+
+                            if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) <= File.GetLastWriteTimeUtc(sourcePath))
+                            {
+                                Console.WriteLine($"File [{targetPath}] is up to date.");
+                                Program.Exit(0);
+                            }
+
+                            Console.WriteLine($"GZIP: [{sourcePath}] --> [{targetPath}].");
+
+                            var uncompressed = File.ReadAllBytes(sourcePath);
+                            var compressed = NeonHelper.GzipBytes(uncompressed);
+
+                            File.WriteAllBytes(targetPath, compressed);
+                        }
                         break;
 
                     default:

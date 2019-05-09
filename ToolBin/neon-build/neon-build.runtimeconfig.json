@@ -1,0 +1,13 @@
+{
+  "runtimeOptions": {
+    "tfm": "netcoreapp3.0",
+    "framework": {
+      "name": "Microsoft.NETCore.App",
+      "version": "3.0.0-preview3-27503-5"
+    },
+    "configProperties": {
+      "System.GC.Concurrent": true,
+      "System.GC.Server": false
+    }
+  }
+}

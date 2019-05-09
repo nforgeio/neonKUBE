@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Base class for all proxy requests.
@@ -51,6 +51,12 @@ namespace Neon.Cadence
             get => GetLongProperty("RequestId");
             set => SetLongProperty("RequestId", value);
         }
+
+        /// <summary>
+        /// Derived request types must return the type of the expected
+        /// <see cref="ProxyReply"/> message.
+        /// </summary>
+        public virtual MessageTypes ReplyType => MessageTypes.Unspecified;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()

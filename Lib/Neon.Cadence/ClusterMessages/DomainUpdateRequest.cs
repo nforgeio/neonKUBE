@@ -28,7 +28,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>library --> proxy:</b> Requests the details for a named domain.
@@ -44,6 +44,9 @@ namespace Neon.Cadence
             Type = MessageTypes.DomainUpdateRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.DomainUpdateReply;
+
         /// <summary>
         /// The target Cadence domain name.
         /// </summary>
@@ -54,30 +57,39 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Optionally specifies the new domain name.
+        /// Specifies the new description.
         /// </summary>
-        public string NewName
+        public string UpdatedInfoDescription
         {
-            get => GetStringProperty("NewName");
-            set => SetStringProperty("NewName", value);
+            get => GetStringProperty("UpdatedInfoDescription");
+            set => SetStringProperty("UpdatedInfoDescription", value);
         }
 
         /// <summary>
-        /// Optionally specifies the new description.
+        /// Specifies the new owner's email address.
         /// </summary>
-        public string Description
+        public string UpdatedInfoOwnerEmail
         {
-            get => GetStringProperty("Description");
-            set => SetStringProperty("Description", value);
+            get => GetStringProperty("UpdatedInfoOwnerEmail");
+            set => SetStringProperty("UpdatedInfoOwnerEmail", value);
         }
 
         /// <summary>
-        /// Optionally specifies the new owner's email address.
+        /// Specifies the metrics emission setting.
         /// </summary>
-        public string OwnerEmail
+        public bool ConfigurationEmitMetrics
         {
-            get => GetStringProperty("OwnerEmail");
-            set => SetStringProperty("OwnerEmail", value);
+            get => GetBoolProperty("ConfigurationEmitMetrics");
+            set => SetBoolProperty("ConfigurationEmitMetrics", value);
+        }
+
+        /// <summary>
+        /// Specifies the workfloy history retention period in days.
+        /// </summary>
+        public int ConfigurationRetentionDays
+        {
+            get => GetIntProperty("ConfigurationRetentionDays");
+            set => SetIntProperty("ConfigurationRetentionDays", value);
         }
 
         /// <inheritdoc/>
@@ -97,10 +109,11 @@ namespace Neon.Cadence
 
             var typedTarget = (DomainUpdateRequest)target;
 
-            typedTarget.Name        = this.Name;
-            typedTarget.NewName     = this.NewName;
-            typedTarget.Description = this.Description;
-            typedTarget.OwnerEmail = this.OwnerEmail;
+            typedTarget.Name                       = this.Name;
+            typedTarget.ConfigurationEmitMetrics   = this.ConfigurationEmitMetrics;
+            typedTarget.ConfigurationRetentionDays = this.ConfigurationRetentionDays;
+            typedTarget.UpdatedInfoDescription     = this.UpdatedInfoDescription;
+            typedTarget.UpdatedInfoOwnerEmail      = this.UpdatedInfoOwnerEmail;
         }
     }
 }

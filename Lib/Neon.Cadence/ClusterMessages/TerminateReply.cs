@@ -28,13 +28,13 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>proxy --> library:</b> Answers a <see cref="TerminateRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.TerminateReply)]
-    internal class TerminateReply : ProxyRequest
+    internal class TerminateReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.

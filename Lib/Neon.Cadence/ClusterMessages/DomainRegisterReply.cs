@@ -28,13 +28,13 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>proxy --> library:</b> Answers a <see cref="DomainRegisterRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.DomainRegisterReply)]
-    internal class DomainRegisterReply : ProxyRequest
+    internal class DomainRegisterReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
