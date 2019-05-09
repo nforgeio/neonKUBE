@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	domain "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadencedomain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/domain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )

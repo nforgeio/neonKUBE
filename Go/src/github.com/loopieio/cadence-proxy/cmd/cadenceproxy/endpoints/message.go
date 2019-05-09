@@ -12,8 +12,8 @@ import (
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
 
+	domain "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadencedomain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/domain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
 
 	cadenceclient "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceclient"
