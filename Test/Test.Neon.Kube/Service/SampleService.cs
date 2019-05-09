@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TestService.cs
+// FILE:	    SampleService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -47,16 +47,16 @@ namespace TestKube
     /// Implements a simple web service used for testing <see cref="KubeService"/>
     /// and <see cref="KubeServiceFixture{TService}"/>.
     /// </summary>
-    public class TestService : KubeService
+    public class SampleService : KubeService
     {
         //---------------------------------------------------------------------
         // Local types
 
         public class Startup
         {
-            private TestService service;
+            private SampleService service;
 
-            public Startup(IConfiguration configuration, TestService service)
+            public Startup(IConfiguration configuration, SampleService service)
             {
                 this.Configuration = configuration;
                 this.service       = service;
@@ -78,33 +78,7 @@ namespace TestKube
         }
 
         //---------------------------------------------------------------------
-        // Static members
-
-        /// <summary>
-        /// Returns the service description.
-        /// </summary>
-        private static ServiceDescription GetServiceDescription()
-        {
-            var description = new ServiceDescription()
-            {
-                Name    = nameof(TestService),
-                Address = IPAddress.Parse("127.0.0.10")
-            };
-
-            description.Endpoints.Add("default",
-                new ServiceEndpoint()
-                {
-                    Name       = "default",
-                    Protocol   = ServiceEndpointProtocol.Http,
-                    PathPrefix = "/",
-                    Port       = 666
-                });
-
-            return description;
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
+        // Implementation
 
         private IWebHost    webHost;
         private Thread      thread;
@@ -112,8 +86,12 @@ namespace TestKube
         /// <summary>
         /// Constructor.
         /// </summary>
-        public TestService()
-            : base(GetServiceDescription(), ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
+        /// <param name="description">The service description.</param>
+        /// <param name="branch">Optionally specifies the build branch.</param>
+        /// <param name="commit">Optionally specifies the branch commit.</param>
+        /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
+        public SampleService(ServiceDescription description, string branch = null, string commit = null, bool isDirty = false)
+            : base(description, branch, commit, isDirty)
         {
         }
 
@@ -171,7 +149,7 @@ namespace TestKube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task OnWebRequest(HttpContext context)
         {
-            await context.Response.WriteAsync("Test");
+            await context.Response.WriteAsync("Hello World!");
         }
 
         /// <summary>

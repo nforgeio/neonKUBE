@@ -271,8 +271,8 @@ namespace Neon.Kube.Service
         /// </para>
         /// <para>
         /// Alternatively, you could try to map properties from your source
-        /// control environment to these parameters, pass a more fixed version
-        /// string as <paramref name="branch"/>, or simply ignore these parameters.
+        /// control environment to these parameters, pass your version string as 
+        /// <paramref name="branch"/>, or simply ignore these parameters.
         /// </para>
         /// </remarks>
         public KubeService(ServiceDescription description, string branch = null, string commit = null, bool isDirty = false)
