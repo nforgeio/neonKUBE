@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SampleService.cs
+// FILE:	    ComplexService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -44,13 +44,13 @@ using Xunit;
 namespace TestKube
 {
     /// <summary>
-    /// Startup class for <see cref="SampleService"/>.
+    /// Startup class for <see cref="ComplexService"/>.
     /// </summary>
-    public class SampleServiceStartup
+    public class ComplexServiceStartup
     {
-        private SampleService service;
+        private ComplexService service;
 
-        public SampleServiceStartup(IConfiguration configuration, SampleService service)
+        public ComplexServiceStartup(IConfiguration configuration, ComplexService service)
         {
             this.Configuration = configuration;
             this.service       = service;
@@ -72,14 +72,35 @@ namespace TestKube
     }
 
     /// <summary>
-    /// Implements a simple web service used for testing <see cref="KubeService"/>
-    /// and <see cref="KubeServiceFixture{TService}"/>.
+    /// Implements a somewhat complex service that services an HTTP endpoint, and also
+    /// has a <see cref="Task"/> and <see cref="Thread"/> running in the background.
     /// </summary>
-    public class SampleService : KubeService
+    /// <remarks>
+    /// <para>
+    /// This service demonstrates how to deply a service with an ASP.NET endpoint that
+    /// uses environment variables or a configuration file to specify the string
+    /// returned by the endpoint.  This also demonstrates how a service can have
+    /// and internal worker thread and/or task.
+    /// </para>
+    /// <para>
+    /// The service looks for the <b>COMPLEX_RESULT</b> environment variable and
+    /// if present, will return the value as the endpoint response text.  Otherwise,
+    /// the service will look for a configuration file at the logical path
+    /// <b>/etc/complex/response</b> and return its contents of present.  If neither
+    /// the environment variable or file are present, the endpoint will return
+    /// <b>UNCONFIGURED</b>.
+    /// </para>
+    /// <para>
+    /// We'll use these settings to exercise the <see cref="KubeService"/> logical
+    /// configuration capabilities.
+    /// </para>
+    /// </remarks>
+    public class ComplexService : KubeService
     {
         private IWebHost    webHost;
         private Thread      thread;
         private Task        task;
+        private string      responseText;
 
         /// <summary>
         /// Constructor.
@@ -89,7 +110,7 @@ namespace TestKube
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
-        public SampleService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
+        public ComplexService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
             : base(serviceMap, name, branch, commit, isDirty)
         {
         }
@@ -111,14 +132,35 @@ namespace TestKube
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            // Read the configuration environment variable or file to initialize
+            // endpoint response text.
+
+            responseText = "UNCONFIGURED";
+
+            var complexResponseVar = GetEnvironmentVariable("COMPLEX_RESPONSE");
+
+            if (complexResponseVar != null)
+            {
+                responseText = complexResponseVar;
+            }
+            else
+            {
+                var configPath = GetConfigFilePath("/etc/complex/response");
+
+                if (configPath != null && File.Exists(configPath))
+                {
+                    responseText = File.ReadAllText(configPath);
+                }
+            }
+
             // Start the web service.
 
             var endpoint = Description.Endpoints.Default;
 
             webHost = new WebHostBuilder()
-                .UseStartup<SampleServiceStartup>()
+                .UseStartup<ComplexServiceStartup>()
                 .UseKestrel(options => options.Listen(Description.Address, endpoint.Port))
-                .ConfigureServices(services => services.AddSingleton(typeof(SampleService), this))
+                .ConfigureServices(services => services.AddSingleton(typeof(ComplexService), this))
                 .Build();
 
             webHost.Start();
@@ -153,7 +195,7 @@ namespace TestKube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task OnWebRequest(HttpContext context)
         {
-            await context.Response.WriteAsync("Hello World!");
+            await context.Response.WriteAsync(responseText);
         }
 
         /// <summary>

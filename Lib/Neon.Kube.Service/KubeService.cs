@@ -298,7 +298,7 @@ namespace Neon.Kube.Service
 
             this.ServiceMap           = serviceMap;
             this.Description          = description;
-            this.InProduction         = NeonHelper.IsDevWorkstation;
+            this.InProduction         = !NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
@@ -698,7 +698,7 @@ namespace Neon.Kube.Service
                             throw new FormatException($"[{path}:{lineNumber}]: Setting name cannot be blank.");
                         }
 
-                        Environment.SetEnvironmentVariable(name, value);
+                        SetEnvironmentVariable(name, value);
                     }
                 }
             }
@@ -804,10 +804,19 @@ namespace Neon.Kube.Service
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <param name="contents">The content string.</param>
-        public void SetConfigFile(string logicalPath, string contents)
+        /// <param name="linuxLineEndings">
+        /// Optionally convert any Windows style Lline endings (CRLF) into Linux 
+        /// style endings (LF).  This defaults to <c>false</c>.
+        /// </param>
+        public void SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath));
             Covenant.Requires<ArgumentNullException>(contents != null);
+
+            if (linuxLineEndings)
+            {
+                contents = contents.Replace("\r\n", "\n");
+            }
 
             lock (syncLock)
             {
@@ -863,8 +872,12 @@ namespace Neon.Kube.Service
         /// Returns the physical path for the confguration file whose logical path is specified.
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
-        /// <returns>The physical path for the configuration file.</returns>
-        /// <exception cref="FileNotFoundException">Thrown if there's no file configured at <paramref name="logicalPath"/>.</exception>
+        /// <returns>The physical path for the configuration file or <c>null</c> if the logical file path is not present.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method does not verify that the physical file actually exists.
+        /// </note>
+        /// </remarks>
         public string GetConfigFilePath(string logicalPath)
         {
             lock (syncLock)
@@ -876,7 +889,7 @@ namespace Neon.Kube.Service
 
                 if (!configFiles.TryGetValue(logicalPath, out var fileInfo))
                 {
-                    throw new FileNotFoundException($"Configuration file at logical path [{logicalPath}] not found.");
+                    return null;
                 }
 
                 return fileInfo.PhysicalPath;
