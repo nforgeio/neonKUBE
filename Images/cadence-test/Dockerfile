@@ -80,6 +80,9 @@ RUN mkdir /cadence \
 # Export CADENCE_HOME ENV variable
 ENV CADENCE_HOME /cadence
 
+# Set timezone to UTC
+ENV TZ=UTC
+
 # Tell to expose ports
 EXPOSE 7933 7934 7935 7939 9042
 
