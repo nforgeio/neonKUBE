@@ -140,7 +140,7 @@ namespace Neon.Xunit
         bool IsRunning { get; }
 
         /// <summary>
-        /// Resets the fixture state.
+        /// <b>INTERNAL USE ONLY:</b> Resets the fixture state.
         /// </summary>
         void Reset();
     }
