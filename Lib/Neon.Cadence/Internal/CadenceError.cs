@@ -69,7 +69,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Optionally specifies the GOLANG error type.
         /// </summary>
-        [JsonProperty(PropertyName = "ErrorType", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Type", Required = Required.Always)]
         public string Type { get; set; }
 
         /// <summary>

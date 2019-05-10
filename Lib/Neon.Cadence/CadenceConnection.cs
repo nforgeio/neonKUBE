@@ -557,7 +557,7 @@ namespace Neon.Cadence
                     // Signal the proxy that it should exit gracefully and then
                     // allow it [Settings.TerminateTimeout] to actually exit
                     // before killing it.
-
+       
                     try
                     {
                         ProxyCallAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
