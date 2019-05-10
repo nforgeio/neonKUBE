@@ -1,8 +1,6 @@
 package base
 
 import (
-	"fmt"
-
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 )
 
@@ -26,6 +24,9 @@ type (
 	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
 		GetReplyType() messages.MessageType
+		SetReplyType(value messages.MessageType)
+		GetRequestID() int64
+		SetRequestID(value int64)
 	}
 )
 
@@ -57,31 +58,22 @@ func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *ProxyRequest) SetProxyMessage(value *ProxyMessage) {
-	*request.ProxyMessage = *value
+	request.ProxyMessage.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *ProxyRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (request *ProxyRequest) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n", str)
-	str = fmt.Sprintf("%s%s", str, request.ProxyMessage.String())
-	str = fmt.Sprintf("%s\n", str)
-	return str
+	return request.ProxyMessage.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *ProxyRequest) GetRequestID() int64 {
-	return request.GetLongProperty("RequestId")
+	return request.ProxyMessage.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *ProxyRequest) SetRequestID(value int64) {
-	request.SetLongProperty("RequestId", value)
+	request.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -94,4 +86,13 @@ func (request *ProxyRequest) SetRequestID(value int64) {
 // request with
 func (request *ProxyRequest) GetReplyType() messages.MessageType {
 	return request.ReplyType
+}
+
+// SetReplyType sets the MessageType used to reply to a specific
+// ProxyRequest
+//
+// param value messages.MessageType -> the message type to reply to the
+// request with
+func (request *ProxyRequest) SetReplyType(value messages.MessageType) {
+	request.ReplyType = value
 }

@@ -2,6 +2,8 @@ package base_test
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -87,6 +89,21 @@ func (s *UnitTestSuite) TestPropertyHelpers() {
 
 	message.SetTimeSpanProperty("foo", time.Second*123)
 	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo"))
+
+	jsonStr := "{\"String\":\"john\",\"Details\":\"22\",\"Type\":\"mca\"}"
+	cadenceError := cadenceerrors.NewCadenceErrorEmpty()
+	err := json.Unmarshal([]byte(jsonStr), cadenceError)
+	if err != nil {
+		panic(err)
+	}
+
+	message.SetJSONProperty("foo", cadenceError)
+	s.Equal(cadenceError, message.GetJSONProperty("foo", cadenceError))
+
+	b, err := base64.StdEncoding.DecodeString("c29tZSBkYXRhIHdpdGggACBhbmQg77u/")
+	s.NoError(err)
+	message.SetBytesProperty("foo", b)
+	s.Equal(b, message.GetBytesProperty("foo"))
 }
 
 // --------------------------------------------------------------------------
@@ -122,6 +139,12 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		v.Properties["Empty"] = &p3
 		v.Properties["Nil"] = nil
 
+		v.SetJSONProperty("Error", cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"))
+
+		b, err := base64.StdEncoding.DecodeString("c29tZSBkYXRhIHdpdGggACBhbmQg77u/")
+		s.NoError(err)
+		v.SetBytesProperty("Bytes", b)
+
 		// fill the attachments map
 		v.Attachments = append(v.Attachments, []byte{0, 1, 2, 3, 4})
 		v.Attachments = append(v.Attachments, make([]byte, 0))
@@ -144,11 +167,19 @@ func (s *UnitTestSuite) TestProxyMessage() {
 
 		// type and property values
 		s.Equal(messages.Unspecified, v.Type)
-		s.Equal(4, len(v.Properties))
+		s.Equal(6, len(v.Properties))
 		s.Equal("1", *v.Properties["One"])
 		s.Equal("2", *v.Properties["Two"])
 		s.Empty(v.Properties["Empty"])
 		s.Nil(v.Properties["Nil"])
+		s.Equal("c29tZSBkYXRhIHdpdGggACBhbmQg77u/", *v.Properties["Bytes"])
+
+		cadenceError := v.GetJSONProperty("Error", cadenceerrors.NewCadenceErrorEmpty())
+		if v, ok := cadenceError.(*cadenceerrors.CadenceError); ok {
+			s.Equal("foo", *v.String)
+			s.Equal("bar", *v.Details)
+			s.Equal(cadenceerrors.Custom, v.GetType())
+		}
 
 		// attachment values
 		s.Equal(3, len(v.Attachments))
@@ -201,23 +232,17 @@ func (s *UnitTestSuite) TestProxyReply() {
 
 	if v, ok := message.(*base.ProxyReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(cadenceerrors.None, v.GetErrorType())
 		s.Nil(v.GetError())
-		s.Nil(v.GetErrorDetails())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetErrorType(cadenceerrors.Custom)
-
-		str1 := "MyError"
-		str2 := "MyError Details"
-		v.SetError(&str1)
-		v.SetErrorDetails(&str2)
+		v.SetError(cadenceerrors.NewCadenceError("MyError"))
 
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.Custom, v.GetErrorType())
-		s.Equal("MyError", *v.GetError())
-		s.Equal("MyError Details", *v.GetErrorDetails())
+		s.Nil(v.GetError().Type)
+		s.Panics(func() { v.GetError().GetType() })
+		s.Equal("MyError", *v.GetError().String)
+		s.Nil(v.GetError().Details)
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -233,9 +258,9 @@ func (s *UnitTestSuite) TestProxyReply() {
 
 	if v, ok := message.(*base.ProxyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.Custom, v.GetErrorType())
-		s.Equal("MyError", *v.GetError())
-		s.Equal("MyError Details", *v.GetErrorDetails())
+		s.Nil(v.GetError().Type)
+		s.Panics(func() { v.GetError().GetType() })
+		s.Equal("MyError", *v.GetError().String)
+		s.Nil(v.GetError().Details)
 	}
 }

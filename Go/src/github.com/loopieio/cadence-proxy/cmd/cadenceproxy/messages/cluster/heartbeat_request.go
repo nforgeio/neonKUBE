@@ -1,8 +1,6 @@
 package cluster
 
 import (
-	"fmt"
-
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
@@ -17,7 +15,6 @@ type (
 	// the corresponding MessageType for replying to this ProxyRequest
 	HeartbeatRequest struct {
 		*base.ProxyRequest
-		ReplyType messages.MessageType
 	}
 )
 
@@ -30,7 +27,8 @@ func NewHeartbeatRequest() *HeartbeatRequest {
 	request := new(HeartbeatRequest)
 	request.ProxyRequest = base.NewProxyRequest()
 	request.Type = messages.HeartbeatRequest
-	request.ReplyType = messages.HeartbeatReply
+	request.SetReplyType(messages.HeartbeatReply)
+
 	return request
 }
 
@@ -42,6 +40,7 @@ func (request *HeartbeatRequest) Clone() base.IProxyMessage {
 	heartbeatRequest := NewHeartbeatRequest()
 	var messageClone base.IProxyMessage = heartbeatRequest
 	request.CopyTo(messageClone)
+
 	return messageClone
 }
 
@@ -52,31 +51,22 @@ func (request *HeartbeatRequest) CopyTo(target base.IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *HeartbeatRequest) SetProxyMessage(value *base.ProxyMessage) {
-	*request.ProxyMessage = *value
+	request.ProxyMessage.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *HeartbeatRequest) GetProxyMessage() *base.ProxyMessage {
-	return request.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (request *HeartbeatRequest) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n{\n", str)
-	str = fmt.Sprintf("%s%s", str, request.ProxyRequest.String())
-	str = fmt.Sprintf("%s}\n", str)
-	return str
+	return request.ProxyMessage.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *HeartbeatRequest) GetRequestID() int64 {
-	return request.GetLongProperty("RequestId")
+	return request.ProxyMessage.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *HeartbeatRequest) SetRequestID(value int64) {
-	request.SetLongProperty("RequestId", value)
+	request.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -84,5 +74,10 @@ func (request *HeartbeatRequest) SetRequestID(value int64) {
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *HeartbeatRequest) GetReplyType() messages.MessageType {
-	return request.ReplyType
+	return request.ProxyRequest.GetReplyType()
+}
+
+// SetReplyType inherits docs from ProxyRequest.SetReplyType()
+func (request *HeartbeatRequest) SetReplyType(value messages.MessageType) {
+	request.ProxyRequest.SetReplyType(value)
 }

@@ -3,7 +3,7 @@ package workflow
 import "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 
 type (
-	WorkflowProxyReply struct {
+	WorkflowReply struct {
 		*base.ProxyReply
 		ContextID string
 	}

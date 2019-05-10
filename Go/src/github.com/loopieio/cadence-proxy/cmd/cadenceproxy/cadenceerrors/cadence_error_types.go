@@ -7,11 +7,9 @@ import "fmt"
 type CadenceErrorTypes int
 
 const (
-	// None indicates no errors
-	None CadenceErrorTypes = iota
 
 	// Cancelled indicates that an operation was cancelled
-	Cancelled
+	Cancelled CadenceErrorTypes = iota
 
 	// Custom is a custom error
 	Custom
@@ -31,7 +29,6 @@ const (
 
 func (t CadenceErrorTypes) String() string {
 	return [...]string{
-		"none",
 		"cancelled",
 		"custom",
 		"generic",

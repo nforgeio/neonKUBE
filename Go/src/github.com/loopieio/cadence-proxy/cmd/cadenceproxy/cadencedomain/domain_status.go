@@ -8,11 +8,8 @@ type DomainStatus int
 
 const (
 
-	// StatusUnspecified indicates that the status cannot be determined.
-	Unspecified DomainStatus = iota
-
 	// Registered indicates that the domain is registered and active.
-	Registered
+	Registered DomainStatus = iota
 
 	// Deprecated indicates that the domain is closed for new workflows
 	// but will remain until already running workflows are completed and the
@@ -26,7 +23,6 @@ const (
 
 func (t DomainStatus) String() string {
 	return [...]string{
-		"UNSPECIFIED",
 		"REGISTERED",
 		"DEPRECATED",
 		"DELETED",
@@ -35,8 +31,6 @@ func (t DomainStatus) String() string {
 
 func StringToDomainStatus(value string) DomainStatus {
 	switch value {
-	case "UNSPECIFIED":
-		return Unspecified
 	case "REGISTERED":
 		return Registered
 	case "DEPRECATED":

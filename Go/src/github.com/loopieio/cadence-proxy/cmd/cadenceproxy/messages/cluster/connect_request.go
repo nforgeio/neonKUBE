@@ -1,8 +1,6 @@
 package cluster
 
 import (
-	"fmt"
-
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
@@ -17,7 +15,6 @@ type (
 	// the corresponding MessageType for replying to this ProxyRequest
 	ConnectRequest struct {
 		*base.ProxyRequest
-		ReplyType messages.MessageType
 	}
 )
 
@@ -29,7 +26,8 @@ func NewConnectRequest() *ConnectRequest {
 	request := new(ConnectRequest)
 	request.ProxyRequest = base.NewProxyRequest()
 	request.Type = messages.ConnectRequest
-	request.ReplyType = messages.ConnectReply
+	request.SetReplyType(messages.ConnectReply)
+
 	return request
 }
 
@@ -75,7 +73,6 @@ func (request *ConnectRequest) SetIdentity(value *string) {
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *ConnectRequest) Clone() base.IProxyMessage {
 	connectRequest := NewConnectRequest()
-
 	var messageClone base.IProxyMessage = connectRequest
 	request.CopyTo(messageClone)
 
@@ -93,31 +90,22 @@ func (request *ConnectRequest) CopyTo(target base.IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *ConnectRequest) SetProxyMessage(value *base.ProxyMessage) {
-	*request.ProxyMessage = *value
+	request.ProxyMessage.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *ConnectRequest) GetProxyMessage() *base.ProxyMessage {
-	return request.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (request *ConnectRequest) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n{\n", str)
-	str = fmt.Sprintf("%s%s", str, request.ProxyRequest.String())
-	str = fmt.Sprintf("%s}\n", str)
-	return str
+	return request.ProxyMessage.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *ConnectRequest) GetRequestID() int64 {
-	return request.GetLongProperty("RequestId")
+	return request.ProxyMessage.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *ConnectRequest) SetRequestID(value int64) {
-	request.SetLongProperty("RequestId", value)
+	request.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -126,4 +114,9 @@ func (request *ConnectRequest) SetRequestID(value int64) {
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *ConnectRequest) GetReplyType() messages.MessageType {
 	return request.ReplyType
+}
+
+// SetReplyType inherits docs from ProxyRequest.SetReplyType()
+func (request *ConnectRequest) SetReplyType(value messages.MessageType) {
+	request.ProxyRequest.SetReplyType(value)
 }

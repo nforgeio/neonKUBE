@@ -1,9 +1,6 @@
 package cluster
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
@@ -27,6 +24,7 @@ func NewCancelReply() *CancelReply {
 	reply := new(CancelReply)
 	reply.ProxyReply = base.NewProxyReply()
 	reply.Type = messages.CancelReply
+
 	return reply
 }
 
@@ -56,6 +54,7 @@ func (reply *CancelReply) Clone() base.IProxyMessage {
 	cancelReply := NewCancelReply()
 	var messageClone base.IProxyMessage = cancelReply
 	reply.CopyTo(messageClone)
+
 	return messageClone
 }
 
@@ -69,113 +68,33 @@ func (reply *CancelReply) CopyTo(target base.IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (reply *CancelReply) SetProxyMessage(value *base.ProxyMessage) {
-	*reply.ProxyMessage = *value
+	reply.ProxyMessage.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (reply *CancelReply) GetProxyMessage() *base.ProxyMessage {
-	return reply.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (reply *CancelReply) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n{\n", str)
-	str = fmt.Sprintf("%s%s", str, reply.ProxyReply.String())
-	str = fmt.Sprintf("%s}\n", str)
-	return str
+	return reply.ProxyMessage.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *CancelReply) GetRequestID() int64 {
-	return reply.GetLongProperty("RequestId")
+	return reply.ProxyMessage.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *CancelReply) SetRequestID(value int64) {
-	reply.SetLongProperty("RequestId", value)
+	reply.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError inherits docs from ProxyReply.GetError()
-func (reply *CancelReply) GetError() *string {
-	return reply.GetStringProperty("Error")
+func (reply *CancelReply) GetError() *cadenceerrors.CadenceError {
+	return reply.ProxyReply.GetError()
 }
 
 // SetError inherits docs from ProxyReply.SetError()
-func (reply *CancelReply) SetError(value *string) {
-	reply.SetStringProperty("Error", value)
-}
-
-// GetErrorDetails inherits docs from ProxyReply.GetErrorDetails()
-func (reply *CancelReply) GetErrorDetails() *string {
-	return reply.GetStringProperty("ErrorDetails")
-}
-
-// SetErrorDetails inherits docs from ProxyReply.SetErrorDetails()
-func (reply *CancelReply) SetErrorDetails(value *string) {
-	reply.SetStringProperty("ErrorDetails", value)
-}
-
-// GetErrorType inherits docs from ProxyReply.GetErrorType()
-func (reply *CancelReply) GetErrorType() cadenceerrors.CadenceErrorTypes {
-
-	// Grap the pointer to the error string in the properties map
-	errorStringPtr := reply.GetStringProperty("ErrorType")
-	if errorStringPtr == nil {
-		return cadenceerrors.None
-	}
-
-	// dereference and switch block on the value
-	errorString := *errorStringPtr
-	switch errorString {
-	case "cancelled":
-		return cadenceerrors.Cancelled
-	case "custom":
-		return cadenceerrors.Custom
-	case "generic":
-		return cadenceerrors.Generic
-	case "panic":
-		return cadenceerrors.Panic
-	case "terminated":
-		return cadenceerrors.Terminated
-	case "timeout":
-		return cadenceerrors.Timeout
-	default:
-		err := errors.New("not implemented exception")
-		panic(err)
-	}
-}
-
-// SetErrorType inherits docs from ProxyReply.SetErrorType()
-func (reply *CancelReply) SetErrorType(value cadenceerrors.CadenceErrorTypes) {
-	var typeString string
-
-	// switch block on the param value
-	switch value {
-	case cadenceerrors.None:
-		reply.Properties["ErrorType"] = nil
-		return
-	case cadenceerrors.Cancelled:
-		typeString = "cancelled"
-	case cadenceerrors.Custom:
-		typeString = "custom"
-	case cadenceerrors.Generic:
-		typeString = "generic"
-	case cadenceerrors.Panic:
-		typeString = "panic"
-	case cadenceerrors.Terminated:
-		typeString = "terminated"
-	case cadenceerrors.Timeout:
-		typeString = "timeout"
-	default:
-		// panic if type is not recognized or implemented yet
-		err := errors.New("not implemented exception")
-		panic(err)
-	}
-
-	// set the string in the properties map
-	reply.SetStringProperty("ErrorType", &typeString)
+func (reply *CancelReply) SetError(value *cadenceerrors.CadenceError) {
+	reply.ProxyReply.SetError(value)
 }

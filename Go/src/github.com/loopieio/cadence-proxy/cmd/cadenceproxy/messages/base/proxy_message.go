@@ -2,11 +2,13 @@ package base
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -44,7 +46,6 @@ type (
 		GetProxyMessage() *ProxyMessage
 		GetRequestID() int64
 		SetRequestID(int64)
-		String() string
 	}
 )
 
@@ -64,6 +65,7 @@ func NewProxyMessage() *ProxyMessage {
 	message := new(ProxyMessage)
 	message.Properties = make(map[string]*string)
 	message.Attachments = make([][]byte, 0)
+
 	return message
 }
 
@@ -270,29 +272,6 @@ func (proxyMessage *ProxyMessage) Serialize(allowUnspecified bool) ([]byte, erro
 	return buf.Bytes(), nil
 }
 
-// ProxyMessageToString is a method for cleanly
-// printing an ProxyMessage object to a log console
-func (proxyMessage *ProxyMessage) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n", str)
-	str = fmt.Sprintf("%s\tType: %d\n", str, proxyMessage.Type)
-	str = fmt.Sprintf("%s\tProperties:\n", str)
-	for k, v := range proxyMessage.Properties {
-		if v == nil {
-			str = fmt.Sprintf("%s\t\t%s: %s,\n", str, k, "nil")
-		} else {
-			str = fmt.Sprintf("%s\t\t%s: %s,\n", str, k, *v)
-		}
-	}
-
-	str = fmt.Sprintf("%s\tAttachments:\n", str)
-	for i := 0; i < len(proxyMessage.Attachments); i++ {
-		str = fmt.Sprintf("%s\t\t%v\n", str, proxyMessage.Attachments[i])
-	}
-
-	return str
-}
-
 // CopyTo implemented by derived classes to copy
 // message properties to another message instance
 // during a Clone() operation
@@ -310,7 +289,9 @@ func (proxyMessage *ProxyMessage) Clone() IProxyMessage {
 
 // SetProxyMessage is implemented by derived classes to set the value
 // of a ProxyMessage in an IProxyMessage interface
-func (proxyMessage *ProxyMessage) SetProxyMessage(value *ProxyMessage) {}
+func (proxyMessage *ProxyMessage) SetProxyMessage(value *ProxyMessage) {
+	*proxyMessage = *value
+}
 
 // GetProxyMessage is implemented by derived classes to get the value of
 // a ProxyMessage in an IProxyMessage interface
@@ -448,17 +429,17 @@ func (proxyMessage *ProxyMessage) GetTimeSpanProperty(key string, def ...time.Du
 
 // GetJSONProperty is a helper method for retrieving a complex property serialized
 // as a JSON string
-func (proxyMessage *ProxyMessage) GetJSONProperty(key string, deserializeTo interface{}) error {
+func (proxyMessage *ProxyMessage) GetJSONProperty(key string, deserializeTo interface{}) interface{} {
 	if proxyMessage.Properties[key] == nil {
-		return fmt.Errorf("nil value at key %s in ProxyMessage.Properties map", key)
+		return nil
 	}
 
 	err := json.Unmarshal([]byte(*proxyMessage.Properties[key]), deserializeTo)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	return nil
+	return deserializeTo
 }
 
 // GetBytesProperty is a helper method for retrieving a []byte property
@@ -467,7 +448,12 @@ func (proxyMessage *ProxyMessage) GetBytesProperty(key string) []byte {
 		return nil
 	}
 
-	return nil
+	bytes, err := base64.StdEncoding.DecodeString(*proxyMessage.Properties[key])
+	if err != nil {
+		panic(err)
+	}
+
+	return bytes
 }
 
 //---------------------------------------------------------------------
@@ -516,20 +502,28 @@ func (proxyMessage *ProxyMessage) SetTimeSpanProperty(key string, value time.Dur
 }
 
 // SetJSONProperty is a helper method for setting a complex property as JSON
-func (proxyMessage *ProxyMessage) SetJSONProperty(key string, value interface{}) error {
-	var jsonPtr *string
-	if value == nil {
-		jsonPtr = nil
-
+func (proxyMessage *ProxyMessage) SetJSONProperty(key string, value interface{}) {
+	var jsonStr string
+	if reflect.ValueOf(value).IsNil() {
+		proxyMessage.Properties[key] = nil
 	} else {
+
 		bytes, err := json.Marshal(value)
 		if err != nil {
-			return err
+			panic(err)
 		}
 
-		*jsonPtr = string(bytes)
+		jsonStr = string(bytes)
+		proxyMessage.Properties[key] = &jsonStr
 	}
+}
 
-	proxyMessage.Properties[key] = jsonPtr
-	return nil
+//SetBytesProperty is a helper method for setting a []byte property
+func (proxyMessage *ProxyMessage) SetBytesProperty(key string, value []byte) {
+	if value == nil {
+		proxyMessage.Properties[key] = nil
+	} else {
+		str := base64.StdEncoding.EncodeToString(value)
+		proxyMessage.Properties[key] = &str
+	}
 }

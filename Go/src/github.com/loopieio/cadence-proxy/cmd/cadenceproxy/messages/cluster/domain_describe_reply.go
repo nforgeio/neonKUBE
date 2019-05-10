@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"errors"
-	"fmt"
 
 	domain "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadencedomain"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
@@ -28,6 +27,7 @@ func NewDomainDescribeReply() *DomainDescribeReply {
 	reply := new(DomainDescribeReply)
 	reply.ProxyReply = base.NewProxyReply()
 	reply.Type = messages.DomainDescribeReply
+
 	return reply
 }
 
@@ -68,42 +68,46 @@ func (reply *DomainDescribeReply) SetDomainInfoDescription(value *string) {
 // GetDomainInfoStatus gets the DomainInfoStatus property as a string
 // pointer from a DomainDescribeReply's properties map
 //
-// returns DomainStatus -> the DomainStatus of the Domain being described
+// returns *DomainStatus -> pointer to the DomainStatus of the Domain being described
 // from a DomainDescribeReply's properties map
-func (reply *DomainDescribeReply) GetDomainInfoStatus() domain.DomainStatus {
+func (reply *DomainDescribeReply) GetDomainInfoStatus() *domain.DomainStatus {
 	domainInfoStatusPtr := reply.GetStringProperty("DomainInfoStatus")
 	if domainInfoStatusPtr == nil {
-		return domain.Unspecified
+		return nil
 	}
 
 	// dereference and switch block on the value
 	domainStatus := *domainInfoStatusPtr
+	var returnStatus domain.DomainStatus
 	switch domainStatus {
 	case "REGISTERED":
-		return domain.Registered
+		returnStatus = domain.Registered
 	case "DEPRECATED":
-		return domain.Deprecated
+		returnStatus = domain.Deprecated
 	case "DELETED":
-		return domain.Deleted
+		returnStatus = domain.Deleted
 	default:
 		err := errors.New("domainStatus not implemented exception")
 		panic(err)
 	}
+
+	return &returnStatus
 }
 
 // SetDomainInfoStatus sets the DomainInfoStatus property as a string
 // pointer in a DomainDescribeReply's properties map
 //
-// param value DomainStatus -> DomainStatus value to set
+// param value *DomainStatus -> DomainStatus value to set
 // as the DomainDescribeReply's DomainInfoStatus in its properties map
-func (reply *DomainDescribeReply) SetDomainInfoStatus(value domain.DomainStatus) {
-	var statusString string
+func (reply *DomainDescribeReply) SetDomainInfoStatus(value *domain.DomainStatus) {
+	if value == nil {
+		reply.SetStringProperty("DomainInfoStatus", nil)
+		return
+	}
 
 	// switch block on the param value
-	switch value {
-	case domain.Unspecified:
-		reply.Properties["DomainInfoStatus"] = nil
-		return
+	var statusString string
+	switch *value {
 	case domain.Registered:
 		statusString = "REGISTERED"
 	case domain.Deprecated:
@@ -181,7 +185,6 @@ func (reply *DomainDescribeReply) SetConfigurationEmitMetrics(value bool) {
 func (reply *DomainDescribeReply) Clone() base.IProxyMessage {
 	domainDescribeReply := NewDomainDescribeReply()
 	var messageClone base.IProxyMessage = domainDescribeReply
-
 	reply.CopyTo(messageClone)
 
 	return messageClone
@@ -202,113 +205,33 @@ func (reply *DomainDescribeReply) CopyTo(target base.IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (reply *DomainDescribeReply) SetProxyMessage(value *base.ProxyMessage) {
-	*reply.ProxyMessage = *value
+	reply.ProxyMessage.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (reply *DomainDescribeReply) GetProxyMessage() *base.ProxyMessage {
-	return reply.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (reply *DomainDescribeReply) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n{\n", str)
-	str = fmt.Sprintf("%s%s", str, reply.ProxyReply.String())
-	str = fmt.Sprintf("%s}\n", str)
-	return str
+	return reply.ProxyMessage.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *DomainDescribeReply) GetRequestID() int64 {
-	return reply.GetLongProperty("RequestId")
+	return reply.ProxyMessage.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *DomainDescribeReply) SetRequestID(value int64) {
-	reply.SetLongProperty("RequestId", value)
+	reply.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError inherits docs from ProxyReply.GetError()
-func (reply *DomainDescribeReply) GetError() *string {
-	return reply.GetStringProperty("Error")
+func (reply *DomainDescribeReply) GetError() *cadenceerrors.CadenceError {
+	return reply.ProxyReply.GetError()
 }
 
 // SetError inherits docs from ProxyReply.SetError()
-func (reply *DomainDescribeReply) SetError(value *string) {
-	reply.SetStringProperty("Error", value)
-}
-
-// GetErrorDetails inherits docs from ProxyReply.GetErrorDetails()
-func (reply *DomainDescribeReply) GetErrorDetails() *string {
-	return reply.GetStringProperty("ErrorDetails")
-}
-
-// SetErrorDetails inherits docs from ProxyReply.SetErrorDetails()
-func (reply *DomainDescribeReply) SetErrorDetails(value *string) {
-	reply.SetStringProperty("ErrorDetails", value)
-}
-
-// GetErrorType inherits docs from ProxyReply.GetErrorType()
-func (reply *DomainDescribeReply) GetErrorType() cadenceerrors.CadenceErrorTypes {
-
-	// Grap the pointer to the error string in the properties map
-	errorStringPtr := reply.GetStringProperty("ErrorType")
-	if errorStringPtr == nil {
-		return cadenceerrors.None
-	}
-
-	// dereference and switch block on the value
-	errorString := *errorStringPtr
-	switch errorString {
-	case "cancelled":
-		return cadenceerrors.Cancelled
-	case "custom":
-		return cadenceerrors.Custom
-	case "generic":
-		return cadenceerrors.Generic
-	case "panic":
-		return cadenceerrors.Panic
-	case "terminated":
-		return cadenceerrors.Terminated
-	case "timeout":
-		return cadenceerrors.Timeout
-	default:
-		err := errors.New("not implemented exception")
-		panic(err)
-	}
-}
-
-// SetErrorType inherits docs from ProxyReply.SetErrorType()
-func (reply *DomainDescribeReply) SetErrorType(value cadenceerrors.CadenceErrorTypes) {
-	var typeString string
-
-	// switch block on the param value
-	switch value {
-	case cadenceerrors.None:
-		reply.Properties["ErrorType"] = nil
-		return
-	case cadenceerrors.Cancelled:
-		typeString = "cancelled"
-	case cadenceerrors.Custom:
-		typeString = "custom"
-	case cadenceerrors.Generic:
-		typeString = "generic"
-	case cadenceerrors.Panic:
-		typeString = "panic"
-	case cadenceerrors.Terminated:
-		typeString = "terminated"
-	case cadenceerrors.Timeout:
-		typeString = "timeout"
-	default:
-		// panic if type is not recognized or implemented yet
-		err := errors.New("not implemented exception")
-		panic(err)
-	}
-
-	// set the string in the properties map
-	reply.SetStringProperty("ErrorType", &typeString)
+func (reply *DomainDescribeReply) SetError(value *cadenceerrors.CadenceError) {
+	reply.ProxyReply.SetError(value)
 }

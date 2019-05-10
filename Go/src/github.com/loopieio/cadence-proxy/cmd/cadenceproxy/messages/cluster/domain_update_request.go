@@ -1,8 +1,6 @@
 package cluster
 
 import (
-	"fmt"
-
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
@@ -17,7 +15,6 @@ type (
 	// the corresponding MessageType for replying to this ProxyRequest
 	DomainUpdateRequest struct {
 		*base.ProxyRequest
-		ReplyType messages.MessageType
 	}
 )
 
@@ -29,7 +26,8 @@ func NewDomainUpdateRequest() *DomainUpdateRequest {
 	request := new(DomainUpdateRequest)
 	request.ProxyRequest = base.NewProxyRequest()
 	request.Type = messages.DomainUpdateRequest
-	request.ReplyType = messages.DomainUpdateReply
+	request.SetReplyType(messages.DomainUpdateReply)
+
 	return request
 }
 
@@ -126,7 +124,6 @@ func (request *DomainUpdateRequest) SetConfigurationRetentionDays(value int32) {
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *DomainUpdateRequest) Clone() base.IProxyMessage {
 	domainUpdateRequest := NewDomainUpdateRequest()
-
 	var messageClone base.IProxyMessage = domainUpdateRequest
 	request.CopyTo(messageClone)
 
@@ -147,31 +144,22 @@ func (request *DomainUpdateRequest) CopyTo(target base.IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *DomainUpdateRequest) SetProxyMessage(value *base.ProxyMessage) {
-	*request.ProxyMessage = *value
+	request.ProxyMessage.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *DomainUpdateRequest) GetProxyMessage() *base.ProxyMessage {
-	return request.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (request *DomainUpdateRequest) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n{\n", str)
-	str = fmt.Sprintf("%s%s", str, request.ProxyRequest.String())
-	str = fmt.Sprintf("%s}\n", str)
-	return str
+	return request.ProxyMessage.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *DomainUpdateRequest) GetRequestID() int64 {
-	return request.GetLongProperty("RequestId")
+	return request.ProxyMessage.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *DomainUpdateRequest) SetRequestID(value int64) {
-	request.SetLongProperty("RequestId", value)
+	request.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -179,5 +167,10 @@ func (request *DomainUpdateRequest) SetRequestID(value int64) {
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *DomainUpdateRequest) GetReplyType() messages.MessageType {
-	return request.ReplyType
+	return request.ProxyRequest.GetReplyType()
+}
+
+// SetReplyType inherits docs from ProxyRequest.SetReplyType()
+func (request *DomainUpdateRequest) SetReplyType(value messages.MessageType) {
+	request.ProxyRequest.SetReplyType(value)
 }

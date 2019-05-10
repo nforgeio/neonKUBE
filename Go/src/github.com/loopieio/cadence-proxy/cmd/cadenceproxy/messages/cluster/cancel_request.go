@@ -1,8 +1,6 @@
 package cluster
 
 import (
-	"fmt"
-
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages"
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/base"
 )
@@ -17,7 +15,6 @@ type (
 	// the corresponding MessageType for replying to this ProxyRequest
 	CancelRequest struct {
 		*base.ProxyRequest
-		ReplyType messages.MessageType
 	}
 )
 
@@ -29,7 +26,8 @@ func NewCancelRequest() *CancelRequest {
 	request := new(CancelRequest)
 	request.ProxyRequest = base.NewProxyRequest()
 	request.Type = messages.CancelRequest
-	request.ReplyType = messages.CancelReply
+	request.SetReplyType(messages.CancelReply)
+
 	return request
 }
 
@@ -57,7 +55,6 @@ func (request *CancelRequest) SetTargetRequestID(value int64) {
 // Clone inherits docs from ProxyMessage.Clone()
 func (request *CancelRequest) Clone() base.IProxyMessage {
 	cancelRequest := NewCancelRequest()
-
 	var messageClone base.IProxyMessage = cancelRequest
 	request.CopyTo(messageClone)
 
@@ -74,31 +71,22 @@ func (request *CancelRequest) CopyTo(target base.IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *CancelRequest) SetProxyMessage(value *base.ProxyMessage) {
-	*request.ProxyMessage = *value
+	request.ProxyMessage.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *CancelRequest) GetProxyMessage() *base.ProxyMessage {
-	return request.ProxyMessage
-}
-
-// String inherits docs from ProxyMessage.String()
-func (request *CancelRequest) String() string {
-	str := ""
-	str = fmt.Sprintf("%s\n{\n", str)
-	str = fmt.Sprintf("%s%s", str, request.ProxyRequest.String())
-	str = fmt.Sprintf("%s}\n", str)
-	return str
+	return request.ProxyMessage.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *CancelRequest) GetRequestID() int64 {
-	return request.GetLongProperty("RequestId")
+	return request.ProxyMessage.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *CancelRequest) SetRequestID(value int64) {
-	request.SetLongProperty("RequestId", value)
+	request.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -106,5 +94,10 @@ func (request *CancelRequest) SetRequestID(value int64) {
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
 func (request *CancelRequest) GetReplyType() messages.MessageType {
-	return request.ReplyType
+	return request.ProxyRequest.GetReplyType()
+}
+
+// SetReplyType inherits docs from ProxyRequest.GetReplyType()
+func (request *CancelRequest) SetReplyType(value messages.MessageType) {
+	request.ProxyRequest.SetReplyType(value)
 }

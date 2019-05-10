@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	ActivityProxyRequest struct {
+	ActivityRequest struct {
 		*base.ProxyRequest
 		ContextID string
 	}
