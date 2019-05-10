@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if DEBUG
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -49,8 +51,6 @@ using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
-#if DEBUG
-
     public partial class CadenceConnection
     {
         //---------------------------------------------------------------------
