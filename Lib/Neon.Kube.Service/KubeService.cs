@@ -599,7 +599,6 @@ namespace Neon.Kube.Service
         /// service itself.  Service implementations should use <see cref="ExitCode(int, bool)"/>.
         /// </para>
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if another stop request is already pending.</exception>
         /// <exception cref="TimeoutException">
         /// Thrown if the service did not exit gracefully in time before it would have 
         /// been killed (e.g. by Kubernetes or Docker).
@@ -617,12 +616,7 @@ namespace Neon.Kube.Service
         {
             lock (syncLock)
             {
-                if (stopPending)
-                {
-                    throw new InvalidOperationException($"A stop request for [{Name}] is already pending.");
-                }
-
-                if (!isRunning)
+                if (stopPending || !isRunning)
                 {
                     return;
                 }

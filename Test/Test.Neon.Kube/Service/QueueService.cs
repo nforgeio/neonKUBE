@@ -39,6 +39,8 @@ using Neon.Service;
 using Neon.Xunit;
 using Neon.Xunit.Kube;
 
+using NATS.Client;
+
 using Xunit;
 
 namespace TestKubeService
@@ -46,11 +48,11 @@ namespace TestKubeService
     /// <summary>
     /// <para>
     /// Implements a simple service that spins slowly, reading and writing messages
-    /// from a NATS queue.  This expects the following environment variables:
+    /// for a NATS queue.  This expects the following environment variables:
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>NATS_SERVER_URI</b></term>
+    ///     <term><b>NATS_URI</b></term>
     ///     <description>
     ///     Specifies the URI for the NATS server.
     ///     </description>
@@ -69,6 +71,8 @@ namespace TestKubeService
         private string      natsQueue;
         private Task        sendTask;
         private Task        receiveTask;
+        private IConnection nats;
+        private bool        terminating;
 
         /// <summary>
         /// Constructor.
@@ -92,12 +96,30 @@ namespace TestKubeService
             // Load the configuration environment variables, exiting with a
             // non-zero exit code if they don't exist.
 
-            natsServerUri = GetEnvironmentVariable("NATS_SERVER_URI");
+            natsServerUri = GetEnvironmentVariable("NATS_URI");
 
             if (string.IsNullOrEmpty(natsServerUri))
             {
-                Log.LogCritical("Invalid configuration: [NATS_SERVER_URI] enviuronment variable is missing or invalid.");
+                Log.LogCritical("Invalid configuration: [NATS_URI] enviuronment variable is missing or invalid.");
+                Exit(1);
             }
+
+            natsQueue = GetEnvironmentVariable("NATS_QUEUE");
+
+            if (string.IsNullOrEmpty(natsQueue))
+            {
+                Log.LogCritical("Invalid configuration: [NATS_QUEUE] enviuronment variable is missing or invalid.");
+                Exit(1);
+            }
+
+            // Connect to NATS.
+
+            var connectionFactory = new ConnectionFactory();
+            var natOptions        = ConnectionFactory.GetDefaultOptions();
+
+            natOptions.Servers = new string[] { natsServerUri };
+
+            nats = connectionFactory.CreateConnection(natOptions);
 
             // Start the service tasks
 
@@ -107,6 +129,18 @@ namespace TestKubeService
             // Wait for the process terminator to signal that the service is stopping.
 
             await Terminator.StopEvent.WaitAsync();
+
+            // We're going to dispose the NATS connection which will cause any 
+            // pending or future NAT calls to fail and throw an exception.  This
+            // will ultimately cause the tasks to exit.
+            //
+            // Note that we're setting [terminate=true] so the task exception
+            // handlers can handle termination related exceptions by not logging
+            // them and exiting the task.
+
+            terminating = true;
+
+            nats.Dispose();
 
             // Wait for the service task to exit.
 
@@ -118,12 +152,42 @@ namespace TestKubeService
         }
 
         /// <summary>
+        /// Returns the number of messages sent.
+        /// </summary>
+        public int SentCount { get; private set; }
+
+        /// <summary>
+        /// Returns the number of messages received.
+        /// </summary>
+        public int ReceiveCount { get; private set; }
+
+        /// <summary>
         /// Spins slowly sending NATs messages.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task SendTaskFunc()
         {
-            await Task.Delay(TimeSpan.FromDays(1));
+            while (!Terminator.TerminateNow)
+            {
+                try
+                {
+                    nats.Publish(natsQueue, new byte[] { 0, 1, 2, 3, 4 });
+                    SentCount++;
+
+                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                }
+                catch (Exception e)
+                {
+                    if (terminating)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Log.LogError(e);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -132,7 +196,23 @@ namespace TestKubeService
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ReceiveTaskFunc()
         {
-            await Task.Delay(TimeSpan.FromDays(1));
+            try
+            {
+                nats.SubscribeAsync(natsQueue,
+                    (sender, args) =>
+                    {
+                        ReceiveCount++;
+                    });
+            }
+            catch (Exception e)
+            {
+                if (!terminating)
+                {
+                    Log.LogError(e);
+                }
+            }
+
+            await Task.CompletedTask;
         }
     }
 }
