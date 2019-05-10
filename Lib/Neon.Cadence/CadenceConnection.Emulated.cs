@@ -133,6 +133,11 @@ namespace Neon.Cadence
                     await OnEmulatedInitializeAsync((InitializeRequest)proxyRequest);
                     break;
 
+                case MessageTypes.ConnectRequest:
+
+                    await OnEmulatedConnectAsync((ConnectRequest)proxyRequest);
+                    break;
+
                 case MessageTypes.TerminateRequest:
 
                     await OnEmulatedTerminateAsync((TerminateRequest)proxyRequest);
@@ -176,6 +181,16 @@ namespace Neon.Cadence
             }
 
             await EmulatedLibraryClient.SendReplyAsync(request, new InitializeReply());
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="ConnectRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedConnectAsync(ConnectRequest request)
+        {
+            await EmulatedLibraryClient.SendReplyAsync(request, new ConnectReply());
         }
 
         /// <summary>

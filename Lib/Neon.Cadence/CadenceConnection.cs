@@ -386,12 +386,12 @@ namespace Neon.Cadence
 
             this.Settings = settings;
 
-            if (settings.Servers == null || settings.Servers.Count == 0)
+            if (settings.ServerUris == null || settings.ServerUris.Count == 0)
             {
                 throw new CadenceConnectException("No Cadence servers were specified.");
             }
 
-            foreach (var server in settings.Servers)
+            foreach (var server in settings.ServerUris)
             {
                 if (server == null || !server.IsAbsoluteUri)
                 {
@@ -495,19 +495,38 @@ namespace Neon.Cadence
 
             if (!Settings.DebugDisableHandshakes)
             {
-                // Send the [InitializeRequest] to the [cadence-proxy] so it will know
-                // where to send reply messages.
-
                 try
                 {
+                    // Send the [InitializeRequest] to the [cadence-proxy] so it will know
+                    // where to send reply messages.
+
                     var initializeRequest =
                         new InitializeRequest()
                         {
                             LibraryAddress = ListenUri.Host,
-                            LibraryPort = ListenUri.Port
+                            LibraryPort    = ListenUri.Port
                         };
 
                     ProxyCallAsync(initializeRequest).Wait();
+
+                    // Send the [ConnectRequest] to the [cadence-proxy] telling it
+                    // how to connect to the Cadence cluster.
+
+                    var sbEndpoints = new StringBuilder();
+
+                    foreach (var serverUri in settings.ServerUris)
+                    {
+                        sbEndpoints.AppendWithSeparator($"{serverUri.Host}:{serverUri.Port}", ",");
+                    }
+
+                    var connectRequest = 
+                        new ConnectRequest()
+                        {
+                            Endpoints = sbEndpoints.ToString(),
+                            Identity  = settings.ClientIdentity
+                        };
+
+                    ProxyCallAsync(connectRequest).Result.ThrowOnError();
                 }
                 catch (Exception e)
                 {
