@@ -60,10 +60,10 @@ namespace Neon.Cadence
         /// specify multiple nodes in a clustered environment to avoid initial connection
         /// problems if any single node is down.
         /// </remarks>
-        [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "servers", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ServerUris", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "serverUris", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Uri> Servers { get; set; } = new List<Uri>();
+        public List<Uri> ServerUris { get; set; } = new List<Uri>();
 
         /// <summary>
         /// Optionally specifies the port where the client will listen for traffic from the 
@@ -74,6 +74,15 @@ namespace Neon.Cadence
         [YamlMember(Alias = "listenPort", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int ListenPort { get; set; } = 0;
+
+        /// <summary>
+        /// Optionally identifies the client application establishing the connection so that
+        /// Cadence may include this in its logs and metrics.  This defaults to <b>"unknown"</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClientIdentity", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clientIdentity", ApplyNamingConventions = false)]
+        [DefaultValue("unknown")]
+        public string ClientIdentity { get; set; } = "unknown";
 
         /// <summary>
         /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
