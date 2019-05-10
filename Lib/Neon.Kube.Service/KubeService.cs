@@ -750,7 +750,7 @@ namespace Neon.Kube.Service
             {
                 if (InProduction)
                 {
-                    return Environment.GetEnvironmentVariable(name);
+                    return Environment.GetEnvironmentVariable(name) ?? def;
                 }
 
                 if (environmentVariables.TryGetValue(name, out var value))
