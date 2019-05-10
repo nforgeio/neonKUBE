@@ -96,8 +96,6 @@ namespace TestKube
     public class WebService : KubeService
     {
         private IWebHost    webHost;
-        private Thread      thread;
-        private Task        task;
         private string      responseText;
 
         /// <summary>
@@ -105,11 +103,8 @@ namespace TestKube
         /// </summary>
         /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        /// <param name="branch">Optionally specifies the build branch.</param>
-        /// <param name="commit">Optionally specifies the branch commit.</param>
-        /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
-        public WebService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
-            : base(serviceMap, name, branch, commit, isDirty)
+        public WebService(ServiceMap serviceMap, string name)
+            : base(serviceMap, name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
         {
         }
 
@@ -166,11 +161,6 @@ namespace TestKube
             // Wait for the process terminator to signal that the service is stopping.
 
             await Terminator.StopEvent.WaitAsync();
-
-            // Wait for the service thread and task to exit.
-
-            thread.Join();
-            await task;
 
             // Return the exit code specified by the configuration.
 
