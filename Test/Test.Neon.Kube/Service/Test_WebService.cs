@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_ComplexKubeService.cs
+// FILE:	    Test_WebKubeService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -37,15 +37,15 @@ using Xunit;
 namespace TestKube
 {
     /// <summary>
-    /// Demonstrates how to test the <see cref="ComplexService"/> that has a single
+    /// Demonstrates how to test the <see cref="WebService"/> that has a single
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
-    public class Test_ComplexKubeService : IClassFixture<KubeServiceFixture<ComplexService>>
+    public class Test_WebKubeService : IClassFixture<KubeServiceFixture<WebService>>
     {
-        private KubeServiceFixture<ComplexService>   fixture;
+        private KubeServiceFixture<WebService>   fixture;
 
-        public Test_ComplexKubeService(KubeServiceFixture<ComplexService> fixture)
+        public Test_WebKubeService(KubeServiceFixture<WebService> fixture)
         {
             fixture.Start(() => CreateService());
 
@@ -59,7 +59,7 @@ namespace TestKube
         {
             var description = new ServiceDescription()
             {
-                Name    = "complex-service",
+                Name    = "web-service",
                 Address = IPAddress.Parse("127.0.0.10")
             };
 
@@ -68,7 +68,7 @@ namespace TestKube
                 {
                     Protocol   = ServiceEndpointProtocol.Http,
                     PathPrefix = "/",
-                    Port       = 666
+                    Port       = 777
                 });
 
             var serviceMap = new ServiceMap();
@@ -79,12 +79,12 @@ namespace TestKube
         }
 
         /// <summary>
-        /// Creates a <see cref="ComplexService"/> instance.
+        /// Creates a <see cref="WebService"/> instance.
         /// </summary>
         /// <returns>The service instance.</returns>
-        private ComplexService CreateService()
+        private WebService CreateService()
         {
-            return new ComplexService(CreateServiceMap(), "complex-service", ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty);
+            return new WebService(CreateServiceMap(), "web-service", ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty);
         }
 
         [Fact]
@@ -130,7 +130,7 @@ namespace TestKube
 
             var service = CreateService();
 
-            service.SetConfigFile("/etc/complex/response", "From: VIRTUAL FILE");
+            service.SetConfigFile("/etc/web/response", "From: VIRTUAL FILE");
 
             fixture.Restart(() => service);
 
@@ -152,7 +152,7 @@ namespace TestKube
 
                 var service = CreateService();
 
-                service.SetConfigFilePath("/etc/complex/response", tempFile.Path);
+                service.SetConfigFilePath("/etc/web/response", tempFile.Path);
 
                 fixture.Restart(() => service);
 
@@ -183,7 +183,7 @@ namespace TestKube
 
                 var service = CreateService();
 
-                service.SetConfigFilePath("/etc/complex/response", encryptedPath, passwordName => password);
+                service.SetConfigFilePath("/etc/web/response", encryptedPath, passwordName => password);
 
                 fixture.Restart(() => service);
 

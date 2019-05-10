@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ComplexService.cs
+// FILE:	    WebService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -44,13 +44,13 @@ using Xunit;
 namespace TestKube
 {
     /// <summary>
-    /// Startup class for <see cref="ComplexService"/>.
+    /// Startup class for <see cref="WebService"/>.
     /// </summary>
-    public class ComplexServiceStartup
+    public class WebServiceStartup
     {
-        private ComplexService service;
+        private WebService service;
 
-        public ComplexServiceStartup(IConfiguration configuration, ComplexService service)
+        public WebServiceStartup(IConfiguration configuration, WebService service)
         {
             this.Configuration = configuration;
             this.service       = service;
@@ -72,21 +72,19 @@ namespace TestKube
     }
 
     /// <summary>
-    /// Implements a somewhat complex service that services an HTTP endpoint, and also
-    /// has a <see cref="Task"/> and <see cref="Thread"/> running in the background.
+    /// Implements a simple web service with a single endpoint.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This service demonstrates how to deply a service with an ASP.NET endpoint that
     /// uses environment variables or a configuration file to specify the string
-    /// returned by the endpoint.  This also demonstrates how a service can have
-    /// and internal worker thread and/or task.
+    /// returned by the endpoint.
     /// </para>
     /// <para>
     /// The service looks for the <b>WEB_RESULT</b> environment variable and
     /// if present, will return the value as the endpoint response text.  Otherwise,
     /// the service will look for a configuration file at the logical path
-    /// <b>/etc/complex/response</b> and return its contents of present.  If neither
+    /// <b>/etc/web/response</b> and return its contents of present.  If neither
     /// the environment variable or file are present, the endpoint will return
     /// <b>UNCONFIGURED</b>.
     /// </para>
@@ -95,7 +93,7 @@ namespace TestKube
     /// configuration capabilities.
     /// </para>
     /// </remarks>
-    public class ComplexService : KubeService
+    public class WebService : KubeService
     {
         private IWebHost    webHost;
         private Thread      thread;
@@ -110,7 +108,7 @@ namespace TestKube
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
-        public ComplexService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
+        public WebService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
             : base(serviceMap, name, branch, commit, isDirty)
         {
         }
@@ -145,7 +143,7 @@ namespace TestKube
             }
             else
             {
-                var configPath = GetConfigFilePath("/etc/complex/response");
+                var configPath = GetConfigFilePath("/etc/web/response");
 
                 if (configPath != null && File.Exists(configPath))
                 {
@@ -158,21 +156,12 @@ namespace TestKube
             var endpoint = Description.Endpoints.Default;
 
             webHost = new WebHostBuilder()
-                .UseStartup<ComplexServiceStartup>()
+                .UseStartup<WebServiceStartup>()
                 .UseKestrel(options => options.Listen(Description.Address, endpoint.Port))
-                .ConfigureServices(services => services.AddSingleton(typeof(ComplexService), this))
+                .ConfigureServices(services => services.AddSingleton(typeof(WebService), this))
                 .Build();
 
             webHost.Start();
-
-            // Start the worker thread.
-
-            thread = new Thread(new ThreadStart(ThreadFunc));
-            thread.Start();
-
-            // Start the service task 
-
-            task = Task.Run(async () => await TaskFunc());
 
             // Wait for the process terminator to signal that the service is stopping.
 
@@ -196,70 +185,6 @@ namespace TestKube
         public async Task OnWebRequest(HttpContext context)
         {
             await context.Response.WriteAsync(responseText);
-        }
-
-        /// <summary>
-        /// Demonstrates how a service thread can be signalled to terminate.
-        /// </summary>
-        private void ThreadFunc()
-        {
-            // Terminating threads are a bit tricky.  The only acceptable way
-            // to do this by fairly frequently polling a stop signal and then
-            // exiting the thread.
-            //
-            // The [Thread.Abort()] exists on .NET CORE but it throws a 
-            // [NotImplementedException].  This method does do something 
-            // for .NET Framework, but most folks believe that using that
-            // is a very bad idea anyway.
-            //
-            // So this means that you're going to have to poll [Terminator.TerminateNow]
-            // frequently.  This is trivial in the example below, but for threads
-            // performing complex long running activities, you may need to
-            // sprinkle these checks across many of your methods.
-
-            var shortDelay = TimeSpan.FromSeconds(1);
-
-            while (!Terminator.TerminateNow)
-            {
-                Thread.Sleep(shortDelay);
-            }
-        }
-
-        /// <summary>
-        /// Demonstrates how a service task can be signalled to terminate.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task TaskFunc()
-        {
-            while (true)
-            {
-                try
-                {
-                    // Note that we're sleeping here for 1 day!  This simulates
-                    // service that's waiting (for a potentially long period of time)
-                    // for something to do.
-
-                    await Task.Delay(TimeSpan.FromDays(1), Terminator.CancellationToken);
-                }
-                catch (TaskCanceledException)
-                {
-                    // This exception will be thrown when the terminator receives a
-                    // signal to terminate the process because we passed the
-                    // [Terminator.CancellationToken] to [Task.Async.Delay()].
-                    // 
-                    // The terminator calls [Cancel()] on it's cancellation token
-                    // when the termination signal is received which causes any
-                    // pending async operations that were passed the token to 
-                    // abort and throw a [TaskCancelledException].
-                    //
-                    // This is a common .NET async programming pattern.
-                    //
-                    // We're going to use this exception as a signal to 
-                    // exit the task.
-
-                    return;
-                }
-            }
         }
     }
 }
