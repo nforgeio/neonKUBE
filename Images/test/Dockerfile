@@ -29,6 +29,9 @@ FROM        ${ORGANIZATION}/alpine:${BRANCH}-latest
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
+# Set timezone to UTC
+ENV TZ=UTC
+
 COPY docker-entrypoint.sh   /
 
 RUN chmod 777 /docker-entrypoint.sh

@@ -104,3 +104,4 @@ Go/**/test/logs/**
 # into the [Neon.Cadence] assembly as resources.
 
 /Lib/Neon.Cadence/Resources/**
+/Test/Test.Neon.Models/GeneratedUxTypes.cs
