@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_ComplexKubeService.cs
+// FILE:	    Test_ComplexService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,11 +41,11 @@ namespace TestKubeService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
-    public class Test_ComplexKubeService : IClassFixture<KubeServiceFixture<ComplexService>>
+    public class Test_ComplexService : IClassFixture<KubeServiceFixture<ComplexService>>
     {
         private KubeServiceFixture<ComplexService>   fixture;
 
-        public Test_ComplexKubeService(KubeServiceFixture<ComplexService> fixture)
+        public Test_ComplexService(KubeServiceFixture<ComplexService> fixture)
         {
             fixture.Start(() => CreateService());
 

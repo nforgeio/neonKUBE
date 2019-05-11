@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_QueueKubeService.cs
+// FILE:	    Test_QueueService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,13 +41,13 @@ namespace TestKubeService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
-    public class Test_QueueKubeService : IClassFixture<ComposedFixture>
+    public class Test_QueueService : IClassFixture<ComposedFixture>
     {
         private ComposedFixture                     composedFixture;
         private NatsFixture                         natsFixture;
         private KubeServiceFixture<QueueService>    queueServiceFixture;
 
-        public Test_QueueKubeService(ComposedFixture fixture)
+        public Test_QueueService(ComposedFixture fixture)
         {
             this.composedFixture = fixture;
 

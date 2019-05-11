@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_WebKubeService.cs
+// FILE:	    Test_WebService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,11 +41,11 @@ namespace TestKubeService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
-    public class Test_WebKubeService : IClassFixture<KubeServiceFixture<WebService>>
+    public class Test_WebService : IClassFixture<KubeServiceFixture<WebService>>
     {
         private KubeServiceFixture<WebService>   fixture;
 
-        public Test_WebKubeService(KubeServiceFixture<WebService> fixture)
+        public Test_WebService(KubeServiceFixture<WebService> fixture)
         {
             fixture.Start(() => CreateService());
 

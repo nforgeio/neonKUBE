@@ -77,7 +77,7 @@ namespace TestKubeService
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This service demonstrates how to deply a service with an ASP.NET endpoint that
+    /// This service demonstrates how to deploy a service with an ASP.NET endpoint that
     /// uses environment variables or a configuration file to specify the string
     /// returned by the endpoint.  This also demonstrates how a service can have
     /// and internal worker thread and/or task.

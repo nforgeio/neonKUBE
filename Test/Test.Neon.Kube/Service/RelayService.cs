@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WebService.cs
+// FILE:	    RelayService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,13 +45,13 @@ using Xunit;
 namespace TestKubeService
 {
     /// <summary>
-    /// Startup class for <see cref="WebService"/>.
+    /// Startup class for <see cref="RelayService"/>.
     /// </summary>
-    public class WebServiceStartup
+    public class RelayServiceStartup
     {
-        private WebService service;
+        private RelayService service;
 
-        public WebServiceStartup(IConfiguration configuration, WebService service)
+        public RelayServiceStartup(IConfiguration configuration, RelayService service)
         {
             this.Configuration = configuration;
             this.service       = service;
@@ -72,40 +73,27 @@ namespace TestKubeService
     }
 
     /// <summary>
-    /// Implements a simple web service with a single endpoint that returns a
-    /// string specified by a configuration environment variable or file.
+    /// Implements a simple web service that demonstrates how services can use 
+    /// the <see cref="ServiceMap"/> to query another service.  This service
+    /// simply relays the request it receives the the endpoint exposed by
+    /// the service named <b>web-service</b> whose description will be in
+    /// the <see cref="ServiceMap"/> passed to the service.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// This service demonstrates how to deploy a service with an ASP.NET endpoint that
-    /// uses environment variables or a configuration file to specify the string
-    /// returned by the endpoint.
-    /// </para>
-    /// <para>
-    /// The service looks for the <b>WEB_RESULT</b> environment variable and
-    /// if present, will return the value as the endpoint response text.  Otherwise,
-    /// the service will look for a configuration file at the logical path
-    /// <b>/etc/web/response</b> and return its contents of present.  If neither
-    /// the environment variable or file are present, the endpoint will return
-    /// <b>UNCONFIGURED</b>.
-    /// </para>
-    /// <para>
-    /// We'll use these settings to exercise the <see cref="KubeService"/> logical
-    /// configuration capabilities.
-    /// </para>
-    /// </remarks>
-    public class WebService : KubeService
+    public class RelayService : KubeService
     {
-        private IWebHost    webHost;
-        private string      responseText;
+        private IWebHost        webHost;
+        private HttpClient      httpClient;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        public WebService(ServiceMap serviceMap, string name)
-            : base(serviceMap, name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
+        /// <param name="branch">Optionally specifies the build branch.</param>
+        /// <param name="commit">Optionally specifies the branch commit.</param>
+        /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
+        public RelayService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
+            : base(serviceMap, name, branch, commit, isDirty)
         {
         }
 
@@ -121,40 +109,43 @@ namespace TestKubeService
                 webHost.Dispose();
                 webHost = null;
             }
+
+            // We'll also dispose the HTTP client.
+
+            if (httpClient != null)
+            {
+                httpClient.Dispose();
+                httpClient = null;
+            }
         }
 
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
-            // Read the configuration environment variable or file to initialize
-            // endpoint response text.
+            // Query the service map for the [web-service] endpoint and setup
+            // the HTTP client we'll use to communicate with that service.
 
-            responseText = "UNCONFIGURED";
+            var webService = ServiceMap["web-service"];
 
-            var resultVar = GetEnvironmentVariable("WEB_RESULT");
-
-            if (resultVar != null)
+            if (webService == null)
             {
-                responseText = resultVar;
+                Log.LogError("Service description for [web-service] not found.");
+                Exit(1);
             }
-            else
-            {
-                var configPath = GetConfigFilePath("/etc/web/response");
 
-                if (configPath != null && File.Exists(configPath))
-                {
-                    responseText = File.ReadAllText(configPath);
-                }
-            }
+            httpClient = new HttpClient()
+            {
+                BaseAddress = webService.Endpoints.Default.Uri
+            };
 
             // Start the HTTP service.
 
             var endpoint = Description.Endpoints.Default;
 
             webHost = new WebHostBuilder()
-                .UseStartup<WebServiceStartup>()
+                .UseStartup<RelayServiceStartup>()
                 .UseKestrel(options => options.Listen(Description.Address, endpoint.Port))
-                .ConfigureServices(services => services.AddSingleton(typeof(WebService), this))
+                .ConfigureServices(services => services.AddSingleton(typeof(RelayService), this))
                 .Build();
 
             webHost.Start();
@@ -163,9 +154,7 @@ namespace TestKubeService
 
             await Terminator.StopEvent.WaitAsync();
 
-            // Return the exit code specified by the configuration.
-
-            return await Task.FromResult(0);
+            return 0;
         }
 
         /// <summary>
@@ -175,7 +164,23 @@ namespace TestKubeService
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task OnWebRequest(HttpContext context)
         {
-            await context.Response.WriteAsync(responseText);
+            // Call the [web-service] and return what it returns back 
+            // to our caller.
+
+            var response = context.Response;
+
+            try
+            {
+                var remoteResponse = await httpClient.GetStringAsync("/");
+
+                await response.WriteAsync(remoteResponse);
+            }
+            catch (Exception e)
+            {
+                response.StatusCode = StatusCodes.Status500InternalServerError;
+
+                await response.WriteAsync(NeonHelper.ExceptionError(e));
+            }
         }
     }
 }
