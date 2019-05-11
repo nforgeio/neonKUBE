@@ -51,12 +51,12 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DebugPrelaunched       = true,
+                //DebugPrelaunched       = true,
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
-                DebugDisableHeartbeats = true,
+                //DebugDisableHeartbeats = true,
                 DebugIgnoreTimeouts    = true
             };
 

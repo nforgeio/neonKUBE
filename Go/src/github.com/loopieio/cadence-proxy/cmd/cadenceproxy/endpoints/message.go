@@ -50,7 +50,7 @@ var (
 	// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes
 	// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
 	// <c>false</c>
-	debugPrelaunch = true
+	debugPrelaunch = false
 
 	// deathClock is an accumulator that tallies errors thrown by cadence that might
 	// indicate that the connection to the cadence server has been compromised.
