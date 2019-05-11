@@ -205,7 +205,7 @@ namespace TestCadence
 
             var settings = new CadenceSettings()
             {
-                ServerUris = new List<Uri>()
+                Servers = new List<Uri>()
             };
 
             Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
@@ -213,8 +213,8 @@ namespace TestCadence
             // Verify that we see a [CadenceConnectException] when connecting
             // with a relative server URI.
 
-            settings.ServerUris.Clear();
-            settings.ServerUris.Add(new Uri("/relativeuri", UriKind.Relative));
+            settings.Servers.Clear();
+            settings.Servers.Add(new Uri("/relativeuri", UriKind.Relative));
 
             Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
 

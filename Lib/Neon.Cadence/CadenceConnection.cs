@@ -386,12 +386,12 @@ namespace Neon.Cadence
 
             this.Settings = settings;
 
-            if (settings.ServerUris == null || settings.ServerUris.Count == 0)
+            if (settings.Servers == null || settings.Servers.Count == 0)
             {
                 throw new CadenceConnectException("No Cadence servers were specified.");
             }
 
-            foreach (var server in settings.ServerUris)
+            foreach (var server in settings.Servers)
             {
                 if (server == null || !server.IsAbsoluteUri)
                 {
@@ -514,7 +514,7 @@ namespace Neon.Cadence
 
                     var sbEndpoints = new StringBuilder();
 
-                    foreach (var serverUri in settings.ServerUris)
+                    foreach (var serverUri in settings.Servers)
                     {
                         sbEndpoints.AppendWithSeparator($"{serverUri.Host}:{serverUri.Port}", ",");
                     }

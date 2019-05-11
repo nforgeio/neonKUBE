@@ -86,7 +86,7 @@ namespace Neon.Xunit.Cadence
         /// <remarks>
         /// <note>
         /// Some of the <paramref name="settings"/> properties will be ignored including 
-        /// <see cref="CadenceSettings.ServerUris"/>.  This will be replaced by the local
+        /// <see cref="CadenceSettings.Servers"/>.  This will be replaced by the local
         /// endpoint for the Cadence container.  Also, the fixture will connect to the 
         /// <b>test</b> bucket by default (unless another is specified).
         /// </note>
@@ -155,8 +155,8 @@ namespace Neon.Xunit.Cadence
 
                 settings = settings ?? new CadenceSettings();
 
-                settings.ServerUris.Clear();
-                settings.ServerUris.Add(new Uri($"http://localhost:{NetworkPorts.Cadence}"));
+                settings.Servers.Clear();
+                settings.Servers.Add(new Uri($"http://localhost:{NetworkPorts.Cadence}"));
 
                 settings.DebugEmulateProxy = emulateProxy || settings.DebugEmulateProxy;
 

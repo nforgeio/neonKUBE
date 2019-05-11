@@ -60,10 +60,10 @@ namespace Neon.Cadence
         /// specify multiple nodes in a clustered environment to avoid initial connection
         /// problems if any single node is down.
         /// </remarks>
-        [JsonProperty(PropertyName = "ServerUris", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "serverUris", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "servers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Uri> ServerUris { get; set; } = new List<Uri>();
+        public List<Uri> Servers { get; set; } = new List<Uri>();
 
         /// <summary>
         /// Optionally specifies the port where the client will listen for traffic from the 
