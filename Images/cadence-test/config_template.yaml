@@ -96,4 +96,4 @@ archival:
 
 
 publicClient:
-  hostPort: "${HOST_IP}:7933"
+  hostPort: "${BIND_ON_IP}:7933"

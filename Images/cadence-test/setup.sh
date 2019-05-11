@@ -21,12 +21,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+CADENCE_HOME=$1
+RF=${RF:-1}
+export LOG_LEVEL="${LOG_LEVEL:-info}"
+export NUM_HISTORY_SHARDS=${NUM_HISTORY_SHARDS:-4}
+
+# cassandra env
+export KEYSPACE="${KEYSPACE:-cadence}"
+export VISIBILITY_KEYSPACE="${VISIBILITY_KEYSPACE:-cadence_visibility}"
+export CASSANDRA_CONSISTENCY="${CASSANDRA_CONSISTENCY:-One}"
+
 setup_schema() {
     SCHEMA_DIR=$CADENCE_HOME/schema/cassandra/cadence/versioned
     $CADENCE_HOME/cadence-cassandra-tool --ep $CASSANDRA_SEEDS create -k $KEYSPACE --rf $RF
     $CADENCE_HOME/cadence-cassandra-tool --ep $CASSANDRA_SEEDS -k $KEYSPACE setup-schema -v 0.0
     $CADENCE_HOME/cadence-cassandra-tool --ep $CASSANDRA_SEEDS -k $KEYSPACE update-schema -d $SCHEMA_DIR
-    
+}
+
+setup_visibility_schema() {
     VISIBILITY_SCHEMA_DIR=$CADENCE_HOME/schema/cassandra/visibility/versioned
     $CADENCE_HOME/cadence-cassandra-tool --ep $CASSANDRA_SEEDS create -k $VISIBILITY_KEYSPACE --rf $RF
     $CADENCE_HOME/cadence-cassandra-tool --ep $CASSANDRA_SEEDS -k $VISIBILITY_KEYSPACE setup-schema -v 0.0
@@ -61,22 +73,6 @@ init_env() {
         export HOST_IP=$BIND_ON_IP
     fi
 
-    if [ -z "$KEYSPACE" ]; then
-        export KEYSPACE="cadence"
-    fi
-
-    if [ -z "$VISIBILITY_KEYSPACE" ]; then
-        export VISIBILITY_KEYSPACE="cadence_visibility"
-    fi
-
-    if [ -z "$CASSANDRA_SEEDS" ]; then
-        export CASSANDRA_SEEDS=$HOST_IP
-    fi
-
-    if [ -z "$CASSANDRA_CONSISTENCY" ]; then
-        export CASSANDRA_CONSISTENCY="One"
-    fi
-
     if [ -z "$RINGPOP_SEEDS" ]; then
         export RINGPOP_SEEDS_JSON_ARRAY="[\"$HOST_IP:7933\",\"$HOST_IP:7934\",\"$HOST_IP:7935\",\"$HOST_IP:7939\"]"
     else
@@ -84,21 +80,26 @@ init_env() {
         export RINGPOP_SEEDS_JSON_ARRAY=$(json_array "${array[@]}")
     fi
 
-    if [ -z "$NUM_HISTORY_SHARDS" ]; then
-        export NUM_HISTORY_SHARDS=4
-    fi
-
-    if [ -z "$LOG_LEVEL" ]; then
-        export LOG_LEVEL="info"
-    fi
-
     if [ -z "$STATSD_ENDPOINT" ]; then 
         export STATSD_ENDPOINT="$HOST_IP:8125"
     fi
+
+    if [ -z "$CASSANDRA_SEEDS" ]; then 
+        export CASSANDRA_SEEDS=$HOST_IP
+    fi
 }
 
-CADENCE_HOME=$1
-RF=${RF:-1}
+json_array() {
+  echo -n '['
+  while [ $# -gt 0 ]; do
+    x=${1//\\/\\\\}
+    echo -n \"${x//\"/\\\"}\"
+    [ $# -gt 1 ] && echo -n ', '
+    shift
+  done
+  echo ']'
+}
+
 
 # initialize the environment,
 # start cassandra,
@@ -108,6 +109,10 @@ init_env
 start_cassandra
 wait_for_cassandra
 setup_schema
+setup_visibility_schema
 
 # inject environment variables into the .yaml config files
 envsubst < config/docker_template_cassandra.yaml > config/docker.yaml
+
+# sleep for 1 second to make sure that all writes have been completed
+sleep 1
