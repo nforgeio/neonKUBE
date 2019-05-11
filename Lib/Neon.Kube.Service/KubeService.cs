@@ -466,6 +466,17 @@ namespace Neon.Kube.Service
         public List<string> Arguments { get; private set; } = new List<string>();
 
         /// <summary>
+        /// Indicates whether the service has exited.
+        /// </summary>
+        public bool Exited { get; private set; }
+
+        /// <summary>
+        /// Returns any exception thrown by <see cref="OnRunAsync()"/> and caught 
+        /// by <see cref="RunAsync(bool)"/>, causing the service to exit.
+        /// </summary>
+        public Exception ExitException { get; private set; }
+
+        /// <summary>
         /// Initializes <see cref="Arguments"/> with the command line arguments passed.
         /// </summary>
         /// <param name="args">The arguments.</param>
@@ -581,6 +592,8 @@ namespace Neon.Kube.Service
             }
             catch (Exception e)
             {
+                ExitException = e;
+
                 Log.LogError(e);
             }
 
@@ -588,6 +601,8 @@ namespace Neon.Kube.Service
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
             Terminator.ReadyToExit();
+
+            Exited = true;
 
             return ExitCode;
         }
