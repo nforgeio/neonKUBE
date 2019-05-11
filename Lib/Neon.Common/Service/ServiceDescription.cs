@@ -85,14 +85,52 @@ namespace Neon.Service
         public IPAddress Address { get; set; }
 
         /// <summary>
+        /// <para>
         /// Returns the hostname to be used to communcate with this service.  When deployed
-        /// to a Kubernetes cluster, this will be formed from <see cref="Name"/>, <see cref="Namespace"/>,
-        /// and <see cref="Domain"/>.  When testing and <see cref="Address"/> is not <c>null</c>,
+        /// to a Kubernetes cluster, this will be formed from <see cref="Name"/> and <see cref="Namespace"/>,
+        /// omitting the <see cref="Domain"/>.  When testing and <see cref="Address"/> is not <c>null</c>,
         /// then this will simply be the address converted to a string.
+        /// </para>
+        /// <note>
+        /// Use <see cref="FullHostname"/> if you need the fully qualified hostname that
+        /// includes the cluster domain.
+        /// </note>
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
         public string Hostname
+        {
+            get
+            {
+                if (Address != null)
+                {
+                    return Address.ToString();
+                }
+                else
+                {
+                    Covenant.Assert(!string.IsNullOrEmpty(Name));
+                    Covenant.Assert(!string.IsNullOrEmpty(Namespace));
+
+                    return $"{Name}.{Namespace}";
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns the hostname to be used to communcate with this service.  When deployed
+        /// to a Kubernetes cluster, this will be formed from <see cref="Name"/> and <see cref="Namespace"/>,
+        /// including the <see cref="Domain"/>.  When testing and <see cref="Address"/> is not <c>null</c>,
+        /// then this will simply be the address converted to a string.
+        /// </para>
+        /// <note>
+        /// Use <see cref="Hostname"/> if you need the fully qualified hostname that
+        /// includes the cluster domain.
+        /// </note>
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string FullHostname
         {
             get
             {
@@ -116,6 +154,6 @@ namespace Neon.Service
         /// </summary>
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Always)]
         [YamlMember(Alias = "endpoints", ApplyNamingConventions = false)]
-        public Dictionary<string, ServiceEndpoint> Endpoints { get; set; } = new Dictionary<string, ServiceEndpoint>();
+        public ServiceEndpoints Endpoints { get; set; } = new ServiceEndpoints();
     }
 }

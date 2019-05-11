@@ -44,6 +44,9 @@ ENV DEBIAN_FRONTEND noninteractive
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 
+# Set timezone to UTC
+ENV TZ=UTC
+
 # Install .NET Core as described here:
 #
 #   https://www.microsoft.com/net/learn/get-started/linuxubuntu

@@ -50,3 +50,6 @@ COPY _common/*.sh           /
 
 RUN apk add --no-cache tini ca-certificates libcurl \
     && chmod 700 /*.sh
+
+# Set timezone to UTC
+ENV TZ=UTC

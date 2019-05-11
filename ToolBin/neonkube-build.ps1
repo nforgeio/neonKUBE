@@ -135,7 +135,7 @@ if (-not $nobuild)
     "**********************************************************"
     ""
 
-    & "$msbuild" "$nfSolution" $buildConfig -restore "-t:Compile"
+    & "$msbuild" "$nfSolution" $buildConfig -restore 
 
     if (-not $?)
     {
@@ -146,10 +146,17 @@ if (-not $nobuild)
     }
 }
 
-# Publish the .NET Core binaries.
+# Publish the .NET Core binaries to the build folder.
 
 PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
 PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
+
+# Publish the WinDesktop binaries to the build folder.
+
+ md -Force "$nfBuild\win-desktop"
+ cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\*" "$nfBuild\win-desktop"
+ 
+ # Build the installer if requested.
 
 if ($installer)
 {

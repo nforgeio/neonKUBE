@@ -993,31 +993,7 @@ networking:
                             kubeContextExtension.Save();
                         });
 
-                    // Configure kube-apiserver
-
-                    foreach (var master in cluster.Masters)
-                    {
-                        try
-                        {
-                            master.InvokeIdempotentAction("setup/kube-apiserver",
-                            () =>
-                            {
-                                master.Status = "configure: kube-apiserver";
-                                master.SudoCommand(CommandBundle.FromScript(
-@"#!/bin/bash
-
-sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
-"));
-                            });
-                        }
-                        catch (Exception e)
-                        {
-                            master.Fault(NeonHelper.ExceptionError(e));
-                            master.LogException(e);
-                        }
-
-                        master.Status = "done";
-                    }
+                    firstMaster.Status = "done";
                     
 
                     // kubectl config:
@@ -1133,6 +1109,33 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         }
 
                         master.Status = "joined";
+                    }
+
+
+                    // Configure kube-apiserver on all the masters
+
+                    foreach (var master in cluster.Masters)
+                    {
+                        try
+                        {
+                            master.InvokeIdempotentAction("setup/cluster-kube-apiserver",
+                                () =>
+                                {
+                                    master.Status = "configure: kube-apiserver";
+                                    master.SudoCommand(CommandBundle.FromScript(
+        @"#!/bin/bash
+
+sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
+"));
+                                }); 
+                        }
+                        catch (Exception e)
+                        {
+                            master.Fault(NeonHelper.ExceptionError(e));
+                            master.LogException(e);
+                        }
+
+                        master.Status = "kube-apiserver configured";
                     }
 
                     //---------------------------------------------------------
@@ -1465,18 +1468,14 @@ done
 helm template install/kubernetes/helm/istio \
     --name istio \
     --namespace istio-system \
-    --values install/kubernetes/helm/istio/values-istio-demo-auth.yaml \
     --set istio_cni.enabled=true \
     --set global.proxy.accessLogFile=/dev/stdout \
     --set kiali.enabled=true \
     --set tracing.enabled=true \
     --set grafana.enabled=true \
-    --set gateways.istio-ingressgateway.sds.enabled=true \
-    --set global.k8sIngress.enabled=true \
-    --set global.k8sIngress.enableHttps=true \
-    --set global.k8sIngress.gatewayName=ingressgateway \
     --set certmanager.enabled=true \
     --set certmanager.email=mailbox@donotuseexample.com \
+    --set gateways.istio-ingressgateway.sds.enabled=true \
     --set gateways.istio-ingressgateway.type=NodePort \
     --set gateways.istio-ingressgateway.ports[0].targetPort=80 \
     --set gateways.istio-ingressgateway.ports[0].port=80 \
@@ -1487,6 +1486,7 @@ helm template install/kubernetes/helm/istio \
     --set gateways.istio-ingressgateway.ports[1].port=443 \
     --set gateways.istio-ingressgateway.ports[1].name=https \
     --set gateways.istio-ingressgateway.ports[1].nodePort=30443 \
+    \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));

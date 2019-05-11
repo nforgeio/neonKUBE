@@ -48,7 +48,9 @@ namespace Neon.Kube.Service
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
     /// your service is started.  This is where you'll implement your service.  Note that your 
-    /// <see cref="OnRunAsync"/> method should not return until the <see cref="Terminator"/> signals it to stop.
+    /// <see cref="OnRunAsync"/> method should generally not return until the <see cref="Terminator"/>
+    /// signals it to stop.  Alternatively, you can throw a <see cref="ProgramExitException"/> with
+    /// a process exit code to terminate your service.
     /// </para>
     /// <note>
     /// All services should properly handle <see cref="Terminator"/> stop signals so unit tests will terminate
@@ -70,15 +72,15 @@ namespace Neon.Kube.Service
     /// <para>
     /// Services are generally configured using environment variables and/or configuration
     /// files.  In production, environment variables will actually come from the environment
-    /// after having been initialized by the container image or set by Kubernetes when
+    /// after having been initialized by the container image or passed by Kubernetes when
     /// starting the service container.  Environment variables are retrieved by name
     /// (case sensitive).
     /// </para>
     /// <para>
     /// Configuration files work the same way.  They are either present in the service 
-    /// container image or passed to the container as a secret or config file by Kubernetes. 
-    /// Configuration files are specified by their path (case sensitive) as located within
-    /// the running container.
+    /// container image or mounted to the container as a secret or config file by Kubernetes. 
+    /// Configuration files are specified by their path (case sensitive) within the
+    /// running container.
     /// </para>
     /// <para>
     /// This class provides some abstractions for managing environment variables and 
@@ -90,7 +92,7 @@ namespace Neon.Kube.Service
     /// Services should use the <see cref="GetEnvironmentVariable(string, string)"/> method to 
     /// retrieve important environment variables rather than using <see cref="Environment.GetEnvironmentVariable(string)"/>.
     /// In production, this simply returns the variable directly from the current process.
-    /// For test, the environment variable will be returned from a local dictionary
+    /// For tests, the environment variable will be returned from a local dictionary
     /// that was expicitly initialized by calls to <see cref="SetEnvironmentVariable(string, string)"/>.
     /// This local dictionary allows the testing of multiple services at the same
     /// time with each being presented their own environment variables.
@@ -98,15 +100,15 @@ namespace Neon.Kube.Service
     /// <para>
     /// You may also use the <see cref="LoadEnvironmentVariables(string, Func{string, string})"/>
     /// method to load environment variables from a text file (potentially encrypted via
-    /// <see cref="NeonVault"/>.  This will typically be done only for unit tests.
+    /// <see cref="NeonVault"/>).  This will typically be done only for unit tests.
     /// </para>
     /// <para>
     /// Configuration files work similarily.  You'll use <see cref="GetConfigFilePath(string)"/>
     /// to map a logical file path to a physical path.  The logical file path is typically
     /// specified as the path where the configuration file will be located in production.
     /// This can be any valid path with in a running production container and since we're
-    /// currently Linux centric, will typically be a Linux file path like <c>/myconfig.yaml</c>
-    /// or <c>/var/run/myconfig.yaml</c>.
+    /// currently Linux centric, will typically be a Linux file path like <c>/etc/MYSERVICE.yaml</c>
+    /// or <c>/etc/MYSERVICE/config.yaml</c>.
     /// </para>
     /// <para>
     /// For production, <see cref="GetConfigFilePath(string)"/> will simply return the file
@@ -122,6 +124,55 @@ namespace Neon.Kube.Service
     /// You can also use <see cref="LoadConfigFile(string, string, Func{string, string})"/>
     /// during unit testing to load a potentially encrypted configuration file.
     /// </para>
+    /// <para><b>SERVICE TERMINATION</b></para>
+    /// <para>
+    /// All services, especially those that create unmanaged resources like ASP.NET services,
+    /// sockets, NATS clients, HTTP clients, thread etc. should override and implement 
+    /// <see cref="Dispose(bool)"/>  to ensure that any of these resources are proactively 
+    /// disposed.  Your method should call the base class version of the method first before 
+    /// disposing these resources.
+    /// </para>
+    /// <code language="C#">
+    /// protected override Dispose(bool disposing)
+    /// {
+    ///     base.Dispose(disposing);
+    ///     
+    ///     if (appHost != null)
+    ///     {
+    ///         appHost.Dispose();
+    ///         appHost = null;
+    ///     }
+    /// }
+    /// </code>
+    /// <para>
+    /// The <b>disposing</b> parameter is passed as <c>true</c> when the base <see cref="KubeService.Dispose()"/>
+    /// method was called or <c>false</c> if the garbage collector is finalizing the instance
+    /// before discarding it.  The difference is subtle and most services can safely ignore
+    /// this parameter (other than passing it through to the base <see cref="Dispose(bool)"/>
+    /// method).
+    /// </para>
+    /// <para>
+    /// In the example above, the service implements an ASP.NET web service where <c>appHost</c>
+    /// was initialized as the <c>IWebHost</c> actually implementing the web service.  The code
+    /// ensures that the <c>appHost</c> isn't already disposed before disposing it.  This will
+    /// stop the web service and release the underlying listening socket.  You'll want to do
+    /// something like this for any other unmanaged resources your service might hold.
+    /// </para>
+    /// <note>
+    /// <para>
+    /// It's very important that you take care to dispose things like running web services and
+    /// listening sockets within your <see cref="Dispose(bool)"/> method.  You also need to
+    /// ensure that any threads you've created are terminated.  This means that you'll need
+    /// a way to signal threads to exit and then wait for them to actually exit.
+    /// </para>
+    /// <para>
+    /// This is important when testing your services with a unit testing framework like
+    /// Xunit because frameworks like this run all tests within the same Test Runner
+    /// process and leaving something like a listening socket open on a port (say port 80)
+    /// may prevent a subsequent test from running successfully due to it not being able 
+    /// to open its listening socket on port 80. 
+    /// </para>
+    /// </note>
     /// <para><b>LOGGING</b></para>
     /// <para>
     /// Each <see cref="KubeService"/> instance maintains its own <see cref="LogManager"/>
@@ -207,10 +258,15 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="description">The service description.</param>
+        /// <param name="serviceMap">The service map describing this service and potentially other services.</param>
+        /// <param name="name">The name of this service within <see cref="ServiceMap"/>.</param>
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if there is no service description for <paramref name="name"/>
+        /// within <see cref="serviceMap"/>.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// For those of you using Git for source control, you'll want to pass the
@@ -220,17 +276,29 @@ namespace Neon.Kube.Service
         /// </para>
         /// <para>
         /// Alternatively, you could try to map properties from your source
-        /// control environment to these parameters, pass a more fixed version
-        /// string as <paramref name="branch"/>, or simply ignore these parameters.
+        /// control environment to these parameters, pass your version string as 
+        /// <paramref name="branch"/>, or simply ignore these parameters.
         /// </para>
         /// </remarks>
-        public KubeService(ServiceDescription description, string branch = null, string commit = null, bool isDirty = false)
+        public KubeService(
+            ServiceMap  serviceMap, 
+            string      name, 
+            string      branch        = null, 
+            string      commit        = null, 
+            bool        isDirty       = false,
+            bool        noProcessExit = false)
         {
-            Covenant.Requires<ArgumentNullException>(description != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(description.Name));
+            Covenant.Requires<ArgumentNullException>(serviceMap != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
+            if (!serviceMap.TryGetValue(name, out var description))
+            {
+                throw new KeyNotFoundException($"The service map does not include a service definition for [{name}].");
+            }
+
+            this.ServiceMap           = serviceMap;
             this.Description          = description;
-            this.InProduction         = NeonHelper.IsDevWorkstation;
+            this.InProduction         = !NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
@@ -316,14 +384,19 @@ namespace Neon.Kube.Service
         public bool InDevelopment => !InProduction;
 
         /// <summary>
-        /// Returns the service description.
-        /// </summary>
-        public ServiceDescription Description { get; private set; }
-
-        /// <summary>
         /// Returns the service name.
         /// </summary>
         public string Name => Description.Name;
+
+        /// <summary>
+        /// Returns the service map.
+        /// </summary>
+        public ServiceMap ServiceMap { get; private set; }
+
+        /// <summary>
+        /// Returns the service description for this service.
+        /// </summary>
+        public ServiceDescription Description { get; private set; }
 
         /// <summary>
         /// Returns GIT branch and commit the service was built from as
@@ -350,7 +423,7 @@ namespace Neon.Kube.Service
         /// <exception cref="InvalidOperationException">
         /// Thrown when the service does not define exactly one endpoint or <see cref="Description"/> is not set.
         /// </exception>
-        public string BaseUri
+        public Uri BaseUri
         {
             get
             {
@@ -412,6 +485,11 @@ namespace Neon.Kube.Service
         /// Starts the service if it's not already running.  This will call <see cref="OnRunAsync"/>,
         /// which actually implements the service.
         /// </summary>
+        /// <param name="disableProcessExit">
+        /// Optionally specifies that the hosting process should not be terminated 
+        /// when the service exists.  This is typically used for testing or debugging.
+        /// This defaults to <c>false</c>.
+        /// </param>
         /// <remarks>
         /// <note>
         /// For production, this method will not return until the service is expicitly 
@@ -443,7 +521,7 @@ namespace Neon.Kube.Service
         /// It is not possible to restart a service after it's been stopped.
         /// </note>
         /// </remarks>
-        public async virtual Task<int> RunAsync()
+        public async virtual Task<int> RunAsync(bool disableProcessExit = false)
         {
             lock (syncLock)
             {
@@ -460,6 +538,14 @@ namespace Neon.Kube.Service
                 isRunning = true;
             }
 
+            // [disableProcessExit] will be typically passed as true when testing or
+            // debugging.  We'll let the terminator know so it won't do this.
+
+            if (disableProcessExit)
+            {
+                Terminator.DisableProcessExit = true;
+            }
+
             // Initialize the logger.
 
             LogManager = new LogManager(parseLogLevel: false);
@@ -468,7 +554,7 @@ namespace Neon.Kube.Service
             Log = LogManager.GetLogger();
             Log.LogInfo(() => $"Starting [{Name}:{GitVersion}]");
 
-            // This call actually implements the service.
+            // Start and run the service.
 
             try
             {
@@ -487,8 +573,12 @@ namespace Neon.Kube.Service
             {
                 ExitCode = e.ExitCode;
             }
+            catch (Exception e)
+            {
+                Log.LogError(e);
+            }
 
-            // Give the service its last rights.
+            // Perform last rights for the service before it passes away.
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
             Terminator.ReadyToExit();
@@ -608,7 +698,7 @@ namespace Neon.Kube.Service
                             throw new FormatException($"[{path}:{lineNumber}]: Setting name cannot be blank.");
                         }
 
-                        Environment.SetEnvironmentVariable(name, value);
+                        SetEnvironmentVariable(name, value);
                     }
                 }
             }
@@ -714,10 +804,19 @@ namespace Neon.Kube.Service
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <param name="contents">The content string.</param>
-        public void SetConfigFile(string logicalPath, string contents)
+        /// <param name="linuxLineEndings">
+        /// Optionally convert any Windows style Lline endings (CRLF) into Linux 
+        /// style endings (LF).  This defaults to <c>false</c>.
+        /// </param>
+        public void SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath));
             Covenant.Requires<ArgumentNullException>(contents != null);
+
+            if (linuxLineEndings)
+            {
+                contents = contents.Replace("\r\n", "\n");
+            }
 
             lock (syncLock)
             {
@@ -773,8 +872,12 @@ namespace Neon.Kube.Service
         /// Returns the physical path for the confguration file whose logical path is specified.
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
-        /// <returns>The physical path for the configuration file.</returns>
-        /// <exception cref="FileNotFoundException">Thrown if there's no file configured at <paramref name="logicalPath"/>.</exception>
+        /// <returns>The physical path for the configuration file or <c>null</c> if the logical file path is not present.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method does not verify that the physical file actually exists.
+        /// </note>
+        /// </remarks>
         public string GetConfigFilePath(string logicalPath)
         {
             lock (syncLock)
@@ -786,7 +889,7 @@ namespace Neon.Kube.Service
 
                 if (!configFiles.TryGetValue(logicalPath, out var fileInfo))
                 {
-                    throw new FileNotFoundException($"Configuration file at logical path [{logicalPath}] not found.");
+                    return null;
                 }
 
                 return fileInfo.PhysicalPath;
