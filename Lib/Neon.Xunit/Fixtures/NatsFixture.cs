@@ -55,6 +55,11 @@ namespace Neon.Xunit
     public sealed class NatsFixture : ContainerFixture
     {
         /// <summary>
+        /// Returns the URI for a NATS server running locally (probably as a Docker container).
+        /// </summary>
+        public const string ConnectionUri = "nats://localhost:4222";
+
+        /// <summary>
         /// Constructs the fixture.
         /// </summary>
         public NatsFixture()
@@ -142,6 +147,7 @@ namespace Neon.Xunit
                 async () =>
                 {
                     Connection = factory.CreateConnection();
+
                     await Task.CompletedTask;
 
                 }).Wait();

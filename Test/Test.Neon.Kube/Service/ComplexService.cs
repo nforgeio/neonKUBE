@@ -41,7 +41,7 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestKube
+namespace TestKubeService
 {
     /// <summary>
     /// Startup class for <see cref="ComplexService"/>.

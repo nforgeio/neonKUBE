@@ -77,7 +77,7 @@ namespace Neon.Xunit
         /// </returns>
         public override TestFixtureStatus Start(Action action = null)
         {
-            throw new InvalidOperationException("Use the [Start(Func<TService> serviceCreator)] method instead of this.");
+            throw new InvalidOperationException("Use the [Start(Func<TService> serviceCreator)] method instead of this method.");
         }
 
         /// <summary>

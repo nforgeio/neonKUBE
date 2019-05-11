@@ -232,7 +232,7 @@ namespace Neon.Xunit
             }
             finally
             {
-                InAction      = false;
+                InAction  = false;
                 IsRunning = true;       // Setting this even if the action failed.
             }
 
