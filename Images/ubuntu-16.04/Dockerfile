@@ -31,6 +31,9 @@ ARG         TINI_URL
 
 ENV DEBIAN_FRONTEND noninteractive
 
+# Set timezone to UTC
+ENV TZ=UTC
+
 # Install the [tini] INIT manager.
 
 ADD ${TINI_URL} /sbin/tini

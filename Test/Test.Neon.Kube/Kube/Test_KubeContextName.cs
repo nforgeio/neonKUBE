@@ -24,8 +24,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Kube;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Xunit;
 using Neon.Xunit.Kube;
 

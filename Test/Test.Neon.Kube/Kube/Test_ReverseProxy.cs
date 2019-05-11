@@ -30,8 +30,8 @@ using System.Threading.Tasks;
 using Microsoft.Net.Http.Server;
 
 using Neon.Common;
-using Neon.Kube;
 using Neon.IO;
+using Neon.Kube;
 using Neon.Xunit;
 using Neon.Xunit.Kube;
 

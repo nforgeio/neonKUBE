@@ -29,3 +29,6 @@ STOPSIGNAL  SIGTERM
 # Install the [tini] INIT manager.
 
 RUN apk add --no-cache tini ca-certificates
+
+# Set timezone to UTC
+ENV TZ=UTC
