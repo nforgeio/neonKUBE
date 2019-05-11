@@ -2,7 +2,6 @@ package cadenceclient
 
 import (
 	"context"
-	"fmt"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/worker"
@@ -104,11 +103,6 @@ func (helper *CadenceClientHelper) SetupServiceConfig() error {
 
 	// set the logger to global logger
 	helper.Logger = zap.L()
-
-	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Debug(fmt.Sprintf("Logger created!\nHostPort:%s, Service:%s\n",
-		helper.Config.hostPort,
-		_cadenceFrontendService))
 
 	// Configure the CadenceClientHelper.Builder
 	helper.Builder = NewBuilder(helper.Logger).
