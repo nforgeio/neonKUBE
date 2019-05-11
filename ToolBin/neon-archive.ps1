@@ -44,7 +44,7 @@ neon-build clean --all
 # Remove GOLANG related files that don't need to be archived.
 
 "ARCHIVE: Removing GOLANG files"
-Remove-Item "$nfRoot\Go\src\github.com\loopieio\cadence-proxy\vendor" -Recurse -ErrorAction Ignore
+Remove-Item "$nfRoot\Go\pkg" -Recurse -ErrorAction Ignore
 
 # Zip the archive
 
@@ -58,3 +58,11 @@ Remove-Item "$target" -ErrorAction Ignore
 # We'll use [7-zip] instead.
 
 7z a -tzip -r -mmt4 -mx9 -bsp1 "$target" "$nfRoot"
+
+" "
+"**************************"
+"*** ARCHIVING COMPLETE ***"
+"**************************"
+" "
+"OUTPUT: $target"
+" "
