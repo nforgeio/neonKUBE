@@ -516,7 +516,6 @@ namespace Neon.Cadence
 
                     foreach (var serverUri in settings.ServerUris)
                     {
-                        //sbEndpoints.AppendWithSeparator($"{serverUri.Host}:{serverUri.Port}", ",");
                         sbEndpoints.AppendWithSeparator($"{serverUri.Host}:7933", ",");
                     }
 

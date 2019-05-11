@@ -144,7 +144,7 @@ namespace Neon.Cadence.Internal
             if (startingBracePos != -1 && endingBracePos != 1)
             {
                 error   = String.Substring(0, startingBracePos);
-                message = String.Substring(startingBracePos + 1, endingBracePos - startingBracePos + 1);
+                message = String.Substring(startingBracePos + 1, endingBracePos - (startingBracePos + 1));
             }
             else
             {
