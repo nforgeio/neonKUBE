@@ -21,12 +21,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+CADENCE_HOME=$1
+SERVICES="history,matching,frontend,worker"
+
 start_cassandra() {
     ./cassandra -R
 }
 
 wait_for_cassandra() {
-    CASSANDRA_SEEDS=`hostname --ip-address`
+    export CASSANDRA_SEEDS=`hostname --ip-address`
     server=`echo $CASSANDRA_SEEDS | awk -F ',' '{print $1}'`
     until cqlsh --cqlversion=3.4.4 $server < /dev/null; do
         echo 'waiting for cassandra to start up'
@@ -34,10 +37,6 @@ wait_for_cassandra() {
     done
     echo 'cassandra started'
 }
-
-RF=${RF:-1}
-CADENCE_HOME=$1
-SERVICES="history,matching,frontend,worker"
 
 # start cassandra,
 # wait for it to complete startup

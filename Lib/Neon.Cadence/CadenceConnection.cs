@@ -516,7 +516,7 @@ namespace Neon.Cadence
 
                     foreach (var serverUri in settings.Servers)
                     {
-                        sbEndpoints.AppendWithSeparator($"{serverUri.Host}:{serverUri.Port}", ",");
+                        sbEndpoints.AppendWithSeparator($"{serverUri.Host}:7933", ",");
                     }
 
                     var connectRequest = 
@@ -525,6 +525,7 @@ namespace Neon.Cadence
                             Endpoints = sbEndpoints.ToString(),
                             Identity  = settings.ClientIdentity
                         };
+
 
                     ProxyCallAsync(connectRequest).Result.ThrowOnError();
                 }

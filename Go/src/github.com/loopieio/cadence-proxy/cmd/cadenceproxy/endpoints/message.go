@@ -343,8 +343,7 @@ func handleCancelRequest(request *cluster.CancelRequest) (base.IProxyMessage, er
 		if v, ok := reply.(*cluster.CancelReply); ok {
 			buildCancelReply(v, cadenceerrors.NewCadenceError(
 				"ConnectionError",
-				cadenceerrors.Custom,
-				"no connection to the cadence server has been established yet"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -356,8 +355,7 @@ func handleCancelRequest(request *cluster.CancelRequest) (base.IProxyMessage, er
 		if v, ok := reply.(*cluster.CancelReply); ok {
 			buildCancelReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				"failed to create cadence client"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -369,8 +367,7 @@ func handleCancelRequest(request *cluster.CancelRequest) (base.IProxyMessage, er
 		if v, ok := reply.(*cluster.CancelReply); ok {
 			buildCancelReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				fmt.Sprintf("failed to cancel workflow with ID %d", targetRequestID)), false)
+				cadenceerrors.Custom), false)
 		}
 
 		return reply, nil
@@ -418,8 +415,7 @@ func handleConnectRequest(request *cluster.ConnectRequest) (base.IProxyMessage, 
 		if v, ok := reply.(*cluster.ConnectReply); ok {
 			buildConnectReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				"failed to configure the cadence service client"))
+				cadenceerrors.Custom))
 		}
 	}
 
@@ -444,8 +440,7 @@ func handleDomainDescribeRequest(request *cluster.DomainDescribeRequest) (base.I
 		if v, ok := reply.(*cluster.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
 				"ConnectionError",
-				cadenceerrors.Custom,
-				"no connection to the cadence server has been established yet"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -457,8 +452,7 @@ func handleDomainDescribeRequest(request *cluster.DomainDescribeRequest) (base.I
 		if v, ok := reply.(*cluster.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				"failed to create cadence domain client"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -470,8 +464,7 @@ func handleDomainDescribeRequest(request *cluster.DomainDescribeRequest) (base.I
 		if v, ok := reply.(*cluster.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				"describe domain operation failed"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -498,8 +491,7 @@ func handleDomainRegisterRequest(request *cluster.DomainRegisterRequest) (base.I
 		if v, ok := reply.(*cluster.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				"ConnectionError",
-				cadenceerrors.Custom,
-				"no connection to the cadence server has been established yet"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -511,8 +503,7 @@ func handleDomainRegisterRequest(request *cluster.DomainRegisterRequest) (base.I
 		if v, ok := reply.(*cluster.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				"failed to create cadence domain client"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -536,8 +527,7 @@ func handleDomainRegisterRequest(request *cluster.DomainRegisterRequest) (base.I
 		if v, ok := reply.(*cluster.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				fmt.Sprintf("error while trying to register domain %s with cadence server", domainRegisterRequest.GetName())))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -567,8 +557,7 @@ func handleDomainUpdateRequest(request *cluster.DomainUpdateRequest) (base.IProx
 		if v, ok := reply.(*cluster.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				"ConnectionError",
-				cadenceerrors.Custom,
-				"no connection to the cadence server has been established yet"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -580,8 +569,7 @@ func handleDomainUpdateRequest(request *cluster.DomainUpdateRequest) (base.IProx
 		if v, ok := reply.(*cluster.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				"failed to create cadence domain client"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
@@ -613,8 +601,7 @@ func handleDomainUpdateRequest(request *cluster.DomainUpdateRequest) (base.IProx
 		if v, ok := reply.(*cluster.DomainUpdateReply); ok {
 			buildDomainUpdateReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
-				cadenceerrors.Custom,
-				"update domain operation failed"))
+				cadenceerrors.Custom))
 		}
 
 		return reply, nil
