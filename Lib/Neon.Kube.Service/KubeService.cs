@@ -571,7 +571,13 @@ namespace Neon.Kube.Service
             }
             catch (ProgramExitException e)
             {
-                ExitCode = e.ExitCode;
+                // Don't override a non-zero ExitCode that was set earlier
+                // with a zero exit code.
+
+                if (e.ExitCode != 0)
+                {
+                    ExitCode = e.ExitCode;
+                }
             }
             catch (Exception e)
             {
@@ -587,9 +593,12 @@ namespace Neon.Kube.Service
         }
 
         /// <summary>
-        /// Stops the service if it's not already stopped.
+        /// <para>
+        /// Stops the service if it's not already stopped.  This is intended to be called by
+        /// external things like unit test fixtures and is not intended to be called by the
+        /// service itself.  Service implementations should use <see cref="ExitCode(int, bool)"/>.
+        /// </para>
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if another stop request is already pending.</exception>
         /// <exception cref="TimeoutException">
         /// Thrown if the service did not exit gracefully in time before it would have 
         /// been killed (e.g. by Kubernetes or Docker).
@@ -599,7 +608,7 @@ namespace Neon.Kube.Service
         /// It is not possible to restart a service after it's been stopped.
         /// </note>
         /// <para>
-        /// This is intended for managing unit test execution and is not intended 
+        /// This is intended for internal use or managing unit test execution and is not intended 
         /// for use by the service to stop itself.
         /// </para>
         /// </remarks>
@@ -607,12 +616,7 @@ namespace Neon.Kube.Service
         {
             lock (syncLock)
             {
-                if (stopPending)
-                {
-                    throw new InvalidOperationException($"A stop request for [{Name}] is already pending.");
-                }
-
-                if (!isRunning)
+                if (stopPending || !isRunning)
                 {
                     return;
                 }
@@ -621,6 +625,53 @@ namespace Neon.Kube.Service
             }
 
             Terminator.Signal();
+        }
+
+        /// <summary>
+        /// Used by services to stop themselves, specifying an optional process exit code.
+        /// </summary>
+        /// <param name="exitCode">The optional exit code (defaults to <b>0</b>).</param>
+        /// <remarks>
+        /// This works by setting <see cref="ExitCode"/> if <paramref name="exitCode"/> is non-zero,
+        /// signalling process termination on another thread and then throwing a <see cref="ProgramExitException"/> 
+        /// on the current thread.  This will generally cause the current thread or task to terminate
+        /// immediately and any other properly implemented threads and tasks to terminate gracefully
+        /// when they receive the termination signal.
+        /// </remarks>
+        public virtual void Exit(int exitCode = 0)
+        {
+            lock (syncLock)
+            {
+                if (exitCode != 0)
+                {
+                    ExitCode = exitCode;
+                }
+
+                new Thread(
+                    new ThreadStart(
+                        () =>
+                        {
+                            // $hack(jeff.lill):
+                            //
+                            // Give the Exit() method a bit of time to throw the 
+                            // ProgramExitException to make termination handling
+                            // a bit more deterministic.
+
+                            Thread.Sleep(TimeSpan.FromSeconds(0.5));
+
+                            try
+                            {
+                                Stop();
+                            }
+                            catch
+                            {
+                                // Ignoring any errors.
+                            }
+
+                        })).Start();
+
+                throw new ProgramExitException(ExitCode);
+            }
         }
 
         /// <summary>

@@ -182,7 +182,7 @@ namespace Neon.Kube.Service
 
         /// <summary>
         /// Emulates a signal instructing the service to close.  This will typically be used
-        /// for unitb testing services.
+        /// for unit testing services.
         /// </summary>
         /// <exception cref="TimeoutException">
         /// Thrown if the service did not exit gracefully in time before it would have 

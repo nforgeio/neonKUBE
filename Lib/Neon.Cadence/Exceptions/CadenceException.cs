@@ -56,7 +56,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="CadenceError"/>.</returns>
         internal virtual CadenceError ToCadenceError()
         {
-            return new CadenceError(CadenceError, CadenceErrorType, Message);
+            return new CadenceError($"{CadenceError}{{{Message}}}", CadenceErrorType);
         }
     }
 }

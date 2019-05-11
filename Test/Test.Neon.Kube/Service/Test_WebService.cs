@@ -34,7 +34,7 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestKube
+namespace TestKubeService
 {
     /// <summary>
     /// Demonstrates how to test the <see cref="WebService"/> that has a single

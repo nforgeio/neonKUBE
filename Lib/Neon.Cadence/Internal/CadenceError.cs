@@ -50,14 +50,12 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="error">The GOLANG error string.</param>
         /// <param name="type">Optionally specifies the error type.</param>
-        /// <param name="details">Optionally specifies additional error details.</param>
-        public CadenceError(string error, CadenceErrorTypes type = CadenceErrorTypes.Custom, string details = null)
+        public CadenceError(string error, CadenceErrorTypes type = CadenceErrorTypes.Custom)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error));
 
             this.String = error;
             this.SetErrorType(type);
-            this.Details = details;
         }
 
         /// <summary>
@@ -118,46 +116,79 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Optionally specifies any additional error details.
-        /// </summary>
-        [JsonProperty(PropertyName = "Details", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(null)]
-        public string Details { get; set; }
-
-        /// <summary>
         /// Converts the instance into a <see cref="CadenceException"/>.
         /// </summary>
         /// <returns>One of the exceptions derived from <see cref="CadenceException"/>.</returns>
         public CadenceException ToException()
         {
+            // $note(jeff.lill):
+            //
+            // We're depending on cadence error strings looking like this:
+            //
+            //      ERROR{MESSAGE}
+            //
+            // where:
+            //
+            //      ERROR       - identifies the error
+            //      MESSAGE     - describes the error in more detail
+            //
+            // For robustness, we'll also handle the situation where there
+            // is no {MESSAGE} part.
+
+            string error;
+            string message;
+
+            var startingBracePos = String.IndexOf('{');
+            var endingBracePos   = String.LastIndexOf('}');
+
+            if (startingBracePos != -1 && endingBracePos != 1)
+            {
+                error   = String.Substring(0, startingBracePos);
+                message = String.Substring(startingBracePos + 1, endingBracePos - startingBracePos + 1);
+            }
+            else
+            {
+                error   = String;
+                message = string.Empty;
+            }
+
             // First, we're going to try mapping the error identifier to one of the
             // predefined Cadence exceptions and if that doesn't work, we'll generate
             // a more generic exception.
 
-            switch (String)
+            switch (error)
             {
                 case "BadRequestError":
 
-                    return new CadenceBadRequestException(Details);
+                    return new CadenceBadRequestException(message);
 
                 case "DomainAlreadyExistsError":
 
-                    return new CadenceDomainAlreadyExistsException(Details);
+                    return new CadenceDomainAlreadyExistsException(message);
 
                 case "EntityNotExistsError":
 
-                    return new CadenceEntityNotExistsException(Details);
+                    return new CadenceEntityNotExistsException(message);
 
                 case "InternalServiceError":
 
-                    return new CadenceInternalServiceException(Details);
+                    return new CadenceInternalServiceException(message);
 
                 case "ServiceBusyError":
 
-                    return new CadenceServiceBusyException(Details);
+                    return new CadenceServiceBusyException(message);
             }
 
             // Create a more generic exception.
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                message = $"{error}: {message}";
+            }
+            else
+            {
+                message = error;
+            }
 
             var errorType = GetErrorType();
 
@@ -165,27 +196,27 @@ namespace Neon.Cadence.Internal
             {
                 case CadenceErrorTypes.Cancelled:
 
-                    return new CadenceCancelledException(Details);
+                    return new CadenceCancelledException(message);
 
                 case CadenceErrorTypes.Custom:
 
-                    return new CadenceCustomException(Details);
+                    return new CadenceCustomException(message);
 
                 case CadenceErrorTypes.Generic:
 
-                    return new CadenceGenericException(Details);
+                    return new CadenceGenericException(message);
 
                 case CadenceErrorTypes.Panic:
 
-                    return new CadencePanicException(Details);
+                    return new CadencePanicException(message);
 
                 case CadenceErrorTypes.Terminated:
 
-                    return new CadenceTerminatedException(Details);
+                    return new CadenceTerminatedException(message);
 
                 case CadenceErrorTypes.Timeout:
 
-                    return new CadenceTimeoutException(Details);
+                    return new CadenceTimeoutException(message);
 
                 default:
 

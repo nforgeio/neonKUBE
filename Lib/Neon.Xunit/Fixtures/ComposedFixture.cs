@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 
 using Neon.Common;
+using Neon.Kube.Service;
 
 namespace Neon.Xunit
 {
@@ -76,13 +77,48 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Adds a named <see cref="ITestFixture"/> to the set.
+        /// Adds a named <see cref="ITestFixture"/>.
         /// </summary>
         /// <param name="name">The fixture name (case insenstitive).</param>
         /// <param name="subFixture">The subfixture instance.</param>
         /// <param name="action">The optional <see cref="Action"/> to be called when the fixture is initialized.</param>
+        /// <remarks>
+        /// <note>
+        /// This method doesn't work for <see cref="KubeServiceFixture{TService}"/> based fixtures.  Use
+        /// <see cref="AddServiceFixture{TService}(string, KubeServiceFixture{TService}, Func{TService})"/> instead.
+        /// </note>
+        /// </remarks>
         public void AddFixture<TFixture>(string name, TFixture subFixture, Action<TFixture> action = null)
             where TFixture : ITestFixture
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(subFixture != null);
+            Covenant.Requires<InvalidOperationException>(!subFixture.IsRunning, "A subfixture cannot be added after it has already been initialized.");
+
+            var fixtureType = typeof(TFixture);
+
+            if (fixtureType.IsGenericType && fixtureType.Name == typeof(KubeServiceFixture<KubeService>).Name)
+            {
+                throw new InvalidOperationException($"This method doesn't work for [{nameof(KubeServiceFixture<KubeService>)}] fixtures.  Use [AddServiceFixture<TService>()] instead.");
+            }
+
+            CheckDisposed();
+            CheckWithinAction();
+
+            subFixture.Start(() => action?.Invoke(subFixture));
+            nameToFixture.Add(name, subFixture);
+            fixtureList.Add(subFixture);
+        }
+
+        /// <summary>
+        /// Adds a named <see cref="KubeServiceFixture{TService}"/> fixture.
+        /// </summary>
+        /// <typeparam name="TService">The service type (derived from <see cref="KubeService"/>.</typeparam>
+        /// <param name="name">The fixture name (case insenstitive).</param>
+        /// <param name="subFixture">The subfixture being added.</param>
+        /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
+        public void AddServiceFixture<TService>(string name, KubeServiceFixture<TService> subFixture, Func<TService> serviceCreator)
+            where TService : KubeService
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(subFixture != null);
@@ -91,7 +127,7 @@ namespace Neon.Xunit
             CheckDisposed();
             CheckWithinAction();
 
-            subFixture.Start(() => action?.Invoke(subFixture));
+            subFixture.Start(serviceCreator);
             nameToFixture.Add(name, subFixture);
             fixtureList.Add(subFixture);
         }
