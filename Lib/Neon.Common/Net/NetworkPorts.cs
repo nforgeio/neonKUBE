@@ -268,6 +268,11 @@ namespace Neon.Net
         /// </summary>
         public const int AppCacherNg = 3142;
 
+        /// <summary>
+        /// Uber Cadence primary cluster port.
+        /// </summary>
+        public const int Cadence = 7933;
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -335,7 +340,8 @@ namespace Neon.Net
                 new Map("OpenVPN", OpenVPN),
                 new Map("AMQP", AMQP),
                 new Map("RabbitMQAdmin", RabbitMQAdmin),
-                new Map("aptcacherng", AppCacherNg)
+                new Map("aptcacherng", AppCacherNg),
+                new Map("cadence", Cadence)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

@@ -156,7 +156,7 @@ namespace Neon.Xunit.Cadence
                 settings = settings ?? new CadenceSettings();
 
                 settings.Servers.Clear();
-                settings.Servers.Add(new Uri("http://localhost:8091"));
+                settings.Servers.Add(new Uri($"http://localhost:{NetworkPorts.Cadence}"));
 
                 settings.DebugEmulateProxy = emulateProxy || settings.DebugEmulateProxy;
 
