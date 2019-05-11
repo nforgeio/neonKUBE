@@ -107,11 +107,8 @@ namespace TestKube
         /// </summary>
         /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        /// <param name="branch">Optionally specifies the build branch.</param>
-        /// <param name="commit">Optionally specifies the branch commit.</param>
-        /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
-        public ComplexService(ServiceMap serviceMap, string name, string branch = null, string commit = null, bool isDirty = false)
-            : base(serviceMap, name, branch, commit, isDirty)
+        public ComplexService(ServiceMap serviceMap, string name)
+            : base(serviceMap, name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
         {
         }
 

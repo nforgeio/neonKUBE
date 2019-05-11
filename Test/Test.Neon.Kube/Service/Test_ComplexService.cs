@@ -84,7 +84,7 @@ namespace TestKube
         /// <returns>The service instance.</returns>
         private ComplexService CreateService()
         {
-            return new ComplexService(CreateServiceMap(), "complex-service", ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty);
+            return new ComplexService(CreateServiceMap(), "complex-service");
         }
 
         [Fact]

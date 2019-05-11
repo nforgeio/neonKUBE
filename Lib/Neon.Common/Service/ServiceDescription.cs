@@ -144,7 +144,7 @@ namespace Neon.Service
                     Covenant.Assert(!string.IsNullOrEmpty(Namespace));
                     Covenant.Assert(!string.IsNullOrEmpty(Domain));
 
-                    return $"{Name}.{Namespace}.{Domain}";
+                    return $"{Name}.{Namespace}.svc.{Domain}";
                 }
             }
         }

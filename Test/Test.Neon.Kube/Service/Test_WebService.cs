@@ -84,7 +84,7 @@ namespace TestKube
         /// <returns>The service instance.</returns>
         private WebService CreateService()
         {
-            return new WebService(CreateServiceMap(), "web-service", ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty);
+            return new WebService(CreateServiceMap(), "web-service");
         }
 
         [Fact]
