@@ -39,6 +39,14 @@ namespace Neon.Xunit
     public class KubeServiceFixture<TService> : TestFixture
         where TService : KubeService
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static TimeSpan defaultRunningTimeout = TimeSpan.FromSeconds(30);
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private object                          syncLock = new object();
         private Task                            serviceTask;
         private Dictionary<string, HttpClient>  httpClientCache;
@@ -67,7 +75,7 @@ namespace Neon.Xunit
         public TService Service { get; private set; }
 
         /// <summary>
-        /// <b>DON'T USE THIS:</b> Use <see cref="Start(Func{TService})"/> instead for this fixture.
+        /// <b>DON'T USE THIS:</b> Use <see cref="Start(Func{TService}, TimeSpan)"/> instead for this fixture.
         /// </summary>
         /// <param name="action">The initialization action.</param>
         /// <returns>
@@ -85,11 +93,19 @@ namespace Neon.Xunit
         /// the fixture is not already running.
         /// </summary>
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
+        /// <param name="runningTimeout">
+        /// Optionally specifies the maximum time the fixture should wait for the service to transition
+        /// to the <see cref="KubeServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
+        /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
         /// fixture was already running.
         /// </returns>
+        /// <exception cref="TimeoutException">
+        /// Thrown if the service didn't transition to the running (or terminated) state 
+        /// within <paramref name="runningTimeout"/>.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// This method first calls the <paramref name="serviceCreator"/> callback and expects it to
@@ -97,7 +113,7 @@ namespace Neon.Xunit
         /// and configuration files as required.  The callback should <b>not start</b> the service.
         /// </para>
         /// </remarks>
-        public TestFixtureStatus Start(Func<TService> serviceCreator = null)
+        public TestFixtureStatus Start(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
         {
             Covenant.Requires<ArgumentNullException>(serviceCreator != null);
 
@@ -106,7 +122,7 @@ namespace Neon.Xunit
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(serviceCreator);
+                    StartAsComposed(serviceCreator, runningTimeout);
                 });
         }
 
@@ -114,9 +130,22 @@ namespace Neon.Xunit
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
-        public void StartAsComposed(Func<TService> serviceCreator = null)
+        /// <param name="runningTimeout">
+        /// Optionally specifies the maximum time the fixture should wait for the service to transition
+        /// to the <see cref="KubeServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
+        /// </param>
+        /// <exception cref="TimeoutException">
+        /// Thrown if the service didn't transition to the running (or terminated) state
+        /// within <paramref name="runningTimeout"/>.
+        /// </exception>
+        public void StartAsComposed(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
         {
             Covenant.Requires<ArgumentNullException>(serviceCreator != null);
+
+            if (runningTimeout == default)
+            {
+                runningTimeout = defaultRunningTimeout;
+            }
 
             base.CheckWithinAction();
 
@@ -130,7 +159,20 @@ namespace Neon.Xunit
 
             serviceTask = Service.RunAsync();
 
-            IsRunning = true;
+            // Wait for the service to signal that it's running or has terminated.
+
+            try
+            {
+                NeonHelper.WaitFor(() => Service.Status == KubeServiceStatus.Running || Service.Status == KubeServiceStatus.Terminated, runningTimeout);
+            }
+            catch (TimeoutException)
+            {
+                // Throw a nicer exception that explains what's happened in more detail.
+
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunning)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunning)}()] is being called or increase the timeout.");
+            }
+
+            IsRunning = Service.Status == KubeServiceStatus.Running;
         }
 
         /// <inheritdoc/>
@@ -198,6 +240,14 @@ namespace Neon.Xunit
         /// Restarts the service.
         /// </summary>
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
+        /// <param name="runningTimeout">
+        /// Optionally specifies the maximum time the fixture should wait for the service to transition
+        /// to the <see cref="KubeServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
+        /// </param>
+        /// <exception cref="TimeoutException">
+        /// Thrown if the service didn't transition to the running (or terminated) state
+        /// within <paramref name="runningTimeout"/>.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// This method first calls the <paramref name="serviceCreator"/> callback and expects
@@ -205,10 +255,14 @@ namespace Neon.Xunit
         /// variables and configuration files as required.  The callback should not start thge service.
         /// </para>
         /// </remarks>
-        public void Restart(Func<TService> serviceCreator = null)
+        public void Restart(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
         {
             Covenant.Requires<ArgumentNullException>(serviceCreator != null);
-            Covenant.Requires<InvalidOperationException>(IsRunning);
+
+            if (runningTimeout == default)
+            {
+                runningTimeout = defaultRunningTimeout;
+            }
 
             StopService();
             ClearCaches();
@@ -217,6 +271,21 @@ namespace Neon.Xunit
             Covenant.Assert(Service != null);
 
             serviceTask = Service.RunAsync();
+
+            // Wait for the service to signal that it's running or has terminated.
+
+            try
+            {
+                NeonHelper.WaitFor(() => Service.Status == KubeServiceStatus.Running || Service.Status == KubeServiceStatus.Terminated, runningTimeout);
+            }
+            catch (TimeoutException)
+            {
+                // Throw a nicer exception that explains what's happened in more detail.
+
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunning)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunning)}()] is being called or increase the timeout.");
+            }
+
+            IsRunning = Service.Status == KubeServiceStatus.Running;
         }
 
         /// <summary>

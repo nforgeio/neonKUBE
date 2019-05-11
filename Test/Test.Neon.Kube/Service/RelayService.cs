@@ -150,6 +150,10 @@ namespace TestKubeService
 
             webHost.Start();
 
+            // Indicate that the service is ready for business.
+
+            SetRunning();
+
             // Wait for the process terminator to signal that the service is stopping.
 
             await Terminator.StopEvent.WaitAsync();

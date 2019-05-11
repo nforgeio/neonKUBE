@@ -63,6 +63,9 @@ namespace TestKubeService
 
             this.webServiceFixture   = (KubeServiceFixture<WebService>)composedFixture["web-service"];
             this.relayServiceFixture = (KubeServiceFixture<RelayService>)composedFixture["relay-service"];
+
+            Assert.True(webServiceFixture.IsRunning);
+            Assert.True(relayServiceFixture.IsRunning);
         }
 
         /// <summary>

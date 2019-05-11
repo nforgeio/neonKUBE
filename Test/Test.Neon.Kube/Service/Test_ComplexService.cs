@@ -97,6 +97,7 @@ namespace TestKubeService
             var service = CreateService();
 
             fixture.Restart(() => service);
+            Assert.True(fixture.IsRunning);
 
             var client = fixture.GetHttpClient();
 
@@ -115,6 +116,7 @@ namespace TestKubeService
             service.SetEnvironmentVariable("WEB_RESULT", "From: ENVIRONMENT");
 
             fixture.Restart(() => service);
+            Assert.True(fixture.IsRunning);
 
             var client = fixture.GetHttpClient();
 
@@ -133,6 +135,7 @@ namespace TestKubeService
             service.SetConfigFile("/etc/complex/response", "From: VIRTUAL FILE");
 
             fixture.Restart(() => service);
+            Assert.True(fixture.IsRunning);
 
             var client = fixture.GetHttpClient();
 
@@ -155,6 +158,7 @@ namespace TestKubeService
                 service.SetConfigFilePath("/etc/complex/response", tempFile.Path);
 
                 fixture.Restart(() => service);
+                Assert.True(fixture.IsRunning);
 
                 var client = fixture.GetHttpClient();
 
@@ -186,6 +190,7 @@ namespace TestKubeService
                 service.SetConfigFilePath("/etc/complex/response", encryptedPath, passwordName => password);
 
                 fixture.Restart(() => service);
+                Assert.True(fixture.IsRunning);
 
                 var client = fixture.GetHttpClient();
 
@@ -213,6 +218,7 @@ WEB_RESULT=HELLO WORLD!
                 service.LoadEnvironmentVariables(tempFile.Path);
 
                 fixture.Restart(() => service);
+                Assert.True(fixture.IsRunning);
 
                 var client = fixture.GetHttpClient();
 
@@ -248,6 +254,7 @@ WEB_RESULT=HELLO WORLD! (encrypted)
                 Assert.True(NeonVault.IsEncrypted(encryptedPath));
 
                 fixture.Restart(() => service);
+                Assert.True(fixture.IsRunning);
 
                 var client = fixture.GetHttpClient();
 
