@@ -99,6 +99,10 @@ ARGUMENTS:
 OPTIONS:
 
     --help                              - Display help
+
+    --insecure                          - Use insecure temporary folder 
+                                          (see remarks)
+ 
     --log-folder=LOG-FOLDER             - Optional log folder path
 
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
@@ -109,23 +113,26 @@ OPTIONS:
 
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
+
     -q, --quiet                         - Disables operation progress
 
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster stablization 
                                           (defaults to 60s).
+
+REMARKS:
+
+By default, any tempory files generated will be written to your 
+[$HOME/.neonkube/temp] folder which is encrypted at rest for
+Windows 10 PRO and Windows Server workstations.  This encryption
+may cause some problems (e.g. a [neon run ...] command that 
+needs to mount a decrypted file to a local Docker container.
+
+You can disable the use of this encrypted folder by specifying
+[--insecure] for any command.
 ";
             // Disable any logging that might be performed by library classes.
 
             LogManager.Default.LogLevel = LogLevel.None;
-
-            // Ensure that temporary files are written to the users temporary folder because
-            // there's a decent chance that this folder will be encrypted at rest.
-
-            if (KubeTestManager.Current == null)
-            {
-                TempFile.Root   = KubeHelper.TempFolder;
-                TempFolder.Root = KubeHelper.TempFolder;
-            }
 
             // Use the version of Powershell Core installed with the application,
             // if present.
@@ -188,6 +195,7 @@ OPTIONS:
 
                 validOptions.Add("--debug");
                 validOptions.Add("--help");
+                validOptions.Add("--insecure");
                 validOptions.Add("--log-folder");
                 validOptions.Add("--machine-username");
                 validOptions.Add("--machine-password");
@@ -202,6 +210,18 @@ OPTIONS:
                 {
                     Console.WriteLine(usage);
                     Program.Exit(0);
+                }
+
+                if (!CommandLine.HasOption("--insecure"))
+                {
+                    // Ensure that temporary files are written to the users temporary folder because
+                    // there's a decent chance that this folder will be encrypted at rest.
+
+                    if (KubeTestManager.Current == null)
+                    {
+                        TempFile.Root   = KubeHelper.TempFolder;
+                        TempFolder.Root = KubeHelper.TempFolder;
+                    }
                 }
 
                 var commands = new List<ICommand>()
