@@ -21,7 +21,15 @@ echo The [%NF_ROOT%\neonKUBE.sln] file does not exist.  Please pass the path
 echo to the Neon solution folder.
 goto done
 
-:goodPath
+:goodPath 
+
+pushd "%NF_ROOT%\.."
+set NF_REPOS=%cd%
+popd
+
+REM Set NF_REPOS to the parent directory holding the neonFORGE repositories.
+
+pushd 
 
 REM Configure the environment variables.
 
@@ -35,6 +43,7 @@ set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.
 
 REM Persist the environment variables.
 
+setx NF_REPOS "%NF_REPOS%" /M
 setx NF_ROOT "%NF_ROOT%" /M
 setx NF_TOOLBIN "%NF_TOOLBIN%" /M
 setx NF_BUILD "%NF_BUILD%" /M
