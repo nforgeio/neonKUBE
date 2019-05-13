@@ -86,3 +86,13 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
   Check for new Ubuntu 18.04 releases and build new templates
 
+# Cadence
+
+1. Check http://github.com/uber/cadence for new release branches.
+
+2. Run this command to fetch the release from the official repository and add it to our for:
+  ```
+  neon-cadence BRANCH
+  ```
+
+3. Update **$/Images/cadence-test/publish.ps1** and build the image(s).
