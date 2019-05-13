@@ -64,16 +64,17 @@ func (s *Instance) Start() {
 	}()
 
 	// wait for the shutdown signal from a terminate request
-	<-s.ShutdownChannel
+	shutdown := <-s.ShutdownChannel
 
-	// create the context and the cancelFunc to shut down the server instance
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	if shutdown {
+		// create the context and the cancelFunc to shut down the server instance
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 
-	// try and do a graceful shutdown if possible from context
-	if err := s.httpServer.Shutdown(ctx); err != nil {
-		s.Logger.Fatal("could not gracefully shut server down", zap.Error(err))
+		// try and do a graceful shutdown if possible from context
+		if err := s.httpServer.Shutdown(ctx); err != nil {
+			s.Logger.Fatal("could not gracefully shut server down", zap.Error(err))
+		}
+		s.Logger.Info("server gracefully shutting down")
 	}
-	s.Logger.Info("server gracefully shutting down")
-
 }

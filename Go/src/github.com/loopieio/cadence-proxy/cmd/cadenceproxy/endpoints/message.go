@@ -3,11 +3,13 @@ package endpoints
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/cadenceerrors"
 
@@ -27,10 +29,16 @@ import (
 
 const (
 
-	// deathClockThreshold is the limit of critical failures
+	// _deathClockThreshold is the limit of critical failures
 	// returned by calls to the cadence server indicating a connection
 	// issue
-	deathClockThreshold = 5
+	_deathClockThreshold = 5
+
+	// _cadenceSystemDomain is the string name of the cadence-system domain that
+	// exists on all cadence servers.  This value is used to check that a connection
+	// has been established to the cadence server instance and that it is ready to
+	// accept requests
+	_cadenceSystemDomain = "cadence-system"
 )
 
 var (
@@ -58,6 +66,10 @@ var (
 	// reached a specified threshold, then add a CadenceError to the HeartbeatReply.
 	// This will tell the Neon.Cadence library to shut the cadence-proxy down
 	deathClock int
+
+	// connectionError is the custom error that is thrown when the cadence-proxy
+	// is not able to establish a connection with the cadence server
+	connectionError = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
 )
 
 // MessageHandler accepts an http.PUT requests and parses the
@@ -342,7 +354,7 @@ func handleCancelRequest(request *cluster.CancelRequest) (base.IProxyMessage, er
 	if cadenceclient.ClientHelper == nil {
 		if v, ok := reply.(*cluster.CancelReply); ok {
 			buildCancelReply(v, cadenceerrors.NewCadenceError(
-				"ConnectionError",
+				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
@@ -419,6 +431,43 @@ func handleConnectRequest(request *cluster.ConnectRequest) (base.IProxyMessage, 
 		}
 	}
 
+	// make a channel that waits for a connection to be established until returning ready
+	connectChan := make(chan error)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	go func() {
+
+		// build the domain client using a configured CadenceClientHelper instance
+		domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+		if err != nil {
+			connectChan <- err
+			return
+		}
+
+		// send a describe domain request to the cadence server
+		_, err = domainClient.Describe(ctx, _cadenceSystemDomain)
+		if err != nil {
+			connectChan <- err
+			return
+		}
+
+		connectChan <- nil
+	}()
+
+	connectResult := <-connectChan
+	if connectResult != nil {
+		cadenceclient.ClientHelper = nil
+
+		if v, ok := reply.(*cluster.DomainDescribeReply); ok {
+			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
+				connectResult.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply, nil
+	}
+
 	if v, ok := reply.(*cluster.ConnectReply); ok {
 		buildConnectReply(v, nil)
 	}
@@ -439,7 +488,7 @@ func handleDomainDescribeRequest(request *cluster.DomainDescribeRequest) (base.I
 	if cadenceclient.ClientHelper == nil {
 		if v, ok := reply.(*cluster.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
-				"ConnectionError",
+				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
@@ -490,7 +539,7 @@ func handleDomainRegisterRequest(request *cluster.DomainRegisterRequest) (base.I
 	if cadenceclient.ClientHelper == nil {
 		if v, ok := reply.(*cluster.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
-				"ConnectionError",
+				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
@@ -556,7 +605,7 @@ func handleDomainUpdateRequest(request *cluster.DomainUpdateRequest) (base.IProx
 	if cadenceclient.ClientHelper == nil {
 		if v, ok := reply.(*cluster.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
-				"ConnectionError",
+				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
