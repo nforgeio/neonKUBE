@@ -164,6 +164,11 @@ namespace Neon.Xunit
             try
             {
                 NeonHelper.WaitFor(() => Service.Status == KubeServiceStatus.Running || Service.Status == KubeServiceStatus.Terminated, runningTimeout);
+
+                if (Service.ExitException != null)
+                {
+                    throw new Exception($"Unexpected [{Service.ExitException.GetType().Name}] thrown by the service's [OnRunAsync()] method.", Service.ExitException);
+                }
             }
             catch (TimeoutException)
             {

@@ -34,8 +34,8 @@ ARG VERSION
 # get and compile cadence-server
 RUN go get -u github.com/golang/dep/cmd/dep \
     && go get -u golang.org/x/lint/golint \
-    && git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence \
-    && cd /go/src/github.com/uber/cadence \
+    && git clone https://github.com/nforgeio/cadence.git /go/src/github.com/nforgeio/cadence \
+    && cd /go/src/github.com/nforgeio/cadence \
     && git checkout $VERSION && make bins_nothrift
 
 # Final Cadence image
@@ -88,10 +88,10 @@ COPY ./cassandra.yaml /etc/cassandra/cassandra_template.yaml
 COPY ./setup.sh $CADENCE_HOME/setup.sh
 
 # copy over necessary cadence files and schemas from the builder
-COPY --from=builder /go/src/github.com/uber/cadence/cadence-cassandra-tool /cadence
-COPY --from=builder /go/src/github.com/uber/cadence/cadence /cadence
-COPY --from=builder /go/src/github.com/uber/cadence/cadence-server /cadence
-COPY --from=builder /go/src/github.com/uber/cadence/schema/ /cadence/schema/
+COPY --from=builder /go/src/github.com/nforgeio/cadence/cadence-cassandra-tool /cadence
+COPY --from=builder /go/src/github.com/nforgeio/cadence/cadence                /cadence
+COPY --from=builder /go/src/github.com/nforgeio/cadence/cadence-server         /cadence
+COPY --from=builder /go/src/github.com/nforgeio/cadence/schema/                /cadence/schema/
 
 # change working dir to /cadence
 WORKDIR $CADENCE_HOME
