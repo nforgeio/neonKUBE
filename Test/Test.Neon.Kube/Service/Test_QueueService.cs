@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_QueueKubeService.cs
+// FILE:	    Test_QueueService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,13 +41,13 @@ namespace TestKubeService
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
-    public class Test_QueueKubeService : IClassFixture<ComposedFixture>
+    public class Test_QueueService : IClassFixture<ComposedFixture>
     {
         private ComposedFixture                     composedFixture;
         private NatsFixture                         natsFixture;
         private KubeServiceFixture<QueueService>    queueServiceFixture;
 
-        public Test_QueueKubeService(ComposedFixture fixture)
+        public Test_QueueService(ComposedFixture fixture)
         {
             this.composedFixture = fixture;
 
@@ -109,6 +109,10 @@ namespace TestKubeService
             var service = CreateQueueService();
 
             queueServiceFixture.Restart(() => service);
+            Assert.True(queueServiceFixture.IsRunning);
+
+            // Give the service some time to process some messages.
+
             await Task.Delay(TimeSpan.FromSeconds(5));
 
             Assert.True(service.SentCount > 0);
@@ -122,7 +126,7 @@ namespace TestKubeService
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
-        public async Task BadConfig()
+        public void BadConfig()
         {
             // Restart the service with with a missing configuration
             // environment variable and verify that the service failed
@@ -135,12 +139,10 @@ namespace TestKubeService
             service.SetEnvironmentVariable("NATS_QUEUE", null);     // Delete this variable
 
             queueServiceFixture.Restart(() => service);
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            Assert.False(queueServiceFixture.IsRunning);
 
-            Assert.Equal(0, service.SentCount);
-            Assert.Equal(0, service.ReceiveCount);
-
-            // Signal the service to stop and verify that it returned [exitcode=0].
+            // Signal the service to stop and verify that it returned a
+            // non-zero exit code indicating an error.
 
             service.Stop();
             Assert.NotEqual(0, service.ExitCode);

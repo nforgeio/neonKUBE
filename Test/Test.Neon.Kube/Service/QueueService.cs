@@ -115,7 +115,7 @@ namespace TestKubeService
             // Connect to NATS.
 
             var connectionFactory = new ConnectionFactory();
-            var natOptions        = ConnectionFactory.GetDefaultOptions();
+            var natOptions = ConnectionFactory.GetDefaultOptions();
 
             natOptions.Servers = new string[] { natsServerUri };
 
@@ -125,6 +125,10 @@ namespace TestKubeService
 
             sendTask    = Task.Run(async () => await SendTaskFunc());
             receiveTask = Task.Run(async () => await ReceiveTaskFunc());
+
+            // Indicate that the service is ready for business.
+
+            SetRunning();
 
             // Wait for the process terminator to signal that the service is stopping.
 
@@ -146,9 +150,7 @@ namespace TestKubeService
 
             await sendTask;
 
-            // Return the exit code specified by the configuration.
-
-            return await Task.FromResult(0);
+            return 0;
         }
 
         /// <summary>

@@ -77,7 +77,7 @@ namespace TestKubeService
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This service demonstrates how to deply a service with an ASP.NET endpoint that
+    /// This service demonstrates how to deploy a service with an ASP.NET endpoint that
     /// uses environment variables or a configuration file to specify the string
     /// returned by the endpoint.  This also demonstrates how a service can have
     /// and internal worker thread and/or task.
@@ -170,6 +170,10 @@ namespace TestKubeService
             // Start the service task 
 
             task = Task.Run(async () => await TaskFunc());
+
+            // Indicate that the service is ready for business.
+
+            SetRunning();
 
             // Wait for the process terminator to signal that the service is stopping.
 

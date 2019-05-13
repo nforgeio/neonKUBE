@@ -72,13 +72,23 @@ namespace Neon.Service
         }
 
         /// <summary>
-        /// Indexer.mapping service names to their <see cref="ServiceDescription"/>.
+        /// Indexer mapping service names to their <see cref="ServiceDescription"/>.
         /// </summary>
         /// <param name="name">The service name.</param>
-        /// <returns>The service description.</returns>
+        /// <returns>The service description or <c>null</c> if the named service is not present.</returns>
         public new ServiceDescription this[string name]
         {
-            get => base[name];
+            get
+            {
+                if (base.TryGetValue(name, out var description))
+                {
+                    return description;
+                }
+                else
+                {
+                    return null;
+                }
+            }
 
             set
             {

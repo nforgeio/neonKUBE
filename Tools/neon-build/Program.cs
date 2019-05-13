@@ -32,10 +32,14 @@ namespace NeonBuild
 @"
 Internal neonKUBE project build related utilities.
 
-neon-build clean
-----------------
+neon-build clean [-all]
+-----------------------
 Deletes all of the [bin] and [obj] folders within the repo and
 also clears the [Build] folder.
+
+OPTIONS:
+
+    --all           - clears the [Build-cache] folder too.
 
 neon-build build-installer PLATFORM [--kube-version=VERSION]
 ------------------------------------------------------------
@@ -129,7 +133,17 @@ ARGUMENTS:
 
                         if (Directory.Exists(buildFolder))
                         {
-                            NeonHelper.DeleteFolderContents(Path.Combine(Program.RepoRootFolder, "Build"));
+                            NeonHelper.DeleteFolderContents(buildFolder);
+                        }
+
+                        if (commandLine.HasOption("--all"))
+                        {
+                            var buildCacheFolder = Path.Combine(Program.RepoRootFolder, "Build-cache");
+
+                            if (Directory.Exists(buildCacheFolder))
+                            {
+                                NeonHelper.DeleteFolderContents(buildCacheFolder);
+                            }
                         }
 
                         foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "bin", SearchOption.AllDirectories))

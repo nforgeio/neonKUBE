@@ -38,13 +38,9 @@
 
 9. Upgrade an older cluster and verify by running cluster unit tests.
 
-10. Deploy a fresh cluster and verify by running the cluster unit tests.
+10. Push the `release-VERSION` branch to GitHub.
 
-11. Fix any important issues and commit the changes.
-
-12. Push the `release-VERSION` branch to GitHub.
-
-13. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+11. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version

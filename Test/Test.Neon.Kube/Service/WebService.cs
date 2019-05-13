@@ -72,11 +72,12 @@ namespace TestKubeService
     }
 
     /// <summary>
-    /// Implements a simple web service with a single endpoint.
+    /// Implements a simple web service with a single endpoint that returns a
+    /// string specified by a configuration environment variable or file.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This service demonstrates how to deply a service with an ASP.NET endpoint that
+    /// This service demonstrates how to deploy a service with an ASP.NET endpoint that
     /// uses environment variables or a configuration file to specify the string
     /// returned by the endpoint.
     /// </para>
@@ -146,7 +147,7 @@ namespace TestKubeService
                 }
             }
 
-            // Start the web service.
+            // Start the HTTP service.
 
             var endpoint = Description.Endpoints.Default;
 
@@ -157,6 +158,10 @@ namespace TestKubeService
                 .Build();
 
             webHost.Start();
+
+            // Indicate that the service is ready for business.
+
+            SetRunning();
 
             // Wait for the process terminator to signal that the service is stopping.
 

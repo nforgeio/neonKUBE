@@ -47,14 +47,23 @@ namespace Neon.Kube.Service
     /// <para>
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
-    /// your service is started.  This is where you'll implement your service.  Note that your 
-    /// <see cref="OnRunAsync"/> method should generally not return until the <see cref="Terminator"/>
-    /// signals it to stop.  Alternatively, you can throw a <see cref="ProgramExitException"/> with
-    /// a process exit code to terminate your service.
+    /// your service is started.  This is where you'll implement your service.  You should perform any
+    /// initialization and then call <see cref="SetRunning"/> to indicate that the service is ready for
+    /// business.
+    /// </para>
+    /// <note>
+    /// Note that calling <see cref="SetRunning()"/> after your service has initialized is very important
+    /// because the <b>KubeServiceFixture</b> requires won't allow tests to proceed until the service
+    /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
+    /// </note>
+    /// <para>
+    /// Note that your  <see cref="OnRunAsync"/> method should generally not return until the 
+    /// <see cref="Terminator"/> signals it to stop.  Alternatively, you can throw a <see cref="ProgramExitException"/>
+    /// with an optional process exit code to proactively exit your service.
     /// </para>
     /// <note>
     /// All services should properly handle <see cref="Terminator"/> stop signals so unit tests will terminate
-    /// promptly.  Your terminatebhandler method must return within a set period of time (30 seconds by default) 
+    /// promptly.  Your terminate handler method must return within a set period of time (30 seconds by default) 
     /// to avoid having your tests being forced to stop.  This is probably the trickiest implementation
     /// task.  For truly asynchronous service implementations, you should consider passing
     /// the <see cref="ProcessTerminator.CancellationToken"/> to all async methods you
@@ -466,6 +475,21 @@ namespace Neon.Kube.Service
         public List<string> Arguments { get; private set; } = new List<string>();
 
         /// <summary>
+        /// Returns the service current running status.
+        /// </summary>
+        public KubeServiceStatus Status { get; private set; }
+
+        /// <summary>
+        /// Returns the exit code returned by the service.
+        /// </summary>
+        public int ExitCode { get; private set; }
+
+        /// <summary>
+        /// Returns any abnormal exception thrown by the derived <see cref="OnRunAsync"/> method.
+        /// </summary>
+        public Exception ExitException { get; private set; }
+
+        /// <summary>
         /// Initializes <see cref="Arguments"/> with the command line arguments passed.
         /// </summary>
         /// <param name="args">The arguments.</param>
@@ -479,6 +503,16 @@ namespace Neon.Kube.Service
             {
                 Arguments.Add(arg);
             }
+        }
+
+        /// <summary>
+        /// Called by <see cref="OnRunAsync"/> implementation after they've completed any
+        /// initialization and are ready for traffic.  This sets <see cref="Status"/> to
+        /// <see cref="KubeServiceStatus.Running"/>.
+        /// </summary>
+        public void SetRunning()
+        {
+            Status = KubeServiceStatus.Running;
         }
 
         /// <summary>
@@ -581,6 +615,8 @@ namespace Neon.Kube.Service
             }
             catch (Exception e)
             {
+                ExitException = e;
+
                 Log.LogError(e);
             }
 
@@ -588,6 +624,8 @@ namespace Neon.Kube.Service
 
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
             Terminator.ReadyToExit();
+
+            Status = KubeServiceStatus.Terminated;
 
             return ExitCode;
         }
@@ -675,17 +713,21 @@ namespace Neon.Kube.Service
         }
 
         /// <summary>
-        /// Returns the exit code returned by the service.
-        /// </summary>
-        public int ExitCode { get; private set; }
-
-        /// <summary>
         /// Called to actually implement the service.
         /// </summary>
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
+        /// <para>
+        /// Services should perform any required initialization and then must call <see cref="SetRunning()"/>
+        /// to indicate that the service should transition into the <see cref="KubeServiceStatus.Running"/>
+        /// state.  This is very important because the service test fixture requires the service to be
+        /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 
+        /// race conditions.
+        /// </para>
+        /// <para>
         /// This method should return the program exit code or throw a <see cref="ProgramExitException"/>
         /// to exit with the program exit code.
+        /// </para>
         /// </remarks>
         protected abstract Task<int> OnRunAsync();
 

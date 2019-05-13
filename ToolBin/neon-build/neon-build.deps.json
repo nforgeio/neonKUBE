@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v3.0",
-    "signature": "0a298034cce5a2f47aeaba46490b9920e22eab08"
+    "signature": "8a4319e7e3d156d95c332253cf13cfd3c6d202f1"
   },
   "compilationOptions": {},
   "targets": {
@@ -10,8 +10,8 @@
         "dependencies": {
           "Microsoft.NETCore.Platforms": "3.0.0-preview3.19128.7",
           "Microsoft.WindowsDesktop.App": "3.0.0-preview3-27504-2",
-          "Neon.Common": "0.4.4-alpha",
-          "Neon.Kube": "0.4.4-alpha",
+          "Neon.Common": "0.4.5-alpha",
+          "Neon.Kube": "0.4.5-alpha",
           "runtime.win-x64.Microsoft.AspNetCore.App": "3.0.0-preview3-19153-02",
           "runtime.win-x64.Microsoft.NETCore.App": "3.0.0-preview3-27503-5",
           "runtime.win-x64.Microsoft.NETCore.DotNetAppHost": "3.0.0-preview3-27503-5",
@@ -168,6 +168,14 @@
       },
       "Microsoft.NETCore.Platforms/3.0.0-preview3.19128.7": {},
       "Microsoft.NETCore.Targets/2.0.0": {},
+      "Microsoft.OpenApi/1.1.3": {
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.OpenApi.dll": {
+            "assemblyVersion": "1.1.3.0",
+            "fileVersion": "1.1.3.0"
+          }
+        }
+      },
       "Microsoft.Win32.Primitives/4.3.0": {
         "dependencies": {
           "Microsoft.NETCore.Platforms": "3.0.0-preview3.19128.7",
@@ -1582,13 +1590,6 @@
           "System.Runtime.Handles": "4.3.0"
         }
       },
-      "System.Runtime.Loader/4.3.0": {
-        "dependencies": {
-          "System.IO": "4.3.0",
-          "System.Reflection": "4.3.0",
-          "System.Runtime": "4.3.1"
-        }
-      },
       "System.Runtime.Numerics/4.3.0": {
         "dependencies": {
           "System.Globalization": "4.3.0",
@@ -2163,7 +2164,7 @@
           }
         }
       },
-      "Neon.Common/0.4.4-alpha": {
+      "Neon.Common/0.4.5-alpha": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "3.0.0-preview3.19153.1",
           "Microsoft.Extensions.Logging.Abstractions": "3.0.0-preview3.19153.1",
@@ -2182,21 +2183,21 @@
           "Neon.Common.dll": {}
         }
       },
-      "Neon.Couchbase/0.4.4-alpha": {
+      "Neon.Couchbase/0.4.5-alpha": {
         "dependencies": {
           "CouchbaseNetClient": "2.7.5",
           "Linq2Couchbase": "1.4.0",
           "Microsoft.CSharp": "4.6.0-preview3.19128.7",
           "Microsoft.Extensions.Logging.Abstractions": "3.0.0-preview3.19153.1",
-          "Neon.Common": "0.4.4-alpha"
+          "Neon.Common": "0.4.5-alpha"
         },
         "runtime": {
           "Neon.Couchbase.dll": {}
         }
       },
-      "Neon.Cryptography/0.4.4-alpha": {
+      "Neon.Cryptography/0.4.5-alpha": {
         "dependencies": {
-          "Neon.Common": "0.4.4-alpha",
+          "Neon.Common": "0.4.5-alpha",
           "Newtonsoft.Json": "12.0.1",
           "System.Security.Cryptography.Cng": "4.6.0-preview3.19128.7"
         },
@@ -2204,16 +2205,16 @@
           "Neon.Cryptography.dll": {}
         }
       },
-      "Neon.Kube/0.4.4-alpha": {
+      "Neon.Kube/0.4.5-alpha": {
         "dependencies": {
           "DNS": "5.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "3.0.0-preview3.19153.1",
           "Microsoft.Net.Http.Server": "1.1.4",
+          "Microsoft.OpenApi": "1.1.3",
           "Microsoft.Windows.Compatibility": "2.0.1",
-          "Neon.Common": "0.4.4-alpha",
-          "Neon.Couchbase": "0.4.4-alpha",
-          "Neon.Cryptography": "0.4.4-alpha",
-          "Neon.Kube.Service": "0.4.4-alpha",
+          "Neon.Common": "0.4.5-alpha",
+          "Neon.Couchbase": "0.4.5-alpha",
+          "Neon.Cryptography": "0.4.5-alpha",
           "Newtonsoft.Json": "12.0.1",
           "SSH.NET": "2016.1.0",
           "SharpZipLib.NETStandard": "1.0.7",
@@ -2227,15 +2228,6 @@
         },
         "runtime": {
           "Neon.Kube.dll": {}
-        }
-      },
-      "Neon.Kube.Service/0.4.4-alpha": {
-        "dependencies": {
-          "Neon.Common": "0.4.4-alpha",
-          "System.Runtime.Loader": "4.3.0"
-        },
-        "runtime": {
-          "Neon.Kube.Service.dll": {}
         }
       }
     }
@@ -2350,6 +2342,13 @@
       "sha512": "sha512-odP/tJj1z6GylFpNo7pMtbd/xQgTC3Ex2If63dRTL38bBNMwsBnJ+RceUIyHdRBC0oik/3NehYT+oECwBhIM3Q==",
       "path": "microsoft.netcore.targets/2.0.0",
       "hashPath": "microsoft.netcore.targets.2.0.0.nupkg.sha512"
+    },
+    "Microsoft.OpenApi/1.1.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-diryk0aFewZf1dVxugYmdr4V6pAZsXnU4VRR8X7/njT8tceGBtCFF36LBwcICcEhjyqSI1qEXLJV5GMs3uTmXw==",
+      "path": "microsoft.openapi/1.1.3",
+      "hashPath": "microsoft.openapi.1.1.3.nupkg.sha512"
     },
     "Microsoft.Win32.Primitives/4.3.0": {
       "type": "package",
@@ -3114,13 +3113,6 @@
       "path": "system.runtime.interopservices/4.3.0",
       "hashPath": "system.runtime.interopservices.4.3.0.nupkg.sha512"
     },
-    "System.Runtime.Loader/4.3.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-DHMaRn8D8YCK2GG2pw+UzNxn/OHVfaWx7OTLBD/hPegHZZgcZh3H6seWegrC4BYwsfuGrywIuT+MQs+rPqRLTQ==",
-      "path": "system.runtime.loader/4.3.0",
-      "hashPath": "system.runtime.loader.4.3.0.nupkg.sha512"
-    },
     "System.Runtime.Numerics/4.3.0": {
       "type": "package",
       "serviceable": true,
@@ -3422,27 +3414,22 @@
       "path": "yamldotnet/6.0.0",
       "hashPath": "yamldotnet.6.0.0.nupkg.sha512"
     },
-    "Neon.Common/0.4.4-alpha": {
+    "Neon.Common/0.4.5-alpha": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Neon.Couchbase/0.4.4-alpha": {
+    "Neon.Couchbase/0.4.5-alpha": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Neon.Cryptography/0.4.4-alpha": {
+    "Neon.Cryptography/0.4.5-alpha": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Neon.Kube/0.4.4-alpha": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "Neon.Kube.Service/0.4.4-alpha": {
+    "Neon.Kube/0.4.5-alpha": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
