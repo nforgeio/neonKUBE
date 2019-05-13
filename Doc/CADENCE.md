@@ -23,7 +23,6 @@ The solution is to:
 3. **New release branch:** Cadence names their latest release branch like **0.5.8**.  Note that branches named like **0.5.8_release** are still in progress and have not yet been released.
 
   ```
-  neon-cadence 0.5.8
+  neon-cadence release 0.5.8
 
   ```
-
