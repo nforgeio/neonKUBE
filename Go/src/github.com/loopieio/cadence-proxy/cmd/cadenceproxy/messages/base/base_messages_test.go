@@ -240,6 +240,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Nil(v.GetError().Type)
 		s.Panics(func() { v.GetError().GetType() })
+		s.Equal("MyError", *v.GetError().String)
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
