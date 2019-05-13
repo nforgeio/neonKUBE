@@ -139,7 +139,7 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		v.Properties["Empty"] = &p3
 		v.Properties["Nil"] = nil
 
-		v.SetJSONProperty("Error", cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"))
+		v.SetJSONProperty("Error", cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom))
 
 		b, err := base64.StdEncoding.DecodeString("c29tZSBkYXRhIHdpdGggACBhbmQg77u/")
 		s.NoError(err)
@@ -177,7 +177,6 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		cadenceError := v.GetJSONProperty("Error", cadenceerrors.NewCadenceErrorEmpty())
 		if v, ok := cadenceError.(*cadenceerrors.CadenceError); ok {
 			s.Equal("foo", *v.String)
-			s.Equal("bar", *v.Details)
 			s.Equal(cadenceerrors.Custom, v.GetType())
 		}
 
@@ -242,7 +241,6 @@ func (s *UnitTestSuite) TestProxyReply() {
 		s.Nil(v.GetError().Type)
 		s.Panics(func() { v.GetError().GetType() })
 		s.Equal("MyError", *v.GetError().String)
-		s.Nil(v.GetError().Details)
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -261,6 +259,5 @@ func (s *UnitTestSuite) TestProxyReply() {
 		s.Nil(v.GetError().Type)
 		s.Panics(func() { v.GetError().GetType() })
 		s.Equal("MyError", *v.GetError().String)
-		s.Nil(v.GetError().Details)
 	}
 }
