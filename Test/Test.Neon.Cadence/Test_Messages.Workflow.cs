@@ -248,15 +248,15 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(TimeSpan.Zero, message.DecisionTimeout);
+                Assert.Null(message.Result);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.DecisionTimeout = TimeSpan.FromMinutes(120);
-                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
+                message.Result = new byte[] { 0, 1, 2, 3, 4 };
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 message.Error = new CadenceError("MyError");
                 Assert.Equal("MyError", message.Error.String);
 
@@ -267,7 +267,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the connection's web server and verify.
@@ -275,7 +275,7 @@ namespace TestCadence
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -283,7 +283,7 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(TimeSpan.FromMinutes(120), message.DecisionTimeout);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
             }
         }

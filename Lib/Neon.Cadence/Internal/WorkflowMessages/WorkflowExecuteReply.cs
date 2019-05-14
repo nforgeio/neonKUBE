@@ -46,12 +46,13 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Returns the workflow's <b>TaskStartToCloseTimeout</b>.
+        /// The result returned from the executed workflow or <c>null</c>
+        /// if the execution failed.
         /// </summary>
-        public TimeSpan DecisionTimeout
+        public byte[] Result
         {
-            get => GetTimeSpanProperty("DecisionTimeout");
-            set => SetTimeSpanProperty("DecisionTimeout", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
@@ -71,7 +72,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteReply)target;
 
-            typedTarget.DecisionTimeout = this.DecisionTimeout;
+            typedTarget.Result = this.Result;
         }
     }
 }

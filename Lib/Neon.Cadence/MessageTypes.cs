@@ -40,7 +40,7 @@ namespace Neon.Cadence
         Unspecified = 0,
 
         //---------------------------------------------------------------------
-        // Global messages
+        // Client messages
 
         /// <summary>
         /// <b>library --> proxy:</b> Informs the proxy of the network endpoint where the
@@ -131,6 +131,17 @@ namespace Neon.Cadence
         /// exists.
         /// </summary>
         CancelReply = 16,
+
+        /// <summary>
+        /// <b>library --> proxy:</b> Indicates that the application is capable of handling workflows
+        /// and activities within a specific Cadence domain and task lisk.
+        /// </summary>
+        NewWorkerRequest = 17,
+
+        /// <summary>
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="NewWorkerRequest"/> message.
+        /// </summary>
+        NewWorkerReply = 18,
 
         //---------------------------------------------------------------------
         // Workflow messages

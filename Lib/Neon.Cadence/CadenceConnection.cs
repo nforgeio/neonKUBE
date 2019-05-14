@@ -833,23 +833,6 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Handles requests to the test <b>"/echo"</b> endpoint path.
-        /// </summary>
-        /// <param name="context">The request context.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEchoRequestAsync(HttpContext context)
-        {
-            var request        = context.Request;
-            var response       = context.Response;
-            var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
-            var clonedMessage  = requestMessage.Clone();
-
-            response.ContentType = ProxyMessage.ContentType;
-
-            await response.Body.WriteAsync(clonedMessage.Serialize());
-        }
-
-        /// <summary>
         /// Asynchronously calls the <b>cadence-proxy</b> by sending a request message
         /// and then waits for a reply.
         /// </summary>
