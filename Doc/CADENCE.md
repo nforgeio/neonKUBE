@@ -22,8 +22,9 @@ The solution is to:
 
 3. **New release branch:** Cadence names their latest release branch like **0.5.8**.  Note that branches named like **0.5.8_release** are still in progress and have not yet been released.
 
-  ```
-  neon-cadence 0.5.8
+  You can use the command below to pull a new release branch from the official Cadence repo to your local **neon-cadence** repo and then push it up to https://github.com/nforgeio/cadence:
 
   ```
+  neon-cadence release 0.5.8
 
+  ```
