@@ -172,12 +172,12 @@ func proccessIncomingMessage(payload []byte, responseChan chan error) {
 	// IProxyRequest
 	case base.IProxyRequest:
 		responseChan <- nil
-		_ := handleIProxyRequest(s, typeCode)
+		_ = handleIProxyRequest(s, typeCode)
 
 	// IProxyReply
 	case base.IProxyReply:
 		responseChan <- nil
-		_ := handleIProxyReply(s, typeCode)
+		_ = handleIProxyReply(s, typeCode)
 
 	// Unrecognized type
 	default:
