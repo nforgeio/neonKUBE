@@ -1475,18 +1475,28 @@ helm template install/kubernetes/helm/istio \
     --set grafana.enabled=true \
     --set certmanager.enabled=true \
     --set certmanager.email=mailbox@donotuseexample.com \
+";
+            if (cluster.Definition.Network.Ingress.Count > 0)
+            {
+                istioScript1 +=
+$@" \
     --set gateways.istio-ingressgateway.sds.enabled=true \
     --set gateways.istio-ingressgateway.type=NodePort \
-    --set gateways.istio-ingressgateway.ports[0].targetPort=80 \
-    --set gateways.istio-ingressgateway.ports[0].port=80 \
-    --set gateways.istio-ingressgateway.ports[0].name=http2 \
-    --set gateways.istio-ingressgateway.ports[0].nodePort=30080 \
-    \
-    --set gateways.istio-ingressgateway.ports[1].targetPort=443 \
-    --set gateways.istio-ingressgateway.ports[1].port=443 \
-    --set gateways.istio-ingressgateway.ports[1].name=https \
-    --set gateways.istio-ingressgateway.ports[1].nodePort=30443 \
-    \
+";
+                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
+                {
+                    istioScript1 +=
+$@" \
+    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
+    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
+    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
+    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
+";
+                }
+            }
+
+            istioScript1 +=
+$@" \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
