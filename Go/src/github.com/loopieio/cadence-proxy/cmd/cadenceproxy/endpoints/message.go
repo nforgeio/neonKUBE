@@ -39,6 +39,14 @@ const (
 	// has been established to the cadence server instance and that it is ready to
 	// accept requests
 	_cadenceSystemDomain = "cadence-system"
+
+	// _responseTimeout specifies the amount of time in seconds a response has to be sent after
+	// a request has been recieved by the cadence-proxy
+	_responseTimeout = time.Second * 30
+
+	// _replyTimeout specifies the amount of time in seconds a reply has to be sent after
+	// a request has been recieved by the cadence-proxy
+	_replyTimeout = time.Second * 30
 )
 
 var (
@@ -58,7 +66,7 @@ var (
 	// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes
 	// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
 	// <c>false</c>
-	debugPrelaunch = false
+	debugPrelaunch = true
 
 	// deathClock is an accumulator that tallies errors thrown by cadence that might
 	// indicate that the connection to the cadence server has been compromised.
@@ -90,6 +98,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	statusCode, err := checkRequestValidity(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
+		panic(err)
 	}
 
 	// create an empty []byte and read the
@@ -105,29 +114,37 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	statusCode, err = proccessIncomingMessage(payload)
+	// make channel for writing a response to the sender
+	responseChan := make(chan error)
+
+	// process the incoming payload
+	go func() {
+		proccessIncomingMessage(payload, responseChan)
+
+		// check to see if terminate is true, if it is then gracefully
+		// shut down the server instance by sending a truth bool value
+		// to the instance's ShutdownChannel
+		if terminate {
+			Instance.ShutdownChannel <- true
+		}
+	}()
+
+	err = <-responseChan
 	if err != nil {
 
 		// write the error and status code into response
-		http.Error(w, err.Error(), statusCode)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)
 	}
 
-	// write status code as response back to sender
+	// write the response header to 200 OK
 	w.WriteHeader(http.StatusOK)
-
-	// check to see if terminate is true, if it is then gracefully
-	// shut down the server instance by sending a truth bool value
-	// to the instance's ShutdownChannel
-	if terminate {
-		Instance.ShutdownChannel <- true
-	}
 }
 
 // -------------------------------------------------------------------------
 // Helper methods for handling incoming messages
 
-func proccessIncomingMessage(payload []byte) (int, error) {
+func proccessIncomingMessage(payload []byte, responseChan chan error) {
 
 	// deserialize the payload
 	buf := bytes.NewBuffer(payload)
@@ -138,7 +155,7 @@ func proccessIncomingMessage(payload []byte) (int, error) {
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Error deserializing input", zap.Error(err))
-		return http.StatusBadRequest, err
+		responseChan <- err
 	}
 
 	// typecode to get the specific message type
@@ -149,19 +166,29 @@ func proccessIncomingMessage(payload []byte) (int, error) {
 
 	// Nil type value
 	case nil:
-		err := fmt.Errorf("nil type for incoming ProxyMessage: %v of type %v", message, typeCode)
+		err := fmt.Errorf("nil type for incoming ProxyMessage of type %v", typeCode)
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Error processing incoming message", zap.Error(err))
-		return http.StatusBadRequest, err
+		responseChan <- err
 
 	// IProxyRequest
 	case base.IProxyRequest:
-		return handleIProxyRequest(s, typeCode)
+		responseChan <- nil
+		//err := handleIProxyRequest(s, typeCode)
+		err := fmt.Errorf("YES %v", s)
+		if err != nil {
+			panic(err)
+		}
 
 	// IProxyReply
 	case base.IProxyReply:
-		return handleIProxyReply(s, typeCode)
+		responseChan <- nil
+		//err := handleIProxyReply(s, typeCode)
+		err := fmt.Errorf("YES %v", s)
+		if err != nil {
+			panic(err)
+		}
 
 	// Unrecognized type
 	default:
@@ -169,7 +196,7 @@ func proccessIncomingMessage(payload []byte) (int, error) {
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Error processing incoming message", zap.Error(err))
-		return http.StatusBadRequest, err
+		responseChan <- err
 	}
 }
 
@@ -228,7 +255,7 @@ func putReply(content []byte, address string) (*http.Response, error) {
 // -------------------------------------------------------------------------
 // IProxyRequest message type handlers
 
-func handleIProxyRequest(request base.IProxyRequest, typeCode messages.MessageType) (int, error) {
+func handleIProxyRequest(request base.IProxyRequest, typeCode messages.MessageType) error {
 
 	// error for catching exceptions in the switch block
 	var err error
@@ -298,7 +325,7 @@ func handleIProxyRequest(request base.IProxyRequest, typeCode messages.MessageTy
 	// in the switch block or if the message could not
 	// be cast to a specific type
 	if (err != nil) || (reflect.ValueOf(reply).IsNil()) {
-		return http.StatusBadRequest, err
+		return err
 	}
 
 	// Get the pointer to the ProxyMessage
@@ -311,25 +338,18 @@ func handleIProxyRequest(request base.IProxyRequest, typeCode messages.MessageTy
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Error serializing proxy message", zap.Error(err))
-		return http.StatusBadRequest, err
+		return err
 	}
 
 	// send the reply as an http.Request back to the Neon.Cadence Library
 	// via http.PUT
 	resp, err := putReply(serializedMessage, replyAddress)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		return err
 	}
 	defer resp.Body.Close()
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Neon.Cadence Library Response",
-		zap.Int("ProxyReply Type", int(replyProxyMessage.Type)),
-		zap.String("Response Status", resp.Status),
-		zap.String("Request URL", resp.Request.URL.String()),
-	)
-
-	return resp.StatusCode, nil
+	return nil
 }
 
 func handleActivityRequest(request *activity.ActivityRequest) (base.IProxyMessage, error) {
@@ -433,7 +453,7 @@ func handleConnectRequest(request *cluster.ConnectRequest) (base.IProxyMessage, 
 
 	// make a channel that waits for a connection to be established until returning ready
 	connectChan := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithTimeout(context.Background(), _replyTimeout)
 	defer cancel()
 
 	go func() {
@@ -801,7 +821,7 @@ func buildTerminateReply(reply *cluster.TerminateReply, cadenceError *cadenceerr
 // -------------------------------------------------------------------------
 // IProxyReply message type handlers
 
-func handleIProxyReply(reply base.IProxyReply, typeCode messages.MessageType) (int, error) {
+func handleIProxyReply(reply base.IProxyReply, typeCode messages.MessageType) error {
 
 	// error to catch any exceptions thrown in the
 	// switch block
@@ -854,10 +874,10 @@ func handleIProxyReply(reply base.IProxyReply, typeCode messages.MessageType) (i
 	// catch any exceptions returned in
 	// the switch block
 	if err != nil {
-		return http.StatusBadRequest, err
+		return err
 	}
 
-	return http.StatusOK, nil
+	return nil
 }
 
 func handleActivityReply(reply base.IProxyReply) error {

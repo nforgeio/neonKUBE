@@ -67,6 +67,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
+            //var bytes = new byte[]{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             var bytes   = request.Serialize();
             var content = new ByteArrayContent(bytes);
 
