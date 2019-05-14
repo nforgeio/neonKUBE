@@ -158,10 +158,7 @@ func proccessIncomingMessage(payload []byte, responseChan chan error) {
 		responseChan <- err
 	}
 
-	// typecode to get the specific message type
 	typeCode := message.GetProxyMessage().Type
-
-	// determine whether the input request is a ProxyReply or ProxyRequest
 	switch s := message.(type) {
 
 	// Nil type value
@@ -175,20 +172,12 @@ func proccessIncomingMessage(payload []byte, responseChan chan error) {
 	// IProxyRequest
 	case base.IProxyRequest:
 		responseChan <- nil
-		//err := handleIProxyRequest(s, typeCode)
-		err := fmt.Errorf("YES %v", s)
-		if err != nil {
-			panic(err)
-		}
+		_ := handleIProxyRequest(s, typeCode)
 
 	// IProxyReply
 	case base.IProxyReply:
 		responseChan <- nil
-		//err := handleIProxyReply(s, typeCode)
-		err := fmt.Errorf("YES %v", s)
-		if err != nil {
-			panic(err)
-		}
+		_ := handleIProxyReply(s, typeCode)
 
 	// Unrecognized type
 	default:
