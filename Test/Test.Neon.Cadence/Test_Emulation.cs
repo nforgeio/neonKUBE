@@ -345,7 +345,7 @@ namespace TestCadence
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await connection.StartWorkerAsync(domain, null));
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await connection.StartWorkerAsync(domain, ""));
 
-            // This operation should fail because the domain has not yet been registred.
+            // This operation should fail because the domain has not yet been registered.
 
             await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await connection.StartWorkerAsync(domain, "test"));
 
