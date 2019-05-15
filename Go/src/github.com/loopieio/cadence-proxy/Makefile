@@ -13,10 +13,7 @@ LOG_DIR=./test/logs
 
 # test dirs
 NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
-BASE_TEST_DIR=./cmd/cadenceproxy/messages/base
-CLUSTER_TEST_DIR=./cmd/cadenceproxy/messages/cluster
-TEST_DIRS=./cmd/cadenceproxy/messages/base \
-		./cmd/cadenceproxy/messages/cluster
+MESSAGES_TEST_DIR=./internal/messages/types
 
 # Gather all source code		
 ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
@@ -50,27 +47,19 @@ cadenceproxy: cadence-proxy-linux \
 bins: cadenceproxy \
 
 test: bins
-	rm -f test/base.test
-	rm -f test/cluster.test
+	rm -f test/messages.test
 	rm -f $(LOG_DIR)/test.log
-	echo $(TEST_DIRS)
 
-	go test -v -o test/base.test -coverprofile $(LOG_DIR)/base-cover.out $(BASE_TEST_DIR) | tee -a $(LOG_DIR)/test.log
-	go tool cover -html=$(LOG_DIR)/base-cover.out -o $(LOG_DIR)/base-cover.html
-
-	go test -v -o test/cluster.test -coverprofile $(LOG_DIR)/cluster-cover.out $(CLUSTER_TEST_DIR) | tee -a $(LOG_DIR)/test.log; \
-	go tool cover -html=$(LOG_DIR)/cluster-cover.out -o $(LOG_DIR)/cluster-cover.html; \
+	go test -v -o test/messages.test -coverprofile $(LOG_DIR)/messages-cover.out $(MESSAGES_TEST_DIR) | tee -a $(LOG_DIR)/test.log
+	go tool cover -html=$(LOG_DIR)/messages-cover.out -o $(LOG_DIR)/messages-cover.html
 	
 clean:
 	rm -Rf bin/*
-	rm -f test/base.test
-	rm -f test/cluster.test
+	rm -f test/messages.test
 
 	rm -f $(LOG_DIR)/test.log
-	rm -f $(LOG_DIR)/base-cover.out
-	rm -f $(LOG_DIR)/base-cover.html
-	rm -f $(LOG_DIR)/cluster-cover.out
-	rm -f $(LOG_DIR)/cluster-cover.html
+	rm -f $(LOG_DIR)/messages-cover.out
+	rm -f $(LOG_DIR)/messages-cover.html
 
 	rm -f $(BUILD_DIR)/$(WIN)
 	rm -f $(BUILD_DIR)/$(LINUX)

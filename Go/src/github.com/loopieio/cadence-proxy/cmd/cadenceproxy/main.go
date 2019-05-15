@@ -2,19 +2,11 @@ package main
 
 import (
 	"flag"
-	"os"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/endpoints"
-	clustermessages "github.com/loopieio/cadence-proxy/cmd/cadenceproxy/messages/cluster"
-	"github.com/loopieio/cadence-proxy/cmd/cadenceproxy/server"
+	"github.com/loopieio/cadence-proxy/internal/endpoints"
+	"github.com/loopieio/cadence-proxy/internal/logger"
+	"github.com/loopieio/cadence-proxy/internal/server"
 )
-
-func init() {
-	clustermessages.FillMessageTypeStructMap()
-}
 
 func main() {
 
@@ -28,8 +20,13 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", true, "Set to debug mode")
 	flag.Parse()
 
+	// endpoint debugging
+	if debugMode {
+		endpoints.Debug = true
+	}
+
 	// set the log level and if the program should run in debug mode
-	setLogLevelAndDebugMode(logLevel, debugMode)
+	logger.SetLogger(logLevel, debugMode)
 
 	// create the instance, set the routes,
 	// and start the server
@@ -43,70 +40,4 @@ func main() {
 
 	// start the server
 	instance.Start()
-}
-
-func setLogLevelAndDebugMode(logLevel string, debugMode bool) {
-
-	// new *zap.Logger
-	// new zapcore.EncoderConfig for the logger
-	var logger *zap.Logger
-	var encoderCfg zapcore.EncoderConfig
-
-	// new AtomicLevel for dynamic logging level
-	atom := zap.NewAtomicLevel()
-
-	switch debugMode {
-	case true:
-
-		// set the log level
-		atom.SetLevel(zap.DebugLevel)
-
-		// set Debug in endpoints
-		endpoints.Debug = debugMode
-
-		// create the logger
-		encoderCfg = zap.NewDevelopmentEncoderConfig()
-		encoderCfg.TimeKey = "Time"
-		encoderCfg.LevelKey = "Level"
-		encoderCfg.MessageKey = "Debug Message"
-		logger = zap.New(zapcore.NewCore(
-			zapcore.NewJSONEncoder(encoderCfg),
-			zapcore.Lock(os.Stdout),
-			atom,
-		))
-		defer logger.Sync()
-
-	default:
-
-		// set the log level
-		switch logLevel {
-		case "panic":
-			atom.SetLevel(zap.PanicLevel)
-		case "fatal":
-			atom.SetLevel(zap.FatalLevel)
-		case "error":
-			atom.SetLevel(zap.ErrorLevel)
-		case "warn":
-			atom.SetLevel(zap.WarnLevel)
-		case "debug":
-			atom.SetLevel(zap.DebugLevel)
-		default:
-			atom.SetLevel(zap.InfoLevel)
-		}
-
-		// create the logger
-		encoderCfg = zap.NewProductionEncoderConfig()
-		encoderCfg.TimeKey = "Time"
-		encoderCfg.MessageKey = "Message"
-		encoderCfg.LevelKey = "Level"
-		logger = zap.New(zapcore.NewCore(
-			zapcore.NewJSONEncoder(encoderCfg),
-			zapcore.Lock(os.Stdout),
-			atom,
-		))
-		defer logger.Sync()
-	}
-
-	// set the global logger
-	_ = zap.ReplaceGlobals(logger)
 }
