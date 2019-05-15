@@ -63,7 +63,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        public async Task RegisterDomain(RegisterDomainRequest request)
+        private async Task RegisterDomainAsync(RegisterDomainRequest request)
         {
             var domainRegisterRequest =
                 new DomainRegisterRequest()
@@ -96,7 +96,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7)
         {
-            await RegisterDomain(
+            await RegisterDomainAsync(
                 new RegisterDomainRequest()
                 {
                     Name          = name,

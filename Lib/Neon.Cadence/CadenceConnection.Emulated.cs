@@ -525,7 +525,20 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                // We'll need to track the worker.
+                if (!emulatedDomains.Any(d => d.Name == request.Domain))
+                {
+                    await EmulatedLibraryClient.SendReplyAsync(request,
+                        new NewWorkerReply()
+                        {
+                            Error = new CadenceEntityNotExistsException($"Domain [{request.Domain}] does not exist.").ToCadenceError()
+                        });
+
+                    return;
+                }
+
+                // We need to track the worker so we can avoid sending
+                // stop requests to the [cadence-proxy] when the worker
+                //is already stopped.
 
                 emulatedWorkers.Add(workerId, worker);
             }
