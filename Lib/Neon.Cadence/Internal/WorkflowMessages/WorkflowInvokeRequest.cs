@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> library:</b> Invokes a workflow instance.
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowInvokeRequest)]
-    internal class WorkflowInvokeRequest : WorkflowContextRequest
+    internal class WorkflowInvokeRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
@@ -58,12 +58,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The workflow arguments dictionary (or <c>null</c>).
+        /// The workflow arguments encoded into a byte array (or <c>null</c>).
         /// </summary>
-        public Dictionary<string, object> Args
+        public byte[] Args
         {
-            get => GetJsonProperty<Dictionary<string, object>>("Args");
-            set => SetJsonProperty<Dictionary<string, object>>("Args", value);
+            get => GetBytesProperty("Args");
+            set => SetBytesProperty("Args", value);
         }
 
         /// <inheritdoc/>
@@ -84,18 +84,7 @@ namespace Neon.Cadence.Internal
             var typedTarget = (WorkflowInvokeRequest)target;
 
             typedTarget.Name = this.Name;
-
-            if (this.Args != null)
-            {
-                var clonedArgs = new Dictionary<string, object>();
-
-                foreach (var arg in this.Args)
-                {
-                    clonedArgs.Add(arg.Key, arg.Value);
-                }
-
-                typedTarget.Args = clonedArgs;
-            }
+            typedTarget.Args = this.Args;
         }
     }
 }

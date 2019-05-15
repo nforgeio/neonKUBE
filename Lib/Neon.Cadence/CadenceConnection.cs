@@ -367,11 +367,6 @@ namespace Neon.Cadence
         private int                         proxyPort;
         private HttpClient                  proxyClient;
         private IWebHost                    host;
-        private IWebHost                    emulatedHost;
-        private long                        nextRequestId;
-        private Dictionary<long, Operation> operations; 
-        private Thread                      heartbeatThread;
-        private Thread                      timeoutThread;
         private Exception                   pendingException;
         private bool                        closingConnection;
         private bool                        connectionClosedRaised;
@@ -488,10 +483,7 @@ namespace Neon.Cadence
                 Timeout     = settings.ProxyTimeout > TimeSpan.Zero ? settings.ProxyTimeout : Settings.DebugHttpTimeout
             };
 
-            // Initialize the pending operations dictionary.
-
-            nextRequestId = 0;
-            operations    = new Dictionary<long, Operation>();
+            // Initilize the [cadence-proxy].
 
             if (!Settings.DebugDisableHandshakes)
             {
@@ -830,23 +822,6 @@ namespace Neon.Cadence
             }
 
             await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Handles requests to the test <b>"/echo"</b> endpoint path.
-        /// </summary>
-        /// <param name="context">The request context.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEchoRequestAsync(HttpContext context)
-        {
-            var request        = context.Request;
-            var response       = context.Response;
-            var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
-            var clonedMessage  = requestMessage.Clone();
-
-            response.ContentType = ProxyMessage.ContentType;
-
-            await response.Body.WriteAsync(clonedMessage.Serialize());
         }
 
         /// <summary>
