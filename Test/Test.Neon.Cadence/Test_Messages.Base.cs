@@ -44,7 +44,7 @@ namespace TestCadence
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestProxyMessage()
+        public void Test_ProxyMessage()
         {
             // Ensures that we can serialize and deserialize base messages.
 
@@ -110,7 +110,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestProxyRequest()
+        public void Test_ProxyRequest()
         {
             // Ensures that we can serialize and deserialize request messages.
 
@@ -151,7 +151,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestProxyReply()
+        public void Test_ProxyReply()
         {
             // Ensures that we can serialize and deserialize reply messages.
 
@@ -193,7 +193,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestActivityRequest()
+        public void Test_ActivityRequest()
         {
             // Ensures that we can serialize and deserialize activity request messages.
 
@@ -234,7 +234,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestActivityReply()
+        public void Test_ActivityReply()
         {
             // Ensures that we can serialize and deserialize activity reply messages.
 
@@ -279,67 +279,68 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowRequest()
+        public void Test_WorkflowContextRequest()
         {
             // Ensures that we can serialize and deserialize workflow request messages.
 
-            WorkflowRequest message;
+            WorkflowContextRequest message;
 
             using (var stream = new MemoryStream())
             {
                 // Empty message.
 
-                message = new WorkflowRequest();
+                message = new WorkflowContextRequest();
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowContextRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(0, message.ContextId);
+                Assert.Equal(0, message.WorkflowContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.ContextId = 666;
-                Assert.Equal(666, message.ContextId);
+                message.WorkflowContextId = 666;
+                Assert.Equal(666, message.WorkflowContextId);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowContextRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
+                Assert.Equal(666, message.WorkflowContextId);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowReply()
+        public void Test_WorkflowContextReply()
         {
             // Ensures that we can serialize and deserialize workflow reply messages.
 
-            WorkflowReply message;
+            WorkflowContextReply message;
 
             using (var stream = new MemoryStream())
             {
                 // Empty message.
 
-                message = new WorkflowReply();
+                message = new WorkflowContextReply();
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowContextReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
+                Assert.Equal(0, message.WorkflowContextId);
 
                 // Round-trip
 
@@ -347,15 +348,18 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
                 Assert.Equal("MyError", message.Error.String);
+                message.WorkflowContextId = 666;
+                Assert.Equal(666, message.WorkflowContextId);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowContextReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(666, message.WorkflowContextId);
             }
         }
     }

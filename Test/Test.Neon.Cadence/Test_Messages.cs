@@ -71,9 +71,9 @@ namespace TestCadence
                 //--------------------------------
                 // $debug(jeff.lill): DELETE THIS!
                 DebugPrelaunched       = false,
-                DebugDisableHandshakes = false,
-                DebugDisableHeartbeats = false,
-                DebugEmulateProxy      = false,
+                DebugDisableHandshakes = true,
+                DebugDisableHeartbeats = true,
+                DebugEmulateProxy      = true,
                 //--------------------------------
             };
 
@@ -95,7 +95,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestPropertyHelpers()
+        public void Test_PropertyHelpers()
         {
             // Verify that the property helper methods work as expected.
 

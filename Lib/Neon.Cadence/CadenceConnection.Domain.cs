@@ -71,7 +71,7 @@ namespace Neon.Cadence
                     RetentionDays = request.RetentionDays
                 };
 
-            var reply = await ProxyCallAsync(domainRegisterRequest);
+            var reply = await CallProxyAsync(domainRegisterRequest);
 
             reply.ThrowOnError();
         }
@@ -120,7 +120,7 @@ namespace Neon.Cadence
                     Name = name,
                 };
 
-            var reply = (DomainDescribeReply)await ProxyCallAsync(domainDescribeRequest);
+            var reply = (DomainDescribeReply)await CallProxyAsync(domainDescribeRequest);
 
             reply.ThrowOnError();
 
@@ -164,7 +164,7 @@ namespace Neon.Cadence
                     ConfigurationRetentionDays = request.Configuration.RetentionDays
                 };
 
-            var reply = await ProxyCallAsync(domainUpdateRequest);
+            var reply = await CallProxyAsync(domainUpdateRequest);
 
             reply.ThrowOnError();
         }
