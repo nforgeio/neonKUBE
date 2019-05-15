@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowIDReusePolicy.cs
+// FILE:	    Worker.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,34 +27,30 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the workflow ID reuse policies.
+    /// Identifies a worker registered with Cadence.
     /// </summary>
-    internal static class WorkflowIDReusePolicy
+    public class Worker
     {
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution
-        /// when workflow not running, and the last execution close state is in
-        /// [terminated, cancelled, timeouted, failed].
+        /// Internal constructor.
         /// </summary>
-        public const int WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0;
+        /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
+        internal Worker(long workerId)
+        {
+            this.WorkerId = workerId;
+        }
 
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicate allow start a workflow execution using
-        /// the same workflow ID,when workflow not running.
+        /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.
         /// </summary>
-        public const int WorkflowIDReusePolicyAllowDuplicate = 1;
-
-        /// <summary>
-        /// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution
-        /// using the same workflow ID at all.
-        /// </summary>
-        public const int orkflowIDReusePolicyRejectDuplicate = 2;
+        internal long WorkerId { get; private set; }
     }
 }

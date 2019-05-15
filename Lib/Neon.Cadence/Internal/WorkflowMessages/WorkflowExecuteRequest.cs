@@ -78,10 +78,10 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The workflow start options.
         /// </summary>
-        public StartWorkflowOptions Options
+        public InternalStartWorkflowOptions Options
         {
-            get => GetJsonProperty<StartWorkflowOptions>("Options");
-            set => SetJsonProperty<StartWorkflowOptions>("Options", value);
+            get => GetJsonProperty<InternalStartWorkflowOptions>("Options");
+            set => SetJsonProperty<InternalStartWorkflowOptions>("Options", value);
         }
 
         /// <inheritdoc/>

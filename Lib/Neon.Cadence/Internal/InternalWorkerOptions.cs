@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkerOptions .cs
+// FILE:	    InternalWorkerOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,10 +34,10 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Specifies the options Cadence will use when assigning workflow and activity
-    /// executions to a user's worker service.  This maps fairly closely to the
-    /// Cadence GOLANG <b>WorkerOptions</b>, but we removed a few fields that don't
-    /// make sense to serialize.  See the remarks for more information.
+    /// <b>INTERNAL USE ONLY:</b> Specifies the options Cadence will use when assigning
+    /// workflow and activity executions to a user's worker service.  This maps fairly 
+    /// closely to the  Cadence GOLANG <b>WorkerOptions</b>, but we removed a few fields
+    /// that don't make sense to serialize.  See the remarks for more information.
     /// </summary>
     /// <remarks>
     /// <list type="table">
@@ -69,7 +69,7 @@ namespace Neon.Cadence.Internal
     /// </item>
     /// </list>
     /// </remarks>
-    public class WorkerOptions
+    public class InternalWorkerOptions
     {
         /// <summary>
         /// Optional: To set the maximum concurrent activity executions this worker can have.

@@ -119,7 +119,7 @@ namespace Neon.Cadence
             /// <summary>
             /// The workflow start options.
             /// </summary>
-            public StartWorkflowOptions Options { get; set; }
+            public InternalStartWorkflowOptions Options { get; set; }
 
             /// <summary>
             /// Indicates when the workflow as completed execution.
@@ -727,7 +727,7 @@ namespace Neon.Cadence
             await EmulatedLibraryClient.SendReplyAsync(request,
                 new WorkflowExecuteReply()
                 {
-                    Execution = new WorkflowExecution()
+                    Execution = new InternalWorkflowExecution()
                     {
                         ID    = workflow.WorkflowId,
                         RunID = workflow.WorkflowId

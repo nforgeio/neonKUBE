@@ -365,6 +365,7 @@ namespace Neon.Cadence
         private object                          syncLock   = new object();
         private IPAddress                       address    = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private Dictionary<long, Operation>     operations = new Dictionary<long, Operation>();
+        private Dictionary<long, Worker>        workers    = new Dictionary<long, Worker>();
         private int                             proxyPort;
         private HttpClient                      proxyClient;
         private IWebHost                        host;

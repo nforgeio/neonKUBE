@@ -181,7 +181,7 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.Name = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new StartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = "100s" };
+                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = "100s" };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
@@ -252,7 +252,7 @@ namespace TestCadence
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.Execution = new WorkflowExecution() { ID = "foo", RunID = "bar" };
+                message.Execution = new InternalWorkflowExecution() { ID = "foo", RunID = "bar" };
                 Assert.Equal("foo", message.Execution.ID);
                 Assert.Equal("bar", message.Execution.RunID);
                 message.Error = new CadenceError("MyError");

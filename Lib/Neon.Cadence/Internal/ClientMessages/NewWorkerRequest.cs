@@ -87,10 +87,10 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The worker options.
         /// </summary>
-        public WorkerOptions Options
+        public InternalWorkerOptions Options
         {
-            get => GetJsonProperty<WorkerOptions>("Options");
-            set => SetJsonProperty<WorkerOptions>("Options", value);
+            get => GetJsonProperty<InternalWorkerOptions>("Options");
+            set => SetJsonProperty<InternalWorkerOptions>("Options", value);
         }
 
         /// <inheritdoc/>

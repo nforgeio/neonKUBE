@@ -1036,7 +1036,7 @@ namespace TestCadence
                 Assert.Equal("my-domain", message.Domain);
                 message.TaskList = "my-tasks";
                 Assert.Equal("my-tasks", message.TaskList);
-                message.Options = new WorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
+                message.Options = new InternalWorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 

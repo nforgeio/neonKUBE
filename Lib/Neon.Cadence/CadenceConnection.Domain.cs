@@ -51,6 +51,9 @@ namespace Neon.Cadence
 {
     public partial class CadenceConnection
     {
+        //---------------------------------------------------------------------
+        // Cadence domain related operations.
+
         /// <summary>
         /// Registers a Cadence domain using the <see cref="RegisterDomainRequest"/> information passed.
         /// </summary>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartWorkflowOptions.cs
+// FILE:	    InternalStartWorkflowOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,19 +35,19 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <para>
-    /// Specififies workflow execution options.  This maps pretty closely
-    /// to this Cadence GOLANG structure:
+    /// <b>INTERNAL USE ONLY:</b> Specififies workflow execution options.  This maps 
+    /// pretty closely to this Cadence GOLANG structure:
     /// </para>
     /// <para>
     /// https://godoc.org/go.uber.org/cadence/internal#StartWorkflowOptions
     /// </para>
     /// </summary>
-    internal class StartWorkflowOptions
+    internal class InternalStartWorkflowOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public StartWorkflowOptions()
+        public InternalStartWorkflowOptions()
         {
         }
 
