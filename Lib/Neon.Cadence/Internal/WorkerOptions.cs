@@ -81,8 +81,8 @@ namespace Neon.Cadence.Internal
         public int MaxConcurrentActivityExecutionSize { get; set; }
 
         /// <summary>
-        // Optional: Sets the rate limiting on number of activities that can be executed per second per
-        // worker. This can be used to limit resources used by the worker.
+        /// Optional: Sets the rate limiting on number of activities that can be executed per second per
+        /// worker. This can be used to limit resources used by the worker.
         /// Notice that the number is represented in float, so that you can set it to less than
         /// 1 if needed. For example, set the number to 0.1 means you want your activity to be executed
         /// once for every 10 seconds. This can be used to protect down stream services from flooding.
@@ -154,8 +154,8 @@ namespace Neon.Cadence.Internal
         public bool AutoHeartBeat { get; set; }
 
         /// <summary>
-        // Optional: Sets an identify that can be used to track this host for debugging.
-        // default: default identity that include hostname, groupName and process ID.
+        /// Optional: Sets an identify that can be used to track this host for debugging.
+        /// default: default identity that include hostname, groupName and process ID.
         /// </summary>
         [JsonProperty(PropertyName = "Identity", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
