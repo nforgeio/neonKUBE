@@ -57,7 +57,8 @@ namespace TestCadence
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
                 DebugDisableHeartbeats = false,
-                DebugIgnoreTimeouts    = false
+                DebugIgnoreTimeouts    = false,
+                DebugEmulateProxy      = true
             };
 
             fixture.Start(settings);

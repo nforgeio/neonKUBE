@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteReply.cs
+// FILE:	    WorkflowRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,22 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="WorkflowExecuteRequest"/>
+    /// Base class for all workflow context replies.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteReply)]
-    internal class WorkflowExecuteReply : ProxyReply
+    [ProxyMessage(MessageTypes.Unspecified)]
+    internal class WorkflowReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteReply()
+        public WorkflowReply()
         {
-            Type = MessageTypes.WorkflowExecuteReply;
-        }
-
-        /// <summary>
-        /// Returns details identifying the workflow execution.
-        /// </summary>
-        public WorkflowExecution Execution
-        {
-            get => GetJsonProperty<WorkflowExecution>("Execution");
-            set => SetJsonProperty<WorkflowExecution>("Execution", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteReply();
+            var clone = new WorkflowReply();
 
             CopyTo(clone);
 
@@ -68,10 +58,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowExecuteReply)target;
-
-            typedTarget.Execution = this.Execution;
         }
     }
 }

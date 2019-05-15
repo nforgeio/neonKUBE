@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteReply.cs
+// FILE:	    WorkflowRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,31 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="WorkflowExecuteRequest"/>
+    /// Base class for all workflow context requests.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteReply)]
-    internal class WorkflowExecuteReply : ProxyReply
+    [ProxyMessage(MessageTypes.Unspecified)]
+    internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteReply()
+        public WorkflowRequest()
         {
-            Type = MessageTypes.WorkflowExecuteReply;
         }
 
         /// <summary>
-        /// Returns details identifying the workflow execution.
+        /// Uniquely identifies the workflow context associated with this request.
         /// </summary>
-        public WorkflowExecution Execution
+        public long ContextId
         {
-            get => GetJsonProperty<WorkflowExecution>("Execution");
-            set => SetJsonProperty<WorkflowExecution>("Execution", value);
+            get => GetLongProperty("ContextId");
+            set => SetLongProperty("ContextId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteReply();
+            var clone = new WorkflowRequest();
 
             CopyTo(clone);
 
@@ -69,9 +68,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowExecuteReply)target;
+            var typedTarget = (WorkflowRequest)target;
 
-            typedTarget.Execution = this.Execution;
+            typedTarget.ContextId = this.ContextId;
         }
     }
 }

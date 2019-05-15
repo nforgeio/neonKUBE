@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRequest.cs
+// FILE:	    NewWorkerReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,45 +18,63 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Net;
+using Neon.Tasks;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow context replies.
+    /// <b>proxy --> library:</b> Answers a <see cref="NewWorkerRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowReply : ProxyReply
+    [ProxyMessage(MessageTypes.NewWorkerReply)]
+    internal class NewWorkerReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowReply()
+        public NewWorkerReply()
         {
+            Type = MessageTypes.NewWorkerReply;
         }
 
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this reply.
+        /// The ID of the new worker.
         /// </summary>
-        public long WorkflowContextId
+        public long WorkerId
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetLongProperty("WorkerId");
+            set => SetLongProperty("WorkerId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowReply();
+            var clone = new NewWorkerReply();
 
             CopyTo(clone);
 
@@ -68,9 +86,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowReply)target;
+            var typedTarget = (NewWorkerReply)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.WorkerId = this.WorkerId;
         }
     }
 }
