@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NewWorkerReply.cs
+// FILE:	    NewWorkerRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -49,32 +49,54 @@ using Neon.Tasks;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="NewWorkerRequest"/>.
+    /// <b>library --> proxy:</b> Registers with Cadence that the current
+    /// connection is capable of executing task and/or activities.
     /// </summary>
-    [ProxyMessage(MessageTypes.NewWorkerReply)]
-    internal class NewWorkerReply : ProxyReply
+    [ProxyMessage(MessageTypes.NewWorkerRequest)]
+    internal class NewWorkerRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public NewWorkerReply()
+        public NewWorkerRequest()
         {
-            Type = MessageTypes.NewWorkerReply;
+            Type = MessageTypes.NewWorkerRequest;
+        }
+
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.NewWorkerReply;
+
+        /// <summary>
+        /// The domain hosting the Cadence workflow.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty("Domain");
+            set => SetStringProperty("Domain", value);
         }
 
         /// <summary>
-        /// The ID of the new worker.
+        /// Identifies the task list for the source workflows and activities.
         /// </summary>
-        public long WorkerId
+        public string TaskList
         {
-            get => GetLongProperty("WorkerId");
-            set => SetLongProperty("WorkerId", value);
+            get => GetStringProperty("TaskList");
+            set => SetStringProperty("TaskList", value);
+        }
+
+        /// <summary>
+        /// The worker options.
+        /// </summary>
+        public WorkerOptions Options
+        {
+            get => GetJsonProperty<WorkerOptions>("Options");
+            set => SetJsonProperty<WorkerOptions>("Options", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new NewWorkerReply();
+            var clone = new NewWorkerRequest();
 
             CopyTo(clone);
 
@@ -86,9 +108,11 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (NewWorkerReply)target;
+            var typedTarget = (NewWorkerRequest)target;
 
-            typedTarget.WorkerId = this.WorkerId;
+            typedTarget.Domain   = this.Domain;
+            typedTarget.TaskList = this.TaskList;
+            typedTarget.Options  = this.Options;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRequest.cs
+// FILE:	    WorkflowExecution .cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,49 +28,29 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow context replies.
+    /// Cadence workflow execution details.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowReply : ProxyReply
+    public class WorkflowExecution
     {
         /// <summary>
-        /// Default constructor.
+        /// The original ID assigned to the workflow.
         /// </summary>
-        public WorkflowReply()
-        {
-        }
+        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string ID { get; set; }
 
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this reply.
+        /// The latest ID assigned to the workflow.  Note that this will differ
+        /// from <see cref="ID"/> when the workflow has been restarted.
         /// </summary>
-        public long WorkflowContextId
-        {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
-        }
-
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowReply)target;
-
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
-        }
+        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string RunID { get; set; }
     }
 }

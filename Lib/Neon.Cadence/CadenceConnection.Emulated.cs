@@ -56,6 +56,9 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Emulated [cadence-proxy] implementation:
 
+        /// <summary>
+        /// Used to track emulated Cadence domains.
+        /// </summary>
         private class EmulatedCadenceDomain
         {
             public string       Name { get; set; }
@@ -67,8 +70,23 @@ namespace Neon.Cadence
             public int          RetentionDays { get; set; }
         }
 
-        private AsyncMutex                  emulationMutex  = new AsyncMutex();
-        private List<EmulatedCadenceDomain> emulatedDomains = new List<EmulatedCadenceDomain>();
+        /// <summary>
+        /// Used to track emulated Cadence worker (registrations).
+        /// </summary>
+        private class EmulatedWorker
+        {
+            public long         WorkerId { get; set;}
+        }
+
+        private AsyncMutex                          emulationMutex  = new AsyncMutex();
+        private Dictionary<long, Operation>         operations      = new Dictionary<long, Operation>(); 
+        private List<EmulatedCadenceDomain>         emulatedDomains = new List<EmulatedCadenceDomain>();
+        private Dictionary<long, EmulatedWorker>    emulatedWorkers = new Dictionary<long, EmulatedWorker>();
+        private long                                nextRequestId   = 0;
+        private long                                nextWorkerId    = 0;
+        private Thread                              heartbeatThread;
+        private Thread                              timeoutThread;
+        private IWebHost                            emulatedHost;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Set this to <c>false</c> to emulate an unhealthy
@@ -149,10 +167,10 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEchoRequestAsync(HttpContext context)
         {
-            var request = context.Request;
-            var response = context.Response;
+            var request        = context.Request;
+            var response       = context.Response;
             var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
-            var clonedMessage = requestMessage.Clone();
+            var clonedMessage  = requestMessage.Clone();
 
             response.ContentType = ProxyMessage.ContentType;
 
@@ -180,7 +198,7 @@ namespace Neon.Cadence
             switch (proxyRequest.Type)
             {
                 //-------------------------------------------------------------
-                // Global messages
+                // Client messages
 
                 case MessageTypes.CancelRequest:
 
@@ -222,12 +240,17 @@ namespace Neon.Cadence
                     await OnEmulatedTerminateRequestAsync((TerminateRequest)proxyRequest);
                     break;
 
+                case MessageTypes.NewWorkerRequest:
+
+                    await OnEmulatedNewWorkerRequestAsync((NewWorkerRequest)proxyRequest);
+                    break;
+
                 //-------------------------------------------------------------
                 // Workflow messages
 
                 case MessageTypes.WorkflowExecuteRequest:
 
-                    await OnEmulatedWorkflowExecuteAsync((WorkflowExecuteRequest)proxyRequest);
+                    await OnEmulatedWorkflowExecuteRequestAsync((WorkflowExecuteRequest)proxyRequest);
                     break;
 
                 case MessageTypes.WorkflowInvokeReply:
@@ -344,6 +367,27 @@ namespace Neon.Cadence
         private async Task OnEmulatedTerminateRequestAsync(TerminateRequest request)
         {
             await EmulatedLibraryClient.SendReplyAsync(request, new TerminateReply());
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="NewWorkerRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedNewWorkerRequestAsync(NewWorkerRequest request)
+        {
+            var workerId = Interlocked.Increment(ref nextWorkerId);
+
+            using (await emulationMutex.AcquireAsync())
+            {
+                // We'll need to track the worker.
+
+                var worker = new EmulatedWorker() { WorkerId = workerId };
+
+                emulatedWorkers.Add(workerId, worker);
+
+                await EmulatedLibraryClient.SendReplyAsync(request, new NewWorkerReply() { WorkerId = workerId });
+            }
         }
 
         /// <summary>
@@ -488,6 +532,24 @@ namespace Neon.Cadence
             }
 
             await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowExecuteReply());
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="WorkflowInvokeReply"/> messages.
+        /// </summary>
+        /// <param name="reply">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedWorkflowInvokeReplyAsync(WorkflowInvokeReply reply)
+        {
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="WorkflowRegisterRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedWorkflowRegisterRequestAsync(WorkflowRegisterRequest request)
+        {
         }
     }
 }

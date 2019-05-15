@@ -54,6 +54,28 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// <para>
+        /// Optionally specifies the maximum time the operation may
+        /// take before it should be aborted.  The operation reply 
+        /// should specify a <see cref="CadenceError"/> of type
+        /// <see cref="CadenceErrorTypes.Timeout"/> when this happens.
+        /// </para>
+        /// <note>
+        /// A <see cref="TimeSpan.Zero"/> (the default) indicates that
+        /// the operation may proceed indefinitely.
+        /// </note>
+        /// </summary>
+        /// <remarks>
+        /// Note that operations are not required to support this
+        /// property when that's doesn't makes sense.
+        /// </remarks>
+        public TimeSpan Timeout
+        {
+            get => GetTimeSpanProperty("Timeout");
+            set => SetTimeSpanProperty("Timeout", value);
+        }
+
+        /// <summary>
         /// Derived request types must return the type of the expected
         /// <see cref="ProxyReply"/> message.
         /// </summary>
@@ -77,6 +99,7 @@ namespace Neon.Cadence.Internal
             var typedTarget = (ProxyRequest)target;
 
             typedTarget.RequestId = this.RequestId;
+            typedTarget.Timeout   = this.Timeout;
         }
     }
 }

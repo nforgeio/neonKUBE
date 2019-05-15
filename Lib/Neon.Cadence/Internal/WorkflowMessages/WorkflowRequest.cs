@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowContextRequest.cs
+// FILE:	    WorkflowRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,28 +35,28 @@ namespace Neon.Cadence.Internal
     /// Base class for all workflow context requests.
     /// </summary>
     [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowContextRequest : ProxyRequest
+    internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowContextRequest()
+        public WorkflowRequest()
         {
         }
 
         /// <summary>
         /// Uniquely identifies the workflow context associated with this request.
         /// </summary>
-        public long WorkflowContextId
+        public long ContextId
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetLongProperty("ContextId");
+            set => SetLongProperty("ContextId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowContextRequest();
+            var clone = new WorkflowRequest();
 
             CopyTo(clone);
 
@@ -68,9 +68,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowContextRequest)target;
+            var typedTarget = (WorkflowRequest)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.ContextId = this.ContextId;
         }
     }
 }

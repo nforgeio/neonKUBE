@@ -72,8 +72,8 @@ namespace TestCadence
                 // $debug(jeff.lill): DELETE THIS!
                 DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
-                DebugDisableHeartbeats = false,
-                DebugEmulateProxy      = false,
+                DebugDisableHeartbeats = true,
+                DebugEmulateProxy      = true,
                 //--------------------------------
             };
 

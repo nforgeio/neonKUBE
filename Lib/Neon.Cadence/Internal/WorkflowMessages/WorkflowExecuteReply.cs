@@ -46,13 +46,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The result returned from the executed workflow or <c>null</c>
-        /// if the execution failed.
+        /// Returns details identifying the workflow execution.
         /// </summary>
-        public byte[] Result
+        public WorkflowExecution Execution
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetJsonProperty<WorkflowExecution>("Execution");
+            set => SetJsonProperty<WorkflowExecution>("Execution", value);
         }
 
         /// <inheritdoc/>
@@ -72,7 +71,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteReply)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Execution = this.Execution;
         }
     }
 }

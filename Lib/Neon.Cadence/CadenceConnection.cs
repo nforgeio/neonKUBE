@@ -367,11 +367,6 @@ namespace Neon.Cadence
         private int                         proxyPort;
         private HttpClient                  proxyClient;
         private IWebHost                    host;
-        private IWebHost                    emulatedHost;
-        private long                        nextRequestId;
-        private Dictionary<long, Operation> operations; 
-        private Thread                      heartbeatThread;
-        private Thread                      timeoutThread;
         private Exception                   pendingException;
         private bool                        closingConnection;
         private bool                        connectionClosedRaised;
@@ -488,10 +483,7 @@ namespace Neon.Cadence
                 Timeout     = settings.ProxyTimeout > TimeSpan.Zero ? settings.ProxyTimeout : Settings.DebugHttpTimeout
             };
 
-            // Initialize the pending operations dictionary.
-
-            nextRequestId = 0;
-            operations    = new Dictionary<long, Operation>();
+            // Initilize the [cadence-proxy].
 
             if (!Settings.DebugDisableHandshakes)
             {
