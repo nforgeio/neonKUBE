@@ -5,6 +5,7 @@ package messagetypes
 type MessageType int32
 
 const (
+
 	/// <summary>
 	/// Indicates a message with an unspecified type.  This normally indicates an error.
 	/// </summary>
@@ -102,6 +103,27 @@ const (
 	/// exists.
 	/// </summary>
 	CancelReply MessageType = 16
+
+	/// <summary>
+	/// <b>library --> proxy:</b> Indicates that the application is capable of handling workflows
+	/// and activities within a specific Cadence domain and task lisk.
+	/// </summary>
+	NewWorkerRequest MessageType = 17
+
+	/// <summary>
+	/// <b>proxy --> library:</b> Sent in response to a <see cref="NewWorkerRequest"/> message.
+	/// </summary>
+	NewWorkerReply MessageType = 18
+
+	/// <summary>
+	/// <b>library --> proxy:</b> Stops a Cadence worker.
+	/// </summary>
+	StopWorkerRequest MessageType = 19
+
+	/// <summary>
+	/// <b>proxy --> library:</b> Sent in response to a <see cref="StopWorkerRequest"/> message
+	/// </summary>
+	StopWorkerReply MessageType = 20
 
 	//---------------------------------------------------------------------
 	// Workflow messages

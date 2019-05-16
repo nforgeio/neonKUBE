@@ -11,7 +11,7 @@ type (
 	// WorkflowExecuteReply.  It holds a reference to a ProxyReply in memory
 	// and is the reply type to a WorkflowExecuteRequest
 	WorkflowExecuteReply struct {
-		*WorkflowReply
+		*WorkflowContextReply
 	}
 )
 
@@ -22,7 +22,7 @@ type (
 // WorkflowExecuteReply in memory
 func NewWorkflowExecuteReply() *WorkflowExecuteReply {
 	reply := new(WorkflowExecuteReply)
-	reply.WorkflowReply = NewWorkflowReply()
+	reply.WorkflowContextReply = NewWorkflowContextReply()
 	reply.Type = messagetypes.WorkflowExecuteReply
 
 	return reply
@@ -66,7 +66,7 @@ func (reply *WorkflowExecuteReply) Clone() IProxyMessage {
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *WorkflowExecuteReply) CopyTo(target IProxyMessage) {
-	reply.WorkflowReply.CopyTo(target)
+	reply.WorkflowContextReply.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteReply); ok {
 		v.SetExecution(reply.GetExecution())
 	}
@@ -74,22 +74,22 @@ func (reply *WorkflowExecuteReply) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (reply *WorkflowExecuteReply) SetProxyMessage(value *ProxyMessage) {
-	reply.WorkflowReply.SetProxyMessage(value)
+	reply.WorkflowContextReply.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (reply *WorkflowExecuteReply) GetProxyMessage() *ProxyMessage {
-	return reply.WorkflowReply.GetProxyMessage()
+	return reply.WorkflowContextReply.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *WorkflowExecuteReply) GetRequestID() int64 {
-	return reply.WorkflowReply.GetRequestID()
+	return reply.WorkflowContextReply.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *WorkflowExecuteReply) SetRequestID(value int64) {
-	reply.WorkflowReply.SetRequestID(value)
+	reply.WorkflowContextReply.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -97,10 +97,23 @@ func (reply *WorkflowExecuteReply) SetRequestID(value int64) {
 
 // GetError inherits docs from ProxyReply.GetError()
 func (reply *WorkflowExecuteReply) GetError() *cadenceerrors.CadenceError {
-	return reply.WorkflowReply.GetError()
+	return reply.WorkflowContextReply.GetError()
 }
 
 // SetError inherits docs from ProxyReply.SetError()
 func (reply *WorkflowExecuteReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.WorkflowReply.SetError(value)
+	reply.WorkflowContextReply.SetError(value)
+}
+
+// -------------------------------------------------------------------------
+// IWorkflowContextReply interface methods for implementing the IWorkflowContextReply interface
+
+// GetContextID inherits docs from WorkflowContextReply.GetContextID()
+func (request *WorkflowExecuteReply) GetContextID() int64 {
+	return request.GetLongProperty("ContextId")
+}
+
+// SetContextID inherits docs from WorkflowContextReply.SetContextID()
+func (request *WorkflowExecuteReply) SetContextID(value int64) {
+	request.SetLongProperty("ContextId", value)
 }

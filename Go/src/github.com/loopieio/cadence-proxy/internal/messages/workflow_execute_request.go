@@ -10,17 +10,17 @@ import (
 
 type (
 
-	// WorkflowExecuteRequest is WorkflowRequest of MessageType
+	// WorkflowExecuteRequest is WorkflowContextRequest of MessageType
 	// WorkflowExecuteRequest.
 	//
 	// A WorkflowExecuteRequest contains a reference to a
-	// WorkflowRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this WorkflowRequest
+	// WorkflowContextRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this WorkflowContextRequest
 	//
 	// A WorkflowExecuteRequest will pass all of the given data and options
 	// necessary to execute a cadence workflow via the cadence client
 	WorkflowExecuteRequest struct {
-		*WorkflowRequest
+		*WorkflowContextRequest
 	}
 )
 
@@ -30,7 +30,7 @@ type (
 // WorkflowExecuteRequest in memory
 func NewWorkflowExecuteRequest() *WorkflowExecuteRequest {
 	request := new(WorkflowExecuteRequest)
-	request.WorkflowRequest = NewWorkflowRequest()
+	request.WorkflowContextRequest = NewWorkflowContextRequest()
 	request.Type = messagetypes.WorkflowExecuteRequest
 	request.SetReplyType(messagetypes.WorkflowExecuteReply)
 
@@ -74,29 +74,23 @@ func (request *WorkflowExecuteRequest) SetName(value *string) {
 }
 
 // GetArgs gets a WorkflowExecuteRequest's Args field
-// from its properties map.  Args is a map of key/value
-// pairs that hold the arguments for executing a specific workflow
+// from its properties map.  Args is a []byte that hold the arguments
+// for executing a specific workflow
 //
-// returns *map[string]interface{]} -> pointer to a map of strings to values
-// representing workflow parameters or arguments for executing
-func (request *WorkflowExecuteRequest) GetArgs() *map[string]interface{} {
-	args := new(map[string]interface{})
-	err := request.GetJSONProperty("Args", args)
-	if err != nil {
-		return nil
-	}
-
-	return args
+// returns []byte -> []byte representing workflow parameters or arguments
+// for executing
+func (request *WorkflowExecuteRequest) GetArgs() []byte {
+	return request.GetBytesProperty("Args")
 }
 
 // SetArgs sets an WorkflowExecuteRequest's Args field
-// from its properties map.  Args is a map of key/value
-// pairs that hold the arguments for executing a specific workflow
+// from its properties map.  Args is a []byte that hold the arguments
+// for executing a specific workflow
 //
-// param value map[string]interface{]} -> pointer to a map of strings to values
-// representing workflow parameters or arguments for executing
-func (request *WorkflowExecuteRequest) SetArgs(value *map[string]interface{}) {
-	request.SetJSONProperty("Args", value)
+// param value []byte -> []byte representing workflow parameters or arguments
+// for executing
+func (request *WorkflowExecuteRequest) SetArgs(value []byte) {
+	request.SetBytesProperty("Args", value)
 }
 
 // GetOptions gets a WorkflowExecutionRequest's start options
@@ -127,7 +121,7 @@ func (request *WorkflowExecuteRequest) SetOptions(value *client.StartWorkflowOpt
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from WorkflowRequest.Clone()
+// Clone inherits docs from WorkflowContextRequest.Clone()
 func (request *WorkflowExecuteRequest) Clone() IProxyMessage {
 	workflowExecuteRequest := NewWorkflowExecuteRequest()
 	var messageClone IProxyMessage = workflowExecuteRequest
@@ -136,9 +130,9 @@ func (request *WorkflowExecuteRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from WorkflowRequest.CopyTo()
+// CopyTo inherits docs from WorkflowContextRequest.CopyTo()
 func (request *WorkflowExecuteRequest) CopyTo(target IProxyMessage) {
-	request.WorkflowRequest.CopyTo(target)
+	request.WorkflowContextRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteRequest); ok {
 		v.SetDomain(request.GetDomain())
 		v.SetName(request.GetName())
@@ -147,58 +141,58 @@ func (request *WorkflowExecuteRequest) CopyTo(target IProxyMessage) {
 	}
 }
 
-// SetProxyMessage inherits docs from WorkflowRequest.SetProxyMessage()
+// SetProxyMessage inherits docs from WorkflowContextRequest.SetProxyMessage()
 func (request *WorkflowExecuteRequest) SetProxyMessage(value *ProxyMessage) {
-	request.WorkflowRequest.SetProxyMessage(value)
+	request.WorkflowContextRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from WorkflowRequest.GetProxyMessage()
+// GetProxyMessage inherits docs from WorkflowContextRequest.GetProxyMessage()
 func (request *WorkflowExecuteRequest) GetProxyMessage() *ProxyMessage {
-	return request.WorkflowRequest.GetProxyMessage()
+	return request.WorkflowContextRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from WorkflowRequest.GetRequestID()
+// GetRequestID inherits docs from WorkflowContextRequest.GetRequestID()
 func (request *WorkflowExecuteRequest) GetRequestID() int64 {
-	return request.WorkflowRequest.GetRequestID()
+	return request.WorkflowContextRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from WorkflowRequest.SetRequestID()
+// SetRequestID inherits docs from WorkflowContextRequest.SetRequestID()
 func (request *WorkflowExecuteRequest) SetRequestID(value int64) {
-	request.WorkflowRequest.SetRequestID(value)
+	request.WorkflowContextRequest.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetReplyType inherits docs from WorkflowRequest.GetReplyType()
+// GetReplyType inherits docs from WorkflowContextRequest.GetReplyType()
 func (request *WorkflowExecuteRequest) GetReplyType() messagetypes.MessageType {
-	return request.WorkflowRequest.GetReplyType()
+	return request.WorkflowContextRequest.GetReplyType()
 }
 
-// SetReplyType inherits docs from WorkflowRequest.SetReplyType()
+// SetReplyType inherits docs from WorkflowContextRequest.SetReplyType()
 func (request *WorkflowExecuteRequest) SetReplyType(value messagetypes.MessageType) {
-	request.WorkflowRequest.SetReplyType(value)
+	request.WorkflowContextRequest.SetReplyType(value)
 }
 
-// GetTimeout inherits docs from WorkflowRequest.GetTimeout()
+// GetTimeout inherits docs from WorkflowContextRequest.GetTimeout()
 func (request *WorkflowExecuteRequest) GetTimeout() time.Duration {
-	return request.WorkflowRequest.GetTimeout()
+	return request.WorkflowContextRequest.GetTimeout()
 }
 
-// SetTimeout inherits docs from WorkflowRequest.SetTimeout()
+// SetTimeout inherits docs from WorkflowContextRequest.SetTimeout()
 func (request *WorkflowExecuteRequest) SetTimeout(value time.Duration) {
-	request.WorkflowRequest.SetTimeout(value)
+	request.WorkflowContextRequest.SetTimeout(value)
 }
 
 // -------------------------------------------------------------------------
-// IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
+// IWorkflowContextRequest interface methods for implementing the IWorkflowContextRequest interface
 
-// GetContextID inherits docs from WorkflowRequest.GetContextID()
+// GetContextID inherits docs from WorkflowContextRequest.GetContextID()
 func (request *WorkflowExecuteRequest) GetContextID() int64 {
-	return request.WorkflowRequest.GetContextID()
+	return request.WorkflowContextRequest.GetContextID()
 }
 
-// SetContextID inherits docs from WorkflowRequest.SetContextID()
+// SetContextID inherits docs from WorkflowContextRequest.SetContextID()
 func (request *WorkflowExecuteRequest) SetContextID(value int64) {
-	request.WorkflowRequest.SetContextID(value)
+	request.WorkflowContextRequest.SetContextID(value)
 }
