@@ -48,7 +48,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 			// $debug(jack.burns): DELETE THIS!
 			logger.Error("Error Handling ProxyMessage", zap.Error(err))
-			deathWish = true
+			panic(err)
 		}
 
 		// check to see if terminate is true, if it is then gracefully
