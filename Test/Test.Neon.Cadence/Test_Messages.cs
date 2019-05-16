@@ -154,7 +154,7 @@ namespace TestCadence
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="message">The message to be checked.</param>
         /// <returns>The received echo message.</returns>
-        private TMessage EchoToConnection<TMessage>(TMessage message)
+        private TMessage EchoToClient<TMessage>(TMessage message)
             where TMessage : ProxyMessage, new()
         {
             var bytes   = message.Serialize();

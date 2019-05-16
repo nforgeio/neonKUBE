@@ -91,7 +91,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(1.5, message.Timeout.TotalSeconds);
@@ -148,7 +148,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -206,7 +206,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
@@ -260,14 +260,14 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -322,7 +322,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
@@ -399,7 +399,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -482,7 +482,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
@@ -543,7 +543,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -614,7 +614,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-name", message.Name);
@@ -674,7 +674,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -725,7 +725,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -776,7 +776,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -827,7 +827,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -878,7 +878,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -931,7 +931,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.TargetRequestId);
@@ -987,7 +987,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -1054,7 +1054,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
@@ -1114,7 +1114,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
@@ -1169,7 +1169,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
@@ -1220,7 +1220,7 @@ namespace TestCadence
 
                 // Echo the message via the connection's web server and verify.
 
-                message = EchoToConnection(message);
+                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
