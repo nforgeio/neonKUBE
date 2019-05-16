@@ -1,8 +1,8 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadenceerrors"
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -23,7 +23,7 @@ type (
 func NewHeartbeatReply() *HeartbeatReply {
 	reply := new(HeartbeatReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messages.HeartbeatReply
+	reply.Type = messagetypes.HeartbeatReply
 
 	return reply
 }
@@ -47,22 +47,22 @@ func (reply *HeartbeatReply) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (reply *HeartbeatReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyMessage.SetProxyMessage(value)
+	reply.ProxyReply.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (reply *HeartbeatReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyMessage.GetProxyMessage()
+	return reply.ProxyReply.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *HeartbeatReply) GetRequestID() int64 {
-	return reply.ProxyMessage.GetRequestID()
+	return reply.ProxyReply.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *HeartbeatReply) SetRequestID(value int64) {
-	reply.ProxyMessage.SetRequestID(value)
+	reply.ProxyReply.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------

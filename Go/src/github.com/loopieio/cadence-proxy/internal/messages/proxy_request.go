@@ -1,6 +1,10 @@
-package types
+package messages
 
-import "github.com/loopieio/cadence-proxy/internal/messages"
+import (
+	"time"
+
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
+)
 
 type (
 
@@ -10,10 +14,10 @@ type (
 	//
 	// A ProxyRequest contains a RequestId and a reference to a
 	// ProxyMessage struct in memory and ReplyType, which is
-	// the corresponding messages.MessageType for replying to this ProxyRequest
+	// the corresponding MessageType for replying to this ProxyRequest
 	ProxyRequest struct {
 		*ProxyMessage
-		ReplyType messages.MessageType
+		ReplyType messagetypes.MessageType
 	}
 
 	// IProxyRequest is an interface for all ProxyRequest message types.
@@ -21,10 +25,12 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
-		GetReplyType() messages.MessageType
-		SetReplyType(value messages.MessageType)
+		GetReplyType() messagetypes.MessageType
+		SetReplyType(value messagetypes.MessageType)
 		GetRequestID() int64
 		SetRequestID(value int64)
+		GetTimeout() time.Duration
+		SetTimeout(value time.Duration)
 	}
 )
 
@@ -35,6 +41,8 @@ type (
 func NewProxyRequest() *ProxyRequest {
 	request := new(ProxyRequest)
 	request.ProxyMessage = NewProxyMessage()
+	request.Type = messagetypes.Unspecified
+	request.SetReplyType(messagetypes.Unspecified)
 	return request
 }
 
@@ -52,6 +60,9 @@ func (request *ProxyRequest) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	request.ProxyMessage.CopyTo(target)
+	if v, ok := target.(IProxyRequest); ok {
+		v.SetTimeout(request.GetTimeout())
+	}
 }
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
@@ -77,20 +88,37 @@ func (request *ProxyRequest) SetRequestID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetReplyType gets the messages.MessageType used to reply to a specific
+// GetReplyType gets the MessageType used to reply to a specific
 // ProxyRequest
 //
-// returns messages.MessageType -> the message type to reply to the
+// returns MessageType -> the message type to reply to the
 // request with
-func (request *ProxyRequest) GetReplyType() messages.MessageType {
+func (request *ProxyRequest) GetReplyType() messagetypes.MessageType {
 	return request.ReplyType
 }
 
-// SetReplyType sets the messages.MessageType used to reply to a specific
+// SetReplyType sets the MessageType used to reply to a specific
 // ProxyRequest
 //
-// param value messages.MessageType -> the message type to reply to the
+// param value MessageType -> the message type to reply to the
 // request with
-func (request *ProxyRequest) SetReplyType(value messages.MessageType) {
+func (request *ProxyRequest) SetReplyType(value messagetypes.MessageType) {
 	request.ReplyType = value
+}
+
+// GetTimeout gets the Timeout property from a ProxyRequest's properties map
+// Timeout is a timespan property and indicates the timeout for a specific request
+//
+// returns time.Duration -> the duration for a ProxyRequest's timeout from its properties map
+func (request *ProxyRequest) GetTimeout() time.Duration {
+	return request.GetTimeSpanProperty("Timeout")
+}
+
+// SetTimeout sets the Timeout property in a ProxyRequest's properties map
+// Timeout is a timespan property and indicates the timeout for a specific request
+//
+// param value time.Duration -> the timeout duration to be set in a
+// ProxyRequest's properties map
+func (request *ProxyRequest) SetTimeout(value time.Duration) {
+	request.SetTimeSpanProperty("Timeout", value)
 }

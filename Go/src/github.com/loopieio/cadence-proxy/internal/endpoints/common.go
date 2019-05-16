@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/loopieio/cadence-proxy/internal/messages/types"
+	"github.com/loopieio/cadence-proxy/internal/messages"
 	"github.com/loopieio/cadence-proxy/internal/server"
 	"go.uber.org/zap"
 )
@@ -130,7 +130,7 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 	return http.StatusOK, nil
 }
 
-func readAndDeserialize(body io.Reader) (types.IProxyMessage, error) {
+func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 
 	// create an empty []byte and read the
 	// request body into it if not nil
@@ -144,7 +144,7 @@ func readAndDeserialize(body io.Reader) (types.IProxyMessage, error) {
 
 	// deserialize the payload
 	buf := bytes.NewBuffer(payload)
-	message, err := types.Deserialize(buf, false)
+	message, err := messages.Deserialize(buf, false)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!

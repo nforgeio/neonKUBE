@@ -8,21 +8,21 @@ import (
 	"os"
 	"reflect"
 
-	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadenceclient"
-	domain "github.com/loopieio/cadence-proxy/internal/cadencedomain"
-	"github.com/loopieio/cadence-proxy/internal/cadenceerrors"
+	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadence/cadenceclient"
+	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomain"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/messages"
-	"github.com/loopieio/cadence-proxy/internal/messages/types"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
 	"go.uber.org/zap"
 )
 
-func createReplyMessage(request types.IProxyRequest) types.IProxyMessage {
+func createReplyMessage(request messages.IProxyRequest) messages.IProxyMessage {
 
 	// get the correct reply type and initialize a new
 	// reply corresponding to the request message type
-	proxyMessage := types.CreateNewTypedMessage(request.GetReplyType())
+	var proxyMessage messages.IProxyMessage = messages.CreateNewTypedMessage(request.GetReplyType())
 	if reflect.ValueOf(proxyMessage).IsNil() {
 		return nil
 	}
@@ -70,60 +70,60 @@ func putReply(content []byte, address string) (*http.Response, error) {
 // -------------------------------------------------------------------------
 // IProxyRequest message type handlers
 
-func handleIProxyRequest(request types.IProxyRequest, typeCode messages.MessageType) error {
+func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.MessageType) error {
 
 	// error for catching exceptions in the switch block
 	var err error
-	var reply types.IProxyMessage
+	var reply messages.IProxyMessage
 
 	// handle the messages individually based on their message type
 	switch typeCode {
 
 	// InitializeRequest
-	case messages.InitializeRequest:
-		if v, ok := request.(*types.InitializeRequest); ok {
+	case messagetypes.InitializeRequest:
+		if v, ok := request.(*messages.InitializeRequest); ok {
 			reply, err = handleInitializeRequest(v)
 		}
 
 	// HeartbeatRequest
-	case messages.HeartbeatRequest:
-		if v, ok := request.(*types.HeartbeatRequest); ok {
+	case messagetypes.HeartbeatRequest:
+		if v, ok := request.(*messages.HeartbeatRequest); ok {
 			reply, err = handleHeartbeatRequest(v)
 		}
 
 	// CancelRequest
-	case messages.CancelRequest:
-		if v, ok := request.(*types.CancelRequest); ok {
+	case messagetypes.CancelRequest:
+		if v, ok := request.(*messages.CancelRequest); ok {
 			reply, err = handleCancelRequest(v)
 		}
 
 	// ConnectRequest
-	case messages.ConnectRequest:
-		if v, ok := request.(*types.ConnectRequest); ok {
+	case messagetypes.ConnectRequest:
+		if v, ok := request.(*messages.ConnectRequest); ok {
 			reply, err = handleConnectRequest(v)
 		}
 
 	// DomainDescribeRequest
-	case messages.DomainDescribeRequest:
-		if v, ok := request.(*types.DomainDescribeRequest); ok {
+	case messagetypes.DomainDescribeRequest:
+		if v, ok := request.(*messages.DomainDescribeRequest); ok {
 			reply, err = handleDomainDescribeRequest(v)
 		}
 
 	// DomainRegisterRequest
-	case messages.DomainRegisterRequest:
-		if v, ok := request.(*types.DomainRegisterRequest); ok {
+	case messagetypes.DomainRegisterRequest:
+		if v, ok := request.(*messages.DomainRegisterRequest); ok {
 			reply, err = handleDomainRegisterRequest(v)
 		}
 
 	// DomainUpdateRequest
-	case messages.DomainUpdateRequest:
-		if v, ok := request.(*types.DomainUpdateRequest); ok {
+	case messagetypes.DomainUpdateRequest:
+		if v, ok := request.(*messages.DomainUpdateRequest); ok {
 			reply, err = handleDomainUpdateRequest(v)
 		}
 
 	// TerminateRequest
-	case messages.TerminateRequest:
-		if v, ok := request.(*types.TerminateRequest); ok {
+	case messagetypes.TerminateRequest:
+		if v, ok := request.(*messages.TerminateRequest); ok {
 			reply, err = handleTerminateRequest(v)
 		}
 
@@ -167,7 +167,7 @@ func handleIProxyRequest(request types.IProxyRequest, typeCode messages.MessageT
 	return nil
 }
 
-func handleActivityRequest(request *types.ActivityRequest) (types.IProxyMessage, error) {
+func handleActivityRequest(request *messages.ActivityRequest) (messages.IProxyMessage, error) {
 	err := fmt.Errorf("not implemented exception for message type ActivityRequest")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -176,7 +176,7 @@ func handleActivityRequest(request *types.ActivityRequest) (types.IProxyMessage,
 
 }
 
-func handleCancelRequest(request *types.CancelRequest) (types.IProxyMessage, error) {
+func handleCancelRequest(request *messages.CancelRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("CancelRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -184,50 +184,14 @@ func handleCancelRequest(request *types.CancelRequest) (types.IProxyMessage, err
 	// new InitializeReply
 	reply := createReplyMessage(request)
 
-	// check to see if a connection has been made with the
-	// cadence client
-	if cadenceclient.ClientHelper == nil {
-		if v, ok := reply.(*types.CancelReply); ok {
-			buildCancelReply(v, cadenceerrors.NewCadenceError(
-				connectionError.Error(),
-				cadenceerrors.Custom))
-		}
-
-		return reply, nil
-	}
-
-	// build the cadence client using a configured CadenceClientHelper instance
-	client, err := cadenceclient.ClientHelper.Builder.BuildCadenceClient()
-	if err != nil {
-		if v, ok := reply.(*types.CancelReply); ok {
-			buildCancelReply(v, cadenceerrors.NewCadenceError(
-				err.Error(),
-				cadenceerrors.Custom))
-		}
-
-		return reply, nil
-	}
-
-	targetRequestID := request.GetTargetRequestID()
-	err = client.CancelWorkflow(context.Background(), string(targetRequestID), "")
-	if err != nil {
-		if v, ok := reply.(*types.CancelReply); ok {
-			buildCancelReply(v, cadenceerrors.NewCadenceError(
-				err.Error(),
-				cadenceerrors.Custom), false)
-		}
-
-		return reply, nil
-	}
-
-	if v, ok := reply.(*types.CancelReply); ok {
+	if v, ok := reply.(*messages.CancelReply); ok {
 		buildCancelReply(v, nil, true)
 	}
 
 	return reply, nil
 }
 
-func handleConnectRequest(request *types.ConnectRequest) (types.IProxyMessage, error) {
+func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ConnectRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -259,7 +223,7 @@ func handleConnectRequest(request *types.ConnectRequest) (types.IProxyMessage, e
 		cadenceclient.ClientHelper = nil
 
 		// build the rest of the reply with a custom error
-		if v, ok := reply.(*types.ConnectReply); ok {
+		if v, ok := reply.(*messages.ConnectReply); ok {
 			buildConnectReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
 				cadenceerrors.Custom))
@@ -294,7 +258,7 @@ func handleConnectRequest(request *types.ConnectRequest) (types.IProxyMessage, e
 	if connectResult != nil {
 		cadenceclient.ClientHelper = nil
 
-		if v, ok := reply.(*types.ConnectReply); ok {
+		if v, ok := reply.(*messages.ConnectReply); ok {
 			buildConnectReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
@@ -303,14 +267,14 @@ func handleConnectRequest(request *types.ConnectRequest) (types.IProxyMessage, e
 		return reply, nil
 	}
 
-	if v, ok := reply.(*types.ConnectReply); ok {
+	if v, ok := reply.(*messages.ConnectReply); ok {
 		buildConnectReply(v, nil)
 	}
 
 	return reply, nil
 }
 
-func handleDomainDescribeRequest(request *types.DomainDescribeRequest) (types.IProxyMessage, error) {
+func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainDescribeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -321,7 +285,7 @@ func handleDomainDescribeRequest(request *types.DomainDescribeRequest) (types.IP
 	// check to see if a connection has been made with the
 	// cadence client
 	if cadenceclient.ClientHelper == nil {
-		if v, ok := reply.(*types.DomainDescribeReply); ok {
+		if v, ok := reply.(*messages.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
@@ -333,7 +297,7 @@ func handleDomainDescribeRequest(request *types.DomainDescribeRequest) (types.IP
 	// build the domain client using a configured CadenceClientHelper instance
 	domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-		if v, ok := reply.(*types.DomainDescribeReply); ok {
+		if v, ok := reply.(*messages.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
 				cadenceerrors.Custom))
@@ -345,7 +309,7 @@ func handleDomainDescribeRequest(request *types.DomainDescribeRequest) (types.IP
 	// send a describe domain request to the cadence server
 	describeDomainResponse, err := domainClient.Describe(context.Background(), *request.GetName())
 	if err != nil {
-		if v, ok := reply.(*types.DomainDescribeReply); ok {
+		if v, ok := reply.(*messages.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
 				cadenceerrors.Custom))
@@ -354,14 +318,14 @@ func handleDomainDescribeRequest(request *types.DomainDescribeRequest) (types.IP
 		return reply, nil
 	}
 
-	if v, ok := reply.(*types.DomainDescribeReply); ok {
+	if v, ok := reply.(*messages.DomainDescribeReply); ok {
 		buildDomainDescribeReply(v, nil, describeDomainResponse)
 	}
 
 	return reply, nil
 }
 
-func handleDomainRegisterRequest(request *types.DomainRegisterRequest) (types.IProxyMessage, error) {
+func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -372,7 +336,7 @@ func handleDomainRegisterRequest(request *types.DomainRegisterRequest) (types.IP
 	// check to see if a connection has been made with the
 	// cadence client
 	if cadenceclient.ClientHelper == nil {
-		if v, ok := reply.(*types.DomainRegisterReply); ok {
+		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
@@ -384,7 +348,7 @@ func handleDomainRegisterRequest(request *types.DomainRegisterRequest) (types.IP
 	// build the domain client using a configured CadenceClientHelper instance
 	domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-		if v, ok := reply.(*types.DomainRegisterReply); ok {
+		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
 				cadenceerrors.Custom))
@@ -408,7 +372,7 @@ func handleDomainRegisterRequest(request *types.DomainRegisterRequest) (types.IP
 	// register the domain using the RegisterDomainRequest
 	err = domainClient.Register(context.Background(), &domainRegisterRequest)
 	if err != nil {
-		if v, ok := reply.(*types.DomainRegisterReply); ok {
+		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
 				cadenceerrors.Custom))
@@ -420,14 +384,14 @@ func handleDomainRegisterRequest(request *types.DomainRegisterRequest) (types.IP
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("domain successfully registered", zap.String("Domain Name", domainRegisterRequest.GetName()))
 
-	if v, ok := reply.(*types.DomainRegisterReply); ok {
+	if v, ok := reply.(*messages.DomainRegisterReply); ok {
 		buildDomainRegisterReply(v, nil)
 	}
 
 	return reply, nil
 }
 
-func handleDomainUpdateRequest(request *types.DomainUpdateRequest) (types.IProxyMessage, error) {
+func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainUpdateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -438,7 +402,7 @@ func handleDomainUpdateRequest(request *types.DomainUpdateRequest) (types.IProxy
 	// check to see if a connection has been made with the
 	// cadence client
 	if cadenceclient.ClientHelper == nil {
-		if v, ok := reply.(*types.DomainRegisterReply); ok {
+		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
@@ -450,7 +414,7 @@ func handleDomainUpdateRequest(request *types.DomainUpdateRequest) (types.IProxy
 	// build the domain client using a configured CadenceClientHelper instance
 	domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-		if v, ok := reply.(*types.DomainRegisterReply); ok {
+		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
 				cadenceerrors.Custom))
@@ -482,7 +446,7 @@ func handleDomainUpdateRequest(request *types.DomainUpdateRequest) (types.IProxy
 	err = domainClient.Update(context.Background(), &domainUpdateRequest)
 	if err != nil {
 
-		if v, ok := reply.(*types.DomainUpdateReply); ok {
+		if v, ok := reply.(*messages.DomainUpdateReply); ok {
 			buildDomainUpdateReply(v, cadenceerrors.NewCadenceError(
 				err.Error(),
 				cadenceerrors.Custom))
@@ -494,28 +458,28 @@ func handleDomainUpdateRequest(request *types.DomainUpdateRequest) (types.IProxy
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("domain successfully Updated", zap.String("Domain Name", domainUpdateRequest.GetName()))
 
-	if v, ok := reply.(*types.DomainUpdateReply); ok {
+	if v, ok := reply.(*messages.DomainUpdateReply); ok {
 		buildDomainUpdateReply(v, nil)
 	}
 
 	return reply, nil
 }
 
-func handleHeartbeatRequest(request *types.HeartbeatRequest) (types.IProxyMessage, error) {
+func handleHeartbeatRequest(request *messages.HeartbeatRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("HeartbeatRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
 	// new HeartbeatReply
 	reply := createReplyMessage(request)
-	if v, ok := reply.(*types.HeartbeatReply); ok {
+	if v, ok := reply.(*messages.HeartbeatReply); ok {
 		buildHeartbeatReply(v, nil)
 	}
 
 	return reply, nil
 }
 
-func handleInitializeRequest(request *types.InitializeRequest) (types.IProxyMessage, error) {
+func handleInitializeRequest(request *messages.InitializeRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("InitializeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -543,14 +507,14 @@ func handleInitializeRequest(request *types.InitializeRequest) (types.IProxyMess
 		zap.String("Reply Address", replyAddress),
 	)
 
-	if v, ok := reply.(*types.InitializeReply); ok {
+	if v, ok := reply.(*messages.InitializeReply); ok {
 		buildInitializeReply(v, nil)
 	}
 
 	return reply, nil
 }
 
-func handleTerminateRequest(request *types.TerminateRequest) (types.IProxyMessage, error) {
+func handleTerminateRequest(request *messages.TerminateRequest) (messages.IProxyMessage, error) {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("TerminateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -562,7 +526,7 @@ func handleTerminateRequest(request *types.TerminateRequest) (types.IProxyMessag
 	// the server instance should gracefully shut down
 	terminate = true
 
-	if v, ok := reply.(*types.TerminateReply); ok {
+	if v, ok := reply.(*messages.TerminateReply); ok {
 		buildTerminateReply(v, nil)
 	}
 
@@ -572,7 +536,7 @@ func handleTerminateRequest(request *types.TerminateRequest) (types.IProxyMessag
 // -------------------------------------------------------------------------
 // ProxyReply builders
 
-func buildCancelReply(reply *types.CancelReply, cadenceError *cadenceerrors.CadenceError, wasCancelled ...bool) {
+func buildCancelReply(reply *messages.CancelReply, cadenceError *cadenceerrors.CadenceError, wasCancelled ...bool) {
 	reply.SetError(cadenceError)
 
 	if len(wasCancelled) > 0 {
@@ -580,11 +544,11 @@ func buildCancelReply(reply *types.CancelReply, cadenceError *cadenceerrors.Cade
 	}
 }
 
-func buildConnectReply(reply *types.ConnectReply, cadenceError *cadenceerrors.CadenceError) {
+func buildConnectReply(reply *messages.ConnectReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildDomainDescribeReply(reply *types.DomainDescribeReply, cadenceError *cadenceerrors.CadenceError, describeDomainResponse ...*cadenceshared.DescribeDomainResponse) {
+func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError *cadenceerrors.CadenceError, describeDomainResponse ...*cadenceshared.DescribeDomainResponse) {
 	reply.SetError(cadenceError)
 
 	if len(describeDomainResponse) > 0 {
@@ -600,22 +564,22 @@ func buildDomainDescribeReply(reply *types.DomainDescribeReply, cadenceError *ca
 	}
 }
 
-func buildDomainRegisterReply(reply *types.DomainRegisterReply, cadenceError *cadenceerrors.CadenceError) {
+func buildDomainRegisterReply(reply *messages.DomainRegisterReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildDomainUpdateReply(reply *types.DomainUpdateReply, cadenceError *cadenceerrors.CadenceError) {
+func buildDomainUpdateReply(reply *messages.DomainUpdateReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildHeartbeatReply(reply *types.HeartbeatReply, cadenceError *cadenceerrors.CadenceError) {
+func buildHeartbeatReply(reply *messages.HeartbeatReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildInitializeReply(reply *types.InitializeReply, cadenceError *cadenceerrors.CadenceError) {
+func buildInitializeReply(reply *messages.InitializeReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildTerminateReply(reply *types.TerminateReply, cadenceError *cadenceerrors.CadenceError) {
+func buildTerminateReply(reply *messages.TerminateReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }

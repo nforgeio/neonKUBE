@@ -1,4 +1,4 @@
-package types
+package messages
 
 import (
 	"bytes"
@@ -13,31 +13,37 @@ import (
 	"time"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
+
 	// ProxyMessage represents an encoded Cadence ProxyMessage
 	// Type is the cadence ProxyMessage as an enumeration
 	// Properties are the Properties for the ProxyMessages
 	// Attachments are any data attachments (in bytes) that
 	// are needed to perform the ProxyMessage
 	ProxyMessage struct {
-		Type        messages.MessageType
+		Type        messagetypes.MessageType
 		Properties  map[string]*string
 		Attachments [][]byte
 	}
 
 	// IProxyMessage is an interface that all message types implement
 	// Allows message types that implement this interface to:
+	//
 	// Clone -> Create a replica of itself in a new IProxyMessage in memory.
 	// The replica does not share any pointers to data in the original IProxyMessage
+	//
 	// CopyTo -> Helper method used by Clone() to copy replica data from the original
 	// to a cloned message
+	//
 	// SetProxyMessage -> Set a message's ProxyMessage to the values of the ProxyMessage
 	// passed as a parameter.  It does not set pointers, but the actual values of the
 	// input ProxyMessage
+	//
 	// GetProxyMessage -> Gets a pointer to a message's ProxyMessage
+	//
 	// String -> Builds a string representation of a message that can be used for debug output
 	IProxyMessage interface {
 		Clone() IProxyMessage
@@ -47,13 +53,6 @@ type (
 		GetRequestID() int64
 		SetRequestID(int64)
 	}
-)
-
-var (
-
-	// MessageTypeStructMap is a map that maps a message type
-	// to its corresponding Message Struct
-	MessageTypeStructMap = make(map[int]IProxyMessage)
 )
 
 // NewProxyMessage creates a new ProxyMessage in memory, initializes
@@ -75,15 +74,18 @@ func NewProxyMessage() *ProxyMessage {
 //
 // param buf *bytes.Buffer -> bytes.Buffer of bytes holding an encoded
 // ProxyMessage
+//
 // param allowUnspecified -> bool that indicates that allowing a ProxyMessage
 // of unspecified message type can be allowed during deserialization.
 // This is used for unit testing
+//
 // param typeCode ...interface{} -> an optional interface type to create a specific message
 // type when allowUnspecified is true.
 // Used for unit testing only
 //
 // return ProxyMessage -> ProxyMessage initialized using values encoded in
 // bytes from the bytes.Buffer
+//
 // return Error -> an error deserializing does not work
 func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (IProxyMessage, error) {
 
@@ -92,14 +94,11 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 	var message IProxyMessage
 
 	// get the message type
-	messageType := messages.MessageType(readInt32(buf))
+	messageType := messagetypes.MessageType(readInt32(buf))
 
 	// check for allow unspecified
 	if !allowUnspecified {
-
 		message = CreateNewTypedMessage(messageType)
-
-		// check to see if it is a valid message type
 		if message == nil {
 			err := fmt.Errorf("unexpected message type %v", messageType)
 			return nil, err
@@ -142,52 +141,52 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 // param messageType message.MessageType -> the MessageType to be created
 //
 // returns IProxyMessage -> the initialized message as an IProxyMessage interface
-func CreateNewTypedMessage(messageType messages.MessageType) IProxyMessage {
+func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	var message IProxyMessage
 	switch messageType {
-	case messages.CancelRequest:
+	case messagetypes.CancelRequest:
 		message = NewCancelRequest()
-	case messages.CancelReply:
+	case messagetypes.CancelReply:
 		message = NewCancelReply()
-	case messages.ConnectReply:
+	case messagetypes.ConnectReply:
 		message = NewConnectReply()
-	case messages.ConnectRequest:
+	case messagetypes.ConnectRequest:
 		message = NewConnectRequest()
-	case messages.DomainDescribeReply:
+	case messagetypes.DomainDescribeReply:
 		message = NewDomainDescribeReply()
-	case messages.DomainDescribeRequest:
+	case messagetypes.DomainDescribeRequest:
 		message = NewDomainDescribeRequest()
-	case messages.DomainRegisterReply:
+	case messagetypes.DomainRegisterReply:
 		message = NewDomainRegisterReply()
-	case messages.DomainRegisterRequest:
+	case messagetypes.DomainRegisterRequest:
 		message = NewDomainRegisterRequest()
-	case messages.DomainUpdateReply:
+	case messagetypes.DomainUpdateReply:
 		message = NewDomainUpdateReply()
-	case messages.DomainUpdateRequest:
+	case messagetypes.DomainUpdateRequest:
 		message = NewDomainUpdateRequest()
-	case messages.HeartbeatReply:
+	case messagetypes.HeartbeatReply:
 		message = NewHeartbeatReply()
-	case messages.HeartbeatRequest:
+	case messagetypes.HeartbeatRequest:
 		message = NewHeartbeatRequest()
-	case messages.InitializeReply:
+	case messagetypes.InitializeReply:
 		message = NewInitializeReply()
-	case messages.InitializeRequest:
+	case messagetypes.InitializeRequest:
 		message = NewInitializeRequest()
-	case messages.TerminateReply:
+	case messagetypes.TerminateReply:
 		message = NewTerminateReply()
-	case messages.TerminateRequest:
+	case messagetypes.TerminateRequest:
 		message = NewTerminateRequest()
-	case messages.WorkflowExecuteReply:
+	case messagetypes.WorkflowExecuteReply:
 		message = NewWorkflowExecuteReply()
-	case messages.WorkflowExecuteRequest:
+	case messagetypes.WorkflowExecuteRequest:
 		message = NewWorkflowExecuteRequest()
-	case messages.WorkflowInvokeReply:
+	case messagetypes.WorkflowInvokeReply:
 		message = NewWorkflowInvokeReply()
-	case messages.WorkflowInvokeRequest:
+	case messagetypes.WorkflowInvokeRequest:
 		message = NewWorkflowInvokeRequest()
-	case messages.WorkflowRegisterReply:
+	case messagetypes.WorkflowRegisterReply:
 		message = NewWorkflowRegisterReply()
-	case messages.WorkflowRegisterRequest:
+	case messagetypes.WorkflowRegisterRequest:
 		message = NewWorkflowRegisterRequest()
 	default:
 		return nil
@@ -283,12 +282,13 @@ func readInt32(buf *bytes.Buffer) int32 {
 // Used for unit testing
 //
 // return []byte -> the ProxyMessage instance encoded as a []byte
+//
 // return error -> an error if serialization goes wrong
 func (proxyMessage *ProxyMessage) Serialize(allowUnspecified bool) ([]byte, error) {
 
 	// if the type code is not to be ignored, but the message
 	// type is unspecified, then throw an error
-	if (!allowUnspecified) && (proxyMessage.Type == messages.Unspecified) {
+	if (!allowUnspecified) && (proxyMessage.Type == messagetypes.Unspecified) {
 		err := fmt.Errorf("proxy message has not initialized its [%v] property", proxyMessage.Type)
 		return nil, err
 	}
@@ -486,9 +486,9 @@ func (proxyMessage *ProxyMessage) GetTimeSpanProperty(key string, def ...time.Du
 
 // GetJSONProperty is a helper method for retrieving a complex property serialized
 // as a JSON string
-func (proxyMessage *ProxyMessage) GetJSONProperty(key string, deserializeTo interface{}) interface{} {
+func (proxyMessage *ProxyMessage) GetJSONProperty(key string, deserializeTo interface{}) error {
 	if proxyMessage.Properties[key] == nil {
-		return nil
+		return fmt.Errorf("nil value error")
 	}
 
 	err := json.Unmarshal([]byte(*proxyMessage.Properties[key]), deserializeTo)
@@ -496,7 +496,7 @@ func (proxyMessage *ProxyMessage) GetJSONProperty(key string, deserializeTo inte
 		panic(err)
 	}
 
-	return deserializeTo
+	return nil
 }
 
 // GetBytesProperty is a helper method for retrieving a []byte property

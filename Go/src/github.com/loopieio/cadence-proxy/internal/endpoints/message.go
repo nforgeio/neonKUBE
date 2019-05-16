@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/loopieio/cadence-proxy/internal/messages"
 	"go.uber.org/zap"
-
-	"github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 // MessageHandler accepts an http.PUT requests and parses the
@@ -78,7 +77,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 // -------------------------------------------------------------------------
 // Helper methods for handling incoming messages
 
-func proccessIncomingMessage(message types.IProxyMessage, responseChan chan error) error {
+func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan error) error {
 
 	// get type of message and switch
 	typeCode := message.GetProxyMessage().Type
@@ -95,12 +94,12 @@ func proccessIncomingMessage(message types.IProxyMessage, responseChan chan erro
 		return err
 
 	// IProxyRequest
-	case types.IProxyRequest:
+	case messages.IProxyRequest:
 		responseChan <- nil
 		return handleIProxyRequest(s, typeCode)
 
 	// IProxyReply
-	case types.IProxyReply:
+	case messages.IProxyReply:
 		responseChan <- nil
 		return handleIProxyReply(s, typeCode)
 

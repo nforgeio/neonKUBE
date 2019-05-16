@@ -1,4 +1,4 @@
-package messages
+package messagetypes
 
 // MessageType is an enumerated mapping
 // of all ProxyMessage types

@@ -1,9 +1,10 @@
 package endpoints
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/loopieio/cadence-proxy/internal/messages/types"
+	"github.com/loopieio/cadence-proxy/internal/messages"
 	"go.uber.org/zap"
 )
 
@@ -36,6 +37,9 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug(fmt.Sprintf("Echo message type %d", int(message.GetProxyMessage().Type)))
+
 	// serialize the message
 	serializedMessageCopy, err := cloneForEcho(message)
 	if err != nil {
@@ -52,7 +56,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func cloneForEcho(message types.IProxyMessage) ([]byte, error) {
+func cloneForEcho(message messages.IProxyMessage) ([]byte, error) {
 
 	// create a clone of the message to send back
 	// as a PUT request

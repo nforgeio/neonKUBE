@@ -1,8 +1,8 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadenceerrors"
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -22,7 +22,7 @@ type (
 func NewConnectReply() *ConnectReply {
 	reply := new(ConnectReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messages.ConnectReply
+	reply.Type = messagetypes.ConnectReply
 
 	return reply
 }
@@ -30,7 +30,7 @@ func NewConnectReply() *ConnectReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from IProxyMessage.Clone()
 func (reply *ConnectReply) Clone() IProxyMessage {
 	connectReply := NewConnectReply()
 	var messageClone IProxyMessage = connectReply
@@ -39,29 +39,29 @@ func (reply *ConnectReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from IProxyMessage.CopyTo()
 func (reply *ConnectReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from IProxyMessage.SetProxyMessage()
 func (reply *ConnectReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyMessage.SetProxyMessage(value)
+	reply.ProxyReply.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from IProxyMessage.GetProxyMessage()
 func (reply *ConnectReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyMessage.GetProxyMessage()
+	return reply.ProxyReply.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from IProxyMessage.GetRequestID()
 func (reply *ConnectReply) GetRequestID() int64 {
-	return reply.ProxyMessage.GetRequestID()
+	return reply.ProxyReply.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from IProxyMessage.SetRequestID()
 func (reply *ConnectReply) SetRequestID(value int64) {
-	reply.ProxyMessage.SetRequestID(value)
+	reply.ProxyReply.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------

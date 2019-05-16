@@ -1,7 +1,9 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	"time"
+
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -25,8 +27,8 @@ type (
 func NewHeartbeatRequest() *HeartbeatRequest {
 	request := new(HeartbeatRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messages.HeartbeatRequest
-	request.SetReplyType(messages.HeartbeatReply)
+	request.Type = messagetypes.HeartbeatRequest
+	request.SetReplyType(messagetypes.HeartbeatReply)
 
 	return request
 }
@@ -50,33 +52,43 @@ func (request *HeartbeatRequest) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *HeartbeatRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyMessage.SetProxyMessage(value)
+	request.ProxyRequest.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *HeartbeatRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyMessage.GetProxyMessage()
+	return request.ProxyRequest.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *HeartbeatRequest) GetRequestID() int64 {
-	return request.ProxyMessage.GetRequestID()
+	return request.ProxyRequest.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *HeartbeatRequest) SetRequestID(value int64) {
-	request.ProxyMessage.SetRequestID(value)
+	request.ProxyRequest.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *HeartbeatRequest) GetReplyType() messages.MessageType {
+func (request *HeartbeatRequest) GetReplyType() messagetypes.MessageType {
 	return request.ProxyRequest.GetReplyType()
 }
 
 // SetReplyType inherits docs from ProxyRequest.SetReplyType()
-func (request *HeartbeatRequest) SetReplyType(value messages.MessageType) {
+func (request *HeartbeatRequest) SetReplyType(value messagetypes.MessageType) {
 	request.ProxyRequest.SetReplyType(value)
+}
+
+// GetTimeout inherits docs from ProxyRequest.GetTimeout()
+func (request *HeartbeatRequest) GetTimeout() time.Duration {
+	return request.ProxyRequest.GetTimeout()
+}
+
+// SetTimeout inherits docs from ProxyRequest.SetTimeout()
+func (request *HeartbeatRequest) SetTimeout(value time.Duration) {
+	request.ProxyRequest.SetTimeout(value)
 }

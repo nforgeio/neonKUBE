@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	"github.com/loopieio/cadence-proxy/internal/messages"
-	"github.com/loopieio/cadence-proxy/internal/messages/types"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 	"go.uber.org/zap"
 )
 
 // -------------------------------------------------------------------------
 // IProxyReply message type handlers
 
-func handleIProxyReply(reply types.IProxyReply, typeCode messages.MessageType) error {
+func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.MessageType) error {
 
 	// error to catch any exceptions thrown in the
 	// switch block
@@ -21,35 +21,35 @@ func handleIProxyReply(reply types.IProxyReply, typeCode messages.MessageType) e
 	switch typeCode {
 
 	// InitializeReply
-	case messages.InitializeReply:
+	case messagetypes.InitializeReply:
 		err = handleInitializeReply(reply)
 
 	// HeartbeatReply
-	case messages.HeartbeatReply:
+	case messagetypes.HeartbeatReply:
 		err = handleHeartbeatReply(reply)
 
 	// CancelReply
-	case messages.CancelReply:
+	case messagetypes.CancelReply:
 		err = handleCancelReply(reply)
 
 	// ConnectReply
-	case messages.ConnectReply:
+	case messagetypes.ConnectReply:
 		err = handleConnectReply(reply)
 
 	// DomainDescribeReply
-	case messages.DomainDescribeReply:
+	case messagetypes.DomainDescribeReply:
 		err = handleDomainDescribeReply(reply)
 
 	// DomainRegisterReply
-	case messages.DomainRegisterReply:
+	case messagetypes.DomainRegisterReply:
 		err = handleDomainRegisterReply(reply)
 
 	// DomainUpdateReply
-	case messages.DomainUpdateReply:
+	case messagetypes.DomainUpdateReply:
 		err = handleDomainUpdateReply(reply)
 
 	// TerminateReply
-	case messages.TerminateReply:
+	case messagetypes.TerminateReply:
 		err = handleTerminateReply(reply)
 
 	// Undefined message type
@@ -70,7 +70,7 @@ func handleIProxyReply(reply types.IProxyReply, typeCode messages.MessageType) e
 	return nil
 }
 
-func handleActivityReply(reply types.IProxyReply) error {
+func handleActivityReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type ActivityReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -78,7 +78,7 @@ func handleActivityReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleCancelReply(reply types.IProxyReply) error {
+func handleCancelReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type CancelReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -86,7 +86,7 @@ func handleCancelReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleConnectReply(reply types.IProxyReply) error {
+func handleConnectReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type ConnectReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -94,7 +94,7 @@ func handleConnectReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleDomainDescribeReply(reply types.IProxyReply) error {
+func handleDomainDescribeReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type DomainDescribeReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -102,7 +102,7 @@ func handleDomainDescribeReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleDomainRegisterReply(reply types.IProxyReply) error {
+func handleDomainRegisterReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type DomainRegisterReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -110,7 +110,7 @@ func handleDomainRegisterReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleDomainUpdateReply(reply types.IProxyReply) error {
+func handleDomainUpdateReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type DomainUpdateReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -118,7 +118,7 @@ func handleDomainUpdateReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleHeartbeatReply(reply types.IProxyReply) error {
+func handleHeartbeatReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type HeartbeatReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -126,7 +126,7 @@ func handleHeartbeatReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleInitializeReply(reply types.IProxyReply) error {
+func handleInitializeReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type InitializeReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -134,7 +134,7 @@ func handleInitializeReply(reply types.IProxyReply) error {
 	return err
 }
 
-func handleTerminateReply(reply types.IProxyReply) error {
+func handleTerminateReply(reply messages.IProxyReply) error {
 	err := fmt.Errorf("not implemented exception for message type TerminateReply")
 
 	// $debug(jack.burns): DELETE THIS!

@@ -1,7 +1,8 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadenceerrors"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -35,6 +36,8 @@ type (
 func NewProxyReply() *ProxyReply {
 	reply := new(ProxyReply)
 	reply.ProxyMessage = NewProxyMessage()
+	reply.Type = messagetypes.Unspecified
+
 	return reply
 }
 
@@ -46,6 +49,7 @@ func (reply *ProxyReply) Clone() IProxyMessage {
 	proxyReply := NewProxyReply()
 	var messageClone IProxyMessage = proxyReply
 	reply.CopyTo(messageClone)
+
 	return messageClone
 }
 
@@ -86,12 +90,13 @@ func (reply *ProxyReply) SetRequestID(value int64) {
 // returns cadenceerrors.CadenceError -> a CadenceError struct encoded with the
 // JSON property values at a ProxyReply's Error property
 func (reply *ProxyReply) GetError() *cadenceerrors.CadenceError {
-	cadenceError := reply.GetJSONProperty("Error", cadenceerrors.NewCadenceErrorEmpty())
-	if v, ok := cadenceError.(*cadenceerrors.CadenceError); ok {
-		return v
+	cadenceError := cadenceerrors.NewCadenceErrorEmpty()
+	err := reply.GetJSONProperty("Error", cadenceError)
+	if err != nil {
+		return nil
 	}
 
-	return nil
+	return cadenceError
 }
 
 // SetError sets a CadenceError as a JSON string in a ProxyReply's

@@ -1,8 +1,8 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadenceerrors"
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -22,7 +22,7 @@ type (
 func NewDomainUpdateReply() *DomainUpdateReply {
 	reply := new(DomainUpdateReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messages.DomainUpdateReply
+	reply.Type = messagetypes.DomainUpdateReply
 
 	return reply
 }
@@ -46,22 +46,22 @@ func (reply *DomainUpdateReply) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (reply *DomainUpdateReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyMessage.SetProxyMessage(value)
+	reply.ProxyReply.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (reply *DomainUpdateReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyMessage.GetProxyMessage()
+	return reply.ProxyReply.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *DomainUpdateReply) GetRequestID() int64 {
-	return reply.ProxyMessage.GetRequestID()
+	return reply.ProxyReply.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *DomainUpdateReply) SetRequestID(value int64) {
-	reply.ProxyMessage.SetRequestID(value)
+	reply.ProxyReply.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------

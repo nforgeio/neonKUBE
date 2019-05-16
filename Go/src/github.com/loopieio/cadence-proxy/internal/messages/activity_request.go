@@ -1,4 +1,4 @@
-package types
+package messages
 
 type (
 	ActivityRequest struct {

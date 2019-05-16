@@ -13,7 +13,8 @@ LOG_DIR=./test/logs
 
 # test dirs
 NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
-MESSAGES_TEST_DIR=./internal/messages/types
+MESSAGES_TEST_DIR=./internal/messages
+TEST_DIRS := $(MESSAGES_TEST_DIR)
 
 # Gather all source code		
 ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
@@ -47,8 +48,10 @@ cadenceproxy: cadence-proxy-linux \
 bins: cadenceproxy \
 
 test: bins
-	rm -f test/messages.test
+	rm -f test/client.test
+	rm -f test/base.test
 	rm -f $(LOG_DIR)/test.log
+	echo $(TEST_DIRS)
 
 	go test -v -o test/messages.test -coverprofile $(LOG_DIR)/messages-cover.out $(MESSAGES_TEST_DIR) | tee -a $(LOG_DIR)/test.log
 	go tool cover -html=$(LOG_DIR)/messages-cover.out -o $(LOG_DIR)/messages-cover.html

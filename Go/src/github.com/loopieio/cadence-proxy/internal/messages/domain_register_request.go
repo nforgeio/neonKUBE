@@ -1,7 +1,9 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	"time"
+
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -24,8 +26,8 @@ type (
 func NewDomainRegisterRequest() *DomainRegisterRequest {
 	request := new(DomainRegisterRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messages.DomainRegisterRequest
-	request.SetReplyType(messages.DomainRegisterReply)
+	request.Type = messagetypes.DomainRegisterRequest
+	request.SetReplyType(messagetypes.DomainRegisterReply)
 
 	return request
 }
@@ -143,33 +145,43 @@ func (request *DomainRegisterRequest) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *DomainRegisterRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyMessage.SetProxyMessage(value)
+	request.ProxyRequest.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *DomainRegisterRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyMessage.GetProxyMessage()
+	return request.ProxyRequest.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *DomainRegisterRequest) GetRequestID() int64 {
-	return request.ProxyMessage.GetRequestID()
+	return request.ProxyRequest.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *DomainRegisterRequest) SetRequestID(value int64) {
-	request.ProxyMessage.SetRequestID(value)
+	request.ProxyRequest.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *DomainRegisterRequest) GetReplyType() messages.MessageType {
+func (request *DomainRegisterRequest) GetReplyType() messagetypes.MessageType {
 	return request.ProxyRequest.GetReplyType()
 }
 
 // SetReplyType inherits docs from ProxyRequest.SetReplyType()
-func (request *DomainRegisterRequest) SetReplyType(value messages.MessageType) {
+func (request *DomainRegisterRequest) SetReplyType(value messagetypes.MessageType) {
 	request.ProxyRequest.SetReplyType(value)
+}
+
+// GetTimeout inherits docs from ProxyRequest.GetTimeout()
+func (request *DomainRegisterRequest) GetTimeout() time.Duration {
+	return request.ProxyRequest.GetTimeout()
+}
+
+// SetTimeout inherits docs from ProxyRequest.SetTimeout()
+func (request *DomainRegisterRequest) SetTimeout(value time.Duration) {
+	request.ProxyRequest.SetTimeout(value)
 }

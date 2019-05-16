@@ -1,8 +1,8 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadenceerrors"
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -11,7 +11,7 @@ type (
 	// WorkflowExecuteReply.  It holds a reference to a ProxyReply in memory
 	// and is the reply type to a WorkflowExecuteRequest
 	WorkflowExecuteReply struct {
-		*ProxyReply
+		*WorkflowReply
 	}
 )
 
@@ -22,8 +22,8 @@ type (
 // WorkflowExecuteReply in memory
 func NewWorkflowExecuteReply() *WorkflowExecuteReply {
 	reply := new(WorkflowExecuteReply)
-	reply.ProxyReply = NewProxyReply()
-	reply.Type = messages.WorkflowExecuteReply
+	reply.WorkflowReply = NewWorkflowReply()
+	reply.Type = messagetypes.WorkflowExecuteReply
 
 	return reply
 }
@@ -31,18 +31,25 @@ func NewWorkflowExecuteReply() *WorkflowExecuteReply {
 // GetExecution gets the workflow execution or nil
 // from a WorkflowExecuteReply's properties map.
 //
-// returns []byte -> a []byte representing the result of a workflow execution
-func (reply *WorkflowExecuteReply) GetExecution() []byte {
-	return reply.GetBytesProperty("Execution")
+// returns *map[string]interface{} -> pointer to a map representing the
+// result of a workflow execution
+func (request *WorkflowExecuteReply) GetExecution() *map[string]interface{} {
+	exe := new(map[string]interface{})
+	err := request.GetJSONProperty("Execution", exe)
+	if err != nil {
+		return nil
+	}
+
+	return exe
 }
 
 // SetExecution sets the workflow execution or nil
 // in a WorkflowExecuteReply's properties map.
 //
-// param value []byte -> []]byte representing the result of a workflow execution
-// to be set in the WorkflowExecuteReply's properties map
-func (reply *WorkflowExecuteReply) SetExecution(value []byte) {
-	reply.SetBytesProperty("Execution", value)
+// param value *map[string]interface{} -> pointer to a map representing the result of
+// a workflow execution, to be set in the WorkflowExecuteReply's properties map
+func (reply *WorkflowExecuteReply) SetExecution(value *map[string]interface{}) {
+	reply.SetJSONProperty("Execution", value)
 }
 
 // -------------------------------------------------------------------------
@@ -50,8 +57,8 @@ func (reply *WorkflowExecuteReply) SetExecution(value []byte) {
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *WorkflowExecuteReply) Clone() IProxyMessage {
-	WorkflowExecuteReply := NewWorkflowExecuteReply()
-	var messageClone IProxyMessage = WorkflowExecuteReply
+	workflowExecuteReply := NewWorkflowExecuteReply()
+	var messageClone IProxyMessage = workflowExecuteReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
@@ -59,7 +66,7 @@ func (reply *WorkflowExecuteReply) Clone() IProxyMessage {
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *WorkflowExecuteReply) CopyTo(target IProxyMessage) {
-	reply.ProxyReply.CopyTo(target)
+	reply.WorkflowReply.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteReply); ok {
 		v.SetExecution(reply.GetExecution())
 	}
@@ -67,22 +74,22 @@ func (reply *WorkflowExecuteReply) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (reply *WorkflowExecuteReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyMessage.SetProxyMessage(value)
+	reply.WorkflowReply.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (reply *WorkflowExecuteReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyMessage.GetProxyMessage()
+	return reply.WorkflowReply.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (reply *WorkflowExecuteReply) GetRequestID() int64 {
-	return reply.ProxyMessage.GetRequestID()
+	return reply.WorkflowReply.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *WorkflowExecuteReply) SetRequestID(value int64) {
-	reply.ProxyMessage.SetRequestID(value)
+	reply.WorkflowReply.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -90,10 +97,10 @@ func (reply *WorkflowExecuteReply) SetRequestID(value int64) {
 
 // GetError inherits docs from ProxyReply.GetError()
 func (reply *WorkflowExecuteReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
+	return reply.WorkflowReply.GetError()
 }
 
 // SetError inherits docs from ProxyReply.SetError()
 func (reply *WorkflowExecuteReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
+	reply.WorkflowReply.SetError(value)
 }

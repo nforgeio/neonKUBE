@@ -1,7 +1,9 @@
-package types
+package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/messages"
+	"time"
+
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (
@@ -24,8 +26,8 @@ type (
 func NewInitializeRequest() *InitializeRequest {
 	request := new(InitializeRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messages.InitializeRequest
-	request.SetReplyType(messages.InitializeReply)
+	request.Type = messagetypes.InitializeRequest
+	request.SetReplyType(messagetypes.InitializeReply)
 
 	return request
 }
@@ -89,33 +91,43 @@ func (request *InitializeRequest) CopyTo(target IProxyMessage) {
 
 // SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
 func (request *InitializeRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyMessage.SetProxyMessage(value)
+	request.ProxyRequest.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
 func (request *InitializeRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyMessage.GetProxyMessage()
+	return request.ProxyRequest.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from ProxyMessage.GetRequestID()
 func (request *InitializeRequest) GetRequestID() int64 {
-	return request.ProxyMessage.GetRequestID()
+	return request.ProxyRequest.GetRequestID()
 }
 
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *InitializeRequest) SetRequestID(value int64) {
-	request.ProxyMessage.SetRequestID(value)
+	request.ProxyRequest.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *InitializeRequest) GetReplyType() messages.MessageType {
+func (request *InitializeRequest) GetReplyType() messagetypes.MessageType {
 	return request.ProxyRequest.GetReplyType()
 }
 
 // SetReplyType inherits docs from ProxyRequest.SetReplyType()
-func (request *InitializeRequest) SetReplyType(value messages.MessageType) {
+func (request *InitializeRequest) SetReplyType(value messagetypes.MessageType) {
 	request.ProxyRequest.SetReplyType(value)
+}
+
+// GetTimeout inherits docs from ProxyRequest.GetTimeout()
+func (request *InitializeRequest) GetTimeout() time.Duration {
+	return request.ProxyRequest.GetTimeout()
+}
+
+// SetTimeout inherits docs from ProxyRequest.SetTimeout()
+func (request *InitializeRequest) SetTimeout(value time.Duration) {
+	request.ProxyRequest.SetTimeout(value)
 }

@@ -1,4 +1,4 @@
-package types_test
+package messages_test
 
 import (
 	"bytes"
@@ -10,21 +10,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/loopieio/cadence-proxy/internal/logger"
-
-	"go.uber.org/zap"
-
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
-	domain "github.com/loopieio/cadence-proxy/internal/cadencedomain"
-	"github.com/loopieio/cadence-proxy/internal/messages"
-	"github.com/loopieio/cadence-proxy/internal/messages/types"
-
-	"github.com/loopieio/cadence-proxy/internal/cadenceerrors"
-
+	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomain"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/endpoints"
-
+	"github.com/loopieio/cadence-proxy/internal/logger"
+	"github.com/loopieio/cadence-proxy/internal/messages"
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 	"github.com/loopieio/cadence-proxy/internal/server"
 	"github.com/stretchr/testify/suite"
+
+	"go.uber.org/zap"
 )
 
 type (
@@ -76,7 +72,7 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 // --------------------------------------------------------------------------
 // Test all implemented message types
 
-func (s *UnitTestSuite) echoToConnection(message types.IProxyMessage) (types.IProxyMessage, error) {
+func (s *UnitTestSuite) echoToConnection(message messages.IProxyMessage) (messages.IProxyMessage, error) {
 	proxyMessage := message.GetProxyMessage()
 	content, err := proxyMessage.Serialize(false)
 	if err != nil {
@@ -108,25 +104,25 @@ func (s *UnitTestSuite) echoToConnection(message types.IProxyMessage) (types.IPr
 		return nil, err
 	}
 
-	return types.Deserialize(bytes.NewBuffer(payload), false)
+	return messages.Deserialize(bytes.NewBuffer(payload), false)
 }
 
 func (s *UnitTestSuite) TestInitializeRequest() {
 
-	var message types.IProxyMessage = types.NewInitializeRequest()
-	if v, ok := message.(*types.InitializeRequest); ok {
-		s.Equal(messages.InitializeReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewInitializeRequest()
+	if v, ok := message.(*messages.InitializeRequest); ok {
+		s.Equal(messagetypes.InitializeReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.InitializeRequest); ok {
+	if v, ok := message.(*messages.InitializeRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetLibraryAddress())
 		s.Equal(int32(0), v.GetLibraryPort())
@@ -148,11 +144,11 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.InitializeRequest); ok {
+	if v, ok := message.(*messages.InitializeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
@@ -162,7 +158,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.InitializeRequest); ok {
+	if v, ok := message.(*messages.InitializeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
@@ -170,17 +166,17 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 }
 
 func (s *UnitTestSuite) TestInitializeReply() {
-	var message types.IProxyMessage = types.NewInitializeReply()
+	var message messages.IProxyMessage = messages.NewInitializeReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.InitializeReply); ok {
+	if v, ok := message.(*messages.InitializeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -197,11 +193,11 @@ func (s *UnitTestSuite) TestInitializeReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.InitializeReply); ok {
+	if v, ok := message.(*messages.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -210,27 +206,27 @@ func (s *UnitTestSuite) TestInitializeReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.InitializeReply); ok {
+	if v, ok := message.(*messages.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
 }
 func (s *UnitTestSuite) TestConnectRequest() {
 
-	var message types.IProxyMessage = types.NewConnectRequest()
-	if v, ok := message.(*types.ConnectRequest); ok {
-		s.Equal(messages.ConnectReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewConnectRequest()
+	if v, ok := message.(*messages.ConnectRequest); ok {
+		s.Equal(messagetypes.ConnectReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ConnectRequest); ok {
+	if v, ok := message.(*messages.ConnectRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetEndpoints())
 		s.Nil(v.GetIdentity())
@@ -253,11 +249,11 @@ func (s *UnitTestSuite) TestConnectRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ConnectRequest); ok {
+	if v, ok := message.(*messages.ConnectRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
@@ -267,7 +263,7 @@ func (s *UnitTestSuite) TestConnectRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ConnectRequest); ok {
+	if v, ok := message.(*messages.ConnectRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
@@ -275,17 +271,17 @@ func (s *UnitTestSuite) TestConnectRequest() {
 }
 
 func (s *UnitTestSuite) TestConnectReply() {
-	var message types.IProxyMessage = types.NewConnectReply()
+	var message messages.IProxyMessage = messages.NewConnectReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ConnectReply); ok {
+	if v, ok := message.(*messages.ConnectReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -302,11 +298,11 @@ func (s *UnitTestSuite) TestConnectReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ConnectReply); ok {
+	if v, ok := message.(*messages.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -315,7 +311,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ConnectReply); ok {
+	if v, ok := message.(*messages.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -323,20 +319,20 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 func (s *UnitTestSuite) TestDomainDescribeRequest() {
 
-	var message types.IProxyMessage = types.NewDomainDescribeRequest()
-	if v, ok := message.(*types.DomainDescribeRequest); ok {
-		s.Equal(messages.DomainDescribeReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewDomainDescribeRequest()
+	if v, ok := message.(*messages.DomainDescribeRequest); ok {
+		s.Equal(messagetypes.DomainDescribeReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainDescribeRequest); ok {
+	if v, ok := message.(*messages.DomainDescribeRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 
@@ -354,11 +350,11 @@ func (s *UnitTestSuite) TestDomainDescribeRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainDescribeRequest); ok {
+	if v, ok := message.(*messages.DomainDescribeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-domain", *v.GetName())
 	}
@@ -367,24 +363,24 @@ func (s *UnitTestSuite) TestDomainDescribeRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainDescribeRequest); ok {
+	if v, ok := message.(*messages.DomainDescribeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-domain", *v.GetName())
 	}
 }
 
 func (s *UnitTestSuite) TestDomainDescribeReply() {
-	var message types.IProxyMessage = types.NewDomainDescribeReply()
+	var message messages.IProxyMessage = messages.NewDomainDescribeReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainDescribeReply); ok {
+	if v, ok := message.(*messages.DomainDescribeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 		s.False(v.GetConfigurationEmitMetrics())
@@ -429,11 +425,11 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainDescribeReply); ok {
+	if v, ok := message.(*messages.DomainDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
@@ -448,7 +444,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainDescribeReply); ok {
+	if v, ok := message.(*messages.DomainDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
@@ -462,20 +458,20 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 
 func (s *UnitTestSuite) TestDomainRegisterRequest() {
 
-	var message types.IProxyMessage = types.NewDomainRegisterRequest()
-	if v, ok := message.(*types.DomainRegisterRequest); ok {
-		s.Equal(messages.DomainRegisterReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewDomainRegisterRequest()
+	if v, ok := message.(*messages.DomainRegisterRequest); ok {
+		s.Equal(messagetypes.DomainRegisterReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainRegisterRequest); ok {
+	if v, ok := message.(*messages.DomainRegisterRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetDescription())
@@ -512,11 +508,11 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainRegisterRequest); ok {
+	if v, ok := message.(*messages.DomainRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-domain", *v.GetName())
 		s.Equal("my-description", *v.GetDescription())
@@ -529,7 +525,7 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainRegisterRequest); ok {
+	if v, ok := message.(*messages.DomainRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-domain", *v.GetName())
 		s.Equal("my-description", *v.GetDescription())
@@ -540,17 +536,17 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 }
 
 func (s *UnitTestSuite) TestDomainRegisterReply() {
-	var message types.IProxyMessage = types.NewDomainRegisterReply()
+	var message messages.IProxyMessage = messages.NewDomainRegisterReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainRegisterReply); ok {
+	if v, ok := message.(*messages.DomainRegisterReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -567,11 +563,11 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainRegisterReply); ok {
+	if v, ok := message.(*messages.DomainRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -580,7 +576,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainRegisterReply); ok {
+	if v, ok := message.(*messages.DomainRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -588,20 +584,20 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 
 func (s *UnitTestSuite) TestDomainUpdateRequest() {
 
-	var message types.IProxyMessage = types.NewDomainUpdateRequest()
-	if v, ok := message.(*types.DomainUpdateRequest); ok {
-		s.Equal(messages.DomainUpdateReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewDomainUpdateRequest()
+	if v, ok := message.(*messages.DomainUpdateRequest); ok {
+		s.Equal(messagetypes.DomainUpdateReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainUpdateRequest); ok {
+	if v, ok := message.(*messages.DomainUpdateRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetUpdatedInfoDescription())
@@ -638,11 +634,11 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainUpdateRequest); ok {
+	if v, ok := message.(*messages.DomainUpdateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-domain", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
@@ -655,7 +651,7 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainUpdateRequest); ok {
+	if v, ok := message.(*messages.DomainUpdateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-domain", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
@@ -666,17 +662,17 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 }
 
 func (s *UnitTestSuite) TestDomainUpdateReply() {
-	var message types.IProxyMessage = types.NewDomainUpdateReply()
+	var message messages.IProxyMessage = messages.NewDomainUpdateReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainUpdateReply); ok {
+	if v, ok := message.(*messages.DomainUpdateReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -693,11 +689,11 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainUpdateReply); ok {
+	if v, ok := message.(*messages.DomainUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -706,7 +702,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.DomainUpdateReply); ok {
+	if v, ok := message.(*messages.DomainUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -714,20 +710,20 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 
 func (s *UnitTestSuite) TestTerminateRequest() {
 
-	var message types.IProxyMessage = types.NewTerminateRequest()
-	if v, ok := message.(*types.TerminateRequest); ok {
-		s.Equal(messages.TerminateReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewTerminateRequest()
+	if v, ok := message.(*messages.TerminateRequest); ok {
+		s.Equal(messagetypes.TerminateReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.TerminateRequest); ok {
+	if v, ok := message.(*messages.TerminateRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -740,11 +736,11 @@ func (s *UnitTestSuite) TestTerminateRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.TerminateRequest); ok {
+	if v, ok := message.(*messages.TerminateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 	}
 
@@ -752,23 +748,23 @@ func (s *UnitTestSuite) TestTerminateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.TerminateRequest); ok {
+	if v, ok := message.(*messages.TerminateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 	}
 }
 
 func (s *UnitTestSuite) TestTerminateReply() {
-	var message types.IProxyMessage = types.NewTerminateReply()
+	var message messages.IProxyMessage = messages.NewTerminateReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.TerminateReply); ok {
+	if v, ok := message.(*messages.TerminateReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -785,11 +781,11 @@ func (s *UnitTestSuite) TestTerminateReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.TerminateReply); ok {
+	if v, ok := message.(*messages.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -798,7 +794,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.TerminateReply); ok {
+	if v, ok := message.(*messages.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -806,20 +802,20 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 func (s *UnitTestSuite) TestHeartbeatRequest() {
 
-	var message types.IProxyMessage = types.NewHeartbeatRequest()
-	if v, ok := message.(*types.HeartbeatRequest); ok {
-		s.Equal(messages.HeartbeatReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewHeartbeatRequest()
+	if v, ok := message.(*messages.HeartbeatRequest); ok {
+		s.Equal(messagetypes.HeartbeatReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.HeartbeatRequest); ok {
+	if v, ok := message.(*messages.HeartbeatRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -832,11 +828,11 @@ func (s *UnitTestSuite) TestHeartbeatRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.HeartbeatRequest); ok {
+	if v, ok := message.(*messages.HeartbeatRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 	}
 
@@ -844,23 +840,23 @@ func (s *UnitTestSuite) TestHeartbeatRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.HeartbeatRequest); ok {
+	if v, ok := message.(*messages.HeartbeatRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 	}
 }
 
 func (s *UnitTestSuite) TestHeartbeatReply() {
-	var message types.IProxyMessage = types.NewHeartbeatReply()
+	var message messages.IProxyMessage = messages.NewHeartbeatReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.HeartbeatReply); ok {
+	if v, ok := message.(*messages.HeartbeatReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -877,11 +873,11 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.HeartbeatReply); ok {
+	if v, ok := message.(*messages.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -890,7 +886,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.HeartbeatReply); ok {
+	if v, ok := message.(*messages.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -898,20 +894,20 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 func (s *UnitTestSuite) TestCancelRequest() {
 
-	var message types.IProxyMessage = types.NewCancelRequest()
-	if v, ok := message.(*types.CancelRequest); ok {
-		s.Equal(messages.CancelReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewCancelRequest()
+	if v, ok := message.(*messages.CancelRequest); ok {
+		s.Equal(messagetypes.CancelReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.CancelRequest); ok {
+	if v, ok := message.(*messages.CancelRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetTargetRequestID())
 
@@ -928,11 +924,11 @@ func (s *UnitTestSuite) TestCancelRequest() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.CancelRequest); ok {
+	if v, ok := message.(*messages.CancelRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetTargetRequestID())
 	}
@@ -941,24 +937,24 @@ func (s *UnitTestSuite) TestCancelRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.CancelRequest); ok {
+	if v, ok := message.(*messages.CancelRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetTargetRequestID())
 	}
 }
 
 func (s *UnitTestSuite) TestCancelReply() {
-	var message types.IProxyMessage = types.NewCancelReply()
+	var message messages.IProxyMessage = messages.NewCancelReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.CancelReply); ok {
+	if v, ok := message.(*messages.CancelReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 		s.False(v.GetWasCancelled())
@@ -979,11 +975,11 @@ func (s *UnitTestSuite) TestCancelReply() {
 	serializedMessage, err = proxyMessage.Serialize(false)
 	s.NoError(err)
 
-	message, err = types.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.CancelReply); ok {
+	if v, ok := message.(*messages.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 		s.True(v.GetWasCancelled())
@@ -993,17 +989,20 @@ func (s *UnitTestSuite) TestCancelReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.CancelReply); ok {
+	if v, ok := message.(*messages.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 		s.True(v.GetWasCancelled())
 	}
 }
 
+// --------------------------------------------------------------------------
+// Test the messages.ProxyMessage helper methods
+
 func (s *UnitTestSuite) TestPropertyHelpers() {
 
 	// verify that the property helper methods work as expected
-	message := types.NewProxyMessage()
+	message := messages.NewProxyMessage()
 
 	// verify that non-existant property values return the default for the requested type
 	s.Nil(message.GetStringProperty("foo"))
@@ -1049,13 +1048,15 @@ func (s *UnitTestSuite) TestPropertyHelpers() {
 
 	jsonStr := "{\"String\":\"john\",\"Details\":\"22\",\"Type\":\"mca\"}"
 	cadenceError := cadenceerrors.NewCadenceErrorEmpty()
+	cadenceErrorCheck := cadenceerrors.NewCadenceErrorEmpty()
 	err := json.Unmarshal([]byte(jsonStr), cadenceError)
 	if err != nil {
 		panic(err)
 	}
 
 	message.SetJSONProperty("foo", cadenceError)
-	s.Equal(cadenceError, message.GetJSONProperty("foo", cadenceError))
+	message.GetJSONProperty("foo", cadenceErrorCheck)
+	s.Equal(cadenceError, cadenceErrorCheck)
 
 	b, err := base64.StdEncoding.DecodeString("c29tZSBkYXRhIHdpdGggACBhbmQg77u/")
 	s.NoError(err)
@@ -1064,28 +1065,28 @@ func (s *UnitTestSuite) TestPropertyHelpers() {
 }
 
 // --------------------------------------------------------------------------
-// Test the base messages (ProxyMessage, ProxyRequest, ProxyReply)
+// Test the base messages (messages.ProxyMessage, messages.ProxyRequest, messages.ProxyReply)
 
 // TestProxyMessage ensures that we can
-// serializate and deserialize a base ProxyMessage
+// serializate and deserialize a base messages.ProxyMessage
 func (s *UnitTestSuite) TestProxyMessage() {
 
 	// empty buffer to create empty proxy message
 	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := types.Deserialize(buf, true)
+	message, err := messages.Deserialize(buf, true)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ProxyMessage); ok {
-		s.Equal(messages.Unspecified, v.Type)
+	if v, ok := message.(*messages.ProxyMessage); ok {
+		s.Equal(messagetypes.Unspecified, v.Type)
 		s.Empty(v.Properties)
 		s.Empty(v.Attachments)
 	}
 
 	// new proxy message to fill
-	message = types.NewProxyMessage()
+	message = messages.NewProxyMessage()
 
-	if v, ok := message.(*types.ProxyMessage); ok {
+	if v, ok := message.(*messages.ProxyMessage); ok {
 
 		// fill the properties map
 		p1 := "1"
@@ -1116,14 +1117,14 @@ func (s *UnitTestSuite) TestProxyMessage() {
 	}
 
 	// deserialize
-	message, err = types.Deserialize(buf, true)
+	message, err = messages.Deserialize(buf, true)
 	s.NoError(err)
 
 	// check that the values are the same
-	if v, ok := message.(*types.ProxyMessage); ok {
+	if v, ok := message.(*messages.ProxyMessage); ok {
 
 		// type and property values
-		s.Equal(messages.Unspecified, v.Type)
+		s.Equal(messagetypes.Unspecified, v.Type)
 		s.Equal(6, len(v.Properties))
 		s.Equal("1", *v.Properties["One"])
 		s.Equal("2", *v.Properties["Two"])
@@ -1131,11 +1132,10 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		s.Nil(v.Properties["Nil"])
 		s.Equal("c29tZSBkYXRhIHdpdGggACBhbmQg77u/", *v.Properties["Bytes"])
 
-		cadenceError := v.GetJSONProperty("Error", cadenceerrors.NewCadenceErrorEmpty())
-		if v, ok := cadenceError.(*cadenceerrors.CadenceError); ok {
-			s.Equal("foo", *v.String)
-			s.Equal(cadenceerrors.Custom, v.GetType())
-		}
+		cadenceError := cadenceerrors.NewCadenceErrorEmpty()
+		v.GetJSONProperty("Error", cadenceError)
+		s.Equal("foo", *cadenceError.String)
+		s.Equal(cadenceerrors.Custom, cadenceError.GetType())
 
 		// attachment values
 		s.Equal(3, len(v.Attachments))
@@ -1149,11 +1149,11 @@ func (s *UnitTestSuite) TestProxyRequest() {
 	// Ensure that we can serialize and deserialize request messages
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := types.Deserialize(buf, true, "ProxyRequest")
+	message, err := messages.Deserialize(buf, true, "messages.ProxyRequest")
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ProxyRequest); ok {
+	if v, ok := message.(*messages.ProxyRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -1168,11 +1168,11 @@ func (s *UnitTestSuite) TestProxyRequest() {
 		buf = bytes.NewBuffer(serializedMessage)
 	}
 
-	message, err = types.Deserialize(buf, true, "ProxyRequest")
+	message, err = messages.Deserialize(buf, true, "messages.ProxyRequest")
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ProxyRequest); ok {
+	if v, ok := message.(*messages.ProxyRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 	}
 }
@@ -1182,11 +1182,11 @@ func (s *UnitTestSuite) TestProxyReply() {
 	// Ensure that we can serialize and deserialize reply messages
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := types.Deserialize(buf, true, "ProxyReply")
+	message, err := messages.Deserialize(buf, true, "messages.ProxyReply")
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ProxyReply); ok {
+	if v, ok := message.(*messages.ProxyReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -1207,11 +1207,11 @@ func (s *UnitTestSuite) TestProxyReply() {
 		buf = bytes.NewBuffer(serializedMessage)
 	}
 
-	message, err = types.Deserialize(buf, true, "ProxyReply")
+	message, err = messages.Deserialize(buf, true, "messages.ProxyReply")
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*types.ProxyReply); ok {
+	if v, ok := message.(*messages.ProxyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Nil(v.GetError().Type)
 		s.Panics(func() { v.GetError().GetType() })
