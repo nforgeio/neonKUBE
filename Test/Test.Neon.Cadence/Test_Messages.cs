@@ -57,7 +57,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Implementation
 
-        CadenceFixture fixture;
+        CadenceFixture      fixture;
         CadenceConnection   connection;
         HttpClient          proxyClient;
 
@@ -95,7 +95,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestPropertyHelpers()
+        public void Test_PropertyHelpers()
         {
             // Verify that the property helper methods work as expected.
 

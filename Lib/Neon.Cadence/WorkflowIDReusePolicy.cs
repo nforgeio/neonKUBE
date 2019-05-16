@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecution .cs
+// FILE:	    WorkflowIDReusePolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,26 +31,30 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Cadence workflow execution details.
+    /// Enumerates the workflow ID reuse policies.
     /// </summary>
-    public class WorkflowExecution
+    public static class WorkflowIDReusePolicy
     {
         /// <summary>
-        /// The original ID assigned to the workflow.
+        /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution
+        /// when workflow not running, and the last execution close state is in
+        /// [terminated, cancelled, timeouted, failed].
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string ID { get; set; }
+        public const int WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0;
 
         /// <summary>
-        /// The latest ID assigned to the workflow.  Note that this will differ
-        /// from <see cref="ID"/> when the workflow has been restarted.
+        /// WorkflowIDReusePolicyAllowDuplicate allow start a workflow execution using
+        /// the same workflow ID,when workflow not running.
         /// </summary>
-        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string RunID { get; set; }
+        public const int WorkflowIDReusePolicyAllowDuplicate = 1;
+
+        /// <summary>
+        /// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution
+        /// using the same workflow ID at all.
+        /// </summary>
+        public const int WorkflowIDReusePolicyRejectDuplicate = 2;
     }
 }

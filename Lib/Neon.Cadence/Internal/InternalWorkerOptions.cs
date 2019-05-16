@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkerOptions .cs
+// FILE:	    InternalWorkerOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,10 +34,10 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Specifies the options Cadence will use when assigning workflow and activity
-    /// executions to a user's worker service.  This maps fairly closely to the
-    /// Cadence GOLANG <b>WorkerOptions</b>, but we removed a few fields that don't
-    /// make sense to serialize.  See the remarks for more information.
+    /// <b>INTERNAL USE ONLY:</b> Specifies the options Cadence will use when assigning
+    /// workflow and activity executions to a user's worker service.  This maps fairly 
+    /// closely to the  Cadence GOLANG <b>WorkerOptions</b>, but we removed a few fields
+    /// that don't make sense to serialize.  See the remarks for more information.
     /// </summary>
     /// <remarks>
     /// <list type="table">
@@ -69,7 +69,7 @@ namespace Neon.Cadence.Internal
     /// </item>
     /// </list>
     /// </remarks>
-    public class WorkerOptions
+    public class InternalWorkerOptions
     {
         /// <summary>
         /// Optional: To set the maximum concurrent activity executions this worker can have.
@@ -207,8 +207,8 @@ namespace Neon.Cadence.Internal
         /// default: 5s
         /// </summary>
         [JsonProperty(PropertyName = "StickyScheduleToStartTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("5s")]
-        public string StickyScheduleToStartTimeout { get; set; } = "5s";
+        [DefaultValue(5 * CadenceHelper.NanosecondsPerSecond)]
+        public long StickyScheduleToStartTimeout { get; set; } = 5 * CadenceHelper.NanosecondsPerSecond;
 
         /// <summary>
         /// Optional: Sets how decision worker deals with non-deterministic history events
@@ -224,7 +224,7 @@ namespace Neon.Cadence.Internal
         /// default: 0s
         /// </summary>
         [JsonProperty(PropertyName = "WorkerStopTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("0s")]
-        public string WorkerStopTimeout { get; set; } = "0s";
+        [DefaultValue(0L)]
+        public long WorkerStopTimeout { get; set; } = 0L;
     }
 }

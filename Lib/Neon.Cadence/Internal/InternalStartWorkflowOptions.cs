@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartWorkflowOptions.cs
+// FILE:	    InternalStartWorkflowOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,19 +35,19 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <para>
-    /// Specififies workflow execution options.  This maps pretty closely
-    /// to this Cadence GOLANG structure:
+    /// <b>INTERNAL USE ONLY:</b> Specififies workflow execution options.  This maps 
+    /// pretty closely to this Cadence GOLANG structure:
     /// </para>
     /// <para>
     /// https://godoc.org/go.uber.org/cadence/internal#StartWorkflowOptions
     /// </para>
     /// </summary>
-    internal class StartWorkflowOptions
+    internal class InternalStartWorkflowOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public StartWorkflowOptions()
+        public InternalStartWorkflowOptions()
         {
         }
 
@@ -68,20 +68,20 @@ namespace Neon.Cadence.Internal
         public string TaskList { get; set; }
 
         /// <summary>
-        /// ExecutionStartToCloseTimeout - The time out for duration of workflow execution.
-        /// The resolution is seconds.  Mandatory: No default.
+        /// ExecutionStartToCloseTimeout - The time out for duration of workflow execution (expressed
+        /// in nanoseconds).  Mandatory: No default.
         /// </summary>
         [JsonProperty(PropertyName = "ExecutionStartToCloseTimeout", Required = Required.Always)]
-        public string ExecutionStartToCloseTimeout { get; set; } = null;
+        public long ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
         /// DecisionTaskStartToCloseTimeout - The time out for processing decision task from the time the worker
         /// pulled this task. If a decision task is lost, it is retried after this timeout.
-        /// The resolution is seconds.  Optional: defaulted to 10 secs.
+        /// Expressed as nanoseconds.  Optional: defaulted to 10 secs.
         /// </summary>
         [JsonProperty(PropertyName = "DecisionTaskStartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("10s")]
-        public string DecisionTaskStartToCloseTimeout { get; set; } = "10s";
+        [DefaultValue(10 * CadenceHelper.NanosecondsPerSecond)]
+        public long DecisionTaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
 
         /// <summary>
         /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful

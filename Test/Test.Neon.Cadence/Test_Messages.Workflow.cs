@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
 using Neon.IO;
+using Neon.Time;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -44,7 +45,7 @@ namespace TestCadence
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowRegisterRequest()
+        public void Test_WorkflowRegisterRequest()
         {
             WorkflowRegisterRequest message;
 
@@ -98,7 +99,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowRegisterReply()
+        public void Test_WorkflowRegisterReply()
         {
             WorkflowRegisterReply message;
 
@@ -151,7 +152,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowExecuteRequest()
+        public void Test_WorkflowExecuteRequest()
         {
             WorkflowExecuteRequest message;
 
@@ -180,14 +181,14 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.Domain = "my-domain";
                 message.Name = "Foo";
-                message.Args = new Dictionary<string, object>() { { "hello", "world!" } };
-                message.Options = new StartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = "100s" };
+                message.Args = new byte[] { 0, 1, 2, 3, 4 };
+                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("100s").Ticks };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -198,10 +199,9 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
-                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -210,10 +210,9 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
-                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -222,16 +221,15 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
-                Assert.Equal("world!", message.Args["hello"]);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowExecuteReply()
+        public void Test_WorkflowExecuteReply()
         {
             WorkflowExecuteReply message;
 
@@ -255,7 +253,7 @@ namespace TestCadence
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.Execution = new WorkflowExecution() { ID = "foo", RunID = "bar" };
+                message.Execution = new InternalWorkflowExecution() { ID = "foo", RunID = "bar" };
                 Assert.Equal("foo", message.Execution.ID);
                 Assert.Equal("bar", message.Execution.RunID);
                 message.Error = new CadenceError("MyError");
@@ -294,7 +292,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowInvokeRequest()
+        public void Test_WorkflowInvokeRequest()
         {
             WorkflowInvokeRequest message;
 
@@ -313,16 +311,16 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowInvokeRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(0, message.ContextId);
+                Assert.Equal(0, message.WorkflowContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
-                message.ContextId = 666;
+                message.WorkflowContextId = 666;
                 message.Name = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
+                Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
 
                 stream.SetLength(0);
@@ -332,7 +330,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowInvokeRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
+                Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
@@ -341,7 +339,7 @@ namespace TestCadence
                 message = EchoToConnection(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
+                Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
@@ -350,7 +348,7 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
+                Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
             }
@@ -358,7 +356,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestWorkflowInvokeReply()
+        public void Test_WorkflowInvokeReply()
         {
             WorkflowInvokeReply message;
 

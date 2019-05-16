@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRequest.cs
+// FILE:	    StopWorkerRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,45 +18,66 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
+using Neon.Net;
+using Neon.Tasks;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow context requests.
+    /// <b>library --> proxy:</b> Stops a Cadence worker.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.StopWorkerRequest)]
+    internal class StopWorkerRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowRequest()
+        public StopWorkerRequest()
         {
+            Type = MessageTypes.StopWorkerRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.StopWorkerReply;
+
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this request.
+        /// Identifies the worker being stopped.
         /// </summary>
-        public long ContextId
+        public long WorkerId
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetLongProperty("WorkerId");
+            set => SetLongProperty("WorkerId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowRequest();
+            var clone = new StopWorkerRequest();
 
             CopyTo(clone);
 
@@ -68,9 +89,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowRequest)target;
+            var typedTarget = (StopWorkerRequest)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.WorkerId = this.WorkerId;
         }
     }
 }

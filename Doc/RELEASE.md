@@ -36,11 +36,9 @@
 
 8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Upgrade an older cluster and verify by running cluster unit tests.
+9. Push the `release-VERSION` branch to GitHub.
 
-10. Push the `release-VERSION` branch to GitHub.
-
-11. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version

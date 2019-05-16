@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowIDReusePolicy.cs
+// FILE:	    WorkflowContextRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,33 +28,50 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the workflow ID reuse policies.
+    /// Base class for all workflow requests that relate to a workflow context
+    /// being managed by the <b>cadence-proxy</b>.
     /// </summary>
-    internal static class WorkflowIDReusePolicy
+    [ProxyMessage(MessageTypes.Unspecified)]
+    internal class WorkflowContextRequest : ProxyRequest
     {
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution
-        /// when workflow not running, and the last execution close state is in
-        /// [terminated, cancelled, timeouted, failed].
+        /// Default constructor.
         /// </summary>
-        public const int WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0;
+        public WorkflowContextRequest()
+        {
+        }
 
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicate allow start a workflow execution using
-        /// the same workflow ID,when workflow not running.
+        /// Uniquely identifies the workflow context associated with this request.
         /// </summary>
-        public const int WorkflowIDReusePolicyAllowDuplicate = 1;
+        public long WorkflowContextId
+        {
+            get => GetLongProperty("WorkflowContextId");
+            set => SetLongProperty("WorkflowContextId", value);
+        }
 
-        /// <summary>
-        /// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution
-        /// using the same workflow ID at all.
-        /// </summary>
-        public const int orkflowIDReusePolicyRejectDuplicate = 2;
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new WorkflowContextRequest();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+
+            var typedTarget = (WorkflowContextRequest)target;
+
+            typedTarget.WorkflowContextId = this.WorkflowContextId;
+        }
     }
 }

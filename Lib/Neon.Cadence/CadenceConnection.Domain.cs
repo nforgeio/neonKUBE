@@ -51,6 +51,9 @@ namespace Neon.Cadence
 {
     public partial class CadenceConnection
     {
+        //---------------------------------------------------------------------
+        // Cadence domain related operations.
+
         /// <summary>
         /// Registers a Cadence domain using the <see cref="RegisterDomainRequest"/> information passed.
         /// </summary>
@@ -60,7 +63,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        public async Task RegisterDomain(RegisterDomainRequest request)
+        private async Task RegisterDomainAsync(RegisterDomainRequest request)
         {
             var domainRegisterRequest =
                 new DomainRegisterRequest()
@@ -71,7 +74,7 @@ namespace Neon.Cadence
                     RetentionDays = request.RetentionDays
                 };
 
-            var reply = await ProxyCallAsync(domainRegisterRequest);
+            var reply = await CallProxyAsync(domainRegisterRequest);
 
             reply.ThrowOnError();
         }
@@ -93,7 +96,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7)
         {
-            await RegisterDomain(
+            await RegisterDomainAsync(
                 new RegisterDomainRequest()
                 {
                     Name          = name,
@@ -120,7 +123,7 @@ namespace Neon.Cadence
                     Name = name,
                 };
 
-            var reply = (DomainDescribeReply)await ProxyCallAsync(domainDescribeRequest);
+            var reply = (DomainDescribeReply)await CallProxyAsync(domainDescribeRequest);
 
             reply.ThrowOnError();
 
@@ -164,7 +167,7 @@ namespace Neon.Cadence
                     ConfigurationRetentionDays = request.Configuration.RetentionDays
                 };
 
-            var reply = await ProxyCallAsync(domainUpdateRequest);
+            var reply = await CallProxyAsync(domainUpdateRequest);
 
             reply.ThrowOnError();
         }

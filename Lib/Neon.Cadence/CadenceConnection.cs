@@ -362,14 +362,17 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                      syncLock = new object();
-        private IPAddress                   address  = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
-        private int                         proxyPort;
-        private HttpClient                  proxyClient;
-        private IWebHost                    host;
-        private Exception                   pendingException;
-        private bool                        closingConnection;
-        private bool                        connectionClosedRaised;
+        private object                          syncLock   = new object();
+        private IPAddress                       address    = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
+        private Dictionary<long, Operation>     operations = new Dictionary<long, Operation>();
+        private Dictionary<long, Worker>        workers    = new Dictionary<long, Worker>();
+        private int                             proxyPort;
+        private HttpClient                      proxyClient;
+        private IWebHost                        host;
+        private Exception                       pendingException;
+        private bool                            closingConnection;
+        private bool                            connectionClosedRaised;
+        private long                            nextRequestId = 0;
 
         /// <summary>
         /// Constructor.
@@ -499,7 +502,7 @@ namespace Neon.Cadence
                             LibraryPort    = ListenUri.Port
                         };
 
-                    ProxyCallAsync(initializeRequest).Wait();
+                    CallProxyAsync(initializeRequest).Wait();
 
                     // Send the [ConnectRequest] to the [cadence-proxy] telling it
                     // how to connect to the Cadence cluster.
@@ -519,7 +522,7 @@ namespace Neon.Cadence
                         };
 
 
-                    ProxyCallAsync(connectRequest).Result.ThrowOnError();
+                    CallProxyAsync(connectRequest).Result.ThrowOnError();
                 }
                 catch (Exception e)
                 {
@@ -528,6 +531,7 @@ namespace Neon.Cadence
                 }
             }
 
+#if DEBUG
             // Crank up the background threads which will handle [cadence-proxy]
             // health heartbeats as well as request timeouts.
 
@@ -536,6 +540,7 @@ namespace Neon.Cadence
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
+#endif
         }
 
         /// <summary>
@@ -572,7 +577,7 @@ namespace Neon.Cadence
        
                     try
                     {
-                        ProxyCallAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
+                        CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
                     }
                     catch
                     {
@@ -593,6 +598,7 @@ namespace Neon.Cadence
                 }
             }
 
+#if DEBUG
             if (heartbeatThread != null)
             {
                 heartbeatThread.Join();
@@ -605,16 +611,17 @@ namespace Neon.Cadence
                 timeoutThread = null;
             }
 
-            if (host != null)
-            {
-                host.Dispose();
-                host = null;
-            }
-
             if (emulatedHost != null)
             {
                 emulatedHost.Dispose();
                 emulatedHost = null;
+            }
+#endif
+
+            if (host != null)
+            {
+                host.Dispose();
+                host = null;
             }
 
             if (proxyClient != null)
@@ -726,12 +733,12 @@ namespace Neon.Cadence
 
                         await OnRootRequestAsync(context);
                         break;
-
+#if DEBUG
                     case "/echo":
 
                         await OnEchoRequestAsync(context);
                         break;
-
+#endif
                     default:
 
                         response.StatusCode = StatusCodes.Status404NotFound;
@@ -811,7 +818,7 @@ namespace Neon.Cadence
                     log.LogWarn(() => $"Reply [type={reply.Type}, requestId={reply.RequestId}] does not map to a pending operation and will be ignored.");
 
                     httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                    await httpResponse.WriteAsync($"[cadence-client] Does have a pending operation with [requestId={reply.RequestId}].");
+                    await httpResponse.WriteAsync($"[cadence-client] does not have a pending operation with [requestId={reply.RequestId}].");
                 }
             }
             else
@@ -834,7 +841,7 @@ namespace Neon.Cadence
         /// This defaults to unlimited.
         /// </param>
         /// <returns>The reply message.</returns>
-        private async Task<ProxyReply> ProxyCallAsync(ProxyRequest request, TimeSpan timeout = default)
+        private async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
         {
             try
             {
@@ -944,7 +951,7 @@ namespace Neon.Cadence
 
                                 try
                                 {
-                                    var heartbeatReply = await ProxyCallAsync(new HeartbeatRequest(), timeout: Settings.DebugHttpTimeout);
+                                    var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: Settings.DebugHttpTimeout);
 
                                     if (heartbeatReply.Error != null)
                                     {
@@ -1058,7 +1065,7 @@ namespace Neon.Cadence
                                 {
                                     if (operation.Request.Type != MessageTypes.CancelRequest)
                                     {
-                                        await ProxyCallAsync(new CancelRequest() { TargetRequestId = operation.RequestId }, timeout: TimeSpan.FromSeconds(1));
+                                        await CallProxyAsync(new CancelRequest() { TargetRequestId = operation.RequestId }, timeout: TimeSpan.FromSeconds(1));
                                     }
 
                                     operation.SetCanceled();
