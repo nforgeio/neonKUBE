@@ -143,7 +143,6 @@ namespace Neon.Cadence
         private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts      = new Dictionary<long, EmulatedWorkflow>();
         private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows             = new Dictionary<string, EmulatedWorkflow>();
         private Dictionary<long, Operation>             emulatedOperations            = new Dictionary<long, Operation>();
-        private long                                    nextEmulatedRequestId         = 0;
         private long                                    nextEmulatedWorkerId          = 0;
         private long                                    nextEmulatedWorkflowContextId = 0;
         private Thread                                  heartbeatThread;
@@ -386,7 +385,7 @@ namespace Neon.Cadence
         {
             try
             {
-                var requestId = Interlocked.Increment(ref nextEmulatedRequestId);
+                var requestId = Interlocked.Increment(ref nextRequestId);
                 var operation = new Operation(requestId, request);
 
                 lock (syncLock)

@@ -372,6 +372,7 @@ namespace Neon.Cadence
         private Exception                       pendingException;
         private bool                            closingConnection;
         private bool                            connectionClosedRaised;
+        private long                            nextRequestId = 0;
 
         /// <summary>
         /// Constructor.
@@ -530,6 +531,7 @@ namespace Neon.Cadence
                 }
             }
 
+#if DEBUG
             // Crank up the background threads which will handle [cadence-proxy]
             // health heartbeats as well as request timeouts.
 
@@ -538,6 +540,7 @@ namespace Neon.Cadence
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
+#endif
         }
 
         /// <summary>
@@ -595,6 +598,7 @@ namespace Neon.Cadence
                 }
             }
 
+#if DEBUG
             if (heartbeatThread != null)
             {
                 heartbeatThread.Join();
@@ -607,16 +611,17 @@ namespace Neon.Cadence
                 timeoutThread = null;
             }
 
-            if (host != null)
-            {
-                host.Dispose();
-                host = null;
-            }
-
             if (emulatedHost != null)
             {
                 emulatedHost.Dispose();
                 emulatedHost = null;
+            }
+#endif
+
+            if (host != null)
+            {
+                host.Dispose();
+                host = null;
             }
 
             if (proxyClient != null)
@@ -728,12 +733,12 @@ namespace Neon.Cadence
 
                         await OnRootRequestAsync(context);
                         break;
-
+#if DEBUG
                     case "/echo":
 
                         await OnEchoRequestAsync(context);
                         break;
-
+#endif
                     default:
 
                         response.StatusCode = StatusCodes.Status404NotFound;
@@ -840,7 +845,7 @@ namespace Neon.Cadence
         {
             try
             {
-                var requestId = Interlocked.Increment(ref this.nextEmulatedRequestId);
+                var requestId = Interlocked.Increment(ref this.nextRequestId);
                 var operation = new Operation(requestId, request, timeout);
 
                 lock (syncLock)
