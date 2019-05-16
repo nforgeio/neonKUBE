@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Information returned by <see cref="CadenceConnection.DescribeDomainAsync(string)"/>.
+    /// Information returned by <see cref="CadenceClient.DescribeDomainAsync(string)"/>.
     /// </summary>
     public class DescribeDomainResponse
     {

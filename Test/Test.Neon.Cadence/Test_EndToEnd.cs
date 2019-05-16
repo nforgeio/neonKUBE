@@ -39,12 +39,12 @@ using Xunit;
 namespace TestCadence
 {
     /// <summary>
-    /// Tests low-level <see cref="CadenceConnection"/> functionality against the <b>cadence-proxy</b>.
+    /// Tests low-level <see cref="CadenceClient"/> functionality against the <b>cadence-proxy</b>.
     /// </summary>
     public sealed class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture      fixture;
-        CadenceConnection   connection;
+        CadenceClient   connection;
         HttpClient          proxyClient;
 
         public Test_EndToEnd(CadenceFixture fixture)

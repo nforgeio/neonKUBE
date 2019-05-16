@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceConnectionClosedDelegate.cs
+// FILE:	    CadenceClientClosedDelegate.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,19 +22,19 @@ using System.ComponentModel;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Delegate called by a <see cref="CadenceConnection"/> when the connection is closed
+    /// Delegate called by a <see cref="CadenceClient"/> when the connection is closed
     /// explicitly or where there's a problem communicating with the <b>cadence-proxy</b>.
     /// </summary>
     /// <param name="sender">The event sender.</param>
     /// <param name="args">The event arguments.</param>
-    public delegate void CadenceConnectionClosedDelegate(object sender, CadenceConnectionClosedArgs args);
+    public delegate void CadenceClientClosedDelegate(object sender, CadenceClientClosedArgs args);
 
     /// <summary>
-    /// The event arguments sent when a <see cref="CadenceConnection"/> is closed
+    /// The event arguments sent when a <see cref="CadenceClient"/> is closed
     /// with a property indicating whether or not the connection was closed due
     /// to an error.
     /// </summary>
-    public class CadenceConnectionClosedArgs : EventArgs
+    public class CadenceClientClosedArgs : EventArgs
     {
         /// <summary>
         /// This will be set if the connection was closed due to an error
