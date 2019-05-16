@@ -127,6 +127,30 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 			reply, err = handleTerminateRequest(v)
 		}
 
+	// WorkflowRegisterRequest
+	case messagetypes.WorkflowRegisterRequest:
+		if v, ok := request.(*messages.WorkflowRegisterRequest); ok {
+			reply, err = handleWorkflowRegisterRequest(v)
+		}
+
+	// WorkflowExecuteRequest
+	case messagetypes.WorkflowExecuteRequest:
+		if v, ok := request.(*messages.WorkflowExecuteRequest); ok {
+			reply, err = handleWorkflowExecuteRequest(v)
+		}
+
+	// WorkflowInvokeRequest
+	case messagetypes.WorkflowInvokeRequest:
+		if v, ok := request.(*messages.WorkflowInvokeRequest); ok {
+			reply, err = handleWorkflowInvokeRequest(v)
+		}
+
+	// NewWorkerRequest
+	case messagetypes.NewWorkerRequest:
+		if v, ok := request.(*messages.NewWorkerRequest); ok {
+			reply, err = handleNewWorkerRequest(v)
+		}
+
 	// Undefined message type
 	default:
 
@@ -531,6 +555,42 @@ func handleTerminateRequest(request *messages.TerminateRequest) (messages.IProxy
 	}
 
 	return reply, nil
+}
+
+func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) (messages.IProxyMessage, error) {
+	err := fmt.Errorf("not implemented exception for message type WorkflowRegisterRequest")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowRegisterRequest", zap.Error(err))
+	return nil, err
+
+}
+
+func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) (messages.IProxyMessage, error) {
+	err := fmt.Errorf("not implemented exception for message type WorkflowExecuteRequest")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowExecuteRequest", zap.Error(err))
+	return nil, err
+
+}
+
+func handleWorkflowInvokeRequest(request *messages.WorkflowInvokeRequest) (messages.IProxyMessage, error) {
+	err := fmt.Errorf("not implemented exception for message type WorkflowInvokeRequest")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowInvokeRequest", zap.Error(err))
+	return nil, err
+
+}
+
+func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxyMessage, error) {
+	err := fmt.Errorf("not implemented exception for message type NewWorkerRequest")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling NewWorkerRequest", zap.Error(err))
+	return nil, err
+
 }
 
 // -------------------------------------------------------------------------
