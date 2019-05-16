@@ -70,7 +70,7 @@ SetVersion Neon.Nats
 SetVersion Neon.Web
 SetVersion Neon.XenServer
 SetVersion Neon.Xunit
-# SetVersion Neon.Xunit.Cadence
+SetVersion Neon.Xunit.Cadence
 SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
 
@@ -97,7 +97,7 @@ Publish Neon.Nats
 Publish Neon.Web
 Publish Neon.XenServer
 Publish Neon.Xunit
-# Publish Neon.Xunit.Cadence
+Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
 pause
