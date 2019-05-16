@@ -217,7 +217,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "NonDeterministicWorkflowPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public NonDeterministicWorkflowPolicy NonDeterministicWorkflowPolicy { get; set; } = NonDeterministicWorkflowPolicy.NonDeterministicWorkflowPolicyBlockWorkflow;
+        public int NonDeterministicWorkflowPolicy { get; set; } = (int)Neon.Cadence.NonDeterministicWorkflowPolicy.NonDeterministicWorkflowPolicyBlockWorkflow;
 
         /// <summary>
         /// Optional: worker graceful shutdown timeout.

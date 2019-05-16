@@ -201,7 +201,7 @@ namespace Neon.Cadence
                 DisableActivityWorker                    = this.DisableActivityWorker,
                 DisableStickyExecution                   = this.DisableStickyExecution,
                 StickyScheduleToStartTimeout             = GoTimeSpan.FromTimeSpan(this.StickyScheduleToStartTimeout).Ticks,
-                NonDeterministicWorkflowPolicy           = this.NonDeterministicWorkflowPolicy,
+                NonDeterministicWorkflowPolicy           = (int)this.NonDeterministicWorkflowPolicy,
                 WorkerStopTimeout                        = GoTimeSpan.FromTimeSpan(this.WorkerStopTimeout).Ticks
             };
         }

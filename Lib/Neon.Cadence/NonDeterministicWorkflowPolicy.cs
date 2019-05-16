@@ -55,6 +55,6 @@ namespace Neon.Cadence
         /// Whereas default does *NOT* reply anything back to the server, fail workflow replies back with a request
         /// to fail the workflow execution.
         /// </summary>
-        NonDeterministicWorkflowPolicyFailWorkflow
+        NonDeterministicWorkflowPolicyFailWorkflow = 1
     }
 }

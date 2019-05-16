@@ -36,25 +36,25 @@ namespace Neon.Cadence
     /// <summary>
     /// Enumerates the workflow ID reuse policies.
     /// </summary>
-    public static class WorkflowIDReusePolicy
+    public enum WorkflowIDReusePolicy
     {
         /// <summary>
         /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution
         /// when workflow not running, and the last execution close state is in
         /// [terminated, cancelled, timeouted, failed].
         /// </summary>
-        public const int WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0;
+        WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0,
 
         /// <summary>
         /// WorkflowIDReusePolicyAllowDuplicate allow start a workflow execution using
         /// the same workflow ID,when workflow not running.
         /// </summary>
-        public const int WorkflowIDReusePolicyAllowDuplicate = 1;
+        WorkflowIDReusePolicyAllowDuplicate = 1,
 
         /// <summary>
         /// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution
         /// using the same workflow ID at all.
         /// </summary>
-        public const int WorkflowIDReusePolicyRejectDuplicate = 2;
+        WorkflowIDReusePolicyRejectDuplicate = 2
     }
 }

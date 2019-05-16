@@ -90,7 +90,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        public int WorkflowIdReusePolicy { get; set; } = (int)WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
         
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
