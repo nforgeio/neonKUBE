@@ -207,8 +207,8 @@ namespace Neon.Cadence.Internal
         /// default: 5s
         /// </summary>
         [JsonProperty(PropertyName = "StickyScheduleToStartTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("5s")]
-        public string StickyScheduleToStartTimeout { get; set; } = "5s";
+        [DefaultValue(5 * CadenceHelper.NanosecondsPerSecond)]
+        public long StickyScheduleToStartTimeout { get; set; } = 5 * CadenceHelper.NanosecondsPerSecond;
 
         /// <summary>
         /// Optional: Sets how decision worker deals with non-deterministic history events
@@ -224,7 +224,7 @@ namespace Neon.Cadence.Internal
         /// default: 0s
         /// </summary>
         [JsonProperty(PropertyName = "WorkerStopTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("0s")]
-        public string WorkerStopTimeout { get; set; } = "0s";
+        [DefaultValue(0L)]
+        public long WorkerStopTimeout { get; set; } = 0L;
     }
 }

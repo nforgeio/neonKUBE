@@ -31,6 +31,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
 using Neon.IO;
+using Neon.Time;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -181,13 +182,13 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.Name = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = "100s" };
+                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("100s").Ticks };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -200,7 +201,7 @@ namespace TestCadence
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -211,7 +212,7 @@ namespace TestCadence
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -222,7 +223,7 @@ namespace TestCadence
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal("100s", message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
             }
         }
 
