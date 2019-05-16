@@ -1475,6 +1475,7 @@ helm template install/kubernetes/helm/istio \
     --set grafana.enabled=true \
     --set certmanager.enabled=true \
     --set certmanager.email=mailbox@donotuseexample.com \
+	--set gateways.istio-egressgateway.enabled=true \
 ";
             if (cluster.Definition.Network.Ingress.Count > 0)
             {
