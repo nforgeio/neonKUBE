@@ -27,7 +27,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Enumerates the possible message types.
@@ -142,6 +142,16 @@ namespace Neon.Cadence
         /// <b>proxy --> library:</b> Sent in response to a <see cref="NewWorkerRequest"/> message.
         /// </summary>
         NewWorkerReply = 18,
+
+        /// <summary>
+        /// <b>library --> proxy:</b> Stops a Cadence worker.
+        /// </summary>
+        StopWorkerRequest = 19,
+
+        /// <summary>
+        /// <b>proxy --> library:</b> Sent in response to a <see cref="StopWorkerRequest"/> message,
+        /// </summary>
+        StopWorkerReply = 20,
 
         //---------------------------------------------------------------------
         // Workflow messages

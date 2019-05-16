@@ -31,7 +31,7 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
     /// Enumerates how a decision task handler deals with mismatched history events 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    WorkflowContextReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,31 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// Base class for all workflow context replies.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    [ProxyMessage(MessageTypes.Unspecified)]
+    internal class WorkflowContextReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowInvokeReply()
+        public WorkflowContextReply()
         {
-            Type = MessageTypes.WorkflowInvokeReply;
         }
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// Uniquely identifies the workflow context associated with this reply.
         /// </summary>
-        public byte[] Result
+        public long WorkflowContextId
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetLongProperty("WorkflowContextId");
+            set => SetLongProperty("WorkflowContextId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowInvokeReply();
+            var clone = new WorkflowContextReply();
 
             CopyTo(clone);
 
@@ -69,7 +68,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowInvokeReply)target;
+            var typedTarget = (WorkflowContextReply)target;
+
+            typedTarget.WorkflowContextId = this.WorkflowContextId;
         }
     }
 }

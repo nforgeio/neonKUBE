@@ -49,7 +49,7 @@ namespace Neon.Cadence.Internal
         public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
 
         /// <summary>
-        /// Identifies the target domain where the workflow will run.
+        /// Identifies the Cadence domain hosting the workflow.
         /// </summary>
         public string Domain
         {
@@ -67,21 +67,21 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The workflow arguments dictionary (or <c>null</c>).
+        /// The workflow arguments encoded as a byte array (or <c>null</c>).
         /// </summary>
-        public Dictionary<string, object> Args
+        public byte[] Args
         {
-            get => GetJsonProperty<Dictionary<string, object>>("Args");
-            set => SetJsonProperty<Dictionary<string, object>>("Args", value);
+            get => GetBytesProperty("Args");
+            set => SetBytesProperty("Args", value);
         }
 
         /// <summary>
         /// The workflow start options.
         /// </summary>
-        public StartWorkflowOptions Options
+        public InternalStartWorkflowOptions Options
         {
-            get => GetJsonProperty<StartWorkflowOptions>("Options");
-            set => SetJsonProperty<StartWorkflowOptions>("Options", value);
+            get => GetJsonProperty<InternalStartWorkflowOptions>("Options");
+            set => SetJsonProperty<InternalStartWorkflowOptions>("Options", value);
         }
 
         /// <inheritdoc/>
@@ -101,21 +101,10 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteRequest)target;
 
+            typedTarget.Args    = this.Args;
             typedTarget.Domain  = this.Domain;
             typedTarget.Name    = this.Name;
             typedTarget.Options = this.Options;
-
-            if (this.Args != null)
-            {
-                var clonedArgs = new Dictionary<string, object>();
-
-                foreach (var arg in this.Args)
-                {
-                    clonedArgs.Add(arg.Key, arg.Value);
-                }
-
-                typedTarget.Args = clonedArgs;
-            }
         }
     }
 }

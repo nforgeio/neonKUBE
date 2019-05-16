@@ -44,7 +44,7 @@ namespace TestCadence
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestInitializeRequest()
+        public void Test_InitializeRequest()
         {
             InitializeRequest message;
 
@@ -111,7 +111,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestInitializeReply()
+        public void Test_InitializeReply()
         {
             InitializeReply message;
 
@@ -163,7 +163,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestConnectRequest()
+        public void Test_ConnectRequest()
         {
             ConnectRequest message;
 
@@ -224,7 +224,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestConnectReply()
+        public void Test_ConnectReply()
         {
             ConnectReply message;
 
@@ -283,7 +283,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestDomainDescribeRequest()
+        public void Test_DomainDescribeRequest()
         {
             DomainDescribeRequest message;
 
@@ -338,7 +338,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestDomainDescribeReply()
+        public void Test_DomainDescribeReply()
         {
             DomainDescribeReply message;
 
@@ -427,7 +427,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestDomainRegisterRequest()
+        public void Test_DomainRegisterRequest()
         {
             DomainRegisterRequest message;
 
@@ -506,7 +506,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestDomainRegisterReply()
+        public void Test_DomainRegisterReply()
         {
             DomainRegisterReply message;
 
@@ -559,7 +559,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestDomainUpdateRequest()
+        public void Test_DomainUpdateRequest()
         {
             DomainUpdateRequest message;
 
@@ -638,7 +638,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestDomainUpdateReply()
+        public void Test_DomainUpdateReply()
         {
             DomainUpdateReply message;
 
@@ -690,7 +690,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestTerminateRequest()
+        public void Test_TerminateRequest()
         {
             TerminateRequest message;
 
@@ -739,7 +739,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestTerminateReply()
+        public void Test_TerminateReply()
         {
             TerminateReply message;
 
@@ -792,7 +792,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestHeartbeatRequest()
+        public void Test_HeartbeatRequest()
         {
             HeartbeatRequest message;
 
@@ -841,7 +841,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestHeartbeatReply()
+        public void Test_HeartbeatReply()
         {
             HeartbeatReply message;
 
@@ -894,7 +894,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestCancelRequest()
+        public void Test_CancelRequest()
         {
             CancelRequest message;
 
@@ -947,7 +947,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestCancelReply()
+        public void Test_CancelReply()
         {
             CancelReply message;
 
@@ -1005,7 +1005,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestNewWorkerRequest()
+        public void Test_NewWorkerRequest()
         {
             NewWorkerRequest message;
 
@@ -1036,7 +1036,7 @@ namespace TestCadence
                 Assert.Equal("my-domain", message.Domain);
                 message.TaskList = "my-tasks";
                 Assert.Equal("my-tasks", message.TaskList);
-                message.Options = new WorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
+                message.Options = new InternalWorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
@@ -1076,7 +1076,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void TestNewWorkerReply()
+        public void Test_NewWorkerReply()
         {
             NewWorkerReply message;
 
@@ -1125,6 +1125,110 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_StopWorkerRequest()
+        {
+            StopWorkerRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new StopWorkerRequest();
+
+                Assert.Equal(MessageTypes.StopWorkerReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StopWorkerRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.WorkerId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.WorkerId = 666;
+                Assert.Equal(666, message.WorkerId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StopWorkerRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
+            }
+        }
+
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_StopWorkerReply()
+        {
+            StopWorkerReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new StopWorkerReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StopWorkerReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<StopWorkerReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToConnection(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
             }
         }
     }

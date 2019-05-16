@@ -325,5 +325,43 @@ namespace TestCadence
 
             await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await connection.UpdateDomainAsync("does-not-exist", updateDomainRequest));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Worker()
+        {
+            // Verify that emulated start/stop worker operations work.
+
+            // Generate unique a domain and taskList to avoid conflicts with
+            // other tests on this connection.
+
+            var domain   = Guid.NewGuid().ToString("D");
+            var taskList = Guid.NewGuid().ToString("D");
+
+            // Verify parameter checks.
+
+            await Assert.ThrowsAsync<ArgumentNullException>(async() => await connection.StartWorkerAsync(null, taskList));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await connection.StartWorkerAsync("", taskList));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await connection.StartWorkerAsync(domain, null));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await connection.StartWorkerAsync(domain, ""));
+
+            // This operation should fail because the domain has not yet been registered.
+
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await connection.StartWorkerAsync(domain, "test"));
+
+            // Register the domain and then start a worker.
+
+            await connection.RegisterDomainAsync(domain);
+
+            var worker = await connection.StartWorkerAsync(domain, taskList);
+
+            // Stop the worker.
+
+            await connection.StopWorkerAsync(worker);
+
+            // Stop the worker again to verify that we don't see any errors.
+
+            await connection.StopWorkerAsync(worker);
+        }
     }
 }

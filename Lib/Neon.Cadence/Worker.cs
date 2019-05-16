@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRequest.cs
+// FILE:	    Worker.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,37 +27,30 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Base class for all workflow context replies.
+    /// Identifies a worker registered with Cadence.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowReply : ProxyReply
+    public class Worker
     {
         /// <summary>
-        /// Default constructor.
+        /// Internal constructor.
         /// </summary>
-        public WorkflowReply()
+        /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
+        internal Worker(long workerId)
         {
+            this.WorkerId = workerId;
         }
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-        }
+        /// <summary>
+        /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.
+        /// </summary>
+        internal long WorkerId { get; private set; }
     }
 }

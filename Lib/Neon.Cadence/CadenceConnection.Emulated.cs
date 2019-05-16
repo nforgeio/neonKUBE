@@ -55,6 +55,14 @@ namespace Neon.Cadence
     {
         //---------------------------------------------------------------------
         // Emulated [cadence-proxy] implementation:
+        //
+        // IMPLEMENTATION NOTE:
+        // --------------------
+        // This is a low-fidelity emulation of Cadence functionality.  This is intended
+        // to be used for verifying some of the bigger picture .NET Cadence client functionality
+        // independently from the [cadence-proxy].
+        //
+        // This is not intended for unit testing actual workflows.
 
         /// <summary>
         /// Used to track emulated Cadence domains.
@@ -75,18 +83,71 @@ namespace Neon.Cadence
         /// </summary>
         private class EmulatedWorker
         {
-            public long         WorkerId { get; set;}
+            public long WorkerId { get; set;}
         }
 
-        private AsyncMutex                          emulationMutex  = new AsyncMutex();
-        private Dictionary<long, Operation>         operations      = new Dictionary<long, Operation>(); 
-        private List<EmulatedCadenceDomain>         emulatedDomains = new List<EmulatedCadenceDomain>();
-        private Dictionary<long, EmulatedWorker>    emulatedWorkers = new Dictionary<long, EmulatedWorker>();
-        private long                                nextRequestId   = 0;
-        private long                                nextWorkerId    = 0;
-        private Thread                              heartbeatThread;
-        private Thread                              timeoutThread;
-        private IWebHost                            emulatedHost;
+        /// <summary>
+        /// Used to track emulated workflows.
+        /// </summary>
+        private class EmulatedWorkflow
+        {
+            /// <summary>
+            /// The workflow ID.
+            /// </summary>
+            public string WorkflowId { get; set; }
+
+            /// <summary>
+            /// The workflow context ID.
+            /// </summary>
+            public long WorkflowContextId { get; set; }
+
+            /// <summary>
+            /// Identifies the Cadence domain hosting the workflow.
+            /// </summary>
+            public string Domain { get; set; }
+
+            /// <summary>
+            /// Identifies the workflow implementation to be started.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The workflow arguments encoded a a byte array (or <c>null</c>).
+            /// </summary>
+            public byte[] Args { get; set; }
+
+            /// <summary>
+            /// The workflow start options.
+            /// </summary>
+            public InternalStartWorkflowOptions Options { get; set; }
+
+            /// <summary>
+            /// Indicates when the workflow as completed execution.
+            /// </summary>
+            public bool IsComplete { get; set; }
+
+            /// <summary>
+            /// The workflow result or <c>null</c>.
+            /// </summary>
+            public byte[] Result { get; set; }
+
+            /// <summary>
+            /// The workflow error or <c>null</c>.
+            /// </summary>
+            public CadenceError Error { get; set; }
+        }
+
+        private AsyncMutex                              emulationMutex                = new AsyncMutex();
+        private List<EmulatedCadenceDomain>             emulatedDomains               = new List<EmulatedCadenceDomain>();
+        private Dictionary<long, EmulatedWorker>        emulatedWorkers               = new Dictionary<long, EmulatedWorker>();
+        private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts      = new Dictionary<long, EmulatedWorkflow>();
+        private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows             = new Dictionary<string, EmulatedWorkflow>();
+        private Dictionary<long, Operation>             emulatedOperations            = new Dictionary<long, Operation>();
+        private long                                    nextEmulatedWorkerId          = 0;
+        private long                                    nextEmulatedWorkflowContextId = 0;
+        private Thread                                  heartbeatThread;
+        private Thread                                  timeoutThread;
+        private IWebHost                                emulatedHost;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Set this to <c>false</c> to emulate an unhealthy
@@ -186,63 +247,107 @@ namespace Neon.Cadence
         {
             var request      = context.Request;
             var response     = context.Response;
-            var proxyRequest = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
+            var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
 
-            if (EmulatedLibraryClient == null && proxyRequest.Type != MessageTypes.InitializeRequest)
+            if (EmulatedLibraryClient == null && proxyMessage.Type != MessageTypes.InitializeRequest)
             {
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 await response.WriteAsync($"Unexpected Message: Waiting for an [{nameof(InitializeRequest)}] message to specify the [cadence-client] network endpoint.");
                 return;
             }
 
-            switch (proxyRequest.Type)
+            // Handle proxy reply messages by completing any pending [CallClientAsync()] operation.
+
+            var reply = proxyMessage as ProxyReply;
+
+            if (reply != null)
+            {
+                Operation operation;
+
+                using (await emulationMutex.AcquireAsync())
+                {
+                    emulatedOperations.TryGetValue(reply.RequestId, out operation);    
+                }
+
+                if (operation != null)
+                {
+                    if (reply.Type != operation.Request.ReplyType)
+                    {
+                        response.StatusCode = StatusCodes.Status400BadRequest;
+                        await response.WriteAsync($"[cadence-emulation] has a request [type={operation.Request.Type}, requestId={operation.RequestId}] pending but reply [type={reply.Type}] is not valid and will be ignored.");
+                    }
+                    else
+                    {
+                        operation.SetReply(reply);
+                        response.StatusCode = StatusCodes.Status200OK;
+                    }
+                }
+                else
+                {
+                    log.LogWarn(() => $"[cadence-emulation] reply [type={reply.Type}, requestId={reply.RequestId}] does not map to a pending operation and will be ignored.");
+
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    await response.WriteAsync($"[cadence-emulation] does not have a pending operation with [requestId={reply.RequestId}].");
+                }
+
+                return;
+            }
+
+            // Handle proxy request messages.
+
+            switch (proxyMessage.Type)
             {
                 //-------------------------------------------------------------
                 // Client messages
 
                 case MessageTypes.CancelRequest:
 
-                    await OnEmulatedCancelRequestAsync((CancelRequest)proxyRequest);
+                    await OnEmulatedCancelRequestAsync((CancelRequest)proxyMessage);
                     break;
 
                 case MessageTypes.DomainDescribeRequest:
 
-                    await OnEmulatedDomainDescribeRequestAsync((DomainDescribeRequest)proxyRequest);
+                    await OnEmulatedDomainDescribeRequestAsync((DomainDescribeRequest)proxyMessage);
                     break;
 
                 case MessageTypes.DomainRegisterRequest:
 
-                    await OnEmulatedDomainRegisterRequestAsync((DomainRegisterRequest)proxyRequest);
+                    await OnEmulatedDomainRegisterRequestAsync((DomainRegisterRequest)proxyMessage);
                     break;
 
                 case MessageTypes.DomainUpdateRequest:
 
-                    await OnEmulatedDomainUpdateRequestAsync((DomainUpdateRequest)proxyRequest);
+                    await OnEmulatedDomainUpdateRequestAsync((DomainUpdateRequest)proxyMessage);
                     break;
 
                 case MessageTypes.HeartbeatRequest:
 
-                    await OnEmulatedHeartbeatRequestAsync((HeartbeatRequest) proxyRequest);
+                    await OnEmulatedHeartbeatRequestAsync((HeartbeatRequest) proxyMessage);
                     break;
 
                 case MessageTypes.InitializeRequest:
 
-                    await OnEmulatedInitializeRequestAsync((InitializeRequest)proxyRequest);
+                    await OnEmulatedInitializeRequestAsync((InitializeRequest)proxyMessage);
                     break;
 
                 case MessageTypes.ConnectRequest:
 
-                    await OnEmulatedConnectRequestAsync((ConnectRequest)proxyRequest);
+                    await OnEmulatedConnectRequestAsync((ConnectRequest)proxyMessage);
                     break;
 
                 case MessageTypes.TerminateRequest:
 
-                    await OnEmulatedTerminateRequestAsync((TerminateRequest)proxyRequest);
+                    await OnEmulatedTerminateRequestAsync((TerminateRequest)proxyMessage);
                     break;
 
                 case MessageTypes.NewWorkerRequest:
 
-                    await OnEmulatedNewWorkerRequestAsync((NewWorkerRequest)proxyRequest);
+                    await OnEmulatedNewWorkerRequestAsync((NewWorkerRequest)proxyMessage);
+                    break;
+
+                case MessageTypes.StopWorkerRequest:
+
+                    await OnEmulatedStopWorkerRequestAsync((StopWorkerRequest)proxyMessage);
                     break;
 
                 //-------------------------------------------------------------
@@ -250,17 +355,12 @@ namespace Neon.Cadence
 
                 case MessageTypes.WorkflowExecuteRequest:
 
-                    await OnEmulatedWorkflowExecuteRequestAsync((WorkflowExecuteRequest)proxyRequest);
-                    break;
-
-                case MessageTypes.WorkflowInvokeReply:
-
-                    await OnEmulatedWorkflowInvokeReplyAsync((WorkflowInvokeReply)proxyRequest);
+                    await OnEmulatedWorkflowExecuteRequestAsync((WorkflowExecuteRequest)proxyMessage);
                     break;
 
                 case MessageTypes.WorkflowRegisterRequest:
 
-                    await OnEmulatedWorkflowRegisterRequestAsync((WorkflowRegisterRequest)proxyRequest);
+                    await OnEmulatedWorkflowRegisterRequestAsync((WorkflowRegisterRequest)proxyMessage);
                     break;
 
                 //-------------------------------------------------------------
@@ -268,11 +368,54 @@ namespace Neon.Cadence
                 default:
 
                     response.StatusCode = StatusCodes.Status400BadRequest;
-                    await response.WriteAsync($"EMULATION: Message [{proxyRequest.Type}] is not supported.");
+                    await response.WriteAsync($"EMULATION: Message [{proxyMessage.Type}] is not supported.");
                     break;
             }
 
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Asynchronously emulates a call to the <b>cadence-client</b> by sending a request message
+        /// and then waits for a reply.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        private async Task<ProxyReply> CallClientAsync(ProxyRequest request)
+        {
+            try
+            {
+                var requestId = Interlocked.Increment(ref nextRequestId);
+                var operation = new Operation(requestId, request);
+
+                lock (syncLock)
+                {
+                    operations.Add(requestId, operation);
+                }
+
+                var response = await proxyClient.SendRequestAsync(request);
+
+                response.EnsureSuccessStatusCode();
+
+                return await operation.CompletionSource.Task;
+            }
+            catch (Exception e)
+            {
+                // We should never see an exception under normal circumstances.
+                // Either a requestID somehow got reused (which should never 
+                // happen) or the HTTP request to the [cadence-proxy] failed
+                // to be transmitted, timed out, or the proxy returned an
+                // error status code.
+                //
+                // We're going to save the exception to [pendingException]
+                // and signal the background thread to close the connection.
+
+                pendingException  = e;
+                closingConnection = true;
+
+                log.LogCritical(e);
+                throw;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -376,18 +519,30 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedNewWorkerRequestAsync(NewWorkerRequest request)
         {
-            var workerId = Interlocked.Increment(ref nextWorkerId);
+            var workerId = Interlocked.Increment(ref nextEmulatedWorkerId);
+            var worker   = new EmulatedWorker() { WorkerId = workerId };
 
             using (await emulationMutex.AcquireAsync())
             {
-                // We'll need to track the worker.
+                if (!emulatedDomains.Any(d => d.Name == request.Domain))
+                {
+                    await EmulatedLibraryClient.SendReplyAsync(request,
+                        new NewWorkerReply()
+                        {
+                            Error = new CadenceEntityNotExistsException($"Domain [{request.Domain}] does not exist.").ToCadenceError()
+                        });
 
-                var worker = new EmulatedWorker() { WorkerId = workerId };
+                    return;
+                }
+
+                // We need to track the worker so we can avoid sending
+                // stop requests to the [cadence-proxy] when the worker
+                //is already stopped.
 
                 emulatedWorkers.Add(workerId, worker);
-
-                await EmulatedLibraryClient.SendReplyAsync(request, new NewWorkerReply() { WorkerId = workerId });
             }
+
+            await EmulatedLibraryClient.SendReplyAsync(request, new NewWorkerReply() { WorkerId = workerId });
         }
 
         /// <summary>
@@ -397,37 +552,37 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainDescribeRequestAsync(DomainDescribeRequest request)
         {
-            using (await emulationMutex.AcquireAsync())
+            var reply  = new DomainDescribeReply();
+            var domain = (EmulatedCadenceDomain)null;
+
+            if (string.IsNullOrEmpty(request.Name))
             {
-                var reply  = new DomainDescribeReply();
-                var domain = (EmulatedCadenceDomain)null;
-
-                if (string.IsNullOrEmpty(request.Name))
-                {
-                    reply.Error = new CadenceEntityNotExistsException("Invalid name.").ToCadenceError();
-
-                    await EmulatedLibraryClient.SendReplyAsync(request, reply);
-                    return;
-                }
-
-                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
-
-                if (domain == null)
-                {
-                    reply.Error = new CadenceEntityNotExistsException($"Domain [name={request.Name}] does not exist.").ToCadenceError();
-                }
-                else
-                {
-                    reply.DomainInfoName             = domain.Name;
-                    reply.DomainInfoOwnerEmail       = domain.OwnerEmail;
-                    reply.DomainInfoStatus           = domain.Status;
-                    reply.DomainInfoDescription      = domain.Description;
-                    reply.ConfigurationEmitMetrics   = domain.EmitMetrics;
-                    reply.ConfigurationRetentionDays = domain.RetentionDays;
-                }
+                reply.Error = new CadenceEntityNotExistsException("Invalid name.").ToCadenceError();
 
                 await EmulatedLibraryClient.SendReplyAsync(request, reply);
+                return;
             }
+
+            using (await emulationMutex.AcquireAsync())
+            {
+                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
+            }
+
+            if (domain == null)
+            {
+                reply.Error = new CadenceEntityNotExistsException($"Domain [name={request.Name}] does not exist.").ToCadenceError();
+            }
+            else
+            {
+                reply.DomainInfoName             = domain.Name;
+                reply.DomainInfoOwnerEmail       = domain.OwnerEmail;
+                reply.DomainInfoStatus           = domain.Status;
+                reply.DomainInfoDescription      = domain.Description;
+                reply.ConfigurationEmitMetrics   = domain.EmitMetrics;
+                reply.ConfigurationRetentionDays = domain.RetentionDays;
+            }
+
+            await EmulatedLibraryClient.SendReplyAsync(request, reply);
         }
 
         /// <summary>
@@ -437,29 +592,27 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainRegisterRequestAsync(DomainRegisterRequest request)
         {
+            var reply = new DomainRegisterReply();
+
+            if (string.IsNullOrEmpty(request.Name))
+            {
+                await EmulatedLibraryClient.SendReplyAsync(request,
+                    new DomainRegisterReply()
+                    {
+                        Error = new CadenceBadRequestException("Invalid name.").ToCadenceError()
+                    });
+
+                await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
+                return;
+            }
+
             using (await emulationMutex.AcquireAsync())
             {
-                if (string.IsNullOrEmpty(request.Name))
-                {
-                    await EmulatedLibraryClient.SendReplyAsync(request,
-                        new DomainRegisterReply()
-                        {
-                            Error = new CadenceBadRequestException("Invalid name.").ToCadenceError()
-                        });
-
-                    await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
-                    return;
-                }
-
                 if (emulatedDomains.SingleOrDefault(d => d.Name == request.Name) != null)
                 {
-                    await EmulatedLibraryClient.SendReplyAsync(request,
-                        new DomainRegisterReply()
-                        {
-                            Error = new CadenceDomainAlreadyExistsException($"Domain [{request.Name}] already exists.").ToCadenceError()
-                        });
+                    reply.Error = new CadenceDomainAlreadyExistsException($"Domain [{request.Name}] already exists.").ToCadenceError();
 
-                    await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
+                    await EmulatedLibraryClient.SendReplyAsync(request, reply);
                     return;
                 }
 
@@ -475,7 +628,7 @@ namespace Neon.Cadence
                         RetentionDays = request.RetentionDays
                     });
 
-                await EmulatedLibraryClient.SendReplyAsync(request, new DomainRegisterReply());
+                await EmulatedLibraryClient.SendReplyAsync(request, reply);
             }
         }
 
@@ -486,62 +639,67 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedDomainUpdateRequestAsync(DomainUpdateRequest request)
         {
+            var reply = new DomainUpdateReply();
+
+            if (string.IsNullOrEmpty(request.Name))
+            {
+                reply.Error = new CadenceBadRequestException("Domain name is required.").ToCadenceError();
+
+                await EmulatedLibraryClient.SendReplyAsync(request, reply);
+                return;
+            }
+
+            EmulatedCadenceDomain domain;
+
             using (await emulationMutex.AcquireAsync())
             {
-                var reply = new DomainUpdateReply();
+                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
+            }
 
-                if (string.IsNullOrEmpty(request.Name))
+            if (domain == null)
+            {
+                reply.Error = new CadenceEntityNotExistsException($"Domain [name={request.Name}] does not exist.").ToCadenceError();
+
+                await EmulatedLibraryClient.SendReplyAsync(request, reply);
+                return;
+            }
+
+            domain.Description   = request.UpdatedInfoDescription;
+            domain.OwnerEmail    = request.UpdatedInfoOwnerEmail;
+            domain.EmitMetrics   = request.ConfigurationEmitMetrics;
+            domain.RetentionDays = request.ConfigurationRetentionDays;
+
+            await EmulatedLibraryClient.SendReplyAsync(request, reply);
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="StopWorkerRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedStopWorkerRequestAsync(StopWorkerRequest request)
+        {
+            using (await emulationMutex.AcquireAsync())
+            {
+                if (emulatedWorkers.TryGetValue(request.WorkerId, out var worker))
                 {
-                    reply.Error = new CadenceBadRequestException("Domain name is required.").ToCadenceError();
+                    emulatedWorkers.Remove(request.WorkerId);
 
-                    await EmulatedLibraryClient.SendReplyAsync(request, reply);
-                    return;
+                    await EmulatedLibraryClient.SendReplyAsync(request, new StopWorkerReply());
                 }
-
-                var domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
-
-                if (domain == null)
+                else
                 {
-                    reply.Error = new CadenceEntityNotExistsException($"Domain [name={request.Name}] does not exist.").ToCadenceError();
-
-                    await EmulatedLibraryClient.SendReplyAsync(request, reply);
-                    return;
+                    await EmulatedLibraryClient.SendReplyAsync(request,
+                        new StopWorkerReply()
+                        {
+                            Error = new CadenceError() { String = "EntityNotExistsError", Type = "custom" }
+                        });
                 }
-
-                domain.Description   = request.UpdatedInfoDescription;
-                domain.OwnerEmail    = request.UpdatedInfoOwnerEmail;
-                domain.EmitMetrics   = request.ConfigurationEmitMetrics;
-                domain.RetentionDays = request.ConfigurationRetentionDays;
-
-                await EmulatedLibraryClient.SendReplyAsync(request, new DomainUpdateReply());
             }
         }
 
         //---------------------------------------------------------------------
         // Workflow messages
-
-        /// <summary>
-        /// Handles emulated <see cref="WorkflowExecuteRequest"/> messages.
-        /// </summary>
-        /// <param name="request">The received message.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedWorkflowExecuteRequestAsync(WorkflowExecuteRequest request)
-        {
-            using (await emulationMutex.AcquireAsync())
-            {
-            }
-
-            await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowExecuteReply());
-        }
-
-        /// <summary>
-        /// Handles emulated <see cref="WorkflowInvokeReply"/> messages.
-        /// </summary>
-        /// <param name="reply">The received message.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedWorkflowInvokeReplyAsync(WorkflowInvokeReply reply)
-        {
-        }
 
         /// <summary>
         /// Handles emulated <see cref="WorkflowRegisterRequest"/> messages.
@@ -550,6 +708,71 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedWorkflowRegisterRequestAsync(WorkflowRegisterRequest request)
         {
+            await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowRegisterReply());
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="WorkflowExecuteRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedWorkflowExecuteRequestAsync(WorkflowExecuteRequest request)
+        {
+            var workflowContextId = Interlocked.Increment(ref nextEmulatedWorkflowContextId);
+
+            var workflow = new EmulatedWorkflow()
+            {
+                WorkflowId        = request.Options.ID ?? Guid.NewGuid().ToString("D"),
+                WorkflowContextId = workflowContextId,
+                Args              = request.Args,
+                Domain            = request.Domain,
+                Name              = request.Name,
+                Options           = request.Options
+            };
+
+            using (await emulationMutex.AcquireAsync())
+            {
+                emulatedWorkflowContexts.Add(workflowContextId, workflow);
+                emulatedWorkflows.Add(workflow.WorkflowId, workflow);
+            }
+
+            await EmulatedLibraryClient.SendReplyAsync(request,
+                new WorkflowExecuteReply()
+                {
+                    Execution = new InternalWorkflowExecution()
+                    {
+                        ID    = workflow.WorkflowId,
+                        RunID = workflow.WorkflowId
+                    }
+                });
+
+            // If we wanted to get fancy here, we'd have a queue with pending workflow
+            // executions and have a separate thread pick these up and invoke them
+            // only when a worker is registered for the domain and task list.
+            //
+            // But in keeping with our limited emulation goals, we're just going to
+            // kick off a task here to invoke the workflow.
+
+            _ = Task.Run(
+                async () =>
+                {
+                    var workflowInvokeRequest =
+                        new WorkflowInvokeRequest()
+                        {
+                            Args              = workflow.Args,
+                            Name              = workflow.Name,
+                            WorkflowContextId = workflow.WorkflowContextId
+                        };
+
+                    var workflowInvokeReply = (WorkflowInvokeReply)await CallClientAsync(workflowInvokeRequest);
+
+                    using (await emulationMutex.AcquireAsync())
+                    {
+                        workflow.Result     = workflowInvokeReply.Result;
+                        workflow.Error      = workflowInvokeReply.Error;
+                        workflow.IsComplete = true;
+                    }
+                });
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    InternalWorkflowExecution.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,48 +28,29 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    public class InternalWorkflowExecution
     {
         /// <summary>
-        /// Default constructor.
+        /// The original ID assigned to the workflow.
         /// </summary>
-        public WorkflowInvokeReply()
-        {
-            Type = MessageTypes.WorkflowInvokeReply;
-        }
+        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string ID { get; set; }
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// The latest ID assigned to the workflow.  Note that this will differ
+        /// from <see cref="ID"/> when the workflow has been restarted.
         /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
-
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowInvokeReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowInvokeReply)target;
-        }
+        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string RunID { get; set; }
     }
 }
