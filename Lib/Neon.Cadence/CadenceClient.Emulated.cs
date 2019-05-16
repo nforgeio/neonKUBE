@@ -51,7 +51,7 @@ using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
-    public partial class CadenceConnection
+    public partial class CadenceClient
     {
         //---------------------------------------------------------------------
         // Emulated [cadence-proxy] implementation:

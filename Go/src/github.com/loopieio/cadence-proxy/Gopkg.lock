@@ -575,6 +575,7 @@
     "go.uber.org/cadence/.gen/go/shared",
     "go.uber.org/cadence/client",
     "go.uber.org/cadence/worker",
+    "go.uber.org/cadence/workflow",
     "go.uber.org/yarpc",
     "go.uber.org/yarpc/transport/tchannel",
     "go.uber.org/zap",

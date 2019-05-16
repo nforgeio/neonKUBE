@@ -446,13 +446,7 @@ func handleHeartbeatRequest(request *messages.HeartbeatRequest) (messages.IProxy
 	// new HeartbeatReply
 	reply := createReplyMessage(request)
 	if v, ok := reply.(*messages.HeartbeatReply); ok {
-		var cadenceError *cadenceerrors.CadenceError
-		if deathWish {
-			cadenceError = cadenceerrors.NewCadenceError("DeathWishError",
-				cadenceerrors.Custom,
-			)
-		}
-		buildHeartbeatReply(v, cadenceError)
+		buildHeartbeatReply(v, nil)
 	}
 
 	return reply, nil
