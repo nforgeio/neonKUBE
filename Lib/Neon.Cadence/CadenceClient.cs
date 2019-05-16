@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceConnection.cs
+// FILE:	    CadenceClient.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -52,7 +52,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Implements a client to manage an Uber Cadence cluster.
     /// </summary>
-    public partial class CadenceConnection : IDisposable
+    public partial class CadenceClient : IDisposable
     {
         /// <summary>
         /// The <b>cadence-proxy</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
@@ -75,9 +75,9 @@ namespace Neon.Cadence
         /// </summary>
         private class Startup
         {
-            private CadenceConnection client;
+            private CadenceClient client;
 
-            public void Configure(IApplicationBuilder app, CadenceConnection client)
+            public void Configure(IApplicationBuilder app, CadenceClient client)
             {
                 this.client = client;
 
@@ -224,7 +224,7 @@ namespace Neon.Cadence
 
         private static readonly object      staticSyncLock = new object();
         private static readonly Assembly    thisAssembly   = Assembly.GetExecutingAssembly();
-        private static readonly INeonLogger log            = LogManager.Default.GetLogger<CadenceConnection>();
+        private static readonly INeonLogger log            = LogManager.Default.GetLogger<CadenceClient>();
         private static bool                 proxyWritten   = false;
 
         /// <summary>
@@ -378,7 +378,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
-        public CadenceConnection(CadenceSettings settings)
+        public CadenceClient(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
@@ -421,7 +421,7 @@ namespace Neon.Cadence
                 .ConfigureServices(
                     services =>
                     {
-                        services.AddSingleton(typeof(CadenceConnection), this);
+                        services.AddSingleton(typeof(CadenceClient), this);
                         services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
                     })
                 .UseStartup<Startup>()
@@ -546,7 +546,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~CadenceConnection()
+        ~CadenceClient()
         {
             Dispose(false);
         }
@@ -666,10 +666,10 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Raised when the connection is closed.  You can determine whether the connection
-        /// was closed normally or due to an error by examining the <see cref="CadenceConnectionClosedArgs"/>
+        /// was closed normally or due to an error by examining the <see cref="CadenceClientClosedArgs"/>
         /// arguments passed to the handler.
         /// </summary>
-        public event CadenceConnectionClosedDelegate ConnectionClosed;
+        public event CadenceClientClosedDelegate ConnectionClosed;
 
         /// <summary>
         /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already
@@ -692,7 +692,7 @@ namespace Neon.Cadence
 
             if (raiseConnectionClosed)
             {
-                ConnectionClosed?.Invoke(this, new CadenceConnectionClosedArgs() { Exception = exception });
+                ConnectionClosed?.Invoke(this, new CadenceClientClosedArgs() { Exception = exception });
             }
 
             // Signal the background threads that they need to exit.
