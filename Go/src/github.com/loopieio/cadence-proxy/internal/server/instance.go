@@ -64,6 +64,7 @@ func (s *Instance) Start() {
 	}()
 
 	// wait for the shutdown signal from a terminate request
+	defer close(s.ShutdownChannel)
 	shutdown := <-s.ShutdownChannel
 	if shutdown {
 		// create the context and the cancelFunc to shut down the server instance

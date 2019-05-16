@@ -4,6 +4,7 @@ import (
 	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomain"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/messages"
+	"go.uber.org/cadence/workflow"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 )
@@ -63,16 +64,28 @@ func buildWorkflowRegisterReply(reply *messages.WorkflowRegisterReply, cadenceEr
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceError *cadenceerrors.CadenceError, execution ...*workflow.Execution) {
 	reply.SetError(cadenceError)
+
+	if len(execution) > 0 {
+		reply.SetExecution(execution[0])
+	}
 }
 
-func buildWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...[]byte) {
 	reply.SetError(cadenceError)
+
+	if len(result[0]) > 0 {
+		reply.SetResult(result[0])
+	}
 }
 
-func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError) {
+func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError, workerID ...*string) {
 	reply.SetError(cadenceError)
+
+	if len(workerID) > 0 {
+		reply.SetWorkerID(workerID[0])
+	}
 }
 
 func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *cadenceerrors.CadenceError) {

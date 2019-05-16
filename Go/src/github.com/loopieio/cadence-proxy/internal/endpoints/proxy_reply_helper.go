@@ -22,35 +22,81 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 
 	// InitializeReply
 	case messagetypes.InitializeReply:
-		err = handleInitializeReply(reply)
+		if v, ok := reply.(*messages.InitializeReply); ok {
+			err = handleInitializeReply(v)
+		}
 
 	// HeartbeatReply
 	case messagetypes.HeartbeatReply:
-		err = handleHeartbeatReply(reply)
+		if v, ok := reply.(*messages.HeartbeatReply); ok {
+			err = handleHeartbeatReply(v)
+		}
 
 	// CancelReply
 	case messagetypes.CancelReply:
-		err = handleCancelReply(reply)
+		if v, ok := reply.(*messages.CancelReply); ok {
+			err = handleCancelReply(v)
+		}
 
 	// ConnectReply
 	case messagetypes.ConnectReply:
-		err = handleConnectReply(reply)
+		if v, ok := reply.(*messages.ConnectReply); ok {
+			err = handleConnectReply(v)
+		}
 
 	// DomainDescribeReply
 	case messagetypes.DomainDescribeReply:
-		err = handleDomainDescribeReply(reply)
+		if v, ok := reply.(*messages.DomainDescribeReply); ok {
+			err = handleDomainDescribeReply(v)
+		}
 
 	// DomainRegisterReply
 	case messagetypes.DomainRegisterReply:
-		err = handleDomainRegisterReply(reply)
+		if v, ok := reply.(*messages.DomainRegisterReply); ok {
+			err = handleDomainRegisterReply(v)
+		}
 
 	// DomainUpdateReply
 	case messagetypes.DomainUpdateReply:
-		err = handleDomainUpdateReply(reply)
+		if v, ok := reply.(*messages.DomainUpdateReply); ok {
+			err = handleDomainUpdateReply(v)
+		}
 
 	// TerminateReply
 	case messagetypes.TerminateReply:
-		err = handleTerminateReply(reply)
+		if v, ok := reply.(*messages.TerminateReply); ok {
+			err = handleTerminateReply(v)
+		}
+
+	// WorkflowExecuteReply
+	case messagetypes.WorkflowExecuteReply:
+		if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
+			err = handleWorkflowExecuteReply(v)
+		}
+
+	// WorkflowInvokeReply
+	case messagetypes.WorkflowInvokeReply:
+		if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
+			err = handleWorkflowInvokeReply(v)
+		}
+
+	// WorkflowRegisterReply
+	case messagetypes.WorkflowRegisterReply:
+		if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
+			err = handleWorkflowRegisterReply(v)
+		}
+
+	// NewWorkerReply
+	case messagetypes.NewWorkerReply:
+		if v, ok := reply.(*messages.NewWorkerReply); ok {
+			err = handleNewWorkerReply(v)
+		}
+
+	// StopWorkerReply
+	case messagetypes.StopWorkerReply:
+		if v, ok := reply.(*messages.StopWorkerReply); ok {
+			err = handleStopWorkerReply(v)
+		}
 
 	// Undefined message type
 	default:
@@ -70,7 +116,7 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 	return nil
 }
 
-func handleActivityReply(reply messages.IProxyReply) error {
+func handleActivityReply(reply *messages.ActivityReply) error {
 	err := fmt.Errorf("not implemented exception for message type ActivityReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -78,7 +124,7 @@ func handleActivityReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleCancelReply(reply messages.IProxyReply) error {
+func handleCancelReply(reply *messages.CancelReply) error {
 	err := fmt.Errorf("not implemented exception for message type CancelReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -86,7 +132,7 @@ func handleCancelReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleConnectReply(reply messages.IProxyReply) error {
+func handleConnectReply(reply *messages.ConnectReply) error {
 	err := fmt.Errorf("not implemented exception for message type ConnectReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -94,7 +140,7 @@ func handleConnectReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleDomainDescribeReply(reply messages.IProxyReply) error {
+func handleDomainDescribeReply(reply *messages.DomainDescribeReply) error {
 	err := fmt.Errorf("not implemented exception for message type DomainDescribeReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -102,7 +148,7 @@ func handleDomainDescribeReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleDomainRegisterReply(reply messages.IProxyReply) error {
+func handleDomainRegisterReply(reply *messages.DomainRegisterReply) error {
 	err := fmt.Errorf("not implemented exception for message type DomainRegisterReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -110,7 +156,7 @@ func handleDomainRegisterReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleDomainUpdateReply(reply messages.IProxyReply) error {
+func handleDomainUpdateReply(reply *messages.DomainUpdateReply) error {
 	err := fmt.Errorf("not implemented exception for message type DomainUpdateReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -118,7 +164,7 @@ func handleDomainUpdateReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleHeartbeatReply(reply messages.IProxyReply) error {
+func handleHeartbeatReply(reply *messages.HeartbeatReply) error {
 	err := fmt.Errorf("not implemented exception for message type HeartbeatReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -126,7 +172,7 @@ func handleHeartbeatReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleInitializeReply(reply messages.IProxyReply) error {
+func handleInitializeReply(reply *messages.InitializeReply) error {
 	err := fmt.Errorf("not implemented exception for message type InitializeReply")
 
 	// $debug(jack.burns): DELETE THIS!
@@ -134,10 +180,50 @@ func handleInitializeReply(reply messages.IProxyReply) error {
 	return err
 }
 
-func handleTerminateReply(reply messages.IProxyReply) error {
+func handleTerminateReply(reply *messages.TerminateReply) error {
 	err := fmt.Errorf("not implemented exception for message type TerminateReply")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling TerminateReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowExecuteReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowExecuteReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowInvokeReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowInvokeReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowRegisterReply(reply *messages.WorkflowRegisterReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowRegisterReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowRegisterReply", zap.Error(err))
+	return err
+}
+
+func handleNewWorkerReply(reply *messages.NewWorkerReply) error {
+	err := fmt.Errorf("not implemented exception for message type NewWorkerReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling NewWorkerReply", zap.Error(err))
+	return err
+}
+
+func handleStopWorkerReply(reply *messages.StopWorkerReply) error {
+	err := fmt.Errorf("not implemented exception for message type StopWorkerReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling StopWorkerReply", zap.Error(err))
 	return err
 }

@@ -131,7 +131,7 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 
 	// send the reply as an http.Request back to the Neon.Cadence Library
 	// via http.PUT
-	resp, err := putReply(serializedMessage, replyAddress)
+	resp, err := putReply(serializedMessage)
 	if err != nil {
 		return err
 	}
@@ -566,7 +566,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyMessage {
 	return proxyMessage
 }
 
-func putReply(content []byte, address string) (*http.Response, error) {
+func putReply(content []byte) (*http.Response, error) {
 
 	// create a buffer with the serialized bytes to reply with
 	// and create the PUT request

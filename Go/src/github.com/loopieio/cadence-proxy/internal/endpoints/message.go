@@ -40,6 +40,9 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// make channel for writing a response to the sender
 	responseChan := make(chan error)
+	defer close(responseChan)
+
+	// go routine to process the message
 	go func() {
 
 		// process the incoming payload
@@ -59,6 +62,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	// receive error on responseChan
 	err = <-responseChan
 	if err != nil {
 
@@ -86,9 +90,8 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Error processing incoming message", zap.Error(err))
-
 		responseChan <- err
-		return err
+		return nil
 
 	// IProxyRequest
 	case messages.IProxyRequest:
@@ -106,8 +109,7 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Error processing incoming message", zap.Error(err))
-
 		responseChan <- err
-		return err
+		return nil
 	}
 }
