@@ -595,7 +595,7 @@ namespace Neon.Cadence.Internal
                 }
                 else
                 {
-                    return NeonHelper.JsonDeserialize<T>(value, strict: true);
+                    return NeonHelper.JsonDeserialize<T>(value, strict: false);
                 }
             }
             else

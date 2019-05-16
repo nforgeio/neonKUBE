@@ -44,14 +44,11 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 		// process the incoming payload
 		err := proccessIncomingMessage(message, responseChan)
-
 		if err != nil {
-			logger.Error("Error Handling ProxyMessage", zap.Error(err))
 
-			// TODO: Jack
-			// Add some sort of indication in the HeartbeatRequest that
-			// the server is not in good condition and probably needs to
-			// shut down
+			// $debug(jack.burns): DELETE THIS!
+			logger.Error("Error Handling ProxyMessage", zap.Error(err))
+			deathWish = true
 		}
 
 		// check to see if terminate is true, if it is then gracefully

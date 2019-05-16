@@ -60,6 +60,10 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewNewWorkerReply()
 	case messagetypes.NewWorkerRequest:
 		message = NewNewWorkerRequest()
+	case messagetypes.StopWorkerRequest:
+		message = NewStopWorkerRequest()
+	case messagetypes.StopWorkerReply:
+		message = NewStopWorkerReply()
 	default:
 		return nil
 	}

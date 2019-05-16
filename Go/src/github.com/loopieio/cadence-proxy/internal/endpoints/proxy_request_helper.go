@@ -118,11 +118,9 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 		return err
 	}
 
-	// Get the pointer to the ProxyMessage
-	replyProxyMessage := reply.GetProxyMessage()
-
 	// serialize the reply message into a []byte
 	// to send back over the network
+	replyProxyMessage := reply.GetProxyMessage()
 	serializedMessage, err := replyProxyMessage.Serialize(false)
 	if err != nil {
 
@@ -448,7 +446,13 @@ func handleHeartbeatRequest(request *messages.HeartbeatRequest) (messages.IProxy
 	// new HeartbeatReply
 	reply := createReplyMessage(request)
 	if v, ok := reply.(*messages.HeartbeatReply); ok {
-		buildHeartbeatReply(v, nil)
+		var cadenceError *cadenceerrors.CadenceError
+		if deathWish {
+			cadenceError = cadenceerrors.NewCadenceError("DeathWishError",
+				cadenceerrors.Custom,
+			)
+		}
+		buildHeartbeatReply(v, cadenceError)
 	}
 
 	return reply, nil
@@ -542,6 +546,14 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 	logger.Debug("Error handling NewWorkerRequest", zap.Error(err))
 	return nil, err
 
+}
+
+func handleStopWorkerRequest(request *messages.StopWorkerRequest) (messages.IProxyMessage, error) {
+	err := fmt.Errorf("not implemented exception for message type StopWorkerRequest")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling StopWorkerRequest", zap.Error(err))
+	return nil, err
 }
 
 // -------------------------------------------------------------------------

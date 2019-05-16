@@ -56,7 +56,18 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func cloneForEcho(message messages.IProxyMessage) ([]byte, error) {
+func cloneForEcho(message messages.IProxyMessage) (b []byte, e error) {
+
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Recovered in cloneForEcho")
+			e = fmt.Errorf("panic %v", r)
+			b = nil
+		}
+	}()
 
 	// create a clone of the message to send back
 	// as a PUT request

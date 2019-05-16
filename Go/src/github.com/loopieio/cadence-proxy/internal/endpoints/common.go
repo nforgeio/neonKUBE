@@ -67,6 +67,8 @@ var (
 	// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
 	// <c>false</c>
 	debugPrelaunch = true
+
+	deathWish = false
 )
 
 // IncrementNextRequestID increments the global variable
