@@ -18,55 +18,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func createReplyMessage(request messages.IProxyRequest) messages.IProxyMessage {
-
-	// get the correct reply type and initialize a new
-	// reply corresponding to the request message type
-	var proxyMessage messages.IProxyMessage = messages.CreateNewTypedMessage(request.GetReplyType())
-	if reflect.ValueOf(proxyMessage).IsNil() {
-		return nil
-	}
-	proxyMessage.SetRequestID(request.GetRequestID())
-
-	return proxyMessage
-}
-
-func putReply(content []byte, address string) (*http.Response, error) {
-
-	// create a buffer with the serialized bytes to reply with
-	// and create the PUT request
-	buf := bytes.NewBuffer(content)
-	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
-	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Error creating Neon.Cadence Library request", zap.Error(err))
-		return nil, err
-	}
-
-	// set the request header to specified content type
-	req.Header.Set("Content-Type", ContentType)
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Neon.Cadence Library request",
-		zap.String("Request Address", req.URL.String()),
-		zap.String("Request Content-Type", req.Header.Get("Content-Type")),
-		zap.String("Request Method", req.Method),
-	)
-
-	// initialize the http.Client and send the request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Error sending Neon.Cadence Library request", zap.Error(err))
-		return nil, err
-	}
-
-	return resp, nil
-}
-
 // -------------------------------------------------------------------------
 // IProxyRequest message type handlers
 
@@ -591,4 +542,56 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 	logger.Debug("Error handling NewWorkerRequest", zap.Error(err))
 	return nil, err
 
+}
+
+// -------------------------------------------------------------------------
+// Helpers for sending ProxyReply messages back to Neon.Cadence Library
+
+func createReplyMessage(request messages.IProxyRequest) messages.IProxyMessage {
+
+	// get the correct reply type and initialize a new
+	// reply corresponding to the request message type
+	var proxyMessage messages.IProxyMessage = messages.CreateNewTypedMessage(request.GetReplyType())
+	if reflect.ValueOf(proxyMessage).IsNil() {
+		return nil
+	}
+	proxyMessage.SetRequestID(request.GetRequestID())
+
+	return proxyMessage
+}
+
+func putReply(content []byte, address string) (*http.Response, error) {
+
+	// create a buffer with the serialized bytes to reply with
+	// and create the PUT request
+	buf := bytes.NewBuffer(content)
+	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Error creating Neon.Cadence Library request", zap.Error(err))
+		return nil, err
+	}
+
+	// set the request header to specified content type
+	req.Header.Set("Content-Type", ContentType)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Neon.Cadence Library request",
+		zap.String("Request Address", req.URL.String()),
+		zap.String("Request Content-Type", req.Header.Get("Content-Type")),
+		zap.String("Request Method", req.Method),
+	)
+
+	// initialize the http.Client and send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Error sending Neon.Cadence Library request", zap.Error(err))
+		return nil, err
+	}
+
+	return resp, nil
 }
