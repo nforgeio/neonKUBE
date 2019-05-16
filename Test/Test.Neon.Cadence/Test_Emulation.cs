@@ -39,13 +39,13 @@ using Xunit;
 namespace TestCadence
 {
     /// <summary>
-    /// Tests low-level <see cref="CadenceConnection"/> functionality against a
+    /// Tests low-level <see cref="CadenceClient"/> functionality against a
     /// partially implemented <b>cadence-proxy</b> emulation.
     /// </summary>
     public sealed class Test_Emulation : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture      fixture;
-        CadenceConnection   connection;
+        CadenceClient   connection;
         HttpClient          proxyClient;
 
         public Test_Emulation(CadenceFixture fixture)
@@ -208,7 +208,7 @@ namespace TestCadence
                 Servers = new List<Uri>()
             };
 
-            Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
+            Assert.Throws<CadenceConnectException>(() => new CadenceClient(settings));
 
             // Verify that we see a [CadenceConnectException] when connecting
             // with a relative server URI.
@@ -216,7 +216,7 @@ namespace TestCadence
             settings.Servers.Clear();
             settings.Servers.Add(new Uri("/relativeuri", UriKind.Relative));
 
-            Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
+            Assert.Throws<CadenceConnectException>(() => new CadenceClient(settings));
 
 #if TODO
             // Verify that we see a [CadenceConnectException] when attempting

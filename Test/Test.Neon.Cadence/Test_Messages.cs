@@ -58,7 +58,7 @@ namespace TestCadence
         // Implementation
 
         CadenceFixture      fixture;
-        CadenceConnection   connection;
+        CadenceClient   connection;
         HttpClient          proxyClient;
 
         public Test_Messages(CadenceFixture fixture)

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceConnection.Client.cs
+// FILE:	    CadenceClient.Base.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -49,7 +49,7 @@ using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
-    public partial class CadenceConnection
+    public partial class CadenceClient
     {
         //---------------------------------------------------------------------
         // Cadence basic client related operations.

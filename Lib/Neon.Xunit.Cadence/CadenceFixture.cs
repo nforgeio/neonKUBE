@@ -155,7 +155,7 @@ namespace Neon.Xunit.Cadence
 
                 // Create the Cadence connection.
 
-                Connection = new CadenceConnection(settings);
+                Connection = new CadenceClient(settings);
 
                 ConnectionClient = new HttpClient()
                 {
@@ -165,9 +165,9 @@ namespace Neon.Xunit.Cadence
         }
 
         /// <summary>
-        /// Returns the <see cref="CadenceConnection"/> to be used to interact with Cadence.
+        /// Returns the <see cref="CadenceClient"/> to be used to interact with Cadence.
         /// </summary>
-        public CadenceConnection Connection { get; private set; }
+        public CadenceClient Connection { get; private set; }
 
         /// <summary>
         /// Returns a <see cref="HttpClient"/> suitable for submitting requests to the
@@ -207,7 +207,7 @@ namespace Neon.Xunit.Cadence
 
             // Reconnect.
 
-            Connection = new CadenceConnection(settings);
+            Connection = new CadenceClient(settings);
 
             ConnectionClient = new HttpClient()
             {
