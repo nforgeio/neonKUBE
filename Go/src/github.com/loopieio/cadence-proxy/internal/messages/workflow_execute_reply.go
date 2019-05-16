@@ -3,6 +3,7 @@ package messages
 import (
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
+	"go.uber.org/cadence/workflow"
 )
 
 type (
@@ -31,10 +32,10 @@ func NewWorkflowExecuteReply() *WorkflowExecuteReply {
 // GetExecution gets the workflow execution or nil
 // from a WorkflowExecuteReply's properties map.
 //
-// returns *map[string]interface{} -> pointer to a map representing the
-// result of a workflow execution
-func (request *WorkflowExecuteReply) GetExecution() *map[string]interface{} {
-	exe := new(map[string]interface{})
+// returns *workflow.Execution -> pointer to a cadence workflow execution
+// struct housing the result of a workflow execution
+func (request *WorkflowExecuteReply) GetExecution() *workflow.Execution {
+	exe := new(workflow.Execution)
 	err := request.GetJSONProperty("Execution", exe)
 	if err != nil {
 		return nil
@@ -46,9 +47,10 @@ func (request *WorkflowExecuteReply) GetExecution() *map[string]interface{} {
 // SetExecution sets the workflow execution or nil
 // in a WorkflowExecuteReply's properties map.
 //
-// param value *map[string]interface{} -> pointer to a map representing the result of
-// a workflow execution, to be set in the WorkflowExecuteReply's properties map
-func (reply *WorkflowExecuteReply) SetExecution(value *map[string]interface{}) {
+// param value *workflow.Execution -> pointer to a cadence workflow execution
+// struct housing the result of a workflow execution, to be set in the
+// WorkflowExecuteReply's properties map
+func (reply *WorkflowExecuteReply) SetExecution(value *workflow.Execution) {
 	reply.SetJSONProperty("Execution", value)
 }
 

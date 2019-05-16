@@ -74,3 +74,7 @@ func buildWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, cadenceError 
 func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
+
+func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
