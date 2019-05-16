@@ -95,9 +95,9 @@ namespace Neon.Cadence
         /// </summary>
         private class EmulatedStartup
         {
-            private CadenceConnection client;
+            private CadenceClient client;
 
-            public void Configure(IApplicationBuilder app, CadenceConnection client)
+            public void Configure(IApplicationBuilder app, CadenceClient client)
             {
                 this.client = client;
 
@@ -457,7 +457,7 @@ namespace Neon.Cadence
                     .ConfigureServices(
                         services =>
                         {
-                            services.AddSingleton(typeof(CadenceConnection), this);
+                            services.AddSingleton(typeof(CadenceClient), this);
                             services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
                         })
                     .UseStartup<EmulatedStartup>()

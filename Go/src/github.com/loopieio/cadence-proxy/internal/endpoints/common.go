@@ -66,7 +66,7 @@ var (
 	// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes
 	// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
 	// <c>false</c>
-	debugPrelaunch = true
+	debugPrelaunch = false
 )
 
 // IncrementNextRequestID increments the global variable
