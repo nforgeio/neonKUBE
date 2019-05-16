@@ -8,11 +8,14 @@ import (
 	"github.com/loopieio/cadence-proxy/internal/server"
 )
 
-func main() {
+var (
 
 	// variables to put command line args in
-	var address, logLevel string
-	var debugMode bool
+	address, logLevel string
+	debugMode         bool
+)
+
+func main() {
 
 	// define the flags and parse them
 	flag.StringVar(&address, "listen", "127.0.0.2:5000", "Address for the Cadence Proxy Server to listen on")
