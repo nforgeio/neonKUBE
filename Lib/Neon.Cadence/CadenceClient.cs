@@ -571,6 +571,20 @@ namespace Neon.Cadence
             {
                 try
                 {
+                    // Gracefully stop all workflow workers.
+
+                    List<Worker> workerList;
+
+                    lock (syncLock)
+                    {
+                        workerList = workers.Values.ToList();
+                    }
+
+                    foreach (var worker in workerList)
+                    {
+                        StopWorkerAsync(worker).Wait();
+                    }
+
                     // Signal the proxy that it should exit gracefully and then
                     // allow it [Settings.TerminateTimeout] to actually exit
                     // before killing it.
