@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
-	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomain"
+	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/endpoints"
 	"github.com/loopieio/cadence-proxy/internal/logger"

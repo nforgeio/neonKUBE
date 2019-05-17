@@ -1,7 +1,7 @@
 package endpoints
 
 import (
-	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomain"
+	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	"go.uber.org/cadence/workflow"

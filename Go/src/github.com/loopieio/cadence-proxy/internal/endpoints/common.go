@@ -34,7 +34,7 @@ const (
 )
 
 var (
-	requestmu sync.RWMutex
+	mu sync.RWMutex
 
 	// NextRequestID is incremented (protected by a mutex) every time
 	// a new request message is sent
@@ -72,16 +72,16 @@ var (
 // IncrementNextRequestID increments the global variable
 // NextRequestID by 1 and is protected by a mutex lock
 func IncrementNextRequestID() {
-	requestmu.Lock()
+	mu.Lock()
 	NextRequestID = NextRequestID + 1
-	requestmu.Unlock()
+	mu.Unlock()
 }
 
 // GetNextRequestID gets the value of the global variable
 // NextRequestID and is protected by a mutex Read lock
 func GetNextRequestID() int64 {
-	requestmu.RLock()
-	defer requestmu.RUnlock()
+	mu.RLock()
+	defer mu.RUnlock()
 	return NextRequestID
 }
 

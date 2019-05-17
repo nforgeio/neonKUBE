@@ -3,7 +3,7 @@ package messages
 import (
 	"errors"
 
-	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomain"
+	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )

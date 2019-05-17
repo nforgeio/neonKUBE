@@ -39,30 +39,10 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// make channel for writing a response to the sender
-	responseChan := make(chan error)
-	defer close(responseChan)
-
 	// go routine to process the message
-	go func() {
-
-		// process the incoming payload
-		err := proccessIncomingMessage(message, responseChan)
-		if err != nil {
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Error("Error Handling ProxyMessage", zap.Error(err))
-			panic(err)
-		}
-
-		// check to see if terminate is true, if it is then gracefully
-		// shut down the server instance by sending a truth bool value
-		// to the instance's ShutdownChannel
-		if terminate {
-			Instance.ShutdownChannel <- true
-		}
-	}()
-
 	// receive error on responseChan
+	responseChan := make(chan error)
+	go proccessIncomingMessage(message, responseChan)
 	err = <-responseChan
 	if err != nil {
 
@@ -78,38 +58,61 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 // -------------------------------------------------------------------------
 // Helper methods for handling incoming messages
 
-func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan error) error {
+func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan error) {
 
-	// get type of message and switch
+	// defer the termination of the server
+	// and the closing of the responseChan
+	defer func() {
+
+		// close the responseChan
+		// check to see if terminate is true, if it is then gracefully
+		// shut down the server instance by sending a truth bool value
+		// to the instance's ShutdownChannel
+		close(responseChan)
+		if terminate {
+			Instance.ShutdownChannel <- true
+		}
+	}()
+
+	// get type of message
+	var err error
 	typeCode := message.GetProxyMessage().Type
-	switch s := message.(type) {
 
-	// Nil type value
+	// and switch
+	switch s := message.(type) {
 	case nil:
-		err := fmt.Errorf("nil type for incoming ProxyMessage of type %v", typeCode)
 
 		// $debug(jack.burns): DELETE THIS!
+		err = fmt.Errorf("nil type for incoming ProxyMessage of type %v", typeCode)
 		logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
-		return nil
 
 	// IProxyRequest
 	case messages.IProxyRequest:
 		responseChan <- nil
-		return handleIProxyRequest(s, typeCode)
+		err = handleIProxyRequest(s, typeCode)
 
 	// IProxyReply
 	case messages.IProxyReply:
 		responseChan <- nil
-		return handleIProxyReply(s, typeCode)
+		err = handleIProxyReply(s, typeCode)
 
 	// Unrecognized type
 	default:
-		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %v", typeCode)
 
 		// $debug(jack.burns): DELETE THIS!
+		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %v", typeCode)
 		logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
-		return nil
+	}
+
+	// there should not be error values in here
+	// if there are, then something is wrong with the server
+	// and most likely needs to be terminated
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Error Handling ProxyMessage", zap.Error(err))
+		panic(err)
 	}
 }
