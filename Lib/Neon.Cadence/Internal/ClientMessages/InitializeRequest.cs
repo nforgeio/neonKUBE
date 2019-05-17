@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Informs the proxy of the network endpoint
+    /// <b>client --> proxy:</b> Informs the proxy of the network endpoint
     /// where the library is listening for proxy messages.
     /// </summary>
     [ProxyMessage(MessageTypes.InitializeRequest)]

@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
+    /// <b>client --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
     /// proxy should send a <see cref="TerminateReply"/> back to the library and
     /// then exit, terminating the process.
     /// </summary>

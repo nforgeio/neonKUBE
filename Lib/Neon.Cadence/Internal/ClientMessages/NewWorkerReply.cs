@@ -49,7 +49,7 @@ using Neon.Tasks;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="NewWorkerRequest"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="NewWorkerRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.NewWorkerReply)]
     internal class NewWorkerReply : ProxyReply

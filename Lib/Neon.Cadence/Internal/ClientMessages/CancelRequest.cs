@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Sent periodically to confirm that the proxy is
+    /// <b>client --> proxy:</b> Sent periodically to confirm that the proxy is
     /// still healthy.  The proxy should send a <see cref="CancelReply"/>
     /// optionally indicating that there's a problem by specifying an error.
     /// </summary>

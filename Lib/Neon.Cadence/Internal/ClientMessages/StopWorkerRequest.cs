@@ -49,7 +49,7 @@ using Neon.Tasks;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Stops a Cadence worker.
+    /// <b>client --> proxy:</b> Stops a Cadence worker.
     /// </summary>
     [ProxyMessage(MessageTypes.StopWorkerRequest)]
     internal class StopWorkerRequest : ProxyRequest

@@ -34,7 +34,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Requests the proxy establish a connection with a Cadence cluster.
+    /// <b>client --> proxy:</b> Requests the proxy establish a connection with a Cadence cluster.
     /// This maps to a <c>NewClient()</c> in the proxy.
     /// </summary>
     [ProxyMessage(MessageTypes.ConnectRequest)]

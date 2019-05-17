@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Sent in response to a <see cref="CancelRequest"/>
+    /// <b>proxy --> client:</b> Sent in response to a <see cref="CancelRequest"/>
     /// indicating that the operation was canceled, has already completed or doesn't
     /// exist.
     /// </summary>
