@@ -43,6 +43,10 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	// receive error on responseChan
 	responseChan := make(chan error)
 	go proccessIncomingMessage(message, responseChan)
+
+	// block and wait for error value
+	// on responseChan to send an http.Response
+	// back to the Neon.Cadence Lib
 	err = <-responseChan
 	if err != nil {
 

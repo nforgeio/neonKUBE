@@ -80,7 +80,7 @@ func buildWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, cadenceError 
 	}
 }
 
-func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError, workerID ...*string) {
+func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError, workerID ...int64) {
 	reply.SetError(cadenceError)
 
 	if len(workerID) > 0 {

@@ -7,6 +7,11 @@ import (
 )
 
 var (
+	mu sync.RWMutex
+
+	// NextWorkerID is incremented (protected by a mutex) every time
+	// a new cadence Worker is created
+	NextWorkerID int64
 
 	// WorkersMap maps a int64 WorkerId to the cadence
 	// Worker returned by the Cadence NewWorker() function.
@@ -24,17 +29,39 @@ type (
 	}
 )
 
+//----------------------------------------------------------------------------
+// NextWorkerID methods
+
+// IncrementNextWorkerID increments the global variable
+// NextWorkerID by 1 and is protected by a mutex lock
+func IncrementNextWorkerID() {
+	mu.Lock()
+	NextWorkerID = NextWorkerID + 1
+	mu.Unlock()
+}
+
+// GetNextWorkerID gets the value of the global variable
+// NextWorkerID and is protected by a mutex Read lock
+func GetNextWorkerID() int64 {
+	mu.RLock()
+	defer mu.RUnlock()
+	return NextWorkerID
+}
+
+//----------------------------------------------------------------------------
+// Workers instance methods
+
 // Add adds a new cadence worker and its corresponding WorkerId into
 // the Workers.workers map.  This method is thread-safe.
 //
 // param workerID int64 -> the long workerID to the cadence Worker
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
-// param worker *worker.Worker -> pointer to the new cadence Worker returned
+// param worker worker.Worker -> pnew cadence Worker returned
 // by the Cadence NewWorker() function.  This will be the mapped value
 //
 // returns int64 -> long workerID of the new cadence Worker added to the map
-func (workers *Workers) Add(workerID int64, worker *worker.Worker) int64 {
+func (workers *Workers) Add(workerID int64, worker worker.Worker) int64 {
 	WorkersMap.Map.Store(workerID, worker)
 	return workerID
 }
@@ -57,10 +84,10 @@ func (workers *Workers) Delete(workerID int64) int64 {
 // param workerID int64 -> the long workerID to the cadence Worker
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
-// returns *worker.Worker -> pointer to cadence Worker with the specified workerID
-func (workers *Workers) Get(workerID int64) *worker.Worker {
+// returns worker.Worker -> cadence Worker with the specified workerID
+func (workers *Workers) Get(workerID int64) worker.Worker {
 	if v, ok := WorkersMap.Map.Load(workerID); ok {
-		if _v, _ok := v.(*worker.Worker); _ok {
+		if _v, _ok := v.(worker.Worker); _ok {
 			return _v
 		}
 	}

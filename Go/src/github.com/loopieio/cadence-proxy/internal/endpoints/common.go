@@ -51,6 +51,10 @@ var (
 	// is not able to establish a connection with the cadence server
 	connectionError = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
 
+	// entityNotExistError is the custom error that is thrown when a cadence
+	// entity cannot be found in the cadence server
+	entityNotExistError = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
+
 	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
 	replyAddress string
