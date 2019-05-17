@@ -27,24 +27,24 @@ func NewNewWorkerReply() *NewWorkerReply {
 	return reply
 }
 
-// GetWorkerID gets the WorkerID property as a *string
+// GetWorkerID gets the WorkerID property as a int64
 // from a NewWorkerReply's properties map
 //
-// returns *string -> pointer to the WorkerId property in a
+// returns int64 -> the WorkerId property in a
 // NewWorkerReply's properties map, which represents the new cadence
 // worker's ID
-func (reply *NewWorkerReply) GetWorkerID() *string {
-	return reply.GetStringProperty("WorkerId")
+func (reply *NewWorkerReply) GetWorkerID() int64 {
+	return reply.GetLongProperty("WorkerId")
 }
 
 // SetWorkerID sets the WorkerID property in a
 // NewWorkerReply's properties map
 //
-// param value *string -> pointer to a WorkerId string in memory
-// to be set in a NewWorkerReply's properties map.
+// param value int64 -> WorkerId int64 to be set in a
+// NewWorkerReply's properties map.
 // It represents the new cadence worker's ID
-func (reply *NewWorkerReply) SetWorkerID(value *string) {
-	reply.SetStringProperty("WorkerId", value)
+func (reply *NewWorkerReply) SetWorkerID(value int64) {
+	reply.SetLongProperty("WorkerId", value)
 }
 
 // -------------------------------------------------------------------------

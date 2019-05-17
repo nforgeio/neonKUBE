@@ -30,11 +30,11 @@ type (
 // param workerID int64 -> the long workerID to the cadence Worker
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
-// param worker *worker.Worker -> pointer to the new cadence Worker returned
+// param worker worker.Worker -> pnew cadence Worker returned
 // by the Cadence NewWorker() function.  This will be the mapped value
 //
 // returns int64 -> long workerID of the new cadence Worker added to the map
-func (workers *Workers) Add(workerID int64, worker *worker.Worker) int64 {
+func (workers *Workers) Add(workerID int64, worker worker.Worker) int64 {
 	WorkersMap.Map.Store(workerID, worker)
 	return workerID
 }
@@ -57,10 +57,10 @@ func (workers *Workers) Delete(workerID int64) int64 {
 // param workerID int64 -> the long workerID to the cadence Worker
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
-// returns *worker.Worker -> pointer to cadence Worker with the specified workerID
-func (workers *Workers) Get(workerID int64) *worker.Worker {
+// returns worker.Worker -> cadence Worker with the specified workerID
+func (workers *Workers) Get(workerID int64) worker.Worker {
 	if v, ok := WorkersMap.Map.Load(workerID); ok {
-		if _v, _ok := v.(*worker.Worker); _ok {
+		if _v, _ok := v.(worker.Worker); _ok {
 			return _v
 		}
 	}
