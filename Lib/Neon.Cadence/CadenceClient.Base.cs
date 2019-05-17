@@ -55,6 +55,17 @@ namespace Neon.Cadence
         // Cadence basic client related operations.
 
         /// <summary>
+        /// Pings the <b>cadence-proxy</b> and waits for the reply.  This is used 
+        /// mainly for low-level performance and load testing but can also be used
+        /// to explicitly verify that the <b>cadence-proxy</b> is still alive.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task PingAsync()
+        {
+            await CallProxyAsync(new PingRequest());
+        }
+
+        /// <summary>
         /// Signals Cadence that it can begin invoking workflows and activities from the
         /// specified domain and task list on the current connection.
         /// </summary>

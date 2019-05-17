@@ -977,7 +977,7 @@ namespace Neon.Cadence
                         // [TaskCanceledException] when the connection is in
                         // the process of being closed.
 
-                        if (!closingConnection || !(e is TaskCanceledException))
+                        if (!closingConnection || !e.Contains<TaskCanceledException>())
                         {
                             exception = e;
                             log.LogError(e);

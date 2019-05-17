@@ -153,6 +153,18 @@ namespace Neon.Cadence.Internal
         /// </summary>
         StopWorkerReply = 20,
 
+        /// <summary>
+        /// Sent from either the library or proxy mainly for measuring the raw throughput of 
+        /// client/proxy transactions.  The receiver simply responds immediately with a
+        /// <see cref="PingReply"/>.
+        /// </summary>
+        PingRequest = 21,
+
+        /// <summary>
+        /// Sent by either side in response to a <see cref="PingRequest"/>.
+        /// </summary>
+        PingReply = 22,
+
         //---------------------------------------------------------------------
         // Workflow messages
         //

@@ -17,12 +17,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -44,7 +46,7 @@ namespace TestCadence
     public sealed class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture      fixture;
-        CadenceClient   connection;
+        CadenceClient       client;
         HttpClient          proxyClient;
 
         public Test_EndToEnd(CadenceFixture fixture)
@@ -64,8 +66,8 @@ namespace TestCadence
             fixture.Start(settings);
 
             this.fixture     = fixture;
-            this.connection  = fixture.Connection;
-            this.proxyClient = new HttpClient() { BaseAddress = connection.ProxyUri };
+            this.client  = fixture.Connection;
+            this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
         }
 
         public void Dispose()
@@ -86,14 +88,14 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // RegisterDomain:
 
-            await connection.RegisterDomainAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
-            await Assert.ThrowsAsync<CadenceDomainAlreadyExistsException>(async () => await connection.RegisterDomainAsync(name: "domain-0"));
-            await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await connection.RegisterDomainAsync(name: null));
+            await client.RegisterDomainAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
+            await Assert.ThrowsAsync<CadenceDomainAlreadyExistsException>(async () => await client.RegisterDomainAsync(name: "domain-0"));
+            await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await client.RegisterDomainAsync(name: null));
 
             //-----------------------------------------------------------------
             // DescribeDomain:
 
-            var domainDescribeReply = await connection.DescribeDomainAsync("domain-0");
+            var domainDescribeReply = await client.DescribeDomainAsync("domain-0");
 
             Assert.False(domainDescribeReply.Configuration.EmitMetrics);
             Assert.Equal(14, domainDescribeReply.Configuration.RetentionDays);
@@ -102,7 +104,7 @@ namespace TestCadence
             Assert.Equal("jeff@lilltek.com", domainDescribeReply.DomainInfo.OwnerEmail);
             Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
 
-            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await connection.DescribeDomainAsync("does-not-exist"));
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.DescribeDomainAsync("does-not-exist"));
 
             //-----------------------------------------------------------------
             // UpdateDomain:
@@ -114,9 +116,9 @@ namespace TestCadence
             updateDomainRequest.DomainInfo.OwnerEmail       = "foo@bar.com";
             updateDomainRequest.DomainInfo.Description      = "new description";
 
-            await connection.UpdateDomainAsync("domain-0", updateDomainRequest);
+            await client.UpdateDomainAsync("domain-0", updateDomainRequest);
 
-            domainDescribeReply = await connection.DescribeDomainAsync("domain-0");
+            domainDescribeReply = await client.DescribeDomainAsync("domain-0");
 
             Assert.True(domainDescribeReply.Configuration.EmitMetrics);
             Assert.Equal(77, domainDescribeReply.Configuration.RetentionDays);
@@ -125,7 +127,80 @@ namespace TestCadence
             Assert.Equal("foo@bar.com", domainDescribeReply.DomainInfo.OwnerEmail);
             Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
 
-            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await connection.UpdateDomainAsync("does-not-exist", updateDomainRequest));
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.UpdateDomainAsync("does-not-exist", updateDomainRequest));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Ping()
+        {
+            // Verify that Ping works and optionally measure simple transaction throughput.
+
+            await client.PingAsync();
+
+            var stopwatch  = new Stopwatch();
+            var iterations = 5000;
+
+            stopwatch.Start();
+
+            for (int i = 0; i < iterations; i++)
+            {
+                await client.PingAsync();
+            }
+
+            stopwatch.Stop();
+
+            var tps = iterations * (1.0 / stopwatch.Elapsed.TotalSeconds);
+
+            Console.WriteLine($"Transactions/sec: {tps}");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void PingAttack()
+        {
+            // Measure througput with 4 threads hammering the proxy with pings.
+
+            var syncLock   = new object();
+            var totalTps   = 0.0;
+            var threads    = new Thread[4];
+            var iterations = 5000;
+
+            for (int i = 0; i < threads.Length; i++)
+            {
+                threads[i] = new Thread(
+                    new ThreadStart(
+                        () =>
+                        {
+                            var stopwatch = new Stopwatch();
+
+                            stopwatch.Start();
+
+                            for (int j = 0; j < iterations; j++)
+                            {
+                                client.PingAsync().Wait();
+                            }
+
+                            stopwatch.Stop();
+
+                            var tps = iterations * (1.0 / stopwatch.Elapsed.TotalSeconds);
+
+                            lock (syncLock)
+                            {
+                                totalTps += tps;
+                            }
+                        }));
+
+                threads[i].Start();
+            }
+
+            foreach (var thread in threads)
+            {
+                thread.Join();
+            }
+
+            Console.WriteLine($"Transactions/sec: {totalTps}");
+            Console.WriteLine($"Latency (average): {1.0 / totalTps}");
         }
     }
 }
