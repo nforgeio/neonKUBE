@@ -7,6 +7,11 @@ import (
 )
 
 var (
+	mu sync.RWMutex
+
+	// NextWorkerID is incremented (protected by a mutex) every time
+	// a new cadence Worker is created
+	NextWorkerID int64
 
 	// WorkersMap maps a int64 WorkerId to the cadence
 	// Worker returned by the Cadence NewWorker() function.
@@ -23,6 +28,28 @@ type (
 		sync.Map
 	}
 )
+
+//----------------------------------------------------------------------------
+// NextWorkerID methods
+
+// IncrementNextWorkerID increments the global variable
+// NextWorkerID by 1 and is protected by a mutex lock
+func IncrementNextWorkerID() {
+	mu.Lock()
+	NextWorkerID = NextWorkerID + 1
+	mu.Unlock()
+}
+
+// GetNextWorkerID gets the value of the global variable
+// NextWorkerID and is protected by a mutex Read lock
+func GetNextWorkerID() int64 {
+	mu.RLock()
+	defer mu.RUnlock()
+	return NextWorkerID
+}
+
+//----------------------------------------------------------------------------
+// Workers instance methods
 
 // Add adds a new cadence worker and its corresponding WorkerId into
 // the Workers.workers map.  This method is thread-safe.

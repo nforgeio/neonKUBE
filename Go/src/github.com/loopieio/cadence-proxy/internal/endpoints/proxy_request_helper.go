@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"os"
 	"reflect"
@@ -23,7 +22,7 @@ import (
 )
 
 // -------------------------------------------------------------------------
-// IProxyRequest message type handlers
+// IProxyRequest message type handler entrypoint
 
 func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.MessageType) error {
 
@@ -135,7 +134,7 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 
 	// send the reply as an http.Request back to the Neon.Cadence Library
 	// via http.PUT
-	resp, err := putToNeonCadence(serializedMessage)
+	resp, err := putToNeonCadenceClient(serializedMessage)
 	if err != nil {
 		return err
 	}
@@ -143,6 +142,9 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 
 	return nil
 }
+
+// -------------------------------------------------------------------------
+// IProxyRequest message type handler methods
 
 func handleActivityRequest(request *messages.ActivityRequest) (messages.IProxyMessage, error) {
 	err := fmt.Errorf("not implemented exception for message type ActivityRequest")
@@ -173,7 +175,7 @@ func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMess
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ConnectRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// new InitializeReply
+	// new ConnectReply
 	reply := createReplyMessage(request)
 
 	// set endpoint to cadence cluster
@@ -260,7 +262,7 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) (messa
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainDescribeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// new InitializeReply
+	// new DomainDescribeReply
 	reply := createReplyMessage(request)
 
 	// check to see if a connection has been made with the
@@ -311,7 +313,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) (messa
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// new InitializeReply
+	// new DomainRegisterReply
 	reply := createReplyMessage(request)
 
 	// check to see if a connection has been made with the
@@ -377,7 +379,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) (messages.
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainUpdateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// create the reply to Neon.Cadence library
+	// new DomainUpdateReply
 	reply := createReplyMessage(request)
 
 	// check to see if a connection has been made with the
@@ -500,7 +502,7 @@ func handleTerminateRequest(request *messages.TerminateRequest) (messages.IProxy
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("TerminateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// new InitializeReply
+	// new TerminateReply
 	reply := createReplyMessage(request)
 
 	// setting terminate to true indicates that after the TerminateReply is sent,
@@ -519,7 +521,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) (m
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// create the reply to Neon.Cadence library
+	// new WorkflowRegisterReply
 	reply := createReplyMessage(request)
 
 	// check to see if a connection has been made with the
@@ -560,7 +562,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("NewWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// new InitializeReply
+	// new NewWorkerReply
 	reply := createReplyMessage(request)
 
 	// check to see if a connection has been made with the
@@ -584,7 +586,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 
 	// put the worker and workerID from the new worker to the
 	// WorkersMap and then run the worker by calling Run() on it
-	workerID := cadenceworkers.WorkersMap.Add(rand.Int63(), worker)
+	workerID := cadenceworkers.WorkersMap.Add(cadenceworkers.GetNextWorkerID(), worker)
 	err := worker.Run()
 	if err != nil {
 		if v, ok := reply.(*messages.NewWorkerReply); ok {
@@ -596,6 +598,8 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 		return reply, nil
 	}
 
+	// increment NextWorkerID
+	cadenceworkers.IncrementNextWorkerID()
 	if v, ok := reply.(*messages.NewWorkerReply); ok {
 		buildNewWorkerReply(v, nil, workerID)
 	}
@@ -608,7 +612,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) (messages.IPro
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("StopWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// new InitializeReply
+	// new StopWorkerReply
 	reply := createReplyMessage(request)
 
 	// check to see if a connection has been made with the
@@ -664,7 +668,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyMessage {
 	return proxyMessage
 }
 
-func putToNeonCadence(content []byte) (*http.Response, error) {
+func putToNeonCadenceClient(content []byte) (*http.Response, error) {
 
 	// create a buffer with the serialized bytes to reply with
 	// and create the PUT request
