@@ -116,7 +116,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Converts the instance into a <see cref="CadenceException"/>.
+        /// Converts the instance into an <see cref="CadenceException"/>.
         /// </summary>
         /// <returns>One of the exceptions derived from <see cref="CadenceException"/>.</returns>
         public CadenceException ToException()

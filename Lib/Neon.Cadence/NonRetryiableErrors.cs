@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceHelper.cs
+// FILE:	    NonRetryiableErrors.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -50,58 +50,50 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Cadence helper methods and constants.
+    /// Used in conjunction with <see cref="CadenceRetryPolicy"/> to specify errors that
+    /// <b>will not</b> cause a workflow related operation to be retried.
     /// </summary>
-    internal static class CadenceHelper
+    public static class NonRetryiableErrors
     {
         /// <summary>
-        /// Number of nanoseconds per second.
+        /// Returns the non-retriable error string for a <b>custom error</b>.
         /// </summary>
-        public const long NanosecondsPerSecond = 1000000000L;
-
-        /// <summary>
-        /// Returns the maximum timespan supported by Cadence.
-        /// </summary>
-        public static TimeSpan MaxTimespan { get; private set; } = TimeSpan.FromTicks(long.MaxValue / 100);
-
-        /// <summary>
-        /// Returns the minimum timespan supported by Cadence.
-        /// </summary>
-        public static TimeSpan MinTimespan { get; private set; } = TimeSpan.FromTicks(long.MinValue / 100);
-
-        /// <summary>
-        /// Ensures that the timespan passed doesn't exceed the minimum or maximum
-        /// supported by Cadence/GOLANG.
-        /// </summary>
-        /// <param name="timespan">The input.</param>
-        /// <returns>The adjusted output.</returns>
-        public static TimeSpan Normalize(TimeSpan timespan)
+        /// <param name="reason">The reason string.</param>
+        public static string Custom(string reason)
         {
-            if (timespan > MaxTimespan)
-            {
-                return MaxTimespan;
-            }
-            else if (timespan < MinTimespan)
-            {
-                return MinTimespan;
-            }
-            else
-            {
-                return timespan;
-            }
+            return reason;
         }
 
         /// <summary>
-        /// Converts a .NET <see cref="TimeSpan"/> into a Cadence/GOLANG duration
-        /// (aka a <c>long</c> specifying the interval in nanoseconds.
+        /// Returns the non-retriable error string for a <b>panic error</b>.
         /// </summary>
-        /// <param name="timespan">The input .NET timespan.</param>
-        /// <returns>The duration in nanoseconds.</returns>
-        public static long ToCadence(TimeSpan timespan)
+        public static string Panic()
         {
-            timespan = Normalize(timespan);
+            return "cadenceInternal:Panic";
+        }
 
-            return timespan.Ticks * 100;
+        /// <summary>
+        /// Returns the non-retriable error string for a <b>generic error</b>.
+        /// </summary>
+        public static string Generic()
+        {
+            return "cadenceInternal:Generic";
+        }
+
+        /// <summary>
+        /// Returns the non-retriable error string for a <b>start-to-close timeout</b>.
+        /// </summary>
+        public static string StartToCloseTimeout()
+        {
+            return "cadenceInternal:Timeout START_TO_CLOSE";
+        }
+
+        /// <summary>
+        /// Returns the non-retriable error string for a <b>heartbeat timeout</b>.
+        /// </summary>
+        public static string HeartbeatTimeout()
+        {
+            return "cadenceInternal:Timeout HEARTBEAT";
         }
     }
 }

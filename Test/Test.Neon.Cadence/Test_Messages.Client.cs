@@ -1024,6 +1024,8 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<NewWorkerRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.False(message.IsWorkflow);
                 Assert.Null(message.Domain);
                 Assert.Null(message.TaskList);
                 Assert.Null(message.Options);
@@ -1032,6 +1034,10 @@ namespace TestCadence
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
+                message.Name = "my-workflow";
+                Assert.Equal("my-workflow", message.Name);
+                message.IsWorkflow = true;
+                Assert.True(message.IsWorkflow);
                 message.Domain = "my-domain";
                 Assert.Equal("my-domain", message.Domain);
                 message.TaskList = "my-tasks";
@@ -1047,6 +1053,8 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<NewWorkerRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-workflow", message.Name);
+                Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
@@ -1057,6 +1065,8 @@ namespace TestCadence
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-workflow", message.Name);
+                Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
@@ -1067,6 +1077,8 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-workflow", message.Name);
+                Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
@@ -1241,7 +1253,7 @@ namespace TestCadence
             {
                 message = new PingRequest();
 
-                Assert.Equal(MessageTypes.PingRequest, message.ReplyType);
+                Assert.Equal(MessageTypes.PingReply, message.ReplyType);
 
                 // Empty message.
 

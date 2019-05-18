@@ -180,7 +180,7 @@ namespace Neon.Cadence
         public TimeSpan WorkerStopTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
-        /// Converts the instance into a <see cref="InternalWorkerOptions"/>.
+        /// Converts the instance into an <see cref="InternalWorkerOptions"/>.
         /// </summary>
         /// <returns>The converted instance.</returns>
         internal InternalWorkerOptions ToInternal()

@@ -66,7 +66,7 @@ namespace TestCadence
             fixture.Start(settings);
 
             this.fixture     = fixture;
-            this.client  = fixture.Connection;
+            this.client      = fixture.Connection;
             this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
         }
 

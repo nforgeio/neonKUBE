@@ -48,7 +48,6 @@ namespace TestKubeService
         public class TestClass : IClassFixture<ComposedFixture>, IDisposable
         {
             private ServiceMap                          serviceMap;
-            private string                              argValue;
             private ComposedFixture                     composedFixture;
             private KubeServiceFixture<WebService>      webServiceFixture;
             private KubeServiceFixture<RelayService>    relayServiceFixture;
@@ -181,7 +180,7 @@ namespace TestKubeService
         //-----------------------------------------------------------
         // Static members
 
-        private static string   argValue       = null;
+        private static string   argValue         = null;
         private static bool     runWasCalled     = false;
         private static bool     disposeWasCalled = false;
 
@@ -197,7 +196,7 @@ namespace TestKubeService
 
             TestHelper.RunFixture<TestClass>("Hello World!");
 
-            Assert.Equal("Hello World!", argValue);
+            Assert.Equal("Hello World!", Test_RunFixture.argValue);
             Assert.True(runWasCalled);
             Assert.True(disposeWasCalled);
         }

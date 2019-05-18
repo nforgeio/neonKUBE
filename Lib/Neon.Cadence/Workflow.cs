@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
@@ -32,13 +33,18 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
-using System.Threading;
 
 namespace Neon.Cadence
 {
     /// <summary>
     /// Base class for all application Cadence workflow implementations.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// All .NET application workflow implementations will need to derive from the
+    /// <see cref="Workflow"/> class and implement <see cref="RunAsync(byte[])"/>.
+    /// </para>
+    /// </remarks>
     public abstract class Workflow
     {
         private long workflowContextId;
@@ -46,17 +52,13 @@ namespace Neon.Cadence
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="client">The client managing this workflow.</param>
-        /// <param name="workflowContextId">
-        /// Identifies the workflow context being held by the <b>cadence-proxy</b>
-        /// for this workflow instance.
-        /// </param>
-        internal Workflow(CadenceClient client, long workflowContextId)
+        /// <param name="args">The low-level workflow initisalization arguments.</param>
+        internal Workflow(WorkflowConstructorArgs args)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(args != null);
 
-            this.Client            = client;
-            this.workflowContextId = workflowContextId;
+            this.Client            = args.Client;
+            this.workflowContextId = args.WorkflowContextId;
         }
 
         /// <summary>
@@ -74,22 +76,24 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns <c>true</c> if there is a completion result from previous runs of
-        /// this workflow.  This is useful for cron workflows that would like to pass
+        /// this workflow.  This is useful for CRON workflows that would like to pass
         /// ending state from from one workflow run to the next.  This property
         /// indicates whether the last run (if any) returned any state.
         /// </summary>
-        protected async Task<bool> HasLastCompletionResultAsync()
+        protected async Task<bool> HasPreviousRunResultAsync()
         {
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
 
         /// <summary>
         /// Returns the result from the last workflow run or <c>null</c>.  This is useful 
-        /// for cron workflows that would like to pass ending state from from one workflow
+        /// for CRON workflows that would like to pass information from from one workflow
         /// run to the next.
         /// </summary>
-        protected async Task<byte[]> LastCompletionResultAsync()
+        protected async Task<byte[]> GetPreviousRunResultAsync()
         {
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
 
@@ -99,13 +103,14 @@ namespace Neon.Cadence
         /// executing activities after the parent workflow has been cancelled.
         /// </summary>
         /// <remarks>
-        /// Under the covers, this creates a new disconnected Cadence client that
-        /// is independent from the parent workflow's context.  This method only
-        /// creates the new context for the first call.  Subsequent calls won't
-        /// do anything.
+        /// Under the covers, this replaces the underlying workflow context with
+        /// a new disconnected context that is independent from the parent workflow's
+        /// context.  This method only substitutes the new context for the first call. 
+        /// Subsequent calls won't actually do anything.
         /// </remarks>
-        protected async Task BeginCleanupAsync()
+        protected async Task DisconnectContextAsync()
         {
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
 
@@ -115,12 +120,13 @@ namespace Neon.Cadence
         /// <returns>The current workflow time (UTC).</returns>
         protected async Task<DateTime> UtcNowAsync()
         {
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Use this when your workflow needs to obtain a value that may 
-        /// change at runtime.  When a workflow executes this for the first
+        /// Use this when your workflow needs to obtain an external value that 
+        /// may change at runtime.  When a workflow executes this for the first
         /// time, the <paramref name="getter"/> function will be called to
         /// fetch the value and persist it to the workflow history.  When
         /// the workflow is being replayed, the value from the history
@@ -172,6 +178,8 @@ namespace Neon.Cadence
         /// </exception>
         protected async Task SleepAsync(TimeSpan delay, CancellationToken cancellationToken = default)
         {
+            await Task.CompletedTask;
+
             if (delay <= TimeSpan.Zero)
             {
                 return;

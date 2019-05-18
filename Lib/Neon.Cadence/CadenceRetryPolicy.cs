@@ -31,17 +31,12 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+using Neon.Cadence.Internal;
+
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <para>
-    /// Used to serialize standard Neon <see cref="IRetryPolicy"/> instances into a
-    /// form compatible with the Cadence GOLANG client.  This class maps closely to
-    /// the Cadence GOLANG client structure:
-    /// </para>
-    /// <para>
-    /// https://godoc.org/go.uber.org/cadence/internal#RetryPolicy
-    /// </para>
+    /// Describes a Cadence retry policy.
     /// </summary>
     internal class CadenceRetryPolicy
     {
@@ -56,16 +51,16 @@ namespace Neon.Cadence.Internal
         /// Constructs an instance from a <see cref="LinearRetryPolicy"/>.
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public InternalRetryPolicy(LinearRetryPolicy policy)
+        public CadenceRetryPolicy(LinearRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null);
 
-            this.InitialInterval    = new GoTimeSpan(policy.RetryInterval).ToString();
+            this.InitialInterval    = CadenceHelper.Normalize(policy.RetryInterval);
             this.BackoffCoefficient = 1.0;
 
             if (policy.Timeout.HasValue)
             {
-                this.ExpirationInterval = new GoTimeSpan(policy.Timeout.Value).ToString();
+                this.ExpirationInterval = CadenceHelper.Normalize(policy.Timeout.Value);
             }
 
             this.MaximumAttempts = policy.MaxAttempts;
@@ -75,68 +70,83 @@ namespace Neon.Cadence.Internal
         /// Constructs an instance froma <see cref="ExponentialRetryPolicy"/>,
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public InternalRetryPolicy(ExponentialRetryPolicy policy)
+        public CadenceRetryPolicy(ExponentialRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null);
 
-            this.InitialInterval    = new GoTimeSpan(policy.InitialRetryInterval).ToString();
+            this.InitialInterval    = CadenceHelper.Normalize(policy.InitialRetryInterval);
             this.BackoffCoefficient = 2.0;
-            this.MaximumInterval    = new GoTimeSpan(policy.MaxRetryInterval).ToString();
+            this.MaximumInterval    = CadenceHelper.Normalize(policy.MaxRetryInterval);
 
             if (policy.Timeout.HasValue)
             {
-                this.ExpirationInterval = new GoTimeSpan(policy.Timeout.Value).ToString();
+                this.ExpirationInterval = CadenceHelper.Normalize(policy.Timeout.Value);
             }
 
             this.MaximumAttempts = policy.MaxAttempts;
         }
 
         /// <summary>
-        /// Backoff interval for the first retry. If coefficient is 1.0 then it is used for all retries.
-        /// Required, no default value.
+        /// Specifies the backoff interval for the first retry.  If coefficient is 1.0 then
+        /// it is used for all retries.  Required, no default value.
         /// </summary>
         public TimeSpan InitialInterval { get; set; }
 
         /// <summary>
-        /// Coefficient used to calculate the next retry backoff interval.
-        /// The next retry interval is previous interval multiplied by this coefficient.
-        /// Must be 1 or larger. Default is 2.0.
+        /// Specifies the coefficient used to calculate the next retry backoff interval.  
+        /// The next retry interval is previous interval multiplied by this coefficient. 
+        /// This must be 1 or larger. Default is 2.0.
         /// </summary>
         public double BackoffCoefficient { get; set; } = 2.0;
 
         /// <summary>
-        /// Maximum time to retry. Either ExpirationInterval or MaximumAttempts is required.
-        /// When exceeded the retries stop even if maximum retries is not reached yet.
+        /// Specifies the maximim retry interval.  Retries intervals will start at <see cref="InitialInterval"/>
+        /// and then be multiplied by <see cref="BackoffCoefficient"/> for each retry attempt until the
+        /// interval reaches or exceeds <see cref="MaximumInterval"/>, at which point point each
+        /// retry will use <see cref="MaximumInterval"/> for all subsequent attempts.
         /// </summary>
         public TimeSpan MaximumInterval { get; set; }
 
         /// <summary>
-        /// Maximum time to retry. Either ExpirationInterval or MaximumAttempts is required.
-        /// When exceeded the retries stop even if maximum retries is not reached yet.
+        /// Maximum time to retry.  Either <see cref="ExpirationInterval"/> or <see cref="MaximumAttempts"/> is 
+        /// required.  Retries will stop when this is exceeded even if maximum retries is not been reached.
         /// </summary>
         public TimeSpan ExpirationInterval { get; set; }
 
         /// <summary>
-        /// Maximum number of attempts. When exceeded the retries stop even if not expired yet.
-        /// If not set or set to 0, it means unlimited, and rely on ExpirationInterval to stop.
-        /// Either MaximumAttempts or ExpirationInterval is required.
+        /// Maximum number of attempts.  When exceeded the retries stop.  If not set or set to 0, it means 
+        /// unlimited, and the policy will rely on <see cref="ExpirationInterval"/> to decide when to stop
+        /// retrying.  Either <see cref="MaximumAttempts"/> or <see cref="MaximumInterval"/>"/> is required.
         /// </summary>
         public int MaximumAttempts { get; set; }
 
         /// <summary>
         /// <para>
-        /// Non-Retriable errors. This is optional. Cadence server will stop retry if error reason matches this list.
+        /// Specifies Cadence errors that should not be retried. This is optional. Cadence server 
+        /// will stop retrying if error reason matches this list.  Use the <see cref="NonRetryiableErrors"/>
+        /// class methods to initialize this list as required.
         /// </para>
-        /// <list type="bullet">
-        /// <item>Error reason for custom error is specified when your activity/workflow return cadence.NewCustomError(reason).</item>
-        /// <item>Error reason for panic error is "cadenceInternal:Panic".</item>
-        /// <item>Error reason for any other error is "cadenceInternal:Generic".</item>
-        /// <item>Error reason for timeouts is: "cadenceInternal:Timeout TIMEOUT_TYPE". TIMEOUT_TYPE could be START_TO_CLOSE or HEARTBEAT.</item>
-        /// </list>
         /// <note>
-        /// Note, cancellation is not a failure, so it won't be retried.
+        /// Cancellation is not a failure, so that won't be retried.
         /// </note>
         /// </summary>
         public List<string> NonRetriableErrorReasons { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Converts the instance into an <see cref="InternalRetryPolicy"/>.
+        /// </summary>
+        /// <returns>The converted instance.</returns>
+        internal InternalRetryPolicy ToInternal()
+        {
+            return new InternalRetryPolicy()
+            {
+                BackoffCoefficient       = this.BackoffCoefficient,
+                ExpirationInterval       = CadenceHelper.ToCadence(this.ExpirationInterval),
+                InitialInterval          = CadenceHelper.ToCadence(this.InitialInterval),
+                MaximumAttempts          = this.MaximumAttempts,
+                MaximumInterval          = CadenceHelper.ToCadence(this.MaximumInterval),
+                NonRetriableErrorReasons = NonRetriableErrorReasons.ToList()
+            };
+        }
     }
 }
