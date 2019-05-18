@@ -3,6 +3,8 @@ package endpoints
 import (
 	"fmt"
 
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
+
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 	"go.uber.org/zap"
@@ -197,11 +199,20 @@ func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
 }
 
 func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
-	err := fmt.Errorf("not implemented exception for message type WorkflowInvokeReply")
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowInvokeReply", zap.Error(err))
-	return err
+	// WorkflowExecutionContext at the specified WorflowContextID
+	workflowContextID := reply.GetContextID()
+	wectx := cadenceworkflows.WorkflowExecutionContextsMap.Get(workflowContextID)
+	if wectx == nil {
+		return entityNotExistError
+	}
+
+	// TODO: JACK --
+	// c. If WorkflowInvokeReply has a null Error property, then signal the context promise completion and have it return the WorkflowInvokeReply.Result bytes.
+	// d. If WorkflowInvokeReply reports an error, then signal the context promise completion and have it return the error.
+	// e. Remove the context from the workflowContexts table.
+
+	return nil
 }
 
 func handleWorkflowRegisterReply(reply *messages.WorkflowRegisterReply) error {
