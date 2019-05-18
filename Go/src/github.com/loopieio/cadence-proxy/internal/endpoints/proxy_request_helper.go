@@ -8,6 +8,10 @@ import (
 	"os"
 	"reflect"
 
+	"go.uber.org/cadence/workflow"
+
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
+
 	"go.uber.org/cadence/worker"
 
 	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadence/cadenceclient"
@@ -19,6 +23,14 @@ import (
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
 	"go.uber.org/zap"
+)
+
+var (
+
+	// ClientHelper is a global variable that holds this cadence-proxy's instance
+	// of the CadenceClientHelper that will be used to create domain and workflow clients
+	// that communicate with the cadence server
+	clientHelper = cadenceclient.NewCadenceClientHelper()
 )
 
 // -------------------------------------------------------------------------
@@ -36,73 +48,73 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 	// InitializeRequest
 	case messagetypes.InitializeRequest:
 		if v, ok := request.(*messages.InitializeRequest); ok {
-			reply, err = handleInitializeRequest(v)
+			reply = handleInitializeRequest(v)
 		}
 
 	// HeartbeatRequest
 	case messagetypes.HeartbeatRequest:
 		if v, ok := request.(*messages.HeartbeatRequest); ok {
-			reply, err = handleHeartbeatRequest(v)
+			reply = handleHeartbeatRequest(v)
 		}
 
 	// CancelRequest
 	case messagetypes.CancelRequest:
 		if v, ok := request.(*messages.CancelRequest); ok {
-			reply, err = handleCancelRequest(v)
+			reply = handleCancelRequest(v)
 		}
 
 	// ConnectRequest
 	case messagetypes.ConnectRequest:
 		if v, ok := request.(*messages.ConnectRequest); ok {
-			reply, err = handleConnectRequest(v)
+			reply = handleConnectRequest(v)
 		}
 
 	// DomainDescribeRequest
 	case messagetypes.DomainDescribeRequest:
 		if v, ok := request.(*messages.DomainDescribeRequest); ok {
-			reply, err = handleDomainDescribeRequest(v)
+			reply = handleDomainDescribeRequest(v)
 		}
 
 	// DomainRegisterRequest
 	case messagetypes.DomainRegisterRequest:
 		if v, ok := request.(*messages.DomainRegisterRequest); ok {
-			reply, err = handleDomainRegisterRequest(v)
+			reply = handleDomainRegisterRequest(v)
 		}
 
 	// DomainUpdateRequest
 	case messagetypes.DomainUpdateRequest:
 		if v, ok := request.(*messages.DomainUpdateRequest); ok {
-			reply, err = handleDomainUpdateRequest(v)
+			reply = handleDomainUpdateRequest(v)
 		}
 
 	// TerminateRequest
 	case messagetypes.TerminateRequest:
 		if v, ok := request.(*messages.TerminateRequest); ok {
-			reply, err = handleTerminateRequest(v)
+			reply = handleTerminateRequest(v)
 		}
 
 	// WorkflowRegisterRequest
 	case messagetypes.WorkflowRegisterRequest:
 		if v, ok := request.(*messages.WorkflowRegisterRequest); ok {
-			reply, err = handleWorkflowRegisterRequest(v)
+			reply = handleWorkflowRegisterRequest(v)
 		}
 
 	// WorkflowExecuteRequest
 	case messagetypes.WorkflowExecuteRequest:
 		if v, ok := request.(*messages.WorkflowExecuteRequest); ok {
-			reply, err = handleWorkflowExecuteRequest(v)
+			reply = handleWorkflowExecuteRequest(v)
 		}
 
 	// WorkflowInvokeRequest
 	case messagetypes.WorkflowInvokeRequest:
 		if v, ok := request.(*messages.WorkflowInvokeRequest); ok {
-			reply, err = handleWorkflowInvokeRequest(v)
+			reply = handleWorkflowInvokeRequest(v)
 		}
 
 	// NewWorkerRequest
 	case messagetypes.NewWorkerRequest:
 		if v, ok := request.(*messages.NewWorkerRequest); ok {
-			reply, err = handleNewWorkerRequest(v)
+			reply = handleNewWorkerRequest(v)
 		}
 
 	// Undefined message type
@@ -121,20 +133,10 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 		return err
 	}
 
-	// serialize the reply message into a []byte
-	// to send back over the network
-	replyProxyMessage := reply.GetProxyMessage()
-	serializedMessage, err := replyProxyMessage.Serialize(false)
-	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Error serializing proxy message", zap.Error(err))
-		return err
-	}
-
 	// send the reply as an http.Request back to the Neon.Cadence Library
 	// via http.PUT
-	resp, err := putToNeonCadenceClient(serializedMessage)
+	var replyMessage messages.IProxyMessage = reply.GetProxyMessage()
+	resp, err := putToNeonCadenceClient(replyMessage)
 	if err != nil {
 		return err
 	}
@@ -146,16 +148,15 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 // -------------------------------------------------------------------------
 // IProxyRequest message type handler methods
 
-func handleActivityRequest(request *messages.ActivityRequest) (messages.IProxyMessage, error) {
-	err := fmt.Errorf("not implemented exception for message type ActivityRequest")
+func handleActivityRequest(request *messages.ActivityRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling ActivityRequest", zap.Error(err))
-	return nil, err
+	logger.Debug("not implemented exception for message type ActivityRequest")
+	return nil
 
 }
 
-func handleCancelRequest(request *messages.CancelRequest) (messages.IProxyMessage, error) {
+func handleCancelRequest(request *messages.CancelRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("CancelRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -167,10 +168,10 @@ func handleCancelRequest(request *messages.CancelRequest) (messages.IProxyMessag
 		buildCancelReply(v, nil, true)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMessage, error) {
+func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ConnectRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -189,17 +190,17 @@ func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMess
 	}
 
 	// setup the CadenceClientHelper
-	cadenceclient.ClientHelper = cadenceclient.NewCadenceClientHelper()
-	cadenceclient.ClientHelper.SetHostPort(endpoints)
-	cadenceclient.ClientHelper.SetClientOptions(&opts)
+	clientHelper = cadenceclient.NewCadenceClientHelper()
+	clientHelper.SetHostPort(endpoints)
+	clientHelper.SetClientOptions(&opts)
 
-	err := cadenceclient.ClientHelper.SetupServiceConfig()
+	err := clientHelper.SetupServiceConfig()
 	if err != nil {
 
 		// set the client helper to nil indicating that
 		// there is no connection that has been made to the cadence
 		// server
-		cadenceclient.ClientHelper = nil
+		clientHelper = nil
 
 		// build the rest of the reply with a custom error
 		if v, ok := reply.(*messages.ConnectReply); ok {
@@ -213,6 +214,9 @@ func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMess
 	// until returning ready
 	connectChan := make(chan error)
 	ctx, cancel := context.WithTimeout(context.Background(), _cadenceTimeout)
+
+	// defer the cancel of the context and
+	// closing of the connectChan
 	defer func() {
 		cancel()
 		close(connectChan)
@@ -221,7 +225,7 @@ func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMess
 	go func() {
 
 		// build the domain client using a configured CadenceClientHelper instance
-		domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+		domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 		if err != nil {
 			connectChan <- err
 			return
@@ -239,7 +243,7 @@ func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMess
 
 	connectResult := <-connectChan
 	if connectResult != nil {
-		cadenceclient.ClientHelper = nil
+		clientHelper = nil
 
 		if v, ok := reply.(*messages.ConnectReply); ok {
 			buildConnectReply(v, cadenceerrors.NewCadenceError(
@@ -247,17 +251,17 @@ func handleConnectRequest(request *messages.ConnectRequest) (messages.IProxyMess
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	if v, ok := reply.(*messages.ConnectReply); ok {
 		buildConnectReply(v, nil)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) (messages.IProxyMessage, error) {
+func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainDescribeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -267,18 +271,18 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) (messa
 
 	// check to see if a connection has been made with the
 	// cadence client
-	if cadenceclient.ClientHelper == nil {
+	if clientHelper == nil {
 		if v, ok := reply.(*messages.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// build the domain client using a configured CadenceClientHelper instance
-	domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+	domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
 		if v, ok := reply.(*messages.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceerrors.NewCadenceError(
@@ -286,7 +290,7 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) (messa
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// send a describe domain request to the cadence server
@@ -298,17 +302,17 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) (messa
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	if v, ok := reply.(*messages.DomainDescribeReply); ok {
 		buildDomainDescribeReply(v, nil, describeDomainResponse)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) (messages.IProxyMessage, error) {
+func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -318,18 +322,18 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) (messa
 
 	// check to see if a connection has been made with the
 	// cadence client
-	if cadenceclient.ClientHelper == nil {
+	if clientHelper == nil {
 		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// build the domain client using a configured CadenceClientHelper instance
-	domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+	domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
 		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceerrors.NewCadenceError(
@@ -337,7 +341,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) (messa
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// create a new cadence domain RegisterDomainRequest for
@@ -361,7 +365,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) (messa
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// $debug(jack.burns): DELETE THIS!
@@ -371,10 +375,10 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) (messa
 		buildDomainRegisterReply(v, nil)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) (messages.IProxyMessage, error) {
+func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainUpdateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -384,18 +388,18 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) (messages.
 
 	// check to see if a connection has been made with the
 	// cadence client
-	if cadenceclient.ClientHelper == nil {
+	if clientHelper == nil {
 		if v, ok := reply.(*messages.DomainUpdateReply); ok {
 			buildDomainUpdateReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// build the domain client using a configured CadenceClientHelper instance
-	domainClient, err := cadenceclient.ClientHelper.Builder.BuildCadenceDomainClient()
+	domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
 		if v, ok := reply.(*messages.DomainUpdateReply); ok {
 			buildDomainUpdateReply(v, cadenceerrors.NewCadenceError(
@@ -403,7 +407,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) (messages.
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// DomainUpdateRequest.Configuration
@@ -435,7 +439,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) (messages.
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// $debug(jack.burns): DELETE THIS!
@@ -445,10 +449,10 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) (messages.
 		buildDomainUpdateReply(v, nil)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleHeartbeatRequest(request *messages.HeartbeatRequest) (messages.IProxyMessage, error) {
+func handleHeartbeatRequest(request *messages.HeartbeatRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("HeartbeatRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -459,10 +463,10 @@ func handleHeartbeatRequest(request *messages.HeartbeatRequest) (messages.IProxy
 		buildHeartbeatReply(v, nil)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleInitializeRequest(request *messages.InitializeRequest) (messages.IProxyMessage, error) {
+func handleInitializeRequest(request *messages.InitializeRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("InitializeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -494,10 +498,10 @@ func handleInitializeRequest(request *messages.InitializeRequest) (messages.IPro
 		buildInitializeReply(v, nil)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleTerminateRequest(request *messages.TerminateRequest) (messages.IProxyMessage, error) {
+func handleTerminateRequest(request *messages.TerminateRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("TerminateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -513,10 +517,10 @@ func handleTerminateRequest(request *messages.TerminateRequest) (messages.IProxy
 		buildTerminateReply(v, nil)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) (messages.IProxyMessage, error) {
+func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -526,38 +530,82 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) (m
 
 	// check to see if a connection has been made with the
 	// cadence client
-	if cadenceclient.ClientHelper == nil {
+	if clientHelper == nil {
 		if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
 			buildWorkflowRegisterReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
-	return reply, nil
+	// define some variables to hold workflow return values
+	workflowContextID := cadenceworkflows.NextWorkflowContextID()
+
+	// create workflow function
+	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
+		future, settable := workflow.NewFuture(ctx)
+		wectx := new(cadenceworkflows.WorkflowExecutionContext)
+		wectx.SetContext(ctx)
+		wectx.SetFuture(future)
+		wectx.SetSettable(settable)
+
+		// set the WorkflowExecutionContext in the
+		// WorkflowExecutionContextsMap
+		workflowContextID = cadenceworkflows.WorkflowExecutionContextsMap.Add(workflowContextID, wectx)
+
+		// Send a WorkflowInvokeRequest to the Neon.Cadence Lib
+		// cadence-client
+		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
+		workflowInvokeRequest.SetRequestID(NextRequestID())
+		workflowInvokeRequest.SetArgs(input)
+		workflowInvokeRequest.SetContextID(workflowContextID)
+
+		// send the WorkflowInvokeRequest
+		var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()
+		resp, err := putToNeonCadenceClient(message)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		// wait for the future to be unblocked
+		var result []byte
+		if err = future.Get(ctx, &result); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	// register the workflow
+	// build the reply
+	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *request.GetName()})
+	if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
+		buildWorkflowRegisterReply(v, nil)
+	}
+
+	return reply
 }
 
-func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) (messages.IProxyMessage, error) {
-	err := fmt.Errorf("not implemented exception for message type WorkflowExecuteRequest")
+func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowExecuteRequest", zap.Error(err))
-	return nil, err
+	logger.Debug("not implemented exception for message type WorkflowExecuteRequest")
+	return nil
 
 }
 
-func handleWorkflowInvokeRequest(request *messages.WorkflowInvokeRequest) (messages.IProxyMessage, error) {
-	err := fmt.Errorf("not implemented exception for message type WorkflowInvokeRequest")
+func handleWorkflowInvokeRequest(request *messages.WorkflowInvokeRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowInvokeRequest", zap.Error(err))
-	return nil, err
+	logger.Debug("not implemented exception for message type WorkflowInvokeRequest")
+	return nil
 
 }
 
-func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxyMessage, error) {
+func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("NewWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -567,14 +615,14 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 
 	// check to see if a connection has been made with the
 	// cadence client
-	if cadenceclient.ClientHelper == nil {
+	if clientHelper == nil {
 		if v, ok := reply.(*messages.NewWorkerReply); ok {
 			buildNewWorkerReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// gather the worker.New() parameters
@@ -582,11 +630,11 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 	domain := request.GetDomain()
 	taskList := request.GetTaskList()
 	opts := request.GetOptions()
-	worker := worker.New(cadenceclient.ClientHelper.Service, *domain, *taskList, *opts)
+	worker := worker.New(clientHelper.Service, *domain, *taskList, *opts)
 
 	// put the worker and workerID from the new worker to the
 	// WorkersMap and then run the worker by calling Run() on it
-	workerID := cadenceworkers.WorkersMap.Add(cadenceworkers.GetNextWorkerID(), worker)
+	workerID := cadenceworkers.WorkersMap.Add(cadenceworkers.NextWorkerID(), worker)
 	err := worker.Run()
 	if err != nil {
 		if v, ok := reply.(*messages.NewWorkerReply); ok {
@@ -595,19 +643,17 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) (messages.IProxy
 				cadenceerrors.Custom), workerID)
 		}
 
-		return reply, nil
+		return reply
 	}
 
-	// increment NextWorkerID
-	cadenceworkers.IncrementNextWorkerID()
 	if v, ok := reply.(*messages.NewWorkerReply); ok {
 		buildNewWorkerReply(v, nil, workerID)
 	}
 
-	return reply, nil
+	return reply
 }
 
-func handleStopWorkerRequest(request *messages.StopWorkerRequest) (messages.IProxyMessage, error) {
+func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("StopWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
@@ -617,14 +663,14 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) (messages.IPro
 
 	// check to see if a connection has been made with the
 	// cadence client
-	if cadenceclient.ClientHelper == nil {
+	if clientHelper == nil {
 		if v, ok := reply.(*messages.StopWorkerReply); ok {
 			buildStopWorkerReply(v, cadenceerrors.NewCadenceError(
 				connectionError.Error(),
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// get the workerID from the request so that we know
@@ -638,7 +684,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) (messages.IPro
 				cadenceerrors.Custom))
 		}
 
-		return reply, nil
+		return reply
 	}
 
 	// stop the worker and
@@ -649,7 +695,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) (messages.IPro
 		buildStopWorkerReply(v, nil)
 	}
 
-	return reply, nil
+	return reply
 }
 
 // -------------------------------------------------------------------------
@@ -668,7 +714,17 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyMessage {
 	return proxyMessage
 }
 
-func putToNeonCadenceClient(content []byte) (*http.Response, error) {
+func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
+
+	// serialize the message
+	proxyMessage := message.GetProxyMessage()
+	content, err := proxyMessage.Serialize(false)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Error serializing proxy message", zap.Error(err))
+		return nil, err
+	}
 
 	// create a buffer with the serialized bytes to reply with
 	// and create the PUT request

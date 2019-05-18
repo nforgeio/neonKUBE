@@ -36,9 +36,9 @@ const (
 var (
 	mu sync.RWMutex
 
-	// NextRequestID is incremented (protected by a mutex) every time
+	// RequestID is incremented (protected by a mutex) every time
 	// a new request message is sent
-	NextRequestID int64
+	RequestID int64
 
 	// logger for all endpoints to utilize
 	logger *zap.Logger
@@ -73,20 +73,23 @@ var (
 	debugPrelaunch = false
 )
 
-// IncrementNextRequestID increments the global variable
-// NextRequestID by 1 and is protected by a mutex lock
-func IncrementNextRequestID() {
+// NextRequestID increments the package variable
+// RequestID by 1 and is protected by a mutex lock
+func NextRequestID() int64 {
 	mu.Lock()
-	NextRequestID = NextRequestID + 1
+	curr := RequestID
+	RequestID = RequestID + 1
 	mu.Unlock()
+
+	return curr
 }
 
-// GetNextRequestID gets the value of the global variable
-// NextRequestID and is protected by a mutex Read lock
-func GetNextRequestID() int64 {
+// GetRequestID gets the value of the global variable
+// RequestID and is protected by a mutex Read lock
+func GetRequestID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return NextRequestID
+	return RequestID
 }
 
 func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {

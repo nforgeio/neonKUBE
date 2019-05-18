@@ -11,7 +11,7 @@ var (
 
 	// NextWorkflowContextID is incremented (protected by a mutex) every time
 	// a new cadence workflow.Context is created
-	NextWorkflowContextID int64
+	WorkflowContextID int64
 
 	// WorkflowExecutionContextsMap maps a int64 ContextId to the cadence
 	// Workflow Context passed to the cadence Workflow functions.
@@ -30,33 +30,38 @@ type (
 
 	// WorkflowExecutionContext holds a Cadence workflow
 	// context as well as promise/future that will complete
-	// when the workflow execution finishes.  This is used
-	// as an intermediate for holding worklfow information and
-	// state while registering and executing cadence
-	// workflow
+	// when the workflow execution finishes.  It also holds
+	// a cadence Settable to set values or errors on a
+	// future.  This struct is used as an intermediate for
+	// holding worklfow information and state while registering
+	// and executing cadence workflows
 	WorkflowExecutionContext struct {
 		workflow.Context
 		workflow.Future
+		workflow.Settable
 	}
 )
 
 //----------------------------------------------------------------------------
-// NextWorkflowContextID methods
+// WorkflowContextID methods
 
-// IncrementNextWorkflowContextID increments the global variable
-// NextWorkflowContextID by 1 and is protected by a mutex lock
-func IncrementNextWorkflowContextID() {
+// NextWorkflowContextID increments the global variable
+// WorkflowContextID by 1 and is protected by a mutex lock
+func NextWorkflowContextID() int64 {
 	mu.Lock()
-	NextWorkflowContextID = NextWorkflowContextID + 1
+	curr := WorkflowContextID
+	WorkflowContextID = WorkflowContextID + 1
 	mu.Unlock()
+
+	return curr
 }
 
-// GetNextWorkflowContextID gets the value of the global variable
-// NextWorkflowContextID and is protected by a mutex Read lock
-func GetNextWorkflowContextID() int64 {
+// GetWorkflowContextID gets the value of the global variable
+// WorkflowContextID and is protected by a mutex Read lock
+func GetWorkflowContextID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return NextWorkflowContextID
+	return WorkflowContextID
 }
 
 //----------------------------------------------------------------------------
@@ -99,6 +104,21 @@ func (wectx *WorkflowExecutionContext) GetFuture() workflow.Future {
 // set as a WorkflowExecutionContext's cadence workflow.Future
 func (wectx *WorkflowExecutionContext) SetFuture(value workflow.Future) {
 	wectx.Future = value
+}
+
+// GetSettable gets a WorkflowExecutionContext's workflow.Settable
+//
+// returns workflow.Settable -> a cadence workflow.Settable
+func (wectx *WorkflowExecutionContext) GetSettable() workflow.Settable {
+	return wectx.Settable
+}
+
+// SetSettable sets a WorkflowExecutionContext's workflow.Settable
+//
+// param value workflow.Settable -> a cadence workflow.Settable to be
+// set as a WorkflowExecutionContext's cadence workflow.Settable
+func (wectx *WorkflowExecutionContext) SetSettable(value workflow.Settable) {
+	wectx.Settable = value
 }
 
 // Add adds a new cadence context and its corresponding ContextId into
