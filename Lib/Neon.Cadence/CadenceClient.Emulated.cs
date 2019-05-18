@@ -350,6 +350,11 @@ namespace Neon.Cadence
                     await OnEmulatedStopWorkerRequestAsync((StopWorkerRequest)proxyMessage);
                     break;
 
+                case MessageTypes.PingRequest:
+
+                    await OnEmulatedPingRequestAsync((PingRequest)proxyMessage);
+                    break;
+
                 //-------------------------------------------------------------
                 // Workflow messages
 
@@ -696,6 +701,16 @@ namespace Neon.Cadence
                         });
                 }
             }
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="PingRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedPingRequestAsync(PingRequest request)
+        {
+            await EmulatedLibraryClient.SendReplyAsync(request, new PingReply());
         }
 
         //---------------------------------------------------------------------

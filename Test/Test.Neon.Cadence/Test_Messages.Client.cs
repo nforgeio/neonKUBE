@@ -1183,7 +1183,6 @@ namespace TestCadence
             }
         }
 
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_StopWorkerReply()
@@ -1215,6 +1214,103 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<StopWorkerReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_PingRequest()
+        {
+            PingRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new PingRequest();
+
+                Assert.Equal(MessageTypes.PingRequest, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<PingRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<PingRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_PingReply()
+        {
+            PingReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new PingReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<PingReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<PingReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 

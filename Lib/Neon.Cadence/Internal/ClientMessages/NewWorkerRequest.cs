@@ -49,7 +49,7 @@ using Neon.Tasks;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Registers with Cadence that the current
+    /// <b>client --> proxy:</b> Registers with Cadence that the current
     /// connection is capable of executing task and/or activities.
     /// </summary>
     [ProxyMessage(MessageTypes.NewWorkerRequest)]

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRegisterRequest.cs
+// FILE:	    PingRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,35 +32,26 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Registers a workflow handler by name.
+    /// Sent by either the client or proxy for measuring transaction throughput.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowRegisterRequest)]
-    internal class WorkflowRegisterRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.PingRequest)]
+    internal class PingRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowRegisterRequest()
+        public PingRequest()
         {
-            Type = MessageTypes.WorkflowRegisterRequest;
+            Type = MessageTypes.PingRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowRegisterReply;
-
-        /// <summary>
-        /// Identifies the workflow implementation.
-        /// </summary>
-        public string Name
-        {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
-        }
+        public override MessageTypes ReplyType => MessageTypes.PingReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowRegisterRequest();
+            var clone = new PingRequest();
 
             CopyTo(clone);
 
@@ -71,10 +62,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowRegisterRequest)target;
-
-            typedTarget.Name = this.Name;
         }
     }
 }

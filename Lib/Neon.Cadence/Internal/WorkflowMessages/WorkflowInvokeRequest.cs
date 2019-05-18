@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Invokes a workflow instance.
+    /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowInvokeRequest)]
     internal class WorkflowInvokeRequest : WorkflowContextRequest

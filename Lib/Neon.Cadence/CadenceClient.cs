@@ -571,6 +571,20 @@ namespace Neon.Cadence
             {
                 try
                 {
+                    // Gracefully stop all workflow workers.
+
+                    List<Worker> workerList;
+
+                    lock (syncLock)
+                    {
+                        workerList = workers.Values.ToList();
+                    }
+
+                    foreach (var worker in workerList)
+                    {
+                        StopWorkerAsync(worker).Wait();
+                    }
+
                     // Signal the proxy that it should exit gracefully and then
                     // allow it [Settings.TerminateTimeout] to actually exit
                     // before killing it.
@@ -977,7 +991,7 @@ namespace Neon.Cadence
                         // [TaskCanceledException] when the connection is in
                         // the process of being closed.
 
-                        if (!closingConnection || !(e is TaskCanceledException))
+                        if (!closingConnection || !e.Contains<TaskCanceledException>())
                         {
                             exception = e;
                             log.LogError(e);

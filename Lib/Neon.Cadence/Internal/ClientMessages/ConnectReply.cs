@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="ConnectRequest"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="ConnectRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.ConnectReply)]
     internal class ConnectReply : ProxyReply

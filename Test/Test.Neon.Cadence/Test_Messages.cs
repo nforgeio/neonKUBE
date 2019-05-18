@@ -58,7 +58,7 @@ namespace TestCadence
         // Implementation
 
         CadenceFixture      fixture;
-        CadenceClient   connection;
+        CadenceClient       client;
         HttpClient          proxyClient;
 
         public Test_Messages(CadenceFixture fixture)
@@ -80,8 +80,8 @@ namespace TestCadence
             fixture.Start(settings);
 
             this.fixture     = fixture;
-            this.connection  = fixture.Connection;
-            this.proxyClient = new HttpClient() { BaseAddress = connection.ProxyUri };
+            this.client  = fixture.Connection;
+            this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
         }
 
         public void Dispose()
