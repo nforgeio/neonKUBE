@@ -64,6 +64,10 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewStopWorkerRequest()
 	case messagetypes.StopWorkerReply:
 		message = NewStopWorkerReply()
+	case messagetypes.PingReply:
+		message = NewPingReply()
+	case messagetypes.PingRequest:
+		message = NewPingRequest()
 	default:
 		return nil
 	}

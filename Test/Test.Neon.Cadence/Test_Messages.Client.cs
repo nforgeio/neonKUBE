@@ -1241,7 +1241,7 @@ namespace TestCadence
             {
                 message = new PingRequest();
 
-                Assert.Equal(MessageTypes.PingRequest, message.ReplyType);
+                Assert.Equal(MessageTypes.PingReply, message.ReplyType);
 
                 // Empty message.
 
