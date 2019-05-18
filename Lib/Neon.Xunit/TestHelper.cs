@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -378,6 +379,11 @@ namespace Neon.Xunit
         /// Used to run a <see cref="TestFixture"/> outside of a unit test.
         /// </summary>
         /// <typeparam name="T">Specifies the test type.</typeparam>
+        /// <param name="args">
+        /// Optional parameters that will be passed to the constructor after the
+        /// fixture parameter.  Note that the number of parameters and their types
+        /// must match the constructor parameters after the fixture one.
+        /// </param>
         /// <remarks>
         /// <para>
         /// This is often used to run a <see cref="KubeService"/> using <see cref="KubeServiceFixture{TService}"/>
@@ -441,7 +447,8 @@ namespace Neon.Xunit
         /// <list type="number">
         ///     <item>
         ///     Perform a runtime check to verify that <typeparamref name="T"/> has a public constructor
-        ///     that accepts a single parameter of type <typeparamref name="T"/>.
+        ///     that accepts a single parameter of type <typeparamref name="T"/> as well as any additional
+        ///     parameters.
         ///     </item>
         ///     <item>
         ///     Perform a runtime check to ensure that <typeparamref name="T"/> has a <c>public void Run()</c>
@@ -468,7 +475,7 @@ namespace Neon.Xunit
         ///     </item>
         /// </list>
         /// </remarks>
-        public static void RunFixture<T>()
+        public static void RunFixture<T>(params object[] args)
             where T : class
         {
             // Verify that the test class has the required constructor and Run() method.
@@ -482,7 +489,21 @@ namespace Neon.Xunit
             }
 
             var fixtureType = classFixtureType.GenericTypeArguments.First();
-            var constructor = testType.GetConstructor(new Type[] { fixtureType });
+            var constructor = (ConstructorInfo)null;
+
+            foreach (var constructorInfo in testType.GetConstructors())
+            {
+                var parameters = constructorInfo.GetParameters();
+
+                if (parameters.Length == 1 + args.Length)
+                {
+                    if (parameters.First().ParameterType == fixtureType)
+                    {
+                        constructor = constructorInfo;
+                        break;
+                    }
+                }
+            }
 
             if (constructor == null)
             {
@@ -505,7 +526,16 @@ namespace Neon.Xunit
             {
                 // Construct the test class and call it's [Run()] method.
 
-                test = (T)constructor.Invoke(new object[] { fixture });
+                var parameters = new object[1 + args.Length];
+
+                parameters[0] = fixture;
+
+                for (int i = 0; i < args.Length; i++)
+                {
+                    parameters[i + 1] = args[i];
+                }
+
+                test = (T)constructor.Invoke(parameters);
 
                 runMethod.Invoke(test, null);
             }
