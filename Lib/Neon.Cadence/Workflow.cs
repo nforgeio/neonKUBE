@@ -52,13 +52,13 @@ namespace Neon.Cadence
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="args">The low-level workflow initisalization arguments.</param>
-        internal Workflow(WorkflowConstructorArgs args)
+        /// <param name="args">The low-level worker initialization arguments.</param>
+        internal Workflow(WorkerConstructorArgs args)
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 
             this.Client            = args.Client;
-            this.workflowContextId = args.WorkflowContextId;
+            this.workflowContextId = args.WorkerContextId;
         }
 
         /// <summary>

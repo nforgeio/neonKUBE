@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConstructorArgs.cs
+// FILE:	    WorkerConstructorArgs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -37,11 +37,12 @@ using Neon.Time;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the opaque arguments passed to a <see cref="Workflow"/> implementation
-    /// by the <see cref="CadenceClient"/> when the workflow is executed on a worker.
-    /// This must be passed to the base workfow clas constructor.
+    /// Holds the opaque arguments passed to <see cref="Workflow"/> and <see cref="Activity"/>
+    /// implementations by the <see cref="CadenceClient"/> when the workflow or activity is 
+    /// executed on a worker.  This must be passed to the base <see cref="Workflow"/> or
+    /// <see cref="Activity"/> class constructors.
     /// </summary>
-    public class WorkflowConstructorArgs
+    public class WorkerConstructorArgs
     {
         /// <summary>
         /// The parent <see cref="CadenceClient"/>.
@@ -52,6 +53,6 @@ namespace Neon.Cadence
         /// The ID used to reference the corresponding Cadence context managed by
         /// the <b>cadence-proxy</b>.
         /// </summary>
-        internal long WorkflowContextId { get; set; }
+        internal long WorkerContextId { get; set; }
     }
 }

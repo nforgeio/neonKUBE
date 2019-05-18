@@ -41,5 +41,31 @@ namespace Neon.Cadence
     /// </summary>
     public abstract class Activity
     {
+        private long activityContextId;
+
+        /// <summary>
+        /// Internal constructor.
+        /// </summary>
+        /// <param name="args">The low-level worker initialization arguments.</param>
+        internal Activity(WorkerConstructorArgs args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null);
+
+            this.Client            = args.Client;
+            this.activityContextId = args.WorkerContextId;
+        }
+
+        /// <summary>
+        /// Returns the <see cref="CadenceClient"/> managing this activity.
+        /// </summary>
+        public CadenceClient Client { get; private set; }
+
+        /// <summary>
+        /// Called by Cadence to execute an activity.  Derived classes will need to implement
+        /// their activity logic here.
+        /// </summary>
+        /// <param name="args">The activity arguments encoded into a byte array or <c>null</c>.</param>
+        /// <returns>The activity result encoded as a byte array or <c>null</c>.</returns>
+        protected abstract Task<byte[]> RunAsync(byte[] args);
     }
 }

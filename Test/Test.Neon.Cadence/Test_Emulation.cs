@@ -54,7 +54,7 @@ namespace TestCadence
         /// </summary>
         public class HelloWorkflow : Workflow
         {
-            public HelloWorkflow(WorkflowConstructorArgs args)
+            public HelloWorkflow(WorkerConstructorArgs args)
                 : base(args)
             {
             }
