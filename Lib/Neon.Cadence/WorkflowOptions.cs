@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalStartWorkflowOptions.cs
+// FILE:	    WorkflowOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,74 +31,55 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <para>
-    /// <b>INTERNAL USE ONLY:</b> Specifies workflow execution options.  This maps 
-    /// pretty closely to this Cadence GOLANG structure:
-    /// </para>
-    /// <para>
-    /// https://godoc.org/go.uber.org/cadence/internal#StartWorkflowOptions
-    /// </para>
+    /// Specifies the options to use when starting a workflow.
     /// </summary>
-    internal class InternalStartWorkflowOptions
+    internal class WorkflowOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public InternalStartWorkflowOptions()
+        public WorkflowOptions()
         {
         }
 
         /// <summary>
-        /// ID - The business identifier of the workflow execution.
-        /// Optional: defaulted to a uuid.
+        /// Optionally specifies the business ID for a workflow.  This defaults
+        /// to a generated UUID.
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
         public string ID { get; set; } = null;
 
         /// <summary>
-        /// TaskList - The decisions of the workflow are scheduled on this queue.
-        /// This is also the default task list on which activities are scheduled. The workflow author can choose
-        /// to override this using activity options.  Mandatory: No default.
+        /// Specifies the tasklist where this workflow will be scheduled.
         /// </summary>
-        [JsonProperty(PropertyName = "TaskList", Required = Required.Always)]
         public string TaskList { get; set; }
 
         /// <summary>
-        /// ExecutionStartToCloseTimeout - The time out for duration of workflow execution (expressed
-        /// in nanoseconds).  Mandatory: No default.
+        /// Specifies the maximum time the workflow may run from start
+        /// to finish.  This is required.
         /// </summary>
-        [JsonProperty(PropertyName = "ExecutionStartToCloseTimeout", Required = Required.Always)]
-        public long ExecutionStartToCloseTimeout { get; set; }
+        public TimeSpan ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
-        /// DecisionTaskStartToCloseTimeout - The time out for processing decision task from the time the worker
-        /// pulled this task. If a decision task is lost, it is retried after this timeout.
-        /// Expressed as nanoseconds.  Optional: defaulted to 10 secs.
+        /// Op[tionally specifies the time out for processing decision task from the time the worker
+        /// pulled this task.  If a decision task is lost, it is retried after this timeout.
+        /// This defaults to <b>10 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "DecisionTaskStartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(10 * CadenceHelper.NanosecondsPerSecond)]
-        public long DecisionTaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
+        public TimeSpan DecisionTaskStartToCloseTimeout { get; set; }
 
         /// <summary>
-        /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful
-        /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate.
-        /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
+        /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
+        /// This defaults to <see cref="WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = (int)WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        public WorkflowIDReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
         
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
         /// server will start new workflow execution if needed based on the retry policy.
         /// </summary>
-        [JsonProperty(PropertyName = "RetryPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public InternalRetryPolicy RetryPolicy { get; set; } = null;
+        public CadenceRetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
         /// <para>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    QueryHandlerAttribute.cs
+// FILE:	    ChildWorkflowPolicy .cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,13 +22,11 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
@@ -36,26 +34,36 @@ using Neon.Time;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to tag a <see cref="Workflow"/> method that will be called to handle an
-    /// external query.
+    /// Enumerates the possible child workflow behaviors when the parent
+    /// workflow is terminated.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public class QueryHandlerAttribute : Attribute
+    public enum ChildWorkflowPolicy
     {
         /// <summary>
-        /// Constructor.
+        /// <para>
+        /// All open child workflows will be terminated when parent workflow is terminated.
+        /// </para>
+        /// <note>
+        /// This policy is not implemented.
+        /// </note>
         /// </summary>
-        /// <param name="queryName">Specifies the Cadence query name.</param>
-        public QueryHandlerAttribute(string queryName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
-
-            this.Query = queryName;
-        }
+        ChildWorkflowPolicyTerminate = 0,
 
         /// <summary>
-        /// Returns the query name. 
+        /// <para>
+        /// Cancel requests will be sent to all open child workflows to all open child 
+        /// workflows when parent workflow is terminated.
+        /// </para>
+        /// <note>
+        /// This policy is not implemented.
+        /// </note>
         /// </summary>
-        public string Query { get; private set; }
+        ChildWorkflowPolicyRequestCancel = 1,
+
+        /// <summary>
+        /// ChildWorkflowPolicyAbandon is policy that will have no impact to child workflow execution when parent workflow is
+        /// terminated.  This is the default policy.
+        /// </summary>
+        ChildWorkflowPolicyAbandon = 2
     }
 }

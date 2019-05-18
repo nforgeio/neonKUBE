@@ -32,6 +32,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
+using System.Threading;
 
 namespace Neon.Cadence
 {
@@ -45,14 +46,23 @@ namespace Neon.Cadence
         /// <summary>
         /// Internal constructor.
         /// </summary>
+        /// <param name="client">The client managing this workflow.</param>
         /// <param name="workflowContextId">
         /// Identifies the workflow context being held by the <b>cadence-proxy</b>
         /// for this workflow instance.
         /// </param>
-        internal Workflow(long workflowContextId)
+        internal Workflow(CadenceClient client, long workflowContextId)
         {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            this.Client            = client;
             this.workflowContextId = workflowContextId;
         }
+
+        /// <summary>
+        /// Returns the <see cref="CadenceClient"/> managing this workflow.
+        /// </summary>
+        public CadenceClient Client { get; private set; }
 
         /// <summary>
         /// Called by Cadence to execute a workflow.  Derived classes will need to implement
@@ -68,12 +78,9 @@ namespace Neon.Cadence
         /// ending state from from one workflow run to the next.  This property
         /// indicates whether the last run (if any) returned any state.
         /// </summary>
-        protected bool HasLastCompletionResult
+        protected async Task<bool> HasLastCompletionResultAsync()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -81,12 +88,9 @@ namespace Neon.Cadence
         /// for cron workflows that would like to pass ending state from from one workflow
         /// run to the next.
         /// </summary>
-        protected byte[] LastCompletionResult
+        protected async Task<byte[]> LastCompletionResultAsync()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -100,7 +104,7 @@ namespace Neon.Cadence
         /// creates the new context for the first call.  Subsequent calls won't
         /// do anything.
         /// </remarks>
-        protected void BeginCleanup()
+        protected async Task BeginCleanupAsync()
         {
             throw new NotImplementedException();
         }
@@ -108,12 +112,10 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the current time (UTC).
         /// </summary>
-        protected DateTime UtcNow
+        /// <returns>The current workflow time (UTC).</returns>
+        protected async Task<DateTime> UtcNowAsync()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -136,7 +138,7 @@ namespace Neon.Cadence
         /// <para>
         /// For example, a workflow step may require a random number
         /// when making a decision.  In this case, the workflow would
-        /// call <see cref="GetValue(Func{byte[]})"/>, passing a function
+        /// call <see cref="GetMutableValueAsync(Func{byte[]})"/>, passing a function
         /// that generates a random number.
         /// </para>
         /// <para>
@@ -151,9 +153,29 @@ namespace Neon.Cadence
         /// during the replay.
         /// </para>
         /// </remarks>
-        protected byte[] GetValue(Func<byte[]> getter)
+        protected Task<byte[]> GetMutableValueAsync(Func<byte[]> getter)
         {
             Covenant.Requires<ArgumentNullException>(getter != null);
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Pauses the workflow for at least the period specified.
+        /// </summary>
+        /// <param name="delay">The time to delay.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns></returns>
+        /// <exception cref="TaskCanceledException">
+        /// Thrown if the operation was cancelled via <see cref="CancellationToken"/> or the
+        /// workflow was cancelled externally.
+        /// </exception>
+        protected async Task SleepAsync(TimeSpan delay, CancellationToken cancellationToken = default)
+        {
+            if (delay <= TimeSpan.Zero)
+            {
+                return;
+            }
 
             throw new NotImplementedException();
         }

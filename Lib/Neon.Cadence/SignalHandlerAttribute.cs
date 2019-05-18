@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    QueryHandlerAttribute.cs
+// FILE:	    SignalHandlerAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -37,25 +37,25 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Used to tag a <see cref="Workflow"/> method that will be called to handle an
-    /// external query.
+    /// external signal.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class QueryHandlerAttribute : Attribute
+    public class SignalHandlerAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="queryName">Specifies the Cadence query name.</param>
-        public QueryHandlerAttribute(string queryName)
+        /// <param name="signalName">Specifies the Cadence signal name.</param>
+        public SignalHandlerAttribute(string signalName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-            this.Query = queryName;
+            this.SignalName = signalName;
         }
 
         /// <summary>
-        /// Returns the query name. 
+        /// Returns the signal name. 
         /// </summary>
-        public string Query { get; private set; }
+        public string SignalName { get; private set; }
     }
 }

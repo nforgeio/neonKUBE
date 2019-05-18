@@ -56,7 +56,7 @@ namespace Neon.Cadence.Internal
         /// Constructs an instance from a <see cref="LinearRetryPolicy"/>.
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public CadenceRetryPolicy(LinearRetryPolicy policy)
+        public InternalRetryPolicy(LinearRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null);
 
@@ -75,7 +75,7 @@ namespace Neon.Cadence.Internal
         /// Constructs an instance froma <see cref="ExponentialRetryPolicy"/>,
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public CadenceRetryPolicy(ExponentialRetryPolicy policy)
+        public InternalRetryPolicy(ExponentialRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null);
 
@@ -95,40 +95,32 @@ namespace Neon.Cadence.Internal
         /// Backoff interval for the first retry. If coefficient is 1.0 then it is used for all retries.
         /// Required, no default value.
         /// </summary>
-        [JsonProperty(PropertyName = "InitialInterval", Required = Required.Always)]
-        public string InitialInterval { get; set; }
+        public TimeSpan InitialInterval { get; set; }
 
         /// <summary>
         /// Coefficient used to calculate the next retry backoff interval.
         /// The next retry interval is previous interval multiplied by this coefficient.
         /// Must be 1 or larger. Default is 2.0.
         /// </summary>
-        [JsonProperty(PropertyName = "BackoffCoefficient", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(2.0)]
         public double BackoffCoefficient { get; set; } = 2.0;
 
         /// <summary>
         /// Maximum time to retry. Either ExpirationInterval or MaximumAttempts is required.
         /// When exceeded the retries stop even if maximum retries is not reached yet.
         /// </summary>
-        [JsonProperty(PropertyName = "MaximumInterval", DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(null)]
-        public string MaximumInterval { get; set; } = null;
+        public TimeSpan MaximumInterval { get; set; }
 
         /// <summary>
         /// Maximum time to retry. Either ExpirationInterval or MaximumAttempts is required.
         /// When exceeded the retries stop even if maximum retries is not reached yet.
         /// </summary>
-        [JsonProperty(PropertyName = "ExpirationInterval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(null)]
-        public string ExpirationInterval { get; set; } = null;
+        public TimeSpan ExpirationInterval { get; set; }
 
         /// <summary>
         /// Maximum number of attempts. When exceeded the retries stop even if not expired yet.
         /// If not set or set to 0, it means unlimited, and rely on ExpirationInterval to stop.
         /// Either MaximumAttempts or ExpirationInterval is required.
         /// </summary>
-        [JsonProperty(PropertyName = "MaximumAttempts", Required = Required.Always)]
         public int MaximumAttempts { get; set; }
 
         /// <summary>
@@ -145,8 +137,6 @@ namespace Neon.Cadence.Internal
         /// Note, cancellation is not a failure, so it won't be retried.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "NonRetriableErrorReasons", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(null)]
         public List<string> NonRetriableErrorReasons { get; set; } = new List<string>();
     }
 }

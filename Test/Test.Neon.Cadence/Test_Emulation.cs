@@ -334,16 +334,16 @@ namespace TestCadence
         {
             // Verify that emulated start/stop worker operations work.
 
-            // Generate unique a domain and taskList to avoid conflicts with
+            // Generate unique a domain and tasklist to avoid conflicts with
             // other tests on this connection.
 
             var domain   = Guid.NewGuid().ToString("D");
-            var taskList = Guid.NewGuid().ToString("D");
+            var tasklist = Guid.NewGuid().ToString("D");
 
             // Verify parameter checks.
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkerAsync(null, taskList));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync("", taskList));
+            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkerAsync(null, tasklist));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync("", tasklist));
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync(domain, null));
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync(domain, ""));
 
@@ -355,7 +355,7 @@ namespace TestCadence
 
             await client.RegisterDomainAsync(domain);
 
-            var worker = await client.StartWorkerAsync(domain, taskList);
+            var worker = await client.StartWorkerAsync(domain, tasklist);
 
             // Stop the worker.
 

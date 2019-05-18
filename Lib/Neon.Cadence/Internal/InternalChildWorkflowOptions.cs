@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalStartWorkflowOptions.cs
+// FILE:	    InternalChildWorkflowOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,63 +35,85 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <para>
-    /// <b>INTERNAL USE ONLY:</b> Specifies workflow execution options.  This maps 
-    /// pretty closely to this Cadence GOLANG structure:
+    /// <b>INTERNAL USE ONLY:</b> Specifies child workflow execution options.  This maps 
+    /// closely to this Cadence GOLANG structure:
     /// </para>
     /// <para>
-    /// https://godoc.org/go.uber.org/cadence/internal#StartWorkflowOptions
+    /// https://godoc.org/go.uber.org/cadence/internal#ChildWorkflowOptions
     /// </para>
     /// </summary>
-    internal class InternalStartWorkflowOptions
+    internal class InternalChildWorkflowOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public InternalStartWorkflowOptions()
+        public InternalChildWorkflowOptions()
         {
         }
 
         /// <summary>
-        /// ID - The business identifier of the workflow execution.
-        /// Optional: defaulted to a uuid.
+        /// Domain of the child workflow.
+        /// Optional: the current workflow (parent)'s domain will be used if this is not provided.
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Domain", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string ID { get; set; } = null;
+        public string Domain { get; set; } = null;
 
         /// <summary>
-        /// TaskList - The decisions of the workflow are scheduled on this queue.
-        /// This is also the default task list on which activities are scheduled. The workflow author can choose
-        /// to override this using activity options.  Mandatory: No default.
+        /// WorkflowID of the child workflow to be scheduled.
+        /// Optional: an auto generated workflowID will be used if this is not provided.        /// </summary>
+        [JsonProperty(PropertyName = "WorkflowID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string WorkflowID { get; set; } = null;
+
+        /// <summary>
+        /// TaskList that the child workflow needs to be scheduled on.
+        /// Optional: the parent workflow task list will be used if this is not provided.
         /// </summary>
         [JsonProperty(PropertyName = "TaskList", Required = Required.Always)]
         public string TaskList { get; set; }
 
         /// <summary>
-        /// ExecutionStartToCloseTimeout - The time out for duration of workflow execution (expressed
-        /// in nanoseconds).  Mandatory: No default.
+        /// ExecutionStartToCloseTimeout - The end to end timeout for the child workflow execution.
+        /// Mandatory: no default
         /// </summary>
         [JsonProperty(PropertyName = "ExecutionStartToCloseTimeout", Required = Required.Always)]
         public long ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
-        /// DecisionTaskStartToCloseTimeout - The time out for processing decision task from the time the worker
-        /// pulled this task. If a decision task is lost, it is retried after this timeout.
-        /// Expressed as nanoseconds.  Optional: defaulted to 10 secs.
+        /// TaskStartToCloseTimeout - The decision task timeout for the child workflow.
+        /// Optional: default is 10s if this is not provided (or if 0 is provided).
         /// </summary>
-        [JsonProperty(PropertyName = "DecisionTaskStartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "TaskStartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(10 * CadenceHelper.NanosecondsPerSecond)]
-        public long DecisionTaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
+        public long TaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
+
+        /// <summary>
+        /// ChildPolicy defines the behavior of child workflow when parent workflow is terminated.
+        /// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
+        /// </summary>
+        [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue((int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon)]
+        public int ChildPolicy { get; set; } = (int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon;
+
+        /// <summary>
+        /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended
+        /// as: completed/failed/timedout/terminated/canceled)
+        /// Optional: default false
+        /// </summary>
+        [JsonProperty(PropertyName = "WaitForCancellation", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool WaitForCancellation { get; set; } = false;
 
         /// <summary>
         /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful
-        /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate.
+        /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate
         /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly)]
         public int WorkflowIdReusePolicy { get; set; } = (int)WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
-        
+
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
         /// server will start new workflow execution if needed based on the retry policy.

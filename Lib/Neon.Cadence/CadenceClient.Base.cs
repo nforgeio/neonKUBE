@@ -70,13 +70,13 @@ namespace Neon.Cadence
         /// specified domain and task list on the current connection.
         /// </summary>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="taskList">The target task list.</param>
+        /// <param name="tasklist">The target task list.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
-        public async Task<Worker> StartWorkerAsync(string domain, string taskList, WorkerOptions options = null)
+        public async Task<Worker> StartWorkerAsync(string domain, string tasklist, WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
 
             options = options ?? new WorkerOptions();
 
@@ -84,7 +84,7 @@ namespace Neon.Cadence
                 new NewWorkerRequest()
                 {
                     Domain   = domain,
-                    TaskList = taskList,
+                    TaskList = tasklist,
                     Options  = options.ToInternal()
                 }));
 
