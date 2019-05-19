@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
@@ -36,7 +37,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Specifies the options to use when starting a workflow.
     /// </summary>
-    internal class WorkflowOptions
+    public class WorkflowOptions
     {
         /// <summary>
         /// Default constructor.
@@ -82,28 +83,30 @@ namespace Neon.Cadence
         public CadenceRetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
-        /// <para>
-        /// CronSchedule - Optional cron schedule for workflow. If a cron schedule is specified, the workflow will run
-        /// as a cron based on the schedule. The scheduling will be based on UTC time. Schedule for next run only happen
-        /// after the current run is completed/failed/timeout. If a RetryPolicy is also supplied, and the workflow failed
-        /// or timeout, the workflow will be retried based on the retry policy. While the workflow is retrying, it won't
-        /// schedule its next run. If next schedule is due while workflow is running (or retrying), then it will skip that
-        /// schedule. Cron workflow will not stop until it is terminated or cancelled (by returning cadence.CanceledError).
-        /// The cron spec is as following:
-        /// </para>
-        /// <code>
-        /// ┌───────────── minute (0 - 59)
-        /// │ ┌───────────── hour (0 - 23)
-        /// │ │ ┌───────────── day of the month (1 - 31)
-        /// │ │ │ ┌───────────── month (1 - 12)
-        /// │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
-        /// │ │ │ │ │
-        /// │ │ │ │ │
-        /// * * * * *
-        /// </code>
+        /// Optionally specifies a recurring schedule for the workflow.  See <see cref="CronSchedule"/>
+        /// for more information.
         /// </summary>
         [JsonProperty(PropertyName = "CronSchedule", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string CronSchedule { get; set; } = null;
+        public CronSchedule CronSchedule { get; set; }
+
+        /// <summary>
+        /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.  Note that
+        /// <see cref="Domain"/> is not included in the result will will need to be handled separately.
+        /// </summary>
+        /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
+        internal InternalStartWorkflowOptions ToInternal()
+        {
+            return new InternalStartWorkflowOptions()
+            {
+                ID                              = this.ID,
+                TaskList                        = this.TaskList,
+                DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.DecisionTaskStartToCloseTimeout),
+                ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
+                RetryPolicy                     = this.RetryPolicy.ToInternal(),
+                WorkflowIdReusePolicy           = (int)this.WorkflowIdReusePolicy,
+                CronSchedule                    = this.CronSchedule.ToInternal(),
+            };
+        }
     }
 }

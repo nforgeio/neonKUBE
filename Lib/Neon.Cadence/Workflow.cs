@@ -41,9 +41,40 @@ namespace Neon.Cadence
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All .NET application workflow implementations will need to derive from the
-    /// <see cref="Workflow"/> class and implement <see cref="RunAsync(byte[])"/>.
+    /// Workflows are pretty easy to implement.  You'll need to derive your custom
+    /// workflow class from <see cref="Workflow"/> and implement a public constructor
+    /// with a single <see cref="WorkerConstructorArgs"/> parameter and have your
+    /// constructor call the corresponding base <see cref="Workflow(WorkerConstructorArgs)"/>)
+    /// constructor to initialize the instance.  You'll also need to implement the
+    /// <see cref="RunAsync(byte[])"/> method, which is where your workflow logic
+    /// will reside.  
     /// </para>
+    /// <para>
+    /// Here's how workflows work:
+    /// </para>
+    /// <list type="number">
+    ///     <item>
+    ///     Somebody kicks off a workflow by calling <see cref="CadenceClient.address"/>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    ///     <item>
+    ///     </item>
+    /// </list>
     /// </remarks>
     public abstract class Workflow
     {
@@ -53,7 +84,7 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="args">The low-level worker initialization arguments.</param>
-        internal Workflow(WorkerConstructorArgs args)
+        protected Workflow(WorkerConstructorArgs args)
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 

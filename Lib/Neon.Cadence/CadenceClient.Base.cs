@@ -210,7 +210,7 @@ namespace Neon.Cadence
             }
 
             var reply = (StopWorkerReply)(await CallProxyAsync(new StopWorkerRequest() { WorkerId = worker.WorkerId }));
-
+            
             reply.ThrowOnError();
         }
     }

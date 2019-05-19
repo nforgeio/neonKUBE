@@ -38,7 +38,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes a Cadence retry policy.
     /// </summary>
-    internal class CadenceRetryPolicy
+    public class CadenceRetryPolicy
     {
         /// <summary>
         /// Default constructor.
