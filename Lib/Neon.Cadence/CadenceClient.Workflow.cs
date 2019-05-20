@@ -207,7 +207,7 @@ namespace Neon.Cadence
         /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
         /// <param name="workflowArgs">Optionally specifies the workflow arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         public async Task SignalWorkflow(string workflowId, WorkflowOptions options, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null)
@@ -227,6 +227,46 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// <para>
+        /// Sets the maximum number of bytes of history that will be retained
+        /// for sticky workflows for workflow workers created by this client
+        /// as a performance optimization.  When this is exceeded, Cadence will
+        /// need to retrieve the entire workflow history from the Cadence cluster
+        /// every time the workflow is assigned to a worker.
+        /// </para>
+        /// <para>
+        /// This defaults to <b>10K</b> bytes.
+        /// </para>
+        /// </summary>
+        /// <param name="maxSize">The maximum number of bytes to cache for each sticky workflow.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task SetWorkflowCacheSize(int maxSize)
+        {
+            Covenant.Requires<ArgumentNullException>(maxSize >= 0);
+
+            var reply = (SetWorkflowCacheSizeReply)await CallProxyAsync(
+                new SetWorkflowCacheSizeRequest()
+                {
+                    Size = maxSize
+                });
+
+            reply.ThrowOnError();
+
+            workflowCacheSize = maxSize;
+        }
+
+        /// <summary>
+        /// Returns the current maximum maximum number of bytes of history that 
+        /// will be retained for sticky workflows for workflow workers created 
+        /// by this client as a performance optimization.
+        /// </summary>
+        /// <returns>The maximum individual workflow cache size in bytes.</returns>
+        public async Task<int> GetworkflowCacheSize()
+        {
+            return await Task.FromResult(workflowCacheSize);
         }
     }
 }

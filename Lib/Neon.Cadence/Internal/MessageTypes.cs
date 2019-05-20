@@ -165,6 +165,20 @@ namespace Neon.Cadence.Internal
         /// </summary>
         PingReply = 22,
 
+        /// <summary>
+        /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
+        /// to cache the history of a sticky workflow on a workflow worker as a performance
+        /// optimization.  When this is exceeded for a workflow, its full history will
+        /// need to be retrieved from the Cadence cluster the next time the workflow
+        /// instance is assigned to a worker. 
+        /// </summary>
+        SetWorkflowCacheSizeRequest = 23,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="SetWorkflowCacheSizeRequest"/>.
+        /// </summary>
+        SetWorkflowCacheSizeReply = 24,
+
         //---------------------------------------------------------------------
         // Workflow messages
         //

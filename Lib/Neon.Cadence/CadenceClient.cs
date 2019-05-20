@@ -373,6 +373,7 @@ namespace Neon.Cadence
         private bool                            closingConnection;
         private bool                            connectionClosedRaised;
         private long                            nextRequestId = 0;
+        private int                             workflowCacheSize;
 
         /// <summary>
         /// Constructor.
@@ -1112,7 +1113,7 @@ namespace Neon.Cadence
             RaiseConnectionClosed(exception);
         }
 
-        //--------------------------------------------------------------------0
+        //--------------------------------------------------------------------
         // These methods handle requests sent by the [cadence-proxy].
 
         /// <summary>

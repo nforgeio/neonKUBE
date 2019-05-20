@@ -95,12 +95,43 @@ namespace Neon.Cadence
     ///     encoded as a byte array.
     /// </item>
     /// <item>
+    ///     <para>
     ///     The custom <see cref="Workflow.RunAsync(byte[])"/> method implements the workflow by
-    ///     
+    ///     calling activities via <see cref="CallActivity(string, byte[])"/> or <see cref="CallLocalActivity{TActivity}(byte[], LocalActivityOptions)"/> 
+    ///     and child workflows via <see cref="CallWorkflow(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    ///     making decisions based on their results to call other activities and child workflows, 
+    ///     and ultimately return a result or throwing an exception to indicate that the workflow
+    ///     failed.
+    ///     </para>
+    ///     <para>
+    ///     The Neon Cadence client expects workflow and activity parameters and results to be 
+    ///     byte arrays or <c>null</c>.  It's up to the application to encode the actual values
+    ///     into bytes using whatever encoding scheme that makes sense.  It is common though
+    ///     to use the <see cref="NeonHelper.JsonSerialize(object, Formatting)"/> and
+    ///     <see cref="NeonHelper.JsonDeserialize(Type, string, bool)"/> methods to serialize
+    ///     paramaters and results to JSON strings and then encode those as UTF-8 bytes.
+    ///     </para>
     /// </item>
     /// <item>
+    ///     <para>
+    ///     Workflow instances can be signalled when external events occur via the 
+    ///     <see cref="CadenceClient.SignalWorkflow(string, string, string, byte[])"/> or
+    ///     <see cref="CadenceClient.SignalWorkflow(string, WorkflowOptions, string, byte[], byte[])"/>
+    ///     methods.  Signals are identified by a string name and may include a byte
+    ///     array payload.  Workflows receive signals by implementing a receive method
+    ///     accepting a byte array payload parameter and tagging the method with a
+    ///     <see cref="SignalHandlerAttribute"/> specifying the signal name, like:
+    ///     </para>
+    ///     <code language="c#">
+    ///     [SignalHandler("my-signal")]
+    ///     protected void OnMySignal(byte[] args)
+    ///     {
+    ///         // Do something.
+    ///     }
+    ///     </code>
     /// </item>
     /// <item>
+    ///     Running workflows can also be queried via the 
     /// </item>
     /// <item>
     /// </item>
