@@ -240,7 +240,7 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyMessa
 	// make a channel that waits for a connection to be established
 	// until returning ready
 	connectChan := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), _cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 
 	// defer the cancel of the context and
 	// closing of the connectChan
@@ -779,7 +779,7 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 	// create the context to cancel the workflow
 	workflowID := request.GetWorkflowID()
 	runID := request.GetRunID()
-	ctx, cancel := context.WithTimeout(context.Background(), _cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
 	// cancel the specified workflow
@@ -809,6 +809,51 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	// new WorkflowTerminateReply
 	reply := createReplyMessage(request)
 
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
+			buildWorkflowTerminateReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
+			buildWorkflowTerminateReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// grab the client.TerminateWorkflow parameters and
+	// create the context to cancel the workflow
+	workflowID := request.GetWorkflowID()
+	runID := request.GetRunID()
+	reason := request.GetReason()
+	details := request.GetDetails()
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	defer cancel()
+
+	// cancel the specified workflow
+	err = client.TerminateWorkflow(ctx, *workflowID, *runID, *reason, details)
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
+			buildWorkflowTerminateReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
 	if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
 		buildWorkflowTerminateReply(v, nil)
 	}
@@ -823,6 +868,51 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 
 	// new WorkflowSignalReply
 	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
+			buildWorkflowSignalReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
+			buildWorkflowSignalReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// grab the client.SignalWorkflow parameters and
+	// create the context to cancel the workflow
+	workflowID := request.GetWorkflowID()
+	runID := request.GetRunID()
+	signalName := request.GetSignalName()
+	signalArgs := request.GetSignalArgs()
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	defer cancel()
+
+	// cancel the specified workflow
+	err = client.SignalWorkflow(ctx, *workflowID, *runID, *signalName, signalArgs)
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
+			buildWorkflowSignalReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
 
 	if v, ok := reply.(*messages.WorkflowSignalReply); ok {
 		buildWorkflowSignalReply(v, nil)
@@ -839,6 +929,54 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	// new WorkflowSignalWithStartReply
 	reply := createReplyMessage(request)
 
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
+			buildWorkflowSignalWithStartReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
+			buildWorkflowSignalWithStartReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// grab the client.SignalWithStartWorkflow parameters and
+	// create the context to cancel the workflow
+	workflowID := request.GetWorkflowID()
+	signalName := request.GetSignalName()
+	signalArgs := request.GetSignalArgs()
+	opts := request.GetOptions()
+	workflowArgs := request.GetWorkflowArgs()
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	defer cancel()
+
+	// cancel the specified workflow
+	_, err = client.SignalWithStartWorkflow(ctx, *workflowID, *signalName, signalArgs, *opts, "TODO: REPLACE ONCE IMPLEMENTED", workflowArgs)
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
+			buildWorkflowSignalWithStartReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// TODO: JACK NEED TO EDIT BUILDWORKFLOWSSIGNALWITHSTARTREPLY TO ADD WORKFLOWID
+	// AND RUNID IN THE REPLY ONCE IMPLEMENTED ON NEON.CADENCE LIBRARY SIDE
 	if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
 		buildWorkflowSignalWithStartReply(v, nil)
 	}

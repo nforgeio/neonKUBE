@@ -13,6 +13,7 @@ import (
 
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	"github.com/loopieio/cadence-proxy/internal/server"
+
 	"go.uber.org/zap"
 )
 
@@ -27,10 +28,6 @@ const (
 	// has been established to the cadence server instance and that it is ready to
 	// accept requests
 	_cadenceSystemDomain = "cadence-system"
-
-	// _cadenceTimeout specifies the amount of time in seconds a reply has to be sent after
-	// a request has been recieved by the cadence-proxy
-	_cadenceTimeout = time.Second * 30
 )
 
 var (
@@ -71,6 +68,10 @@ var (
 	// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
 	// <c>false</c>
 	debugPrelaunch = false
+
+	// cadenceTimeout specifies the amount of time in seconds a reply has to be sent after
+	// a request has been recieved by the cadence-proxy
+	cadenceTimeout = time.Second * 30
 )
 
 // NextRequestID increments the package variable
