@@ -359,6 +359,29 @@ namespace Neon.Cadence
             }
         }
 
+        /// <summary>
+        /// Establishes a connection to a Cadence cluster.
+        /// </summary>
+        /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
+        /// <returns>The connected <see cref="CadenceClient"/>.</returns>
+        public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
+        {
+            Covenant.Requires<ArgumentNullException>(settings != null);
+
+            var client = new CadenceClient(settings);
+
+            //-----------------------------------------
+            // $debug(jeff.lill):
+            //
+            // Uncomment this call after Jack has implemented this
+            // functionality.
+
+            // await client.SetWorkflowCacheSize(10000);
+            //-----------------------------------------
+
+            return client;
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -373,12 +396,15 @@ namespace Neon.Cadence
         private bool                            closingConnection;
         private bool                            connectionClosedRaised;
         private long                            nextRequestId = 0;
+        private int                             workflowCacheSize;
+        private Thread                          heartbeatThread;
+        private Thread                          timeoutThread;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
-        public CadenceClient(CadenceSettings settings)
+        private CadenceClient(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
@@ -531,7 +557,6 @@ namespace Neon.Cadence
                 }
             }
 
-#if DEBUG
             // Crank up the background threads which will handle [cadence-proxy]
             // health heartbeats as well as request timeouts.
 
@@ -540,7 +565,6 @@ namespace Neon.Cadence
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
-#endif
         }
 
         /// <summary>
@@ -612,7 +636,6 @@ namespace Neon.Cadence
                 }
             }
 
-#if DEBUG
             if (heartbeatThread != null)
             {
                 heartbeatThread.Join();
@@ -625,18 +648,19 @@ namespace Neon.Cadence
                 timeoutThread = null;
             }
 
+#if DEBUG
             if (emulatedHost != null)
             {
                 emulatedHost.Dispose();
                 emulatedHost = null;
             }
-#endif
 
-            if (host != null)
+            if (EmulatedLibraryClient != null)
             {
-                host.Dispose();
-                host = null;
+                EmulatedLibraryClient.Dispose();
+                EmulatedLibraryClient = null;
             }
+#endif
 
             if (proxyClient != null)
             {
@@ -644,13 +668,11 @@ namespace Neon.Cadence
                 proxyClient = null;
             }
 
-#if DEBUG
-            if (EmulatedLibraryClient != null)
+            if (host != null)
             {
-                EmulatedLibraryClient.Dispose();
-                EmulatedLibraryClient = null;
+                host.Dispose();
+                host = null;
             }
-#endif
 
             if (disposing)
             {
@@ -1112,7 +1134,7 @@ namespace Neon.Cadence
             RaiseConnectionClosed(exception);
         }
 
-        //--------------------------------------------------------------------0
+        //--------------------------------------------------------------------
         // These methods handle requests sent by the [cadence-proxy].
 
         /// <summary>

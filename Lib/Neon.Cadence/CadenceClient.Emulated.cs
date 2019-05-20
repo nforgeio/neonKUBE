@@ -145,8 +145,6 @@ namespace Neon.Cadence
         private Dictionary<long, Operation>             emulatedOperations            = new Dictionary<long, Operation>();
         private long                                    nextEmulatedWorkerId          = 0;
         private long                                    nextEmulatedWorkflowContextId = 0;
-        private Thread                                  heartbeatThread;
-        private Thread                                  timeoutThread;
         private IWebHost                                emulatedHost;
 
         /// <summary>
@@ -366,6 +364,11 @@ namespace Neon.Cadence
                 case MessageTypes.WorkflowRegisterRequest:
 
                     await OnEmulatedWorkflowRegisterRequestAsync((WorkflowRegisterRequest)proxyMessage);
+                    break;
+
+                case MessageTypes.WorkflowSetCacheSizeRequest:
+
+                    await OnEmulatedWorkflowSetCacheSizeRequestAsync((WorkflowSetCacheSizeRequest)proxyMessage);
                     break;
 
                 //-------------------------------------------------------------
@@ -788,6 +791,16 @@ namespace Neon.Cadence
                         workflow.IsComplete = true;
                     }
                 });
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="WorkflowSetCacheSizeRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedWorkflowSetCacheSizeRequestAsync(WorkflowSetCacheSizeRequest request)
+        {
+            await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowSetCacheSizeReply());
         }
     }
 }
