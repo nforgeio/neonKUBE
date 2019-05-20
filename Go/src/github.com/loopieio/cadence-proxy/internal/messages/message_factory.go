@@ -84,6 +84,10 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowSignalWithStartReply()
 	case messagetypes.WorkflowSignalWithStartRequest:
 		message = NewWorkflowSignalWithStartRequest()
+	case messagetypes.WorkflowSetCacheSizeRequest:
+		message = NewWorkflowSetCacheSizeRequest()
+	case messagetypes.WorkflowSetCacheSizeReply:
+		message = NewWorkflowSetCacheSizeReply()
 	default:
 		return nil
 	}
