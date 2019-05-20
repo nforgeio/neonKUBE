@@ -203,7 +203,7 @@ func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
 func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 	// WorkflowExecutionContext at the specified WorflowContextID
-	workflowExecutionContextID := reply.GetContextID()
+	workflowExecutionContextID := reply.GetWorkflowContextID()
 	wectx := cadenceworkflows.WorkflowExecutionContextsMap.Get(workflowExecutionContextID)
 	if wectx == nil {
 		return entityNotExistError

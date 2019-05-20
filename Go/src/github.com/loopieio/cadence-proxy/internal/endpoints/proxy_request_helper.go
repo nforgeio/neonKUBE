@@ -560,7 +560,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
 		workflowInvokeRequest.SetRequestID(NextRequestID())
 		workflowInvokeRequest.SetArgs(input)
-		workflowInvokeRequest.SetContextID(workflowContextID)
+		workflowInvokeRequest.SetWorkflowContextID(workflowContextID)
 
 		// send the WorkflowInvokeRequest
 		var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()

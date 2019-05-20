@@ -11,6 +11,9 @@ import (
 	"time"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
+
 	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/endpoints"
@@ -18,9 +21,6 @@ import (
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 	"github.com/loopieio/cadence-proxy/internal/server"
-	"github.com/stretchr/testify/suite"
-
-	"go.uber.org/zap"
 )
 
 type (
