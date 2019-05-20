@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceRetryPolicy.cs
+// FILE:	    InternalRetryPolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -43,12 +43,12 @@ namespace Neon.Cadence.Internal
     /// https://godoc.org/go.uber.org/cadence/internal#RetryPolicy
     /// </para>
     /// </summary>
-    internal class CadenceRetryPolicy
+    internal class InternalRetryPolicy
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public CadenceRetryPolicy()
+        public InternalRetryPolicy()
         {
         }
 
@@ -56,36 +56,36 @@ namespace Neon.Cadence.Internal
         /// Constructs an instance from a <see cref="LinearRetryPolicy"/>.
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public CadenceRetryPolicy(LinearRetryPolicy policy)
+        public InternalRetryPolicy(LinearRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null);
 
-            this.InitialInterval    = new GoTimeSpan(policy.RetryInterval).ToString();
+            this.InitialInterval    = CadenceHelper.ToCadence(policy.RetryInterval);
             this.BackoffCoefficient = 1.0;
 
             if (policy.Timeout.HasValue)
             {
-                this.ExpirationInterval = new GoTimeSpan(policy.Timeout.Value).ToString();
+                this.ExpirationInterval = CadenceHelper.ToCadence(policy.Timeout.Value);
             }
 
             this.MaximumAttempts = policy.MaxAttempts;
         }
 
         /// <summary>
-        /// Constructs an instance froma <see cref="ExponentialRetryPolicy"/>,
+        /// Constructs an instance from a <see cref="ExponentialRetryPolicy"/>,
         /// </summary>
         /// <param name="policy">The policy.</param>
-        public CadenceRetryPolicy(ExponentialRetryPolicy policy)
+        public InternalRetryPolicy(ExponentialRetryPolicy policy)
         {
             Covenant.Requires<ArgumentNullException>(policy != null);
 
-            this.InitialInterval    = new GoTimeSpan(policy.InitialRetryInterval).ToString();
+            this.InitialInterval    = CadenceHelper.ToCadence(policy.InitialRetryInterval);
             this.BackoffCoefficient = 2.0;
-            this.MaximumInterval    = new GoTimeSpan(policy.MaxRetryInterval).ToString();
+            this.MaximumInterval    = CadenceHelper.ToCadence(policy.MaxRetryInterval);
 
             if (policy.Timeout.HasValue)
             {
-                this.ExpirationInterval = new GoTimeSpan(policy.Timeout.Value).ToString();
+                this.ExpirationInterval = CadenceHelper.ToCadence(policy.Timeout.Value);
             }
 
             this.MaximumAttempts = policy.MaxAttempts;
@@ -96,7 +96,7 @@ namespace Neon.Cadence.Internal
         /// Required, no default value.
         /// </summary>
         [JsonProperty(PropertyName = "InitialInterval", Required = Required.Always)]
-        public string InitialInterval { get; set; }
+        public long InitialInterval { get; set; }
 
         /// <summary>
         /// Coefficient used to calculate the next retry backoff interval.
@@ -108,41 +108,47 @@ namespace Neon.Cadence.Internal
         public double BackoffCoefficient { get; set; } = 2.0;
 
         /// <summary>
-        /// Maximum time to retry. Either ExpirationInterval or MaximumAttempts is required.
-        /// When exceeded the retries stop even if maximum retries is not reached yet.
+        /// Specifies the maximim retry interval.  Retries intervals will start at <see cref="InitialInterval"/>
+        /// and then be multiplied by <see cref="BackoffCoefficient"/> for each retry attempt until the
+        /// interval reaches or exceeds <see cref="MaximumInterval"/>, at which point point each
+        /// retry will use <see cref="MaximumInterval"/> for all subsequent attempts.
         /// </summary>
         [JsonProperty(PropertyName = "MaximumInterval", DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string MaximumInterval { get; set; } = null;
+        public long MaximumInterval { get; set; }
 
         /// <summary>
-        /// Maximum time to retry. Either ExpirationInterval or MaximumAttempts is required.
-        /// When exceeded the retries stop even if maximum retries is not reached yet.
+        /// Maximum time to retry.  Either <see cref="ExpirationInterval"/> or <see cref="MaximumAttempts"/> is 
+        /// required.  Retries will stop when this is exceeded even if maximum retries is not been reached.
         /// </summary>
         [JsonProperty(PropertyName = "ExpirationInterval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string ExpirationInterval { get; set; } = null;
+        public long ExpirationInterval { get; set; }
 
         /// <summary>
-        /// Maximum number of attempts. When exceeded the retries stop even if not expired yet.
-        /// If not set or set to 0, it means unlimited, and rely on ExpirationInterval to stop.
-        /// Either MaximumAttempts or ExpirationInterval is required.
+        /// Maximum number of attempts.  When exceeded the retries stop.  If not set or set to 0, it means 
+        /// unlimited, and the policy will rely on <see cref="ExpirationInterval"/> to decide when to stop
+        /// retrying.  Either <see cref="MaximumAttempts"/> or <see cref="MaximumInterval"/>"/> is required.
         /// </summary>
         [JsonProperty(PropertyName = "MaximumAttempts", Required = Required.Always)]
         public int MaximumAttempts { get; set; }
 
         /// <summary>
         /// <para>
-        /// Non-Retriable errors. This is optional. Cadence server will stop retry if error reason matches this list.
+        /// Specifies Cadence errors that should not be retried. This is optional. Cadence server 
+        /// will stop retrying if error reason matches this list.
         /// </para>
         /// <list type="bullet">
-        /// <item>Error reason for custom error is specified when your activity/workflow return cadence.NewCustomError(reason).</item>
-        /// <item>Error reason for panic error is "cadenceInternal:Panic".</item>
-        /// <item>Error reason for any other error is "cadenceInternal:Generic".</item>
-        /// <item>Error reason for timeouts is: "cadenceInternal:Timeout TIMEOUT_TYPE". TIMEOUT_TYPE could be START_TO_CLOSE or HEARTBEAT.</item>
+        /// <item>Custom errors: <b>cadence.NewCustomError(reason)</b></item>
+        /// <item>Panic errors: <b>cadenceInternal:Panic</b></item>
+        /// <item>Generic errors: <b>cadenceInternal:Generic</b></item>
+        /// <item>
+        /// Timeout errors: <b>cadenceInternal:Timeout TIMEOUT_TYPE</b>, where
+        /// <b>TIMEOUT_TYPE</b> can be be <b>START_TO_CLOSE</b> or <b>HEARTBEAT</b>.
+        /// </item>
         /// </list>
         /// <note>
-        /// Note, cancellation is not a failure, so it won't be retried.
+        /// Cancellation is not a failure, so it won't be retried.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NonRetriableErrorReasons", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    WorkflowCancelRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,45 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// <b>proxy --> client:</b> Cancels a workflow execution.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    [ProxyMessage(MessageTypes.WorkflowCancelRequest)]
+    internal class WorkflowCancelRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowInvokeReply()
+        public WorkflowCancelRequest()
         {
-            Type = MessageTypes.WorkflowInvokeReply;
+            Type = MessageTypes.WorkflowCancelRequest;
+        }
+
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.WorkflowCancelReply;
+
+        /// <summary>
+        /// Identifies the workflow by ID.
+        /// </summary>
+        public string WorkflowId
+        {
+            get => GetStringProperty("WorkflowId");
+            set => SetStringProperty("WorkflowId", value);
         }
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// Identifies the specific workflow run to be cancelled.  The latest run
+        /// will be cancelled when this is <c>null</c> or empty.
         /// </summary>
-        public byte[] Result
+        public string RunId
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetStringProperty("RunId");
+            set => SetStringProperty("RunId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowInvokeReply();
+            var clone = new WorkflowCancelRequest();
 
             CopyTo(clone);
 
@@ -69,9 +82,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowInvokeReply)target;
+            var typedTarget = (WorkflowCancelRequest)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.WorkflowId = this.WorkflowId;
+            typedTarget.RunId      = this.RunId;
         }
     }
 }

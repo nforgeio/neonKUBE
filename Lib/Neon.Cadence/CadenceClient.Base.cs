@@ -66,26 +66,111 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Signals Cadence that it can begin invoking workflows and activities from the
-        /// specified domain and task list on the current connection.
+        /// Signals Cadence that the application is capable of executing workflows
+        /// of type <typeparamref name="TWorkflow"/>.
         /// </summary>
+        /// <typeparam name="TWorkflow">Identifies the workflow implementation.</typeparam>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="taskList">The target task list.</param>
+        /// <param name="tasklist">The target task list.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
+        /// <param name="name">
+        /// Optionally overrides the fully qualified <typeparamref name="TWorkflow"/> name 
+        /// used to register the worker.
+        /// </param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
-        public async Task<Worker> StartWorkerAsync(string domain, string taskList, WorkerOptions options = null)
+        /// <remarks>
+        /// <para>
+        /// Your workflow application will need to call this method so that Cadence will know
+        /// that it can schedule workflows to run within the current process.  You'll need
+        /// to specify the target Cadence domain and tasklist.
+        /// </para>
+        /// <para>
+        /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
+        /// as customize the name used to register the workflow, which defaults to the
+        /// fully qualified name of the workflow type.
+        /// </para>
+        /// <para>
+        /// This method returns a <see cref="Worker"/> which may be used by advanced applications
+        /// to explicitly stop the worker by calling <see cref="StopWorkerAsync(Worker)"/>.  Doing
+        /// this is entirely optional.
+        /// </para>
+        /// </remarks>
+        internal async Task<Worker> StartWorkflowWorkerAsync<TWorkflow>(string domain, string tasklist, WorkerOptions options = null, string name = null)
+            where TWorkflow : Workflow
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
 
             options = options ?? new WorkerOptions();
 
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {
-                    Domain   = domain,
-                    TaskList = taskList,
-                    Options  = options.ToInternal()
+                    Name       = name ?? typeof(TWorkflow).FullName,
+                    IsWorkflow = true,
+                    Domain     = domain,
+                    TaskList   = tasklist,
+                    Options    = options.ToInternal()
+                }));
+
+            reply.ThrowOnError();
+
+            var worker = new Worker(reply.WorkerId);
+
+            lock (syncLock)
+            {
+                workers.Add(reply.WorkerId, worker);
+            }
+
+            return worker;
+        }
+
+        /// <summary>
+        /// Signals Cadence that the application is capable of executing activities
+        /// of type <typeparamref name="TActivity"/>.
+        /// </summary>
+        /// <typeparam name="TActivity">Identifies the activity implementation.</typeparam>
+        /// <param name="domain">The target Cadence domain.</param>
+        /// <param name="tasklist">The target task list.</param>
+        /// <param name="options">Optionally specifies additional worker options.</param>
+        /// <param name="name">
+        /// Optionally overrides the fully qualified <typeparamref name="TActivity"/> name 
+        /// used to register the worker.
+        /// </param>
+        /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// Your workflow application will need to call this method so that Cadence will know
+        /// that it can schedule activities to run within the current process.  You'll need
+        /// to specify the target Cadence domain and tasklist.
+        /// </para>
+        /// <para>
+        /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
+        /// as customize the name used to register the activity, which defaults to the
+        /// fully qualified name of the activity type.
+        /// </para>
+        /// <para>
+        /// This method returns a <see cref="Worker"/> which may be used by advanced applications
+        /// to explicitly stop the worker by calling <see cref="StopWorkerAsync(Worker)"/>.  Doing
+        /// this is entirely optional.
+        /// </para>
+        /// </remarks>
+        internal async Task<Worker> StartActivityWorkerAsync<TActivity>(string domain, string tasklist, WorkerOptions options = null, string name = null)
+            where TActivity : Activity
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
+
+            options = options ?? new WorkerOptions();
+
+            var reply = (NewWorkerReply)(await CallProxyAsync(
+                new NewWorkerRequest()
+                {
+                    Name       = name ?? typeof(TActivity).FullName,
+                    IsWorkflow = false,
+                    Domain     = domain,
+                    TaskList   = tasklist,
+                    Options    = options.ToInternal()
                 }));
 
             reply.ThrowOnError();
@@ -103,13 +188,14 @@ namespace Neon.Cadence
         /// <summary>
         /// Signals Cadence that it should stop invoking activities and workflows 
         /// for the specified <see cref="Worker"/> (returned by a previous call to
-        /// <see cref="StartWorkerAsync(string, string, WorkerOptions)"/>).
+        /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions, string)"/>)
+        /// or <see cref="StartActivityWorkerAsync(string, string, WorkerOptions, string)"/>.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// This method does nothing if the worker is already stopped.
         /// </remarks>
-        public async Task StopWorkerAsync(Worker worker)
+        internal async Task StopWorkerAsync(Worker worker)
         {
             lock (syncLock)
             {
@@ -124,7 +210,7 @@ namespace Neon.Cadence
             }
 
             var reply = (StopWorkerReply)(await CallProxyAsync(new StopWorkerRequest() { WorkerId = worker.WorkerId }));
-
+            
             reply.ThrowOnError();
         }
     }

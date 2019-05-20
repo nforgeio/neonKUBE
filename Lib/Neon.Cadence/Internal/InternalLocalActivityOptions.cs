@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    InternalLocalActivityOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,50 +28,35 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// <b>INTERNAL USE ONLY:</b> Specifies local activity execution options.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    internal class InternalLocalActivityOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowInvokeReply()
+        public InternalLocalActivityOptions()
         {
-            Type = MessageTypes.WorkflowInvokeReply;
         }
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// Specifies the maximum time the activity can run.
         /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
+        [JsonProperty(PropertyName = "ScheduleToCloseTimeoutSeconds", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public long ScheduleToCloseTimeoutSeconds { get; set; }
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowInvokeReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowInvokeReply)target;
-
-            typedTarget.Result = this.Result;
-        }
+        /// <summary>
+        /// The activity retry policy.
+        /// </summary>
+        [JsonProperty(PropertyName = "RetryPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public InternalRetryPolicy RetryPolicy { get; set; } = null;
     }
 }

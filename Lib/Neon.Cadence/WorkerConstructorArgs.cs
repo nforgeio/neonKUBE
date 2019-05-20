@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    WorkerConstructorArgs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,56 +22,37 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// Holds the opaque arguments passed to <see cref="Workflow"/> and <see cref="Activity"/>
+    /// implementations by the <see cref="CadenceClient"/> when the workflow or activity is 
+    /// executed on a worker.  This must be passed to the base <see cref="Workflow"/> or
+    /// <see cref="Activity"/> class constructors.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    public class WorkerConstructorArgs
     {
         /// <summary>
-        /// Default constructor.
+        /// The parent <see cref="CadenceClient"/>.
         /// </summary>
-        public WorkflowInvokeReply()
-        {
-            Type = MessageTypes.WorkflowInvokeReply;
-        }
+        internal CadenceClient Client { get; set; }
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// The ID used to reference the corresponding Cadence context managed by
+        /// the <b>cadence-proxy</b>.
         /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
-
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowInvokeReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowInvokeReply)target;
-
-            typedTarget.Result = this.Result;
-        }
+        internal long WorkerContextId { get; set; }
     }
 }

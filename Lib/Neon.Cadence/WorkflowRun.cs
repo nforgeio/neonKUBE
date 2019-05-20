@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceHelper.cs
+// FILE:	    WorkflowRun.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -50,58 +50,34 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Cadence helper methods and constants.
+    /// Describes the state of an executed workflow.
     /// </summary>
-    internal static class CadenceHelper
+    public class WorkflowRun
     {
         /// <summary>
-        /// Number of nanoseconds per second.
+        /// Internal constructor.
         /// </summary>
-        public const long NanosecondsPerSecond = 1000000000L;
-
-        /// <summary>
-        /// Returns the maximum timespan supported by Cadence.
-        /// </summary>
-        public static TimeSpan MaxTimespan { get; private set; } = TimeSpan.FromTicks(long.MaxValue / 100);
-
-        /// <summary>
-        /// Returns the minimum timespan supported by Cadence.
-        /// </summary>
-        public static TimeSpan MinTimespan { get; private set; } = TimeSpan.FromTicks(long.MinValue / 100);
-
-        /// <summary>
-        /// Ensures that the timespan passed doesn't exceed the minimum or maximum
-        /// supported by Cadence/GOLANG.
-        /// </summary>
-        /// <param name="timespan">The input.</param>
-        /// <returns>The adjusted output.</returns>
-        public static TimeSpan Normalize(TimeSpan timespan)
+        /// <param name="id">The current ID for the workflow.</param>
+        /// <param name="runId">The original ID the workflow.</param>
+        internal WorkflowRun(string runId, string id)
         {
-            if (timespan > MaxTimespan)
-            {
-                return MaxTimespan;
-            }
-            else if (timespan < MinTimespan)
-            {
-                return MinTimespan;
-            }
-            else
-            {
-                return timespan;
-            }
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
+
+            this.RunId = id;
+            this.Id    = id;
         }
 
         /// <summary>
-        /// Converts a .NET <see cref="TimeSpan"/> into a Cadence/GOLANG duration
-        /// (aka a <c>long</c> specifying the interval in nanoseconds.
+        /// The original ID assigned to the workflow when it was started.
         /// </summary>
-        /// <param name="timespan">The input .NET timespan.</param>
-        /// <returns>The duration in nanoseconds.</returns>
-        public static long ToCadence(TimeSpan timespan)
-        {
-            timespan = Normalize(timespan);
+        public string RunId { get; private set; }
 
-            return timespan.Ticks * 100;
-        }
+        /// <summary>
+        /// Returns the current ID for workflow execution.  This will be different
+        /// than <see cref="RunId"/> when the workflow has been continued as new
+        /// or potentially restarted.
+        /// </summary>
+        public string Id { get; private set; }
     }
 }

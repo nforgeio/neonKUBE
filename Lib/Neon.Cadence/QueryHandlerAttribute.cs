@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    QueryHandlerAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,56 +22,40 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// Used to tag a <see cref="Workflow"/> method that will be called to handle an
+    /// external query.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    [AttributeUsage(AttributeTargets.Class)]
+    public class QueryHandlerAttribute : Attribute
     {
         /// <summary>
-        /// Default constructor.
+        /// Constructor.
         /// </summary>
-        public WorkflowInvokeReply()
+        /// <param name="queryName">Specifies the Cadence query name.</param>
+        public QueryHandlerAttribute(string queryName)
         {
-            Type = MessageTypes.WorkflowInvokeReply;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+
+            this.Query = queryName;
         }
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// Returns the query name. 
         /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
-
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowInvokeReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowInvokeReply)target;
-
-            typedTarget.Result = this.Result;
-        }
+        public string Query { get; private set; }
     }
 }

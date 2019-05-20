@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    LocalActivityOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,50 +28,44 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// Specifies options used when running a local workflow activity.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    public class LocalActivityOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowInvokeReply()
+        public LocalActivityOptions()
         {
-            Type = MessageTypes.WorkflowInvokeReply;
         }
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// Specifies the maximum time the activity can run.
         /// </summary>
-        public byte[] Result
+        public TimeSpan ScheduleToCloseTimeoutSeconds { get; set; }
+
+        /// <summary>
+        /// The activity retry policy.
+        /// </summary>
+        public CadenceRetryPolicy RetryPolicy { get; set; } = null;
+
+        /// <summary>
+        /// Converts this instance into the corresponding internal object.
+        /// </summary>
+        /// <returns>The equivalent <see cref="InternalLocalActivityOptions"/>.</returns>
+        internal InternalLocalActivityOptions ToInternal()
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
-
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowInvokeReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowInvokeReply)target;
-
-            typedTarget.Result = this.Result;
+            return new InternalLocalActivityOptions()
+            {
+                ScheduleToCloseTimeoutSeconds = CadenceHelper.ToCadence(this.ScheduleToCloseTimeoutSeconds),
+                RetryPolicy                   = RetryPolicy?.ToInternal()
+            };
         }
     }
 }

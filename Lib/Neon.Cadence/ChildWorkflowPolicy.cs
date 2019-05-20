@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    ChildWorkflowPolicy .cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,50 +28,42 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Retry;
+using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// Enumerates the possible child workflow behaviors when the parent
+    /// workflow is terminated.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    public enum ChildWorkflowPolicy
     {
         /// <summary>
-        /// Default constructor.
+        /// <para>
+        /// All open child workflows will be terminated when parent workflow is terminated.
+        /// </para>
+        /// <note>
+        /// This policy is not implemented.
+        /// </note>
         /// </summary>
-        public WorkflowInvokeReply()
-        {
-            Type = MessageTypes.WorkflowInvokeReply;
-        }
+        ChildWorkflowPolicyTerminate = 0,
 
         /// <summary>
-        /// The workflow execution result or <c>null</c>.
+        /// <para>
+        /// Cancel requests will be sent to all open child workflows to all open child 
+        /// workflows when parent workflow is terminated.
+        /// </para>
+        /// <note>
+        /// This policy is not implemented.
+        /// </note>
         /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
+        ChildWorkflowPolicyRequestCancel = 1,
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new WorkflowInvokeReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowInvokeReply)target;
-
-            typedTarget.Result = this.Result;
-        }
+        /// <summary>
+        /// ChildWorkflowPolicyAbandon is policy that will have no impact to child workflow execution when parent workflow is
+        /// terminated.  This is the default policy.
+        /// </summary>
+        ChildWorkflowPolicyAbandon = 2
     }
 }

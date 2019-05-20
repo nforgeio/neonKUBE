@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -38,6 +39,68 @@ namespace Neon.Cadence.Internal
     /// </summary>
     internal class CadenceError
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static Dictionary<string, ConstructorInfo> goErrorToConstructor;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static CadenceError()
+        {
+            // Initialize a dictionary that maps GOLANG error strings to CadenceError
+            // derived exception constructors.  These constructors must have signatures
+            // like:
+            //
+            //      CadenceException(string message, Exception innerException)
+            //
+            // Note that we need to actually construct an instance of each exception
+            // type so that we can retrieve the corresponding GOLANG error string.
+
+            goErrorToConstructor = new Dictionary<string, ConstructorInfo>();
+
+            var cadenceExceptionType = typeof(CadenceException);
+
+            foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
+            {
+                if (!cadenceExceptionType.IsAssignableFrom(type))
+                {
+                    // Ignore everything besides [CadenceException] derived types.
+
+                    continue;
+                }
+
+                if (type.IsAbstract)
+                {
+                    // Ignore [CadenceException] itself.
+
+                    continue;
+                }
+
+                var constructor = type.GetConstructor(new Type[] { typeof(string), typeof(Exception) });
+
+                if (constructor == null)
+                {
+                    throw new Exception($"Type [{type.Name}:{cadenceExceptionType.Name}] does not have a constructor like: [{type.Name}(string, Exception)].");
+                }
+
+                var exception = (CadenceException)constructor.Invoke(new object[] { string.Empty, null });
+
+                if (exception.CadenceError == null)
+                {
+                    // The exception doesn't map to a GOLANG error.
+
+                    continue;
+                }
+
+                goErrorToConstructor.Add(exception.CadenceError, constructor);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -116,7 +179,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Converts the instance into a <see cref="CadenceException"/>.
+        /// Converts the instance into an <see cref="CadenceException"/>.
         /// </summary>
         /// <returns>One of the exceptions derived from <see cref="CadenceException"/>.</returns>
         public CadenceException ToException()
@@ -156,27 +219,9 @@ namespace Neon.Cadence.Internal
             // predefined Cadence exceptions and if that doesn't work, we'll generate
             // a more generic exception.
 
-            switch (error)
+            if (goErrorToConstructor.TryGetValue(error, out var constructor))
             {
-                case "BadRequestError":
-
-                    return new CadenceBadRequestException(message);
-
-                case "DomainAlreadyExistsError":
-
-                    return new CadenceDomainAlreadyExistsException(message);
-
-                case "EntityNotExistsError":
-
-                    return new CadenceEntityNotExistsException(message);
-
-                case "InternalServiceError":
-
-                    return new CadenceInternalServiceException(message);
-
-                case "ServiceBusyError":
-
-                    return new CadenceServiceBusyException(message);
+                return (CadenceException)constructor.Invoke(new object[] { error, null });
             }
 
             // Create a more generic exception.

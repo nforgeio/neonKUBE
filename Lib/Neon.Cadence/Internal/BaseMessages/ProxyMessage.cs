@@ -579,6 +579,34 @@ namespace Neon.Cadence.Internal
         /// <typeparam name="T">The property type.</typeparam>
         /// <param name="key">The property key.</param>
         /// <returns>The parsed value if the property exists or <c>null</c>.</returns>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// <b>IMPORTANT:</b> Be very careful when referencing properties that use this
+        /// method because the behavior will probably be unexepected.  You should:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///     When you need to access multiple subfields of the property value,
+        ///     dereference the property once, save the value to a variable and
+        ///     then use the variable to access the subproperty.  Not doing this
+        ///     will result in the JSON being parsed again for each property
+        ///     reference.
+        ///     </item>
+        ///     <item>
+        ///     Dereferencing the property and changing a subproperty value won't
+        ///     actually persist the change back to the underlying property.  You'll
+        ///     need to dereference the property to a variable, change the subproperty,
+        ///     and then use <see cref="SetJsonProperty{T}(string, T)"/> to persist the
+        ///     change. 
+        ///     </item>
+        /// </list>
+        /// <para>
+        /// These restrictions are a bit odd but we're not actually expecting to 
+        /// be doing any of these things within the <b>cadence-client</b> code.
+        /// </para>
+        /// </note>
+        /// </remarks>
         internal T GetJsonProperty<T>(string key)
             where T : class, new()
         {

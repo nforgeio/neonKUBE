@@ -46,6 +46,30 @@ namespace TestCadence
     /// </summary>
     public sealed class Test_Emulation : IClassFixture<CadenceFixture>, IDisposable
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// This workflow does nothing besides returning "Hello World!" as UTF-8.
+        /// </summary>
+        public class HelloWorkflow : Workflow
+        {
+            public HelloWorkflow(WorkerConstructorArgs args)
+                : base(args)
+            {
+            }
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                await Task.CompletedTask;
+
+                return Encoding.UTF8.GetBytes("Hello World!");
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         CadenceFixture      fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
@@ -334,28 +358,28 @@ namespace TestCadence
         {
             // Verify that emulated start/stop worker operations work.
 
-            // Generate unique a domain and taskList to avoid conflicts with
+            // Generate unique a domain and tasklist to avoid conflicts with
             // other tests on this connection.
 
             var domain   = Guid.NewGuid().ToString("D");
-            var taskList = Guid.NewGuid().ToString("D");
+            var tasklist = Guid.NewGuid().ToString("D");
 
             // Verify parameter checks.
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkerAsync(null, taskList));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync("", taskList));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync(domain, null));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync(domain, ""));
+            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkflowWorkerAsync<HelloWorkflow>(null, tasklist));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>("", tasklist));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, null));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, ""));
 
             // This operation should fail because the domain has not yet been registered.
 
-            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.StartWorkerAsync(domain, "test"));
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, "test"));
 
             // Register the domain and then start a worker.
 
             await client.RegisterDomainAsync(domain);
 
-            var worker = await client.StartWorkerAsync(domain, taskList);
+            var worker = await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, tasklist);
 
             // Stop the worker.
 

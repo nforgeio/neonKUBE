@@ -67,6 +67,24 @@ namespace Neon.Cadence.Internal
         public override MessageTypes ReplyType => MessageTypes.NewWorkerReply;
 
         /// <summary>
+        /// Specifies the name to be used to register the workflow or activity worker.
+        /// </summary>
+        public string Name
+        {
+            get => GetStringProperty("Name");
+            set => SetStringProperty("Name", value);
+        }
+
+        /// <summary>
+        /// Indicates whether we're starting a workflow or an activity worker.
+        /// </summary>
+        public bool IsWorkflow
+        {
+            get => GetBoolProperty("IsWorkflow");
+            set => SetBoolProperty("IsWorkflow", value);
+        }
+
+        /// <summary>
         /// The domain hosting the Cadence workflow.
         /// </summary>
         public string Domain
@@ -110,9 +128,11 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (NewWorkerRequest)target;
 
-            typedTarget.Domain   = this.Domain;
-            typedTarget.TaskList = this.TaskList;
-            typedTarget.Options  = this.Options;
+            typedTarget.Name       = this.Name;
+            typedTarget.IsWorkflow = this.IsWorkflow;
+            typedTarget.Domain     = this.Domain;
+            typedTarget.TaskList   = this.TaskList;
+            typedTarget.Options    = this.Options;
         }
     }
 }

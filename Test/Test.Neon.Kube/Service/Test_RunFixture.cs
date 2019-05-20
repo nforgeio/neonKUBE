@@ -52,8 +52,10 @@ namespace TestKubeService
             private KubeServiceFixture<WebService>      webServiceFixture;
             private KubeServiceFixture<RelayService>    relayServiceFixture;
 
-            public TestClass(ComposedFixture fixture)
+            public TestClass(ComposedFixture fixture, string arg)
             {
+                Test_RunFixture.argValue = arg;
+
                 this.composedFixture = fixture;
                 this.serviceMap      = CreateServiceMap();
 
@@ -178,8 +180,9 @@ namespace TestKubeService
         //-----------------------------------------------------------
         // Static members
 
-        private static bool runWasCalled     = false;
-        private static bool disposeWasCalled = false;
+        private static string   argValue         = null;
+        private static bool     runWasCalled     = false;
+        private static bool     disposeWasCalled = false;
 
         //-----------------------------------------------------------
         // Instance members
@@ -191,8 +194,9 @@ namespace TestKubeService
             runWasCalled     = false;
             disposeWasCalled = false;
 
-            TestHelper.RunFixture<TestClass>();
+            TestHelper.RunFixture<TestClass>("Hello World!");
 
+            Assert.Equal("Hello World!", Test_RunFixture.argValue);
             Assert.True(runWasCalled);
             Assert.True(disposeWasCalled);
         }
