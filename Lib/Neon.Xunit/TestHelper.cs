@@ -376,6 +376,61 @@ namespace Neon.Xunit
         }
 
         /// <summary>
+        /// Verifies that an action throws a <typeparamref name="TException"/> or an
+        /// <see cref="AggregateException"/> that contains <typeparamref name="TException"/>.
+        /// </summary>
+        /// <typeparam name="TException">The required exception type.</typeparam>
+        /// <param name="action">The test action.</param>
+        public static void AssertThrows<TException>(Action action)
+            where TException : Exception
+        {
+            Covenant.Requires<ArgumentNullException>(action != null);
+
+            try
+            {
+                action();
+                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   (no exception thrown)");
+            }
+            catch (Exception e)
+            {
+                if (e is TException || e.Contains<TException>())
+                {
+                    return;
+                }
+
+                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   {e.GetType().Name}");
+            }
+        }
+
+        /// <summary>
+        /// Verifies that an asynchronous action throws a <typeparamref name="TException"/> or an
+        /// <see cref="AggregateException"/> that contains <typeparamref name="TException"/>.
+        /// </summary>
+        /// <typeparam name="TException">The required exception type.</typeparam>
+        /// <param name="action">The test action.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async static Task AssertThrowsAsync<TException>(Func<Task> action)
+            where TException : Exception
+        {
+            Covenant.Requires<ArgumentNullException>(action != null);
+
+            try
+            {
+                await action();
+                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   (no exception thrown)");
+            }
+            catch (Exception e)
+            {
+                if (e is TException || e.Contains<TException>())
+                {
+                    return;
+                }
+
+                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   {e.GetType().Name}");
+            }
+        }
+
+        /// <summary>
         /// Used to run a <see cref="TestFixture"/> outside of a unit test.
         /// </summary>
         /// <typeparam name="T">Specifies the test type.</typeparam>
