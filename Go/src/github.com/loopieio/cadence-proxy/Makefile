@@ -6,7 +6,7 @@ export PATH := $(GOPATH)/bin:$(PATH)
 
 # Project, test, source, and build paths
 PROJECT_ROOT = github.com/loopieio/cadence-proxy
-BUILD_DIR := $(NF_ROOT)/Build/
+BUILD_DIR := $(NF_ROOT)/Build
 COMPRESSED_DIR := $(NF_ROOT)/Lib/Neon.Cadence/Resources
 APP_DIR=./cmd/cadenceproxy
 LOG_DIR=./test/logs

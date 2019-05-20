@@ -142,7 +142,7 @@ func (workflowContexts *WorkflowExecutionContexts) Add(contextID int64, wectx *W
 // param contextID int64 -> the long contextID passed to Cadence
 // workflow functions.  This will be the mapped key
 //
-// returns int64 -> long contextID of the new WorkflowExecutionContext added to the map
+// returns int64 -> long contextID of the WorkflowExecutionContext removed from the map
 func (workflowContexts *WorkflowExecutionContexts) Delete(contextID int64) int64 {
 	WorkflowExecutionContextsMap.Map.Delete(contextID)
 	return contextID

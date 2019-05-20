@@ -3,6 +3,8 @@ package endpoints
 import (
 	"fmt"
 
+	"go.uber.org/cadence"
+
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
 
 	"github.com/loopieio/cadence-proxy/internal/messages"
@@ -201,16 +203,27 @@ func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
 func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 	// WorkflowExecutionContext at the specified WorflowContextID
-	workflowContextID := reply.GetContextID()
-	wectx := cadenceworkflows.WorkflowExecutionContextsMap.Get(workflowContextID)
+	workflowExecutionContextID := reply.GetWorkflowContextID()
+	wectx := cadenceworkflows.WorkflowExecutionContextsMap.Get(workflowExecutionContextID)
 	if wectx == nil {
 		return entityNotExistError
 	}
 
-	// TODO: JACK --
-	// c. If WorkflowInvokeReply has a null Error property, then signal the context promise completion and have it return the WorkflowInvokeReply.Result bytes.
-	// d. If WorkflowInvokeReply reports an error, then signal the context promise completion and have it return the error.
-	// e. Remove the context from the workflowContexts table.
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
+
+	settable := wectx.GetSettable()
+	if err := reply.GetError(); err != nil {
+		settable.Set(nil, cadence.NewCustomError(err.ToString()))
+	} else {
+		settable.Set(reply.GetResult(), nil)
+	}
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
+
+	// remove the WorkflowExecutionContext from the map
+	_ = cadenceworkflows.WorkflowExecutionContextsMap.Delete(workflowExecutionContextID)
 
 	return nil
 }

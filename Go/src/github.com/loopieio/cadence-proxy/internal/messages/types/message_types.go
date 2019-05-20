@@ -166,7 +166,7 @@ const (
 	/// <summary>
 	/// <b>library --> proxy:</b> Signals a workflow.
 	/// </summary>
-	WorkflowSignalWorkflowRequest MessageType = 104
+	WorkflowSignalRequest MessageType = 104
 
 	/// <summary>
 	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWorkflowRequest"/> message.

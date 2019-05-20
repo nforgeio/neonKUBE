@@ -8,20 +8,17 @@ import (
 	"os"
 	"reflect"
 
-	"go.uber.org/cadence/workflow"
-
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
-
-	"go.uber.org/cadence/worker"
-
 	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkers"
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
+	"go.uber.org/cadence/worker"
+	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 )
 
@@ -115,6 +112,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 	case messagetypes.NewWorkerRequest:
 		if v, ok := request.(*messages.NewWorkerRequest); ok {
 			reply = handleNewWorkerRequest(v)
+		}
+
+	// PingRequest
+	case messagetypes.PingRequest:
+		if v, ok := request.(*messages.PingRequest); ok {
+			reply = handlePingRequest(v)
 		}
 
 	// Undefined message type
@@ -560,7 +563,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
 		workflowInvokeRequest.SetRequestID(NextRequestID())
 		workflowInvokeRequest.SetArgs(input)
-		workflowInvokeRequest.SetContextID(workflowContextID)
+		workflowInvokeRequest.SetWorkflowContextID(workflowContextID)
 
 		// send the WorkflowInvokeRequest
 		var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()
@@ -569,6 +572,9 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 			return nil, err
 		}
 		defer resp.Body.Close()
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
 
 		// wait for the future to be unblocked
 		var result []byte
@@ -693,6 +699,21 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	workerID = cadenceworkers.WorkersMap.Delete(workerID)
 	if v, ok := reply.(*messages.StopWorkerReply); ok {
 		buildStopWorkerReply(v, nil)
+	}
+
+	return reply
+}
+
+func handlePingRequest(request *messages.PingRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("PingRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new PingReply
+	reply := createReplyMessage(request)
+
+	if v, ok := reply.(*messages.PingReply); ok {
+		buildPingReply(v, nil)
 	}
 
 	return reply
