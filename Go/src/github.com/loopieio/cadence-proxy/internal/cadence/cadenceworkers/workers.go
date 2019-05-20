@@ -75,7 +75,7 @@ func (workers *Workers) Add(workerID int64, worker worker.Worker) int64 {
 // param workerID int64 -> the long workerID to the cadence Worker
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
-// returns int64 -> long workerID of the new cadence Worker added to the map
+// returns int64 -> long workerID of the cadence Worker removed from the map
 func (workers *Workers) Delete(workerID int64) int64 {
 	WorkersMap.Map.Delete(workerID)
 	return workerID
