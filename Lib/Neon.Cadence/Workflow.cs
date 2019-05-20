@@ -50,30 +50,60 @@ namespace Neon.Cadence
     /// will reside.  
     /// </para>
     /// <para>
-    /// Here's how workflows work:
+    /// Here's an overview describing the steps necessary to implement, deploy, and
+    /// start a workflow:
     /// </para>
     /// <list type="number">
-    ///     <item>
-    ///     Somebody kicks off a workflow by calling <see cref="CadenceClient.address"/>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
-    ///     <item>
-    ///     </item>
+    /// <item>
+    ///     A custom workflow is implemented by deriving a class from <see cref="Workflow"/>,
+    ///     implementing the workflow logic via a <see cref="Workflow.RunAsync(byte[])"/>
+    ///     method.  Any custom workflow activities will need to be implemented as classes
+    ///     derived from <see cref="Activity"/>.
+    /// </item>
+    /// <item>
+    ///     <para>
+    ///     The custom <see cref="Workflow"/> class needs to be deployed as a service or
+    ///     application that creates a <see cref="CadenceClient"/> connected to a Cadence
+    ///     cluster.  This application needs to call <see cref="CadenceClient.StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>
+    ///     and <see cref="CadenceClient.StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/> to
+    ///     start the workflow and activity workers as required.
+    ///     </para>
+    ///     <note>
+    ///     By default, both workflow and activity workers will be registered using the
+    ///     fully qualified name of the custom <see cref="Workflow"/> or <see cref="Activity"/>
+    ///     derived implementation classes.  These names can be customized as required.
+    ///     </note>
+    /// </item>
+    /// <item>
+    ///     <para>
+    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/>,
+    ///     passing an optional byte array as workflow arguments as well as optional workflow options.  
+    ///     Global workflows have no parent, as opposed to child workflows that run in the context of 
+    ///     another workflow (the parent).
+    ///     </para>
+    ///     <note>
+    ///     <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/> returns immediately
+    ///     after the new workflow has been submitted to Cadence.  This method does not wait
+    ///     for the workflow to finish.
+    ///     </note>
+    /// </item>
+    /// <item>
+    ///     For Neon Cadence client instances that have started a worker that handles the named workflow,
+    ///     Cadence will choose one of the workers and begin executing the workflow there.  The Neon Cadence
+    ///     client will instantiate the registered custom <see cref="Workflow"/> call its
+    ///     <see cref="Workflow.RunAsync(byte[])"/> method, passing the optional workflow arguments
+    ///     encoded as a byte array.
+    /// </item>
+    /// <item>
+    ///     The custom <see cref="Workflow.RunAsync(byte[])"/> method implements the workflow by
+    ///     
+    /// </item>
+    /// <item>
+    /// </item>
+    /// <item>
+    /// </item>
+    /// <item>
+    /// </item>
     /// </list>
     /// </remarks>
     public abstract class Workflow
@@ -190,10 +220,11 @@ namespace Neon.Cadence
         /// during the replay.
         /// </para>
         /// </remarks>
-        protected Task<byte[]> GetMutableValueAsync(Func<byte[]> getter)
+        protected async Task<byte[]> GetMutableValueAsync(Func<byte[]> getter)
         {
             Covenant.Requires<ArgumentNullException>(getter != null);
 
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
 
@@ -210,12 +241,77 @@ namespace Neon.Cadence
         protected async Task SleepAsync(TimeSpan delay, CancellationToken cancellationToken = default)
         {
             await Task.CompletedTask;
+            throw new NotImplementedException();
+        }
 
-            if (delay <= TimeSpan.Zero)
-            {
-                return;
-            }
+        /// <summary>
+        /// Executes a child workflow an waits for it to complete.
+        /// </summary>
+        /// <param name="name">The workflow name.</param>
+        /// <param name="args">Optionally specifies the workflow arguments.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>The workflow result encoded as a byte array.</returns>
+        /// <exception cref="CadenceException">
+        /// An exception derived from <see cref="CadenceException"/> will be be thrown 
+        /// if the child workflow did not complete successfully.
+        /// </exception>
+        protected async Task<byte[]> CallWorkflow(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
+        {
+            await Task.CompletedTask;
+            throw new NotImplementedException();
+        }
 
+        /// <summary>
+        /// Executes an activity and waits for it to complete.
+        /// </summary>
+        /// <param name="name">Identifies the activity.</param>
+        /// <param name="args">Optionally specifies the activity name.</param>
+        /// <returns>The activity result encoded as a byte array.</returns>
+        /// <exception cref="CadenceException">
+        /// An exception derived from <see cref="CadenceException"/> will be be thrown 
+        /// if the child workflow did not complete successfully.
+        /// </exception>
+        protected async Task<byte[]> CallActivity(string name, byte[] args = null)
+        {
+            await Task.CompletedTask;
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Executes a local activity and waits for it to complete.
+        /// </summary>
+        /// <typeparam name="TActivity">Specifies the local activity implementation type.</typeparam>
+        /// <param name="args">Optionally specifies the activity name.</param>
+        /// <param name="options">Optionally specifies any local activity options.</param>
+        /// <returns>The activity result encoded as a byte array.</returns>
+        /// <exception cref="CadenceException">
+        /// An exception derived from <see cref="CadenceException"/> will be be thrown 
+        /// if the child workflow did not complete successfully.
+        /// </exception>
+        /// <remarks>
+        /// This method can be used to optimize activities that will complety quickly
+        /// (within seconds).  Rather than scheduling the activity on any worker that
+        /// has registered an implementation for the activity, this method will simply
+        /// instantiate an instance of <typeparamref name="TActivity"/> and call its
+        /// <see cref="Activity.RunAsync(byte[])"/> method.
+        /// </remarks>
+        protected async Task<byte[]> CallLocalActivity<TActivity>(byte[] args = null, LocalActivityOptions options = null)
+            where TActivity : Activity
+        {
+            await Task.CompletedTask;
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Exits and completes the current running workflow and then restarts it, passing the
+        /// optional workflow arguments.
+        /// </summary>
+        /// <param name="args">Optionally specifies the arguments for the new workflow run.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        protected async Task RestartAsync(byte[] args = null)
+        {
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
     }

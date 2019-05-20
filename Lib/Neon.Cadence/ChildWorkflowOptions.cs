@@ -36,7 +36,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Specifies the options to use when executing a child workflow.
     /// </summary>
-    internal class ChildWorkflowOptions
+    public class ChildWorkflowOptions
     {
         /// <summary>
         /// Default constructor.
@@ -82,13 +82,10 @@ namespace Neon.Cadence.Internal
         public ChildWorkflowPolicy ChildPolicy { get; set; } = ChildWorkflowPolicy.ChildWorkflowPolicyAbandon;
 
         /// <summary>
-        /// Optionally specifies whether to wait for the canceled child workflow to be ended
-        /// before returning to the parent.  This defaults to <c>false</c>.
-        /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended
-        /// as: completed/failed/timedout/terminated/canceled)
-        /// Optional: default false
+        /// Optionally specifies whether to wait for the child workflow to finish for any
+        /// reason including being: completed, failed, timedout, terminated, or canceled.
         /// </summary>
-        public bool WaitForCancellation { get; set; } = false;
+        public bool WaitUntilFinished { get; set; } = false;
 
         /// <summary>
         /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
@@ -99,7 +96,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Optionally specifies a retry policy.
         /// </summary>
-        public InternalRetryPolicy RetryPolicy { get; set; } = null;
+        public CadenceRetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  See <see cref="CronSchedule"/>
@@ -118,12 +115,12 @@ namespace Neon.Cadence.Internal
                 Domain                       = this.Domain,
                 WorkflowID                   = this.WorkflowID,
                 TaskList                     = this.TaskList,
-                ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout.Ticks * 100,
-                TaskStartToCloseTimeout      = this.TaskStartToCloseTimeout.Ticks * 100,
+                ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
+                TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
                 ChildPolicy                  = (int)this.ChildPolicy,
-                WaitForCancellation          = this.WaitForCancellation,
+                WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
-                RetryPolicy                  = this.RetryPolicy,
+                RetryPolicy                  = this.RetryPolicy.ToInternal(),
                 CronSchedule                 = this.CronSchedule.ToInternal()
             };
         }

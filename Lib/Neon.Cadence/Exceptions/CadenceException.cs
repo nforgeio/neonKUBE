@@ -43,7 +43,7 @@ namespace Neon.Cadence
         /// exception or <c>null</c> when the exception does not map to an
         /// error string.
         /// </summary>
-        internal virtual string CadenceError => "unknown";
+        internal virtual string CadenceError => null;
 
         /// <summary>
         /// Returns the Cadence error type.

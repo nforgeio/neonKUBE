@@ -80,12 +80,19 @@ namespace Neon.Cadence.Internal
 
                 var constructor = type.GetConstructor(new Type[] { typeof(string), typeof(Exception) });
 
-                if (constructor != null)
+                if (constructor == null)
                 {
                     throw new Exception($"Type [{type.Name}:{cadenceExceptionType.Name}] does not have a constructor like: [{type.Name}(string, Exception)].");
                 }
 
                 var exception = (CadenceException)constructor.Invoke(new object[] { string.Empty, null });
+
+                if (exception.CadenceError == null)
+                {
+                    // The exception doesn't map to a GOLANG error.
+
+                    continue;
+                }
 
                 goErrorToConstructor.Add(exception.CadenceError, constructor);
             }

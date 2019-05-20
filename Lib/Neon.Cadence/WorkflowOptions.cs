@@ -91,12 +91,16 @@ namespace Neon.Cadence
         public CronSchedule CronSchedule { get; set; }
 
         /// <summary>
-        /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.  Note that
-        /// <see cref="Domain"/> is not included in the result will will need to be handled separately.
+        /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
         internal InternalStartWorkflowOptions ToInternal()
         {
+            if (string.IsNullOrEmpty(TaskList))
+            {
+                throw new ArgumentException($"[{nameof(TaskList)}] property is required.");
+            }
+
             return new InternalStartWorkflowOptions()
             {
                 ID                              = this.ID,

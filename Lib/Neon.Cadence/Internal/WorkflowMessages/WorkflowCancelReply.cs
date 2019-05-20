@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeReply.cs
+// FILE:	    WorkflowCancelReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,23 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowCancelRequest"/>
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : WorkflowContextReply
+    [ProxyMessage(MessageTypes.WorkflowCancelReply)]
+    internal class WorkflowCancelReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowInvokeReply()
+        public WorkflowCancelReply()
         {
-            Type = MessageTypes.WorkflowInvokeReply;
-        }
-
-        /// <summary>
-        /// The workflow execution result or <c>null</c>.
-        /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            Type = MessageTypes.WorkflowCancelReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowInvokeReply();
+            var clone = new WorkflowCancelReply();
 
             CopyTo(clone);
 
@@ -68,10 +59,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowInvokeReply)target;
-
-            typedTarget.Result = this.Result;
         }
     }
 }

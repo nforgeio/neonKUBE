@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteRequest.cs
+// FILE:	    WorkflowTerminateRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,62 +32,63 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Starts a workflow execution.
+    /// <b>proxy --> client:</b> Terminates a workflow execution.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteRequest)]
-    internal class WorkflowExecuteRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.WorkflowTerminateRequest)]
+    internal class WorkflowTerminateRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteRequest()
+        public WorkflowTerminateRequest()
         {
-            Type = MessageTypes.WorkflowExecuteRequest;
+            Type = MessageTypes.WorkflowTerminateRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
+        public override MessageTypes ReplyType => MessageTypes.WorkflowTerminateReply;
 
         /// <summary>
-        /// Identifies the Cadence domain hosting the workflow.
+        /// Identifies the workflow by ID.
         /// </summary>
-        public string Domain
+        public string WorkflowId
         {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
+            get => GetStringProperty("WorkflowId");
+            set => SetStringProperty("WorkflowId", value);
         }
 
         /// <summary>
-        /// Identifies the workflow implementation to be started.
+        /// Identifies the specific workflow run to be cancelled.  The latest run
+        /// will be cancelled when this is <c>null</c> or empty.
         /// </summary>
-        public string Name
+        public string RunId
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty("RunId");
+            set => SetStringProperty("RunId", value);
         }
 
         /// <summary>
-        /// Optionally specifies the workflow arguments encoded as a byte array.
+        /// Optionally indicates the termination reason.
         /// </summary>
-        public byte[] Args
+        public string Reason
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetStringProperty("Reason");
+            set => SetStringProperty("Reason", value);
         }
 
         /// <summary>
-        /// Optionally specifies the workflow start options.
+        /// Optionally includes additional termination details encoded as a byte array.
         /// </summary>
-        public InternalStartWorkflowOptions Options
+        public byte[] Details
         {
-            get => GetJsonProperty<InternalStartWorkflowOptions>("Options");
-            set => SetJsonProperty<InternalStartWorkflowOptions>("Options", value);
+            get => GetBytesProperty("Details");
+            set => SetBytesProperty("Details", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteRequest();
+            var clone = new WorkflowTerminateRequest();
 
             CopyTo(clone);
 
@@ -99,12 +100,12 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowExecuteRequest)target;
+            var typedTarget = (WorkflowTerminateRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Domain  = this.Domain;
-            typedTarget.Name    = this.Name;
-            typedTarget.Options = this.Options;
+            typedTarget.WorkflowId = this.WorkflowId;
+            typedTarget.RunId      = this.RunId;
+            typedTarget.Reason     = this.Reason;
+            typedTarget.Details    = this.Details;
         }
     }
 }
