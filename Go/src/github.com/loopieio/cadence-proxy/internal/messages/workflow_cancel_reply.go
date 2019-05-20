@@ -81,12 +81,12 @@ func (reply *WorkflowCancelReply) SetError(value *cadenceerrors.CadenceError) {
 // -------------------------------------------------------------------------
 // IWorkflowContextReply interface methods for implementing the IWorkflowContextReply interface
 
-// GetContextID inherits docs from WorkflowContextReply.GetContextID()
-func (request *WorkflowCancelReply) GetContextID() int64 {
-	return request.GetLongProperty("ContextId")
+// GetWorkflowContextID inherits docs from WorkflowContextReply.GetWorkflowContextID()
+func (request *WorkflowCancelReply) GetWorkflowContextID() int64 {
+	return request.WorkflowContextReply.GetWorkflowContextID()
 }
 
-// SetContextID inherits docs from WorkflowContextReply.SetContextID()
-func (request *WorkflowCancelReply) SetContextID(value int64) {
-	request.SetLongProperty("ContextId", value)
+// SetWorkflowContextID inherits docs from WorkflowContextReply.SetWorkflowContextID()
+func (request *WorkflowCancelReply) SetWorkflowContextID(value int64) {
+	request.WorkflowContextReply.SetWorkflowContextID(value)
 }
