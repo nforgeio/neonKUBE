@@ -636,7 +636,6 @@ namespace Neon.Cadence
                 }
             }
 
-#if DEBUG
             if (heartbeatThread != null)
             {
                 heartbeatThread.Join();
@@ -649,18 +648,19 @@ namespace Neon.Cadence
                 timeoutThread = null;
             }
 
+#if DEBUG
             if (emulatedHost != null)
             {
                 emulatedHost.Dispose();
                 emulatedHost = null;
             }
-#endif
 
-            if (host != null)
+            if (EmulatedLibraryClient != null)
             {
-                host.Dispose();
-                host = null;
+                EmulatedLibraryClient.Dispose();
+                EmulatedLibraryClient = null;
             }
+#endif
 
             if (proxyClient != null)
             {
@@ -668,13 +668,11 @@ namespace Neon.Cadence
                 proxyClient = null;
             }
 
-#if DEBUG
-            if (EmulatedLibraryClient != null)
+            if (host != null)
             {
-                EmulatedLibraryClient.Dispose();
-                EmulatedLibraryClient = null;
+                host.Dispose();
+                host = null;
             }
-#endif
 
             if (disposing)
             {
