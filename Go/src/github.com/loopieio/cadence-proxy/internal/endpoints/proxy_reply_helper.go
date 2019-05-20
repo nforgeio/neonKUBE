@@ -2,6 +2,7 @@ package endpoints
 
 import (
 	"fmt"
+	"os"
 
 	"go.uber.org/cadence"
 
@@ -100,6 +101,12 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 	case messagetypes.StopWorkerReply:
 		if v, ok := reply.(*messages.StopWorkerReply); ok {
 			err = handleStopWorkerReply(v)
+		}
+
+	// PingReply
+	case messagetypes.PingReply:
+		if v, ok := reply.(*messages.PingReply); ok {
+			err = handlePingReply(v)
 		}
 
 	// Undefined message type
@@ -202,6 +209,9 @@ func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
 
 func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
 	// WorkflowExecutionContext at the specified WorflowContextID
 	workflowExecutionContextID := reply.GetWorkflowContextID()
 	wectx := cadenceworkflows.WorkflowExecutionContextsMap.Get(workflowExecutionContextID)
@@ -250,4 +260,11 @@ func handleStopWorkerReply(reply *messages.StopWorkerReply) error {
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling StopWorkerReply", zap.Error(err))
 	return err
+}
+
+func handlePingReply(reply *messages.PingReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	return nil
 }

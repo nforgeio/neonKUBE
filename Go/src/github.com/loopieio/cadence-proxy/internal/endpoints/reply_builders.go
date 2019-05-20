@@ -95,3 +95,19 @@ func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *cadence
 func buildPingReply(reply *messages.PingReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
+
+func buildWorkflowCancelReply(reply *messages.WorkflowCancelReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowTerminateReply(reply *messages.WorkflowTerminateReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowSignalReply(reply *messages.WorkflowSignalReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}

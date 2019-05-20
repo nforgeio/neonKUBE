@@ -114,6 +114,30 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 			reply = handleNewWorkerRequest(v)
 		}
 
+	// WorkflowCancelRequest
+	case messagetypes.WorkflowCancelRequest:
+		if v, ok := request.(*messages.WorkflowCancelRequest); ok {
+			reply = handleWorkflowCancelRequest(v)
+		}
+
+	// WorkflowTerminateRequest
+	case messagetypes.WorkflowTerminateRequest:
+		if v, ok := request.(*messages.WorkflowTerminateRequest); ok {
+			reply = handleWorkflowTerminateRequest(v)
+		}
+
+	// WorkflowSignalRequest
+	case messagetypes.WorkflowSignalRequest:
+		if v, ok := request.(*messages.WorkflowSignalRequest); ok {
+			reply = handleWorkflowSignalRequest(v)
+		}
+
+	// WorkflowSignalWithStartRequest
+	case messagetypes.WorkflowSignalWithStartRequest:
+		if v, ok := request.(*messages.WorkflowSignalWithStartRequest); ok {
+			reply = handleWorkflowSignalWithStartRequest(v)
+		}
+
 	// PingRequest
 	case messagetypes.PingRequest:
 		if v, ok := request.(*messages.PingRequest); ok {
@@ -714,6 +738,109 @@ func handlePingRequest(request *messages.PingRequest) messages.IProxyMessage {
 
 	if v, ok := reply.(*messages.PingReply); ok {
 		buildPingReply(v, nil)
+	}
+
+	return reply
+}
+
+func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowCancelRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowCancelReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowCancelReply); ok {
+			buildWorkflowCancelReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowCancelReply); ok {
+			buildWorkflowCancelReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// grab the client.CancelWorkflow parameters and
+	// create the context to cancel the workflow
+	workflowID := request.GetWorkflowID()
+	runID := request.GetRunID()
+	ctx, cancel := context.WithTimeout(context.Background(), _cadenceTimeout)
+	defer cancel()
+
+	// cancel the specified workflow
+	err = client.CancelWorkflow(ctx, *workflowID, *runID)
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowCancelReply); ok {
+			buildWorkflowCancelReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	if v, ok := reply.(*messages.WorkflowCancelReply); ok {
+		buildWorkflowCancelReply(v, nil)
+	}
+
+	return reply
+}
+
+func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowTerminateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowTerminateReply
+	reply := createReplyMessage(request)
+
+	if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
+		buildWorkflowTerminateReply(v, nil)
+	}
+
+	return reply
+}
+
+func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSignalRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowSignalReply
+	reply := createReplyMessage(request)
+
+	if v, ok := reply.(*messages.WorkflowSignalReply); ok {
+		buildWorkflowSignalReply(v, nil)
+	}
+
+	return reply
+}
+
+func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithStartRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSignalWithStartRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowSignalWithStartReply
+	reply := createReplyMessage(request)
+
+	if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
+		buildWorkflowSignalWithStartReply(v, nil)
 	}
 
 	return reply
