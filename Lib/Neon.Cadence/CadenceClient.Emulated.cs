@@ -145,8 +145,6 @@ namespace Neon.Cadence
         private Dictionary<long, Operation>             emulatedOperations            = new Dictionary<long, Operation>();
         private long                                    nextEmulatedWorkerId          = 0;
         private long                                    nextEmulatedWorkflowContextId = 0;
-        private Thread                                  heartbeatThread;
-        private Thread                                  timeoutThread;
         private IWebHost                                emulatedHost;
 
         /// <summary>

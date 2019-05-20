@@ -397,6 +397,8 @@ namespace Neon.Cadence
         private bool                            connectionClosedRaised;
         private long                            nextRequestId = 0;
         private int                             workflowCacheSize;
+        private Thread                          heartbeatThread;
+        private Thread                          timeoutThread;
 
         /// <summary>
         /// Constructor.
@@ -555,7 +557,6 @@ namespace Neon.Cadence
                 }
             }
 
-#if DEBUG
             // Crank up the background threads which will handle [cadence-proxy]
             // health heartbeats as well as request timeouts.
 
@@ -564,7 +565,6 @@ namespace Neon.Cadence
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
-#endif
         }
 
         /// <summary>

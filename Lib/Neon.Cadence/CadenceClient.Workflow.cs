@@ -241,21 +241,21 @@ namespace Neon.Cadence
         /// This defaults to <b>10K</b> bytes.
         /// </para>
         /// </summary>
-        /// <param name="maxSize">The maximum number of bytes to cache for each sticky workflow.</param>
+        /// <param name="maxCacheSize">The maximum number of bytes to cache for each sticky workflow.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task SetWorkflowCacheSize(int maxSize)
+        public async Task SetWorkflowCacheSize(int maxCacheSize)
         {
-            Covenant.Requires<ArgumentNullException>(maxSize >= 0);
+            Covenant.Requires<ArgumentNullException>(maxCacheSize >= 0);
 
             var reply = (WorkflowSetCacheSizeReply)await CallProxyAsync(
                 new WorkflowSetCacheSizeRequest()
                 {
-                    Size = maxSize
+                    Size = maxCacheSize
                 });
 
             reply.ThrowOnError();
 
-            workflowCacheSize = maxSize;
+            workflowCacheSize = maxCacheSize;
         }
 
         /// <summary>
