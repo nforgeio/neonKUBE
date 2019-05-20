@@ -91,3 +91,7 @@ func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceer
 func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
+
+func buildPingReply(reply *messages.PingReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}

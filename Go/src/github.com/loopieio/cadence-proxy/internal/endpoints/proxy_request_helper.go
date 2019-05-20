@@ -117,6 +117,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 			reply = handleNewWorkerRequest(v)
 		}
 
+	// PingRequest
+	case messagetypes.PingRequest:
+		if v, ok := request.(*messages.PingRequest); ok {
+			reply = handlePingRequest(v)
+		}
+
 	// Undefined message type
 	default:
 
@@ -696,6 +702,21 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	workerID = cadenceworkers.WorkersMap.Delete(workerID)
 	if v, ok := reply.(*messages.StopWorkerReply); ok {
 		buildStopWorkerReply(v, nil)
+	}
+
+	return reply
+}
+
+func handlePingRequest(request *messages.PingRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("PingRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new PingReply
+	reply := createReplyMessage(request)
+
+	if v, ok := reply.(*messages.PingReply); ok {
+		buildPingReply(v, nil)
 	}
 
 	return reply
