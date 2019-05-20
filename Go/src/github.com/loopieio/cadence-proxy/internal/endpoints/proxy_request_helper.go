@@ -570,6 +570,9 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		}
 		defer resp.Body.Close()
 
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
+
 		// wait for the future to be unblocked
 		var result []byte
 		if err = future.Get(ctx, &result); err != nil {

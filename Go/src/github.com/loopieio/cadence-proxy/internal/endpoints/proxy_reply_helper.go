@@ -209,12 +209,18 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		return entityNotExistError
 	}
 
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
+
 	settable := wectx.GetSettable()
 	err := reply.GetError()
 	if err != nil {
 		settable.SetError(cadence.NewCustomError(err.ToString()))
 	}
 	settable.SetValue(reply.GetResult())
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
 
 	// unblock the given context
 	channel := wectx.Done()
