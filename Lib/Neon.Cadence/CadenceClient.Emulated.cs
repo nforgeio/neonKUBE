@@ -368,6 +368,11 @@ namespace Neon.Cadence
                     await OnEmulatedWorkflowRegisterRequestAsync((WorkflowRegisterRequest)proxyMessage);
                     break;
 
+                case MessageTypes.WorkflowSetCacheSizeRequest:
+
+                    await OnEmulatedWorkflowSetCacheSizeRequestAsync((WorkflowSetCacheSizeRequest)proxyMessage);
+                    break;
+
                 //-------------------------------------------------------------
 
                 default:
@@ -788,6 +793,16 @@ namespace Neon.Cadence
                         workflow.IsComplete = true;
                     }
                 });
+        }
+
+        /// <summary>
+        /// Handles emulated <see cref="WorkflowSetCacheSizeRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedWorkflowSetCacheSizeRequestAsync(WorkflowSetCacheSizeRequest request)
+        {
+            await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowSetCacheSizeReply());
         }
     }
 }

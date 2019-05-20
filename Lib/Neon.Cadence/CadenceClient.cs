@@ -359,6 +359,29 @@ namespace Neon.Cadence
             }
         }
 
+        /// <summary>
+        /// Establishes a connection to a Cadence cluster.
+        /// </summary>
+        /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
+        /// <returns>The connected <see cref="CadenceClient"/>.</returns>
+        public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
+        {
+            Covenant.Requires<ArgumentNullException>(settings != null);
+
+            var client = new CadenceClient(settings);
+
+            //-----------------------------------------
+            // $debug(jeff.lill):
+            //
+            // Uncomment this call after Jack has implemented this
+            // functionality.
+
+            // await client.SetWorkflowCacheSize(10000);
+            //-----------------------------------------
+
+            return client;
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -379,7 +402,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
-        public CadenceClient(CadenceSettings settings)
+        private CadenceClient(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 

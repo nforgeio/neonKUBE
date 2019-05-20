@@ -1344,13 +1344,13 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_SetWorkerCacheSizeRequest()
         {
-            SetWorkflowCacheSizeRequest message;
+            WorkflowSetCacheSizeRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new SetWorkflowCacheSizeRequest();
+                message = new WorkflowSetCacheSizeRequest();
 
-                Assert.Equal(MessageTypes.SetWorkflowCacheSizeReply, message.ReplyType);
+                Assert.Equal(MessageTypes.WorkflowSetCacheSizeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1358,7 +1358,7 @@ namespace TestCadence
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<SetWorkflowCacheSizeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.Size);
@@ -1374,7 +1374,7 @@ namespace TestCadence
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<SetWorkflowCacheSizeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(20000, message.Size);
@@ -1399,11 +1399,11 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_SetWorkflowCacheReply()
         {
-            SetWorkflowCacheSizeReply message;
+            WorkflowSetCacheSizeReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new SetWorkflowCacheSizeReply();
+                message = new WorkflowSetCacheSizeReply();
 
                 // Empty message.
 
@@ -1411,7 +1411,7 @@ namespace TestCadence
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<SetWorkflowCacheSizeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -1425,7 +1425,7 @@ namespace TestCadence
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<SetWorkflowCacheSizeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 

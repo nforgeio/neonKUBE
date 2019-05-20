@@ -155,7 +155,7 @@ namespace Neon.Xunit.Cadence
 
                 // Create the Cadence connection.
 
-                Connection = new CadenceClient(settings);
+                Connection = CadenceClient.ConnectAsync(settings).Result;
 
                 ConnectionClient = new HttpClient()
                 {
@@ -207,7 +207,7 @@ namespace Neon.Xunit.Cadence
 
             // Reconnect.
 
-            Connection = new CadenceClient(settings);
+            Connection = CadenceClient.ConnectAsync(settings).Result;
 
             ConnectionClient = new HttpClient()
             {

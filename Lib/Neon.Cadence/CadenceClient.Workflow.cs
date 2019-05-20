@@ -247,8 +247,8 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(maxSize >= 0);
 
-            var reply = (SetWorkflowCacheSizeReply)await CallProxyAsync(
-                new SetWorkflowCacheSizeRequest()
+            var reply = (WorkflowSetCacheSizeReply)await CallProxyAsync(
+                new WorkflowSetCacheSizeRequest()
                 {
                     Size = maxSize
                 });

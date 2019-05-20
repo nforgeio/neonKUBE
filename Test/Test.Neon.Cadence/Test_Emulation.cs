@@ -90,7 +90,7 @@ namespace TestCadence
             fixture.Start(settings);
 
             this.fixture     = fixture;
-            this.client  = fixture.Connection;
+            this.client      = fixture.Connection;
             this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
         }
 
@@ -224,7 +224,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void ConnectionFailed()
+        public async Task ConnectionFailed()
         {
             // Verify that we see a [CadenceConnectException] when connecting
             // with no server URIs.
@@ -234,7 +234,7 @@ namespace TestCadence
                 Servers = new List<Uri>()
             };
 
-            Assert.Throws<CadenceConnectException>(() => new CadenceClient(settings));
+            await TestHelper.AssertThrowsAsync<CadenceConnectException>(async () => await CadenceClient.ConnectAsync(settings));
 
             // Verify that we see a [CadenceConnectException] when connecting
             // with a relative server URI.
@@ -242,7 +242,7 @@ namespace TestCadence
             settings.Servers.Clear();
             settings.Servers.Add(new Uri("/relativeuri", UriKind.Relative));
 
-            Assert.Throws<CadenceConnectException>(() => new CadenceClient(settings));
+            await TestHelper.AssertThrowsAsync<CadenceConnectException>(async () => await CadenceClient.ConnectAsync(settings));
 
 #if TODO
             // Verify that we see a [CadenceConnectException] when attempting
@@ -260,7 +260,7 @@ namespace TestCadence
             settings.Servers.Clear();
             settings.Servers.Add(new Uri("http://127.1.2.3:23444"));
 
-            Assert.Throws<CadenceConnectException>(() => new CadenceConnection(settings));
+            await TestHelper.AssertThrowsAsync<CadenceConnectException>(async () => await CadenceClient.ConnectAsync(settings));
 #endif
         }
 

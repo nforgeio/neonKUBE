@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SetWorkflowCacheSizeRequest.cs
+// FILE:	    WorkflowSetCacheSizeReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -49,39 +49,23 @@ using Neon.Tasks;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
-    /// to cache the history of a sticky workflow on a workflow worker as a performance
-    /// optimization.  When this is exceeded for a workflow, its full history will
-    /// need to be retrieved from the Cadence cluster the next time the workflow
-    /// instance is assigned to a worker. 
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSetCacheSizeRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.SetWorkflowCacheSizeRequest)]
-    internal class SetWorkflowCacheSizeRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.WorkflowSetCacheSizeReply)]
+    internal class WorkflowSetCacheSizeReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public SetWorkflowCacheSizeRequest()
+        public WorkflowSetCacheSizeReply()
         {
-            Type = MessageTypes.SetWorkflowCacheSizeRequest;
-        }
-
-        /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.SetWorkflowCacheSizeReply;
-
-        /// <summary>
-        /// Specifies the maximum number of bytes used for caching sticky workflows.
-        /// </summary>
-        public int Size
-        {
-            get => (int)GetLongProperty("Size");
-            set => SetLongProperty("Size", value);
+            Type = MessageTypes.WorkflowSetCacheSizeReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new SetWorkflowCacheSizeRequest();
+            var clone = new WorkflowSetCacheSizeReply();
 
             CopyTo(clone);
 
@@ -92,10 +76,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (SetWorkflowCacheSizeRequest)target;
-
-            typedTarget.Size = this.Size;
         }
     }
 }
