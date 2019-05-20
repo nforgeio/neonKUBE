@@ -80,6 +80,10 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowTerminateReply()
 	case messagetypes.WorkflowTerminateRequest:
 		message = NewWorkflowTerminateRequest()
+	case messagetypes.WorkflowSignalWithStartReply:
+		message = NewWorkflowSignalWithStartReply()
+	case messagetypes.WorkflowSignalWithStartRequest:
+		message = NewWorkflowSignalWithStartRequest()
 	default:
 		return nil
 	}
