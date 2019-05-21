@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteRequest.cs
+// FILE:	    WorkflowListOpenExecutionsRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,24 +32,25 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Starts a workflow execution.
+    /// <b>proxy --> client:</b> Lists open workflows.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteRequest)]
-    internal class WorkflowExecuteRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.WorkflowListOpenExecutionsRequest)]
+    internal class WorkflowListOpenExecutionsRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteRequest()
+        public WorkflowListOpenExecutionsRequest()
         {
-            Type = MessageTypes.WorkflowExecuteRequest;
+            Type = MessageTypes.WorkflowListOpenExecutionsRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
+        public override MessageTypes ReplyType => MessageTypes.WorkflowListOpenExecutionsReply;
 
         /// <summary>
-        /// Identifies the Cadence domain hosting the workflow.
+        /// Optionally specifies the target domain.  Workflows from all
+        /// domains will be listed when this is omitted.
         /// </summary>
         public string Domain
         {
@@ -57,37 +58,16 @@ namespace Neon.Cadence.Internal
             set => SetStringProperty("Domain", value);
         }
 
-        /// <summary>
-        /// Identifies the workflow implementation to be started.
-        /// </summary>
-        public string Workflow
+        public int MaximumPageSize
         {
-            get => GetStringProperty("Workflow");
-            set => SetStringProperty("Workflow", value);
-        }
-
-        /// <summary>
-        /// Optionally specifies the workflow arguments encoded as a byte array.
-        /// </summary>
-        public byte[] Args
-        {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
-        }
-
-        /// <summary>
-        /// Optionally specifies the workflow start options.
-        /// </summary>
-        public InternalStartWorkflowOptions Options
-        {
-            get => GetJsonProperty<InternalStartWorkflowOptions>("Options");
-            set => SetJsonProperty<InternalStartWorkflowOptions>("Options", value);
+            get => GetIntProperty("MaximumPageSize");
+            set => SetIntProperty("MaximumPageSize", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteRequest();
+            var clone = new WorkflowListOpenExecutionsRequest();
 
             CopyTo(clone);
 
@@ -99,12 +79,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowExecuteRequest)target;
+            var typedTarget = (WorkflowListOpenExecutionsRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Domain  = this.Domain;
-            typedTarget.Workflow    = this.Workflow;
-            typedTarget.Options = this.Options;
+            typedTarget.Domain = this.Domain;
         }
     }
 }

@@ -86,7 +86,7 @@ namespace Neon.Cadence
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
                 {
-                    Name    = name,
+                    Workflow    = name,
                     Domain  = domain,
                     Args    = args,
                     Options = options.ToInternal()

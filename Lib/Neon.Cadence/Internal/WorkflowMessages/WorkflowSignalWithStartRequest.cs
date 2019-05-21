@@ -50,6 +50,16 @@ namespace Neon.Cadence.Internal
         public override MessageTypes ReplyType => MessageTypes.WorkflowSignalWithStartReply;
 
         /// <summary>
+        /// Identifies the workflow to be executed if the workflow instance
+        /// idntified by <see cref="WorkflowId"/> is nor currently running.
+        /// </summary>
+        public string Workflow
+        {
+            get => GetStringProperty("Workflow");
+            set => SetStringProperty("Workflow", value);
+        }
+
+        /// <summary>
         /// Identifies the workflow by ID.
         /// </summary>
         public string WorkflowId
@@ -111,6 +121,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowSignalWithStartRequest)target;
 
+            typedTarget.Workflow = this.Workflow;
             typedTarget.WorkflowId   = this.WorkflowId;
             typedTarget.SignalName   = this.SignalName;
             typedTarget.SignalArgs   = this.SignalArgs;
