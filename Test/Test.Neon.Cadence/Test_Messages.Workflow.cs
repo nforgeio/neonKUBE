@@ -436,15 +436,18 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
                 Assert.Null(message.RunId);
+                Assert.Null(message.Domain);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
+                message.Domain = "my-domain";
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -455,6 +458,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -463,6 +467,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -471,6 +476,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
             }
         }
 

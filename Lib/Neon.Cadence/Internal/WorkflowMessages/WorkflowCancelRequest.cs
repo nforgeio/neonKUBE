@@ -67,6 +67,15 @@ namespace Neon.Cadence.Internal
             set => SetStringProperty("RunId", value);
         }
 
+        /// <summary>
+        /// Optionally overrides the current client domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty("Domain");
+            set => SetStringProperty("Domain", value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -86,6 +95,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
         }
     }
 }

@@ -114,19 +114,25 @@ namespace Neon.Cadence
         /// Optionally specifies the workflow's current run ID.  When <c>null</c> or empty
         /// Cadence will automatically cancel the lastest workflow run.
         /// </param>
+        /// <param name="domain">
+        /// Optionally specifies the target domain, overriding the current client domain.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task CancelWorkflow(string workflowId, string runId = null)
+        public async Task CancelWorkflow(string workflowId, string runId = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+
+            runId = runId ?? string.Empty;
 
             var reply = (WorkflowCancelReply)await CallProxyAsync(
                 new WorkflowCancelRequest()
                 {
                     WorkflowId = workflowId,
-                    RunId      = runId
+                    RunId      = runId,
+                    Domain     = domain
                 });
 
             reply.ThrowOnError();
@@ -144,7 +150,7 @@ namespace Neon.Cadence
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">
         /// Optionally specifies the workflow's current run ID.  When <c>null</c> or empty
-        /// Cadence will automatically cancel the lastest workflow run.
+        /// Cadence will automatically terminate the lastest workflow run.
         /// </param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
         /// <param name="details">Optionally specifies additional details as a byte array.</param>
@@ -155,6 +161,8 @@ namespace Neon.Cadence
         public async Task TerminateWorkflow(string workflowId, string runId = null, string reason = null, byte[] details = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+
+            runId = runId ?? string.Empty;
 
             var reply = (WorkflowTerminateReply)await CallProxyAsync(
                 new WorkflowTerminateRequest()
@@ -173,26 +181,28 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="signalName">Identifies the signal.</param>
+        /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
         /// <param name="runId">
         /// Optionally specifies the workflow's current run ID.  When <c>null</c> or empty
-        /// Cadence will automatically cancel the lastest workflow run.
+        /// Cadence will automatically signal the lastest workflow run.
         /// </param>
-        /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task SignalWorkflow(string workflowId, string signalName, string runId = null, byte[] signalArgs = null)
+        public async Task SignalWorkflow(string workflowId, string signalName, byte[] signalArgs = null, string runId = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+
+            runId = runId ?? string.Empty;
 
             var reply = (WorkflowSignalReply)await CallProxyAsync(
                 new WorkflowSignalRequest()
                 {
                     WorkflowId = workflowId,
                     SignalName = signalName,
-                    RunId      = runId,
-                    SignalArgs = signalArgs
+                    SignalArgs = signalArgs,
+                    RunId      = runId
                 });
 
             reply.ThrowOnError();
@@ -227,6 +237,40 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Queries a workflow.
+        /// </summary>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="queryName">Identifies the signal.</param>
+        /// <param name="runId">
+        /// Optionally specifies the workflow's current run ID.  When <c>null</c> or empty
+        /// Cadence will automatically query the lastest workflow run.
+        /// </param>
+        /// <param name="queryArgs">Optionally specifies query arguments encoded as a byte array.</param>
+        /// <returns>The query result encoded as a byte array.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        public async Task<byte[]> QueryWorkflow(string workflowId, string queryName, byte[] queryArgs = null, string runId = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+
+            runId = runId ?? string.Empty;
+
+            var reply = (WorkflowQueryReply)await CallProxyAsync(
+                new WorkflowQueryRequest()
+                {
+                    WorkflowId = workflowId,
+                    QueryName  = queryName,
+                    QueryArgs  = queryArgs,
+                    RunId      = runId
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
 
         /// <summary>

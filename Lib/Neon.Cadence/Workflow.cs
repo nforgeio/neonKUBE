@@ -115,7 +115,7 @@ namespace Neon.Cadence
     /// <item>
     ///     <para>
     ///     Workflow instances can be signalled when external events occur via the 
-    ///     <see cref="CadenceClient.SignalWorkflow(string, string, string, byte[])"/> or
+    ///     <see cref="CadenceClient.SignalWorkflow(string, string, byte[], string)"/> or
     ///     <see cref="CadenceClient.SignalWorkflow(string, WorkflowOptions, string, byte[], byte[])"/>
     ///     methods.  Signals are identified by a string name and may include a byte
     ///     array payload.  Workflows receive signals by implementing a receive method
@@ -124,14 +124,37 @@ namespace Neon.Cadence
     ///     </para>
     ///     <code language="c#">
     ///     [SignalHandler("my-signal")]
-    ///     protected void OnMySignal(byte[] args)
+    ///     protected async Task OnMySignal(byte[] args)
     ///     {
-    ///         // Do something.
+    ///         await DoDomethingAsync();
     ///     }
     ///     </code>
+    ///     <note>
+    ///     Exceptions thrown by signal handlers are caught and logged but are not
+    ///     returned to the signaller.
+    ///     </note>
     /// </item>
     /// <item>
-    ///     Running workflows can also be queried via the 
+    ///     <para>
+    ///     Running workflows can also be queried via <see cref="CadenceClient.QueryWorkflow(string, string, byte[], string)"/>.
+    ///     Queries are identified by a name and may include optional arguments encoded 
+    ///     as a byte array and return a result encoded as a byte array or <c>null</c>.
+    ///     Workflows receive queries by implementing a receive method accepting the
+    ///     query arguments as a byte array that returns the byte array result.  You'll
+    ///     need to tag this with a <see cref="QueryHandlerAttribute"/> specifying the
+    ///     query name, like:
+    ///     </para>
+    ///     <code language="c#">
+    ///     [QueryHandler("my-query")]
+    ///     protected async Task<byte[]></byte> OnMyQuery(byte[] args)
+    ///     {
+    ///         return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
+    ///     }
+    ///     </code>
+    ///     <note>
+    ///     Exceptions thrown by query handlers are caught and will be returned to 
+    ///     the caller to be thrown as an exception.
+    ///     </note>
     /// </item>
     /// <item>
     /// </item>
