@@ -103,6 +103,48 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 			err = handleStopWorkerReply(v)
 		}
 
+	// WorkflowCancelReply
+	case messagetypes.WorkflowCancelReply:
+		if v, ok := reply.(*messages.WorkflowCancelReply); ok {
+			err = handleWorkflowCancelReply(v)
+		}
+
+	// WorkflowSignalReply
+	case messagetypes.WorkflowSignalReply:
+		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
+			err = handleWorkflowSignalReply(v)
+		}
+
+	// WorkflowSignalWithStartReply
+	case messagetypes.WorkflowSignalWithStartReply:
+		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
+			err = handleWorkflowSignalWithStartReply(v)
+		}
+
+	// WorkflowQueryReply
+	case messagetypes.WorkflowQueryReply:
+		if v, ok := reply.(*messages.WorkflowQueryReply); ok {
+			err = handleWorkflowQueryReply(v)
+		}
+
+	// WorkflowSetCacheSizeReply
+	case messagetypes.WorkflowSetCacheSizeReply:
+		if v, ok := reply.(*messages.WorkflowSetCacheSizeReply); ok {
+			err = handleWorkflowSetCacheSizeReply(v)
+		}
+
+	// WorkflowMutableReply
+	case messagetypes.WorkflowMutableReply:
+		if v, ok := reply.(*messages.WorkflowMutableReply); ok {
+			err = handleWorkflowMutableReply(v)
+		}
+
+	// WorkflowMutableInvokeReply
+	case messagetypes.WorkflowMutableInvokeReply:
+		if v, ok := reply.(*messages.WorkflowMutableInvokeReply); ok {
+			err = handleWorkflowMutableInvokeReply(v)
+		}
+
 	// PingReply
 	case messagetypes.PingReply:
 		if v, ok := reply.(*messages.PingReply); ok {
@@ -259,6 +301,62 @@ func handleStopWorkerReply(reply *messages.StopWorkerReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling StopWorkerReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowCancelReply(reply *messages.WorkflowCancelReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowCancelReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowCancelReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowSignalReply(reply *messages.WorkflowSignalReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowSignalReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowSignalReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowSignalWithStartReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowSignalWithStartReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowQueryReply(reply *messages.WorkflowQueryReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowQueryReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowQueryReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowSetCacheSizeReply(reply *messages.WorkflowSetCacheSizeReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowSetCacheSizeReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowSetCacheSizeReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowMutableReply(reply *messages.WorkflowMutableReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowMutableReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowMutableReply", zap.Error(err))
+	return err
+}
+
+func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowMutableInvokeReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling WorkflowMutableInvokeReply", zap.Error(err))
 	return err
 }
 
