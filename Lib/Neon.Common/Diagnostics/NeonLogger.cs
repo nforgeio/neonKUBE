@@ -95,25 +95,25 @@ namespace Neon.Diagnostics
         private TextWriter  writer;
 
         /// <inheritdoc/>
-        public bool IsDebugEnabled => logManager.LogLevel >= LogLevel.Debug;
+        public bool IsLogDebugEnabled => logManager.LogLevel >= LogLevel.Debug;
 
         /// <inheritdoc/>
-        public bool IsErrorEnabled => logManager.LogLevel >= LogLevel.Error;
+        public bool IsLogErrorEnabled => logManager.LogLevel >= LogLevel.Error;
 
         /// <inheritdoc/>
-        public bool IsSErrorEnabled => logManager.LogLevel >= LogLevel.SError;
+        public bool IsLogSErrorEnabled => logManager.LogLevel >= LogLevel.SError;
 
         /// <inheritdoc/>
-        public bool IsCriticalEnabled => logManager.LogLevel >= LogLevel.Critical;
+        public bool IsLogCriticalEnabled => logManager.LogLevel >= LogLevel.Critical;
 
         /// <inheritdoc/>
-        public bool IsInfoEnabled => logManager.LogLevel >= LogLevel.Info;
+        public bool IsLogInfoEnabled => logManager.LogLevel >= LogLevel.Info;
 
         /// <inheritdoc/>
-        public bool IsSInfoEnabled => logManager.LogLevel >= LogLevel.SInfo;
+        public bool IsLogSInfoEnabled => logManager.LogLevel >= LogLevel.SInfo;
 
         /// <inheritdoc/>
-        public bool IsWarnEnabled => logManager.LogLevel >= LogLevel.Warn;
+        public bool IsLogWarnEnabled => logManager.LogLevel >= LogLevel.Warn;
 
         /// <summary>
         /// Constructs a named instance.
@@ -155,7 +155,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public bool IsEnabled(LogLevel logLevel)
+        public bool IsLogLevelEnabled(LogLevel logLevel)
         {
             // Map into Neon log levels.
 
@@ -163,23 +163,23 @@ namespace Neon.Diagnostics
             {
                 case LogLevel.Debug:
 
-                    return IsDebugEnabled;
+                    return IsLogDebugEnabled;
 
                 case LogLevel.Info:
 
-                    return IsInfoEnabled;
+                    return IsLogInfoEnabled;
 
                 case LogLevel.Warn:
 
-                    return IsWarnEnabled;
+                    return IsLogWarnEnabled;
 
                 case LogLevel.Error:
 
-                    return IsErrorEnabled;
+                    return IsLogErrorEnabled;
 
                 case LogLevel.Critical:
 
-                    return IsCriticalEnabled;
+                    return IsLogCriticalEnabled;
 
                 case LogLevel.None:
                 default:
@@ -218,7 +218,7 @@ namespace Neon.Diagnostics
         {
             if (infoAsDebug && logLevel == LogLevel.Info)
             {
-                if (!IsDebugEnabled)
+                if (!IsLogDebugEnabled)
                 {
                     return;
                 }
@@ -281,7 +281,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogDebug(object message, string activityId = null)
         {
-            if (IsDebugEnabled)
+            if (IsLogDebugEnabled)
             {
                 try
                 {
@@ -297,7 +297,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogDebug(object message, Exception e, string activityId = null)
         {
-            if (IsDebugEnabled)
+            if (IsLogDebugEnabled)
             {
                 try
                 {
@@ -320,7 +320,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogError(object message, string activityId = null)
         {
-            if (IsErrorEnabled)
+            if (IsLogErrorEnabled)
             {
                 try
                 {
@@ -336,7 +336,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogError(object message, Exception e, string activityId = null)
         {
-            if (IsErrorEnabled)
+            if (IsLogErrorEnabled)
             {
                 try
                 {
@@ -359,7 +359,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogSError(object message, string activityId = null)
         {
-            if (IsErrorEnabled)
+            if (IsLogErrorEnabled)
             {
                 try
                 {
@@ -375,7 +375,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogSError(object message, Exception e, string activityId = null)
         {
-            if (IsSErrorEnabled)
+            if (IsLogSErrorEnabled)
             {
                 try
                 {
@@ -398,7 +398,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogCritical(object message, string activityId = null)
         {
-            if (IsCriticalEnabled)
+            if (IsLogCriticalEnabled)
             {
                 try
                 {
@@ -414,7 +414,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogCritical(object message, Exception e, string activityId = null)
         {
-            if (IsCriticalEnabled)
+            if (IsLogCriticalEnabled)
             {
                 try
                 {
@@ -437,7 +437,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogInfo(object message, string activityId = null)
         {
-            if (IsInfoEnabled)
+            if (IsLogInfoEnabled)
             {
                 try
                 {
@@ -453,7 +453,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogInfo(object message, Exception e, string activityId = null)
         {
-            if (IsInfoEnabled)
+            if (IsLogInfoEnabled)
             {
                 try
                 {
@@ -476,7 +476,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogSInfo(object message, string activityId = null)
         {
-            if (IsInfoEnabled)
+            if (IsLogInfoEnabled)
             {
                 try
                 {
@@ -492,7 +492,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogSInfo(object message, Exception e, string activityId = null)
         {
-            if (IsInfoEnabled)
+            if (IsLogInfoEnabled)
             {
                 try
                 {
@@ -515,7 +515,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogWarn(object message, string activityId = null)
         {
-            if (IsWarnEnabled)
+            if (IsLogWarnEnabled)
             {
                 try
                 {
@@ -531,7 +531,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogWarn(object message, Exception e, string activityId = null)
         {
-            if (IsWarnEnabled)
+            if (IsLogWarnEnabled)
             {
                 try
                 {
@@ -733,7 +733,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel)
         {
-            return IsEnabled(ToNeonLevel(logLevel));
+            return IsLogLevelEnabled(ToNeonLevel(logLevel));
         }
 
         /// <inheritdoc/>
