@@ -34,37 +34,37 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Returns <c>true</c> if <b>debug</b> logging is enabled.
         /// </summary>
-        bool IsDebugEnabled { get; }
+        bool IsLogDebugEnabled { get; }
 
         /// <summary>
         /// Returns <c>true</c> if <b>sinfo</b> logging is enabled.
         /// </summary>
-        bool IsSInfoEnabled { get; }
+        bool IsLogSInfoEnabled { get; }
 
         /// <summary>
         /// Returns <c>true</c> if <b>info</b> logging is enabled.
         /// </summary>
-        bool IsInfoEnabled { get; }
+        bool IsLogInfoEnabled { get; }
 
         /// <summary>
         /// Returns <c>true</c> if <b>warn</b> logging is enabled.
         /// </summary>
-        bool IsWarnEnabled { get; }
+        bool IsLogWarnEnabled { get; }
 
         /// <summary>
         /// Returns <c>true</c> if <b>error</b> logging is enabled.
         /// </summary>
-        bool IsErrorEnabled { get; }
+        bool IsLogErrorEnabled { get; }
 
         /// <summary>
         /// Returns <c>true</c> if <b>serror</b> logging is enabled.
         /// </summary>
-        bool IsSErrorEnabled { get; }
+        bool IsLogSErrorEnabled { get; }
 
         /// <summary>
         /// Returns <c>true</c> if <b>critical</b> logging is enabled.
         /// </summary>
-        bool IsCriticalEnabled { get; }
+        bool IsLogCriticalEnabled { get; }
 
         /// <summary>
         /// Indicates whether logging is enabled for a specific log level.

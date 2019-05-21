@@ -81,25 +81,25 @@ namespace Neon.Diagnostics
         // INeonLogger implementation:
 
         /// <inheritdoc/>
-        public bool IsDebugEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug);
+        public bool IsLogDebugEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug);
 
         /// <inheritdoc/>
-        public bool IsErrorEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Error);
+        public bool IsLogErrorEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Error);
 
         /// <inheritdoc/>
-        public bool IsSErrorEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Error);
+        public bool IsLogSErrorEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Error);
 
         /// <inheritdoc/>
-        public bool IsCriticalEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Critical);
+        public bool IsLogCriticalEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Critical);
 
         /// <inheritdoc/>
-        public bool IsInfoEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Information);
+        public bool IsLogInfoEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Information);
 
         /// <inheritdoc/>
-        public bool IsSInfoEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Information);
+        public bool IsLogSInfoEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Information);
 
         /// <inheritdoc/>
-        public bool IsWarnEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Warning);
+        public bool IsLogWarnEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Warning);
 
         /// <inheritdoc/>
         public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel)
@@ -113,13 +113,13 @@ namespace Neon.Diagnostics
             switch (logLevel)
             {
                 case LogLevel.None:     return false;
-                case LogLevel.Critical: return IsCriticalEnabled;
-                case LogLevel.Debug:    return IsDebugEnabled;
-                case LogLevel.Error:    return IsErrorEnabled;
-                case LogLevel.Info:     return IsInfoEnabled;
-                case LogLevel.SError:   return IsSErrorEnabled;
-                case LogLevel.SInfo:    return IsSInfoEnabled;
-                case LogLevel.Warn:     return IsWarnEnabled;
+                case LogLevel.Critical: return IsLogCriticalEnabled;
+                case LogLevel.Debug:    return IsLogDebugEnabled;
+                case LogLevel.Error:    return IsLogErrorEnabled;
+                case LogLevel.Info:     return IsLogInfoEnabled;
+                case LogLevel.SError:   return IsLogSErrorEnabled;
+                case LogLevel.SInfo:    return IsLogSInfoEnabled;
+                case LogLevel.Warn:     return IsLogWarnEnabled;
                 default:                throw new NotImplementedException();
             }
         }
