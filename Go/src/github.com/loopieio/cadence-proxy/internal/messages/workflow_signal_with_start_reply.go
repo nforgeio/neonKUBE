@@ -3,6 +3,8 @@ package messages
 import (
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
+
+	"go.uber.org/cadence/workflow"
 )
 
 type (
@@ -28,6 +30,31 @@ func NewWorkflowSignalWithStartReply() *WorkflowSignalWithStartReply {
 	return reply
 }
 
+// GetExecution gets the cadence workflow.Execution or nil
+// from a WorkflowSignalWithStartReply's properties map.
+//
+// returns *workflow.Execution -> pointer to a cadence workflow.Execution
+// struct housing the result of a workflow execution
+func (reply *WorkflowSignalWithStartReply) GetExecution() *workflow.Execution {
+	exe := new(workflow.Execution)
+	err := reply.GetJSONProperty("Execution", exe)
+	if err != nil {
+		return nil
+	}
+
+	return exe
+}
+
+// SetExecution sets the cadence workflow.Execution or nil
+// in a WorkflowSignalWithStartReply's properties map.
+//
+// param value *workflow.Execution -> pointer to a cadence workflow execution
+// struct housing the result of a started workflow, to be set in the
+// WorkflowSignalWithStartReply's properties map
+func (reply *WorkflowSignalWithStartReply) SetExecution(value *workflow.Execution) {
+	reply.SetJSONProperty("Execution", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -43,6 +70,9 @@ func (reply *WorkflowSignalWithStartReply) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *WorkflowSignalWithStartReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
+	if v, ok := target.(*WorkflowSignalWithStartReply); ok {
+		v.SetExecution(reply.GetExecution())
+	}
 }
 
 // SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()

@@ -1342,7 +1342,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_SetWorkerCacheSizeRequest()
+        public void Test_SetWorkflowCacheSizeRequest()
         {
             WorkflowSetCacheSizeRequest message;
 

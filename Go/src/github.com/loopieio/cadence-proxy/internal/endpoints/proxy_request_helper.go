@@ -114,6 +114,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 			reply = handleNewWorkerRequest(v)
 		}
 
+	// StopWorkerRequest
+	case messagetypes.StopWorkerRequest:
+		if v, ok := request.(*messages.StopWorkerRequest); ok {
+			reply = handleStopWorkerRequest(v)
+		}
+
 	// WorkflowCancelRequest
 	case messagetypes.WorkflowCancelRequest:
 		if v, ok := request.(*messages.WorkflowCancelRequest); ok {
@@ -136,6 +142,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 	case messagetypes.WorkflowSignalWithStartRequest:
 		if v, ok := request.(*messages.WorkflowSignalWithStartRequest); ok {
 			reply = handleWorkflowSignalWithStartRequest(v)
+		}
+
+	// WorkflowSetCacheSizeRequest
+	case messagetypes.WorkflowSetCacheSizeRequest:
+		if v, ok := request.(*messages.WorkflowSetCacheSizeRequest); ok {
+			reply = handleWorkflowSetCacheSizeRequest(v)
 		}
 
 	// PingRequest
@@ -167,7 +179,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+
+		// $debug(jack.burns): DELETE THIS!
+		err := resp.Body.Close()
+		logger.Error("could not close response body", zap.Error(err))
+	}()
 
 	return nil
 }
@@ -595,7 +612,12 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		if err != nil {
 			return nil, err
 		}
-		defer resp.Body.Close()
+		defer func() {
+
+			// $debug(jack.burns): DELETE THIS!
+			err := resp.Body.Close()
+			logger.Error("could not close response body", zap.Error(err))
+		}()
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
@@ -721,6 +743,10 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	// remove it from the cadenceworkers.WorkersMap
 	worker.Stop()
 	workerID = cadenceworkers.WorkersMap.Delete(workerID)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Worker has been deleted", zap.Int64("WorkerID", workerID))
+
 	if v, ok := reply.(*messages.StopWorkerReply); ok {
 		buildStopWorkerReply(v, nil)
 	}
@@ -834,7 +860,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	}
 
 	// grab the client.TerminateWorkflow parameters and
-	// create the context to cancel the workflow
+	// create the context to terminate the workflow
 	workflowID := request.GetWorkflowID()
 	runID := request.GetRunID()
 	reason := request.GetReason()
@@ -842,7 +868,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
-	// cancel the specified workflow
+	// terminate the specified workflow
 	err = client.TerminateWorkflow(ctx, *workflowID, *runID, *reason, details)
 	if err != nil {
 		if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
@@ -894,7 +920,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 	}
 
 	// grab the client.SignalWorkflow parameters and
-	// create the context to cancel the workflow
+	// create the context to signal the workflow
 	workflowID := request.GetWorkflowID()
 	runID := request.GetRunID()
 	signalName := request.GetSignalName()
@@ -902,7 +928,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
-	// cancel the specified workflow
+	// signal the specified workflow
 	err = client.SignalWorkflow(ctx, *workflowID, *runID, *signalName, signalArgs)
 	if err != nil {
 		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
@@ -954,17 +980,18 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	}
 
 	// grab the client.SignalWithStartWorkflow parameters and
-	// create the context to cancel the workflow
+	// create the context to signal and start the workflow
 	workflowID := request.GetWorkflowID()
 	signalName := request.GetSignalName()
 	signalArgs := request.GetSignalArgs()
 	opts := request.GetOptions()
 	workflowArgs := request.GetWorkflowArgs()
+	name := request.GetName()
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
-	// cancel the specified workflow
-	_, err = client.SignalWithStartWorkflow(ctx, *workflowID, *signalName, signalArgs, *opts, "TODO: REPLACE ONCE IMPLEMENTED", workflowArgs)
+	// signalwithstart the specified workflow
+	workflowExecution, err := client.SignalWithStartWorkflow(ctx, *workflowID, *signalName, signalArgs, *opts, *name, workflowArgs)
 	if err != nil {
 		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
 			buildWorkflowSignalWithStartReply(v, cadenceerrors.NewCadenceError(
@@ -975,10 +1002,37 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 		return reply
 	}
 
-	// TODO: JACK NEED TO EDIT BUILDWORKFLOWSSIGNALWITHSTARTREPLY TO ADD WORKFLOWID
-	// AND RUNID IN THE REPLY ONCE IMPLEMENTED ON NEON.CADENCE LIBRARY SIDE
 	if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
-		buildWorkflowSignalWithStartReply(v, nil)
+		buildWorkflowSignalWithStartReply(v, nil, workflowExecution)
+	}
+
+	return reply
+}
+
+func handleWorkflowSetCacheSizeRequest(request *messages.WorkflowSetCacheSizeRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSetCacheSizeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowSetCacheSizeReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowSetCacheSizeReply); ok {
+			buildWorkflowSetCacheSizeReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// set the sticky workflow cache size
+	worker.SetStickyWorkflowCacheSize(request.GetSize())
+	if v, ok := reply.(*messages.WorkflowSetCacheSizeReply); ok {
+		buildWorkflowSetCacheSizeReply(v, nil)
 	}
 
 	return reply

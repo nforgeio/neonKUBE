@@ -16,7 +16,7 @@ type (
 		*ProxyReply
 	}
 
-	// WorkflowContextReply is the interface that all workflow message replies
+	// IWorkflowContextReply is the interface that all workflow message replies
 	// implement.
 	IWorkflowContextReply interface {
 		GetWorkflowContextID() int64
@@ -44,16 +44,16 @@ func NewWorkflowContextReply() *WorkflowContextReply {
 // map.
 //
 // returns int64 -> the long representing a WorkflowContextReply's ContextId
-func (request *WorkflowContextReply) GetWorkflowContextID() int64 {
-	return request.GetLongProperty("WorkflowContextId")
+func (reply *WorkflowContextReply) GetWorkflowContextID() int64 {
+	return reply.GetLongProperty("WorkflowContextId")
 }
 
 // SetWorkflowContextID sets the ContextId in a WorkflowContextReply's properties map
 //
 // param value int64 -> int64 value to set as the WorkflowContextReply's ContextId
 // in its properties map
-func (request *WorkflowContextReply) SetWorkflowContextID(value int64) {
-	request.SetLongProperty("WorkflowContextId", value)
+func (reply *WorkflowContextReply) SetWorkflowContextID(value int64) {
+	reply.SetLongProperty("WorkflowContextId", value)
 }
 
 // -------------------------------------------------------------------------

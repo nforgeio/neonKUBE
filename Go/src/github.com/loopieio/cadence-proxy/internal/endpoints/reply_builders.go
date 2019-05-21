@@ -4,9 +4,9 @@ import (
 	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/messages"
-	"go.uber.org/cadence/workflow"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+	"go.uber.org/cadence/workflow"
 )
 
 // -------------------------------------------------------------------------
@@ -108,6 +108,14 @@ func buildWorkflowSignalReply(reply *messages.WorkflowSignalReply, cadenceError 
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply, cadenceError *cadenceerrors.CadenceError, execution ...*workflow.Execution) {
+	reply.SetError(cadenceError)
+
+	if len(execution) > 0 {
+		reply.SetExecution(execution[0])
+	}
+}
+
+func buildWorkflowSetCacheSizeReply(reply *messages.WorkflowSetCacheSizeReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }

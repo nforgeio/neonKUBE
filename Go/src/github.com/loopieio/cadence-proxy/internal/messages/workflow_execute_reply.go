@@ -34,9 +34,9 @@ func NewWorkflowExecuteReply() *WorkflowExecuteReply {
 //
 // returns *workflow.Execution -> pointer to a cadence workflow execution
 // struct housing the result of a workflow execution
-func (request *WorkflowExecuteReply) GetExecution() *workflow.Execution {
+func (reply *WorkflowExecuteReply) GetExecution() *workflow.Execution {
 	exe := new(workflow.Execution)
-	err := request.GetJSONProperty("Execution", exe)
+	err := reply.GetJSONProperty("Execution", exe)
 	if err != nil {
 		return nil
 	}

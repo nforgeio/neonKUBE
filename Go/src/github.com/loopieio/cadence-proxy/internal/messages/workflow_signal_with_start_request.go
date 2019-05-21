@@ -138,6 +138,24 @@ func (request *WorkflowSignalWithStartRequest) SetWorkflowArgs(value []byte) {
 	request.SetBytesProperty("WorkflowArgs", value)
 }
 
+// GetName gets a WorkflowSignalWithStartRequest's Name value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowSignalWithStartRequest's Name
+func (request *WorkflowSignalWithStartRequest) GetName() *string {
+	return request.GetStringProperty("Name")
+}
+
+// SetName sets a WorkflowSignalWithStartRequest's Name value
+// in its properties map
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowSignalWithStartRequest) SetName(value *string) {
+	request.SetStringProperty("Name", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -159,6 +177,7 @@ func (request *WorkflowSignalWithStartRequest) CopyTo(target IProxyMessage) {
 		v.SetSignalArgs(request.GetSignalArgs())
 		v.SetOptions(request.GetOptions())
 		v.SetWorkflowArgs(request.GetWorkflowArgs())
+		v.SetName(request.GetName())
 	}
 }
 
