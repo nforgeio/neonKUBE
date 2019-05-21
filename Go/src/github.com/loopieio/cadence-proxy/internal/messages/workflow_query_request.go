@@ -8,17 +8,17 @@ import (
 
 type (
 
-	// WorkflowQueryRequest is WorkflowContextRequest of MessageType
+	// WorkflowQueryRequest is WorkflowRequest of MessageType
 	// WorkflowQueryRequest.
 	//
 	// A WorkflowQueryRequest contains a reference to a
-	// WorkflowContextRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this WorkflowContextRequest
+	// WorkflowRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this WorkflowRequest
 	//
 	// A WorkflowQueryRequest will pass all of the given data and options
 	// necessary to query a cadence workflow via the cadence client
 	WorkflowQueryRequest struct {
-		*WorkflowContextRequest
+		*WorkflowRequest
 	}
 )
 
@@ -28,7 +28,7 @@ type (
 // WorkflowQueryRequest in memory
 func NewWorkflowQueryRequest() *WorkflowQueryRequest {
 	request := new(WorkflowQueryRequest)
-	request.WorkflowContextRequest = NewWorkflowContextRequest()
+	request.WorkflowRequest = NewWorkflowRequest()
 	request.Type = messagetypes.WorkflowQueryRequest
 	request.SetReplyType(messagetypes.WorkflowQueryReply)
 
@@ -112,7 +112,7 @@ func (request *WorkflowQueryRequest) SetQueryArgs(value []byte) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from WorkflowContextRequest.Clone()
+// Clone inherits docs from WorkflowRequest.Clone()
 func (request *WorkflowQueryRequest) Clone() IProxyMessage {
 	workflowQueryRequest := NewWorkflowQueryRequest()
 	var messageClone IProxyMessage = workflowQueryRequest
@@ -121,9 +121,9 @@ func (request *WorkflowQueryRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from WorkflowContextRequest.CopyTo()
+// CopyTo inherits docs from WorkflowRequest.CopyTo()
 func (request *WorkflowQueryRequest) CopyTo(target IProxyMessage) {
-	request.WorkflowContextRequest.CopyTo(target)
+	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowQueryRequest); ok {
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetRunID(request.GetRunID())
@@ -132,58 +132,58 @@ func (request *WorkflowQueryRequest) CopyTo(target IProxyMessage) {
 	}
 }
 
-// SetProxyMessage inherits docs from WorkflowContextRequest.SetProxyMessage()
+// SetProxyMessage inherits docs from WorkflowRequest.SetProxyMessage()
 func (request *WorkflowQueryRequest) SetProxyMessage(value *ProxyMessage) {
-	request.WorkflowContextRequest.SetProxyMessage(value)
+	request.WorkflowRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from WorkflowContextRequest.GetProxyMessage()
+// GetProxyMessage inherits docs from WorkflowRequest.GetProxyMessage()
 func (request *WorkflowQueryRequest) GetProxyMessage() *ProxyMessage {
-	return request.WorkflowContextRequest.GetProxyMessage()
+	return request.WorkflowRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from WorkflowContextRequest.GetRequestID()
+// GetRequestID inherits docs from WorkflowRequest.GetRequestID()
 func (request *WorkflowQueryRequest) GetRequestID() int64 {
-	return request.WorkflowContextRequest.GetRequestID()
+	return request.WorkflowRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from WorkflowContextRequest.SetRequestID()
+// SetRequestID inherits docs from WorkflowRequest.SetRequestID()
 func (request *WorkflowQueryRequest) SetRequestID(value int64) {
-	request.WorkflowContextRequest.SetRequestID(value)
+	request.WorkflowRequest.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetReplyType inherits docs from WorkflowContextRequest.GetReplyType()
+// GetReplyType inherits docs from WorkflowRequest.GetReplyType()
 func (request *WorkflowQueryRequest) GetReplyType() messagetypes.MessageType {
-	return request.WorkflowContextRequest.GetReplyType()
+	return request.WorkflowRequest.GetReplyType()
 }
 
-// SetReplyType inherits docs from WorkflowContextRequest.SetReplyType()
+// SetReplyType inherits docs from WorkflowRequest.SetReplyType()
 func (request *WorkflowQueryRequest) SetReplyType(value messagetypes.MessageType) {
-	request.WorkflowContextRequest.SetReplyType(value)
+	request.WorkflowRequest.SetReplyType(value)
 }
 
-// GetTimeout inherits docs from WorkflowContextRequest.GetTimeout()
+// GetTimeout inherits docs from WorkflowRequest.GetTimeout()
 func (request *WorkflowQueryRequest) GetTimeout() time.Duration {
-	return request.WorkflowContextRequest.GetTimeout()
+	return request.WorkflowRequest.GetTimeout()
 }
 
-// SetTimeout inherits docs from WorkflowContextRequest.SetTimeout()
+// SetTimeout inherits docs from WorkflowRequest.SetTimeout()
 func (request *WorkflowQueryRequest) SetTimeout(value time.Duration) {
-	request.WorkflowContextRequest.SetTimeout(value)
+	request.WorkflowRequest.SetTimeout(value)
 }
 
 // -------------------------------------------------------------------------
-// IWorkflowContextRequest interface methods for implementing the IWorkflowContextRequest interface
+// IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
 
-// GetWorkflowContextID inherits docs from WorkflowContextRequest.GetWorkflowContextID()
-func (reply *WorkflowQueryRequest) GetWorkflowContextID() int64 {
-	return reply.WorkflowContextRequest.GetWorkflowContextID()
+// GetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
+func (request *WorkflowQueryRequest) GetWorkflowContextID() int64 {
+	return request.WorkflowRequest.GetWorkflowContextID()
 }
 
-// SetWorkflowContextID inherits docs from WorkflowContextRequest.GetWorkflowContextID()
-func (reply *WorkflowQueryRequest) SetWorkflowContextID(value int64) {
-	reply.WorkflowContextRequest.SetWorkflowContextID(value)
+// SetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
+func (request *WorkflowQueryRequest) SetWorkflowContextID(value int64) {
+	request.WorkflowRequest.SetWorkflowContextID(value)
 }

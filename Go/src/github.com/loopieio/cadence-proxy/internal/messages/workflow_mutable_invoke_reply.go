@@ -7,41 +7,41 @@ import (
 
 type (
 
-	// WorkflowQueryReply is a WorkflowReply of MessageType
-	// WorkflowQueryReply.  It holds a reference to a WorkflowReply in memory
+	// WorkflowMutableInvokeReply is a WorkflowReply of MessageType
+	// WorkflowMutableInvokeReply.  It holds a reference to a WorkflowReply in memory
 	// and is the reply type to a WorkflowInvokeRequest
-	WorkflowQueryReply struct {
+	WorkflowMutableInvokeReply struct {
 		*WorkflowReply
 	}
 )
 
-// NewWorkflowQueryReply is the default constructor for
-// a WorkflowQueryReply
+// NewWorkflowMutableInvokeReply is the default constructor for
+// a WorkflowMutableInvokeReply
 //
-// returns *WorkflowQueryReply -> a pointer to a newly initialized
-// WorkflowQueryReply in memory
-func NewWorkflowQueryReply() *WorkflowQueryReply {
-	reply := new(WorkflowQueryReply)
+// returns *WorkflowMutableInvokeReply -> a pointer to a newly initialized
+// WorkflowMutableInvokeReply in memory
+func NewWorkflowMutableInvokeReply() *WorkflowMutableInvokeReply {
+	reply := new(WorkflowMutableInvokeReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.Type = messagetypes.WorkflowQueryReply
+	reply.Type = messagetypes.WorkflowMutableInvokeReply
 
 	return reply
 }
 
 // GetResult gets the workflow execution result or nil
-// from a WorkflowQueryReply's properties map.
+// from a WorkflowMutableInvokeReply's properties map.
 //
 // returns []byte -> []byte representing the result of a workflow execution
-func (reply *WorkflowQueryReply) GetResult() []byte {
+func (reply *WorkflowMutableInvokeReply) GetResult() []byte {
 	return reply.GetBytesProperty("Result")
 }
 
 // SetResult sets the workflow execution result or nil
-// in a WorkflowQueryReply's properties map.
+// in a WorkflowMutableInvokeReply's properties map.
 //
 // param value []byte -> []byte representing the result of a workflow execution
-// to be set in the WorkflowQueryReply's properties map
-func (reply *WorkflowQueryReply) SetResult(value []byte) {
+// to be set in the WorkflowMutableInvokeReply's properties map
+func (reply *WorkflowMutableInvokeReply) SetResult(value []byte) {
 	reply.SetBytesProperty("Result", value)
 }
 
@@ -49,39 +49,39 @@ func (reply *WorkflowQueryReply) SetResult(value []byte) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyMessage.Clone()
-func (reply *WorkflowQueryReply) Clone() IProxyMessage {
-	workflowQueryReply := NewWorkflowQueryReply()
-	var messageClone IProxyMessage = workflowQueryReply
+func (reply *WorkflowMutableInvokeReply) Clone() IProxyMessage {
+	workflowMutableInvokeReply := NewWorkflowMutableInvokeReply()
+	var messageClone IProxyMessage = workflowMutableInvokeReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
-func (reply *WorkflowQueryReply) CopyTo(target IProxyMessage) {
+func (reply *WorkflowMutableInvokeReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
-	if v, ok := target.(*WorkflowQueryReply); ok {
+	if v, ok := target.(*WorkflowMutableInvokeReply); ok {
 		v.SetResult(reply.GetResult())
 	}
 }
 
 // SetProxyMessage inherits docs from WorkflowReply.SetProxyMessage()
-func (reply *WorkflowQueryReply) SetProxyMessage(value *ProxyMessage) {
+func (reply *WorkflowMutableInvokeReply) SetProxyMessage(value *ProxyMessage) {
 	reply.WorkflowReply.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from WorkflowReply.GetProxyMessage()
-func (reply *WorkflowQueryReply) GetProxyMessage() *ProxyMessage {
+func (reply *WorkflowMutableInvokeReply) GetProxyMessage() *ProxyMessage {
 	return reply.WorkflowReply.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from WorkflowReply.GetRequestID()
-func (reply *WorkflowQueryReply) GetRequestID() int64 {
+func (reply *WorkflowMutableInvokeReply) GetRequestID() int64 {
 	return reply.WorkflowReply.GetRequestID()
 }
 
 // SetRequestID inherits docs from WorkflowReply.SetRequestID()
-func (reply *WorkflowQueryReply) SetRequestID(value int64) {
+func (reply *WorkflowMutableInvokeReply) SetRequestID(value int64) {
 	reply.WorkflowReply.SetRequestID(value)
 }
 
@@ -89,12 +89,12 @@ func (reply *WorkflowQueryReply) SetRequestID(value int64) {
 // IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError inherits docs from WorkflowReply.GetError()
-func (reply *WorkflowQueryReply) GetError() *cadenceerrors.CadenceError {
+func (reply *WorkflowMutableInvokeReply) GetError() *cadenceerrors.CadenceError {
 	return reply.WorkflowReply.GetError()
 }
 
 // SetError inherits docs from WorkflowReply.SetError()
-func (reply *WorkflowQueryReply) SetError(value *cadenceerrors.CadenceError) {
+func (reply *WorkflowMutableInvokeReply) SetError(value *cadenceerrors.CadenceError) {
 	reply.WorkflowReply.SetError(value)
 }
 
@@ -102,11 +102,11 @@ func (reply *WorkflowQueryReply) SetError(value *cadenceerrors.CadenceError) {
 // IWorkflowReply interface methods for implementing the IWorkflowReply interface
 
 // GetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowQueryReply) GetWorkflowContextID() int64 {
+func (reply *WorkflowMutableInvokeReply) GetWorkflowContextID() int64 {
 	return reply.WorkflowReply.GetWorkflowContextID()
 }
 
 // SetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowQueryReply) SetWorkflowContextID(value int64) {
+func (reply *WorkflowMutableInvokeReply) SetWorkflowContextID(value int64) {
 	reply.WorkflowReply.SetWorkflowContextID(value)
 }

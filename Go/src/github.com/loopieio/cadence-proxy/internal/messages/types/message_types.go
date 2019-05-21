@@ -347,39 +347,33 @@ const (
 	WorkflowSignalReceivedReply MessageType = 139
 
 	/// <summary>
-	/// <para>
-	/// <b>proxy --> library:</b> Implements the standard Cadence <i>side effect</i> behavior by
-	/// transmitting a <see cref="WorkflowSideEffectInvokeRequest"/> to the library and
-	/// waiting for the <see cref="WorkflowSideEffectInvokeReply"/> reply persisting the
-	/// answer in the workflow history and then transmitting the answer back to the .NET
-	/// workflow implementation via a <see cref="WorkflowSideEffectReply"/>.
-	/// </para>
-	/// <para>
-	/// This message includes a unique identifier that is used to ensure that a specific side effect
-	/// operation results in only a single <see cref="WorkflowSideEffectInvokeRequest"/> message to
-	/// the .NET workflow application per workflow instance.  Subsequent calls will simply return the
-	/// value from the execution history.
-	/// </para>
+	/// <b>proxy --> client:</b> Implements the standard Cadence <i>side effect</i> behavior.
+	/// The client will transmit a <see cref="WorkflowMutableInvokeRequest"/> message to the
+	/// proxy with a unique <c>MutableId</c>.  The proxy will call the GOLANG Cadence client's
+	/// <c>workflow.SideEffect()</c> function, passing it a function that when called,
+	/// sends a <see cref="WorkflowMutableInvokeRequest"/> back to the client including the
+	/// <c>MutableId</c> and then waits for a <see cref="WorkflowMutableInvokeReply"/>
+	/// and then returns the result from this reply back to Cadence.
 	/// </summary>
-	WorkflowSideEffectRequest MessageType = 140
+	WorkflowMutableRequest MessageType = 140
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
 	/// </summary>
-	WorkflowSideEffectReply MessageType = 141
+	WorkflowMutableReply MessageType = 141
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent by the proxy to the library the first time a side effect
-	/// operation is submitted a workflow instance.  The library will response with the
+	/// <b>proxy --> client:</b> Sent by the proxy to the client the first time a mutable
+	/// operation is submitted a workflow instance.  The client will response with the
 	/// side effect value to be persisted in the workflow history and returned back to
 	/// the the .NET workflow application.
 	/// </summary>
-	WorkflowSideEffectInvokeRequest MessageType = 142
+	WorkflowMutableInvokeRequest MessageType = 142
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
 	/// </summary>
-	WorkflowSideEffectInvokeReply MessageType = 143
+	WorkflowMutableInvokeReply MessageType = 143
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use

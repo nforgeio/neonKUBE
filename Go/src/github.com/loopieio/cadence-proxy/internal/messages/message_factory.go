@@ -92,6 +92,14 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowQueryReply()
 	case messagetypes.WorkflowQueryRequest:
 		message = NewWorkflowQueryRequest()
+	case messagetypes.WorkflowMutableInvokeReply:
+		message = NewWorkflowMutableInvokeReply()
+	case messagetypes.WorkflowMutableInvokeRequest:
+		message = NewWorkflowMutableInvokeRequest()
+	case messagetypes.WorkflowMutableReply:
+		message = NewWorkflowMutableReply()
+	case messagetypes.WorkflowMutableRequest:
+		message = NewWorkflowMutableRequest()
 	default:
 		return nil
 	}

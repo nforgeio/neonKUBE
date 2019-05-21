@@ -3,8 +3,9 @@ package messages
 import (
 	"time"
 
-	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 	worker "go.uber.org/cadence/worker"
+
+	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
 type (

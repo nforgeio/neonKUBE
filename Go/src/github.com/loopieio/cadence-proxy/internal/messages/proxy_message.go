@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
+
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -143,10 +144,10 @@ func handleUnspecifiedMessageType(typeCode []string) IProxyMessage {
 			return NewProxyRequest()
 		case "ProxyReply":
 			return NewProxyReply()
-		case "WorkflowContextRequest":
-			return NewWorkflowContextRequest()
-		case "WorkflowContextReply":
-			return NewWorkflowContextReply()
+		case "WorkflowRequest":
+			return NewWorkflowRequest()
+		case "WorkflowReply":
+			return NewWorkflowReply()
 		default:
 			return NewProxyMessage()
 		}
