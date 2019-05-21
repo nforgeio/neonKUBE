@@ -77,6 +77,15 @@ namespace Neon.Cadence.Internal
             set => SetStringProperty("Identity", value);
         }
 
+        /// <summary>
+        /// The default client timeout.
+        /// </summary>
+        public TimeSpan ClientTimeout
+        {
+            get => GetTimeSpanProperty("ClientTimeout");
+            set => SetTimeSpanProperty("ClientTimeout", value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -94,8 +103,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ConnectRequest)target;
 
-            typedTarget.Endpoints = this.Endpoints;
-            typedTarget.Identity  = this.Identity;
+            typedTarget.Endpoints     = this.Endpoints;
+            typedTarget.Identity      = this.Identity;
+            typedTarget.ClientTimeout = this.ClientTimeout;
         }
     }
 }

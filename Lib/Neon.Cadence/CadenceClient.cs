@@ -368,6 +368,11 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
+            if (settings.ClientTimeout <= TimeSpan.Zero)
+            {
+                settings.ClientTimeout = TimeSpan.FromSeconds(30);
+            }
+
             var client = new CadenceClient(settings);
 
             //-----------------------------------------
@@ -417,9 +422,16 @@ namespace Neon.Cadence
 
             foreach (var server in settings.Servers)
             {
-                if (server == null || !server.IsAbsoluteUri)
+                try
                 {
-                    throw new CadenceConnectException($"Invalid Cadence server URI [{server}].");
+                    if (server == null || !new Uri(server).IsAbsoluteUri)
+                    {
+                        throw new Exception();
+                    }
+                }
+                catch
+                {
+                    throw new CadenceConnectException($"Invalid Cadence server URI: {server}");
                 }
             }
 
@@ -537,7 +549,9 @@ namespace Neon.Cadence
 
                     foreach (var serverUri in settings.Servers)
                     {
-                        sbEndpoints.AppendWithSeparator($"{serverUri.Host}:7933", ",");
+                        var uri = new Uri(serverUri);
+
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:7933", ",");
                     }
 
                     var connectRequest = 

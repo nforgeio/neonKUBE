@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalWithStartReply.cs
+// FILE:	    WorkflowQueryReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalWithStartRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalRequest"/>
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowSignalWithStartReply)]
-    internal class WorkflowSignalWithStartReply : ProxyReply
+    [ProxyMessage(MessageTypes.WorkflowQueryReply)]
+    internal class WorkflowQueryReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalWithStartReply()
+        public WorkflowQueryReply()
         {
-            Type = MessageTypes.WorkflowSignalWithStartReply;
+            Type = MessageTypes.WorkflowQueryReply;
         }
 
         /// <summary>
-        /// Returns details identifying the workflow execution.
+        /// The query result bytes or <c>null</c>.
         /// </summary>
-        public InternalWorkflowExecution Execution
+        public byte[] Result
         {
-            get => GetJsonProperty<InternalWorkflowExecution>("Execution");
-            set => SetJsonProperty<InternalWorkflowExecution>("Execution", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalWithStartReply();
+            var clone = new WorkflowQueryReply();
 
             CopyTo(clone);
 
@@ -69,9 +69,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalWithStartReply)target;
+            var typedTarget = (WorkflowQueryReply)target;
 
-            typedTarget.Execution = this.Execution;
+            typedTarget.Result = this.Result;
         }
     }
 }

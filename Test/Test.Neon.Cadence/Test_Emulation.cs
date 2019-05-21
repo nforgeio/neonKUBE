@@ -231,7 +231,7 @@ namespace TestCadence
 
             var settings = new CadenceSettings()
             {
-                Servers = new List<Uri>()
+                Servers = new List<string>()
             };
 
             await TestHelper.AssertThrowsAsync<CadenceConnectException>(async () => await CadenceClient.ConnectAsync(settings));
@@ -240,7 +240,7 @@ namespace TestCadence
             // with a relative server URI.
 
             settings.Servers.Clear();
-            settings.Servers.Add(new Uri("/relativeuri", UriKind.Relative));
+            settings.Servers.Add("/relativeuri");
 
             await TestHelper.AssertThrowsAsync<CadenceConnectException>(async () => await CadenceClient.ConnectAsync(settings));
 

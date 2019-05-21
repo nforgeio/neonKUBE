@@ -63,7 +63,7 @@ namespace Neon.Cadence
         [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "servers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Uri> Servers { get; set; } = new List<Uri>();
+        public List<string> Servers { get; set; } = new List<string>();
 
         /// <summary>
         /// Optionally specifies the port where the client will listen for traffic from the 
@@ -74,6 +74,15 @@ namespace Neon.Cadence
         [YamlMember(Alias = "listenPort", ApplyNamingConventions = false)]
         [DefaultValue(0)]
         public int ListenPort { get; set; } = 0;
+
+        /// <summary>
+        /// Optionally specifies the maximum time the client should wait for synchronous 
+        /// operations to complete.  This defaults to <b>30 seconds</b> when not set.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClientTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clientTimeout", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public TimeSpan ClientTimeout { get; set; }
 
         /// <summary>
         /// Optionally identifies the client application establishing the connection so that

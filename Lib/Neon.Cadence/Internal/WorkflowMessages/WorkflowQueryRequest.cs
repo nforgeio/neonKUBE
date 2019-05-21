@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteRequest.cs
+// FILE:	    WorkflowQueryRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,62 +32,63 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Starts a workflow execution.
+    /// <b>proxy --> client:</b> Sends a signal to a running workflow.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteRequest)]
-    internal class WorkflowExecuteRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.WorkflowQueryRequest)]
+    internal class WorkflowQueryRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteRequest()
+        public WorkflowQueryRequest()
         {
-            Type = MessageTypes.WorkflowExecuteRequest;
+            Type = MessageTypes.WorkflowQueryRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
+        public override MessageTypes ReplyType => MessageTypes.WorkflowQueryReply;
 
         /// <summary>
-        /// Identifies the Cadence domain hosting the workflow.
+        /// Identifies the workflow by ID.
         /// </summary>
-        public string Domain
+        public string WorkflowId
         {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
+            get => GetStringProperty("WorkflowId");
+            set => SetStringProperty("WorkflowId", value);
         }
 
         /// <summary>
-        /// Identifies the workflow implementation to be started.
+        /// Identifies the specific workflow run to be cancelled.  The latest run
+        /// will be cancelled when this is <c>null</c> or empty.
         /// </summary>
-        public string Workflow
+        public string RunId
         {
-            get => GetStringProperty("Workflow");
-            set => SetStringProperty("Workflow", value);
+            get => GetStringProperty("RunId");
+            set => SetStringProperty("RunId", value);
         }
 
         /// <summary>
-        /// Optionally specifies the workflow arguments encoded as a byte array.
+        /// Identifies the query.
         /// </summary>
-        public byte[] Args
+        public string QueryName
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetStringProperty("QueryName");
+            set => SetStringProperty("QueryName", value);
         }
 
         /// <summary>
-        /// Optionally specifies the workflow start options.
+        /// Optionally specifies the query arguments.
         /// </summary>
-        public InternalStartWorkflowOptions Options
+        public byte[] QueryArgs
         {
-            get => GetJsonProperty<InternalStartWorkflowOptions>("Options");
-            set => SetJsonProperty<InternalStartWorkflowOptions>("Options", value);
+            get => GetBytesProperty("QueryArgs");
+            set => SetBytesProperty("QueryArgs", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteRequest();
+            var clone = new WorkflowQueryRequest();
 
             CopyTo(clone);
 
@@ -99,12 +100,12 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowExecuteRequest)target;
+            var typedTarget = (WorkflowQueryRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Domain  = this.Domain;
-            typedTarget.Workflow    = this.Workflow;
-            typedTarget.Options = this.Options;
+            typedTarget.WorkflowId = this.WorkflowId;
+            typedTarget.RunId      = this.RunId;
+            typedTarget.QueryName  = this.QueryName;
+            typedTarget.QueryArgs  = this.QueryArgs;
         }
     }
 }
