@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalWithStartReply.cs
+// FILE:	    WorkflowMutableInvokeReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalWithStartRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowMutableInvokeRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowSignalWithStartReply)]
-    internal class WorkflowSignalWithStartReply : WorkflowReply
+    [ProxyMessage(MessageTypes.WorkflowMutableInvokeReply)]
+    internal class WorkflowMutableInvokeReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalWithStartReply()
+        public WorkflowMutableInvokeReply()
         {
-            Type = MessageTypes.WorkflowSignalWithStartReply;
+            Type = MessageTypes.WorkflowMutableInvokeReply;
         }
 
         /// <summary>
-        /// Returns details identifying the workflow execution.
+        /// Holds the mutable result.
         /// </summary>
-        public InternalWorkflowExecution Execution
+        public byte[] Result
         {
-            get => GetJsonProperty<InternalWorkflowExecution>("Execution");
-            set => SetJsonProperty<InternalWorkflowExecution>("Execution", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalWithStartReply();
+            var clone = new WorkflowMutableInvokeReply();
 
             CopyTo(clone);
 
@@ -69,9 +69,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalWithStartReply)target;
+            var typedTarget = (WorkflowMutableInvokeReply)target;
 
-            typedTarget.Execution = this.Execution;
+            typedTarget.Result = this.Result;
         }
     }
 }

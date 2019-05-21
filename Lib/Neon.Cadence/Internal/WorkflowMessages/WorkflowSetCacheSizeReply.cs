@@ -52,7 +52,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSetCacheSizeRequest"/>.
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowSetCacheSizeReply)]
-    internal class WorkflowSetCacheSizeReply : ProxyReply
+    internal class WorkflowSetCacheSizeReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.

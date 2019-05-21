@@ -44,7 +44,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// <b>client --> proxy:</b> Informs the proxy of the network endpoint where the
-        /// library is listening for proxy messages.  The proxy should respond with an
+        /// client is listening for proxy messages.  The proxy should respond with an
         /// <see cref="InitializeReply"/> when it's ready to begin receiving inbound
         /// proxy messages.
         /// </summary>
@@ -69,7 +69,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// <b>client --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
-        /// proxy should send a <see cref="TerminateReply"/> back to the library and
+        /// proxy should send a <see cref="TerminateReply"/> back to the client and
         /// then exit, terminating the process.
         /// </summary>
         TerminateRequest = 5,
@@ -110,7 +110,7 @@ namespace Neon.Cadence.Internal
         DomainUpdateReply = 12,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent periodically (every second) by the library to the
+        /// <b>client --> proxy:</b> Sent periodically (every second) by the client to the
         /// proxy to verify that it is still healthy.
         /// </summary>
         HeartbeatRequest = 13,
@@ -154,7 +154,7 @@ namespace Neon.Cadence.Internal
         StopWorkerReply = 20,
 
         /// <summary>
-        /// Sent from either the library or proxy mainly for measuring the raw throughput of 
+        /// Sent from either the client or proxy mainly for measuring the raw throughput of 
         /// client/proxy transactions.  The receiver simply responds immediately with a
         /// <see cref="PingReply"/>.
         /// </summary>
@@ -334,7 +334,7 @@ namespace Neon.Cadence.Internal
         WorkflowDescribeTaskListReply = 131,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Commands the client library and associated .NET application
+        /// <b>proxy --> client:</b> Commands the client client and associated .NET application
         /// to process a workflow instance.
         /// </summary>
         WorkflowInvokeRequest = 132,
@@ -357,7 +357,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>client --> proxy:</b> Indicates that .NET application wishes to consume signals from
         /// a named channel.  Any signals received by the proxy will be forwarded to the
-        /// library via <see cref="WorkflowSignalReceivedRequest"/> messages.
+        /// client via <see cref="WorkflowSignalReceivedRequest"/> messages.
         /// </summary>
         WorkflowSignalSubscribeRequest = 136,
 
@@ -377,39 +377,33 @@ namespace Neon.Cadence.Internal
         WorkflowSignalReceivedReply = 139,
 
         /// <summary>
-        /// <para>
-        /// <b>proxy --> client:</b> Implements the standard Cadence <i>side effect</i> behavior by 
-        /// transmitting a <see cref="WorkflowSideEffectInvokeRequest"/> to the library and
-        /// waiting for the <see cref="WorkflowSideEffectInvokeReply"/> reply, persisting the 
-        /// answer in the workflow history and then transmitting the answer back to the .NET
-        /// workflow implementation via a <see cref="WorkflowSideEffectReply"/>.
-        /// </para>
-        /// <para>
-        /// This message includes a unique identifier that is used to ensure that a specific side effect
-        /// operation results in only a single <see cref="WorkflowSideEffectInvokeRequest"/> message to
-        /// the .NET workflow application per workflow instance.  Subsequent calls will simply return the
-        /// value from the execution history.
-        /// </para>
+        /// <b>proxy --> client:</b> Implements the standard Cadence <i>side effect</i> behavior. 
+        /// The client will transmit a <see cref="WorkflowMutableInvokeRequest"/> message to the
+        /// proxy with a unique <c>MutableId</c>.  The proxy will call the GOLANG Cadence client's
+        /// <c>workflow.SideEffect()</c> function, passing it a function that when called,
+        /// sends a <see cref="WorkflowMutableInvokeRequest"/> back to the client including the
+        /// <c>MutableId</c> and then waits for a <see cref="WorkflowMutableInvokeReply"/>
+        /// and then returns the result from this reply back to Cadence.
         /// </summary>
-        WorkflowSideEffectRequest = 140,
+        WorkflowMutableRequest = 140,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
         /// </summary>
-        WorkflowSideEffectReply = 141,
+        WorkflowMutableReply = 141,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent by the proxy to the library the first time a side effect
-        /// operation is submitted a workflow instance.  The library will response with the
+        /// <b>proxy --> client:</b> Sent by the proxy to the client the first time a mutable
+        /// operation is submitted a workflow instance.  The client will response with the
         /// side effect value to be persisted in the workflow history and returned back to
         /// the the .NET workflow application.
         /// </summary>
-        WorkflowSideEffectInvokeRequest = 142,
+        WorkflowMutableInvokeRequest = 142,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
         /// </summary>
-        WorkflowSideEffectInvokeReply = 143,
+        WorkflowMutableInvokeReply = 143,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
@@ -429,7 +423,7 @@ namespace Neon.Cadence.Internal
         // Activity messages
 
         /// <summary>
-        /// <b>proxy --> client:</b> Commands the client library and associated .NET application
+        /// <b>proxy --> client:</b> Commands the client client and associated .NET application
         /// to process an activity instance.
         /// </summary>
         ActivityInvokeRequest = 200,

@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Registers a workflow handler by name.
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowRegisterRequest)]
-    internal class WorkflowRegisterRequest : ProxyRequest
+    internal class WorkflowRegisterRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.

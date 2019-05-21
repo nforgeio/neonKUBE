@@ -146,7 +146,7 @@ namespace Neon.Cadence
     ///     </para>
     ///     <code language="c#">
     ///     [QueryHandler("my-query")]
-    ///     protected async Task<byte[]></byte> OnMyQuery(byte[] args)
+    ///     protected async Task&lt;byte[]&gt; OnMyQuery(byte[] args)
     ///     {
     ///         return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
     ///     }
@@ -162,6 +162,14 @@ namespace Neon.Cadence
     /// </remarks>
     public abstract class Workflow
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static Version ZeroVersion = new Version(0, 0, 0);
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private long workflowContextId;
 
         /// <summary>
@@ -180,6 +188,20 @@ namespace Neon.Cadence
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
         /// </summary>
         public CadenceClient Client { get; private set; }
+
+        /// <summary>
+        /// Workflow implemenations that support version backwards compatability should
+        /// override this to return the version of the implementation.  This returns
+        /// <c>Version(0, 0, 0)</c> by default.
+        /// </summary>
+        public virtual Version Version => ZeroVersion;
+
+        /// <summary>
+        /// Returns the version of the workflow implementation that was executed when
+        /// the workflow was started.  This can be used to to implement backwards
+        /// compatability.
+        /// </summary>
+        public Version InitialVersion { get; private set; }
 
         /// <summary>
         /// Called by Cadence to execute a workflow.  Derived classes will need to implement
@@ -247,6 +269,7 @@ namespace Neon.Cadence
         /// the workflow is being replayed, the value from the history
         /// will be returned rather than calling the function again.
         /// </summary>
+        /// <param name="mutableId">Identifies the mutable value.</param>
         /// <param name="getter">The value retrival function.</param>
         /// <returns>The requested value as a byte array or <c>null</c>.</returns>
         /// <remarks>
@@ -259,7 +282,7 @@ namespace Neon.Cadence
         /// <para>
         /// For example, a workflow step may require a random number
         /// when making a decision.  In this case, the workflow would
-        /// call <see cref="GetMutableValueAsync(Func{byte[]})"/>, passing a function
+        /// call <see cref="GetMutableValueAsync"/>, passing a function
         /// that generates a random number.
         /// </para>
         /// <para>
@@ -274,8 +297,9 @@ namespace Neon.Cadence
         /// during the replay.
         /// </para>
         /// </remarks>
-        protected async Task<byte[]> GetMutableValueAsync(Func<byte[]> getter)
+        protected async Task<byte[]> GetMutableValueAsync(string mutableId, Func<Task<byte[]>> getter)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mutableId));
             Covenant.Requires<ArgumentNullException>(getter != null);
 
             await Task.CompletedTask;
@@ -299,7 +323,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Executes a child workflow an waits for it to complete.
+        /// Executes a child workflow and waits for it to complete.
         /// </summary>
         /// <param name="name">The workflow name.</param>
         /// <param name="args">Optionally specifies the workflow arguments.</param>

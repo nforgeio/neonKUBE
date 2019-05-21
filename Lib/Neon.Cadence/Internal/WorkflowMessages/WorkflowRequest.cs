@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalWithStartReply.cs
+// FILE:	    WorkflowRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,37 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalWithStartRequest"/>
+    /// Base class for all workflow related requests.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowSignalWithStartReply)]
-    internal class WorkflowSignalWithStartReply : WorkflowReply
+    [ProxyMessage(MessageTypes.Unspecified)]
+    internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalWithStartReply()
+        public WorkflowRequest()
         {
-            Type = MessageTypes.WorkflowSignalWithStartReply;
         }
 
         /// <summary>
-        /// Returns details identifying the workflow execution.
+        /// <para>
+        /// Uniquely identifies the workflow context associated with this request.
+        /// </para>
+        /// <note>
+        /// Not all derived classes actually require this property.  In those cases,
+        /// this can remain as its default zero value.
+        /// </note>
         /// </summary>
-        public InternalWorkflowExecution Execution
+        public long WorkflowContextId
         {
-            get => GetJsonProperty<InternalWorkflowExecution>("Execution");
-            set => SetJsonProperty<InternalWorkflowExecution>("Execution", value);
+            get => GetLongProperty("WorkflowContextId");
+            set => SetLongProperty("WorkflowContextId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalWithStartReply();
+            var clone = new WorkflowRequest();
 
             CopyTo(clone);
 
@@ -69,9 +74,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalWithStartReply)target;
+            var typedTarget = (WorkflowRequest)target;
 
-            typedTarget.Execution = this.Execution;
+            typedTarget.WorkflowContextId = this.WorkflowContextId;
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Neon.Cadence.Internal
     /// workflow if it doesn't exist.
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowSignalWithStartRequest)]
-    internal class WorkflowSignalWithStartRequest : ProxyRequest
+    internal class WorkflowSignalWithStartRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.

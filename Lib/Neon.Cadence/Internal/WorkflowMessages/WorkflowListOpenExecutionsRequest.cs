@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalWithStartReply.cs
+// FILE:	    WorkflowListOpenExecutionsRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,42 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalWithStartRequest"/>
+    /// <b>proxy --> client:</b> Lists open workflows.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowSignalWithStartReply)]
-    internal class WorkflowSignalWithStartReply : WorkflowReply
+    [ProxyMessage(MessageTypes.WorkflowListOpenExecutionsRequest)]
+    internal class WorkflowListOpenExecutionsRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalWithStartReply()
+        public WorkflowListOpenExecutionsRequest()
         {
-            Type = MessageTypes.WorkflowSignalWithStartReply;
+            Type = MessageTypes.WorkflowListOpenExecutionsRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.WorkflowListOpenExecutionsReply;
+
         /// <summary>
-        /// Returns details identifying the workflow execution.
+        /// Optionally specifies the target domain.  Workflows from all
+        /// domains will be listed when this is omitted.
         /// </summary>
-        public InternalWorkflowExecution Execution
+        public string Domain
         {
-            get => GetJsonProperty<InternalWorkflowExecution>("Execution");
-            set => SetJsonProperty<InternalWorkflowExecution>("Execution", value);
+            get => GetStringProperty("Domain");
+            set => SetStringProperty("Domain", value);
+        }
+
+        public int MaximumPageSize
+        {
+            get => GetIntProperty("MaximumPageSize");
+            set => SetIntProperty("MaximumPageSize", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalWithStartReply();
+            var clone = new WorkflowListOpenExecutionsRequest();
 
             CopyTo(clone);
 
@@ -69,9 +79,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalWithStartReply)target;
+            var typedTarget = (WorkflowListOpenExecutionsRequest)target;
 
-            typedTarget.Execution = this.Execution;
+            typedTarget.Domain = this.Domain;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowContextRequest.cs
+// FILE:	    WorkflowMutableReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow requests that relate to a workflow context
-    /// being managed by the <b>cadence-proxy</b>.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowMutableRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowContextRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.WorkflowMutableReply)]
+    internal class WorkflowMutableReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowContextRequest()
+        public WorkflowMutableReply()
         {
+            Type = MessageTypes.WorkflowMutableReply;
         }
 
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this request.
+        /// Holds the mutable result.
         /// </summary>
-        public long WorkflowContextId
+        public byte[] Result
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowContextRequest();
+            var clone = new WorkflowMutableReply();
 
             CopyTo(clone);
 
@@ -69,9 +69,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowContextRequest)target;
+            var typedTarget = (WorkflowMutableReply)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.Result = this.Result;
         }
     }
 }

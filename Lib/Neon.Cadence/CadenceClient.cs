@@ -390,17 +390,17 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                          syncLock   = new object();
-        private IPAddress                       address    = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
-        private Dictionary<long, Operation>     operations = new Dictionary<long, Operation>();
-        private Dictionary<long, Worker>        workers    = new Dictionary<long, Worker>();
+        private object                          syncLock      = new object();
+        private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
+        private Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
+        private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
+        private long                            nextRequestId = 0;
         private int                             proxyPort;
         private HttpClient                      proxyClient;
         private IWebHost                        host;
         private Exception                       pendingException;
         private bool                            closingConnection;
         private bool                            connectionClosedRaised;
-        private long                            nextRequestId = 0;
         private int                             workflowCacheSize;
         private Thread                          heartbeatThread;
         private Thread                          timeoutThread;
