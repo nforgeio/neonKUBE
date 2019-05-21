@@ -68,6 +68,25 @@ func (request *ConnectRequest) SetIdentity(value *string) {
 	request.SetStringProperty("Identity", value)
 }
 
+// GetClientTimeout gets the ClientTimeout property from a ConnectRequest's properties map
+// ClientTimeout is a timespan property and indicates the timeout for a cadence client request
+//
+// returns time.Duration -> the duration for a ConnectRequest's timeout from its properties map
+func (request *ConnectRequest) GetClientTimeout() time.Duration {
+	seconds := time.Second * 30
+	defDuration := time.Nanosecond * time.Duration(seconds.Nanoseconds())
+	return request.GetTimeSpanProperty("ClientTimeout", defDuration)
+}
+
+// SetClientTimeout sets the ClientTimeout property in a ConnectRequest's properties map
+// ClientTimeout is a timespan property and indicates the timeout for a cadence client request
+//
+// param value time.Duration -> the timeout duration to be set in a
+// ConnectRequest's properties map
+func (request *ConnectRequest) SetClientTimeout(value time.Duration) {
+	request.SetTimeSpanProperty("ClientTimeout", value)
+}
+
 // -------------------------------------------------------------------------
 // ProxyMessage interface methods for implementing the ProxyMessage interface
 
@@ -86,6 +105,7 @@ func (request *ConnectRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ConnectRequest); ok {
 		v.SetEndpoints(request.GetEndpoints())
 		v.SetIdentity(request.GetIdentity())
+		v.SetClientTimeout(request.GetClientTimeout())
 	}
 }
 

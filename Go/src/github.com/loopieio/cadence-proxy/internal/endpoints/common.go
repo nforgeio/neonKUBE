@@ -69,9 +69,9 @@ var (
 	// <c>false</c>
 	debugPrelaunch = false
 
-	// cadenceTimeout specifies the amount of time in seconds a reply has to be sent after
+	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy
-	cadenceTimeout = time.Second * 30
+	cadenceClientTimeout time.Duration
 )
 
 // NextRequestID increments the package variable
