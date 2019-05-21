@@ -1198,6 +1198,18 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	// new WorkflowMutableReply
 	reply := createReplyMessage(request)
 
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowMutableReply); ok {
+			buildWorkflowMutableReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
 	if v, ok := reply.(*messages.WorkflowMutableReply); ok {
 		buildWorkflowMutableReply(v, nil)
 	}
