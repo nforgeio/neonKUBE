@@ -63,12 +63,30 @@ func (request *WorkflowCancelRequest) GetRunID() *string {
 }
 
 // SetRunID sets a WorkflowCancelRequest's RunID value
-// in its properties map
+// in its properties map.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
 func (request *WorkflowCancelRequest) SetRunID(value *string) {
 	request.SetStringProperty("RunId", value)
+}
+
+// GetDomain gets a WorkflowCancelRequest's Domain value
+// from its properties map. Optionally overrides the current client domain.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowCancelRequest's Domain
+func (request *WorkflowCancelRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a WorkflowCancelRequest's Domain value
+// in its properties map. Optionally overrides the current client domain.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowCancelRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
 }
 
 // -------------------------------------------------------------------------
@@ -89,6 +107,7 @@ func (request *WorkflowCancelRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowCancelRequest); ok {
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetRunID(request.GetRunID())
+		v.SetDomain(request.GetDomain())
 	}
 }
 

@@ -150,6 +150,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 			reply = handleWorkflowSetCacheSizeRequest(v)
 		}
 
+	// WorkflowQueryRequest
+	case messagetypes.WorkflowQueryRequest:
+		if v, ok := request.(*messages.WorkflowQueryRequest); ok {
+			reply = handleWorkflowQueryRequest(v)
+		}
+
 	// PingRequest
 	case messagetypes.PingRequest:
 		if v, ok := request.(*messages.PingRequest); ok {
@@ -1091,6 +1097,82 @@ func handleWorkflowSetCacheSizeRequest(request *messages.WorkflowSetCacheSizeReq
 	worker.SetStickyWorkflowCacheSize(request.GetSize())
 	if v, ok := reply.(*messages.WorkflowSetCacheSizeReply); ok {
 		buildWorkflowSetCacheSizeReply(v, nil)
+	}
+
+	return reply
+}
+
+func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowQueryRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowQueryReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowQueryReply); ok {
+			buildWorkflowQueryReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowQueryReply); ok {
+			buildWorkflowQueryReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// get the properties from the request
+	workflowID := request.GetWorkflowID()
+	runID := request.GetRunID()
+	queryName := request.GetQueryName()
+	queryArgs := request.GetQueryArgs()
+
+	// create the context
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	defer cancel()
+
+	// query the workflow via the cadence client
+	value, err := client.QueryWorkflow(ctx, *workflowID, *runID, *queryName, queryArgs)
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowQueryReply); ok {
+			buildWorkflowQueryReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// extract the result
+	var result []byte
+	if value.HasValue() {
+		err = value.Get(&result)
+		if err != nil {
+			if v, ok := reply.(*messages.WorkflowQueryReply); ok {
+				buildWorkflowQueryReply(v, cadenceerrors.NewCadenceError(
+					err.Error(),
+					cadenceerrors.Custom))
+			}
+
+			return reply
+		}
+	}
+
+	if v, ok := reply.(*messages.WorkflowQueryReply); ok {
+		buildWorkflowQueryReply(v, nil, result)
 	}
 
 	return reply

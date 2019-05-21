@@ -119,3 +119,11 @@ func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartRe
 func buildWorkflowSetCacheSizeReply(reply *messages.WorkflowSetCacheSizeReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
+
+func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *cadenceerrors.CadenceError, result ...[]byte) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		reply.SetResult(result[0])
+	}
+}
