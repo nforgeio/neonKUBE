@@ -636,9 +636,65 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("not implemented exception for message type WorkflowExecuteRequest")
-	return nil
+	logger.Debug("WorkflowExecuteRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
+	// new WorkflowExecuteReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
+			buildWorkflowExecuteReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
+			buildWorkflowExecuteReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// grab the client.ExecuteWorkflow parameters
+	opts := request.GetOptions()
+	args := request.GetArgs()
+	workflowName := request.GetWorkflow()
+
+	// create the context
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	defer cancel()
+
+	// signalwithstart the specified workflow
+	workflowRun, err := client.ExecuteWorkflow(ctx, *opts, *workflowName, args)
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
+			buildWorkflowExecuteReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// extract the workflow ID and RunID
+	workflowExecution := new(workflow.Execution)
+	workflowExecution.ID = workflowRun.GetID()
+	workflowExecution.RunID = workflowRun.GetRunID()
+	if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
+		buildWorkflowExecuteReply(v, nil, workflowExecution)
+	}
+
+	return reply
 }
 
 func handleWorkflowInvokeRequest(request *messages.WorkflowInvokeRequest) messages.IProxyMessage {
@@ -980,14 +1036,14 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	signalArgs := request.GetSignalArgs()
 	opts := request.GetOptions()
 	workflowArgs := request.GetWorkflowArgs()
-	name := request.GetName()
+	workflow := request.GetWorkflow()
 
 	// create the context
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
-	workflowExecution, err := client.SignalWithStartWorkflow(ctx, *workflowID, *signalName, signalArgs, *opts, *name, workflowArgs)
+	workflowExecution, err := client.SignalWithStartWorkflow(ctx, *workflowID, *signalName, signalArgs, *opts, *workflow, workflowArgs)
 	if err != nil {
 		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
 			buildWorkflowSignalWithStartReply(v, cadenceerrors.NewCadenceError(

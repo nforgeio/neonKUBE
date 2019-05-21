@@ -138,22 +138,22 @@ func (request *WorkflowSignalWithStartRequest) SetWorkflowArgs(value []byte) {
 	request.SetBytesProperty("WorkflowArgs", value)
 }
 
-// GetName gets a WorkflowSignalWithStartRequest's Name value
-// from its properties map
+// GetWorkflow gets a WorkflowSignalWithStartRequest's Workflow value
+// from its properties map. Identifies the workflow implementation to be started.
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalWithStartRequest's Name
-func (request *WorkflowSignalWithStartRequest) GetName() *string {
-	return request.GetStringProperty("Name")
+// of a WorkflowSignalWithStartRequest's Workflow
+func (request *WorkflowSignalWithStartRequest) GetWorkflow() *string {
+	return request.GetStringProperty("Workflow")
 }
 
-// SetName sets a WorkflowSignalWithStartRequest's Name value
-// in its properties map
+// SetWorkflow sets a WorkflowSignalWithStartRequest's Workflow value
+// in its properties map. Identifies the workflow implementation to be started.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowSignalWithStartRequest) SetName(value *string) {
-	request.SetStringProperty("Name", value)
+func (request *WorkflowSignalWithStartRequest) SetWorkflow(value *string) {
+	request.SetStringProperty("Workflow", value)
 }
 
 // -------------------------------------------------------------------------
@@ -177,7 +177,7 @@ func (request *WorkflowSignalWithStartRequest) CopyTo(target IProxyMessage) {
 		v.SetSignalArgs(request.GetSignalArgs())
 		v.SetOptions(request.GetOptions())
 		v.SetWorkflowArgs(request.GetWorkflowArgs())
-		v.SetName(request.GetName())
+		v.SetWorkflow(request.GetWorkflow())
 	}
 }
 

@@ -55,22 +55,22 @@ func (request *WorkflowExecuteRequest) SetDomain(value *string) {
 	request.SetStringProperty("Domain", value)
 }
 
-// GetName gets a WorkflowExecuteRequest's Name value
-// from its properties map
+// GetWorkflow gets a WorkflowExecuteRequest's Workflow value
+// from its properties map.  Identifies the workflow implementation to be started.
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowExecuteRequest's Name
-func (request *WorkflowExecuteRequest) GetName() *string {
-	return request.GetStringProperty("Name")
+// of a WorkflowExecuteRequest's Workflow
+func (request *WorkflowExecuteRequest) GetWorkflow() *string {
+	return request.GetStringProperty("Workflow")
 }
 
-// SetName sets a WorkflowExecuteRequest's Name value
-// in its properties map
+// SetWorkflow sets a WorkflowExecuteRequest's Workflow value
+// in its properties map. Identifies the workflow implementation to be started.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowExecuteRequest) SetName(value *string) {
-	request.SetStringProperty("Name", value)
+func (request *WorkflowExecuteRequest) SetWorkflow(value *string) {
+	request.SetStringProperty("Workflow", value)
 }
 
 // GetArgs gets a WorkflowExecuteRequest's Args field
@@ -135,7 +135,7 @@ func (request *WorkflowExecuteRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteRequest); ok {
 		v.SetDomain(request.GetDomain())
-		v.SetName(request.GetName())
+		v.SetWorkflow(request.GetWorkflow())
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
 	}

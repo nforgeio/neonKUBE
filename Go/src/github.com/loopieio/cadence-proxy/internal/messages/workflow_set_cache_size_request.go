@@ -45,7 +45,7 @@ func NewWorkflowSetCacheSizeRequest() *WorkflowSetCacheSizeRequest {
 // returns int -> int specifying the maximum number of bytes used for caching
 // sticky workflows.cache Size
 func (request *WorkflowSetCacheSizeRequest) GetSize() int {
-	return int(request.GetLongProperty("Size"))
+	return int(request.GetIntProperty("Size"))
 }
 
 // SetSize sets a WorkflowSetCacheSizeRequest's Size value
@@ -54,7 +54,7 @@ func (request *WorkflowSetCacheSizeRequest) GetSize() int {
 // param value int -> int specifying the maximum number of bytes used for caching
 // sticky workflows.cache Size
 func (request *WorkflowSetCacheSizeRequest) SetSize(value int) {
-	request.SetLongProperty("Size", int64(value))
+	request.SetIntProperty("Size", int32(value))
 }
 
 // -------------------------------------------------------------------------
