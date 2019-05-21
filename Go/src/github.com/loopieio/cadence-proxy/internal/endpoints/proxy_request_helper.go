@@ -183,7 +183,9 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 
 		// $debug(jack.burns): DELETE THIS!
 		err := resp.Body.Close()
-		logger.Error("could not close response body", zap.Error(err))
+		if err != nil {
+			logger.Error("could not close response body", zap.Error(err))
+		}
 	}()
 
 	return nil
@@ -217,8 +219,10 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyMessa
 
 	// set endpoint to cadence cluster
 	// and identity
+	// set cadenceClientTimeout
 	endpoints := *request.GetEndpoints()
 	identity := *request.GetIdentity()
+	cadenceClientTimeout = request.GetClientTimeout()
 
 	// client options
 	opts := client.Options{
@@ -249,7 +253,7 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyMessa
 	// make a channel that waits for a connection to be established
 	// until returning ready
 	connectChan := make(chan error)
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 
 	// defer the cancel of the context and
 	// closing of the connectChan
@@ -608,7 +612,9 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 
 			// $debug(jack.burns): DELETE THIS!
 			err := resp.Body.Close()
-			logger.Error("could not close response body", zap.Error(err))
+			if err != nil {
+				logger.Error("could not close response body", zap.Error(err))
+			}
 		}()
 
 		// $debug(jack.burns): DELETE THIS!
@@ -671,7 +677,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	workflowName := request.GetWorkflow()
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
@@ -854,7 +860,7 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 	runID := request.GetRunID()
 
 	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// cancel the specified workflow
@@ -915,7 +921,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	details := request.GetDetails()
 
 	// create the context to terminate the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// terminate the specified workflow
@@ -976,7 +982,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 	signalArgs := request.GetSignalArgs()
 
 	// create the context to signal the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// signal the specified workflow
@@ -1039,7 +1045,7 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	workflow := request.GetWorkflow()
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
