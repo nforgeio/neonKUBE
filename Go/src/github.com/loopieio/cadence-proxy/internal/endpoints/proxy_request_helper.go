@@ -192,14 +192,6 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 // -------------------------------------------------------------------------
 // IProxyRequest message type handler methods
 
-func handleActivityRequest(request *messages.ActivityRequest) messages.IProxyMessage {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("not implemented exception for message type ActivityRequest")
-	return nil
-
-}
-
 func handleCancelRequest(request *messages.CancelRequest) messages.IProxyMessage {
 
 	// $debug(jack.burns): DELETE THIS!
@@ -802,9 +794,10 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 	}
 
 	// grab the client.CancelWorkflow parameters and
-	// create the context to cancel the workflow
 	workflowID := request.GetWorkflowID()
 	runID := request.GetRunID()
+
+	// create the context to cancel the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
@@ -860,11 +853,12 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	}
 
 	// grab the client.TerminateWorkflow parameters and
-	// create the context to terminate the workflow
 	workflowID := request.GetWorkflowID()
 	runID := request.GetRunID()
 	reason := request.GetReason()
 	details := request.GetDetails()
+
+	// create the context to terminate the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
@@ -919,12 +913,13 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 		return reply
 	}
 
-	// grab the client.SignalWorkflow parameters and
-	// create the context to signal the workflow
+	// grab the client.SignalWorkflow parameters
 	workflowID := request.GetWorkflowID()
 	runID := request.GetRunID()
 	signalName := request.GetSignalName()
 	signalArgs := request.GetSignalArgs()
+
+	// create the context to signal the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
@@ -979,14 +974,15 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 		return reply
 	}
 
-	// grab the client.SignalWithStartWorkflow parameters and
-	// create the context to signal and start the workflow
+	// grab the client.SignalWithStartWorkflow parameters
 	workflowID := request.GetWorkflowID()
 	signalName := request.GetSignalName()
 	signalArgs := request.GetSignalArgs()
 	opts := request.GetOptions()
 	workflowArgs := request.GetWorkflowArgs()
 	name := request.GetName()
+
+	// create the context
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceTimeout)
 	defer cancel()
 
