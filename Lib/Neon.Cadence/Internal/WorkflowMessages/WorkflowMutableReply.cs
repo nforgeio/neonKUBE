@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeRequest.cs
+// FILE:	    WorkflowMutableReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,44 +32,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Invokes a workflow instance.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowMutableRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeRequest)]
-    internal class WorkflowInvokeRequest : WorkflowContextRequest
+    [ProxyMessage(MessageTypes.WorkflowMutableReply)]
+    internal class WorkflowMutableReply : WorkflowContextReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowInvokeRequest()
+        public WorkflowMutableReply()
         {
-            Type = MessageTypes.WorkflowInvokeRequest;
-        }
-
-        /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowInvokeReply;
-
-        /// <summary>
-        /// Identifies the workflow implementation to be started.
-        /// </summary>
-        public string Name
-        {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            Type = MessageTypes.WorkflowMutableReply;
         }
 
         /// <summary>
-        /// The workflow arguments encoded into a byte array (or <c>null</c>).
+        /// Holds the mutable result.
         /// </summary>
-        public byte[] Args
+        public byte[] Result
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowInvokeRequest();
+            var clone = new WorkflowMutableReply();
 
             CopyTo(clone);
 
@@ -81,10 +69,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowInvokeRequest)target;
+            var typedTarget = (WorkflowMutableReply)target;
 
-            typedTarget.Name = this.Name;
-            typedTarget.Args = this.Args;
+            typedTarget.Result = this.Result;
         }
     }
 }

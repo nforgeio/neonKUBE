@@ -146,7 +146,7 @@ namespace Neon.Cadence
     ///     </para>
     ///     <code language="c#">
     ///     [QueryHandler("my-query")]
-    ///     protected async Task<byte[]></byte> OnMyQuery(byte[] args)
+    ///     protected async Task&lt;byte[]&gt; OnMyQuery(byte[] args)
     ///     {
     ///         return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
     ///     }
@@ -162,6 +162,14 @@ namespace Neon.Cadence
     /// </remarks>
     public abstract class Workflow
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static Version ZeroVersion = new Version(0, 0, 0);
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private long workflowContextId;
 
         /// <summary>
@@ -180,6 +188,20 @@ namespace Neon.Cadence
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
         /// </summary>
         public CadenceClient Client { get; private set; }
+
+        /// <summary>
+        /// Workflow implemenations that support version backwards compatability should
+        /// override this to return the version of the implementation.  This returns
+        /// <c>Version(0, 0, 0)</c> by default.
+        /// </summary>
+        public virtual Version Version => ZeroVersion;
+
+        /// <summary>
+        /// Returns the version of the workflow implementation that was executed when
+        /// the workflow was started.  This can be used to to implement backwards
+        /// compatability.
+        /// </summary>
+        public Version InitialVersion { get; private set; }
 
         /// <summary>
         /// Called by Cadence to execute a workflow.  Derived classes will need to implement
@@ -299,7 +321,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Executes a child workflow an waits for it to complete.
+        /// Executes a child workflow and waits for it to complete.
         /// </summary>
         /// <param name="name">The workflow name.</param>
         /// <param name="args">Optionally specifies the workflow arguments.</param>

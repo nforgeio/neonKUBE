@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInvokeRequest.cs
+// FILE:	    WorkflowMutableRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,42 +34,33 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeRequest)]
-    internal class WorkflowInvokeRequest : WorkflowContextRequest
+    [ProxyMessage(MessageTypes.WorkflowMutableRequest)]
+    internal class WorkflowMutableRequest : WorkflowContextRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowInvokeRequest()
+        public WorkflowMutableRequest()
         {
-            Type = MessageTypes.WorkflowInvokeRequest;
+            Type = MessageTypes.WorkflowMutableRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowInvokeReply;
+        public override MessageTypes ReplyType => MessageTypes.WorkflowMutableReply;
 
         /// <summary>
-        /// Identifies the workflow implementation to be started.
+        /// Identifies the mutable value to be returned.
         /// </summary>
-        public string Name
+        public string MutableId
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
-        }
-
-        /// <summary>
-        /// The workflow arguments encoded into a byte array (or <c>null</c>).
-        /// </summary>
-        public byte[] Args
-        {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetStringProperty("MutableId");
+            set => SetStringProperty("MutableId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowInvokeRequest();
+            var clone = new WorkflowMutableRequest();
 
             CopyTo(clone);
 
@@ -81,10 +72,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowInvokeRequest)target;
+            var typedTarget = (WorkflowMutableRequest)target;
 
-            typedTarget.Name = this.Name;
-            typedTarget.Args = this.Args;
+            typedTarget.MutableId = this.MutableId;
         }
     }
 }
