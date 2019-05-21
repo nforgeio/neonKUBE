@@ -33,6 +33,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence
 {
@@ -109,7 +110,7 @@ namespace Neon.Cadence
     ///     into bytes using whatever encoding scheme that makes sense.  It is common though
     ///     to use the <see cref="NeonHelper.JsonSerialize(object, Formatting)"/> and
     ///     <see cref="NeonHelper.JsonDeserialize(Type, string, bool)"/> methods to serialize
-    ///     paramaters and results to JSON strings and then encode those as UTF-8 bytes.
+    ///     parameters and results to JSON strings and then encode those as UTF-8 bytes.
     ///     </para>
     /// </item>
     /// <item>
@@ -160,7 +161,7 @@ namespace Neon.Cadence
     /// </item>
     /// </list>
     /// </remarks>
-    public abstract class Workflow
+    public abstract class Workflow : INeonLogger
     {
         //---------------------------------------------------------------------
         // Static members
@@ -201,7 +202,7 @@ namespace Neon.Cadence
         /// the workflow was started.  This can be used to to implement backwards
         /// compatability.
         /// </summary>
-        public Version InitialVersion { get; private set; }
+        public Version OriginalVersion { get; private set; }
 
         /// <summary>
         /// Called by Cadence to execute a workflow.  Derived classes will need to implement
@@ -391,6 +392,126 @@ namespace Neon.Cadence
         {
             await Task.CompletedTask;
             throw new NotImplementedException();
+        }
+
+        //---------------------------------------------------------------------
+        // Logging implementation
+
+        // $todo(jeff.lill): Implement these.
+        //
+        // Note that these calls are all synchronous.  Perhaps we should consider dumping
+        // the [INeonLogger] implementations in favor of simpler async methods?
+
+        /// <inheritdoc/>
+        public bool IsLogDebugEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogSInfoEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogInfoEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogWarnEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogErrorEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogSErrorEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogCriticalEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogLevelEnabled(LogLevel logLevel)
+        {
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public void LogDebug(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSInfo(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogInfo(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogWarn(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSError(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogError(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogCritical(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogDebug(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSInfo(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogInfo(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogWarn(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogError(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSError(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogCritical(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, IEnumerable<string> textFields, IEnumerable<double> numFields)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params string[] textFields)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params double[] numFields)
+        {
         }
     }
 }

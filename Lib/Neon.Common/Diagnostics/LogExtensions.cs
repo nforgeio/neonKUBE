@@ -41,7 +41,7 @@ namespace Neon.Diagnostics
         /// </remarks>
         public static void LogDebug(this INeonLogger log, Func<object> messageFunc)
         {
-            if (log.IsDebugEnabled)
+            if (log.IsLogDebugEnabled)
             {
                 log.LogDebug(messageFunc());
             }
@@ -57,7 +57,7 @@ namespace Neon.Diagnostics
         /// </remarks>
         public static void LogInfo(this INeonLogger log, Func<object> messageFunc)
         {
-            if (log.IsInfoEnabled)
+            if (log.IsLogInfoEnabled)
             {
                 log.LogInfo(messageFunc());
             }
@@ -73,7 +73,7 @@ namespace Neon.Diagnostics
         /// </remarks>
         public static void LogWarn(this INeonLogger log, Func<object> messageFunc)
         {
-            if (log.IsWarnEnabled)
+            if (log.IsLogWarnEnabled)
             {
                 log.LogWarn(messageFunc());
             }
@@ -89,7 +89,7 @@ namespace Neon.Diagnostics
         /// </remarks>
         public static void LogError(this INeonLogger log, Func<object> messageFunc)
         {
-            if (log.IsErrorEnabled)
+            if (log.IsLogErrorEnabled)
             {
                 log.LogError(messageFunc());
             }
@@ -105,7 +105,7 @@ namespace Neon.Diagnostics
         /// </remarks>
         public static void LogCritical(this INeonLogger log, Func<object> messageFunc)
         {
-            if (log.IsCriticalEnabled)
+            if (log.IsLogCriticalEnabled)
             {
                 log.LogCritical(messageFunc());
             }
@@ -118,7 +118,7 @@ namespace Neon.Diagnostics
         /// <param name="e">The exception.</param>
         public static void LogDebug(this INeonLogger log, Exception e)
         {
-            if (log.IsDebugEnabled)
+            if (log.IsLogDebugEnabled)
             {
                 log.LogDebug(null, e);
             }
@@ -131,7 +131,7 @@ namespace Neon.Diagnostics
         /// <param name="e">The exception.</param>
         public static void LogInfo(this INeonLogger log, Exception e)
         {
-            if (log.IsInfoEnabled)
+            if (log.IsLogInfoEnabled)
             {
                 log.LogInfo(null, e);
             }
@@ -144,7 +144,7 @@ namespace Neon.Diagnostics
         /// <param name="e">The exception.</param>
         public static void LogWarn(this INeonLogger log, Exception e)
         {
-            if (log.IsWarnEnabled)
+            if (log.IsLogWarnEnabled)
             {
                 log.LogWarn(null, e);
             }
@@ -157,7 +157,7 @@ namespace Neon.Diagnostics
         /// <param name="e">The exception.</param>
         public static void LogError(this INeonLogger log, Exception e)
         {
-            if (log.IsErrorEnabled)
+            if (log.IsLogErrorEnabled)
             {
                 log.LogError(null, e);
             }
@@ -170,7 +170,7 @@ namespace Neon.Diagnostics
         /// <param name="e">The exception.</param>
         public static void LogCritical(this INeonLogger log, Exception e)
         {
-            if (log.IsCriticalEnabled)
+            if (log.IsLogCriticalEnabled)
             {
                 log.LogCritical(null, e);
             }
