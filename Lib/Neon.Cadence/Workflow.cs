@@ -269,6 +269,7 @@ namespace Neon.Cadence
         /// the workflow is being replayed, the value from the history
         /// will be returned rather than calling the function again.
         /// </summary>
+        /// <param name="mutableId">Identifies the mutable value.</param>
         /// <param name="getter">The value retrival function.</param>
         /// <returns>The requested value as a byte array or <c>null</c>.</returns>
         /// <remarks>
@@ -281,7 +282,7 @@ namespace Neon.Cadence
         /// <para>
         /// For example, a workflow step may require a random number
         /// when making a decision.  In this case, the workflow would
-        /// call <see cref="GetMutableValueAsync(Func{byte[]})"/>, passing a function
+        /// call <see cref="GetMutableValueAsync"/>, passing a function
         /// that generates a random number.
         /// </para>
         /// <para>
@@ -296,8 +297,9 @@ namespace Neon.Cadence
         /// during the replay.
         /// </para>
         /// </remarks>
-        protected async Task<byte[]> GetMutableValueAsync(Func<byte[]> getter)
+        protected async Task<byte[]> GetMutableValueAsync(string mutableId, Func<Task<byte[]>> getter)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mutableId));
             Covenant.Requires<ArgumentNullException>(getter != null);
 
             await Task.CompletedTask;

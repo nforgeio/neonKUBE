@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowContextReply.cs
+// FILE:	    WorkflowRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,20 +32,26 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow context replies.
+    /// Base class for all workflow related requests.
     /// </summary>
     [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowContextReply : ProxyReply
+    internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowContextReply()
+        public WorkflowRequest()
         {
         }
 
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this reply.
+        /// <para>
+        /// Uniquely identifies the workflow context associated with this request.
+        /// </para>
+        /// <note>
+        /// Not all derived classes actually require this property.  In those cases,
+        /// this can remain as its default zero value.
+        /// </note>
         /// </summary>
         public long WorkflowContextId
         {
@@ -56,7 +62,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowContextReply();
+            var clone = new WorkflowRequest();
 
             CopyTo(clone);
 
@@ -68,7 +74,7 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowContextReply)target;
+            var typedTarget = (WorkflowRequest)target;
 
             typedTarget.WorkflowContextId = this.WorkflowContextId;
         }

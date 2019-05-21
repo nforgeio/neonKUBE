@@ -283,19 +283,19 @@ namespace TestCadence
         {
             // Ensures that we can serialize and deserialize workflow request messages.
 
-            WorkflowContextRequest message;
+            WorkflowRequest message;
 
             using (var stream = new MemoryStream())
             {
                 // Empty message.
 
-                message = new WorkflowContextRequest();
+                message = new WorkflowRequest();
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowContextRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.WorkflowContextId);
@@ -311,7 +311,7 @@ namespace TestCadence
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowContextRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkflowContextId);
@@ -324,19 +324,19 @@ namespace TestCadence
         {
             // Ensures that we can serialize and deserialize workflow reply messages.
 
-            WorkflowContextReply message;
+            WorkflowReply message;
 
             using (var stream = new MemoryStream())
             {
                 // Empty message.
 
-                message = new WorkflowContextReply();
+                message = new WorkflowReply();
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowContextReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -355,7 +355,7 @@ namespace TestCadence
                 stream.Write(message.Serialize(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowContextReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);

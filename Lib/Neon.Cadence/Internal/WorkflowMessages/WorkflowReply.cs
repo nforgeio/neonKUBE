@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowListOpenExecutionsRequest.cs
+// FILE:	    WorkflowReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,42 +32,37 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Lists open workflows.
+    /// Base class for all workflow related replies.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowListOpenExecutionsRequest)]
-    internal class WorkflowListOpenExecutionsRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.Unspecified)]
+    internal class WorkflowReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowListOpenExecutionsRequest()
+        public WorkflowReply()
         {
-            Type = MessageTypes.WorkflowListOpenExecutionsRequest;
         }
-
-        /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowListOpenExecutionsReply;
 
         /// <summary>
-        /// Optionally specifies the target domain.  Workflows from all
-        /// domains will be listed when this is omitted.
+        /// <para>
+        /// Uniquely identifies the workflow context associated with this request.
+        /// </para>
+        /// <note>
+        /// Not all derived classes actually require this property.  In those cases,
+        /// this can remain as its default zero value.
+        /// </note>
         /// </summary>
-        public string Domain
+        public long WorkflowContextId
         {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
-        }
-
-        public int MaximumPageSize
-        {
-            get => GetIntProperty("MaximumPageSize");
-            set => SetIntProperty("MaximumPageSize", value);
+            get => GetLongProperty("WorkflowContextId");
+            set => SetLongProperty("WorkflowContextId", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowListOpenExecutionsRequest();
+            var clone = new WorkflowReply();
 
             CopyTo(clone);
 
@@ -79,9 +74,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowListOpenExecutionsRequest)target;
+            var typedTarget = (WorkflowReply)target;
 
-            typedTarget.Domain = this.Domain;
+            typedTarget.WorkflowContextId = this.WorkflowContextId;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowContextRequest.cs
+// FILE:	    WorkflowListOpenExecutionsRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,32 +32,42 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all workflow requests that relate to a workflow context
-    /// being managed by the <b>cadence-proxy</b>.
+    /// <b>proxy --> client:</b> Lists open workflows.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
-    internal class WorkflowContextRequest : ProxyRequest
+    [ProxyMessage(MessageTypes.WorkflowListOpenExecutionsRequest)]
+    internal class WorkflowListOpenExecutionsRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowContextRequest()
+        public WorkflowListOpenExecutionsRequest()
         {
+            Type = MessageTypes.WorkflowListOpenExecutionsRequest;
         }
 
+        /// <inheritdoc/>
+        public override MessageTypes ReplyType => MessageTypes.WorkflowListOpenExecutionsReply;
+
         /// <summary>
-        /// Uniquely identifies the workflow context associated with this request.
+        /// Optionally specifies the target domain.  Workflows from all
+        /// domains will be listed when this is omitted.
         /// </summary>
-        public long WorkflowContextId
+        public string Domain
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetStringProperty("Domain");
+            set => SetStringProperty("Domain", value);
+        }
+
+        public int MaximumPageSize
+        {
+            get => GetIntProperty("MaximumPageSize");
+            set => SetIntProperty("MaximumPageSize", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowContextRequest();
+            var clone = new WorkflowListOpenExecutionsRequest();
 
             CopyTo(clone);
 
@@ -69,9 +79,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowContextRequest)target;
+            var typedTarget = (WorkflowListOpenExecutionsRequest)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.Domain = this.Domain;
         }
     }
 }

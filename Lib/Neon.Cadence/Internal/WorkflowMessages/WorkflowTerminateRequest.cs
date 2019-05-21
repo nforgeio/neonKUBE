@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Terminates a workflow execution.
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowTerminateRequest)]
-    internal class WorkflowTerminateRequest : ProxyRequest
+    internal class WorkflowTerminateRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.

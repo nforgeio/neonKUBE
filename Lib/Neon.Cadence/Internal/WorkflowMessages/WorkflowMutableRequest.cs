@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowMutableRequest)]
-    internal class WorkflowMutableRequest : WorkflowContextRequest
+    internal class WorkflowMutableRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.

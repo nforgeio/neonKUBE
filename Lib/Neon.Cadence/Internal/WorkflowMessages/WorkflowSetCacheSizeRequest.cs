@@ -56,7 +56,7 @@ namespace Neon.Cadence.Internal
     /// instance is assigned to a worker. 
     /// </summary>
     [ProxyMessage(MessageTypes.WorkflowSetCacheSizeRequest)]
-    internal class WorkflowSetCacheSizeRequest : ProxyRequest
+    internal class WorkflowSetCacheSizeRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
