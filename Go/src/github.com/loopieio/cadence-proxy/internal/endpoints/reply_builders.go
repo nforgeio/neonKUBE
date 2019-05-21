@@ -127,3 +127,19 @@ func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *c
 		reply.SetResult(result[0])
 	}
 }
+
+func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, cadenceError *cadenceerrors.CadenceError, result ...[]byte) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		reply.SetResult(result[0])
+	}
+}
+
+func buildWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...[]byte) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		reply.SetResult(result[0])
+	}
+}

@@ -156,6 +156,18 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 			reply = handleWorkflowQueryRequest(v)
 		}
 
+	// WorkflowMutableRequest
+	case messagetypes.WorkflowMutableRequest:
+		if v, ok := request.(*messages.WorkflowMutableRequest); ok {
+			reply = handleWorkflowMutableRequest(v)
+		}
+
+	// WorkflowMutableInvokeRequest
+	case messagetypes.WorkflowMutableInvokeRequest:
+		if v, ok := request.(*messages.WorkflowMutableInvokeRequest); ok {
+			reply = handleWorkflowMutableInvokeRequest(v)
+		}
+
 	// PingRequest
 	case messagetypes.PingRequest:
 		if v, ok := request.(*messages.PingRequest); ok {
@@ -1173,6 +1185,36 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 
 	if v, ok := reply.(*messages.WorkflowQueryReply); ok {
 		buildWorkflowQueryReply(v, nil, result)
+	}
+
+	return reply
+}
+
+func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowMutableRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowMutableReply
+	reply := createReplyMessage(request)
+
+	if v, ok := reply.(*messages.WorkflowMutableReply); ok {
+		buildWorkflowMutableReply(v, nil)
+	}
+
+	return reply
+}
+
+func handleWorkflowMutableInvokeRequest(request *messages.WorkflowMutableInvokeRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowMutableInvokeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowMutableInvokeReply
+	reply := createReplyMessage(request)
+
+	if v, ok := reply.(*messages.WorkflowMutableInvokeReply); ok {
+		buildWorkflowMutableInvokeReply(v, nil)
 	}
 
 	return reply
