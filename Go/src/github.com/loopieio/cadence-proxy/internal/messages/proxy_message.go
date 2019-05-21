@@ -417,12 +417,12 @@ func (proxyMessage *ProxyMessage) GetTimeSpanProperty(key string, def ...time.Du
 		return time.Duration(ticks*100) * time.Nanosecond
 	}
 
-	d := time.Duration(0)
+	d := time.Duration(0) * time.Nanosecond
 	if len(def) > 0 {
 		d = def[0]
 	}
 
-	return d * time.Nanosecond
+	return d
 }
 
 // GetJSONProperty is a helper method for retrieving a complex property serialized

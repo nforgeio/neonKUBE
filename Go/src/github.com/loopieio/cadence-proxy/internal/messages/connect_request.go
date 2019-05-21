@@ -73,9 +73,7 @@ func (request *ConnectRequest) SetIdentity(value *string) {
 //
 // returns time.Duration -> the duration for a ConnectRequest's timeout from its properties map
 func (request *ConnectRequest) GetClientTimeout() time.Duration {
-	seconds := time.Second * 30
-	defDuration := time.Nanosecond * time.Duration(seconds.Nanoseconds())
-	return request.GetTimeSpanProperty("ClientTimeout", defDuration)
+	return request.GetTimeSpanProperty("ClientTimeout", time.Second*30)
 }
 
 // SetClientTimeout sets the ClientTimeout property in a ConnectRequest's properties map
