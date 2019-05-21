@@ -103,9 +103,9 @@ namespace Neon.Diagnostics
         public bool IsCriticalEnabled => log.IsCriticalEnabled;
 
         /// <inheritdoc/>
-        public bool IsEnabled(LogLevel logLevel)
+        public bool IsLogLevelEnabled(LogLevel logLevel)
         {
-            return log.IsEnabled(logLevel);
+            return log.IsLogLevelEnabled(logLevel);
         }
 
         /// <inheritdoc/>

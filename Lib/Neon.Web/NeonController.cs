@@ -283,9 +283,9 @@ namespace Neon.Web
         }
 
         /// <inheritdoc/>
-        public bool IsEnabled(LogLevel logLevel)
+        public bool IsLogLevelEnabled(LogLevel logLevel)
         {
-            return GetLogger().IsEnabled(logLevel);
+            return GetLogger().IsLogLevelEnabled(logLevel);
         }
 
         /// <inheritdoc/>

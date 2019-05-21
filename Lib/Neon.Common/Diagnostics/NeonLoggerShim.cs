@@ -108,7 +108,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public bool IsEnabled(LogLevel logLevel)
+        public bool IsLogLevelEnabled(LogLevel logLevel)
         {
             switch (logLevel)
             {

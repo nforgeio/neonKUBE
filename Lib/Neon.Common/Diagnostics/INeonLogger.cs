@@ -71,7 +71,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="logLevel">The log level.</param>
         /// <returns><c>true</c> if logging is enabled for <paramref name="logLevel"/>.</returns>
-        bool IsEnabled(LogLevel logLevel);
+        bool IsLogLevelEnabled(LogLevel logLevel);
 
         /// <summary>
         /// Logs a <b>debug</b> message.

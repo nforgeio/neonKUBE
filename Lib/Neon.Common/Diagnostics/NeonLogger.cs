@@ -155,7 +155,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public bool IsEnabled(LogLevel logLevel)
+        public bool IsLogLevelEnabled(LogLevel logLevel)
         {
             // Map into Neon log levels.
 
@@ -733,7 +733,7 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel)
         {
-            return IsEnabled(ToNeonLevel(logLevel));
+            return IsLogLevelEnabled(ToNeonLevel(logLevel));
         }
 
         /// <inheritdoc/>
