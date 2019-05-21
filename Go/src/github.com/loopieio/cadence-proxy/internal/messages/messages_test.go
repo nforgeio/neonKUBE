@@ -10,15 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/cadence/workflow"
-
 	"go.uber.org/cadence/client"
-
 	"go.uber.org/cadence/worker"
+	"go.uber.org/cadence/workflow"
+	"go.uber.org/zap"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
+
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
 
 	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
@@ -1704,11 +1703,15 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 	if v, ok := message.(*messages.WorkflowInvokeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
+		s.Equal(int64(0), v.GetWorkflowContextID())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetWorkflowContextID(int64(666))
+		s.Equal(int64(666), v.GetWorkflowContextID())
 
 		result := []byte{0, 1, 2, 3, 4}
 		v.SetResult(result)
@@ -1728,6 +1731,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetWorkflowContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -1738,6 +1742,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetWorkflowContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -2424,7 +2429,8 @@ func (s *UnitTestSuite) TestPropertyHelpers() {
 }
 
 // --------------------------------------------------------------------------
-// Test the base messages (messages.ProxyMessage, messages.ProxyRequest, messages.ProxyReply)
+// Test the base messages (messages.ProxyMessage, messages.ProxyRequest, messages.ProxyReply,
+// messages.WorkflowContextRequest, messages.WorkflowContextReply)
 
 // TestProxyMessage ensures that we can
 // serializate and deserialize a base messages.ProxyMessage
@@ -2508,11 +2514,12 @@ func (s *UnitTestSuite) TestProxyRequest() {
 	// Ensure that we can serialize and deserialize request messages
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := messages.Deserialize(buf, true, "messages.ProxyRequest")
+	message, err := messages.Deserialize(buf, true, "ProxyRequest")
 	s.NoError(err)
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ProxyRequest); ok {
+		s.Equal(v.ReplyType, messagetypes.Unspecified)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(time.Duration(0), v.GetTimeout())
 
@@ -2531,7 +2538,7 @@ func (s *UnitTestSuite) TestProxyRequest() {
 		buf = bytes.NewBuffer(serializedMessage)
 	}
 
-	message, err = messages.Deserialize(buf, true, "messages.ProxyRequest")
+	message, err = messages.Deserialize(buf, true, "ProxyRequest")
 	s.NoError(err)
 	s.NotNil(message)
 
@@ -2546,7 +2553,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 	// Ensure that we can serialize and deserialize reply messages
 
 	buf := bytes.NewBuffer(make([]byte, 0))
-	message, err := messages.Deserialize(buf, true, "messages.ProxyReply")
+	message, err := messages.Deserialize(buf, true, "ProxyReply")
 	s.NoError(err)
 	s.NotNil(message)
 
@@ -2571,13 +2578,105 @@ func (s *UnitTestSuite) TestProxyReply() {
 		buf = bytes.NewBuffer(serializedMessage)
 	}
 
-	message, err = messages.Deserialize(buf, true, "messages.ProxyReply")
+	message, err = messages.Deserialize(buf, true, "ProxyReply")
 	s.NoError(err)
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ProxyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Nil(v.GetError().Type)
+		s.Panics(func() { v.GetError().GetType() })
+		s.Equal("MyError", *v.GetError().String)
+	}
+}
+
+func (s *UnitTestSuite) TestWorkflowContextRequest() {
+
+	// Ensure that we can serialize and deserialize request messages
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	message, err := messages.Deserialize(buf, true, "WorkflowContextRequest")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowContextRequest); ok {
+		s.Equal(v.ReplyType, messagetypes.Unspecified)
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(time.Duration(0), v.GetTimeout())
+		s.Equal(int64(0), v.GetWorkflowContextID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetTimeout(time.Second * 5)
+		s.Equal(time.Second*5, v.GetTimeout())
+
+		v.SetWorkflowContextID(int64(555))
+		s.Equal(int64(555), v.GetWorkflowContextID())
+
+		// serialize the new message
+		serializedMessage, err := v.Serialize(true)
+		s.NoError(err)
+
+		// byte buffer to deserialize
+		buf = bytes.NewBuffer(serializedMessage)
+	}
+
+	message, err = messages.Deserialize(buf, true, "WorkflowContextRequest")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowContextRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(time.Second*5, v.GetTimeout())
+		s.Equal(int64(555), v.GetWorkflowContextID())
+	}
+}
+
+func (s *UnitTestSuite) TestWorkflowContextReply() {
+
+	// Ensure that we can serialize and deserialize reply messages
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	message, err := messages.Deserialize(buf, true, "WorkflowContextReply")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowContextReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+		s.Equal(int64(0), v.GetWorkflowContextID())
+
+		// Round-trip
+		v.SetRequestID(int64(555))
+		v.SetError(cadenceerrors.NewCadenceError("MyError"))
+
+		v.SetWorkflowContextID(int64(555))
+		s.Equal(int64(555), v.GetWorkflowContextID())
+
+		s.Equal(int64(555), v.GetRequestID())
+		s.Nil(v.GetError().Type)
+		s.Panics(func() { v.GetError().GetType() })
+		s.Equal("MyError", *v.GetError().String)
+
+		// serialize the new message
+		serializedMessage, err := v.Serialize(true)
+		s.NoError(err)
+
+		// byte buffer to deserialize
+		buf = bytes.NewBuffer(serializedMessage)
+	}
+
+	message, err = messages.Deserialize(buf, true, "WorkflowContextReply")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowContextReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Nil(v.GetError().Type)
+		s.Equal(int64(555), v.GetWorkflowContextID())
 		s.Panics(func() { v.GetError().GetType() })
 		s.Equal("MyError", *v.GetError().String)
 	}

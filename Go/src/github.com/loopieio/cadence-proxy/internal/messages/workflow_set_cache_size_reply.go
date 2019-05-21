@@ -7,11 +7,11 @@ import (
 
 type (
 
-	// WorkflowSetCacheSizeReply is a ProxyReply of MessageType
-	// WorkflowSetCacheSizeReply.  It holds a reference to a ProxyReply in memory
+	// WorkflowSetCacheSizeReply is a WorkflowContextReply of MessageType
+	// WorkflowSetCacheSizeReply.  It holds a reference to a WorkflowContextReply in memory
 	// and is the reply type to a WorkflowSetCacheSizeRequest
 	WorkflowSetCacheSizeReply struct {
-		*ProxyReply
+		*WorkflowContextReply
 	}
 )
 
@@ -22,7 +22,7 @@ type (
 // WorkflowSetCacheSizeReply in memory
 func NewWorkflowSetCacheSizeReply() *WorkflowSetCacheSizeReply {
 	reply := new(WorkflowSetCacheSizeReply)
-	reply.ProxyReply = NewProxyReply()
+	reply.WorkflowContextReply = NewWorkflowContextReply()
 	reply.Type = messagetypes.WorkflowSetCacheSizeReply
 
 	return reply
@@ -31,7 +31,7 @@ func NewWorkflowSetCacheSizeReply() *WorkflowSetCacheSizeReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyReply.Clone()
+// Clone inherits docs from WorkflowContextReply.Clone()
 func (reply *WorkflowSetCacheSizeReply) Clone() IProxyMessage {
 	workflowSetCacheSizeReply := NewWorkflowSetCacheSizeReply()
 	var messageClone IProxyMessage = workflowSetCacheSizeReply
@@ -40,40 +40,53 @@ func (reply *WorkflowSetCacheSizeReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyReply.CopyTo()
+// CopyTo inherits docs from WorkflowContextReply.CopyTo()
 func (reply *WorkflowSetCacheSizeReply) CopyTo(target IProxyMessage) {
-	reply.ProxyReply.CopyTo(target)
+	reply.WorkflowContextReply.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
+// SetProxyMessage inherits docs from WorkflowContextReply.SetProxyMessage()
 func (reply *WorkflowSetCacheSizeReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
+	reply.WorkflowContextReply.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
+// GetProxyMessage inherits docs from WorkflowContextReply.GetProxyMessage()
 func (reply *WorkflowSetCacheSizeReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
+	return reply.WorkflowContextReply.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyReply.GetRequestID()
+// GetRequestID inherits docs from WorkflowContextReply.GetRequestID()
 func (reply *WorkflowSetCacheSizeReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
+	return reply.WorkflowContextReply.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyReply.SetRequestID()
+// SetRequestID inherits docs from WorkflowContextReply.SetRequestID()
 func (reply *WorkflowSetCacheSizeReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
+	reply.WorkflowContextReply.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyReply interface methods for implementing the IProxyReply interface
 
-// GetError inherits docs from ProxyReply.GetError()
+// GetError inherits docs from WorkflowContextReply.GetError()
 func (reply *WorkflowSetCacheSizeReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
+	return reply.WorkflowContextReply.GetError()
 }
 
-// SetError inherits docs from ProxyReply.SetError()
+// SetError inherits docs from WorkflowContextReply.SetError()
 func (reply *WorkflowSetCacheSizeReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
+	reply.WorkflowContextReply.SetError(value)
+}
+
+// -------------------------------------------------------------------------
+// IWorkflowContextReply interface methods for implementing the IWorkflowContextReply interface
+
+// GetWorkflowContextID inherits docs from WorkflowContextReply.GetWorkflowContextID()
+func (reply *WorkflowSetCacheSizeReply) GetWorkflowContextID() int64 {
+	return reply.WorkflowContextReply.GetWorkflowContextID()
+}
+
+// SetWorkflowContextID inherits docs from WorkflowContextReply.GetWorkflowContextID()
+func (reply *WorkflowSetCacheSizeReply) SetWorkflowContextID(value int64) {
+	reply.WorkflowContextReply.SetWorkflowContextID(value)
 }

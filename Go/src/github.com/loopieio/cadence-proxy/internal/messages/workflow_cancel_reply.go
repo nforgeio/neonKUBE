@@ -7,11 +7,11 @@ import (
 
 type (
 
-	// WorkflowCancelReply is a ProxyReply of MessageType
-	// WorkflowCancelReply.  It holds a reference to a ProxyReply in memory
+	// WorkflowCancelReply is a WorkflowContextReply of MessageType
+	// WorkflowCancelReply.  It holds a reference to a WorkflowContextReply in memory
 	// and is the reply type to a WorkflowCancelRequest
 	WorkflowCancelReply struct {
-		*ProxyReply
+		*WorkflowContextReply
 	}
 )
 
@@ -22,7 +22,7 @@ type (
 // WorkflowCancelReply in memory
 func NewWorkflowCancelReply() *WorkflowCancelReply {
 	reply := new(WorkflowCancelReply)
-	reply.ProxyReply = NewProxyReply()
+	reply.WorkflowContextReply = NewWorkflowContextReply()
 	reply.Type = messagetypes.WorkflowCancelReply
 
 	return reply
@@ -31,7 +31,7 @@ func NewWorkflowCancelReply() *WorkflowCancelReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyReply.Clone()
+// Clone inherits docs from WorkflowContextReply.Clone()
 func (reply *WorkflowCancelReply) Clone() IProxyMessage {
 	workflowCancelReply := NewWorkflowCancelReply()
 	var messageClone IProxyMessage = workflowCancelReply
@@ -40,40 +40,53 @@ func (reply *WorkflowCancelReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyReply.CopyTo()
+// CopyTo inherits docs from WorkflowContextReply.CopyTo()
 func (reply *WorkflowCancelReply) CopyTo(target IProxyMessage) {
-	reply.ProxyReply.CopyTo(target)
+	reply.WorkflowContextReply.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
+// SetProxyMessage inherits docs from WorkflowContextReply.SetProxyMessage()
 func (reply *WorkflowCancelReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
+	reply.WorkflowContextReply.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
+// GetProxyMessage inherits docs from WorkflowContextReply.GetProxyMessage()
 func (reply *WorkflowCancelReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
+	return reply.WorkflowContextReply.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyReply.GetRequestID()
+// GetRequestID inherits docs from WorkflowContextReply.GetRequestID()
 func (reply *WorkflowCancelReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
+	return reply.WorkflowContextReply.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyReply.SetRequestID()
+// SetRequestID inherits docs from WorkflowContextReply.SetRequestID()
 func (reply *WorkflowCancelReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
+	reply.WorkflowContextReply.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyReply interface methods for implementing the IProxyReply interface
 
-// GetError inherits docs from ProxyReply.GetError()
+// GetError inherits docs from WorkflowContextReply.GetError()
 func (reply *WorkflowCancelReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
+	return reply.WorkflowContextReply.GetError()
 }
 
-// SetError inherits docs from ProxyReply.SetError()
+// SetError inherits docs from WorkflowContextReply.SetError()
 func (reply *WorkflowCancelReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
+	reply.WorkflowContextReply.SetError(value)
+}
+
+// -------------------------------------------------------------------------
+// IWorkflowContextReply interface methods for implementing the IWorkflowContextReply interface
+
+// GetWorkflowContextID inherits docs from WorkflowContextReply.GetWorkflowContextID()
+func (reply *WorkflowCancelReply) GetWorkflowContextID() int64 {
+	return reply.WorkflowContextReply.GetWorkflowContextID()
+}
+
+// SetWorkflowContextID inherits docs from WorkflowContextReply.GetWorkflowContextID()
+func (reply *WorkflowCancelReply) SetWorkflowContextID(value int64) {
+	reply.WorkflowContextReply.SetWorkflowContextID(value)
 }

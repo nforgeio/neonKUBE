@@ -10,17 +10,17 @@ import (
 
 type (
 
-	// WorkflowSignalWithStartRequest is ProxyRequest of MessageType
+	// WorkflowSignalWithStartRequest is WorkflowContextRequest of MessageType
 	// WorkflowSignalWithStartRequest.
 	//
 	// A WorkflowSignalWithStartRequest contains a reference to a
-	// ProxyRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this ProxyRequest
+	// WorkflowContextRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this WorkflowContextRequest
 	//
 	// A WorkflowSignalWithStartRequest will pass all of the given data and options
 	// necessary to signal a cadence workflow with start via the cadence client
 	WorkflowSignalWithStartRequest struct {
-		*ProxyRequest
+		*WorkflowContextRequest
 	}
 )
 
@@ -30,7 +30,7 @@ type (
 // WorkflowSignalWithStartRequest in memory
 func NewWorkflowSignalWithStartRequest() *WorkflowSignalWithStartRequest {
 	request := new(WorkflowSignalWithStartRequest)
-	request.ProxyRequest = NewProxyRequest()
+	request.WorkflowContextRequest = NewWorkflowContextRequest()
 	request.Type = messagetypes.WorkflowSignalWithStartRequest
 	request.SetReplyType(messagetypes.WorkflowSignalWithStartReply)
 
@@ -159,7 +159,7 @@ func (request *WorkflowSignalWithStartRequest) SetWorkflow(value *string) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyRequest.Clone()
+// Clone inherits docs from WorkflowContextRequest.Clone()
 func (request *WorkflowSignalWithStartRequest) Clone() IProxyMessage {
 	workflowSignalWithStartRequest := NewWorkflowSignalWithStartRequest()
 	var messageClone IProxyMessage = workflowSignalWithStartRequest
@@ -168,9 +168,9 @@ func (request *WorkflowSignalWithStartRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyRequest.CopyTo()
+// CopyTo inherits docs from WorkflowContextRequest.CopyTo()
 func (request *WorkflowSignalWithStartRequest) CopyTo(target IProxyMessage) {
-	request.ProxyRequest.CopyTo(target)
+	request.WorkflowContextRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowSignalWithStartRequest); ok {
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetSignalName(request.GetSignalName())
@@ -181,45 +181,58 @@ func (request *WorkflowSignalWithStartRequest) CopyTo(target IProxyMessage) {
 	}
 }
 
-// SetProxyMessage inherits docs from ProxyRequest.SetProxyMessage()
+// SetProxyMessage inherits docs from WorkflowContextRequest.SetProxyMessage()
 func (request *WorkflowSignalWithStartRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyRequest.SetProxyMessage(value)
+	request.WorkflowContextRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyRequest.GetProxyMessage()
+// GetProxyMessage inherits docs from WorkflowContextRequest.GetProxyMessage()
 func (request *WorkflowSignalWithStartRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyRequest.GetProxyMessage()
+	return request.WorkflowContextRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
+// GetRequestID inherits docs from WorkflowContextRequest.GetRequestID()
 func (request *WorkflowSignalWithStartRequest) GetRequestID() int64 {
-	return request.ProxyRequest.GetRequestID()
+	return request.WorkflowContextRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
+// SetRequestID inherits docs from WorkflowContextRequest.SetRequestID()
 func (request *WorkflowSignalWithStartRequest) SetRequestID(value int64) {
-	request.ProxyRequest.SetRequestID(value)
+	request.WorkflowContextRequest.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
-// GetReplyType inherits docs from ProxyRequest.GetReplyType()
+// GetReplyType inherits docs from WorkflowContextRequest.GetReplyType()
 func (request *WorkflowSignalWithStartRequest) GetReplyType() messagetypes.MessageType {
-	return request.ProxyRequest.GetReplyType()
+	return request.WorkflowContextRequest.GetReplyType()
 }
 
-// SetReplyType inherits docs from ProxyRequest.SetReplyType()
+// SetReplyType inherits docs from WorkflowContextRequest.SetReplyType()
 func (request *WorkflowSignalWithStartRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetReplyType(value)
+	request.WorkflowContextRequest.SetReplyType(value)
 }
 
-// GetTimeout inherits docs from ProxyRequest.GetTimeout()
+// GetTimeout inherits docs from WorkflowContextRequest.GetTimeout()
 func (request *WorkflowSignalWithStartRequest) GetTimeout() time.Duration {
-	return request.ProxyRequest.GetTimeout()
+	return request.WorkflowContextRequest.GetTimeout()
 }
 
-// SetTimeout inherits docs from ProxyRequest.SetTimeout()
+// SetTimeout inherits docs from WorkflowContextRequest.SetTimeout()
 func (request *WorkflowSignalWithStartRequest) SetTimeout(value time.Duration) {
-	request.ProxyRequest.SetTimeout(value)
+	request.WorkflowContextRequest.SetTimeout(value)
+}
+
+// -------------------------------------------------------------------------
+// IWorkflowContextRequest interface methods for implementing the IWorkflowContextRequest interface
+
+// GetWorkflowContextID inherits docs from WorkflowContextRequest.GetWorkflowContextID()
+func (reply *WorkflowSignalWithStartRequest) GetWorkflowContextID() int64 {
+	return reply.WorkflowContextRequest.GetWorkflowContextID()
+}
+
+// SetWorkflowContextID inherits docs from WorkflowContextRequest.GetWorkflowContextID()
+func (reply *WorkflowSignalWithStartRequest) SetWorkflowContextID(value int64) {
+	reply.WorkflowContextRequest.SetWorkflowContextID(value)
 }
