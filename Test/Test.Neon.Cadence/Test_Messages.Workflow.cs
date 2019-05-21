@@ -318,6 +318,15 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.WorkflowContextId);
+                Assert.Null(message.Name);
+                Assert.Null(message.Args);
+                Assert.Null(message.Domain);
+                Assert.Null(message.WorkflowId);
+                Assert.Null(message.RunId);
+                Assert.Null(message.WorkflowType);
+                Assert.Null(message.TaskList);
+                Assert.Equal(TimeSpan.Zero, message.ExecutionStartToCloseTimeout);
+                Assert.Equal(0, (int)message.ChildPolicy);
 
                 // Round-trip
 
@@ -325,9 +334,21 @@ namespace TestCadence
                 message.WorkflowContextId = 666;
                 message.Name = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
+                message.Domain = "my-domain";
+                message.WorkflowId = "my-workflowid";
+                message.RunId = "my-runid";
+                message.WorkflowType = "my-workflowtype";
+                message.ExecutionStartToCloseTimeout = TimeSpan.FromDays(1);
+                message.ChildPolicy = ChildWorkflowPolicy.ChildWorkflowPolicyRequestCancel;
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-workflowid", message.WorkflowId);
+                Assert.Equal("my-runid", message.RunId);
+                Assert.Equal("my-workflowtype", message.WorkflowType);
+                Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(ChildWorkflowPolicy.ChildWorkflowPolicyRequestCancel, message.ChildPolicy);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -339,6 +360,12 @@ namespace TestCadence
                 Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-workflowid", message.WorkflowId);
+                Assert.Equal("my-runid", message.RunId);
+                Assert.Equal("my-workflowtype", message.WorkflowType);
+                Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(ChildWorkflowPolicy.ChildWorkflowPolicyRequestCancel, message.ChildPolicy);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -348,6 +375,12 @@ namespace TestCadence
                 Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-workflowid", message.WorkflowId);
+                Assert.Equal("my-runid", message.RunId);
+                Assert.Equal("my-workflowtype", message.WorkflowType);
+                Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(ChildWorkflowPolicy.ChildWorkflowPolicyRequestCancel, message.ChildPolicy);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -357,6 +390,12 @@ namespace TestCadence
                 Assert.Equal(666, message.WorkflowContextId);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-workflowid", message.WorkflowId);
+                Assert.Equal("my-runid", message.RunId);
+                Assert.Equal("my-workflowtype", message.WorkflowType);
+                Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(ChildWorkflowPolicy.ChildWorkflowPolicyRequestCancel, message.ChildPolicy);
             }
         }
 

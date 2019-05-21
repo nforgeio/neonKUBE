@@ -35,7 +35,6 @@ using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
 using Newtonsoft.Json;
-using Test.Neon.Models;
 using Xunit;
 
 namespace TestCadence

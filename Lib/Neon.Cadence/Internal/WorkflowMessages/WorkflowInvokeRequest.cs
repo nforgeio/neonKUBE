@@ -66,6 +66,69 @@ namespace Neon.Cadence.Internal
             set => SetBytesProperty("Args", value);
         }
 
+        /// <summary>
+        /// The domain where the workflow is executing.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty("Domain");
+            set => SetStringProperty("Domain", value);
+        }
+
+        /// <summary>
+        /// The original workflow ID.
+        /// </summary>
+        public string WorkflowId
+        {
+            get => GetStringProperty("WorkflowId");
+            set => SetStringProperty("WorkflowId", value);
+        }
+
+        /// <summary>
+        /// The workflow run ID.
+        /// </summary>
+        public string RunId
+        {
+            get => GetStringProperty("RunId");
+            set => SetStringProperty("RunId", value);
+        }
+
+        /// <summary>
+        /// The workflow type.
+        /// </summary>
+        public string WorkflowType
+        {
+            get => GetStringProperty("WorkflowType");
+            set => SetStringProperty("WorkflowType", value);
+        }
+
+        /// <summary>
+        /// The tasklist where the workflow is executing.
+        /// </summary>
+        public string TaskList
+        {
+            get => GetStringProperty("TaskList");
+            set => SetStringProperty("TaskList", value);
+        }
+
+        /// <summary>
+        /// The maximum duration the workflow is allowed to run.
+        /// </summary>
+        public TimeSpan ExecutionStartToCloseTimeout
+        {
+            get => GetTimeSpanProperty("ExecutionStartToCloseTimeout");
+            set => SetTimeSpanProperty("ExecutionStartToCloseTimeout", value);
+        }
+
+        /// <summary>
+        /// The workflow's child workflow policy.
+        /// </summary>
+        public ChildWorkflowPolicy ChildPolicy
+        {
+            get => GetEnumProperty<ChildWorkflowPolicy>("ChildPolicy");
+            set => SetEnumProperty("ChildPolicy", value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -83,8 +146,15 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowInvokeRequest)target;
 
-            typedTarget.Name = this.Name;
-            typedTarget.Args = this.Args;
+            typedTarget.Name                         = this.Name;
+            typedTarget.Args                         = this.Args;
+            typedTarget.Domain                       = this.Domain;
+            typedTarget.WorkflowId                   = this.WorkflowId;
+            typedTarget.RunId                        = this.RunId;
+            typedTarget.WorkflowType                 = this.WorkflowType;
+            typedTarget.TaskList                     = this.TaskList;
+            typedTarget.ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout;
+            typedTarget.ChildPolicy                  = this.ChildPolicy;
         }
     }
 }
