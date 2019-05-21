@@ -744,7 +744,7 @@ namespace Neon.Cadence
                 WorkflowContextId = workflowContextId,
                 Args              = request.Args,
                 Domain            = request.Domain,
-                Name              = request.Name,
+                Name              = request.Workflow,
                 Options           = request.Options
             };
 

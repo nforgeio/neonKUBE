@@ -74,8 +74,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public int Size
         {
-            get => (int)GetLongProperty("Size");
-            set => SetLongProperty("Size", value);
+            get => GetIntProperty("Size");
+            set => SetIntProperty("Size", value);
         }
 
         /// <inheritdoc/>

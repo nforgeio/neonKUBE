@@ -294,12 +294,12 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>client --> proxy:</b> Requests the list of open workflows.
         /// </summary>
-        WorkflowListOpenWorkflowRequest = 124,
+        WorkflowListOpenExecutionsRequest = 124,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowListOpenWorkflowRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowListOpenExecutionsRequest"/> message.
         /// </summary>
-        WorkflowListOpenReply = 125,
+        WorkflowListOpenExecutionsReply = 125,
 
         /// <summary>
         /// <b>client --> proxy:</b> Queries a workflow's last execution.
