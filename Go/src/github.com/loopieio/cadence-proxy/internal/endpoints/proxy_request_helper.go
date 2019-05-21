@@ -183,7 +183,9 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 
 		// $debug(jack.burns): DELETE THIS!
 		err := resp.Body.Close()
-		logger.Error("could not close response body", zap.Error(err))
+		if err != nil {
+			logger.Error("could not close response body", zap.Error(err))
+		}
 	}()
 
 	return nil
@@ -610,7 +612,9 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 
 			// $debug(jack.burns): DELETE THIS!
 			err := resp.Body.Close()
-			logger.Error("could not close response body", zap.Error(err))
+			if err != nil {
+				logger.Error("could not close response body", zap.Error(err))
+			}
 		}()
 
 		// $debug(jack.burns): DELETE THIS!
