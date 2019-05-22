@@ -74,7 +74,7 @@ namespace Neon.Xunit
             {
                 resetMethods = new List<MethodInfo>();
 
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                foreach (var assembly in AppDomain.CurrentDomain.GetUserAssemblies())
                 {
                     Type[] assemblyTypes;
 
