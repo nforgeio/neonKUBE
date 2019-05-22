@@ -3,6 +3,8 @@ package messages
 import (
 	"time"
 
+	"go.uber.org/cadence/workflow"
+
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -73,6 +75,136 @@ func (request *WorkflowInvokeRequest) SetArgs(value []byte) {
 	request.SetBytesProperty("Args", value)
 }
 
+// GetWorkflowID gets a WorkflowInvokeRequest's WorkflowID value
+// from its properties map. The original workflow ID.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowID
+func (request *WorkflowInvokeRequest) GetWorkflowID() *string {
+	return request.GetStringProperty("WorkflowId")
+}
+
+// SetWorkflowID sets an WorkflowInvokeRequest's WorkflowID value
+// in its properties map. The original workflow ID.
+//
+// param value *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowID
+func (request *WorkflowInvokeRequest) SetWorkflowID(value *string) {
+	request.SetStringProperty("WorkflowId", value)
+}
+
+// GetWorkflowType gets a WorkflowInvokeRequest's WorkflowType value
+// from its properties map. The original workflow Type.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowType
+func (request *WorkflowInvokeRequest) GetWorkflowType() *string {
+	return request.GetStringProperty("WorkflowType")
+}
+
+// SetWorkflowType sets an WorkflowInvokeRequest's WorkflowType value
+// in its properties map. The original workflow Type.
+//
+// param value *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowType
+func (request *WorkflowInvokeRequest) SetWorkflowType(value *string) {
+	request.SetStringProperty("WorkflowType", value)
+}
+
+// GetRunID gets a WorkflowInvokeRequest's RunID value
+// from its properties map. The workflow run ID.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's RunID
+func (request *WorkflowInvokeRequest) GetRunID() *string {
+	return request.GetStringProperty("RunId")
+}
+
+// SetRunID sets a WorkflowInvokeRequest's RunID value
+// in its properties map. The workflow run ID.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowInvokeRequest) SetRunID(value *string) {
+	request.SetStringProperty("RunId", value)
+}
+
+// GetDomain gets a WorkflowInvokeRequest's Domain value
+// from its properties map. The domain where the workflow is executing.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's Domain
+func (request *WorkflowInvokeRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a WorkflowInvokeRequest's Domain value
+// in its properties map. The domain where the workflow is executing.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowInvokeRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
+// GetTaskList gets a WorkflowInvokeRequest's TaskList value
+// from its properties map. The tasklist where the workflow is executing.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's TaskList
+func (request *WorkflowInvokeRequest) GetTaskList() *string {
+	return request.GetStringProperty("TaskList")
+}
+
+// SetTaskList sets a WorkflowInvokeRequest's TaskList value
+// in its properties map. The tasklist where the workflow is executing.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowInvokeRequest) SetTaskList(value *string) {
+	request.SetStringProperty("TaskList", value)
+}
+
+// GetExecutionStartToCloseTimeout gets a WorkflowInvokeRequest's
+// ExecutionStartToCloseTimeout property in its properties map.
+// This is the The maximum duration the workflow is allowed to run.
+//
+// returns time.Duration -> the The maximum duration the workflow is allowed to run
+func (request *WorkflowInvokeRequest) GetExecutionStartToCloseTimeout() time.Duration {
+	return request.GetTimeSpanProperty("ExecutionStartToCloseTimeout")
+}
+
+// SetExecutionStartToCloseTimeout sets a WorkflowInvokeRequest's
+// ExecutionStartToCloseTimeout property in its properties map.
+// This is the The maximum duration the workflow is allowed to run.
+//
+// param value time.Duration -> the The maximum duration the workflow is allowed to run
+func (request *WorkflowInvokeRequest) SetExecutionStartToCloseTimeout(value time.Duration) {
+	request.SetTimeSpanProperty("ExecutionStartToCloseTimeout", value)
+}
+
+// GetChildPolicy gets a WorkflowInvokeRequest's
+// ChildPolicy property in its properties map.
+// This is the The workflow's child workflow policy.
+//
+// returns workflow.ChildWorkflowPolicy -> The workflow's child workflow policy.
+func (request *WorkflowInvokeRequest) GetChildPolicy() workflow.ChildWorkflowPolicy {
+	policy := request.GetIntProperty("ChildPolicy")
+	if (policy > 2) || (policy < 0) {
+		return workflow.ChildWorkflowPolicyTerminate
+	}
+	return workflow.ChildWorkflowPolicy(policy)
+}
+
+// SetChildPolicy sets a WorkflowInvokeRequest's
+// ChildPolicy property in its properties map.
+// This is the The workflow's child workflow policy.
+//
+// param value workflow.ChildWorkflowPolicy -> The workflow's child workflow policy.
+func (request *WorkflowInvokeRequest) SetChildPolicy(value workflow.ChildWorkflowPolicy) {
+	request.SetIntProperty("ChildPolicy", int32(value))
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -91,6 +223,13 @@ func (request *WorkflowInvokeRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowInvokeRequest); ok {
 		v.SetName(request.GetName())
 		v.SetArgs(request.GetArgs())
+		v.SetDomain(request.GetDomain())
+		v.SetWorkflowID(request.GetWorkflowID())
+		v.SetWorkflowType(request.GetWorkflowType())
+		v.SetRunID(request.GetRunID())
+		v.SetTaskList(request.GetTaskList())
+		v.SetExecutionStartToCloseTimeout(request.GetExecutionStartToCloseTimeout())
+		v.SetChildPolicy(request.GetChildPolicy())
 	}
 }
 

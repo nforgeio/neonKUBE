@@ -1644,6 +1644,13 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetWorkflowContextID())
 		s.Nil(v.GetArgs())
+		s.Nil(v.GetDomain())
+		s.Nil(v.GetWorkflowID())
+		s.Nil(v.GetRunID())
+		s.Nil(v.GetWorkflowType())
+		s.Nil(v.GetTaskList())
+		s.Equal(0, int(v.GetChildPolicy()))
+		s.Equal(time.Duration(0), v.GetExecutionStartToCloseTimeout())
 
 		// Round-trip
 
@@ -1660,6 +1667,32 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		args := []byte{0, 1, 2, 3, 4}
 		v.SetArgs(args)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
+
+		workflowID := "my-workflowid"
+		v.SetWorkflowID(&workflowID)
+		s.Equal("my-workflowid", *v.GetWorkflowID())
+
+		taskList := "my-tasklist"
+		v.SetTaskList(&taskList)
+		s.Equal("my-tasklist", *v.GetTaskList())
+
+		runID := "my-runid"
+		v.SetRunID(&runID)
+		s.Equal("my-runid", *v.GetRunID())
+
+		workflowType := "my-workflowtype"
+		v.SetWorkflowType(&workflowType)
+		s.Equal("my-workflowtype", *v.GetWorkflowType())
+
+		v.SetExecutionStartToCloseTimeout(time.Hour * 24)
+		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
+
+		v.SetChildPolicy(workflow.ChildWorkflowPolicyRequestCancel)
+		s.Equal(workflow.ChildWorkflowPolicyRequestCancel, v.GetChildPolicy())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1675,6 +1708,13 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("Foo", *v.GetName())
 		s.Equal(int64(666), v.GetWorkflowContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflowid", *v.GetWorkflowID())
+		s.Equal("my-tasklist", *v.GetTaskList())
+		s.Equal("my-runid", *v.GetRunID())
+		s.Equal("my-workflowtype", *v.GetWorkflowType())
+		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
+		s.Equal(workflow.ChildWorkflowPolicyRequestCancel, v.GetChildPolicy())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1686,6 +1726,13 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("Foo", *v.GetName())
 		s.Equal(int64(666), v.GetWorkflowContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflowid", *v.GetWorkflowID())
+		s.Equal("my-tasklist", *v.GetTaskList())
+		s.Equal("my-runid", *v.GetRunID())
+		s.Equal("my-workflowtype", *v.GetWorkflowType())
+		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
+		s.Equal(workflow.ChildWorkflowPolicyRequestCancel, v.GetChildPolicy())
 	}
 }
 
