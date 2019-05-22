@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"time"
 
 	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
@@ -619,6 +620,17 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest.SetRequestID(NextRequestID())
 		workflowInvokeRequest.SetArgs(input)
 		workflowInvokeRequest.SetWorkflowContextID(workflowContextID)
+
+		// get the WorkflowInfo (Domain, WorkflowID, RunID, WorkflowType,
+		// TaskList, ExecutionStartToCloseTimeout)
+		// from the context
+		workflowInfo := workflow.GetInfo(ctx)
+		workflowInvokeRequest.SetDomain(&workflowInfo.Domain)
+		workflowInvokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
+		workflowInvokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
+		workflowInvokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
+		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
+		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
 		// send the WorkflowInvokeRequest
 		var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()

@@ -1649,7 +1649,6 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetWorkflowType())
 		s.Nil(v.GetTaskList())
-		s.Equal(0, int(v.GetChildPolicy()))
 		s.Equal(time.Duration(0), v.GetExecutionStartToCloseTimeout())
 
 		// Round-trip
@@ -1690,9 +1689,6 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 
 		v.SetExecutionStartToCloseTimeout(time.Hour * 24)
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
-
-		v.SetChildPolicy(workflow.ChildWorkflowPolicyRequestCancel)
-		s.Equal(workflow.ChildWorkflowPolicyRequestCancel, v.GetChildPolicy())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1714,7 +1710,6 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
-		s.Equal(workflow.ChildWorkflowPolicyRequestCancel, v.GetChildPolicy())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1732,7 +1727,6 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
-		s.Equal(workflow.ChildWorkflowPolicyRequestCancel, v.GetChildPolicy())
 	}
 }
 

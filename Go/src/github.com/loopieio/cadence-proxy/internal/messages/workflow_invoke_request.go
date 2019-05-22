@@ -3,8 +3,6 @@ package messages
 import (
 	"time"
 
-	"go.uber.org/cadence/workflow"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -183,28 +181,6 @@ func (request *WorkflowInvokeRequest) SetExecutionStartToCloseTimeout(value time
 	request.SetTimeSpanProperty("ExecutionStartToCloseTimeout", value)
 }
 
-// GetChildPolicy gets a WorkflowInvokeRequest's
-// ChildPolicy property in its properties map.
-// This is the The workflow's child workflow policy.
-//
-// returns workflow.ChildWorkflowPolicy -> The workflow's child workflow policy.
-func (request *WorkflowInvokeRequest) GetChildPolicy() workflow.ChildWorkflowPolicy {
-	policy := request.GetIntProperty("ChildPolicy")
-	if (policy > 2) || (policy < 0) {
-		return workflow.ChildWorkflowPolicyTerminate
-	}
-	return workflow.ChildWorkflowPolicy(policy)
-}
-
-// SetChildPolicy sets a WorkflowInvokeRequest's
-// ChildPolicy property in its properties map.
-// This is the The workflow's child workflow policy.
-//
-// param value workflow.ChildWorkflowPolicy -> The workflow's child workflow policy.
-func (request *WorkflowInvokeRequest) SetChildPolicy(value workflow.ChildWorkflowPolicy) {
-	request.SetIntProperty("ChildPolicy", int32(value))
-}
-
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -229,7 +205,6 @@ func (request *WorkflowInvokeRequest) CopyTo(target IProxyMessage) {
 		v.SetRunID(request.GetRunID())
 		v.SetTaskList(request.GetTaskList())
 		v.SetExecutionStartToCloseTimeout(request.GetExecutionStartToCloseTimeout())
-		v.SetChildPolicy(request.GetChildPolicy())
 	}
 }
 
