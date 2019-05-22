@@ -1734,21 +1734,24 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Load and verify the [__T] property if we're not loading a derived class.
+                    // For persistable types, load and verify the [__T] property when this is not a derived class.
 
-                    writer.WriteLine();
-                    writer.WriteLine($"            if (!isDerived)");
-                    writer.WriteLine($"            {{");
-                    writer.WriteLine($"                property = this.__JObject.Property(\"__T\");");
-                    writer.WriteLine($"                if (property == null)");
-                    writer.WriteLine($"                {{");
-                    writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__T] property is required when deserializing.\");");
-                    writer.WriteLine($"                }}");
-                    writer.WriteLine($"                else");
-                    writer.WriteLine($"                {{");
-                    writer.WriteLine($"                    this.__T = (string)property.Value;");
-                    writer.WriteLine($"                }}");
-                    writer.WriteLine($"            }}");
+                    if (dataModel.IsPersistable != null)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"            if (!isDerived)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                property = this.__JObject.Property(\"__T\");");
+                        writer.WriteLine($"                if (property == null)");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__T] property is required when deserializing.\");");
+                        writer.WriteLine($"                }}");
+                        writer.WriteLine($"                else");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    this.__T = (string)property.Value;");
+                        writer.WriteLine($"                }}");
+                        writer.WriteLine($"            }}");
+                    }
 
                     writer.WriteLine($"        }}");
 

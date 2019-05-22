@@ -35,7 +35,7 @@
 
   <ItemGroup>
     <PackageReference Include="NATS.Client" Version="0.8.1" />
-    <PackageReference Include="STAN.Client" Version="0.1.4" />
+    <PackageReference Include="STAN.Client" Version="0.1.6" />
   </ItemGroup>
 
   <ItemGroup>
