@@ -89,9 +89,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This defaults to <see cref="WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly"/>.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly"/>.
         /// </summary>
-        public int WorkflowIdReusePolicy { get; set; } = (int)WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
 
         /// <summary>
         /// Optionally specifies a retry policy.

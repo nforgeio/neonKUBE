@@ -419,6 +419,16 @@ namespace Neon.Cadence.Internal
         /// </summary>
         WorkflowSetCacheSizeReply = 24,
 
+        /// <summary>
+        /// <b>client --> proxy:</b> Describes the execution status of a workflow.
+        /// </summary>
+        WorkflowDescribeExecutionRequest = 25,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDescribeExecutionRequest"/>.
+        /// </summary>
+        WorkflowDescribeExecutionReply = 26,
+
         //---------------------------------------------------------------------
         // Activity messages
 

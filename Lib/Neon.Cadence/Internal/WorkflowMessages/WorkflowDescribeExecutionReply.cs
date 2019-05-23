@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowExecution.cs
+// FILE:	    WorkflowDescribeExecutionReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,37 +28,41 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalRequest"/>
     /// </summary>
-    public class InternalWorkflowExecution
+    [ProxyMessage(MessageTypes.WorkflowDescribeExecutionReply)]
+    internal class WorkflowDescribeExecutionReply : WorkflowReply
     {
         /// <summary>
-        /// The original ID assigned to the workflow.
+        /// Default constructor.
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string ID { get; set; }
-
-        /// <summary>
-        /// The latest ID assigned to the workflow.  Note that this will differ
-        /// from <see cref="ID"/> when the workflow has been restarted.
-        /// </summary>
-        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string RunID { get; set; }
-
-        /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowRun"/>.
-        /// </summary>
-        public WorkflowRun ToPublic()
+        public WorkflowDescribeExecutionReply()
         {
-            return new WorkflowRun(this.RunID, this.ID);
+            Type = MessageTypes.WorkflowDescribeExecutionReply;
+        }
+
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new WorkflowDescribeExecutionReply();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+
+            var typedTarget = (WorkflowDescribeExecutionReply)target;
+
+            //typedTarget.Result = this.Result;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowExecution.cs
+// FILE:	    TaskListKind.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,43 +22,32 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
+    /// Enumerates the different kinds of tasklists.
     /// </summary>
-    public class InternalWorkflowExecution
+    public enum TaskListKind
     {
         /// <summary>
-        /// The original ID assigned to the workflow.
+        /// Normal.
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string ID { get; set; }
+        Normal = 0,
 
         /// <summary>
-        /// The latest ID assigned to the workflow.  Note that this will differ
-        /// from <see cref="ID"/> when the workflow has been restarted.
+        /// Sticky.
         /// </summary>
-        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string RunID { get; set; }
-
-        /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowRun"/>.
-        /// </summary>
-        public WorkflowRun ToPublic()
-        {
-            return new WorkflowRun(this.RunID, this.ID);
-        }
+        Sticky = 1
     }
 }

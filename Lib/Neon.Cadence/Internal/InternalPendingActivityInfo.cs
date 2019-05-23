@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowExecution.cs
+// FILE:	    InternalPendingActivityInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,31 +34,9 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
+    /// Describes an activity in 
     /// </summary>
-    public class InternalWorkflowExecution
+    public class InternalPendingActivityInfo
     {
-        /// <summary>
-        /// The original ID assigned to the workflow.
-        /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string ID { get; set; }
-
-        /// <summary>
-        /// The latest ID assigned to the workflow.  Note that this will differ
-        /// from <see cref="ID"/> when the workflow has been restarted.
-        /// </summary>
-        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string RunID { get; set; }
-
-        /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowRun"/>.
-        /// </summary>
-        public WorkflowRun ToPublic()
-        {
-            return new WorkflowRun(this.RunID, this.ID);
-        }
     }
 }

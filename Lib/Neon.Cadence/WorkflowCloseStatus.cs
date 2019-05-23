@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowExecution.cs
+// FILE:	    WorkflowCloseStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,38 +27,46 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
+    /// Enumerates the possible reasons why a workflow was closed.
     /// </summary>
-    public class InternalWorkflowExecution
+    public enum WorkflowCloseStatus
     {
         /// <summary>
-        /// The original ID assigned to the workflow.
+        /// The workflow completed successfully.
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string ID { get; set; }
+        Completed = 0,
 
         /// <summary>
-        /// The latest ID assigned to the workflow.  Note that this will differ
-        /// from <see cref="ID"/> when the workflow has been restarted.
+        /// The workflow failed.
         /// </summary>
-        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string RunID { get; set; }
+        Failed = 1,
 
         /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowRun"/>.
+        /// The workflow was cancelled.
         /// </summary>
-        public WorkflowRun ToPublic()
-        {
-            return new WorkflowRun(this.RunID, this.ID);
-        }
+        Cancelled = 2,
+
+        /// <summary>
+        /// The workflow was terminated.
+        /// </summary>
+        Terminated = 3,
+
+        /// <summary>
+        /// The workflow was restarted (aka <i>continued as new</i>).
+        /// </summary>
+        Restarted = 4,
+
+        /// <summary>
+        /// The workflow timed out.
+        /// </summary>
+        Timedout = 5
     }
 }

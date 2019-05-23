@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowExecution.cs
+// FILE:	    InternalTaskList.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,31 +34,22 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
+    /// Describes a task list.  This maps directly to the Cadence GOLANG <b>TaskList</b> structure.
     /// </summary>
-    public class InternalWorkflowExecution
+    public class InternalTaskList
     {
         /// <summary>
-        /// The original ID assigned to the workflow.
+        /// Identifies the tasklist.
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Name", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string ID { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
-        /// The latest ID assigned to the workflow.  Note that this will differ
-        /// from <see cref="ID"/> when the workflow has been restarted.
+        /// Indicates the task list kind.
         /// </summary>
-        [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string RunID { get; set; }
-
-        /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowRun"/>.
-        /// </summary>
-        public WorkflowRun ToPublic()
-        {
-            return new WorkflowRun(this.RunID, this.ID);
-        }
+        [JsonProperty(PropertyName = "TaskListKind", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public int TaskListKind { get; set; }
     }
 }
