@@ -9,29 +9,29 @@ import (
 
 type (
 
-	// WorkflowListClosedExecutionsRequest is WorkflowRequest of MessageType
-	// WorkflowListClosedExecutionsRequest.
+	// WorkflowDescribeTaskListRequest is WorkflowRequest of MessageType
+	// WorkflowDescribeTaskListRequest.
 	//
-	// A WorkflowListClosedExecutionsRequest contains a reference to a
+	// A WorkflowDescribeTaskListRequest contains a reference to a
 	// WorkflowRequest struct in memory and ReplyType, which is
 	// the corresponding MessageType for replying to this WorkflowRequest
 	//
-	// A WorkflowListClosedExecutionsRequest will pass all of the given data
-	// necessary to list the closed cadence workflow execution instances
-	WorkflowListClosedExecutionsRequest struct {
+	// A WorkflowDescribeTaskListRequest will pass all of the given data
+	// necessary to describe a cadence workflow task list
+	WorkflowDescribeTaskListRequest struct {
 		*WorkflowRequest
 	}
 )
 
-// NewWorkflowListClosedExecutionsRequest is the default constructor for a WorkflowListClosedExecutionsRequest
+// NewWorkflowDescribeTaskListRequest is the default constructor for a WorkflowDescribeTaskListRequest
 //
-// returns *WorkflowListClosedExecutionsRequest -> a reference to a newly initialized
-// WorkflowListClosedExecutionsRequest in memory
-func NewWorkflowListClosedExecutionsRequest() *WorkflowListClosedExecutionsRequest {
-	request := new(WorkflowListClosedExecutionsRequest)
+// returns *WorkflowDescribeTaskListRequest -> a reference to a newly initialized
+// WorkflowDescribeTaskListRequest in memory
+func NewWorkflowDescribeTaskListRequest() *WorkflowDescribeTaskListRequest {
+	request := new(WorkflowDescribeTaskListRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowListClosedExecutionsRequest
-	request.SetReplyType(messagetypes.WorkflowListClosedExecutionsReply)
+	request.Type = messagetypes.WorkflowDescribeTaskListRequest
+	request.SetReplyType(messagetypes.WorkflowDescribeTaskListReply)
 
 	return request
 }
@@ -40,39 +40,39 @@ func NewWorkflowListClosedExecutionsRequest() *WorkflowListClosedExecutionsReque
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from WorkflowRequest.Clone()
-func (request *WorkflowListClosedExecutionsRequest) Clone() IProxyMessage {
-	workflowListClosedExecutionsRequest := NewWorkflowListClosedExecutionsRequest()
-	var messageClone IProxyMessage = workflowListClosedExecutionsRequest
+func (request *WorkflowDescribeTaskListRequest) Clone() IProxyMessage {
+	workflowDescribeTaskListRequest := NewWorkflowDescribeTaskListRequest()
+	var messageClone IProxyMessage = workflowDescribeTaskListRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from WorkflowRequest.CopyTo()
-func (request *WorkflowListClosedExecutionsRequest) CopyTo(target IProxyMessage) {
+func (request *WorkflowDescribeTaskListRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
-	if v, ok := target.(*WorkflowListClosedExecutionsRequest); ok {
+	if v, ok := target.(*WorkflowDescribeTaskListRequest); ok {
 		fmt.Printf("TODO: JACK -- IMPLEMENT %v", v)
 	}
 }
 
 // SetProxyMessage inherits docs from WorkflowRequest.SetProxyMessage()
-func (request *WorkflowListClosedExecutionsRequest) SetProxyMessage(value *ProxyMessage) {
+func (request *WorkflowDescribeTaskListRequest) SetProxyMessage(value *ProxyMessage) {
 	request.WorkflowRequest.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from WorkflowRequest.GetProxyMessage()
-func (request *WorkflowListClosedExecutionsRequest) GetProxyMessage() *ProxyMessage {
+func (request *WorkflowDescribeTaskListRequest) GetProxyMessage() *ProxyMessage {
 	return request.WorkflowRequest.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from WorkflowRequest.GetRequestID()
-func (request *WorkflowListClosedExecutionsRequest) GetRequestID() int64 {
+func (request *WorkflowDescribeTaskListRequest) GetRequestID() int64 {
 	return request.WorkflowRequest.GetRequestID()
 }
 
 // SetRequestID inherits docs from WorkflowRequest.SetRequestID()
-func (request *WorkflowListClosedExecutionsRequest) SetRequestID(value int64) {
+func (request *WorkflowDescribeTaskListRequest) SetRequestID(value int64) {
 	request.WorkflowRequest.SetRequestID(value)
 }
 
@@ -80,22 +80,22 @@ func (request *WorkflowListClosedExecutionsRequest) SetRequestID(value int64) {
 // IProxyRequest interface methods for implementing the IProxyRequest interface
 
 // GetReplyType inherits docs from WorkflowRequest.GetReplyType()
-func (request *WorkflowListClosedExecutionsRequest) GetReplyType() messagetypes.MessageType {
+func (request *WorkflowDescribeTaskListRequest) GetReplyType() messagetypes.MessageType {
 	return request.WorkflowRequest.GetReplyType()
 }
 
 // SetReplyType inherits docs from WorkflowRequest.SetReplyType()
-func (request *WorkflowListClosedExecutionsRequest) SetReplyType(value messagetypes.MessageType) {
+func (request *WorkflowDescribeTaskListRequest) SetReplyType(value messagetypes.MessageType) {
 	request.WorkflowRequest.SetReplyType(value)
 }
 
 // GetTimeout inherits docs from WorkflowRequest.GetTimeout()
-func (request *WorkflowListClosedExecutionsRequest) GetTimeout() time.Duration {
+func (request *WorkflowDescribeTaskListRequest) GetTimeout() time.Duration {
 	return request.WorkflowRequest.GetTimeout()
 }
 
 // SetTimeout inherits docs from WorkflowRequest.SetTimeout()
-func (request *WorkflowListClosedExecutionsRequest) SetTimeout(value time.Duration) {
+func (request *WorkflowDescribeTaskListRequest) SetTimeout(value time.Duration) {
 	request.WorkflowRequest.SetTimeout(value)
 }
 
@@ -103,11 +103,11 @@ func (request *WorkflowListClosedExecutionsRequest) SetTimeout(value time.Durati
 // IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
 
 // GetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
-func (request *WorkflowListClosedExecutionsRequest) GetWorkflowContextID() int64 {
+func (request *WorkflowDescribeTaskListRequest) GetWorkflowContextID() int64 {
 	return request.WorkflowRequest.GetWorkflowContextID()
 }
 
 // SetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
-func (request *WorkflowListClosedExecutionsRequest) SetWorkflowContextID(value int64) {
+func (request *WorkflowDescribeTaskListRequest) SetWorkflowContextID(value int64) {
 	request.WorkflowRequest.SetWorkflowContextID(value)
 }

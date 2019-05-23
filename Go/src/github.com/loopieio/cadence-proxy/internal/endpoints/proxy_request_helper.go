@@ -668,6 +668,9 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	// register the workflow
 	// build the reply
 	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *request.GetName()})
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Workflow Successfully Registered", zap.String("WorkflowName", *request.GetName()))
 	if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
 		buildWorkflowRegisterReply(v, nil)
 	}

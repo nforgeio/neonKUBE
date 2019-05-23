@@ -314,12 +314,12 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>client --> proxy:</b> Returns information about a worflow execution.
         /// </summary>
-        WorkflowDescribeWorkflowExecutionRequest = 128,
+        WorkflowDescribeExecutionRequest = 128,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDescribeWorkflowExecutionRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDescribeExecutionRequest"/> message.
         /// </summary>
-        WorkflowDescribexecutionReply = 129,
+        WorkflowDescribeExecutionReply = 129,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.

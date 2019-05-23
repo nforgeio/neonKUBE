@@ -100,6 +100,30 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowMutableReply()
 	case messagetypes.WorkflowMutableRequest:
 		message = NewWorkflowMutableRequest()
+	case messagetypes.WorkflowDescribeExecutionReply:
+		message = NewWorkflowDescribeExecutionReply()
+	case messagetypes.WorkflowDescribeExecutionRequest:
+		message = NewWorkflowDescribeExecutionRequest()
+	case messagetypes.WorkflowGetHistoryReply:
+		message = NewWorkflowGetHistoryReply()
+	case messagetypes.WorkflowGetHistoryRequest:
+		message = NewWorkflowGetHistoryRequest()
+	case messagetypes.WorkflowListOpenExecutionsReply:
+		message = NewWorkflowListOpenExecutionsReply()
+	case messagetypes.WorkflowListOpenExecutionsRequest:
+		message = NewWorkflowListOpenExecutionsRequest()
+	case messagetypes.WorkflowListClosedExecutionsReply:
+		message = NewWorkflowListClosedExecutionsReply()
+	case messagetypes.WorkflowListClosedExecutionsRequest:
+		message = NewWorkflowListClosedExecutionsRequest()
+	case messagetypes.WorkflowCountReply:
+		message = NewWorkflowCountReply()
+	case messagetypes.WorkflowCountRequest:
+		message = NewWorkflowCountRequest()
+	case messagetypes.WorkflowDescribeTaskListReply:
+		message = NewWorkflowDescribeTaskListReply()
+	case messagetypes.WorkflowDescribeTaskListRequest:
+		message = NewWorkflowDescribeTaskListRequest()
 	default:
 		return nil
 	}

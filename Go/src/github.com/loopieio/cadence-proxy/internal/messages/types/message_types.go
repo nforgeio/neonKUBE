@@ -211,7 +211,7 @@ const (
 	/// <summary>
 	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowGetHistoryRequest"/> message.
 	/// </summary>
-	WorkflowGetWorkflowHistoryReply MessageType = 113
+	WorkflowGetHistoryReply MessageType = 113
 
 	/// <summary>
 	/// <b>library --> proxy:</b> Indicates that an activity has completed.
@@ -256,12 +256,12 @@ const (
 	/// <summary>
 	/// <b>library --> proxy:</b> Requests the list of closed workflows.
 	/// </summary>
-	WorkflowListClosedRequest MessageType = 122
+	WorkflowListClosedExecutionsRequest MessageType = 122
 
 	/// <summary>
 	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListClosedRequest"/> message.
 	/// </summary>
-	WorkflowListClosedReply MessageType = 123
+	WorkflowListClosedExecutionsReply MessageType = 123
 
 	/// <summary>
 	/// <b>library --> proxy:</b> Requests the list of open workflows.
@@ -286,12 +286,12 @@ const (
 	/// <summary>
 	/// <b>library --> proxy:</b> Returns information about a worflow execution.
 	/// </summary>
-	WorkflowDescribeWorkflowExecutionRequest MessageType = 128
+	WorkflowDescribeExecutionRequest MessageType = 128
 
 	/// <summary>
 	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowDescribeWorkflowExecutionRequest"/> message.
 	/// </summary>
-	WorkflowDescribexecutionReply MessageType = 129
+	WorkflowDescribeExecutionReply MessageType = 129
 
 	/// <summary>
 	/// <b>RESERVED:</b> This is not currently implemented.
@@ -388,6 +388,9 @@ const (
 	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetCacheSizeRequest"/>.
 	/// </summary>
 	WorkflowSetCacheSizeReply MessageType = 24
+
+	WorkflowCountRequest MessageType = 144
+	WorkflowCountReply   MessageType = 145
 
 	//---------------------------------------------------------------------
 	// Activity messages

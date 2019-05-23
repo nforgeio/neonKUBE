@@ -7,23 +7,23 @@ import (
 
 type (
 
-	// WorkflowGetHistoryReply is a WorkflowReply of MessageType
-	// WorkflowGetHistoryReply.  It holds a reference to a WorkflowReply in memory
-	// and is the reply type to a WorkflowGetHistoryRequest
-	WorkflowGetHistoryReply struct {
+	// WorkflowDescribeTaskListReply is a WorkflowReply of MessageType
+	// WorkflowDescribeTaskListReply.  It holds a reference to a WorkflowReply in memory
+	// and is the reply type to a WorkflowDescribeTaskListRequest
+	WorkflowDescribeTaskListReply struct {
 		*WorkflowReply
 	}
 )
 
-// NewWorkflowGetHistoryReply is the default constructor for
-// a WorkflowGetHistoryReply
+// NewWorkflowDescribeTaskListReply is the default constructor for
+// a WorkflowDescribeTaskListReply
 //
-// returns *WorkflowGetHistoryReply -> a pointer to a newly initialized
-// WorkflowGetHistoryReply in memory
-func NewWorkflowGetHistoryReply() *WorkflowGetHistoryReply {
-	reply := new(WorkflowGetHistoryReply)
+// returns *WorkflowDescribeTaskListReply -> a pointer to a newly initialized
+// WorkflowDescribeTaskListReply in memory
+func NewWorkflowDescribeTaskListReply() *WorkflowDescribeTaskListReply {
+	reply := new(WorkflowDescribeTaskListReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.Type = messagetypes.WorkflowGetHistoryReply
+	reply.Type = messagetypes.WorkflowDescribeTaskListReply
 
 	return reply
 }
@@ -32,36 +32,36 @@ func NewWorkflowGetHistoryReply() *WorkflowGetHistoryReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from WorkflowReply.Clone()
-func (reply *WorkflowGetHistoryReply) Clone() IProxyMessage {
-	workflowGetHistoryReply := NewWorkflowGetHistoryReply()
-	var messageClone IProxyMessage = workflowGetHistoryReply
+func (reply *WorkflowDescribeTaskListReply) Clone() IProxyMessage {
+	workflowDescribeTaskListReply := NewWorkflowDescribeTaskListReply()
+	var messageClone IProxyMessage = workflowDescribeTaskListReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from WorkflowReply.CopyTo()
-func (reply *WorkflowGetHistoryReply) CopyTo(target IProxyMessage) {
+func (reply *WorkflowDescribeTaskListReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
 }
 
 // SetProxyMessage inherits docs from WorkflowReply.SetProxyMessage()
-func (reply *WorkflowGetHistoryReply) SetProxyMessage(value *ProxyMessage) {
+func (reply *WorkflowDescribeTaskListReply) SetProxyMessage(value *ProxyMessage) {
 	reply.WorkflowReply.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from WorkflowReply.GetProxyMessage()
-func (reply *WorkflowGetHistoryReply) GetProxyMessage() *ProxyMessage {
+func (reply *WorkflowDescribeTaskListReply) GetProxyMessage() *ProxyMessage {
 	return reply.WorkflowReply.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from WorkflowReply.GetRequestID()
-func (reply *WorkflowGetHistoryReply) GetRequestID() int64 {
+func (reply *WorkflowDescribeTaskListReply) GetRequestID() int64 {
 	return reply.WorkflowReply.GetRequestID()
 }
 
 // SetRequestID inherits docs from WorkflowReply.SetRequestID()
-func (reply *WorkflowGetHistoryReply) SetRequestID(value int64) {
+func (reply *WorkflowDescribeTaskListReply) SetRequestID(value int64) {
 	reply.WorkflowReply.SetRequestID(value)
 }
 
@@ -69,12 +69,12 @@ func (reply *WorkflowGetHistoryReply) SetRequestID(value int64) {
 // IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError inherits docs from WorkflowReply.GetError()
-func (reply *WorkflowGetHistoryReply) GetError() *cadenceerrors.CadenceError {
+func (reply *WorkflowDescribeTaskListReply) GetError() *cadenceerrors.CadenceError {
 	return reply.WorkflowReply.GetError()
 }
 
 // SetError inherits docs from WorkflowReply.SetError()
-func (reply *WorkflowGetHistoryReply) SetError(value *cadenceerrors.CadenceError) {
+func (reply *WorkflowDescribeTaskListReply) SetError(value *cadenceerrors.CadenceError) {
 	reply.WorkflowReply.SetError(value)
 }
 
@@ -82,11 +82,11 @@ func (reply *WorkflowGetHistoryReply) SetError(value *cadenceerrors.CadenceError
 // IWorkflowReply interface methods for implementing the IWorkflowReply interface
 
 // GetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowGetHistoryReply) GetWorkflowContextID() int64 {
+func (reply *WorkflowDescribeTaskListReply) GetWorkflowContextID() int64 {
 	return reply.WorkflowReply.GetWorkflowContextID()
 }
 
 // SetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowGetHistoryReply) SetWorkflowContextID(value int64) {
+func (reply *WorkflowDescribeTaskListReply) SetWorkflowContextID(value int64) {
 	reply.WorkflowReply.SetWorkflowContextID(value)
 }
