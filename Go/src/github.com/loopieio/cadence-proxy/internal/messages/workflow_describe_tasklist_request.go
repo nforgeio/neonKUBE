@@ -36,6 +36,26 @@ func NewWorkflowDescribeTaskListRequest() *WorkflowDescribeTaskListRequest {
 	return request
 }
 
+// GetTaskList gets the TaskList property from the WorkflowDescribeTaskListRequest's
+// properties map.  The TaskList property specifies the cadence tasklist to
+// be described.
+//
+// returns *string -> pointer to the string in memory holding the value of
+// the TaskList property in the WorkflowDescribeTaskListRequest.
+func (request *WorkflowDescribeTaskListRequest) GetTaskList() *string {
+	return request.GetStringProperty("TaskList")
+}
+
+// SetTaskList sets the TaskList property in the WorkflowDescribeTaskListRequest's
+// properties map.  The TaskList property specifies the cadence tasklist to
+// be described.
+//
+// param value *string -> pointer to the string in memory holding the value of
+// the TaskList property in the WorkflowDescribeTaskListRequest.
+func (request *WorkflowDescribeTaskListRequest) SetTaskList(value *string) {
+	request.SetStringProperty("TaskList", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 

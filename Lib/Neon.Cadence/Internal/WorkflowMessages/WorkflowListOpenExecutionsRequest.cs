@@ -81,7 +81,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowListOpenExecutionsRequest)target;
 
-            typedTarget.Domain = this.Domain;
+            typedTarget.Domain          = this.Domain;
+            typedTarget.MaximumPageSize = this.MaximumPageSize;
         }
     }
 }

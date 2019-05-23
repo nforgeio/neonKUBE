@@ -1,7 +1,6 @@
 package messages
 
 import (
-	"fmt"
 	"time"
 
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
@@ -36,6 +35,42 @@ func NewWorkflowDescribeExecutionRequest() *WorkflowDescribeExecutionRequest {
 	return request
 }
 
+// GetWorkflowID gets a WorkflowDescribeExecutionRequest's WorkflowID value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowDescribeExecutionRequest's WorkflowID
+func (request *WorkflowDescribeExecutionRequest) GetWorkflowID() *string {
+	return request.GetStringProperty("WorkflowId")
+}
+
+// SetWorkflowID sets an WorkflowDescribeExecutionRequest's WorkflowID value
+// in its properties map
+//
+// param value *string -> pointer to a string in memory holding the value
+// of a WorkflowDescribeExecutionRequest's WorkflowID
+func (request *WorkflowDescribeExecutionRequest) SetWorkflowID(value *string) {
+	request.SetStringProperty("WorkflowId", value)
+}
+
+// GetRunID gets a WorkflowDescribeExecutionRequest's RunID value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowDescribeExecutionRequest's RunID
+func (request *WorkflowDescribeExecutionRequest) GetRunID() *string {
+	return request.GetStringProperty("RunId")
+}
+
+// SetRunID sets a WorkflowDescribeExecutionRequest's RunID value
+// in its properties map.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowDescribeExecutionRequest) SetRunID(value *string) {
+	request.SetStringProperty("RunId", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -52,7 +87,8 @@ func (request *WorkflowDescribeExecutionRequest) Clone() IProxyMessage {
 func (request *WorkflowDescribeExecutionRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowDescribeExecutionRequest); ok {
-		fmt.Printf("TODO: JACK -- IMPLEMENT %v", v)
+		v.SetWorkflowID(request.GetWorkflowID())
+		v.SetRunID(request.GetRunID())
 	}
 }
 

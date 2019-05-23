@@ -143,3 +143,11 @@ func buildWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply,
 		reply.SetResult(result[0])
 	}
 }
+
+func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecutionReply, cadenceError *cadenceerrors.CadenceError, description ...*cadenceshared.DescribeWorkflowExecutionResponse) {
+	reply.SetError(cadenceError)
+
+	if len(description) > 0 {
+		// TODO: JACK -- IMPLEMENT THIS
+	}
+}

@@ -169,6 +169,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 			reply = handleWorkflowMutableInvokeRequest(v)
 		}
 
+	// WorkflowDescribeExecutionRequest
+	case messagetypes.WorkflowDescribeExecutionRequest:
+		if v, ok := request.(*messages.WorkflowDescribeExecutionRequest); ok {
+			reply = handleWorkflowDescribeExecutionRequest(v)
+		}
+
 	// PingRequest
 	case messagetypes.PingRequest:
 		if v, ok := request.(*messages.PingRequest); ok {
@@ -1360,6 +1366,65 @@ func handleWorkflowMutableInvokeRequest(request *messages.WorkflowMutableInvokeR
 
 	if v, ok := reply.(*messages.WorkflowMutableInvokeReply); ok {
 		buildWorkflowMutableInvokeReply(v, nil)
+	}
+
+	return reply
+}
+
+func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeExecutionRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowDescribeExecutionRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowDescribeExecutionReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.WorkflowDescribeExecutionReply); ok {
+			buildWorkflowDescribeExecutionReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowDescribeExecutionReply); ok {
+			buildWorkflowDescribeExecutionReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// grab the client.CancelWorkflow parameters and
+	workflowID := request.GetWorkflowID()
+	runID := request.GetRunID()
+
+	// create the context to cancel the workflow
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	defer cancel()
+
+	// DescribeWorkflow call to cadence client
+	describeWorkflowExecutionResponse, err := client.DescribeWorkflowExecution(ctx, *workflowID, *runID)
+	if err != nil {
+		if v, ok := reply.(*messages.WorkflowDescribeExecutionReply); ok {
+			buildWorkflowDescribeExecutionReply(v, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	if v, ok := reply.(*messages.WorkflowDescribeExecutionReply); ok {
+		buildWorkflowDescribeExecutionReply(v, nil, describeWorkflowExecutionResponse)
 	}
 
 	return reply
