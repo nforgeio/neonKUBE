@@ -2952,3 +2952,95 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 		s.Equal("MyError", *v.GetError().String)
 	}
 }
+
+func (s *UnitTestSuite) TestActivityRequest() {
+
+	// Ensure that we can serialize and deserialize request messages
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	message, err := messages.Deserialize(buf, true, "ActivityRequest")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.ActivityRequest); ok {
+		s.Equal(v.ReplyType, messagetypes.Unspecified)
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(time.Duration(0), v.GetTimeout())
+		s.Equal(int64(0), v.GetActivityContextID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetTimeout(time.Second * 5)
+		s.Equal(time.Second*5, v.GetTimeout())
+
+		v.SetActivityContextID(int64(555))
+		s.Equal(int64(555), v.GetActivityContextID())
+
+		// serialize the new message
+		serializedMessage, err := v.Serialize(true)
+		s.NoError(err)
+
+		// byte buffer to deserialize
+		buf = bytes.NewBuffer(serializedMessage)
+	}
+
+	message, err = messages.Deserialize(buf, true, "ActivityRequest")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.ActivityRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(time.Second*5, v.GetTimeout())
+		s.Equal(int64(555), v.GetActivityContextID())
+	}
+}
+
+func (s *UnitTestSuite) TestActivityReply() {
+
+	// Ensure that we can serialize and deserialize reply messages
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	message, err := messages.Deserialize(buf, true, "ActivityReply")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.ActivityReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+		s.Equal(int64(0), v.GetActivityContextID())
+
+		// Round-trip
+		v.SetRequestID(int64(555))
+		v.SetError(cadenceerrors.NewCadenceError("MyError"))
+
+		v.SetActivityContextID(int64(555))
+		s.Equal(int64(555), v.GetActivityContextID())
+
+		s.Equal(int64(555), v.GetRequestID())
+		s.Nil(v.GetError().Type)
+		s.Panics(func() { v.GetError().GetType() })
+		s.Equal("MyError", *v.GetError().String)
+
+		// serialize the new message
+		serializedMessage, err := v.Serialize(true)
+		s.NoError(err)
+
+		// byte buffer to deserialize
+		buf = bytes.NewBuffer(serializedMessage)
+	}
+
+	message, err = messages.Deserialize(buf, true, "ActivityReply")
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.ActivityReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Nil(v.GetError().Type)
+		s.Equal(int64(555), v.GetActivityContextID())
+		s.Panics(func() { v.GetError().GetType() })
+		s.Equal("MyError", *v.GetError().String)
+	}
+}

@@ -630,7 +630,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
-		// create the operation for this request and add it to the operations map
+		// create the Operation for this request and add it to the operations map
 		op := NewOperation(workflowInvokeRequest.GetRequestID(), workflowInvokeRequest)
 		future, settable := workflow.NewFuture(ctx)
 		op.SetFuture(future)
@@ -655,9 +655,6 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 				}
 			}()
 		}()
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
 
 		// wait for the future to be unblocked
 		var result []byte
@@ -1253,7 +1250,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		workflowMutableInvokeRequest.SetWorkflowContextID(workflowContextID)
 		workflowMutableInvokeRequest.SetMutableID(mutableID)
 
-		// create the operation for this request and add it to the operations map
+		// create the Operation for this request and add it to the operations map
 		op := NewOperation(workflowMutableInvokeRequest.GetRequestID(), workflowMutableInvokeRequest)
 		future, settable := workflow.NewFuture(ctx)
 		op.SetFuture(future)
@@ -1280,9 +1277,6 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 				}
 			}()
 		}()
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
 
 		// wait for the future to be unblocked
 		var result []byte

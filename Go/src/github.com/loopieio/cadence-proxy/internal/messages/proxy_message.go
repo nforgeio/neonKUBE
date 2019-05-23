@@ -148,6 +148,10 @@ func handleUnspecifiedMessageType(typeCode []string) IProxyMessage {
 			return NewWorkflowRequest()
 		case "WorkflowReply":
 			return NewWorkflowReply()
+		case "ActivityReply":
+			return NewActivityReply()
+		case "ActivityRequest":
+			return NewActivityRequest()
 		default:
 			return NewProxyMessage()
 		}

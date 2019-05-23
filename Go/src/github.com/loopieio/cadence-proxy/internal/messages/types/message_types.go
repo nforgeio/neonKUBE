@@ -266,12 +266,12 @@ const (
 	/// <summary>
 	/// <b>library --> proxy:</b> Requests the list of open workflows.
 	/// </summary>
-	WorkflowListOpenWorkflowRequest MessageType = 124
+	WorkflowListOpenExecutionsRequest MessageType = 124
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListOpenWorkflowRequest"/> message.
+	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListOpenExecutionsRequest"/> message.
 	/// </summary>
-	WorkflowListOpenReply MessageType = 125
+	WorkflowListOpenExecutionsReply MessageType = 125
 
 	/// <summary>
 	/// <b>library --> proxy:</b> Queries a workflow's last execution.

@@ -254,12 +254,11 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 	// WorkflowExecutionContext at the specified WorflowContextID
 	workflowExecutionContextID := reply.GetWorkflowContextID()
-	wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID)
-	if wectx == nil {
+	if wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID); wectx == nil {
 		return entityNotExistError
 	}
 
-	// get the operation corresponding the the reply
+	// get the Operation corresponding the the reply
 	requestID := reply.GetRequestID()
 	op := Operations.Get(requestID)
 	err := op.SetReply(reply, reply.GetResult())
@@ -268,7 +267,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	}
 
 	// remove the WorkflowExecutionContext from the map
-	// and remove the operation from the map
+	// and remove the Operation from the map
 	_ = cadenceworkflows.WorkflowExecutionContexts.Remove(workflowExecutionContextID)
 	_ = Operations.Remove(requestID)
 
@@ -354,12 +353,11 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 
 	// WorkflowExecutionContext at the specified WorflowContextID
 	workflowExecutionContextID := reply.GetWorkflowContextID()
-	wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID)
-	if wectx == nil {
+	if wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID); wectx == nil {
 		return entityNotExistError
 	}
 
-	// get the operation corresponding the the reply
+	// get the Operation corresponding the the reply
 	requestID := reply.GetRequestID()
 	op := Operations.Get(requestID)
 	err := op.SetReply(reply, reply.GetResult())
@@ -368,7 +366,7 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 	}
 
 	// remove the WorkflowExecutionContext from the map
-	// and remove the operation from the map
+	// and remove the Operation from the map
 	_ = cadenceworkflows.WorkflowExecutionContexts.Remove(workflowExecutionContextID)
 	_ = Operations.Remove(requestID)
 
