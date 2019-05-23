@@ -604,20 +604,18 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 
 	// create workflow function
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
-		future, settable := workflow.NewFuture(ctx)
 		wectx := new(cadenceworkflows.WorkflowExecutionContext)
 		wectx.SetContext(ctx)
-		wectx.SetFuture(future)
-		wectx.SetSettable(settable)
 
 		// set the WorkflowExecutionContext in the
-		// WorkflowExecutionContextsMap
-		workflowContextID = cadenceworkflows.WorkflowExecutionContextsMap.Add(workflowContextID, wectx)
+		// WorkflowExecutionContexts
+		workflowContextID = cadenceworkflows.WorkflowExecutionContexts.Add(workflowContextID, wectx)
 
 		// Send a WorkflowInvokeRequest to the Neon.Cadence Lib
 		// cadence-client
+		requestID := NextRequestID()
 		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
-		workflowInvokeRequest.SetRequestID(NextRequestID())
+		workflowInvokeRequest.SetRequestID(requestID)
 		workflowInvokeRequest.SetArgs(input)
 		workflowInvokeRequest.SetWorkflowContextID(workflowContextID)
 
@@ -632,27 +630,38 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
-		// send the WorkflowInvokeRequest
-		var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()
-		resp, err := putToNeonCadenceClient(message)
-		if err != nil {
-			return nil, err
-		}
-		defer func() {
+		// create the operation for this request and add it to the operations map
+		op := NewOperation(workflowInvokeRequest.GetRequestID(), workflowInvokeRequest)
+		future, settable := workflow.NewFuture(ctx)
+		op.SetFuture(future)
+		op.SetSettable(settable)
+		Operations.Add(requestID, op)
 
-			// $debug(jack.burns): DELETE THIS!
-			err := resp.Body.Close()
+		// send the request to the Neon.Cadence client
+		go func() {
+
+			// send the WorkflowInvokeRequest
+			var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()
+			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
-				logger.Error("could not close response body", zap.Error(err))
+				panic(err)
 			}
+			defer func() {
+
+				// $debug(jack.burns): DELETE THIS!
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Error("could not close response body", zap.Error(err))
+				}
+			}()
 		}()
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
+		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
 
 		// wait for the future to be unblocked
 		var result []byte
-		if err = future.Get(ctx, &result); err != nil {
+		if err := future.Get(ctx, &result); err != nil {
 			return nil, err
 		}
 
@@ -826,7 +835,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	// stop the worker and
 	// remove it from the cadenceworkers.WorkersMap
 	worker.Stop()
-	workerID = cadenceworkers.WorkersMap.Delete(workerID)
+	workerID = cadenceworkers.WorkersMap.Remove(workerID)
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Worker has been deleted", zap.Int64("WorkerID", workerID))
@@ -1222,8 +1231,123 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		return reply
 	}
 
-	if v, ok := reply.(*messages.WorkflowMutableReply); ok {
-		buildWorkflowMutableReply(v, nil)
+	// get the WorkflowContextID and the corresponding context
+	workflowContextID := request.GetWorkflowContextID()
+	wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowContextID)
+	if wectx == nil {
+		if v, ok := reply.(*messages.WorkflowMutableReply); ok {
+			buildWorkflowMutableReply(v, cadenceerrors.NewCadenceError(
+				entityNotExistError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// f function for workflow.MutableSideEffect
+	mutableID := request.GetMutableID()
+	f := func(ctx workflow.Context) interface{} {
+		requestID := NextRequestID()
+		workflowMutableInvokeRequest := messages.NewWorkflowMutableInvokeRequest()
+		workflowMutableInvokeRequest.SetRequestID(requestID)
+		workflowMutableInvokeRequest.SetWorkflowContextID(workflowContextID)
+		workflowMutableInvokeRequest.SetMutableID(mutableID)
+
+		// create the operation for this request and add it to the operations map
+		op := NewOperation(workflowMutableInvokeRequest.GetRequestID(), workflowMutableInvokeRequest)
+		future, settable := workflow.NewFuture(ctx)
+		op.SetFuture(future)
+		op.SetSettable(settable)
+		Operations.Add(requestID, op)
+
+		// create channel for WorkflowMutableInvokeReply and add it
+		// to the mutableChannelsMap
+		go func() {
+
+			// send the request to the Neon.Cadence Lib client
+			// send the WorkflowInvokeRequest
+			var message messages.IProxyMessage = workflowMutableInvokeRequest.GetProxyMessage()
+			resp, err := putToNeonCadenceClient(message)
+			if err != nil {
+				panic(err)
+			}
+			defer func() {
+
+				// $debug(jack.burns): DELETE THIS!
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Error("could not close response body", zap.Error(err))
+				}
+			}()
+		}()
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
+
+		// wait for the future to be unblocked
+		var result []byte
+		if err := future.Get(ctx, &result); err != nil {
+			return err
+		}
+
+		return result
+	}
+
+	// the equals function for workflow.MutableSideEffect
+	equals := func(a, b interface{}) bool {
+
+		// check if the results are *cadencerrors.CadenceError
+		if v, ok := a.(*cadenceerrors.CadenceError); ok {
+			if _v, _ok := b.(*cadenceerrors.CadenceError); _ok {
+				if v.GetType() == _v.GetType() &&
+					v.ToString() == _v.ToString() {
+					return true
+				}
+				return false
+			}
+			return false
+		}
+
+		// check if the results are []byte
+		if v, ok := a.([]byte); ok {
+			if _v, _ok := b.([]byte); _ok {
+				return bytes.Equal(v, _v)
+			}
+			return false
+		}
+		return false
+	}
+
+	// execute the cadence server SideEffectMutable call
+	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(), *mutableID, f, equals)
+
+	// extract the result
+	var result interface{}
+	if sideEffectValue.HasValue() {
+		err := sideEffectValue.Get(&result)
+
+		// check the error of retreiving the value
+		if err != nil {
+			if v, ok := reply.(*messages.WorkflowMutableReply); ok {
+				buildWorkflowMutableReply(v, cadenceerrors.NewCadenceError(
+					err.Error(),
+					cadenceerrors.Custom))
+			}
+
+			return reply
+		}
+
+		// check if the result is a cadenceerrors.CadenceError or
+		// a []byte result
+		if v, ok := result.(*cadenceerrors.CadenceError); ok {
+			if _v, _ok := reply.(*messages.WorkflowMutableReply); _ok {
+				buildWorkflowMutableReply(_v, v)
+			}
+		} else if v, ok := result.([]byte); ok {
+			if _v, _ok := reply.(*messages.WorkflowMutableReply); _ok {
+				buildWorkflowMutableReply(_v, nil, v)
+			}
+		}
 	}
 
 	return reply

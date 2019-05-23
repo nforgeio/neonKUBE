@@ -11,6 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/cadence"
+	"go.uber.org/cadence/workflow"
+
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	"github.com/loopieio/cadence-proxy/internal/server"
 
@@ -52,6 +55,14 @@ var (
 	// entity cannot be found in the cadence server
 	entityNotExistError = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
 
+	// workflowChannelError is the custom error that is thrown when a workflow.Channel
+	// cannot have data sent over it because it is closed or blocked for some reason
+	workflowChannelError = errors.New("WorkflowChannelSendError{Message: Could not send data over channel.}")
+
+	// argumentNullError is the custom error that is thrown when trying to access a nil
+	// value
+	argumentNilError = errors.New("ArgumentNilError{Message: failed to access nil value.}")
+
 	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
 	replyAddress string
@@ -72,7 +83,152 @@ var (
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy
 	cadenceClientTimeout time.Duration
+
+	// Operations is a map of operations used to track pending
+	// cadence-client operations
+	Operations = new(operationsMap)
 )
+
+type (
+	operationsMap struct {
+		sync.Map
+	}
+
+	operation struct {
+		goChannel   chan messages.IProxyReply
+		future      workflow.Future
+		settable    workflow.Settable
+		requestID   int64
+		request     messages.IProxyRequest
+		isCancelled bool
+	}
+)
+
+// NewOperation is the default constructor for an operation
+func NewOperation(requestID int64, request messages.IProxyRequest) *operation {
+	op := new(operation)
+	op.isCancelled = false
+	op.request = request
+	op.requestID = requestID
+	op.goChannel = make(chan messages.IProxyReply)
+
+	return op
+}
+
+//----------------------------------------------------------------------------
+// operation instance methods
+
+// GetGoChannel gets the go chan
+func (op *operation) GetGoChannel() chan messages.IProxyReply {
+	return op.goChannel
+}
+
+// SetGoChannel sets the go chan
+func (op *operation) SetGoChannel(value chan messages.IProxyReply) {
+	op.goChannel = value
+}
+
+// GetIsCancelled gets isCancelled
+func (op *operation) GetIsCancelled() bool {
+	return op.isCancelled
+}
+
+// GetRequestID gets the requestID
+func (op *operation) GetRequestID() int64 {
+	return op.requestID
+}
+
+// SetRequestID sets the requestID
+func (op *operation) SetRequestID(value int64) {
+	op.requestID = value
+}
+
+// GetRequest gets the request
+func (op *operation) GetRequest() messages.IProxyRequest {
+	return op.request
+}
+
+// SetRequest sets the request
+func (op *operation) SetRequest(value messages.IProxyRequest) {
+	op.request = value
+}
+
+// GetFuture gets a operation's workflow.Future
+//
+// returns workflow.Future -> a cadence workflow.Future
+func (op *operation) GetFuture() workflow.Future {
+	return op.future
+}
+
+// SetFuture sets a operation's workflow.Future
+//
+// param value workflow.Future -> a cadence workflow.Future to be
+// set as a operation's cadence workflow.Future
+func (op *operation) SetFuture(value workflow.Future) {
+	op.future = value
+}
+
+// GetSettable gets a operation's workflow.Settable
+//
+// returns workflow.Settable -> a cadence workflow.Settable
+func (op *operation) GetSettable() workflow.Settable {
+	return op.settable
+}
+
+// SetSettable sets a operation's workflow.Settable
+//
+// param value workflow.Settable -> a cadence workflow.Settable to be
+// set as a operation's cadence workflow.Settable
+func (op *operation) SetSettable(value workflow.Settable) {
+	op.settable = value
+}
+
+// SetReply signals the awaiting task that a workflow reply message
+// has been received
+func (op *operation) SetReply(value messages.IProxyReply, result interface{}) error {
+	if op.future == nil {
+		return argumentNilError
+	}
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
+
+	settable := op.GetSettable()
+	if err := value.GetError(); err != nil {
+		settable.Set(nil, cadence.NewCustomError(err.ToString()))
+	} else {
+		settable.Set(result, nil)
+	}
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
+
+	return nil
+}
+
+// SetCancelled signals the awaiting task that the operation has
+//been canceled
+func (op *operation) SetCanceled() {
+	close(op.goChannel)
+	op.isCancelled = true
+}
+
+// SetError signals the awaiting task that it should fails with an
+// error
+func (op *operation) SetError(value error) error {
+	if op.future == nil {
+		return argumentNilError
+	}
+
+	settable := op.GetSettable()
+	err := errors.New("FailWithError{Message: induce failure.")
+	settable.Set(nil, cadence.NewCustomError(err.Error()))
+
+	return nil
+}
+
+//----------------------------------------------------------------------------
+// RequestID thread-safe methods
 
 // NextRequestID increments the package variable
 // RequestID by 1 and is protected by a mutex lock
@@ -92,6 +248,59 @@ func GetRequestID() int64 {
 	defer mu.RUnlock()
 	return RequestID
 }
+
+//----------------------------------------------------------------------------
+// operationsMap instance methods
+
+// Add adds a new operation and its corresponding requestID into
+// the operationsMap.  This method is thread-safe.
+//
+// param requestID int64 -> the requestID of the request sent to
+// the Neon.Cadence lib client.  This will be the mapped key
+//
+// param value *operation -> pointer to operation to be set in the map.
+// This will be the mapped value
+//
+// returns int64 -> requestID of the request being added
+// in the operation at the specified requestID
+func (opMap *operationsMap) Add(requestID int64, value *operation) int64 {
+	opMap.Store(requestID, value)
+	return requestID
+}
+
+// Remove removes key/value entry from the operationsMap at the specified
+// requestID.  This is a thread-safe method.
+//
+// param requestID int64 -> the requestID of the request sent to
+// the Neon.Cadence lib client.  This will be the mapped key
+//
+// returns int64 -> requestID of the request being removed in the
+// operation at the specified requestID
+func (opMap *operationsMap) Remove(requestID int64) int64 {
+	opMap.Delete(requestID)
+	return requestID
+}
+
+// Get gets a operation from the operationsMap at the specified
+// requestID.  This method is thread-safe.
+//
+// param requestID int64 -> the requestID of the request sent to
+// the Neon.Cadence lib client.  This will be the mapped key
+//
+// returns *operation -> pointer to operation at the specified requestID
+// in the map.
+func (opMap *operationsMap) Get(requestID int64) *operation {
+	if v, ok := opMap.Load(requestID); ok {
+		if _v, _ok := v.(*operation); _ok {
+			return _v
+		}
+	}
+
+	return nil
+}
+
+//----------------------------------------------------------------------------
+// ProxyMessage processing helpers
 
 func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"go.uber.org/cadence"
-
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
 
 	"github.com/loopieio/cadence-proxy/internal/messages"
@@ -256,26 +254,23 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 	// WorkflowExecutionContext at the specified WorflowContextID
 	workflowExecutionContextID := reply.GetWorkflowContextID()
-	wectx := cadenceworkflows.WorkflowExecutionContextsMap.Get(workflowExecutionContextID)
+	wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID)
 	if wectx == nil {
 		return entityNotExistError
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
-
-	settable := wectx.GetSettable()
-	if err := reply.GetError(); err != nil {
-		settable.Set(nil, cadence.NewCustomError(err.ToString()))
-	} else {
-		settable.Set(reply.GetResult(), nil)
+	// get the operation corresponding the the reply
+	requestID := reply.GetRequestID()
+	op := Operations.Get(requestID)
+	err := op.SetReply(reply, reply.GetResult())
+	if err != nil {
+		return err
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", wectx.IsReady()))
-
 	// remove the WorkflowExecutionContext from the map
-	_ = cadenceworkflows.WorkflowExecutionContextsMap.Delete(workflowExecutionContextID)
+	// and remove the operation from the map
+	_ = cadenceworkflows.WorkflowExecutionContexts.Remove(workflowExecutionContextID)
+	_ = Operations.Remove(requestID)
 
 	return nil
 }
@@ -353,11 +348,31 @@ func handleWorkflowMutableReply(reply *messages.WorkflowMutableReply) error {
 }
 
 func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply) error {
-	err := fmt.Errorf("not implemented exception for message type WorkflowMutableInvokeReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowMutableInvokeReply", zap.Error(err))
-	return err
+	logger.Debug("WorkflowMutableInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// WorkflowExecutionContext at the specified WorflowContextID
+	workflowExecutionContextID := reply.GetWorkflowContextID()
+	wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID)
+	if wectx == nil {
+		return entityNotExistError
+	}
+
+	// get the operation corresponding the the reply
+	requestID := reply.GetRequestID()
+	op := Operations.Get(requestID)
+	err := op.SetReply(reply, reply.GetResult())
+	if err != nil {
+		return err
+	}
+
+	// remove the WorkflowExecutionContext from the map
+	// and remove the operation from the map
+	_ = cadenceworkflows.WorkflowExecutionContexts.Remove(workflowExecutionContextID)
+	_ = Operations.Remove(requestID)
+
+	return nil
 }
 
 func handlePingReply(reply *messages.PingReply) error {
