@@ -811,7 +811,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                dataModel.IsPersistable = dataType.GetCustomAttribute<PersistableAttribute>();
+                dataModel.Persistable = dataType.GetCustomAttribute<PersistableAttribute>();
 
                 // A data model interface is allowed to implement another 
                 // data model interface to specify a base class.  Note that
@@ -1019,7 +1019,7 @@ namespace Neon.CodeGen
             foreach (var dataModel in nameToDataModel.Values
                 .OrderBy(dm => dm.SourceType.Name.ToLowerInvariant()))
             {
-                GenerateDataModel(dataModel, genPersistence: Settings.Persisted && dataModel.IsPersistable != null);
+                GenerateDataModel(dataModel, genPersistence: Settings.Persisted && dataModel.Persistable != null);
             }
 
             // Generate the service clients (if enabled).
@@ -1120,13 +1120,6 @@ namespace Neon.CodeGen
             string          virtualModifier      = dataModel.IsDerived ? "override" : "virtual";
             PropertyInfo    persistedKeyProperty = null;
 
-            if (genPersistence && (dataModel.IsPersistable == null || dataModel.IsEnum))
-            {
-                // Nothing needs to be generated.
-
-                return;
-            }
-
             if (genPersistence && !dataModel.IsEnum)
             {
                 // We need to identify the data model property that acts as the
@@ -1209,7 +1202,7 @@ namespace Neon.CodeGen
                     }
                 }
 
-                if (genPersistence)
+                if (genPersistence && dataModel.IsPersistable)
                 {
                     baseTypeRef += $", IPersistableType<{dataModel.SourceType.Name}>";
                 }
@@ -1281,7 +1274,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            NeonHelper.PackageReferenceToNeonCommonIsRequired();");
                     writer.WriteLine($"        }}");
 
-                    if (genPersistence)
+                    if (genPersistence && dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
@@ -1438,7 +1431,7 @@ namespace Neon.CodeGen
 
                     // For data models tagged with [Persistable], we need to generate the static GetKey(...) method.
 
-                    if (genPersistence)
+                    if (genPersistence && dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
@@ -1734,21 +1727,24 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Load and verify the [__T] property if we're not loading a derived class.
+                    // For persistable types, load and verify the [__T] property when this is not a derived class.
 
-                    writer.WriteLine();
-                    writer.WriteLine($"            if (!isDerived)");
-                    writer.WriteLine($"            {{");
-                    writer.WriteLine($"                property = this.__JObject.Property(\"__T\");");
-                    writer.WriteLine($"                if (property == null)");
-                    writer.WriteLine($"                {{");
-                    writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__T] property is required when deserializing.\");");
-                    writer.WriteLine($"                }}");
-                    writer.WriteLine($"                else");
-                    writer.WriteLine($"                {{");
-                    writer.WriteLine($"                    this.__T = (string)property.Value;");
-                    writer.WriteLine($"                }}");
-                    writer.WriteLine($"            }}");
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"            if (!isDerived)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                property = this.__JObject.Property(\"__T\");");
+                        writer.WriteLine($"                if (property == null)");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__T] property is required when deserializing.\");");
+                        writer.WriteLine($"                }}");
+                        writer.WriteLine($"                else");
+                        writer.WriteLine($"                {{");
+                        writer.WriteLine($"                    this.__T = (string)property.Value;");
+                        writer.WriteLine($"                }}");
+                        writer.WriteLine($"            }}");
+                    }
 
                     writer.WriteLine($"        }}");
 
@@ -2044,7 +2040,7 @@ namespace Neon.CodeGen
                     //---------------------------------------------------------
                     // Generate any persistance related members.
 
-                    if (genPersistence)
+                    if (genPersistence && dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");

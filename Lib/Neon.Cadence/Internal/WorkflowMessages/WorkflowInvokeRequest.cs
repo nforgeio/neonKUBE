@@ -67,7 +67,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The domain where the workflow is executing.
+        /// The domain hosting the workflow.
         /// </summary>
         public string Domain
         {
@@ -120,15 +120,6 @@ namespace Neon.Cadence.Internal
             set => SetTimeSpanProperty("ExecutionStartToCloseTimeout", value);
         }
 
-        /// <summary>
-        /// The workflow's child workflow policy.
-        /// </summary>
-        public ChildWorkflowPolicy ChildPolicy
-        {
-            get => GetEnumProperty<ChildWorkflowPolicy>("ChildPolicy");
-            set => SetEnumProperty("ChildPolicy", value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -154,7 +145,6 @@ namespace Neon.Cadence.Internal
             typedTarget.WorkflowType                 = this.WorkflowType;
             typedTarget.TaskList                     = this.TaskList;
             typedTarget.ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout;
-            typedTarget.ChildPolicy                  = this.ChildPolicy;
         }
     }
 }

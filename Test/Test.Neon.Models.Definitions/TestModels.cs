@@ -88,6 +88,20 @@ namespace Test.Neon.Models.Definitions
         byte[] Data { get; set; }
     }
 
+    [DataModel(Name = "nonpersistable-person")]
+    public interface NonPersistablePerson
+    {
+        [PersistableKey]
+        [JsonProperty(PropertyName = "my-id")]
+        int Id { get; set; }
+        [JsonProperty(PropertyName = "my-name")]
+        string Name { get; set; }
+        [JsonProperty(PropertyName = "my-age")]
+        int Age { get; set; }
+        [JsonProperty(PropertyName = "my-data")]
+        byte[] Data { get; set; }
+    }
+
     public enum MyEnum
     {
         Zero,
@@ -121,6 +135,10 @@ namespace Test.Neon.Models.Definitions
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
         Person CreatePerson(int id, string name, int age);
+
+        [HttpGet]
+        [Route("nonpersistable-person/{id}/{name}/{age}")]
+        NonPersistablePerson CreateNonPersisablePerson(int id, string name, int age);
 
         [HttpPut]
         Person IncrementAge([FromBody] Person person);

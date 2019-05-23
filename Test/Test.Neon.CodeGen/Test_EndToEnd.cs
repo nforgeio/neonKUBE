@@ -100,6 +100,18 @@ namespace TestCodeGen.AspNet
             };
         }
 
+        [HttpGet]
+        [Route("nonpersistable-person/{id}/{name}/{age}")]
+        public NonPersistablePerson CreateNonPersisablePerson(int id, string name, int age)
+        {
+            return new NonPersistablePerson()
+            {
+                Id = id,
+                Name = name,
+                Age = age
+            };
+        }
+
         [HttpPut]
         [Route("IncrementAge")]
         public Person IncrementAge([FromBody] Person person)
@@ -367,6 +379,17 @@ namespace TestCodeGen.AspNet
         public async Task CreatePerson()
         {
             var person = await client.CreatePersonAsync(10, "Jeff", 58);
+
+            Assert.Equal(10, person.Id);
+            Assert.Equal("Jeff", person.Name);
+            Assert.Equal(58, person.Age);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public async Task CreateNonPersisablePersonAsync()
+        {
+            var person = await client.CreateNonPersisablePersonAsync(10, "Jeff", 58);
 
             Assert.Equal(10, person.Id);
             Assert.Equal("Jeff", person.Name);

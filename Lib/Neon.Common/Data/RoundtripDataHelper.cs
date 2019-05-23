@@ -89,7 +89,7 @@ namespace Neon.Data
                 return;
             }
 
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var assembly in AppDomain.CurrentDomain.GetUserAssemblies())
             {
                 foreach (var type in assembly.GetTypes())
                 {

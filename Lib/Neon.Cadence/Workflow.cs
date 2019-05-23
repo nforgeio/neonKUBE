@@ -205,6 +205,36 @@ namespace Neon.Cadence
         public Version OriginalVersion { get; private set; }
 
         /// <summary>
+        /// Returns the domain hosting the workflow.
+        /// </summary>
+        public string Domain { get; private set; }
+
+        /// <summary>
+        /// Returns the original workflow ID.
+        /// </summary>
+        public string WorkflowId { get; private set; }
+
+        /// <summary>
+        /// Returns the workflow's current run ID.
+        /// </summary>
+        public string RunId { get; private set; }
+
+        /// <summary>
+        /// Returns the workflow type.
+        /// </summary>
+        public string WorkflowType { get; private set; }
+
+        /// <summary>
+        /// Returns the tasklist where the workflow is executing.
+        /// </summary>
+        public string TaskList { get; private set; }
+
+        /// <summary>
+        /// Returns the maximum time allowed for the workflow to complete.
+        /// </summary>
+        public TimeSpan WorkflowTimeout { get; private set; }
+
+        /// <summary>
         /// Called by Cadence to execute a workflow.  Derived classes will need to implement
         /// their workflow logic here.
         /// </summary>

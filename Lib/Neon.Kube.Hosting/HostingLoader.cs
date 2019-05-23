@@ -109,11 +109,9 @@ namespace Neon.Kube
                 // end then use the environment specified in the attributes to determine
                 // which hosting manager class to instantiate and return.
 
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
                 environmentToHostingManager = new Dictionary<HostingEnvironments, Type>();
 
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                foreach (var assembly in AppDomain.CurrentDomain.GetUserAssemblies())
                 {
                     foreach (var type in assembly.GetTypes())
                     {
