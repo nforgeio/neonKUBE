@@ -97,6 +97,11 @@ namespace Neon.Cadence.Internal
         public CronSchedule CronSchedule { get; set; }
 
         /// <summary>
+        /// Optionally specifies workflow metadata as a dictionary of named byte array values.
+        /// </summary>
+        public Dictionary<string, byte[]> Memo { get; set; }
+
+        /// <summary>
         /// Converts this instance into the corresponding internal object.
         /// </summary>
         /// <returns>The equivalent <see cref="InternalChildWorkflowOptions"/>.</returns>
@@ -113,7 +118,8 @@ namespace Neon.Cadence.Internal
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy.ToInternal(),
-                CronSchedule                 = this.CronSchedule.ToInternal()
+                CronSchedule                 = this.CronSchedule.ToInternal(),
+                Memo                         = this.Memo
             };
         }
     }
