@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="DomainRegisterRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.DomainRegisterReply)]
+    [ProxyMessage(InternalMessageTypes.DomainRegisterReply)]
     internal class DomainRegisterReply : ProxyReply
     {
         /// <summary>
@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public DomainRegisterReply()
         {
-            Type = MessageTypes.DomainRegisterReply;
+            Type = InternalMessageTypes.DomainRegisterReply;
         }
 
         /// <inheritdoc/>

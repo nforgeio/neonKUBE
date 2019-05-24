@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Registers with Cadence that the current
     /// connection is capable of executing task and/or activities.
     /// </summary>
-    [ProxyMessage(MessageTypes.NewWorkerRequest)]
+    [ProxyMessage(InternalMessageTypes.NewWorkerRequest)]
     internal class NewWorkerRequest : ProxyRequest
     {
         /// <summary>
@@ -36,11 +36,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public NewWorkerRequest()
         {
-            Type = MessageTypes.NewWorkerRequest;
+            Type = InternalMessageTypes.NewWorkerRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.NewWorkerReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.NewWorkerReply;
 
         /// <summary>
         /// Specifies the name to be used to register the workflow or activity worker.

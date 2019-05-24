@@ -816,7 +816,7 @@ namespace Neon.Cadence
 
                 switch (request.Type)
                 {
-                    case MessageTypes.HeartbeatRequest:
+                    case InternalMessageTypes.HeartbeatRequest:
 
                         await OnHeartbeatRequest((HeartbeatRequest)request);
                         break;
@@ -1102,7 +1102,7 @@ namespace Neon.Cadence
                             var notAwaitingThis = Task.Run(
                                 async () =>
                                 {
-                                    if (operation.Request.Type != MessageTypes.CancelRequest)
+                                    if (operation.Request.Type != InternalMessageTypes.CancelRequest)
                                     {
                                         await CallProxyAsync(new CancelRequest() { TargetRequestId = operation.RequestId }, timeout: TimeSpan.FromSeconds(1));
                                     }

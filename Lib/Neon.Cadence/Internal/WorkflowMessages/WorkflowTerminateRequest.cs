@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Terminates a workflow execution.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowTerminateRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowTerminateRequest)]
     internal class WorkflowTerminateRequest : WorkflowRequest
     {
         /// <summary>
@@ -35,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowTerminateRequest()
         {
-            Type = MessageTypes.WorkflowTerminateRequest;
+            Type = InternalMessageTypes.WorkflowTerminateRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowTerminateReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowTerminateReply;
 
         /// <summary>
         /// Identifies the workflow by ID.

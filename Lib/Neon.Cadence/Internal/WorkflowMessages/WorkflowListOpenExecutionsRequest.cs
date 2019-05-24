@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Lists open workflows.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowListOpenExecutionsRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowListOpenExecutionsRequest)]
     internal class WorkflowListOpenExecutionsRequest : WorkflowRequest
     {
         /// <summary>
@@ -35,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowListOpenExecutionsRequest()
         {
-            Type = MessageTypes.WorkflowListOpenExecutionsRequest;
+            Type = InternalMessageTypes.WorkflowListOpenExecutionsRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowListOpenExecutionsReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowListOpenExecutionsReply;
 
         /// <summary>
         /// Optionally specifies the target domain.  Workflows from all

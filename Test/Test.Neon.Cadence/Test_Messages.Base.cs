@@ -61,7 +61,7 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
-                Assert.Equal(MessageTypes.Unspecified, message.Type);
+                Assert.Equal(InternalMessageTypes.Unspecified, message.Type);
                 Assert.Empty(message.Properties);
                 Assert.Empty(message.Attachments);
 
@@ -86,7 +86,7 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
-                Assert.Equal(MessageTypes.Unspecified, message.Type);
+                Assert.Equal(InternalMessageTypes.Unspecified, message.Type);
                 Assert.Equal(6, message.Properties.Count);
                 Assert.Equal("1", message.Properties["One"]);
                 Assert.Equal("2", message.Properties["Two"]);

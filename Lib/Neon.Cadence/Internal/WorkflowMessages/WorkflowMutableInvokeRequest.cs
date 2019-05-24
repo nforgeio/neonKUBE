@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowMutableInvokeRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowMutableInvokeRequest)]
     internal class WorkflowMutableInvokeRequest : WorkflowRequest
     {
         /// <summary>
@@ -35,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowMutableInvokeRequest()
         {
-            Type = MessageTypes.WorkflowMutableInvokeRequest;
+            Type = InternalMessageTypes.WorkflowMutableInvokeRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowMutableInvokeReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowMutableInvokeReply;
 
         /// <summary>
         /// Identifies the mutable value to be returned.

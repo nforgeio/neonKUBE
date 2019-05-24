@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MessageTypes.cs
+// FILE:	    InternalMessageTypes.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Enumerates the possible message types.
     /// </summary>
-    internal enum MessageTypes
+    internal enum InternalMessageTypes
     {
         /// <summary>
         /// Indicates a message with an unspecified type.  This normally indicates an error.

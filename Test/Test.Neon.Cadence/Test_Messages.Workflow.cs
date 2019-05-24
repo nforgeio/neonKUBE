@@ -53,7 +53,7 @@ namespace TestCadence
             {
                 message = new WorkflowRegisterRequest();
 
-                Assert.Equal(MessageTypes.WorkflowRegisterReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowRegisterReply, message.ReplyType);
 
                 // Empty message.
 
@@ -160,7 +160,7 @@ namespace TestCadence
             {
                 message = new WorkflowExecuteRequest();
 
-                Assert.Equal(MessageTypes.WorkflowExecuteReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowExecuteReply, message.ReplyType);
 
                 // Empty message.
 
@@ -306,7 +306,7 @@ namespace TestCadence
             {
                 message = new WorkflowInvokeRequest();
 
-                Assert.Equal(MessageTypes.WorkflowInvokeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowInvokeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -462,7 +462,7 @@ namespace TestCadence
             {
                 message = new WorkflowCancelRequest();
 
-                Assert.Equal(MessageTypes.WorkflowCancelReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowCancelReply, message.ReplyType);
 
                 // Empty message.
 
@@ -582,7 +582,7 @@ namespace TestCadence
             {
                 message = new WorkflowTerminateRequest();
 
-                Assert.Equal(MessageTypes.WorkflowTerminateReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowTerminateReply, message.ReplyType);
 
                 // Empty message.
 
@@ -708,7 +708,7 @@ namespace TestCadence
             {
                 message = new WorkflowSignalRequest();
 
-                Assert.Equal(MessageTypes.WorkflowSignalReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSignalReply, message.ReplyType);
 
                 // Empty message.
 
@@ -834,7 +834,7 @@ namespace TestCadence
             {
                 message = new WorkflowSignalWithStartRequest();
 
-                Assert.Equal(MessageTypes.WorkflowSignalWithStartReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSignalWithStartReply, message.ReplyType);
 
                 // Empty message.
 
@@ -984,7 +984,7 @@ namespace TestCadence
             {
                 message = new WorkflowQueryRequest();
 
-                Assert.Equal(MessageTypes.WorkflowQueryReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowQueryReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1115,7 +1115,7 @@ namespace TestCadence
             {
                 message = new WorkflowMutableRequest();
 
-                Assert.Equal(MessageTypes.WorkflowMutableReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowMutableReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1239,7 +1239,7 @@ namespace TestCadence
             {
                 message = new WorkflowMutableInvokeRequest();
 
-                Assert.Equal(MessageTypes.WorkflowMutableInvokeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowMutableInvokeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1355,7 +1355,7 @@ namespace TestCadence
             {
                 message = new WorkflowDescribeExecutionRequest();
 
-                Assert.Equal(MessageTypes.WorkflowDescribeExecutionReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowDescribeExecutionReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1623,7 +1623,7 @@ namespace TestCadence
             {
                 message = new WorkflowGetResultRequest();
 
-                Assert.Equal(MessageTypes.WorkflowGetResultReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowGetResultReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1745,7 +1745,7 @@ namespace TestCadence
             {
                 message = new WorkflowSignalSubscribeRequest();
 
-                Assert.Equal(MessageTypes.WorkflowSignalSubscribeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSignalSubscribeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1856,7 +1856,7 @@ namespace TestCadence
             {
                 message = new WorkflowSignalReceivedRequest();
 
-                Assert.Equal(MessageTypes.WorkflowSignalReceivedReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSignalReceivedReply, message.ReplyType);
 
                 // Empty message.
 

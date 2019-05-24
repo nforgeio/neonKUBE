@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="TerminateRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.TerminateReply)]
+    [ProxyMessage(InternalMessageTypes.TerminateReply)]
     internal class TerminateReply : ProxyReply
     {
         /// <summary>
@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public TerminateReply()
         {
-            Type = MessageTypes.TerminateReply;
+            Type = InternalMessageTypes.TerminateReply;
         }
 
         /// <inheritdoc/>

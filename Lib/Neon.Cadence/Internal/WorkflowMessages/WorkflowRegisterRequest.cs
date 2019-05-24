@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Registers a workflow handler by name.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowRegisterRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowRegisterRequest)]
     internal class WorkflowRegisterRequest : WorkflowRequest
     {
         /// <summary>
@@ -35,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowRegisterRequest()
         {
-            Type = MessageTypes.WorkflowRegisterRequest;
+            Type = InternalMessageTypes.WorkflowRegisterRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowRegisterReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowRegisterReply;
 
         /// <summary>
         /// Identifies the workflow implementation.

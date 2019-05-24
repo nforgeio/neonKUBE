@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all activity replies.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
+    [ProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ActivityReply : ProxyReply
     {
         /// <summary>

@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="StopWorkerRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.StopWorkerReply)]
+    [ProxyMessage(InternalMessageTypes.StopWorkerReply)]
     internal class StopWorkerReply : ProxyReply
     {
         /// <summary>
@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public StopWorkerReply()
         {
-            Type = MessageTypes.StopWorkerReply;
+            Type = InternalMessageTypes.StopWorkerReply;
         }
 
         /// <inheritdoc/>

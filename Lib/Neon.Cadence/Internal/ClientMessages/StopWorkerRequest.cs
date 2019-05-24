@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Stops a Cadence worker.
     /// </summary>
-    [ProxyMessage(MessageTypes.StopWorkerRequest)]
+    [ProxyMessage(InternalMessageTypes.StopWorkerRequest)]
     internal class StopWorkerRequest : ProxyRequest
     {
         /// <summary>
@@ -35,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public StopWorkerRequest()
         {
-            Type = MessageTypes.StopWorkerRequest;
+            Type = InternalMessageTypes.StopWorkerRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.StopWorkerReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.StopWorkerReply;
 
         /// <summary>
         /// Identifies the worker being stopped.

@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests the details for a named domain.
     /// </summary>
-    [ProxyMessage(MessageTypes.DomainUpdateRequest)]
+    [ProxyMessage(InternalMessageTypes.DomainUpdateRequest)]
     internal class DomainUpdateRequest : ProxyRequest
     {
         /// <summary>
@@ -35,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public DomainUpdateRequest()
         {
-            Type = MessageTypes.DomainUpdateRequest;
+            Type = InternalMessageTypes.DomainUpdateRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.DomainUpdateReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainUpdateReply;
 
         /// <summary>
         /// The target Cadence domain name.

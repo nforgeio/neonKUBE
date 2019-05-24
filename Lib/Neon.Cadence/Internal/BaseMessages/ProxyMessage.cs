@@ -49,7 +49,7 @@ namespace Neon.Cadence.Internal
     /// This class is designed to be a very simple and flexible way of communicating
     /// operations and status between the Cadence client and proxy.  The specific 
     /// message type is identified via the <see cref="Type"/> property (one of the 
-    /// <see cref="MessageTypes"/> values.  The <see cref="Properties"/> dictionary will be
+    /// <see cref="InternalMessageTypes"/> values.  The <see cref="Properties"/> dictionary will be
     /// used to pass named values.  Binary attachments may be passed using the 
     /// <see cref="Attachments"/> property, a list of binary arrays.
     /// </para>
@@ -128,7 +128,7 @@ namespace Neon.Cadence.Internal
     /// and <see cref="SetJsonProperty{T}(string, T)"/> helper methods.
     /// </para>
     /// </remarks>
-    [ProxyMessage(MessageTypes.Unspecified)]
+    [ProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ProxyMessage
     {
         //---------------------------------------------------------------------
@@ -204,7 +204,7 @@ namespace Neon.Cadence.Internal
 
                 Type messageClass;
 
-                var messageType = (MessageTypes)reader.ReadInt32();
+                var messageType = (InternalMessageTypes)reader.ReadInt32();
 
                 if (!ignoreTypeCode)
                 {
@@ -326,9 +326,9 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Indicates the message type, one of the <see cref="MessageTypes"/> values.
+        /// Indicates the message type, one of the <see cref="InternalMessageTypes"/> values.
         /// </summary>
-        public MessageTypes Type { get; set; }
+        public InternalMessageTypes Type { get; set; }
 
         /// <summary>
         /// Returns a case insensitive dictionary that maps argument names to value strings.
@@ -347,7 +347,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The serialized byte array.</returns>
         public byte[] Serialize(bool ignoreTypeCode = false)
         {
-            if (!ignoreTypeCode && Type == MessageTypes.Unspecified)
+            if (!ignoreTypeCode && Type == InternalMessageTypes.Unspecified)
             {
                 throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
             }

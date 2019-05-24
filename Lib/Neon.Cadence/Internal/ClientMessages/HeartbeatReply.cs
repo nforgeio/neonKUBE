@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="HeartbeatRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.HeartbeatReply)]
+    [ProxyMessage(InternalMessageTypes.HeartbeatReply)]
     internal class HeartbeatReply : ProxyReply
     {
         /// <summary>
@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public HeartbeatReply()
         {
-            Type = MessageTypes.HeartbeatReply;
+            Type = InternalMessageTypes.HeartbeatReply;
         }
 
         /// <inheritdoc/>

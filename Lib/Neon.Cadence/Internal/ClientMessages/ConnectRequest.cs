@@ -30,7 +30,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Requests the proxy establish a connection with a Cadence cluster.
     /// This maps to a <c>NewClient()</c> in the proxy.
     /// </summary>
-    [ProxyMessage(MessageTypes.ConnectRequest)]
+    [ProxyMessage(InternalMessageTypes.ConnectRequest)]
     internal class ConnectRequest : ProxyRequest
     {
         /// <summary>
@@ -38,11 +38,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public ConnectRequest()
         {
-            Type = MessageTypes.ConnectRequest;
+            Type = InternalMessageTypes.ConnectRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.ConnectReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ConnectReply;
 
         /// <summary>
         /// <para>

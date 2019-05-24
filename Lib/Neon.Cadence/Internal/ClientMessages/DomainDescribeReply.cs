@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="DomainDescribeRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.DomainDescribeReply)]
+    [ProxyMessage(InternalMessageTypes.DomainDescribeReply)]
     internal class DomainDescribeReply : ProxyReply
     {
         /// <summary>
@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public DomainDescribeReply()
         {
-            Type = MessageTypes.DomainDescribeReply;
+            Type = InternalMessageTypes.DomainDescribeReply;
         }
 
         /// <summary>

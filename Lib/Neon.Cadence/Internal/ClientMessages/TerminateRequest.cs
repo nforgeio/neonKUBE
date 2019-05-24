@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// proxy should send a <see cref="TerminateReply"/> back to the library and
     /// then exit, terminating the process.
     /// </summary>
-    [ProxyMessage(MessageTypes.TerminateRequest)]
+    [ProxyMessage(InternalMessageTypes.TerminateRequest)]
     internal class TerminateRequest : ProxyRequest
     {
         /// <summary>
@@ -37,11 +37,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public TerminateRequest()
         {
-            Type = MessageTypes.TerminateRequest;
+            Type = InternalMessageTypes.TerminateRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.TerminateReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.TerminateReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()

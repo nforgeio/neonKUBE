@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Sends a signal to a running workflow.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowDescribeExecutionRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowDescribeExecutionRequest)]
     internal class WorkflowDescribeExecutionRequest : WorkflowRequest
     {
         /// <summary>
@@ -35,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowDescribeExecutionRequest()
         {
-            Type = MessageTypes.WorkflowDescribeExecutionRequest;
+            Type = InternalMessageTypes.WorkflowDescribeExecutionRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowDescribeExecutionReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowDescribeExecutionReply;
 
         /// <summary>
         /// Identifies the workflow by ID.
