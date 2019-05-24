@@ -324,7 +324,7 @@
   version = "v1.3.2"
 
 [[projects]]
-  digest = "1:3212c7c580d4d07a113ed8481c7f0b62c19e552c943acc4a8d4a6b92b100d956"
+  digest = "1:07d6327b8d8850d2495f741c7a05cfa72a27fa2c0c8142a1c89e9b6d8571f2a0"
   name = "go.uber.org/cadence"
   packages = [
     ".",
@@ -332,6 +332,7 @@
     ".gen/go/cadence/workflowserviceclient",
     ".gen/go/cadence/workflowservicetest",
     ".gen/go/shared",
+    "activity",
     "client",
     "encoded",
     "internal",
@@ -575,6 +576,7 @@
     "go.uber.org/cadence",
     "go.uber.org/cadence/.gen/go/cadence/workflowserviceclient",
     "go.uber.org/cadence/.gen/go/shared",
+    "go.uber.org/cadence/activity",
     "go.uber.org/cadence/client",
     "go.uber.org/cadence/worker",
     "go.uber.org/cadence/workflow",
