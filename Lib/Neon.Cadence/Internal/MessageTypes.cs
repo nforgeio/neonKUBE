@@ -414,6 +414,18 @@ namespace Neon.Cadence.Internal
         /// </summary>
         WorkflowSetCacheSizeReply = 145,
 
+        /// <summary>
+        /// <b>proxy --> client:</b> Returns the workflow result encoded as a byte array, waiting
+        /// for the workflow to complete if it is still running.  Note that this request will fail
+        /// if the workflow did not run to completion.
+        /// </summary>
+        WorkflowGetResultRequest = 146,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetResultRequest"/>.
+        /// </summary>
+        WorkflowGetResultReply = 147,
+
         //---------------------------------------------------------------------
         // Activity messages
 
