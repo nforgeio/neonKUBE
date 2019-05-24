@@ -36,9 +36,9 @@ const (
 var (
 	mu sync.RWMutex
 
-	// RequestID is incremented (protected by a mutex) every time
+	// requestID is incremented (protected by a mutex) every time
 	// a new request message is sent
-	RequestID int64
+	requestID int64
 
 	// logger for all endpoints to utilize
 	logger *zap.Logger
@@ -63,9 +63,9 @@ var (
 	// Operation to fail with an error
 	failWithError = errors.New("FailWithError{Message: induce failure.")
 
-	// replyAddress specifies the address that the Neon.Cadence library
+	// ReplyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
-	replyAddress string
+	ReplyAddress string
 
 	// terminate is a boolean that will be set after handling an incoming
 	// TerminateRequest.  A true value will indicate that the server instance
@@ -87,6 +87,14 @@ var (
 	// Operations is a map of operations used to track pending
 	// cadence-client operations
 	Operations = new(operationsMap)
+
+	// TestMode indicates that the program is being tested.  Behavior might
+	// be different in test mode
+	TestMode = false
+
+	// TestEndpointsMap is a map used for testing purposes (while in test mode) that
+	// maps a requestID to a channel that will be unblocked by the reply
+	TestEndpointsMap = make(map[int64]chan messages.IProxyReply)
 )
 
 type (
@@ -218,22 +226,22 @@ func (op *Operation) SetError(value error) error {
 // RequestID thread-safe methods
 
 // NextRequestID increments the package variable
-// RequestID by 1 and is protected by a mutex lock
+// requestID by 1 and is protected by a mutex lock
 func NextRequestID() int64 {
 	mu.Lock()
-	curr := RequestID
-	RequestID = RequestID + 1
+	curr := requestID
+	requestID = requestID + 1
 	mu.Unlock()
 
 	return curr
 }
 
 // GetRequestID gets the value of the global variable
-// RequestID and is protected by a mutex Read lock
+// requestID and is protected by a mutex Read lock
 func GetRequestID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return RequestID
+	return requestID
 }
 
 //----------------------------------------------------------------------------

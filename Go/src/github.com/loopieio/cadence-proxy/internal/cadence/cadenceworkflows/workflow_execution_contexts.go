@@ -9,9 +9,9 @@ import (
 var (
 	mu sync.RWMutex
 
-	// NextWorkflowContextID is incremented (protected by a mutex) every time
+	// workflowContextID is incremented (protected by a mutex) every time
 	// a new cadence workflow.Context is created
-	WorkflowContextID int64
+	workflowContextID int64
 
 	// WorkflowExecutionContextsMap maps a int64 ContextId to the cadence
 	// Workflow Context passed to the cadence Workflow functions.
@@ -41,25 +41,25 @@ type (
 )
 
 //----------------------------------------------------------------------------
-// WorkflowContextID methods
+// workflowContextID methods
 
 // NextWorkflowContextID increments the global variable
-// WorkflowContextID by 1 and is protected by a mutex lock
+// workflowContextID by 1 and is protected by a mutex lock
 func NextWorkflowContextID() int64 {
 	mu.Lock()
-	curr := WorkflowContextID
-	WorkflowContextID = WorkflowContextID + 1
+	curr := workflowContextID
+	workflowContextID = workflowContextID + 1
 	mu.Unlock()
 
 	return curr
 }
 
 // GetWorkflowContextID gets the value of the global variable
-// WorkflowContextID and is protected by a mutex Read lock
+// workflowContextID and is protected by a mutex Read lock
 func GetWorkflowContextID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return WorkflowContextID
+	return workflowContextID
 }
 
 //----------------------------------------------------------------------------

@@ -164,6 +164,18 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 		return err
 	}
 
+	// for testing
+	if TestMode {
+		key := reply.GetRequestID()
+		replyChan := TestEndpointsMap[key]
+		defer func() {
+			close(replyChan)
+			TestEndpointsMap[key] = nil
+		}()
+
+		replyChan <- reply
+	}
+
 	return nil
 }
 
@@ -184,11 +196,11 @@ func handleCancelReply(reply *messages.CancelReply) error {
 }
 
 func handleConnectReply(reply *messages.ConnectReply) error {
-	err := fmt.Errorf("not implemented exception for message type ConnectReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling ConnectReply", zap.Error(err))
-	return err
+	logger.Debug("ConnectReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
 }
 
 func handleDomainDescribeReply(reply *messages.DomainDescribeReply) error {
@@ -200,11 +212,11 @@ func handleDomainDescribeReply(reply *messages.DomainDescribeReply) error {
 }
 
 func handleDomainRegisterReply(reply *messages.DomainRegisterReply) error {
-	err := fmt.Errorf("not implemented exception for message type DomainRegisterReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling DomainRegisterReply", zap.Error(err))
-	return err
+	logger.Debug("DomainRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
 }
 
 func handleDomainUpdateReply(reply *messages.DomainUpdateReply) error {
@@ -275,19 +287,19 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 }
 
 func handleWorkflowRegisterReply(reply *messages.WorkflowRegisterReply) error {
-	err := fmt.Errorf("not implemented exception for message type WorkflowRegisterReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowRegisterReply", zap.Error(err))
-	return err
+	logger.Debug("WorkflowRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
 }
 
 func handleNewWorkerReply(reply *messages.NewWorkerReply) error {
-	err := fmt.Errorf("not implemented exception for message type NewWorkerReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling NewWorkerReply", zap.Error(err))
-	return err
+	logger.Debug("NewWorkerReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
 }
 
 func handleStopWorkerReply(reply *messages.StopWorkerReply) error {

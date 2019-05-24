@@ -94,6 +94,12 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 	// IProxyRequest
 	case messages.IProxyRequest:
 		responseChan <- nil
+
+		// for testing
+		if TestMode {
+			key := message.GetRequestID()
+			TestEndpointsMap[key] = make(chan messages.IProxyReply)
+		}
 		err = handleIProxyRequest(s, typeCode)
 
 	// IProxyReply

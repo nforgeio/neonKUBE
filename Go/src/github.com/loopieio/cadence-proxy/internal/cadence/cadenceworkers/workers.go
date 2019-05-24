@@ -9,9 +9,9 @@ import (
 var (
 	mu sync.RWMutex
 
-	// WorkerID is incremented (protected by a mutex) every time
+	// workerID is incremented (protected by a mutex) every time
 	// a new cadence Worker is created
-	WorkerID int64
+	workerID int64
 
 	// WorkersMap maps a int64 WorkerId to the cadence
 	// Worker returned by the Cadence NewWorker() function.
@@ -30,25 +30,25 @@ type (
 )
 
 //----------------------------------------------------------------------------
-// WorkerID methods
+// workerID methods
 
 // NextWorkerID increments the global variable
-// WorkerID by 1 and is protected by a mutex lock
+// workerID by 1 and is protected by a mutex lock
 func NextWorkerID() int64 {
 	mu.Lock()
-	curr := WorkerID
-	WorkerID = WorkerID + 1
+	curr := workerID
+	workerID = workerID + 1
 	mu.Unlock()
 
 	return curr
 }
 
 // GetWorkerID gets the value of the global variable
-// WorkerID and is protected by a mutex Read lock
+// workerID and is protected by a mutex Read lock
 func GetWorkerID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return WorkerID
+	return workerID
 }
 
 //----------------------------------------------------------------------------

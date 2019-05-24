@@ -542,21 +542,21 @@ func handleInitializeRequest(request *messages.InitializeRequest) messages.IProx
 	// get the port and address from the InitializeRequest
 	address := *request.GetLibraryAddress()
 	port := request.GetLibraryPort()
-	replyAddress = fmt.Sprintf("http://%s:%d/",
+	ReplyAddress = fmt.Sprintf("http://%s:%d/",
 		address,
 		port,
 	)
 
 	// $debug(jack.burns): DELETE THIS!
 	if debugPrelaunch {
-		replyAddress = "http://127.0.0.2:5001/"
+		ReplyAddress = "http://127.0.0.2:5001/"
 	}
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("InitializeRequest info",
 		zap.String("Library Address", address),
 		zap.Int32("LibaryPort", port),
-		zap.String("Reply Address", replyAddress),
+		zap.String("Reply Address", ReplyAddress),
 	)
 
 	if v, ok := reply.(*messages.InitializeReply); ok {
@@ -786,7 +786,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyM
 	// put the worker and workerID from the new worker to the
 	// WorkersMap and then run the worker by calling Run() on it
 	workerID := cadenceworkers.WorkersMap.Add(cadenceworkers.NextWorkerID(), worker)
-	err := worker.Run()
+	err := worker.Start()
 	if err != nil {
 		if v, ok := reply.(*messages.NewWorkerReply); ok {
 			buildNewWorkerReply(v, cadenceerrors.NewCadenceError(
@@ -1461,7 +1461,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// create a buffer with the serialized bytes to reply with
 	// and create the PUT request
 	buf := bytes.NewBuffer(content)
-	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
+	req, err := http.NewRequest(http.MethodPut, ReplyAddress, buf)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
