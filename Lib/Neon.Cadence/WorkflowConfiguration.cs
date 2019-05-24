@@ -36,6 +36,11 @@ namespace Neon.Cadence
         public string TaskList { get; internal set; }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public TaskListKind TaskListKind { get; internal set; }
+
+        /// <summary>
         /// Maximum time the entire workflow may take to complete end-to-end.
         /// </summary>
         public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }

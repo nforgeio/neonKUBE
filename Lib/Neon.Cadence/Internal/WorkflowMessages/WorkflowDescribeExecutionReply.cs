@@ -38,6 +38,15 @@ namespace Neon.Cadence.Internal
             Type = MessageTypes.WorkflowDescribeExecutionReply;
         }
 
+        /// <summary>
+        /// The workflow execution details.
+        /// </summary>
+        public InternalDescribeWorkflowExecutionResponse Details
+        {
+            get => GetJsonProperty<InternalDescribeWorkflowExecutionResponse>("Details");
+            set => SetJsonProperty("Details", value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -55,7 +64,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowDescribeExecutionReply)target;
 
-            //typedTarget.Result = this.Result;
+            typedTarget.Details = this.Details;
         }
     }
 }

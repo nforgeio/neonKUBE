@@ -67,7 +67,8 @@ namespace Neon.Cadence.Internal
         {
             return new WorkflowConfiguration()
             {
-                 TaskList                       = this.TaskList?.Name,
+                 TaskList                       = this.TaskList.Name,
+                 TaskListKind                   = (TaskListKind)this.TaskList.TaskListKind,
                  ExecutionStartToCloseTimeout   = TimeSpan.FromTicks(this.ExecutionStartToCloseTimeout/100),
                  TaskStartToCloseTimeoutSeconds = TimeSpan.FromTicks(this.TaskStartToCloseTimeoutSeconds/100),
                  ChildPolicy                    = (ChildWorkflowPolicy)this.ChildPolicy
