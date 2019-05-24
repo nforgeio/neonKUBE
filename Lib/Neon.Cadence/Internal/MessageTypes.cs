@@ -399,7 +399,7 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
         /// </summary>
         WorkflowMutableInvokeReply = 143,
-
+        
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
         /// to cache the history of a sticky workflow on a workflow worker as a performance
@@ -407,22 +407,12 @@ namespace Neon.Cadence.Internal
         /// need to be retrieved from the Cadence cluster the next time the workflow
         /// instance is assigned to a worker. 
         /// </summary>
-        WorkflowSetCacheSizeRequest = 23,
+        WorkflowSetCacheSizeRequest = 144,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetCacheSizeRequest"/>.
         /// </summary>
-        WorkflowSetCacheSizeReply = 24,
-
-        /// <summary>
-        /// <b>client --> proxy:</b> Describes the execution status of a workflow.
-        /// </summary>
-        WorkflowDescribeExecutionRequest = 25,
-
-        /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDescribeExecutionRequest"/>.
-        /// </summary>
-        WorkflowDescribeExecutionReply = 26,
+        WorkflowSetCacheSizeReply = 145,
 
         //---------------------------------------------------------------------
         // Activity messages
