@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NonRetryiableErrors.cs
+// FILE:	    NonRetriableErrors.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -30,7 +30,7 @@ namespace Neon.Cadence
     /// Used in conjunction with <see cref="CadenceRetryPolicy"/> to specify errors that
     /// <b>will not</b> cause a workflow related operation to be retried.
     /// </summary>
-    public static class NonRetryiableErrors
+    public static class NonRetriableErrors
     {
         /// <summary>
         /// Returns the non-retriable error string for a <b>custom error</b>.

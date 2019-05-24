@@ -42,7 +42,7 @@ namespace Neon.Cadence
         /// <summary>
         /// The activity state.
         /// </summary>
-        public ActivityState State { get; internal set; }
+        public ActivityStatus State { get; internal set; }
 
         /// <summary>
         /// Details from the last activity heartbeart.

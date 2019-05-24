@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegisterDomainRequest.cs
+// FILE:	    WorkerArgs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,23 +26,22 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain.
+    /// Holds the opaque arguments passed to <see cref="Workflow"/> and <see cref="Activity"/>
+    /// implementations by the <see cref="CadenceClient"/> when the workflow or activity is 
+    /// executed on a worker.  This must be passed to the base <see cref="Workflow"/> or
+    /// <see cref="Activity"/> class constructors.
     /// </summary>
-    public class UpdateDomainRequest
+    public class WorkerArgs
     {
         /// <summary>
-        /// The domain name.
+        /// The parent <see cref="CadenceClient"/>.
         /// </summary>
-        public string Name { get; set; }
+        internal CadenceClient Client { get; set; }
 
         /// <summary>
-        /// The updated basic domain properties.
+        /// The ID used to reference the corresponding Cadence context managed by
+        /// the <b>cadence-proxy</b>.
         /// </summary>
-        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
-
-        /// <summary>
-        /// The updated domain confifuration.
-        /// </summary>
-        public DomainConfiguation Configuration { get; set; } = new DomainConfiguation();
+        internal long WorkerContextId { get; set; }
     }
 }

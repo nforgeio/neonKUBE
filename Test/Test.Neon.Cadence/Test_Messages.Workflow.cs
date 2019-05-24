@@ -1476,7 +1476,7 @@ namespace TestCadence
                         LastStartedTimestamp   = 13000,
                         MaximumAttempts        = 14000,
                         ScheduledTimestamp     = 15000,
-                        State                  = (int)ActivityState.Started
+                        State                  = (int)ActivityStatus.Started
                     }
                 }
             };

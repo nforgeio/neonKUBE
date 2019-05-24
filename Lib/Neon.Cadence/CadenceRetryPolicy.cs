@@ -116,14 +116,14 @@ namespace Neon.Cadence
         /// <summary>
         /// <para>
         /// Specifies Cadence errors that should not be retried. This is optional. Cadence server 
-        /// will stop retrying if error reason matches this list.  Use the <see cref="NonRetryiableErrors"/>
+        /// will stop retrying if error reason matches this list.  Use the <see cref="Cadence.NonRetriableErrors"/>
         /// class methods to initialize this list as required.
         /// </para>
         /// <note>
         /// Cancellation is not a failure, so that won't be retried.
         /// </note>
         /// </summary>
-        public List<string> NonRetriableErrorReasons { get; set; } = new List<string>();
+        public List<string> NonRetriableErrors { get; set; } = new List<string>();
 
         /// <summary>
         /// Converts the instance into an <see cref="InternalRetryPolicy"/>.
@@ -138,7 +138,7 @@ namespace Neon.Cadence
                 InitialInterval          = CadenceHelper.ToCadence(this.InitialInterval),
                 MaximumAttempts          = this.MaximumAttempts,
                 MaximumInterval          = CadenceHelper.ToCadence(this.MaximumInterval),
-                NonRetriableErrorReasons = NonRetriableErrorReasons.ToList()
+                NonRetriableErrorReasons = NonRetriableErrors.ToList()
             };
         }
     }

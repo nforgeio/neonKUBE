@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainConfiguation.cs
+// FILE:	    ActivityStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,24 +20,28 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Information about a Cadence domain configuration.
+    /// Enumerates the state of an activity.
     /// </summary>
-    public class DomainConfiguation
+    public enum ActivityStatus
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// The activity is waiting to be started.
         /// </summary>
-        public int RetentionDays { get; set; }
+        Scheduled = 0,
 
         /// <summary>
-        /// Enables metric generation.
+        /// The activity is running.
         /// </summary>
-        public bool EmitMetrics { get; set; }
+        Started = 1,
+
+        /// <summary>
+        /// The activity has a cancellation request pending.
+        /// </summary>
+        CancelRequested = 2
     }
 }

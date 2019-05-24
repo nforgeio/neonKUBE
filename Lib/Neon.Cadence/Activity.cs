@@ -37,7 +37,7 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="args">The low-level worker initialization arguments.</param>
-        internal Activity(WorkerConstructorArgs args)
+        internal Activity(WorkerArgs args)
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 

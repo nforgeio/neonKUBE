@@ -115,7 +115,7 @@ namespace Neon.Cadence
                     Status      = reply.DomainInfoStatus
                 },
 
-                Configuration = new DomainConfiguation()
+                Configuration = new DomainOptions()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
@@ -129,10 +129,10 @@ namespace Neon.Cadence
         /// <param name="name">Identifies the target domain.</param>
         /// <param name="request">The updated domain information.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
+        public async Task UpdateDomainAsync(string name, DomainUpdateArgs request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
-            Covenant.Requires<ArgumentNullException>(request.Configuration != null);
+            Covenant.Requires<ArgumentNullException>(request.Options != null);
             Covenant.Requires<ArgumentNullException>(request.DomainInfo != null);
 
             var domainUpdateRequest 
@@ -141,8 +141,8 @@ namespace Neon.Cadence
                     Name                       = name,
                     UpdatedInfoDescription     = request.DomainInfo.Description,
                     UpdatedInfoOwnerEmail      = request.DomainInfo.OwnerEmail,
-                    ConfigurationEmitMetrics   = request.Configuration.EmitMetrics,
-                    ConfigurationRetentionDays = request.Configuration.RetentionDays
+                    ConfigurationEmitMetrics   = request.Options.EmitMetrics,
+                    ConfigurationRetentionDays = request.Options.RetentionDays
                 };
 
             var reply = await CallProxyAsync(domainUpdateRequest);

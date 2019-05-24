@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkerConstructorArgs.cs
+// FILE:	    DomainOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,22 +26,18 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the opaque arguments passed to <see cref="Workflow"/> and <see cref="Activity"/>
-    /// implementations by the <see cref="CadenceClient"/> when the workflow or activity is 
-    /// executed on a worker.  This must be passed to the base <see cref="Workflow"/> or
-    /// <see cref="Activity"/> class constructors.
+    /// Domain configuration options.
     /// </summary>
-    public class WorkerConstructorArgs
+    public class DomainOptions
     {
         /// <summary>
-        /// The parent <see cref="CadenceClient"/>.
+        /// The workflow history retention period in days.
         /// </summary>
-        internal CadenceClient Client { get; set; }
+        public int RetentionDays { get; set; }
 
         /// <summary>
-        /// The ID used to reference the corresponding Cadence context managed by
-        /// the <b>cadence-proxy</b>.
+        /// Enables metrics for workflows and activities running in the domain.
         /// </summary>
-        internal long WorkerContextId { get; set; }
+        public bool EmitMetrics { get; set; }
     }
 }

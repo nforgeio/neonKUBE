@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityState.cs
+// FILE:	    DomainUpdateInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,28 +20,24 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the state of an activity.
+    /// Holds the changes to be made to a Cadence domain's basic properties.
     /// </summary>
-    public enum ActivityState
+    public class DomainUpdateInfo
     {
         /// <summary>
-        /// TRhe activity is waiting to be started.
+        /// The updated domain description.
         /// </summary>
-        Scheduled = 0,
+        public string Description { get; set; }
 
         /// <summary>
-        /// The activity is running.
+        /// The updated domain owner's email address.
         /// </summary>
-        Started = 1,
-
-        /// <summary>
-        /// The activity has a cancellation request pending.
-        /// </summary>
-        CancelRequested = 2
+        public string OwnerEmail { get; set; }
     }
 }

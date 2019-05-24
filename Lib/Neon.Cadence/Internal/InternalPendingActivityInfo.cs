@@ -110,7 +110,7 @@ namespace Neon.Cadence.Internal
             {
                 ActivityID             = this.ActivityID,
                 Name                   = this.ActivityType?.Name,
-                State                  = (ActivityState)this.State,
+                State                  = (ActivityStatus)this.State,
                 HeartbeatDetails       = this.HeartbeatDetails,
                 LastHeartbeatTimestamp = new DateTime(this.LastHeartbeatTimestamp),
                 LastStartedTimestamp   = new DateTime(this.LastStartedTimestamp),

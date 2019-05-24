@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateDomainInfo.cs
+// FILE:	    DomainUpdateArgs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,18 +26,23 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain's basic properties.
+    /// Holds the changes to be made to a Cadence domain.
     /// </summary>
-    public class UpdateDomainInfo
+    public class DomainUpdateArgs
     {
         /// <summary>
-        /// The updated domain description.
+        /// The domain name.
         /// </summary>
-        public string Description { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
-        /// The updated domain owner's email address.
+        /// The updated basic domain properties.
         /// </summary>
-        public string OwnerEmail { get; set; }
+        public DomainUpdateInfo DomainInfo { get; set; } = new DomainUpdateInfo();
+
+        /// <summary>
+        /// The updated domain optiona.
+        /// </summary>
+        public DomainOptions Options { get; set; } = new DomainOptions();
     }
 }
