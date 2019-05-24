@@ -14,7 +14,16 @@ LOG_DIR=./test/logs
 # test dirs
 NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
 MESSAGES_TEST_DIR=./internal/messages
-TEST_DIRS := $(MESSAGES_TEST_DIR)
+ENDPOINTS_TEST_DIR=./internal/endpoints
+
+# TEST_ENDPOINTS is a flag (1 for true, 0 for false) that 
+# indicates if the endpoints package should be tested. 
+# In order to test this package, you need a cadence-server
+# listening on host:port 0.0.0.0:7933.  Otherwise, the test
+# will fail
+TEST_ENDPOINTS=1
+TEST_DIRS := $(MESSAGES_TEST_DIR) \
+	$(ENDPOINTS_TEST_DIR)
 
 # Gather all source code		
 ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
@@ -48,21 +57,31 @@ cadenceproxy: cadence-proxy-linux \
 bins: cadenceproxy \
 
 test: bins
-	rm -f test/client.test
-	rm -f test/base.test
+	rm -f test/endpoints.test
+	rm -f test/messages.test
 	rm -f $(LOG_DIR)/test.log
 	echo $(TEST_DIRS)
 
+	# test messages package
 	go test -v -o test/messages.test -coverprofile $(LOG_DIR)/messages-cover.out $(MESSAGES_TEST_DIR) | tee -a $(LOG_DIR)/test.log
 	go tool cover -html=$(LOG_DIR)/messages-cover.out -o $(LOG_DIR)/messages-cover.html
+
+# test endpoints package (check to make sure the TEST_ENDPOINTS flag is the desired value)
+ifeq ($(TEST_ENDPOINTS), 1)
+		go test -v -o test/endpoints.test -coverprofile $(LOG_DIR)/endpoints-cover.out $(ENDPOINTS_TEST_DIR) | tee -a $(LOG_DIR)/test.log
+		go tool cover -html=$(LOG_DIR)/endpoints-cover.out -o $(LOG_DIR)/endpoints-cover.html
+endif
 	
 clean:
 	rm -Rf bin/*
 	rm -f test/messages.test
+	rm -f test/endpoints.test
 
 	rm -f $(LOG_DIR)/test.log
 	rm -f $(LOG_DIR)/messages-cover.out
 	rm -f $(LOG_DIR)/messages-cover.html
+	rm -f $(LOG_DIR)/endpoints-cover.out
+	rm -f $(LOG_DIR)/endpoints-cover.html
 
 	rm -f $(BUILD_DIR)/$(WIN)
 	rm -f $(BUILD_DIR)/$(LINUX)
