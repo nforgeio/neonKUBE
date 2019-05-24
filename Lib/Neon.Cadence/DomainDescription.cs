@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DescribeDomainResponse.cs
+// FILE:	    DomainDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,7 +28,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Information returned by <see cref="CadenceClient.DescribeDomainAsync(string)"/>.
     /// </summary>
-    public class DescribeDomainResponse
+    public class DomainDescription
     {
         /// <summary>
         /// The domain information.

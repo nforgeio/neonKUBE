@@ -93,7 +93,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        public async Task<DescribeDomainResponse> DescribeDomainAsync(string name)
+        public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
             var domainDescribeRequest =
                 new DomainDescribeRequest()
@@ -105,7 +105,7 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            return new DescribeDomainResponse()
+            return new DomainDescription()
             {
                 DomainInfo = new DomainInfo()
                 {
