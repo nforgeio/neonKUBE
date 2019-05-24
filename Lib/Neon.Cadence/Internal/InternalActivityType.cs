@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowType.cs
+// FILE:	    InternalActivityType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,9 +34,9 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Identifies a workflow type.
+    /// <b>INTERNAL USE ONLY:</b> Identifies an activity type.
     /// </summary>
-    internal class InternalWorkflowType
+    internal class InternalActivityType
     {
         /// <summary>
         /// Identifies the workflow implementation.

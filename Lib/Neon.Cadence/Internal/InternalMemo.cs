@@ -35,10 +35,10 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds optional metadata describing workflow as a map
+    /// <b>INTERNAL USE ONLY:</b> Holds optional metadata describing workflow as a map
     /// relating string names to byte arrays.
     /// </summary>
-    public class InternalMemo
+    internal class InternalMemo
     {
         /// <summary>
         /// Metadata keyed by string names.

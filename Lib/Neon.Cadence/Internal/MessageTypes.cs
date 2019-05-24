@@ -30,7 +30,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the possible message types.
+    /// <b>INTERNAL USE ONLY:</b> Enumerates the possible message types.
     /// </summary>
     internal enum MessageTypes
     {

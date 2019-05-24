@@ -34,7 +34,7 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Describes a task list.  This maps directly to the Cadence GOLANG <b>TaskList</b> structure.
+    /// <b>INTERNAL USE ONLY:</b> Describes a task list.  This maps directly to the Cadence GOLANG <b>TaskList</b> structure.
     /// </summary>
     public class InternalTaskList
     {

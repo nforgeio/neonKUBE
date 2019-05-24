@@ -35,7 +35,7 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Describes a Cadence error.
+    /// <b>INTERNAL USE ONLY:</b> Describes a Cadence error.
     /// </summary>
     internal class CadenceError
     {

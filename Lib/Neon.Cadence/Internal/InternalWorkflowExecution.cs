@@ -36,7 +36,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
     /// </summary>
-    public class InternalWorkflowExecution
+    internal class InternalWorkflowExecution
     {
         /// <summary>
         /// The original ID assigned to the workflow.

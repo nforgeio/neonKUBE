@@ -37,8 +37,8 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Used to tag proxy message class implementations and also associate
-    /// the message class with the message type code.
+    /// <b>INTERNAL USE ONLY:</b> Used to tag proxy message class implementations 
+    /// and also associate the message class with the message type code.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     internal class ProxyMessageAttribute : Attribute

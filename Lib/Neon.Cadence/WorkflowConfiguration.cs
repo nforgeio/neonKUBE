@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowType.cs
+// FILE:	    WorkflowConfiguration.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,18 +31,31 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Identifies a workflow type.
+    /// Describes a workflow's configuration.
     /// </summary>
-    internal class InternalWorkflowType
+    public class WorkflowConfiguration
     {
         /// <summary>
-        /// Identifies the workflow implementation.
+        /// Identifies the tasklist where the workflow was scheduled.
         /// </summary>
-        [JsonProperty(PropertyName = "Name", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string Name { get; set; }
+        public string TaskList { get; internal set; }
+
+        /// <summary>
+        /// Maximum time the entire workflow may take to complete end-to-end.
+        /// </summary>
+        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
+
+        /// <summary>
+        /// Maximum time a workflow task/decision may take to complete.
+        /// </summary>
+        public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
+
+        /// <summary>
+        /// The child execution policy.
+        /// </summary>
+        public ChildWorkflowPolicy ChildPolicy { get; internal set; }
     }
 }

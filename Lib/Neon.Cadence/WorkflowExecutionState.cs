@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowInfo.cs
+// FILE:	    WorkflowExecutionState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -52,27 +52,27 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes the current state of a workflow.
     /// </summary>
-    public class WorkflowInfo
+    public class WorkflowExecutionState
     {
         /// <summary>
         /// Describes the original workflow ID as well as the currrent run ID.
         /// </summary>
-        public WorkflowRun Execution { get; set; }
+        public WorkflowRun Execution { get; internal set; }
 
         /// <summary>
         /// Identifies the workflow implementation.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; internal set; }
 
         /// <summary>
         /// Workflow start time or <c>null</c> if the workflow hasn't started yet.
         /// </summary>
-        public DateTime? StartTime { get; set; }
+        public DateTime? StartTime { get; internal set; }
 
         /// <summary>
         /// Workflow close time or <c>null</c> if the workflow hasn't completed yet.
         /// </summary>
-        public DateTime? CloseTime { get; set; }
+        public DateTime? CloseTime { get; internal set; }
 
         /// <summary>
         /// Returns <c>true</c> if the workflow has been started and is still running
@@ -93,36 +93,36 @@ namespace Neon.Cadence
         /// <summary>
         /// The status for a closed workflow.
         /// </summary>
-        public WorkflowCloseStatus WorkflowCloseStatus { get; set; }
+        public WorkflowCloseStatus WorkflowCloseStatus { get; internal set; }
 
         /// <summary>
         /// Workflow history length.
         /// </summary>
-        public long HistoryLength { get; set; }
+        public long HistoryLength { get; internal set; }
 
         /// <summary>
         /// Identifies the domain where the parent workflow is running.
         /// </summary>
-        public string ParentDomain { get; set; }
+        public string ParentDomain { get; internal set; }
 
         /// <summary>
         /// Identfies the parent workflow.
         /// </summary>
-        public WorkflowRun ParentExecution { get; set; }
+        public WorkflowRun ParentExecution { get; internal set; }
 
         /// <summary>
         /// The workflow execution time.
         /// </summary>
-        public TimeSpan ExecutionTime { get; set; }
+        public TimeSpan ExecutionTime { get; internal set; }
 
         /// <summary>
         /// Optional workflow metadata.
         /// </summary>
-        public Dictionary<string, byte[]> Memo { get; set; }
+        public Dictionary<string, byte[]> Memo { get; internal set; }
 
         /// <summary>
         /// Not sure what these are.
         /// </summary>
-        public List<ResetPoint> AutoResetPoints { get; set; }
+        public List<WorkflowResetPoint> AutoResetPoints { get; internal set; }
     }
 }

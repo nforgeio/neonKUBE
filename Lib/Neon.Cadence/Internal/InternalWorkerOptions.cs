@@ -69,7 +69,7 @@ namespace Neon.Cadence.Internal
     /// </item>
     /// </list>
     /// </remarks>
-    public class InternalWorkerOptions
+    internal class InternalWorkerOptions
     {
         /// <summary>
         /// Optional: To set the maximum concurrent activity executions this worker can have.

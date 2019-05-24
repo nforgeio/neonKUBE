@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ResetPoint.cs
+// FILE:	    RegisterDomainRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -39,49 +39,33 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
-using Neon.Cadence.Internal;
-
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Not sure what is.
+    /// Holds the changes to be made to a Cadence domain.
     /// </summary>
-    public class ResetPoint
+    public class UpdateDomainRequest
     {
         /// <summary>
-        /// Not sure what is.
+        /// The domain name.
         /// </summary>
-        public string BinaryChecksum { get; set; }
+        public string Name { get; set; }
 
         /// <summary>
-        /// Not sure what is.
+        /// The updated basic domain properties.
         /// </summary>
-        public string RunId { get; set; }
+        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
 
         /// <summary>
-        /// Not sure what is.
+        /// The updated domain confifuration.
         /// </summary>
-        public long FirstDecisionCompletedId { get; set; }
-
-        /// <summary>
-        /// Not sure what is.
-        /// </summary>
-        public DateTime CreatedTime { get; set; }
-
-        /// <summary>
-        /// Not sure what is.
-        /// </summary>
-        public DateTime ExpiringTime { get; set; }
-
-        /// <summary>
-        /// Not sure what is.
-        /// </summary>
-        public bool Resettable { get; set; }
+        public DomainConfiguation Configuration { get; set; } = new DomainConfiguation();
     }
 }

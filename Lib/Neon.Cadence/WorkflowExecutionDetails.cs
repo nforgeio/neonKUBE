@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegisterDomainRequest.cs
+// FILE:	    WorkflowExecutionDetails.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,54 +18,40 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
+using Neon.Retry;
+using Neon.Time;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain.
+    /// Describes a workflow execution in detail.
     /// </summary>
-    public class UpdateDomainRequest
+    public class WorkflowExecutionDetails
     {
         /// <summary>
-        /// The domain name.
+        /// Describes the workflow's configuration.
         /// </summary>
-        public string Name { get; set; }
+        public WorkflowConfiguration Configuration { get; internal set; }
 
         /// <summary>
-        /// The updated basic domain properties.
+        /// Describes the workflow's execution status.
         /// </summary>
-        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
+        public WorkflowExecutionState Execution { get; internal set; }
 
         /// <summary>
-        /// The updated domain confifuration.
+        /// Describes the workflow's scheduled and executing activities.
         /// </summary>
-        public DomainConfiguation Configuration { get; set; } = new DomainConfiguation();
+        public List<ActivityInfo> Activities { get; internal set; }
     }
 }

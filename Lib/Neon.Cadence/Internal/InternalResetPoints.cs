@@ -35,9 +35,9 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Decribes the reset points.
+    /// <b>INTERNAL USE ONLY:</b> Decribes the reset points.
     /// </summary>
-    public class InternalResetPoints
+    internal class InternalResetPoints
     {
         /// <summary>
         /// Lists the reset points.

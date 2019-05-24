@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowType.cs
+// FILE:	    ActivityState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,27 +22,38 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
+using System.Threading;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Identifies a workflow type.
+    /// Enumerates the state of an activity.
     /// </summary>
-    internal class InternalWorkflowType
+    public enum ActivityState
     {
         /// <summary>
-        /// Identifies the workflow implementation.
+        /// TRhe activity is waiting to be started.
         /// </summary>
-        [JsonProperty(PropertyName = "Name", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string Name { get; set; }
+        Scheduled = 0,
+
+        /// <summary>
+        /// The activity is running.
+        /// </summary>
+        Started = 1,
+
+        /// <summary>
+        /// The activity has a cancellation request pending.
+        /// </summary>
+        CancelRequested = 2
     }
 }

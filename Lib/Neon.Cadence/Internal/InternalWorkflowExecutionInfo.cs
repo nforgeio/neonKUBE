@@ -34,9 +34,9 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Describes a workflow execution.  This maps directly to the Cadence GOLANG <b>WorkflowExecutionInfo</b> structure. 
+    /// <b>INTERNAL USE ONLY:</b> Describes a workflow execution.  This maps directly to the Cadence GOLANG <b>WorkflowExecutionInfo</b> structure. 
     /// </summary>
-    public class InternalWorkflowExecutionInfo
+    internal class InternalWorkflowExecutionInfo
     {
         /// <summary>
         /// Describes the original workflow ID as well as the currrent run ID.
@@ -116,38 +116,39 @@ namespace Neon.Cadence.Internal
         public InternalResetPoints AutoResetPoints { get; set; }
 
         /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowInfo"/>.
+        /// Converts the instance into a public <see cref="WorkflowExecutionState"/>.
         /// </summary>
-        public WorkflowInfo ToPublic()
+        public WorkflowExecutionState ToPublic()
         {
-            var info = new WorkflowInfo()
+            var executionState = new WorkflowExecutionState()
             {
                 Execution           = this.Execution.ToPublic(),
                 Name                = this.WorkflowType.Name,
                 WorkflowCloseStatus = (WorkflowCloseStatus)this.WorkflowCloseStatus,
                 HistoryLength       = this.HistoryLength,
                 ParentDomain        = this.ParentDomainId,
-                ExecutionTime       = TimeSpan.FromTicks(this.ExecutionTime / 100)
-            };
+                ExecutionTime       = TimeSpan.FromTicks(this.ExecutionTime / 100),
+                Memo                = this.Memo?.Fields
+        };
 
             if (this.StartTime > 0)
             {
-                info.StartTime = new DateTime(this.StartTime);
+                executionState.StartTime = new DateTime(this.StartTime);
             }
 
             if (this.CloseTime > 0)
             {
-                info.CloseTime = new DateTime(this.CloseTime);
+                executionState.CloseTime = new DateTime(this.CloseTime);
             }
 
-            info.AutoResetPoints = new List<ResetPoint>();
+            executionState.AutoResetPoints = new List<WorkflowResetPoint>();
 
             foreach (var point in this.AutoResetPoints.Points)
             {
-                info.AutoResetPoints.Add(point.ToPublic());
+                executionState.AutoResetPoints.Add(point.ToPublic());
             }
 
-            return info;
+            return executionState;
         }
     }
 }

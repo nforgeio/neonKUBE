@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegisterDomainRequest.cs
+// FILE:	    WorkflowResetPoint.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -39,44 +39,49 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
-namespace Neon.Cadence.Internal
+using Neon.Cadence.Internal;
+
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Domain registration details.
+    /// Not sure what is.
     /// </summary>
-    internal class RegisterDomainRequest
+    public class WorkflowResetPoint
     {
         /// <summary>
-        /// The domain name.
+        /// Not sure what is.
         /// </summary>
-        public string Name { get; set; }
+        public string BinaryChecksum { get; internal set; }
 
         /// <summary>
-        /// The domain description.
+        /// Not sure what is.
         /// </summary>
-        public string Description { get; set; }
+        public string RunId { get; internal set; }
 
         /// <summary>
-        /// The domain owner's email address.
+        /// Not sure what is.
         /// </summary>
-        public string OwnerEmail { get; set; }
+        public long FirstDecisionCompletedId { get; internal set; }
 
         /// <summary>
-        /// The number of days to retain the history for workflowws
-        /// completed in this domain.  This defaults to <b>7 days</b>.
+        /// Not sure what is.
         /// </summary>
-        public int RetentionDays { get; set; } = 7;
+        public DateTime CreatedTime { get; internal set; }
 
         /// <summary>
-        /// Enables metric generation.  This defaults to <c>false.</c>
+        /// Not sure what is.
         /// </summary>
-        public bool EmitMetrics { get; set; }
+        public DateTime ExpiringTime { get; internal set; }
+
+        /// <summary>
+        /// Not sure what is.
+        /// </summary>
+        public bool Resettable { get; internal set; }
     }
 }

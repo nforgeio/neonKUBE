@@ -34,10 +34,10 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Describes a workflow configuration.  This maps directly to the Cadence GOLANG 
-    /// <b>WorkflowExecutionConfiguration </b> structure.
+    /// <b>INTERNAL USE ONLY:</b> Describes a workflow configuration.  This maps directly
+    /// to the Cadence GOLANG  <b>WorkflowExecutionConfiguration </b> structure.
     /// </summary>
-    public class InternalWorkflowExecutionConfiguration
+    internal class InternalWorkflowExecutionConfiguration
     {
         /// <summary>
         /// Identifies the tasklist where the workflow was scheduled.
@@ -66,5 +66,19 @@ namespace Neon.Cadence.Internal
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue((int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon)]
         public int ChildPolicy { get; set; } = (int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon;
+
+        /// <summary>
+        /// Coverts the instance to a public <see cref="WorkflowConfiguration"/>.
+        /// </summary>
+        public WorkflowConfiguration ToPublic()
+        {
+            return new WorkflowConfiguration()
+            {
+                 TaskList                       = this.TaskList?.Name,
+                 ExecutionStartToCloseTimeout   = TimeSpan.FromTicks(this.ExecutionStartToCloseTimeout/100),
+                 TaskStartToCloseTimeoutSeconds = TimeSpan.FromTicks(this.TaskStartToCloseTimeoutSeconds/100),
+                 ChildPolicy                    = (ChildWorkflowPolicy)this.ChildPolicy
+            };
+        }
     }
 }

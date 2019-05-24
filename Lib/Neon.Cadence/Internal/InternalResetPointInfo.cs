@@ -35,9 +35,9 @@ using Neon.Time;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Not sure what is.
+    /// <b>INTERNAL USE ONLY:</b> Not sure what is.
     /// </summary>
-    public class InternalResetPointInfo
+    internal class InternalResetPointInfo
     {
         /// <summary>
         /// Not sure what is.
@@ -82,11 +82,11 @@ namespace Neon.Cadence.Internal
         public bool Resettable { get; set; }
 
         /// <summary>
-        /// Converts the instance into a public <see cref="ResetPoint"/>.
+        /// Converts the instance into a public <see cref="WorkflowResetPoint"/>.
         /// </summary>
-        public ResetPoint ToPublic()
+        public WorkflowResetPoint ToPublic()
         {
-            return new ResetPoint()
+            return new WorkflowResetPoint()
             {
                 BinaryChecksum           = this.BinaryChecksum,
                 RunId                    = this.RunId,

@@ -32,7 +32,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the Cadence error types.
+    /// <b>INTERNAL USE ONLY:</b> Enumerates the Cadence error types.
     /// </summary>
     public enum CadenceErrorTypes
     {
