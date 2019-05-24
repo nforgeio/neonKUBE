@@ -185,14 +185,6 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 	return nil
 }
 
-func handleActivityReply(reply *messages.ActivityReply) error {
-	err := fmt.Errorf("not implemented exception for message type ActivityReply")
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling ActivityReply", zap.Error(err))
-	return err
-}
-
 func handleCancelReply(reply *messages.CancelReply) error {
 	err := fmt.Errorf("not implemented exception for message type CancelReply")
 
