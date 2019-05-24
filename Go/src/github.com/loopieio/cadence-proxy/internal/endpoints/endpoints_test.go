@@ -136,9 +136,9 @@ func (s *UnitTestSuite) TestRegisterWorkflow() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		endpointsStr := "0.0.0.0:7933"
+		endpointsStr := "127.0.0.1:7933"
 		v.SetEndpoints(&endpointsStr)
-		s.Equal("0.0.0.0:7933", *v.GetEndpoints())
+		s.Equal("127.0.0.1:7933", *v.GetEndpoints())
 
 		identityStr := "my-identity"
 		v.SetIdentity(&identityStr)
@@ -158,7 +158,7 @@ func (s *UnitTestSuite) TestRegisterWorkflow() {
 
 	if v, ok := connectRequest.(*messages.ConnectRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("0.0.0.0:7933", *v.GetEndpoints())
+		s.Equal("127.0.0.1:7933", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
 	}
@@ -174,6 +174,7 @@ func (s *UnitTestSuite) TestRegisterWorkflow() {
 		s.Nil(v.GetError())
 	}
 
+	// DomainRegisterRequest
 	var domainRegisterRequest messages.IProxyMessage = messages.NewDomainRegisterRequest()
 	if v, ok := domainRegisterRequest.(*messages.DomainRegisterRequest); ok {
 		s.Equal(messagetypes.DomainRegisterReply, v.GetReplyType())
@@ -273,9 +274,9 @@ func (s *UnitTestSuite) TestRegisterWorkflow() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		name := "Foo"
+		name := "my-workflow"
 		v.SetName(&name)
-		s.Equal("Foo", *v.GetName())
+		s.Equal("my-workflow", *v.GetName())
 	}
 
 	proxyMessage = workflowRegisterRequest.GetProxyMessage()
@@ -288,7 +289,7 @@ func (s *UnitTestSuite) TestRegisterWorkflow() {
 
 	if v, ok := workflowRegisterRequest.(*messages.WorkflowRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("Foo", *v.GetName())
+		s.Equal("my-workflow", *v.GetName())
 	}
 
 	statusCode, err = s.messageToConnection(workflowRegisterRequest)

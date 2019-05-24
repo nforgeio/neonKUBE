@@ -456,4 +456,7 @@ const (
 	/// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityStopRequest"/> message.
 	/// </summary>
 	ActivityStopReply MessageType = 211
+
+	ActivityRegisterRequest MessageType = 212
+	ActivityRegisterReply   MessageType = 213
 )

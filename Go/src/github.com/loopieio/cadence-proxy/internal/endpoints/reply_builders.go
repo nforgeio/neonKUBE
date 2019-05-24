@@ -151,3 +151,7 @@ func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecuti
 		// TODO: JACK -- IMPLEMENT THIS
 	}
 }
+
+func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}

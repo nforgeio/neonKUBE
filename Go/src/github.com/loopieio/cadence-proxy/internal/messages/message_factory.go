@@ -124,6 +124,10 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowDescribeTaskListReply()
 	case messagetypes.WorkflowDescribeTaskListRequest:
 		message = NewWorkflowDescribeTaskListRequest()
+	case messagetypes.ActivityRegisterReply:
+		message = NewActivityRegisterReply()
+	case messagetypes.ActivityRegisterRequest:
+		message = NewActivityRegisterRequest()
 	default:
 		return nil
 	}

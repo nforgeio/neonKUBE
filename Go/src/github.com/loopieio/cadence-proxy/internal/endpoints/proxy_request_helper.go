@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"time"
 
+	"go.uber.org/cadence/activity"
+
 	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkers"
@@ -173,6 +175,12 @@ func handleIProxyRequest(request messages.IProxyRequest, typeCode messagetypes.M
 	case messagetypes.WorkflowDescribeExecutionRequest:
 		if v, ok := request.(*messages.WorkflowDescribeExecutionRequest); ok {
 			reply = handleWorkflowDescribeExecutionRequest(v)
+		}
+
+	// ActivityRegisterRequest
+	case messagetypes.ActivityRegisterRequest:
+		if v, ok := request.(*messages.ActivityRegisterRequest); ok {
+			reply = handleActivityRegisterRequest(v)
 		}
 
 	// PingRequest
@@ -1425,6 +1433,47 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 
 	if v, ok := reply.(*messages.WorkflowDescribeExecutionReply); ok {
 		buildWorkflowDescribeExecutionReply(v, nil, describeWorkflowExecutionResponse)
+	}
+
+	return reply
+}
+
+func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) messages.IProxyMessage {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new InitializeReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		if v, ok := reply.(*messages.ActivityRegisterReply); ok {
+			buildActivityRegisterReply(v, cadenceerrors.NewCadenceError(
+				connectionError.Error(),
+				cadenceerrors.Custom))
+		}
+
+		return reply
+	}
+
+	// define the activity function
+	var activityFunc func(ctx context.Context) (string, error)
+	if TestMode {
+		activityFunc = func(ctx context.Context) (string, error) {
+			logger.Info("helloworld activity started")
+			return "Hello World!", nil
+		}
+	}
+
+	// register the activity
+	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *request.GetName()})
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *request.GetName()))
+	if v, ok := reply.(*messages.ActivityRegisterReply); ok {
+		buildActivityRegisterReply(v, nil)
 	}
 
 	return reply

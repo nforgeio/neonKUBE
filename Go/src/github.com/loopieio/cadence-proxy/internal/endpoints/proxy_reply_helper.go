@@ -143,6 +143,12 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 			err = handleWorkflowMutableInvokeReply(v)
 		}
 
+	// ActivityRegisterReply
+	case messagetypes.ActivityRegisterReply:
+		if v, ok := reply.(*messages.ActivityRegisterReply); ok {
+			err = handleActivityRegisterReply(v)
+		}
+
 	// PingReply
 	case messagetypes.PingReply:
 		if v, ok := reply.(*messages.PingReply); ok {
@@ -252,11 +258,11 @@ func handleTerminateReply(reply *messages.TerminateReply) error {
 }
 
 func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
-	err := fmt.Errorf("not implemented exception for message type WorkflowExecuteReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowExecuteReply", zap.Error(err))
-	return err
+	logger.Debug("WorkflowRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
 }
 
 func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
@@ -381,6 +387,14 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 	// and remove the Operation from the map
 	_ = cadenceworkflows.WorkflowExecutionContexts.Remove(workflowExecutionContextID)
 	_ = Operations.Remove(requestID)
+
+	return nil
+}
+
+func handleActivityRegisterReply(reply *messages.ActivityRegisterReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
