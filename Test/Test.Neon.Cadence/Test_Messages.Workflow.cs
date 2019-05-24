@@ -859,7 +859,7 @@ namespace TestCadence
                 message.WorkflowId = "666";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = (int)WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicate };
+                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = (int)WorkflowIdReusePolicy.AllowDuplicate };
                 message.WorkflowArgs = new byte[] { 5, 6, 7, 8, 9 };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
@@ -867,7 +867,7 @@ namespace TestCadence
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
                 stream.SetLength(0);
@@ -882,7 +882,7 @@ namespace TestCadence
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
                 // Echo the message via the connection's web server and verify.
@@ -895,7 +895,7 @@ namespace TestCadence
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -908,7 +908,7 @@ namespace TestCadence
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
             }
         }
@@ -1421,7 +1421,7 @@ namespace TestCadence
                     TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (int)TaskListKind.Sticky },
                     ExecutionStartToCloseTimeout   = 1000,
                     TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = (int)ChildWorkflowPolicy.ChildWorkflowPolicyRequestCancel
+                    ChildPolicy                    = (int)ChildTerminationPolicy.RequestCancel
                 },
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()

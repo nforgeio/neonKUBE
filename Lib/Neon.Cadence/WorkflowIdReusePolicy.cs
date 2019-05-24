@@ -31,22 +31,22 @@ namespace Neon.Cadence
     public enum WorkflowIdReusePolicy
     {
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution
-        /// when workflow not running, and the last execution close state is in
-        /// [terminated, cancelled, timeouted, failed].
+        /// Allows starting a workflow with the same ID as another workflow when
+        /// that workflow is not running and the last execution close state 
+        /// is in [terminated, cancelled, timeouted, failed].
         /// </summary>
-        WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0,
+        AllowDuplicateFailedOnly = 0,
 
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicate allow start a workflow execution using
-        /// the same workflow ID,when workflow not running.
+        /// Allows starting a workflow with the same ID as another workflow when
+        /// that workflow is not running for any reason.
         /// </summary>
-        WorkflowIDReusePolicyAllowDuplicate = 1,
+        AllowDuplicate = 1,
 
         /// <summary>
-        /// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution
-        /// using the same workflow ID at all.
+        /// Prohibits starting a workflow with the same ID as another workflow,
+        /// running or not.
         /// </summary>
-        WorkflowIDReusePolicyRejectDuplicate = 2
+        RejectDuplicate = 2
     }
 }

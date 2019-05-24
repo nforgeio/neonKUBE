@@ -109,11 +109,11 @@ namespace Neon.Cadence.Internal
         public InternalResetPoints AutoResetPoints { get; set; }
 
         /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowExecutionState"/>.
+        /// Converts the instance into a public <see cref="WorkflowState"/>.
         /// </summary>
-        public WorkflowExecutionState ToPublic()
+        public WorkflowState ToPublic()
         {
-            var executionState = new WorkflowExecutionState()
+            var executionState = new WorkflowState()
             {
                 Execution           = this.Execution.ToPublic(),
                 Name                = this.WorkflowType.Name,

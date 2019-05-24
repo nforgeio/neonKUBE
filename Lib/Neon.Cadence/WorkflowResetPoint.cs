@@ -26,9 +26,15 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Not sure what is.
+    /// <para>
+    /// Not sure what is for.
+    /// </para>
+    /// <note>
+    /// I'm making this <c>internal</c> for now until we decide it makes sense
+    /// to expose this to .NET workflow applications.
+    /// </note>
     /// </summary>
-    public class WorkflowResetPoint
+    internal class WorkflowResetPoint
     {
         /// <summary>
         /// Not sure what is.

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecutionState.cs
+// FILE:	    WorkflowState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,7 +29,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes the current state of a workflow.
     /// </summary>
-    public class WorkflowExecutionState
+    public class WorkflowState
     {
         /// <summary>
         /// Describes the original workflow ID as well as the currrent run ID.
@@ -98,8 +98,14 @@ namespace Neon.Cadence
         public Dictionary<string, byte[]> Memo { get; internal set; }
 
         /// <summary>
-        /// Not sure what these are.
+        /// <para>
+        /// Not sure what is for.
+        /// </para>
+        /// <note>
+        /// I'm making this <c>internal</c> for now until we decide it makes sense
+        /// to expose this to .NET workflow applications.
+        /// </note>
         /// </summary>
-        public List<WorkflowResetPoint> AutoResetPoints { get; internal set; }
+        internal List<WorkflowResetPoint> AutoResetPoints { get; set; }
     }
 }

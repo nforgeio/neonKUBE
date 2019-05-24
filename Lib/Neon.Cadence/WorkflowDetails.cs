@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecutionDetails.cs
+// FILE:	    WorkflowDetails.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,17 +28,17 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes a workflow execution in detail.
     /// </summary>
-    public class WorkflowExecutionDetails
+    public class WorkflowDetails
     {
         /// <summary>
         /// Describes the workflow's configuration.
         /// </summary>
-        public WorkflowConfiguration Configuration { get; internal set; }
+        public WorkflowConfig Configuration { get; internal set; }
 
         /// <summary>
         /// Describes the workflow's execution status.
         /// </summary>
-        public WorkflowExecutionState Execution { get; internal set; }
+        public WorkflowState Execution { get; internal set; }
 
         /// <summary>
         /// Describes the workflow's scheduled and executing activities.

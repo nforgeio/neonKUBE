@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConfiguration.cs
+// FILE:	    WorkflowConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,7 +28,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes a workflow's configuration.
     /// </summary>
-    public class WorkflowConfiguration
+    public class WorkflowConfig
     {
         /// <summary>
         /// Identifies the tasklist where the workflow was scheduled.
@@ -51,8 +51,9 @@ namespace Neon.Cadence
         public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
 
         /// <summary>
-        /// The child execution policy.
+        /// The termination policy to apply to the child workflow when
+        /// the parent workflow is terminated.
         /// </summary>
-        public ChildWorkflowPolicy ChildPolicy { get; internal set; }
+        public ChildTerminationPolicy ChildPolicy { get; internal set; }
     }
 }

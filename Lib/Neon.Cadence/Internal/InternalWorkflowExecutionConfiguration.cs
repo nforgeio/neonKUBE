@@ -54,24 +54,25 @@ namespace Neon.Cadence.Internal
         public long TaskStartToCloseTimeoutSeconds { get; set; }
 
         /// <summary>
-        /// The child execution policy.
+        /// The termination policy to apply to the child workflow when
+        /// the parent workflow is terminated.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon)]
-        public int ChildPolicy { get; set; } = (int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon;
+        [DefaultValue((int)ChildTerminationPolicy.Abandon)]
+        public int ChildPolicy { get; set; } = (int)ChildTerminationPolicy.Abandon;
 
         /// <summary>
-        /// Coverts the instance to a public <see cref="WorkflowConfiguration"/>.
+        /// Coverts the instance to a public <see cref="WorkflowConfig"/>.
         /// </summary>
-        public WorkflowConfiguration ToPublic()
+        public WorkflowConfig ToPublic()
         {
-            return new WorkflowConfiguration()
+            return new WorkflowConfig()
             {
                  TaskList                       = this.TaskList.Name,
                  TaskListKind                   = (TaskListKind)this.TaskList.TaskListKind,
                  ExecutionStartToCloseTimeout   = TimeSpan.FromTicks(this.ExecutionStartToCloseTimeout/100),
                  TaskStartToCloseTimeoutSeconds = TimeSpan.FromTicks(this.TaskStartToCloseTimeoutSeconds/100),
-                 ChildPolicy                    = (ChildWorkflowPolicy)this.ChildPolicy
+                 ChildPolicy                    = (ChildTerminationPolicy)this.ChildPolicy
             };
         }
     }

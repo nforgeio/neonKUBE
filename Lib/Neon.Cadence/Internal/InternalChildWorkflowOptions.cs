@@ -86,8 +86,8 @@ namespace Neon.Cadence.Internal
         /// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon)]
-        public int ChildPolicy { get; set; } = (int)ChildWorkflowPolicy.ChildWorkflowPolicyAbandon;
+        [DefaultValue((int)ChildTerminationPolicy.Abandon)]
+        public int ChildPolicy { get; set; } = (int)ChildTerminationPolicy.Abandon;
 
         /// <summary>
         /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended
@@ -104,8 +104,8 @@ namespace Neon.Cadence.Internal
         /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(Cadence.WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
 
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
