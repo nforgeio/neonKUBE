@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -39,13 +38,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Net;
-using Neon.Tasks;
-
-using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
