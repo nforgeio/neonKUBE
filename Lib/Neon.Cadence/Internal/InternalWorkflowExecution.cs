@@ -18,25 +18,18 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Cadence workflow execution details.
     /// </summary>
-    public class InternalWorkflowExecution
+    internal class InternalWorkflowExecution
     {
         /// <summary>
         /// The original ID assigned to the workflow.
@@ -52,5 +45,13 @@ namespace Neon.Cadence.Internal
         [JsonProperty(PropertyName = "RunID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string RunID { get; set; }
+
+        /// <summary>
+        /// Converts the instance into a public <see cref="WorkflowRun"/>.
+        /// </summary>
+        public WorkflowRun ToPublic()
+        {
+            return new WorkflowRun(this.RunID, this.ID);
+        }
     }
 }

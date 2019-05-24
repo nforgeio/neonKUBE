@@ -19,23 +19,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Describes a Cadence error.
+    /// <b>INTERNAL USE ONLY:</b> Describes a Cadence error.
     /// </summary>
     internal class CadenceError
     {

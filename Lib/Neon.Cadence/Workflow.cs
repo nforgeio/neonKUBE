@@ -26,7 +26,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;

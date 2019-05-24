@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowIDReusePolicy.cs
+// FILE:	    WorkflowIdReusePolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,25 +18,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence
 {
     /// <summary>
     /// Enumerates the workflow ID reuse policies.
     /// </summary>
-    public enum WorkflowIDReusePolicy
+    public enum WorkflowIdReusePolicy
     {
         /// <summary>
         /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution

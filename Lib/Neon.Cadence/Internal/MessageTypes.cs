@@ -18,19 +18,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-
+using Neon.Cadence;
 using Neon.Common;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the possible message types.
+    /// <b>INTERNAL USE ONLY:</b> Enumerates the possible message types.
     /// </summary>
     internal enum MessageTypes
     {
@@ -418,6 +413,16 @@ namespace Neon.Cadence.Internal
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetCacheSizeRequest"/>.
         /// </summary>
         WorkflowSetCacheSizeReply = 24,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Describes the execution status of a workflow.
+        /// </summary>
+        WorkflowDescribeExecutionRequest = 25,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDescribeExecutionRequest"/>.
+        /// </summary>
+        WorkflowDescribeExecutionReply = 26,
 
         //---------------------------------------------------------------------
         // Activity messages

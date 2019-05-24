@@ -18,18 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
@@ -89,9 +81,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This defaults to <see cref="WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly"/>.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly"/>.
         /// </summary>
-        public int WorkflowIdReusePolicy { get; set; } = (int)WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
 
         /// <summary>
         /// Optionally specifies a retry policy.

@@ -18,18 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
@@ -89,8 +82,8 @@ namespace Neon.Cadence.Internal
         /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = (int)WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        [DefaultValue(Cadence.WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly)]
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
         
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
