@@ -18,33 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
 
 namespace Neon.Cadence.Internal
 {
@@ -52,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Registers with Cadence that the current
     /// connection is capable of executing task and/or activities.
     /// </summary>
-    [ProxyMessage(MessageTypes.NewWorkerRequest)]
+    [ProxyMessage(InternalMessageTypes.NewWorkerRequest)]
     internal class NewWorkerRequest : ProxyRequest
     {
         /// <summary>
@@ -60,11 +36,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public NewWorkerRequest()
         {
-            Type = MessageTypes.NewWorkerRequest;
+            Type = InternalMessageTypes.NewWorkerRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.NewWorkerReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.NewWorkerReply;
 
         /// <summary>
         /// Specifies the name to be used to register the workflow or activity worker.

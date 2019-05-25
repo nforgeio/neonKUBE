@@ -43,11 +43,6 @@ namespace Neon.Data
     public interface IRoundtripData
     {
         /// <summary>
-        /// Returns the string identifying the entity type.
-        /// </summary>
-        string __T { get; }
-
-        /// <summary>
         /// Renders the instance as JSON text, optionally formatting the output.
         /// </summary>
         /// <param name="indented">Optionally pass <c>true</c> to format the output.</param>

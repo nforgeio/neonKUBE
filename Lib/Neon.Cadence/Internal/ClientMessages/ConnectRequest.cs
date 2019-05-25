@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -37,7 +30,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Requests the proxy establish a connection with a Cadence cluster.
     /// This maps to a <c>NewClient()</c> in the proxy.
     /// </summary>
-    [ProxyMessage(MessageTypes.ConnectRequest)]
+    [ProxyMessage(InternalMessageTypes.ConnectRequest)]
     internal class ConnectRequest : ProxyRequest
     {
         /// <summary>
@@ -45,11 +38,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public ConnectRequest()
         {
-            Type = MessageTypes.ConnectRequest;
+            Type = InternalMessageTypes.ConnectRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.ConnectReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ConnectReply;
 
         /// <summary>
         /// <para>

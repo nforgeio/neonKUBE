@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -36,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// still healthy.  The proxy should send a <see cref="HeartbeatReply"/>,
     /// possibly indicating that there's a problem by specifying an error.
     /// </summary>
-    [ProxyMessage(MessageTypes.HeartbeatRequest)]
+    [ProxyMessage(InternalMessageTypes.HeartbeatRequest)]
     internal class HeartbeatRequest : ProxyRequest
     {
         /// <summary>
@@ -44,11 +37,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public HeartbeatRequest()
         {
-            Type = MessageTypes.HeartbeatRequest;
+            Type = InternalMessageTypes.HeartbeatRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.HeartbeatReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.HeartbeatReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()

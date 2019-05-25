@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -36,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// indicating that the operation was canceled, has already completed or doesn't
     /// exist.
     /// </summary>
-    [ProxyMessage(MessageTypes.CancelReply)]
+    [ProxyMessage(InternalMessageTypes.CancelReply)]
     internal class CancelReply : ProxyReply
     {
         /// <summary>
@@ -44,7 +37,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public CancelReply()
         {
-            Type = MessageTypes.CancelReply;
+            Type = InternalMessageTypes.CancelReply;
         }
 
         /// <summary>

@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -37,8 +30,8 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Used to tag proxy message class implementations and also associate
-    /// the message class with the message type code.
+    /// <b>INTERNAL USE ONLY:</b> Used to tag proxy message class implementations 
+    /// and also associate the message class with the message type code.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     internal class ProxyMessageAttribute : Attribute
@@ -47,7 +40,7 @@ namespace Neon.Cadence.Internal
         /// Constructor.
         /// </summary>
         /// <param name="type">Specifies the message type to be used when serializing the tagged message.</param>
-        public ProxyMessageAttribute(MessageTypes type)
+        public ProxyMessageAttribute(InternalMessageTypes type)
         {
             this.Type = type;
         }
@@ -55,6 +48,6 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Returns the associated message type code.
         /// </summary>
-        public MessageTypes Type { get; private set; }
+        public InternalMessageTypes Type { get; private set; }
     }
 }

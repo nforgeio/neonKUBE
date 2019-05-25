@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MessageTypes.cs
+// FILE:	    InternalMessageTypes.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,21 +18,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Text;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-
+using Neon.Cadence;
 using Neon.Common;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the possible message types.
+    /// <b>INTERNAL USE ONLY:</b> Enumerates the possible message types.
     /// </summary>
-    internal enum MessageTypes
+    internal enum InternalMessageTypes
     {
         /// <summary>
         /// Indicates a message with an unspecified type.  This normally indicates an error.
@@ -404,7 +399,7 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
         /// </summary>
         WorkflowMutableInvokeReply = 143,
-
+        
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
         /// to cache the history of a sticky workflow on a workflow worker as a performance
@@ -412,12 +407,24 @@ namespace Neon.Cadence.Internal
         /// need to be retrieved from the Cadence cluster the next time the workflow
         /// instance is assigned to a worker. 
         /// </summary>
-        WorkflowSetCacheSizeRequest = 23,
+        WorkflowSetCacheSizeRequest = 144,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetCacheSizeRequest"/>.
         /// </summary>
-        WorkflowSetCacheSizeReply = 24,
+        WorkflowSetCacheSizeReply = 145,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Returns the workflow result encoded as a byte array, waiting
+        /// for the workflow to complete if it is still running.  Note that this request will fail
+        /// if the workflow did not run to completion.
+        /// </summary>
+        WorkflowGetResultRequest = 146,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetResultRequest"/>.
+        /// </summary>
+        WorkflowGetResultReply = 147,
 
         //---------------------------------------------------------------------
         // Activity messages

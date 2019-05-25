@@ -18,18 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
@@ -69,7 +62,7 @@ namespace Neon.Cadence.Internal
     /// </item>
     /// </list>
     /// </remarks>
-    public class InternalWorkerOptions
+    internal class InternalWorkerOptions
     {
         /// <summary>
         /// Optional: To set the maximum concurrent activity executions this worker can have.
@@ -217,7 +210,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "NonDeterministicWorkflowPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public int NonDeterministicWorkflowPolicy { get; set; } = (int)Neon.Cadence.NonDeterministicWorkflowPolicy.NonDeterministicWorkflowPolicyBlockWorkflow;
+        public int NonDeterministicWorkflowPolicy { get; set; } = (int)Neon.Cadence.NonDeterministicPolicy.BlockWorkflow;
 
         /// <summary>
         /// Optional: worker graceful shutdown timeout.

@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all proxy requests.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
+    [ProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ProxyRequest : ProxyMessage
     {
         /// <summary>
@@ -79,7 +72,7 @@ namespace Neon.Cadence.Internal
         /// Derived request types must return the type of the expected
         /// <see cref="ProxyReply"/> message.
         /// </summary>
-        public virtual MessageTypes ReplyType => MessageTypes.Unspecified;
+        public virtual InternalMessageTypes ReplyType => InternalMessageTypes.Unspecified;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()

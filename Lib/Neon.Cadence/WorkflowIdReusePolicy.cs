@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateDomainInfo.cs
+// FILE:	    WorkflowIdReusePolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,48 +18,35 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
+using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain's basic properties.
+    /// Enumerates the workflow ID reuse policies.
     /// </summary>
-    public class UpdateDomainInfo
+    public enum WorkflowIdReusePolicy
     {
         /// <summary>
-        /// The updated domain description.
+        /// Allows starting a workflow with the same ID as another workflow when
+        /// that workflow is not running and the last execution close state 
+        /// is in [terminated, cancelled, timeouted, failed].
         /// </summary>
-        public string Description { get; set; }
+        AllowDuplicateFailedOnly = 0,
 
         /// <summary>
-        /// The updated domain owner's email address.
+        /// Allows starting a workflow with the same ID as another workflow when
+        /// that workflow is not running for any reason.
         /// </summary>
-        public string OwnerEmail { get; set; }
+        AllowDuplicate = 1,
+
+        /// <summary>
+        /// Prohibits starting a workflow with the same ID as another workflow,
+        /// running or not.
+        /// </summary>
+        RejectDuplicate = 2
     }
 }

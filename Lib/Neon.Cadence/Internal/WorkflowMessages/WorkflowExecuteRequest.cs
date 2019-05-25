@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Starts a workflow execution.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowExecuteRequest)]
     internal class WorkflowExecuteRequest : WorkflowRequest
     {
         /// <summary>
@@ -42,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowExecuteRequest()
         {
-            Type = MessageTypes.WorkflowExecuteRequest;
+            Type = InternalMessageTypes.WorkflowExecuteRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowExecuteReply;
 
         /// <summary>
         /// Identifies the Cadence domain hosting the workflow.

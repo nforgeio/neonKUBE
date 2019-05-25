@@ -18,25 +18,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
 using Neon.Time;
 
 namespace Neon.Cadence
 {
     /// <summary>
     /// Specifies the options Cadence will use when assigning workflow and activity
-    /// executions to a user's worker service.
+    /// executions to a user worker service.
     /// </summary>
     public class WorkerOptions
     {
@@ -169,10 +161,10 @@ namespace Neon.Cadence
         /// <summary>
         /// Optionally sets how decision workers deals with non-deterministic history events,
         /// presumably arising from non-deterministic workflow definitions or non-backward compatible workflow definition changes.
-        /// This defaults to <see cref="NonDeterministicWorkflowPolicy.NonDeterministicWorkflowPolicyBlockWorkflow"/> which 
+        /// This defaults to <see cref="NonDeterministicPolicy.BlockWorkflow"/> which 
         /// just logs error but reply nothing back to server
         /// </summary>
-        public NonDeterministicWorkflowPolicy NonDeterministicWorkflowPolicy { get; set; } = NonDeterministicWorkflowPolicy.NonDeterministicWorkflowPolicyBlockWorkflow;
+        public NonDeterministicPolicy NonDeterministicWorkflowPolicy { get; set; } = NonDeterministicPolicy.BlockWorkflow;
 
         /// <summary>
         /// Optionally sets the graceful shutdown timeout.  Defaults to <see cref="TimeSpan.Zero"/>.

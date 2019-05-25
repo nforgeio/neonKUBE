@@ -54,7 +54,7 @@ namespace TestCadence
         /// </summary>
         public class HelloWorkflow : Workflow
         {
-            public HelloWorkflow(WorkerConstructorArgs args)
+            public HelloWorkflow(WorkerArgs args)
                 : base(args)
             {
             }
@@ -331,10 +331,10 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // UpdateDomain:
 
-            var updateDomainRequest = new UpdateDomainRequest();
+            var updateDomainRequest = new DomainUpdateArgs();
 
-            updateDomainRequest.Configuration.EmitMetrics   = true;
-            updateDomainRequest.Configuration.RetentionDays = 77;
+            updateDomainRequest.Options.EmitMetrics   = true;
+            updateDomainRequest.Options.RetentionDays = 77;
             updateDomainRequest.DomainInfo.OwnerEmail       = "foo@bar.com";
             updateDomainRequest.DomainInfo.Description      = "new description";
 

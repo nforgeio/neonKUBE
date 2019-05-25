@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -35,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Sends a signal to a workflow, starting the
     /// workflow if it doesn't exist.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowSignalWithStartRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowSignalWithStartRequest)]
     internal class WorkflowSignalWithStartRequest : WorkflowRequest
     {
         /// <summary>
@@ -43,11 +36,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowSignalWithStartRequest()
         {
-            Type = MessageTypes.WorkflowSignalWithStartRequest;
+            Type = InternalMessageTypes.WorkflowSignalWithStartRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowSignalWithStartReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSignalWithStartReply;
 
         /// <summary>
         /// Identifies the workflow to be executed if the workflow instance

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DescribeDomainResponse.cs
+// FILE:	    ActivityStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,32 +18,30 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-
+using Neon.Cadence;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Information returned by <see cref="CadenceClient.DescribeDomainAsync(string)"/>.
+    /// Enumerates the state of an activity.
     /// </summary>
-    public class DescribeDomainResponse
+    public enum ActivityStatus
     {
         /// <summary>
-        /// The domain information.
+        /// The activity is waiting to be started.
         /// </summary>
-        public DomainInfo DomainInfo { get; set; }
+        Scheduled = 0,
 
         /// <summary>
-        /// The domain configuration.
+        /// The activity is running.
         /// </summary>
-        public DomainConfiguation Configuration { get; set; }
+        Started = 1,
+
+        /// <summary>
+        /// The activity has a cancellation request pending.
+        /// </summary>
+        CancelRequested = 2
     }
 }

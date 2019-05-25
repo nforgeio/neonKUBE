@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Cancels a workflow execution.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowCancelRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowCancelRequest)]
     internal class WorkflowCancelRequest : WorkflowRequest
     {
         /// <summary>
@@ -42,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowCancelRequest()
         {
-            Type = MessageTypes.WorkflowCancelRequest;
+            Type = InternalMessageTypes.WorkflowCancelRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowCancelReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowCancelReply;
 
         /// <summary>
         /// Identifies the workflow by ID.

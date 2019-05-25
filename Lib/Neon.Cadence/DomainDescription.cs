@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceClientClosedDelegate.cs
+// FILE:	    DomainDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,27 +19,25 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Neon.Cadence;
+using Neon.Cadence.Internal;
+using Neon.Common;
+
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Delegate called by a <see cref="CadenceClient"/> when the connection is closed
-    /// explicitly or where there's a problem communicating with the <b>cadence-proxy</b>.
+    /// Information returned by <see cref="CadenceClient.DescribeDomainAsync(string)"/>.
     /// </summary>
-    /// <param name="sender">The event sender.</param>
-    /// <param name="args">The event arguments.</param>
-    public delegate void CadenceClientClosedDelegate(object sender, CadenceClientClosedArgs args);
-
-    /// <summary>
-    /// The event arguments sent when a <see cref="CadenceClient"/> is closed
-    /// with a property indicating whether or not the connection was closed due
-    /// to an error.
-    /// </summary>
-    public class CadenceClientClosedArgs : EventArgs
+    public class DomainDescription
     {
         /// <summary>
-        /// This will be set if the connection was closed due to an error
-        /// or <c>null</c> when the connection was closed normally.
+        /// The domain information.
         /// </summary>
-        public Exception Exception { get; internal  set; }
+        public DomainInfo DomainInfo { get; set; }
+
+        /// <summary>
+        /// The domain configuration.
+        /// </summary>
+        public DomainOptions Configuration { get; set; }
     }
 }

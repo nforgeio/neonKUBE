@@ -18,40 +18,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 using Neon.Cadence;
 using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>client --> proxy:</b> Stops a Cadence worker.
     /// </summary>
-    [ProxyMessage(MessageTypes.StopWorkerRequest)]
+    [ProxyMessage(InternalMessageTypes.StopWorkerRequest)]
     internal class StopWorkerRequest : ProxyRequest
     {
         /// <summary>
@@ -59,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public StopWorkerRequest()
         {
-            Type = MessageTypes.StopWorkerRequest;
+            Type = InternalMessageTypes.StopWorkerRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.StopWorkerReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.StopWorkerReply;
 
         /// <summary>
         /// Identifies the worker being stopped.

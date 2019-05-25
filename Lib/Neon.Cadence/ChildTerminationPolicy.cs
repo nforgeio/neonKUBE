@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ChildWorkflowPolicy .cs
+// FILE:	    ChildTerminationPolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,18 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence
 {
@@ -37,7 +29,7 @@ namespace Neon.Cadence
     /// Enumerates the possible child workflow behaviors when the parent
     /// workflow is terminated.
     /// </summary>
-    public enum ChildWorkflowPolicy
+    public enum ChildTerminationPolicy
     {
         /// <summary>
         /// <para>
@@ -47,7 +39,7 @@ namespace Neon.Cadence
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        ChildWorkflowPolicyTerminate = 0,
+        Terminate = 0,
 
         /// <summary>
         /// <para>
@@ -58,12 +50,12 @@ namespace Neon.Cadence
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        ChildWorkflowPolicyRequestCancel = 1,
+        RequestCancel = 1,
 
         /// <summary>
-        /// ChildWorkflowPolicyAbandon is policy that will have no impact to child workflow execution when parent workflow is
+        /// Child workflow execution will continue unaffected when parent workflow is
         /// terminated.  This is the default policy.
         /// </summary>
-        ChildWorkflowPolicyAbandon = 2
+        Abandon = 2
     }
 }

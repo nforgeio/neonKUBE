@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowIDReusePolicy.cs
+// FILE:	    WorkerArgs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,43 +18,30 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the workflow ID reuse policies.
+    /// Holds the opaque arguments passed to <see cref="Workflow"/> and <see cref="Activity"/>
+    /// implementations by the <see cref="CadenceClient"/> when the workflow or activity is 
+    /// executed on a worker.  This must be passed to the base <see cref="Workflow"/> or
+    /// <see cref="Activity"/> class constructors.
     /// </summary>
-    public enum WorkflowIDReusePolicy
+    public class WorkerArgs
     {
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicateFailedOnly allow start a workflow execution
-        /// when workflow not running, and the last execution close state is in
-        /// [terminated, cancelled, timeouted, failed].
+        /// The parent <see cref="CadenceClient"/>.
         /// </summary>
-        WorkflowIDReusePolicyAllowDuplicateFailedOnly = 0,
+        internal CadenceClient Client { get; set; }
 
         /// <summary>
-        /// WorkflowIDReusePolicyAllowDuplicate allow start a workflow execution using
-        /// the same workflow ID,when workflow not running.
+        /// The ID used to reference the corresponding Cadence context managed by
+        /// the <b>cadence-proxy</b>.
         /// </summary>
-        WorkflowIDReusePolicyAllowDuplicate = 1,
-
-        /// <summary>
-        /// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution
-        /// using the same workflow ID at all.
-        /// </summary>
-        WorkflowIDReusePolicyRejectDuplicate = 2
+        internal long WorkerContextId { get; set; }
     }
 }

@@ -387,47 +387,6 @@ namespace TestCodeGen
         }
 
         /// <summary>
-        /// Converts the current instance into one of its derived types.
-        /// </summary>
-        /// <typeparam name="TResult">The desired result type.</typeparam>
-        /// <param name="noClone">Optionally disable deep cloning of the underlying <see cref="JObject"/>.</param>
-        /// <returns>The derived instance.</returns>
-        public DataWrapper ToDerived<TResult>(bool noClone = false)
-        {
-            try
-            {
-                var toDerivedMethod = instanceType.GetMethod("ToDerived", new Type[] { typeof(bool) });
-
-                Covenant.Assert(toDerivedMethod != null);
-
-                // $hack(jeff.lill):
-                //
-                // We're going to assume for testing purposes that the derived type
-                // is in the same namespace as the current type.
-
-                var resultType             = AssemblyContext.Current.LoadedAssembly.GetType($"{instanceType.Namespace}.{typeof(TResult).Name}");
-                var toGenericDerivedMethod = toDerivedMethod.MakeGenericMethod(resultType);
-
-                return new DataWrapper()
-                {
-                    instance     = toGenericDerivedMethod.Invoke(instance, new object[] { noClone }),
-                    instanceType = resultType
-                };
-            }
-            catch (TargetInvocationException e)
-            {
-                if (e.InnerException != null)
-                {
-                    throw e.InnerException;
-                }
-                else
-                {
-                    throw;
-                }
-            }
-        }
-
-        /// <summary>
         /// Returns a deep clone of the data model.
         /// </summary>
         /// <returns>The new data <see cref="DataWrapper"/> with the cloned instance.</returns>

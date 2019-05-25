@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Sends a signal to a running workflow.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowQueryRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowQueryRequest)]
     internal class WorkflowQueryRequest : WorkflowRequest
     {
         /// <summary>
@@ -42,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowQueryRequest()
         {
-            Type = MessageTypes.WorkflowQueryRequest;
+            Type = InternalMessageTypes.WorkflowQueryRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowQueryReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowQueryReply;
 
         /// <summary>
         /// Identifies the workflow by ID.

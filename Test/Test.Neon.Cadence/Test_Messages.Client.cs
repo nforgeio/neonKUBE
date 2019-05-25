@@ -52,7 +52,7 @@ namespace TestCadence
             {
                 message = new InitializeRequest();
 
-                Assert.Equal(MessageTypes.InitializeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.InitializeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -171,7 +171,7 @@ namespace TestCadence
             {
                 message = new ConnectRequest();
 
-                Assert.Equal(MessageTypes.ConnectReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.ConnectReply, message.ReplyType);
 
                 // Empty message.
 
@@ -296,7 +296,7 @@ namespace TestCadence
             {
                 message = new DomainDescribeRequest();
 
-                Assert.Equal(MessageTypes.DomainDescribeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.DomainDescribeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -440,7 +440,7 @@ namespace TestCadence
             {
                 message = new DomainRegisterRequest();
 
-                Assert.Equal(MessageTypes.DomainRegisterReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.DomainRegisterReply, message.ReplyType);
 
                 // Empty message.
 
@@ -572,7 +572,7 @@ namespace TestCadence
             {
                 message = new DomainUpdateRequest();
 
-                Assert.Equal(MessageTypes.DomainUpdateReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.DomainUpdateReply, message.ReplyType);
 
                 // Empty message.
 
@@ -703,7 +703,7 @@ namespace TestCadence
             {
                 message = new TerminateRequest();
 
-                Assert.Equal(MessageTypes.TerminateReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.TerminateReply, message.ReplyType);
 
                 // Empty message.
 
@@ -805,7 +805,7 @@ namespace TestCadence
             {
                 message = new HeartbeatRequest();
 
-                Assert.Equal(MessageTypes.HeartbeatReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.HeartbeatReply, message.ReplyType);
 
                 // Empty message.
 
@@ -907,7 +907,7 @@ namespace TestCadence
             {
                 message = new CancelRequest();
 
-                Assert.Equal(MessageTypes.CancelReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.CancelReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1018,7 +1018,7 @@ namespace TestCadence
             {
                 message = new NewWorkerRequest();
 
-                Assert.Equal(MessageTypes.NewWorkerReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.NewWorkerReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1155,7 +1155,7 @@ namespace TestCadence
             {
                 message = new StopWorkerRequest();
 
-                Assert.Equal(MessageTypes.StopWorkerReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.StopWorkerReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1258,7 +1258,7 @@ namespace TestCadence
             {
                 message = new PingRequest();
 
-                Assert.Equal(MessageTypes.PingReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.PingReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1355,7 +1355,7 @@ namespace TestCadence
             {
                 message = new WorkflowSetCacheSizeRequest();
 
-                Assert.Equal(MessageTypes.WorkflowSetCacheSizeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSetCacheSizeReply, message.ReplyType);
 
                 // Empty message.
 

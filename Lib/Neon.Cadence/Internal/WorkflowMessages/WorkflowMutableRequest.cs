@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowMutableRequest)]
+    [ProxyMessage(InternalMessageTypes.WorkflowMutableRequest)]
     internal class WorkflowMutableRequest : WorkflowRequest
     {
         /// <summary>
@@ -42,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowMutableRequest()
         {
-            Type = MessageTypes.WorkflowMutableRequest;
+            Type = InternalMessageTypes.WorkflowMutableRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowMutableReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowMutableReply;
 
         /// <summary>
         /// Identifies the mutable value to be returned.

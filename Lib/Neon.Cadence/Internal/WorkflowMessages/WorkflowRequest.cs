@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all workflow related requests.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
+    [ProxyMessage(InternalMessageTypes.Unspecified)]
     internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>

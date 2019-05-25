@@ -38,6 +38,7 @@ using Neon.Web;
 using Neon.Xunit;
 
 using Test.Neon.UxModels;
+using Newtonsoft.Json.Linq;
 
 using Xunit;
 using Xunit.Abstractions;
@@ -497,6 +498,125 @@ namespace TestCodeGen.UxAspNet
             };
 
             Assert.Equal(list, await client.GetPersonArrayAsync(list));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void RoundTripUnknown()
+        {
+            // Verify that persisted properties that were unknown
+            // at compile time are still round-tripped successfuly.
+            // We're going to test this by accessing the backing
+            // [JObject].  We're also going to verify that these
+            // unknown properties are included in the equality
+            // tests.
+            //
+            // This requirement was the inspiration for this entire code
+            // generation thing and it's funny that it took me this
+            // much time to actually test it.
+
+            var jObject = new JObject();
+
+            // Verify that we can round trip the "Unknown" property.
+
+            jObject.Add("Unknown", "very tricky!");
+            jObject.Add("__T", typeof(Person).FullName);
+
+            var person = Person.CreateFrom(jObject.ToString());
+
+            person.Name = "Jack";
+            person.Age = 10;
+
+            jObject = person.ToJObject();
+
+            Assert.Equal("Jack", (string)jObject["Name"]);
+            Assert.Equal(10, (int)jObject["Age"]);
+            Assert.Equal("very tricky!", (string)jObject["Unknown"]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void Derived()
+        {
+            //-------------------------------------------------------------
+            // Verify that [BaseModel] works.
+
+            var baseModel = new BaseModel();
+
+            Assert.Null(baseModel.ParentProperty);
+
+            baseModel.ParentProperty = "Hello World!";
+            Assert.Equal("Hello World!", baseModel.ParentProperty);
+
+            baseModel = BaseModel.CreateFrom(baseModel.ToString());
+            Assert.Equal("Hello World!", baseModel.ParentProperty);
+
+            //-------------------------------------------------------------
+            // Verify that [DerivedModel] works too.
+
+            var derivedModel = new DerivedModel();
+
+            Assert.Null(derivedModel.ParentProperty);
+            Assert.Null(derivedModel.ChildProperty);
+
+            derivedModel.ParentProperty = "parent";
+            derivedModel.ChildProperty = "child";
+
+            derivedModel = DerivedModel.CreateFrom(derivedModel.ToString());
+
+            Assert.Equal("parent", derivedModel.ParentProperty);
+            Assert.Equal("child", derivedModel.ChildProperty);
+
+            //-------------------------------------------------------------
+            // Verify Equals():
+
+            var value1 = new DerivedModel() { ParentProperty = "parent", ChildProperty = "child" };
+            var value2 = new DerivedModel() { ParentProperty = "parent", ChildProperty = "child" };
+
+            Assert.True(value1.Equals(value1));
+            Assert.True(value1.Equals(value2));
+            Assert.True(value2.Equals(value1));
+
+            Assert.False(value1.Equals(null));
+            Assert.False(value1.Equals("Hello World!"));
+
+            // Verify that a change to the parent class property is detected.
+
+            value1.ParentProperty = "DIFFERENT";
+
+            Assert.True(value1.Equals(value1));
+
+            Assert.False(value1.Equals(value2));
+            Assert.False(value2.Equals(value1));
+            Assert.False(value1.Equals(null));
+            Assert.False(value1.Equals("Hello World!"));
+
+            // Verify that a change to the derived class property is detected.
+
+            value1.ParentProperty = "parent";
+            value1.ChildProperty = "DIFFERENT";
+
+            Assert.True(value1.Equals(value1));
+
+            Assert.False(value1.Equals(value2));
+            Assert.False(value2.Equals(value1));
+            Assert.False(value1.Equals(null));
+            Assert.False(value1.Equals("Hello World!"));
+
+            //-------------------------------------------------------------
+            // Verify that we can use [ToDerived<TResult>()] to create a derived instance
+            // from the base type.  This also exercises [RoundtripDataFactory] a bit.
+
+            derivedModel = new DerivedModel() { ParentProperty = "parent", ChildProperty = "child" };
+
+            baseModel = BaseModel.CreateFrom(derivedModel.ToString());
+
+            Assert.Equal("parent", baseModel.ParentProperty);
+
+            derivedModel = baseModel.ToDerived<DerivedModel>();
+
+            Assert.Equal("parent", derivedModel.ParentProperty);
+            Assert.Equal("child", derivedModel.ChildProperty);
         }
     }
 }

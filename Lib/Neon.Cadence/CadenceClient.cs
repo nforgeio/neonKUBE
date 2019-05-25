@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -39,13 +38,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Net;
-using Neon.Tasks;
-
-using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
@@ -375,14 +371,7 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            //-----------------------------------------
-            // $debug(jeff.lill):
-            //
-            // Uncomment this call after Jack has implemented this
-            // functionality.
-
-            // await client.SetWorkflowCacheSize(10000);
-            //-----------------------------------------
+            await client.SetWorkflowCacheSize(10000);
 
             return client;
         }
@@ -719,7 +708,7 @@ namespace Neon.Cadence
         /// was closed normally or due to an error by examining the <see cref="CadenceClientClosedArgs"/>
         /// arguments passed to the handler.
         /// </summary>
-        public event CadenceClientClosedDelegate ConnectionClosed;
+        public event CadenceClosedDelegate ConnectionClosed;
 
         /// <summary>
         /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already
@@ -827,7 +816,7 @@ namespace Neon.Cadence
 
                 switch (request.Type)
                 {
-                    case MessageTypes.HeartbeatRequest:
+                    case InternalMessageTypes.HeartbeatRequest:
 
                         await OnHeartbeatRequest((HeartbeatRequest)request);
                         break;
@@ -1113,7 +1102,7 @@ namespace Neon.Cadence
                             var notAwaitingThis = Task.Run(
                                 async () =>
                                 {
-                                    if (operation.Request.Type != MessageTypes.CancelRequest)
+                                    if (operation.Request.Type != InternalMessageTypes.CancelRequest)
                                     {
                                         await CallProxyAsync(new CancelRequest() { TargetRequestId = operation.RequestId }, timeout: TimeSpan.FromSeconds(1));
                                     }

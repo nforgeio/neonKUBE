@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainConfiguation.cs
+// FILE:	    InternalResetPoints.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,32 +18,24 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
+using Neon.Cadence;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Information about a Cadence domain configuration.
+    /// <b>INTERNAL USE ONLY:</b> Decribes the reset points.
     /// </summary>
-    public class DomainConfiguation
+    internal class InternalResetPoints
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// Lists the reset points.
         /// </summary>
-        public int RetentionDays { get; set; }
-
-        /// <summary>
-        /// Enables metric generation.
-        /// </summary>
-        public bool EmitMetrics { get; set; }
+        [JsonProperty(PropertyName = "Points", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<InternalResetPointInfo> Points { get; set; }
     }
 }

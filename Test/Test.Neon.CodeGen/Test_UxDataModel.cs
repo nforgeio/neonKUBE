@@ -216,13 +216,13 @@ namespace TestCodeGen.UxDataModel
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<EmptyData>();
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.EmptyData\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<EmptyData>(data.ToString());
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.EmptyData\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<EmptyData>(data.ToJObject());
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.EmptyData\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
 
                 //-------------------------------------------------------------
                 // Verify Equals():
@@ -264,13 +264,13 @@ namespace TestCodeGen.UxDataModel
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<NoSetter>();
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.NoSetter\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<NoSetter>(data.ToString());
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.NoSetter\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<NoSetter>(data.JObject);
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.NoSetter\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
             }
         }
 
@@ -299,13 +299,13 @@ namespace TestCodeGen.UxDataModel
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<NoGetter>();
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.NoGetter\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<NoGetter>(data.ToString());
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.NoGetter\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<NoGetter>(data.JObject);
-                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.NoGetter\"}", data.ToString());
+                Assert.Equal("{}", data.ToString());
             }
         }
 
@@ -331,47 +331,47 @@ namespace TestCodeGen.UxDataModel
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<SimpleData>();
-                Assert.Equal("{\"Name\":null,\"Age\":0,\"Enum\":\"One\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}", data.ToString());
-                Assert.Equal("{\r\n  \"Name\": null,\r\n  \"Age\": 0,\r\n  \"Enum\": \"One\",\r\n  \"__T\": \"TestCodeGen.UxDataModel.SimpleData\"\r\n}", data.ToString(indented: true));
+                Assert.Equal("{\"Name\":null,\"Age\":0,\"Enum\":\"One\"}", data.ToString());
+                Assert.Equal("{\r\n  \"Name\": null,\r\n  \"Age\": 0,\r\n  \"Enum\": \"One\"\r\n}", data.ToString(indented: true));
 
                 data = context.CreateDataWrapper<SimpleData>();
                 data["Name"] = "Jeff";
                 data["Age"]  = 58;
                 data["Enum"] = MyEnum1.Two;
-                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}", data.ToString());
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
 
-                data = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}");
+                data = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
                 data["Name"] = "Jeff";
                 data["Age"] = 58;
                 data["Enum"] = MyEnum1.Two;
-                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}", data.ToString());
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
 
                 var jObject = data.ToJObject();
                 data = context.CreateDataWrapperFrom<SimpleData>(jObject);
                 data["Name"] = "Jeff";
                 data["Age"] = 58;
                 data["Enum"] = MyEnum1.Two;
-                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}", data.ToString());
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
 
                 var jsonText = data.ToString(indented: false);
                 data = context.CreateDataWrapperFrom<SimpleData>(jsonText);
                 data["Name"] = "Jeff";
                 data["Age"] = 58;
                 data["Enum"] = MyEnum1.Two;
-                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}", data.ToString());
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
 
                 jsonText = data.ToString(indented: true);
                 data = context.CreateDataWrapperFrom<SimpleData>(jsonText);
                 data["Name"] = "Jeff";
                 data["Age"] = 58;
                 data["Enum"] = MyEnum1.Two;
-                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}", data.ToString());
+                Assert.Equal("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}", data.ToString());
 
                 //-------------------------------------------------------------
                 // Verify Equals():
 
-                var value1 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}");
-                var value2 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\",\"__T\":\"TestCodeGen.UxDataModel.SimpleData\"}");
+                var value1 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
+                var value2 = context.CreateDataWrapperFrom<SimpleData>("{\"Name\":\"Jeff\",\"Age\":58,\"Enum\":\"Two\"}");
 
                 Assert.True(value1.Equals(value1));
                 Assert.True(value1.Equals(value2));
@@ -422,7 +422,7 @@ namespace TestCodeGen.UxDataModel
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<BasicTypes>();
-                Assert.Equal("{\"Bool\":false,\"Byte\":0,\"SByte\":0,\"Short\":0,\"UShort\":0,\"Int\":0,\"UInt\":0,\"Long\":0,\"ULong\":0,\"Float\":0.0,\"Double\":0.0,\"Decimal\":0.0,\"String\":null,\"__T\":\"TestCodeGen.UxDataModel.BasicTypes\"}", data.ToString());
+                Assert.Equal("{\"Bool\":false,\"Byte\":0,\"SByte\":0,\"Short\":0,\"UShort\":0,\"Int\":0,\"UInt\":0,\"Long\":0,\"ULong\":0,\"Float\":0.0,\"Double\":0.0,\"Decimal\":0.0,\"String\":null}", data.ToString());
 
                 data["Bool"]    = true;
                 data["Byte"]    = (byte)1;
@@ -438,21 +438,21 @@ namespace TestCodeGen.UxDataModel
                 data["Decimal"] = (decimal)11;
                 data["String"]  = "12";
 
-                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\",\"__T\":\"TestCodeGen.UxDataModel.BasicTypes\"}", data.ToString());
+                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
 
                 var jsonText = data.ToString(indented: false);
                 data = context.CreateDataWrapperFrom<BasicTypes>(jsonText);
-                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\",\"__T\":\"TestCodeGen.UxDataModel.BasicTypes\"}", data.ToString());
+                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
 
                 jsonText = data.ToString(indented: true);
                 data = context.CreateDataWrapperFrom<BasicTypes>(jsonText);
-                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\",\"__T\":\"TestCodeGen.UxDataModel.BasicTypes\"}", data.ToString());
+                Assert.Equal("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}", data.ToString());
 
                 //-------------------------------------------------------------
                 // Verify Equals():
 
-                var value1 = context.CreateDataWrapperFrom<BasicTypes>("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\",\"__T\":\"TestCodeGen.UxDataModel.BasicTypes\"}");
-                var value2 = context.CreateDataWrapperFrom<BasicTypes>("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\",\"__T\":\"TestCodeGen.UxDataModel.BasicTypes\"}");
+                var value1 = context.CreateDataWrapperFrom<BasicTypes>("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}");
+                var value2 = context.CreateDataWrapperFrom<BasicTypes>("{\"Bool\":true,\"Byte\":1,\"SByte\":2,\"Short\":3,\"UShort\":4,\"Int\":5,\"UInt\":6,\"Long\":7,\"ULong\":8,\"Float\":9.0,\"Double\":10.0,\"Decimal\":11.0,\"String\":\"12\"}");
 
                 Assert.True(value1.Equals(value1));
                 Assert.True(value1.Equals(value2));
@@ -504,13 +504,13 @@ namespace TestCodeGen.UxDataModel
                 // Set a valid [Enum2] Value and test again.
 
                 data["Enum2"] = MyEnum2.Three;
-                Assert.Equal("{\"List\":null,\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}", data.ToString());
+                Assert.Equal("{\"List\":null,\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the list and verify.
 
                 data["List"] = new ObservableCollection<string>() { "item0", "item1" };
 
-                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the dictionary and verify.
 
@@ -520,12 +520,12 @@ namespace TestCodeGen.UxDataModel
                     { "one", 1 }
                 };
 
-                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the one dimensional array and verify.
 
                 data["SingleArray"] = new int[] { 100, 200 };
-                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":null}", data.ToString());
 
                 // Initialize the two dimensional array and verify.
 
@@ -535,7 +535,7 @@ namespace TestCodeGen.UxDataModel
                     new int[] { 300, 400 }
                 };
 
-                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":[[100,200],[300,400]],\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}", data.ToString());
+                Assert.Equal("{\"List\":[\"item0\",\"item1\"],\"Dictionary\":{\"zero\":0,\"one\":1},\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":[100,200],\"DoubleArray\":[[100,200],[300,400]]}", data.ToString());
 
                 // Verify that a property with [JsonIgnore] is not persisted.
 
@@ -545,8 +545,8 @@ namespace TestCodeGen.UxDataModel
                 //-------------------------------------------------------------
                 // Verify Equals():
 
-                var value1 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"zero\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}");
-                var value2 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"zero\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}");
+                var value1 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"zero\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
+                var value2 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"zero\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
 
                 Assert.True(value1.Equals(value1));
                 Assert.True(value1.Equals(value2));
@@ -555,7 +555,7 @@ namespace TestCodeGen.UxDataModel
                 Assert.False(value1.Equals(null));
                 Assert.False(value1.Equals("Hello World!"));
 
-                value2 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"NOT-ZERO\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null,\"__T\":\"TestCodeGen.UxDataModel.ComplexData\"}");
+                value2 = context.CreateDataWrapperFrom<ComplexData>("{\"List\":[\"NOT-ZERO\"],\"Dictionary\":null,\"Enum1\":\"One\",\"Enum2\":\"three\",\"Simple\":null,\"SingleArray\":null,\"DoubleArray\":null}");
 
                 Assert.True(value1.Equals(value1));
 
@@ -593,118 +593,6 @@ namespace TestCodeGen.UxDataModel
                 Assert.Equal(67, data["Age"]);
                 Assert.Equal(100000.0, data["NetWorth"]);
                 Assert.Equal(MyEnum1.Three, (MyEnum1)data["Enum1"]);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void Derived()
-        {
-            // Verify that data models that inherit from other data models work.
-
-            var settings = new CodeGeneratorSettings()
-            {
-                SourceNamespace = typeof(Test_UxDataModel).Namespace,
-                UxFramework = UxFrameworks.Xaml
-            };
-
-            var generator = new CodeGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
-
-            Assert.False(output.HasErrors);
-
-            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
-
-            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
-            {
-                // Verify that [BaseModel] by itself works.
-
-                var baseData = context.CreateDataWrapper<BaseModel>();
-
-                baseData.Save();
-                baseData.Load(isDerived: false);
-                Assert.Equal(baseData.PersistedType, baseData["__T"]);
-                Assert.Null(baseData["ParentProperty"]);
-
-                baseData["ParentProperty"] = "Hello World!";
-                Assert.Equal("Hello World!", baseData["ParentProperty"]);
-
-                baseData = context.CreateDataWrapperFrom<BaseModel>(baseData.ToString());
-                Assert.Equal("Hello World!", baseData["ParentProperty"]);
-
-                // Verify that [DerivedModel] works too.
-
-                var derivedData = context.CreateDataWrapper<DerivedModel>();
-
-                derivedData.Save();
-                derivedData.Load();
-                Assert.Equal(derivedData.PersistedType, derivedData["__T"]);
-                Assert.Null(derivedData["ParentProperty"]);
-                Assert.Null(derivedData["ChildProperty"]);
-
-                derivedData["ParentProperty"] = "base";
-                Assert.Equal("base", derivedData["ParentProperty"]);
-
-                derivedData["ChildProperty"] = "derived";
-                Assert.Equal("derived", derivedData["ChildProperty"]);
-
-                var json = derivedData.ToString(indented: true);
-
-                derivedData = context.CreateDataWrapperFrom<DerivedModel>(derivedData.ToString());
-                Assert.Equal("base", derivedData["ParentProperty"]);
-                Assert.Equal("derived", derivedData["ChildProperty"]);
-
-                //-------------------------------------------------------------
-                // Verify Equals():
-
-                var value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\",\"__T\":\"TestCodeGen.UxDataModel.DerivedModel\"}");
-                var value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\",\"__T\":\"TestCodeGen.UxDataModel.DerivedModel\"}");
-
-                Assert.True(value1.Equals(value1));
-                Assert.True(value1.Equals(value2));
-                Assert.True(value2.Equals(value1));
-
-                Assert.False(value1.Equals(null));
-                Assert.False(value1.Equals("Hello World!"));
-
-                // Verify that a change to the base class property is detected.
-
-                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\",\"__T\":\"TestCodeGen.UxDataModel.DerivedModel\"}");
-                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"DIFFERENT\",\"ChildProperty\":\"DerivedValue\",\"__T\":\"TestCodeGen.UxDataModel.DerivedModel\"}");
-
-                Assert.True(value1.Equals(value1));
-
-                Assert.False(value1.Equals(value2));
-                Assert.False(value2.Equals(value1));
-                Assert.False(value1.Equals(null));
-                Assert.False(value1.Equals("Hello World!"));
-
-                // Verify that a change to the derived class property is detected.
-
-                value1 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DerivedValue\",\"__T\":\"TestCodeGen.UxDataModel.DerivedModel\"}");
-                value2 = context.CreateDataWrapperFrom<DerivedModel>("{\"ParentProperty\":\"BaseValue\",\"ChildProperty\":\"DIFFERENT\",\"__T\":\"TestCodeGen.UxDataModel.DerivedModel\"}");
-
-                Assert.True(value1.Equals(value1));
-
-                Assert.False(value1.Equals(value2));
-                Assert.False(value2.Equals(value1));
-                Assert.False(value1.Equals(null));
-                Assert.False(value1.Equals("Hello World!"));
-
-                //-------------------------------------------------------------
-                // Verify that we can use [ToDerived<TResult>()] to create a derived instance
-                // from the base type.  This also exercises [RoundtripDataFactory] a bit.
-
-                derivedData = context.CreateDataWrapper<DerivedModel>();
-
-                derivedData["ParentProperty"] = "parent";
-                derivedData["ChildProperty"]  = "child";
-
-                baseData    = context.CreateDataWrapperFrom<BaseModel>(derivedData.ToString());
-                derivedData = baseData.ToDerived<DerivedModel>();
-
-                Assert.Equal("parent", derivedData["ParentProperty"]);
-                Assert.Equal("child", derivedData["ChildProperty"]);
             }
         }
 
@@ -783,14 +671,14 @@ namespace TestCodeGen.UxDataModel
             using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<CustomNamesModel>();
-                Assert.Equal("{\"CustomString\":null,\"CustomInt\":0,\"__T\":\"TestCodeGen.UxDataModel.CustomNamesModel\"}", data.ToString());
+                Assert.Equal("{\"CustomString\":null,\"CustomInt\":0}", data.ToString());
 
                 data["String"] = "Hello World!";
                 data["Int"]    = 1001;
-                Assert.Equal("{\"CustomString\":\"Hello World!\",\"CustomInt\":1001,\"__T\":\"TestCodeGen.UxDataModel.CustomNamesModel\"}", data.ToString());
+                Assert.Equal("{\"CustomString\":\"Hello World!\",\"CustomInt\":1001}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<CustomNamesModel>(data.ToString());
-                Assert.Equal("{\"CustomString\":\"Hello World!\",\"CustomInt\":1001,\"__T\":\"TestCodeGen.UxDataModel.CustomNamesModel\"}", data.ToString());
+                Assert.Equal("{\"CustomString\":\"Hello World!\",\"CustomInt\":1001}", data.ToString());
             }
         }
 
@@ -836,7 +724,7 @@ namespace TestCodeGen.UxDataModel
 
                 // Verify that defaults serialize correctly.
 
-                Assert.Equal("{\"Include\":\"Include\",\"Populate\":\"Populate\",\"__T\":\"TestCodeGen.UxDataModel.SerializationDefaultsModel\"}", data.ToString());
+                Assert.Equal("{\"Include\":\"Include\",\"Populate\":\"Populate\"}", data.ToString());
 
                 // Verify that defaults deserialize correctly.
 
@@ -857,10 +745,10 @@ namespace TestCodeGen.UxDataModel
                 data["Include"]           = "NotInclude";
                 data["Populate"]          = "NotPopulate";
 
-                Assert.Equal("{\"Ignore\":\"NotIgnore\",\"IgnoreAndPopulate\":\"NotIgnoreAndPopulate\",\"Include\":\"NotInclude\",\"Populate\":\"NotPopulate\",\"__T\":\"TestCodeGen.UxDataModel.SerializationDefaultsModel\"}", data.ToString());
+                Assert.Equal("{\"Ignore\":\"NotIgnore\",\"IgnoreAndPopulate\":\"NotIgnoreAndPopulate\",\"Include\":\"NotInclude\",\"Populate\":\"NotPopulate\"}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<SerializationDefaultsModel>(data.ToString());
-                Assert.Equal("{\"Ignore\":\"NotIgnore\",\"IgnoreAndPopulate\":\"NotIgnoreAndPopulate\",\"Include\":\"NotInclude\",\"Populate\":\"NotPopulate\",\"__T\":\"TestCodeGen.UxDataModel.SerializationDefaultsModel\"}", data.ToString());
+                Assert.Equal("{\"Ignore\":\"NotIgnore\",\"IgnoreAndPopulate\":\"NotIgnoreAndPopulate\",\"Include\":\"NotInclude\",\"Populate\":\"NotPopulate\"}", data.ToString());
 
                 Assert.Equal("NotIgnore", data["Ignore"]);
                 Assert.Equal("NotIgnoreAndPopulate", data["IgnoreAndPopulate"]);
@@ -1118,83 +1006,6 @@ namespace TestCodeGen.UxDataModel
                 Assert.NotSame(complexData["DoubleArray"], clonedComplexData["DoubleArray"]);
                 Assert.NotSame(((int[][])complexData["DoubleArray"])[0], ((int[][])clonedComplexData["DoubleArray"])[0]);
                 Assert.NotSame(((int[][])complexData["DoubleArray"])[1], ((int[][])clonedComplexData["DoubleArray"])[1]);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
-        public void RoundTripUnknownProperties()
-        {
-            // Verify that persisted properties that were unknown
-            // at compile time are still round-tripped successfuly.
-            // We're going to test this by accessing the backing
-            // [JObject].  We're also going to verify that these
-            // unknown properties are included in the equality
-            // tests.
-            //
-            // This requirement was the inspiration for this entire code
-            // generation thing and it's funny that it took me this
-            // line to actually test it.
-
-            var settings = new CodeGeneratorSettings()
-            {
-                SourceNamespace = typeof(Test_UxDataModel).Namespace,
-                UxFramework = UxFrameworks.Xaml
-            };
-
-            var generator = new CodeGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
-
-            Assert.False(output.HasErrors);
-
-            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
-
-            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
-            {
-                // Verify for an empty class.
-
-                var emptyData = context.CreateDataWrapper<EmptyData>();
-
-                emptyData.JObject["Unknown"] = "very tricky!";
-
-                var deserialzedEmptyData = context.CreateDataWrapperFrom<EmptyData>(emptyData.ToString());
-
-                Assert.Equal(emptyData, deserialzedEmptyData);
-                Assert.Equal("very tricky!", deserialzedEmptyData.JObject["Unknown"]);
-
-                deserialzedEmptyData.JObject["Unknown"] = "even trickier!";
-
-                var jObject = RoundtripDataHelper.DeepClone(emptyData.JObject);
-
-                jObject["__T"] = typeof(DataWrapper).FullName;
-
-                Assert.False(emptyData.Equals(deserialzedEmptyData));
-                Assert.False(DataWrapper.Equals(emptyData, deserialzedEmptyData));
-                Assert.True(DataWrapper.NotEquals<EmptyData>(emptyData, deserialzedEmptyData));
-
-                // Verify for simple data.
-
-                var simpleData = context.CreateDataWrapper<SimpleData>();
-
-                jObject["__T"]               = typeof(SimpleData).FullName;
-                simpleData.JObject["Unknown"] = "very tricky!";
-
-                var deserialzedSimpleData = context.CreateDataWrapperFrom<SimpleData>(jObject.ToString());
-
-                jObject = RoundtripDataHelper.DeepClone(deserialzedSimpleData.JObject);
-
-                Assert.Equal(simpleData, deserialzedSimpleData);
-                Assert.Equal("very tricky!", deserialzedSimpleData.JObject["Unknown"]);
-
-                deserialzedSimpleData.JObject["Unknown"] = "even trickier!";
-
-                jObject = RoundtripDataHelper.DeepClone(deserialzedSimpleData.JObject);
-
-                jObject["__T"] = typeof(SimpleData).FullName;
-
-                Assert.False(simpleData.Equals(deserialzedSimpleData));
-                Assert.False(DataWrapper.Equals(simpleData, deserialzedSimpleData));
-                Assert.True(DataWrapper.NotEquals<SimpleData>(simpleData, deserialzedSimpleData));
             }
         }
 

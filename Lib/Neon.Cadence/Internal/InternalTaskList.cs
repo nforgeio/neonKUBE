@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkerConstructorArgs.cs
+// FILE:	    InternalTaskList.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,41 +18,31 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds the opaque arguments passed to <see cref="Workflow"/> and <see cref="Activity"/>
-    /// implementations by the <see cref="CadenceClient"/> when the workflow or activity is 
-    /// executed on a worker.  This must be passed to the base <see cref="Workflow"/> or
-    /// <see cref="Activity"/> class constructors.
+    /// <b>INTERNAL USE ONLY:</b> Describes a task list.  This maps directly to the Cadence GOLANG <b>TaskList</b> structure.
     /// </summary>
-    public class WorkerConstructorArgs
+    public class InternalTaskList
     {
         /// <summary>
-        /// The parent <see cref="CadenceClient"/>.
+        /// Identifies the tasklist.
         /// </summary>
-        internal CadenceClient Client { get; set; }
+        [JsonProperty(PropertyName = "Name", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Name { get; set; }
 
         /// <summary>
-        /// The ID used to reference the corresponding Cadence context managed by
-        /// the <b>cadence-proxy</b>.
+        /// Indicates the task list kind.
         /// </summary>
-        internal long WorkerContextId { get; set; }
+        [JsonProperty(PropertyName = "TaskListKind", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public int TaskListKind { get; set; }
     }
 }

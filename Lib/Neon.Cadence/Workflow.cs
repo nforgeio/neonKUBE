@@ -26,7 +26,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -44,8 +43,8 @@ namespace Neon.Cadence
     /// <para>
     /// Workflows are pretty easy to implement.  You'll need to derive your custom
     /// workflow class from <see cref="Workflow"/> and implement a public constructor
-    /// with a single <see cref="WorkerConstructorArgs"/> parameter and have your
-    /// constructor call the corresponding base <see cref="Workflow(WorkerConstructorArgs)"/>)
+    /// with a single <see cref="WorkerArgs"/> parameter and have your
+    /// constructor call the corresponding base <see cref="Workflow(WorkerArgs)"/>)
     /// constructor to initialize the instance.  You'll also need to implement the
     /// <see cref="RunAsync(byte[])"/> method, which is where your workflow logic
     /// will reside.  
@@ -177,7 +176,7 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="args">The low-level worker initialization arguments.</param>
-        protected Workflow(WorkerConstructorArgs args)
+        protected Workflow(WorkerArgs args)
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 

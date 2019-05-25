@@ -19,20 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
-using System.Threading;
 
 namespace Neon.Cadence
 {
@@ -47,7 +37,7 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="args">The low-level worker initialization arguments.</param>
-        internal Activity(WorkerConstructorArgs args)
+        internal Activity(WorkerArgs args)
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 

@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="DomainDescribeRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.DomainUpdateReply)]
+    [ProxyMessage(InternalMessageTypes.DomainUpdateReply)]
     internal class DomainUpdateReply : ProxyReply
     {
         /// <summary>
@@ -42,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public DomainUpdateReply()
         {
-            Type = MessageTypes.DomainUpdateReply;
+            Type = InternalMessageTypes.DomainUpdateReply;
         }
 
         /// <inheritdoc/>

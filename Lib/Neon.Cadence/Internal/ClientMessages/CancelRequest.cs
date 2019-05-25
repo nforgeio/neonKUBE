@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -36,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// still healthy.  The proxy should send a <see cref="CancelReply"/>
     /// optionally indicating that there's a problem by specifying an error.
     /// </summary>
-    [ProxyMessage(MessageTypes.CancelRequest)]
+    [ProxyMessage(InternalMessageTypes.CancelRequest)]
     internal class CancelRequest : ProxyRequest
     {
         /// <summary>
@@ -44,11 +37,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public CancelRequest()
         {
-            Type = MessageTypes.CancelRequest;
+            Type = InternalMessageTypes.CancelRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.CancelReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.CancelReply;
 
         /// <summary>
         /// The ID of the request being cancelled.
