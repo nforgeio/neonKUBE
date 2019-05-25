@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowQueryReply.cs
+// FILE:	    WorkflowGetLastResultRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,27 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueryRequest"/>
+    /// <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
+    ///  This can be used by CRON workflows to retrieve state from the last workflow run.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowQueryReply)]
-    internal class WorkflowQueryReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.WorkflowGetLastResultRequest)]
+    internal class WorkflowGetLastResultRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowQueryReply()
+        public WorkflowGetLastResultRequest()
         {
-            Type = InternalMessageTypes.WorkflowQueryReply;
+            Type = InternalMessageTypes.WorkflowGetLastResultRequest;
         }
 
-        /// <summary>
-        /// The query result bytes or <c>null</c>.
-        /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowGetLastResultReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowQueryReply();
+            var clone = new WorkflowGetLastResultRequest();
 
             CopyTo(clone);
 
@@ -61,10 +56,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowQueryReply)target;
-
-            typedTarget.Result = this.Result;
         }
     }
 }

@@ -147,10 +147,10 @@ namespace TestCadence
                 message = new InitializeRequest();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.LibraryAddress);
@@ -166,10 +166,10 @@ namespace TestCadence
                 Assert.Equal(666, message.LibraryPort);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);

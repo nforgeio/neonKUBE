@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowListOpenExecutionsRequest.cs
+// FILE:	    WorkflowHasLastResultRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,42 +25,28 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Lists open workflows.
+    /// <b>client --> proxy:</b> Determines whether the last execution of the workflow has
+    ///  a completion result.  This can be used by CRON workflows to determine whether the
+    ///  last run returned a result.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowListOpenExecutionsRequest)]
-    internal class WorkflowListOpenExecutionsRequest : WorkflowRequest
+    [ProxyMessage(InternalMessageTypes.WorkflowHasLastResultRequest)]
+    internal class WorkflowHasLastResultRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowListOpenExecutionsRequest()
+        public WorkflowHasLastResultRequest()
         {
-            Type = InternalMessageTypes.WorkflowListOpenExecutionsRequest;
+            Type = InternalMessageTypes.WorkflowHasLastResultRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowListOpenExecutionsReply;
-
-        /// <summary>
-        /// Optionally specifies the target domain.  Workflows from all
-        /// domains will be listed when this is omitted.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
-        }
-
-        public int MaximumPageSize
-        {
-            get => GetIntProperty("MaximumPageSize");
-            set => SetIntProperty("MaximumPageSize", value);
-        }
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowHasLastResultReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowListOpenExecutionsRequest();
+            var clone = new WorkflowHasLastResultRequest();
 
             CopyTo(clone);
 
@@ -71,11 +57,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowListOpenExecutionsRequest)target;
-
-            typedTarget.Domain          = this.Domain;
-            typedTarget.MaximumPageSize = this.MaximumPageSize;
         }
     }
 }

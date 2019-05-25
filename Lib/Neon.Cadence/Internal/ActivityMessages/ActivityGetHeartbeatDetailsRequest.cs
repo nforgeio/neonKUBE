@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowQueryReply.cs
+// FILE:	    ActivityGetHeartbeatDetailsRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,27 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueryRequest"/>
+    /// <b>client --> proxy:</b> Requests the details for the last heartbeat 
+    /// recorded for a failed previous run of the activity.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowQueryReply)]
-    internal class WorkflowQueryReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsRequest)]
+    internal class ActivityGetHeartbeatDetailsRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowQueryReply()
+        public ActivityGetHeartbeatDetailsRequest()
         {
-            Type = InternalMessageTypes.WorkflowQueryReply;
+            Type = InternalMessageTypes.ActivityGetHeartbeatDetailsRequest;
         }
 
-        /// <summary>
-        /// The query result bytes or <c>null</c>.
-        /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityGetHeartbeatDetailsReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowQueryReply();
+            var clone = new ActivityGetHeartbeatDetailsRequest();
 
             CopyTo(clone);
 
@@ -61,10 +56,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowQueryReply)target;
-
-            typedTarget.Result = this.Result;
         }
     }
 }

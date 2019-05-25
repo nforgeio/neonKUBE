@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowQueryReply.cs
+// FILE:	    WorkflowHasLastCompletionReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueryRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowHasLastResultRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowQueryReply)]
-    internal class WorkflowQueryReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.WorkflowHasLastResultReply)]
+    internal class WorkflowHasLastCompletionReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowQueryReply()
+        public WorkflowHasLastCompletionReply()
         {
-            Type = InternalMessageTypes.WorkflowQueryReply;
+            Type = InternalMessageTypes.WorkflowHasLastResultReply;
         }
 
         /// <summary>
-        /// The query result bytes or <c>null</c>.
+        /// Indicates whether the workflow has a last completion result.
         /// </summary>
-        public byte[] Result
+        public bool HasResult
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetBoolProperty("HasResult");
+            set => SetBoolProperty("HasResult", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowQueryReply();
+            var clone = new WorkflowHasLastCompletionReply();
 
             CopyTo(clone);
 
@@ -62,9 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowQueryReply)target;
+            var typedTarget = (WorkflowHasLastCompletionReply)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.HasResult = this.HasResult;
         }
     }
 }

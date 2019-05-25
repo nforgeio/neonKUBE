@@ -25,7 +25,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowDescribeExecutionRequest"/>
     /// </summary>
     [ProxyMessage(InternalMessageTypes.WorkflowDescribeExecutionReply)]
     internal class WorkflowDescribeExecutionReply : WorkflowReply
@@ -44,7 +44,7 @@ namespace Neon.Cadence.Internal
         public InternalDescribeWorkflowExecutionResponse Details
         {
             get => GetJsonProperty<InternalDescribeWorkflowExecutionResponse>("Details");
-            set => SetJsonProperty("Details", value);
+            set => SetJsonProperty<InternalDescribeWorkflowExecutionResponse>("Details", value);
         }
 
         /// <inheritdoc/>

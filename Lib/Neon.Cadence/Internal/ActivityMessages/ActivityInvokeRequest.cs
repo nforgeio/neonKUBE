@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowQueryReply.cs
+// FILE:	    ActivityInvokeRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,36 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueryRequest"/>
+    /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
+    /// a workflow activity.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowQueryReply)]
-    internal class WorkflowQueryReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityInvokeRequest)]
+    internal class ActivityInvokeRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowQueryReply()
+        public ActivityInvokeRequest()
         {
-            Type = InternalMessageTypes.WorkflowQueryReply;
+            Type = InternalMessageTypes.ActivityInvokeRequest;
         }
 
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityInvokeReply;
+
         /// <summary>
-        /// The query result bytes or <c>null</c>.
+        /// Optionally specifies the activity arguments encoded as a byte array.
         /// </summary>
-        public byte[] Result
+        public byte[] Args
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetBytesProperty("Args");
+            set => SetBytesProperty("Args", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowQueryReply();
+            var clone = new ActivityInvokeRequest();
 
             CopyTo(clone);
 
@@ -62,9 +66,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowQueryReply)target;
+            var typedTarget = (ActivityInvokeRequest)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Args = this.Args;
         }
     }
 }

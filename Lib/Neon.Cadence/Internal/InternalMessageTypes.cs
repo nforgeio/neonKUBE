@@ -237,139 +237,99 @@ namespace Neon.Cadence.Internal
         WorkflowGetWorkflowHistoryReply = 113,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Indicates that an activity has completed.
-        /// </summary>
-        WorkflowCompleteActivityRequest = 114,
-
-        /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowCompleteActivityRequest"/> message.
-        /// </summary>
-        WorkflowCompleteActivityReply = 115,
-
-        /// <summary>
-        /// <b>client --> proxy:</b> Indicates that the activity with a specified ID as completed has completed.
-        /// </summary>
-        WorkflowCompleteActivityByIdRequest = 116,
-
-        /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowCompleteActivityByIdRequest"/> message.
-        /// </summary>
-        WorkflowCompleteActivityByIdReply = 117,
-
-        /// <summary>
-        /// <b>client --> proxy:</b> Records an activity heartbeat.
-        /// </summary>
-        WorkflowRecordActivityHeartbeatRequest = 118,
-
-        /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatRequest"/> message.
-        /// </summary>
-        WorkflowRecordActivityHeartbeatReply = 119,
-
-        /// <summary>
-        /// <b>client --> proxy:</b> Records a heartbeat for an activity specified by ID.
-        /// </summary>
-        WorkflowRecordActivityHeartbeatByIdRequest = 120,
-
-        /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatByIdRequest"/> message.
-        /// </summary>
-        WorkflowRecordActivityHeartbeatByIdReply = 121,
-
-        /// <summary>
         /// <b>client --> proxy:</b> Requests the list of closed workflows.
         /// </summary>
-        WorkflowListClosedRequest = 122,
+        WorkflowListClosedRequest = 114,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowListClosedRequest"/> message.
         /// </summary>
-        WorkflowListClosedReply = 123,
+        WorkflowListClosedReply = 115,
 
         /// <summary>
         /// <b>client --> proxy:</b> Requests the list of open workflows.
         /// </summary>
-        WorkflowListOpenExecutionsRequest = 124,
+        WorkflowListOpenExecutionsRequest = 116,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowListOpenExecutionsRequest"/> message.
         /// </summary>
-        WorkflowListOpenExecutionsReply = 125,
+        WorkflowListOpenExecutionsReply = 117,
 
         /// <summary>
         /// <b>client --> proxy:</b> Queries a workflow's last execution.
         /// </summary>
-        WorkflowQueryRequest = 126,
+        WorkflowQueryRequest = 118,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowQueryRequest"/> message.
         /// </summary>
-        WorkflowQueryReply = 127,
+        WorkflowQueryReply = 119,
 
         /// <summary>
         /// <b>client --> proxy:</b> Returns information about a worflow execution.
         /// </summary>
-        WorkflowDescribeExecutionRequest = 128,
+        WorkflowDescribeExecutionRequest = 120,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDescribeExecutionRequest"/> message.
         /// </summary>
-        WorkflowDescribeExecutionReply = 129,
+        WorkflowDescribeExecutionReply = 121,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
         [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListRequest = 130,
+        WorkflowDescribeTaskListRequest = 122,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
         [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListReply = 131,
+        WorkflowDescribeTaskListReply = 123,
 
         /// <summary>
         /// <b>proxy --> client:</b> Commands the client client and associated .NET application
         /// to process a workflow instance.
         /// </summary>
-        WorkflowInvokeRequest = 132,
+        WorkflowInvokeRequest = 124,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
         /// </summary>
-        WorkflowInvokeReply = 133,
+        WorkflowInvokeReply = 125,
 
         /// <summary>
         /// <b>proxy --> client:</b> Initiates execution of a child workflow.
         /// </summary>
-        WorkflowExecuteChildRequest = 134,
+        WorkflowExecuteChildRequest = 126,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
         /// </summary>
-        WorkflowExecuteChildReply = 135,
+        WorkflowExecuteChildReply = 127,
 
         /// <summary>
         /// <b>client --> proxy:</b> Indicates that .NET application wishes to consume signals from
         /// a named channel.  Any signals received by the proxy will be forwarded to the
         /// client via <see cref="WorkflowSignalReceivedRequest"/> messages.
         /// </summary>
-        WorkflowSignalSubscribeRequest = 136,
+        WorkflowSignalSubscribeRequest = 128,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalSubscribeRequest"/> message.
         /// </summary>
-        WorkflowSignalSubscribeReply = 137,
+        WorkflowSignalSubscribeReply = 129,
 
         /// <summary>
         /// <b>proxy --> client:</b> Send when a signal is received by the proxy on a subscribed channel.
         /// </summary>
-        WorkflowSignalReceivedRequest = 138,
+        WorkflowSignalReceivedRequest = 130,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
         /// </summary>
-        WorkflowSignalReceivedReply = 139,
+        WorkflowSignalReceivedReply = 131,
 
         /// <summary>
         /// <b>proxy --> client:</b> Implements the standard Cadence <i>side effect</i> behavior. 
@@ -380,12 +340,12 @@ namespace Neon.Cadence.Internal
         /// <c>MutableId</c> and then waits for a <see cref="WorkflowMutableInvokeReply"/>
         /// and then returns the result from this reply back to Cadence.
         /// </summary>
-        WorkflowMutableRequest = 140,
+        WorkflowMutableRequest = 132,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
         /// </summary>
-        WorkflowMutableReply = 141,
+        WorkflowMutableReply = 133,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent by the proxy to the client the first time a mutable
@@ -393,12 +353,12 @@ namespace Neon.Cadence.Internal
         /// side effect value to be persisted in the workflow history and returned back to
         /// the the .NET workflow application.
         /// </summary>
-        WorkflowMutableInvokeRequest = 142,
+        WorkflowMutableInvokeRequest = 134,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
         /// </summary>
-        WorkflowMutableInvokeReply = 143,
+        WorkflowMutableInvokeReply = 135,
         
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
@@ -407,88 +367,109 @@ namespace Neon.Cadence.Internal
         /// need to be retrieved from the Cadence cluster the next time the workflow
         /// instance is assigned to a worker. 
         /// </summary>
-        WorkflowSetCacheSizeRequest = 144,
+        WorkflowSetCacheSizeRequest = 136,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetCacheSizeRequest"/>.
         /// </summary>
-        WorkflowSetCacheSizeReply = 145,
+        WorkflowSetCacheSizeReply = 137,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Returns the workflow result encoded as a byte array, waiting
+        /// <b>proxy --> client:</b> Requests the workflow result encoded as a byte array, waiting
         /// for the workflow to complete if it is still running.  Note that this request will fail
         /// if the workflow did not run to completion.
         /// </summary>
-        WorkflowGetResultRequest = 146,
+        WorkflowGetResultRequest = 138,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetResultRequest"/>.
         /// </summary>
-        WorkflowGetResultReply = 147,
+        WorkflowGetResultReply = 139,
+
+        /// <summary>
+        ///  <b>proxy --> client:</b> Determines whether the last execution of the workflow has
+        ///  a completion result.  This can be used by CRON workflows to determine whether the
+        ///  last run returned a result.
+        /// </summary>
+        WorkflowHasLastResultRequest = 140,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowHasLastResultRequest"/>.
+        /// </summary>
+        WorkflowHasLastResultReply = 141,
+
+        /// <summary>
+        ///  <b>proxy --> client:</b> Returns the result from the last execution of the workflow.
+        ///  This can be used by CRON workflows to retrieve state from the last workflow run.
+        /// </summary>
+        WorkflowGetLastResultRequest = 142,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetLastResultRequest"/>.
+        /// </summary>
+        WorkflowGetLastResultReply = 143,
 
         //---------------------------------------------------------------------
         // Activity messages
 
         /// <summary>
-        /// <b>proxy --> client:</b> Commands the client client and associated .NET application
-        /// to process an activity instance.
+        /// <b>client --> proxy:</b> Executes an activity within the context of a workflow.
         /// </summary>
-        ActivityInvokeRequest = 200,
+        ActivityExecuteRequest = 200,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityExecuteRequest"/> message.
+        /// </summary>
+        ActivityExecuteReply = 201,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Invokes an activity on an activity worker. 
+        /// </summary>
+        ActivityInvokeRequest = 202,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityInvokeRequest"/> message.
         /// </summary>
-        ActivityInvokeReply = 201,
+        ActivityInvokeReply = 203,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests the heartbeat details from the last failed attempt.
+        /// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity run.
         /// </summary>
-        ActivityGetHeartbeatDetailsRequest = 202,
+        ActivityGetHeartbeatDetailsRequest = 204,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityGetHeartbeatDetailsRequest"/> message.
         /// </summary>
-        ActivityGetHeartbeatDetailsReply = 203,
+        ActivityGetHeartbeatDetailsReply = 205,
 
         /// <summary>
         /// <b>client --> proxy:</b> Logs a message for an activity.
         /// </summary>
-        ActivityLogRequest = 204,
+        ActivityLogRequest = 206,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityLogRequest"/> message.
         /// </summary>
-        ActivityLogReply = 205,
+        ActivityLogReply = 207,
 
         /// <summary>
         /// <b>client --> proxy:</b> Records a heartbeat message for an activity.
         /// </summary>
-        ActivityRecordHeartbeatRequest = 206,
+        ActivityRecordHeartbeatRequest = 209,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityRecordHeartbeatRequest"/> message.
         /// </summary>
-        ActivityRecordHeartbeatReply = 207,
+        ActivityRecordHeartbeatReply = 209,
 
         /// <summary>
         /// <b>client --> proxy:</b> Determines whether an activity execution has any heartbeat details.
         /// </summary>
-        ActivityHasHeartbeatDetailsRequest = 208,
+        ActivityHasHeartbeatDetailsRequest = 210,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityHasHeartbeatDetailsRequest"/> message.
         /// </summary>
-        ActivityHasHeartbeatDetailsReply = 209,
-
-        /// <summary>
-        /// <b>client --> proxy:</b> Signals that the application executing an activity is terminating,
-        /// giving the the proxy a chance to gracefully inform Cadence and then terminate the activity.
-        /// </summary>
-        ActivityStopRequest = 210,
-
-        /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityStopRequest"/> message.
-        /// </summary>
-        ActivityStopReply = 211,
+        ActivityHasHeartbeatDetailsReply = 211,
     }
 }

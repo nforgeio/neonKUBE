@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowQueryReply.cs
+// FILE:	    ActivityExecuteRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,45 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueryRequest"/>
+    /// <b>client --> proxy:</b> Starts a workflow activity.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowQueryReply)]
-    internal class WorkflowQueryReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityExecuteRequest)]
+    internal class ActivityExecuteRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowQueryReply()
+        public ActivityExecuteRequest()
         {
-            Type = InternalMessageTypes.WorkflowQueryReply;
+            Type = InternalMessageTypes.ActivityExecuteRequest;
+        }
+
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityExecuteReply;
+
+        /// <summary>
+        /// Optionally specifies the arguments to be passed to the activity encoded
+        /// as a byte array.
+        /// </summary>
+        public byte[] Args
+        {
+            get => GetBytesProperty("Args");
+            set => SetBytesProperty("Args", value);
         }
 
         /// <summary>
-        /// The query result bytes or <c>null</c>.
+        /// The activity start options.
         /// </summary>
-        public byte[] Result
+        public InternalActivityOptions Options
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetJsonProperty<InternalActivityOptions>("Options");
+            set => SetJsonProperty("Options", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowQueryReply();
+            var clone = new ActivityExecuteRequest();
 
             CopyTo(clone);
 
@@ -62,9 +75,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowQueryReply)target;
+            var typedTarget = (ActivityExecuteRequest)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Args    = this.Args;
+            typedTarget.Options = this.Options;
         }
     }
 }

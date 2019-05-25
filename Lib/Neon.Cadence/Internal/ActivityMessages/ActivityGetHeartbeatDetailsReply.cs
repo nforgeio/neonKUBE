@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowQueryReply.cs
+// FILE:	    ActivityGetHeartbeatDetailsReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueryRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="ActivityGetHeartbeatDetailsRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowQueryReply)]
-    internal class WorkflowQueryReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsReply)]
+    internal class ActivityGetHeartbeatDetailsReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowQueryReply()
+        public ActivityGetHeartbeatDetailsReply()
         {
-            Type = InternalMessageTypes.WorkflowQueryReply;
+            Type = InternalMessageTypes.ActivityGetHeartbeatDetailsReply;
         }
 
         /// <summary>
-        /// The query result bytes or <c>null</c>.
+        /// Returns the activity results encoded as a byte array.
         /// </summary>
-        public byte[] Result
+        public byte[] Details
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetBytesProperty("Details");
+            set => SetBytesProperty("Details", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowQueryReply();
+            var clone = new ActivityGetHeartbeatDetailsReply();
 
             CopyTo(clone);
 
@@ -62,9 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowQueryReply)target;
+            var typedTarget = (ActivityGetHeartbeatDetailsReply)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Details = this.Details;
         }
     }
 }
