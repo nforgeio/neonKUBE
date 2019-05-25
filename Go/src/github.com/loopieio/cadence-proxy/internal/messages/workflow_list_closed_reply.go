@@ -7,23 +7,23 @@ import (
 
 type (
 
-	// WorkflowListClosedExecutionsReply is a WorkflowReply of MessageType
-	// WorkflowListClosedExecutionsReply.  It holds a reference to a WorkflowReply in memory
-	// and is the reply type to a WorkflowListClosedExecutionsRequest
-	WorkflowListClosedExecutionsReply struct {
+	// WorkflowListClosedReply is a WorkflowReply of MessageType
+	// WorkflowListClosedReply.  It holds a reference to a WorkflowReply in memory
+	// and is the reply type to a WorkflowListClosedRequest
+	WorkflowListClosedReply struct {
 		*WorkflowReply
 	}
 )
 
-// NewWorkflowListClosedExecutionsReply is the default constructor for
-// a WorkflowListClosedExecutionsReply
+// NewWorkflowListClosedReply is the default constructor for
+// a WorkflowListClosedReply
 //
-// returns *WorkflowListClosedExecutionsReply -> a pointer to a newly initialized
-// WorkflowListClosedExecutionsReply in memory
-func NewWorkflowListClosedExecutionsReply() *WorkflowListClosedExecutionsReply {
-	reply := new(WorkflowListClosedExecutionsReply)
+// returns *WorkflowListClosedReply -> a pointer to a newly initialized
+// WorkflowListClosedReply in memory
+func NewWorkflowListClosedReply() *WorkflowListClosedReply {
+	reply := new(WorkflowListClosedReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(messagetypes.WorkflowListClosedExecutionsReply)
+	reply.SetType(messagetypes.WorkflowListClosedReply)
 
 	return reply
 }
@@ -32,46 +32,46 @@ func NewWorkflowListClosedExecutionsReply() *WorkflowListClosedExecutionsReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from WorkflowReply.Clone()
-func (reply *WorkflowListClosedExecutionsReply) Clone() IProxyMessage {
-	workflowListClosedExecutionsReply := NewWorkflowListClosedExecutionsReply()
-	var messageClone IProxyMessage = workflowListClosedExecutionsReply
+func (reply *WorkflowListClosedReply) Clone() IProxyMessage {
+	WorkflowListClosedReply := NewWorkflowListClosedReply()
+	var messageClone IProxyMessage = WorkflowListClosedReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from WorkflowReply.CopyTo()
-func (reply *WorkflowListClosedExecutionsReply) CopyTo(target IProxyMessage) {
+func (reply *WorkflowListClosedReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
 }
 
 // SetProxyMessage inherits docs from WorkflowReply.SetProxyMessage()
-func (reply *WorkflowListClosedExecutionsReply) SetProxyMessage(value *ProxyMessage) {
+func (reply *WorkflowListClosedReply) SetProxyMessage(value *ProxyMessage) {
 	reply.WorkflowReply.SetProxyMessage(value)
 }
 
 // GetProxyMessage inherits docs from WorkflowReply.GetProxyMessage()
-func (reply *WorkflowListClosedExecutionsReply) GetProxyMessage() *ProxyMessage {
+func (reply *WorkflowListClosedReply) GetProxyMessage() *ProxyMessage {
 	return reply.WorkflowReply.GetProxyMessage()
 }
 
 // GetRequestID inherits docs from WorkflowReply.GetRequestID()
-func (reply *WorkflowListClosedExecutionsReply) GetRequestID() int64 {
+func (reply *WorkflowListClosedReply) GetRequestID() int64 {
 	return reply.WorkflowReply.GetRequestID()
 }
 
 // SetRequestID inherits docs from WorkflowReply.SetRequestID()
-func (reply *WorkflowListClosedExecutionsReply) SetRequestID(value int64) {
+func (reply *WorkflowListClosedReply) SetRequestID(value int64) {
 	reply.WorkflowReply.SetRequestID(value)
 }
 
 // GetType inherits docs from WorkflowReply.GetType()
-func (reply *WorkflowListClosedExecutionsReply) GetType() messagetypes.MessageType {
+func (reply *WorkflowListClosedReply) GetType() messagetypes.MessageType {
 	return reply.WorkflowReply.GetType()
 }
 
 // SetType inherits docs from WorkflowReply.SetType()
-func (reply *WorkflowListClosedExecutionsReply) SetType(value messagetypes.MessageType) {
+func (reply *WorkflowListClosedReply) SetType(value messagetypes.MessageType) {
 	reply.WorkflowReply.SetType(value)
 }
 
@@ -79,12 +79,12 @@ func (reply *WorkflowListClosedExecutionsReply) SetType(value messagetypes.Messa
 // IProxyReply interface methods for implementing the IProxyReply interface
 
 // GetError inherits docs from WorkflowReply.GetError()
-func (reply *WorkflowListClosedExecutionsReply) GetError() *cadenceerrors.CadenceError {
+func (reply *WorkflowListClosedReply) GetError() *cadenceerrors.CadenceError {
 	return reply.WorkflowReply.GetError()
 }
 
 // SetError inherits docs from WorkflowReply.SetError()
-func (reply *WorkflowListClosedExecutionsReply) SetError(value *cadenceerrors.CadenceError) {
+func (reply *WorkflowListClosedReply) SetError(value *cadenceerrors.CadenceError) {
 	reply.WorkflowReply.SetError(value)
 }
 
@@ -92,11 +92,11 @@ func (reply *WorkflowListClosedExecutionsReply) SetError(value *cadenceerrors.Ca
 // IWorkflowReply interface methods for implementing the IWorkflowReply interface
 
 // GetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowListClosedExecutionsReply) GetWorkflowContextID() int64 {
+func (reply *WorkflowListClosedReply) GetWorkflowContextID() int64 {
 	return reply.WorkflowReply.GetWorkflowContextID()
 }
 
 // SetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowListClosedExecutionsReply) SetWorkflowContextID(value int64) {
+func (reply *WorkflowListClosedReply) SetWorkflowContextID(value int64) {
 	reply.WorkflowReply.SetWorkflowContextID(value)
 }

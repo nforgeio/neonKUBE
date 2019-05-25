@@ -256,12 +256,12 @@ const (
 	/// <summary>
 	/// <b>library --> proxy:</b> Requests the list of closed workflows.
 	/// </summary>
-	WorkflowListClosedExecutionsRequest MessageType = 122
+	WorkflowListClosedRequest MessageType = 122
 
 	/// <summary>
 	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListClosedRequest"/> message.
 	/// </summary>
-	WorkflowListClosedExecutionsReply MessageType = 123
+	WorkflowListClosedReply MessageType = 123
 
 	/// <summary>
 	/// <b>library --> proxy:</b> Requests the list of open workflows.
@@ -382,15 +382,27 @@ const (
 	/// need to be retrieved from the Cadence cluster the next time the workflow
 	/// instance is assigned to a worker.
 	/// </summary>
-	WorkflowSetCacheSizeRequest MessageType = 23
+	WorkflowSetCacheSizeRequest MessageType = 144
 
 	/// <summary>
 	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetCacheSizeRequest"/>.
 	/// </summary>
-	WorkflowSetCacheSizeReply MessageType = 24
+	WorkflowSetCacheSizeReply MessageType = 145
 
-	WorkflowCountRequest MessageType = 144
-	WorkflowCountReply   MessageType = 145
+	/// <summary>
+	/// <b>proxy --> client:</b> Returns the workflow result encoded as a byte array, waiting
+	/// for the workflow to complete if it is still running.  Note that this request will fail
+	/// if the workflow did not run to completion.
+	/// </summary>
+	WorkflowGetResultRequest MessageType = 146
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetResultRequest"/>.
+	/// </summary>
+	WorkflowGetResultReply MessageType = 147
+
+	WorkflowCountRequest MessageType = 148
+	WorkflowCountReply   MessageType = 149
 
 	//---------------------------------------------------------------------
 	// Activity messages

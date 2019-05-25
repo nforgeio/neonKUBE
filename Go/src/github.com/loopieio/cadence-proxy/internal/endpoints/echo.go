@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/loopieio/cadence-proxy/internal/messages"
 	"go.uber.org/zap"
+
+	"github.com/loopieio/cadence-proxy/internal/messages"
 )
 
 // EchoHandler is the handler function for the /echo endpoint used for testing serialization

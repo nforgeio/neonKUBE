@@ -1848,7 +1848,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void WorkflowSignalReceivedRequest()
+        public void Test_WorkflowSignalReceivedRequest()
         {
             WorkflowSignalReceivedRequest message;
 
