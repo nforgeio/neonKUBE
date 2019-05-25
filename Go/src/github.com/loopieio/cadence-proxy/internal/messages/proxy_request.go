@@ -27,10 +27,16 @@ type (
 	IProxyRequest interface {
 		GetReplyType() messagetypes.MessageType
 		SetReplyType(value messagetypes.MessageType)
-		GetRequestID() int64
-		SetRequestID(value int64)
 		GetTimeout() time.Duration
 		SetTimeout(value time.Duration)
+		Clone() IProxyMessage
+		CopyTo(target IProxyMessage)
+		SetProxyMessage(value *ProxyMessage)
+		GetProxyMessage() *ProxyMessage
+		GetRequestID() int64
+		SetRequestID(int64)
+		GetType() messagetypes.MessageType
+		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -41,7 +47,7 @@ type (
 func NewProxyRequest() *ProxyRequest {
 	request := new(ProxyRequest)
 	request.ProxyMessage = NewProxyMessage()
-	request.Type = messagetypes.Unspecified
+	request.SetType(messagetypes.Unspecified)
 	request.SetReplyType(messagetypes.Unspecified)
 	return request
 }
@@ -83,6 +89,16 @@ func (request *ProxyRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *ProxyRequest) SetRequestID(value int64) {
 	request.ProxyMessage.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyMessage.GetType()
+func (request *ProxyRequest) GetType() messagetypes.MessageType {
+	return request.ProxyMessage.GetType()
+}
+
+// SetType inherits docs from ProxyMessage.SetType()
+func (request *ProxyRequest) SetType(value messagetypes.MessageType) {
+	request.ProxyMessage.SetType(value)
 }
 
 // -------------------------------------------------------------------------

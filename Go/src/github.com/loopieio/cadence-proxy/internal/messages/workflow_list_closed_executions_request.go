@@ -30,7 +30,7 @@ type (
 func NewWorkflowListClosedExecutionsRequest() *WorkflowListClosedExecutionsRequest {
 	request := new(WorkflowListClosedExecutionsRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowListClosedExecutionsRequest
+	request.SetType(messagetypes.WorkflowListClosedExecutionsRequest)
 	request.SetReplyType(messagetypes.WorkflowListClosedExecutionsReply)
 
 	return request
@@ -74,6 +74,16 @@ func (request *WorkflowListClosedExecutionsRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowRequest.SetRequestID()
 func (request *WorkflowListClosedExecutionsRequest) SetRequestID(value int64) {
 	request.WorkflowRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowRequest.GetType()
+func (request *WorkflowListClosedExecutionsRequest) GetType() messagetypes.MessageType {
+	return request.WorkflowRequest.GetType()
+}
+
+// SetType inherits docs from WorkflowRequest.SetType()
+func (request *WorkflowListClosedExecutionsRequest) SetType(value messagetypes.MessageType) {
+	request.WorkflowRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

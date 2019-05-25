@@ -23,7 +23,7 @@ type (
 func NewWorkflowSetCacheSizeReply() *WorkflowSetCacheSizeReply {
 	reply := new(WorkflowSetCacheSizeReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.Type = messagetypes.WorkflowSetCacheSizeReply
+	reply.SetType(messagetypes.WorkflowSetCacheSizeReply)
 
 	return reply
 }
@@ -63,6 +63,16 @@ func (reply *WorkflowSetCacheSizeReply) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowReply.SetRequestID()
 func (reply *WorkflowSetCacheSizeReply) SetRequestID(value int64) {
 	reply.WorkflowReply.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowReply.GetType()
+func (reply *WorkflowSetCacheSizeReply) GetType() messagetypes.MessageType {
+	return reply.WorkflowReply.GetType()
+}
+
+// SetType inherits docs from WorkflowReply.SetType()
+func (reply *WorkflowSetCacheSizeReply) SetType(value messagetypes.MessageType) {
+	reply.WorkflowReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

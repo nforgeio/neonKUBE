@@ -30,7 +30,7 @@ type (
 func NewWorkflowGetHistoryRequest() *WorkflowGetHistoryRequest {
 	request := new(WorkflowGetHistoryRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowGetHistoryRequest
+	request.SetType(messagetypes.WorkflowGetHistoryRequest)
 	request.SetReplyType(messagetypes.WorkflowGetHistoryReply)
 
 	return request
@@ -74,6 +74,16 @@ func (request *WorkflowGetHistoryRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowRequest.SetRequestID()
 func (request *WorkflowGetHistoryRequest) SetRequestID(value int64) {
 	request.WorkflowRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowRequest.GetType()
+func (request *WorkflowGetHistoryRequest) GetType() messagetypes.MessageType {
+	return request.WorkflowRequest.GetType()
+}
+
+// SetType inherits docs from WorkflowRequest.SetType()
+func (request *WorkflowGetHistoryRequest) SetType(value messagetypes.MessageType) {
+	request.WorkflowRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

@@ -23,7 +23,7 @@ type (
 func NewHeartbeatReply() *HeartbeatReply {
 	reply := new(HeartbeatReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.HeartbeatReply
+	reply.SetType(messagetypes.HeartbeatReply)
 
 	return reply
 }
@@ -31,7 +31,7 @@ func NewHeartbeatReply() *HeartbeatReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (reply *HeartbeatReply) Clone() IProxyMessage {
 	heartbeatReply := NewHeartbeatReply()
 	var messageClone IProxyMessage = heartbeatReply
@@ -40,29 +40,39 @@ func (reply *HeartbeatReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *HeartbeatReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
 func (reply *HeartbeatReply) SetProxyMessage(value *ProxyMessage) {
 	reply.ProxyReply.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
 func (reply *HeartbeatReply) GetProxyMessage() *ProxyMessage {
 	return reply.ProxyReply.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyReply.GetRequestID()
 func (reply *HeartbeatReply) GetRequestID() int64 {
 	return reply.ProxyReply.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (reply *HeartbeatReply) SetRequestID(value int64) {
 	reply.ProxyReply.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyReply.GetType()
+func (reply *HeartbeatReply) GetType() messagetypes.MessageType {
+	return reply.ProxyReply.GetType()
+}
+
+// SetType inherits docs from ProxyReply.SetType()
+func (reply *HeartbeatReply) SetType(value messagetypes.MessageType) {
+	reply.ProxyReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

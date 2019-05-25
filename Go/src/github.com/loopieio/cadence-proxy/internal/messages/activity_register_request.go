@@ -26,7 +26,7 @@ type (
 func NewActivityRegisterRequest() *ActivityRegisterRequest {
 	request := new(ActivityRegisterRequest)
 	request.ActivityRequest = NewActivityRequest()
-	request.Type = messagetypes.ActivityRegisterRequest
+	request.SetType(messagetypes.ActivityRegisterRequest)
 	request.SetReplyType(messagetypes.ActivityRegisterReply)
 
 	return request
@@ -53,7 +53,7 @@ func (request *ActivityRegisterRequest) SetName(value *string) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ActivityRequest.Clone()
 func (request *ActivityRegisterRequest) Clone() IProxyMessage {
 	activityRegisterRequest := NewActivityRegisterRequest()
 	var messageClone IProxyMessage = activityRegisterRequest
@@ -62,7 +62,7 @@ func (request *ActivityRegisterRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ActivityRequest.CopyTo()
 func (request *ActivityRegisterRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityRegisterRequest); ok {
@@ -71,24 +71,34 @@ func (request *ActivityRegisterRequest) CopyTo(target IProxyMessage) {
 	}
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ActivityRequest.SetProxyMessage()
 func (request *ActivityRegisterRequest) SetProxyMessage(value *ProxyMessage) {
 	request.ActivityRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ActivityRequest.GetProxyMessage()
 func (request *ActivityRegisterRequest) GetProxyMessage() *ProxyMessage {
 	return request.ActivityRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ActivityRequest.GetRequestID()
 func (request *ActivityRegisterRequest) GetRequestID() int64 {
 	return request.ActivityRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ActivityRequest.SetRequestID()
 func (request *ActivityRegisterRequest) SetRequestID(value int64) {
 	request.ActivityRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from ActivityRequest.GetType()
+func (request *ActivityRegisterRequest) GetType() messagetypes.MessageType {
+	return request.ActivityRequest.GetType()
+}
+
+// SetType inherits docs from ActivityRequest.SetType()
+func (request *ActivityRegisterRequest) SetType(value messagetypes.MessageType) {
+	request.ActivityRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

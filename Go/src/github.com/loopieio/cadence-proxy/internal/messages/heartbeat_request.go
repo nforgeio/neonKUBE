@@ -27,7 +27,7 @@ type (
 func NewHeartbeatRequest() *HeartbeatRequest {
 	request := new(HeartbeatRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messagetypes.HeartbeatRequest
+	request.SetType(messagetypes.HeartbeatRequest)
 	request.SetReplyType(messagetypes.HeartbeatReply)
 
 	return request
@@ -36,7 +36,7 @@ func NewHeartbeatRequest() *HeartbeatRequest {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyRequest.Clone()
 func (request *HeartbeatRequest) Clone() IProxyMessage {
 	heartbeatRequest := NewHeartbeatRequest()
 	var messageClone IProxyMessage = heartbeatRequest
@@ -45,29 +45,39 @@ func (request *HeartbeatRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyRequest.CopyTo()
 func (request *HeartbeatRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyRequest.SetProxyMessage()
 func (request *HeartbeatRequest) SetProxyMessage(value *ProxyMessage) {
 	request.ProxyRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyRequest.GetProxyMessage()
 func (request *HeartbeatRequest) GetProxyMessage() *ProxyMessage {
 	return request.ProxyRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyRequest.GetRequestID()
 func (request *HeartbeatRequest) GetRequestID() int64 {
 	return request.ProxyRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyRequest.SetRequestID()
 func (request *HeartbeatRequest) SetRequestID(value int64) {
 	request.ProxyRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyRequest.GetType()
+func (request *HeartbeatRequest) GetType() messagetypes.MessageType {
+	return request.ProxyRequest.GetType()
+}
+
+// SetType inherits docs from ProxyRequest.SetType()
+func (request *HeartbeatRequest) SetType(value messagetypes.MessageType) {
+	request.ProxyRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

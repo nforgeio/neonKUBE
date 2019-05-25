@@ -81,7 +81,7 @@ namespace TestCadence
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
-                DebugEmulateProxy      = true,
+                DebugEmulateProxy      = false,
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
                 //DebugDisableHeartbeats = true,
                 //DebugIgnoreTimeouts    = true

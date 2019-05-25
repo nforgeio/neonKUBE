@@ -27,7 +27,7 @@ type (
 func NewPingRequest() *PingRequest {
 	request := new(PingRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messagetypes.PingRequest
+	request.SetType(messagetypes.PingRequest)
 	request.SetReplyType(messagetypes.PingReply)
 
 	return request
@@ -36,7 +36,7 @@ func NewPingRequest() *PingRequest {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (request *PingRequest) Clone() IProxyMessage {
 	pingRequest := NewPingRequest()
 	var messageClone IProxyMessage = pingRequest
@@ -45,29 +45,39 @@ func (request *PingRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (request *PingRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
 func (request *PingRequest) SetProxyMessage(value *ProxyMessage) {
 	request.ProxyRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
 func (request *PingRequest) GetProxyMessage() *ProxyMessage {
 	return request.ProxyRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyReply.GetRequestID()
 func (request *PingRequest) GetRequestID() int64 {
 	return request.ProxyRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (request *PingRequest) SetRequestID(value int64) {
 	request.ProxyRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyRequest.GetType()
+func (request *PingRequest) GetType() messagetypes.MessageType {
+	return request.ProxyRequest.GetType()
+}
+
+// SetType inherits docs from ProxyRequest.SetType()
+func (request *PingRequest) SetType(value messagetypes.MessageType) {
+	request.ProxyRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

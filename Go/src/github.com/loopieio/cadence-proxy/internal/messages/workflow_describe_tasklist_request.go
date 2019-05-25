@@ -30,7 +30,7 @@ type (
 func NewWorkflowDescribeTaskListRequest() *WorkflowDescribeTaskListRequest {
 	request := new(WorkflowDescribeTaskListRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowDescribeTaskListRequest
+	request.SetType(messagetypes.WorkflowDescribeTaskListRequest)
 	request.SetReplyType(messagetypes.WorkflowDescribeTaskListReply)
 
 	return request
@@ -94,6 +94,16 @@ func (request *WorkflowDescribeTaskListRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowRequest.SetRequestID()
 func (request *WorkflowDescribeTaskListRequest) SetRequestID(value int64) {
 	request.WorkflowRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowRequest.GetType()
+func (request *WorkflowDescribeTaskListRequest) GetType() messagetypes.MessageType {
+	return request.WorkflowRequest.GetType()
+}
+
+// SetType inherits docs from WorkflowRequest.SetType()
+func (request *WorkflowDescribeTaskListRequest) SetType(value messagetypes.MessageType) {
+	request.WorkflowRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

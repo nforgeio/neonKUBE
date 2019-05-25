@@ -53,6 +53,8 @@ type (
 		GetProxyMessage() *ProxyMessage
 		GetRequestID() int64
 		SetRequestID(int64)
+		GetType() messagetypes.MessageType
+		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -65,6 +67,7 @@ func NewProxyMessage() *ProxyMessage {
 	message := new(ProxyMessage)
 	message.Properties = make(map[string]*string)
 	message.Attachments = make([][]byte, 0)
+	message.SetType(messagetypes.Unspecified)
 
 	return message
 }
@@ -318,6 +321,20 @@ func (proxyMessage *ProxyMessage) GetRequestID() int64 {
 // param value int64 -> the long value to set as a ProxyMessage request id
 func (proxyMessage *ProxyMessage) SetRequestID(value int64) {
 	proxyMessage.SetLongProperty("RequestId", value)
+}
+
+// GetType gets the message type
+//
+// returns messagetypes.MessageType -> the type of message
+func (proxyMessage *ProxyMessage) GetType() messagetypes.MessageType {
+	return proxyMessage.Type
+}
+
+// SetType sets the message type
+//
+// param value messagetypes.MessageType -> the message type to set
+func (proxyMessage *ProxyMessage) SetType(value messagetypes.MessageType) {
+	proxyMessage.Type = value
 }
 
 // -------------------------------------------------------------------------

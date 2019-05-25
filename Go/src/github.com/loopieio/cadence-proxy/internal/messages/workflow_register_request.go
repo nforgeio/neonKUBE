@@ -30,7 +30,7 @@ type (
 func NewWorkflowRegisterRequest() *WorkflowRegisterRequest {
 	request := new(WorkflowRegisterRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowRegisterRequest
+	request.SetType(messagetypes.WorkflowRegisterRequest)
 	request.SetReplyType(messagetypes.WorkflowRegisterReply)
 
 	return request
@@ -92,6 +92,16 @@ func (request *WorkflowRegisterRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowRequest.SetRequestID()
 func (request *WorkflowRegisterRequest) SetRequestID(value int64) {
 	request.WorkflowRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowRequest.GetType()
+func (request *WorkflowRegisterRequest) GetType() messagetypes.MessageType {
+	return request.WorkflowRequest.GetType()
+}
+
+// SetType inherits docs from WorkflowRequest.SetType()
+func (request *WorkflowRegisterRequest) SetType(value messagetypes.MessageType) {
+	request.WorkflowRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

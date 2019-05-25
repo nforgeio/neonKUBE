@@ -23,7 +23,7 @@ type (
 func NewWorkflowRegisterReply() *WorkflowRegisterReply {
 	reply := new(WorkflowRegisterReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.Type = messagetypes.WorkflowRegisterReply
+	reply.SetType(messagetypes.WorkflowRegisterReply)
 
 	return reply
 }
@@ -63,6 +63,16 @@ func (reply *WorkflowRegisterReply) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowReply.SetRequestID()
 func (reply *WorkflowRegisterReply) SetRequestID(value int64) {
 	reply.WorkflowReply.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowReply.GetType()
+func (reply *WorkflowRegisterReply) GetType() messagetypes.MessageType {
+	return reply.WorkflowReply.GetType()
+}
+
+// SetType inherits docs from WorkflowReply.SetType()
+func (reply *WorkflowRegisterReply) SetType(value messagetypes.MessageType) {
+	reply.WorkflowReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

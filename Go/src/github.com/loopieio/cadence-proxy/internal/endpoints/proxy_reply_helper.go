@@ -14,14 +14,14 @@ import (
 // -------------------------------------------------------------------------
 // IProxyReply message type handlers
 
-func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.MessageType) error {
+func handleIProxyReply(reply messages.IProxyReply) error {
 
 	// error to catch any exceptions thrown in the
 	// switch block
 	var err error
 
 	// handle the messages individually based on their message type
-	switch typeCode {
+	switch reply.GetType() {
 
 	// InitializeReply
 	case messagetypes.InitializeReply:
@@ -143,12 +143,6 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 			err = handleWorkflowMutableInvokeReply(v)
 		}
 
-	// ActivityRegisterReply
-	case messagetypes.ActivityRegisterReply:
-		if v, ok := reply.(*messages.ActivityRegisterReply); ok {
-			err = handleActivityRegisterReply(v)
-		}
-
 	// PingReply
 	case messagetypes.PingReply:
 		if v, ok := reply.(*messages.PingReply); ok {
@@ -158,7 +152,7 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 	// Undefined message type
 	default:
 
-		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", typeCode)
+		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
@@ -168,18 +162,6 @@ func handleIProxyReply(reply messages.IProxyReply, typeCode messagetypes.Message
 	// the switch block
 	if err != nil {
 		return err
-	}
-
-	// for testing
-	if TestMode {
-		key := reply.GetRequestID()
-		replyChan := TestEndpointsMap[key]
-		defer func() {
-			close(replyChan)
-			TestEndpointsMap[key] = nil
-		}()
-
-		replyChan <- reply
 	}
 
 	return nil

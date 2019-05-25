@@ -23,7 +23,7 @@ type (
 func NewWorkflowCancelReply() *WorkflowCancelReply {
 	reply := new(WorkflowCancelReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.Type = messagetypes.WorkflowCancelReply
+	reply.SetType(messagetypes.WorkflowCancelReply)
 
 	return reply
 }
@@ -63,6 +63,16 @@ func (reply *WorkflowCancelReply) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowReply.SetRequestID()
 func (reply *WorkflowCancelReply) SetRequestID(value int64) {
 	reply.WorkflowReply.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowReply.GetType()
+func (reply *WorkflowCancelReply) GetType() messagetypes.MessageType {
+	return reply.WorkflowReply.GetType()
+}
+
+// SetType inherits docs from WorkflowReply.SetType()
+func (reply *WorkflowCancelReply) SetType(value messagetypes.MessageType) {
+	reply.WorkflowReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

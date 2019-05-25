@@ -23,7 +23,7 @@ type (
 func NewPingReply() *PingReply {
 	reply := new(PingReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.PingReply
+	reply.SetType(messagetypes.PingReply)
 
 	return reply
 }
@@ -31,7 +31,7 @@ func NewPingReply() *PingReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (reply *PingReply) Clone() IProxyMessage {
 	pingReply := NewPingReply()
 	var messageClone IProxyMessage = pingReply
@@ -40,29 +40,39 @@ func (reply *PingReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *PingReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
 func (reply *PingReply) SetProxyMessage(value *ProxyMessage) {
 	reply.ProxyReply.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
 func (reply *PingReply) GetProxyMessage() *ProxyMessage {
 	return reply.ProxyReply.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyReply.GetRequestID()
 func (reply *PingReply) GetRequestID() int64 {
 	return reply.ProxyReply.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (reply *PingReply) SetRequestID(value int64) {
 	reply.ProxyReply.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyReply.GetType()
+func (reply *PingReply) GetType() messagetypes.MessageType {
+	return reply.ProxyReply.GetType()
+}
+
+// SetType inherits docs from ProxyReply.SetType()
+func (reply *PingReply) SetType(value messagetypes.MessageType) {
+	reply.ProxyReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

@@ -63,9 +63,9 @@ var (
 	// Operation to fail with an error
 	failWithError = errors.New("FailWithError{Message: induce failure.")
 
-	// ReplyAddress specifies the address that the Neon.Cadence library
+	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
-	ReplyAddress string
+	replyAddress string
 
 	// terminate is a boolean that will be set after handling an incoming
 	// TerminateRequest.  A true value will indicate that the server instance
@@ -87,14 +87,6 @@ var (
 	// Operations is a map of operations used to track pending
 	// cadence-client operations
 	Operations = new(operationsMap)
-
-	// TestMode indicates that the program is being tested.  Behavior might
-	// be different in test mode
-	TestMode = false
-
-	// TestEndpointsMap is a map used for testing purposes (while in test mode) that
-	// maps a requestID to a channel that will be unblocked by the reply
-	TestEndpointsMap = make(map[int64]chan messages.IProxyReply)
 )
 
 type (

@@ -21,6 +21,16 @@ type (
 	IActivityReply interface {
 		GetActivityContextID() int64
 		SetActivityContextID(value int64)
+		GetError() *cadenceerrors.CadenceError
+		SetError(value *cadenceerrors.CadenceError)
+		Clone() IProxyMessage
+		CopyTo(target IProxyMessage)
+		SetProxyMessage(value *ProxyMessage)
+		GetProxyMessage() *ProxyMessage
+		GetRequestID() int64
+		SetRequestID(int64)
+		GetType() messagetypes.MessageType
+		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -32,7 +42,7 @@ type (
 func NewActivityReply() *ActivityReply {
 	reply := new(ActivityReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.Unspecified
+	reply.SetType(messagetypes.Unspecified)
 
 	return reply
 }
@@ -94,6 +104,16 @@ func (reply *ActivityReply) GetRequestID() int64 {
 // SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (reply *ActivityReply) SetRequestID(value int64) {
 	reply.ProxyReply.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyReply.GetType()
+func (reply *ActivityReply) GetType() messagetypes.MessageType {
+	return reply.ProxyReply.GetType()
+}
+
+// SetType inherits docs from ProxyReply.SetType()
+func (reply *ActivityReply) SetType(value messagetypes.MessageType) {
+	reply.ProxyReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

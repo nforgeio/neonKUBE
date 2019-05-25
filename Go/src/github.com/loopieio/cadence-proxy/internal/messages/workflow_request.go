@@ -24,6 +24,18 @@ type (
 	IWorkflowRequest interface {
 		GetWorkflowContextID() int64
 		SetWorkflowContextID(value int64)
+		GetReplyType() messagetypes.MessageType
+		SetReplyType(value messagetypes.MessageType)
+		GetTimeout() time.Duration
+		SetTimeout(value time.Duration)
+		Clone() IProxyMessage
+		CopyTo(target IProxyMessage)
+		SetProxyMessage(value *ProxyMessage)
+		GetProxyMessage() *ProxyMessage
+		GetRequestID() int64
+		SetRequestID(int64)
+		GetType() messagetypes.MessageType
+		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -34,7 +46,7 @@ type (
 func NewWorkflowRequest() *WorkflowRequest {
 	request := new(WorkflowRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messagetypes.Unspecified
+	request.SetType(messagetypes.Unspecified)
 	request.SetReplyType(messagetypes.Unspecified)
 
 	return request
@@ -97,6 +109,16 @@ func (request *WorkflowRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *WorkflowRequest) SetRequestID(value int64) {
 	request.ProxyRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyRequest.GetType()
+func (request *WorkflowRequest) GetType() messagetypes.MessageType {
+	return request.ProxyRequest.GetType()
+}
+
+// SetType inherits docs from ProxyRequest.SetType()
+func (request *WorkflowRequest) SetType(value messagetypes.MessageType) {
+	request.ProxyRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

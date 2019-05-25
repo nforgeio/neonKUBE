@@ -21,6 +21,16 @@ type (
 	IWorkflowReply interface {
 		GetWorkflowContextID() int64
 		SetWorkflowContextID(value int64)
+		GetError() *cadenceerrors.CadenceError
+		SetError(value *cadenceerrors.CadenceError)
+		Clone() IProxyMessage
+		CopyTo(target IProxyMessage)
+		SetProxyMessage(value *ProxyMessage)
+		GetProxyMessage() *ProxyMessage
+		GetRequestID() int64
+		SetRequestID(int64)
+		GetType() messagetypes.MessageType
+		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -32,7 +42,7 @@ type (
 func NewWorkflowReply() *WorkflowReply {
 	reply := new(WorkflowReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.Unspecified
+	reply.SetType(messagetypes.Unspecified)
 
 	return reply
 }
@@ -94,6 +104,16 @@ func (reply *WorkflowReply) GetRequestID() int64 {
 // SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (reply *WorkflowReply) SetRequestID(value int64) {
 	reply.ProxyReply.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyReply.GetType()
+func (request *WorkflowReply) GetType() messagetypes.MessageType {
+	return request.ProxyReply.GetType()
+}
+
+// SetType inherits docs from ProxyReply.SetType()
+func (request *WorkflowReply) SetType(value messagetypes.MessageType) {
+	request.ProxyReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

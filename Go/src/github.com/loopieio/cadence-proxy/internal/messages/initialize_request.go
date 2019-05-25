@@ -26,7 +26,7 @@ type (
 func NewInitializeRequest() *InitializeRequest {
 	request := new(InitializeRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messagetypes.InitializeRequest
+	request.SetType(messagetypes.InitializeRequest)
 	request.SetReplyType(messagetypes.InitializeReply)
 
 	return request
@@ -71,7 +71,7 @@ func (request *InitializeRequest) SetLibraryPort(value int32) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (request *InitializeRequest) Clone() IProxyMessage {
 	initializeRequest := NewInitializeRequest()
 	var messageClone IProxyMessage = initializeRequest
@@ -80,7 +80,7 @@ func (request *InitializeRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (request *InitializeRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*InitializeRequest); ok {
@@ -89,24 +89,34 @@ func (request *InitializeRequest) CopyTo(target IProxyMessage) {
 	}
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
 func (request *InitializeRequest) SetProxyMessage(value *ProxyMessage) {
 	request.ProxyRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
 func (request *InitializeRequest) GetProxyMessage() *ProxyMessage {
 	return request.ProxyRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyReply.GetRequestID()
 func (request *InitializeRequest) GetRequestID() int64 {
 	return request.ProxyRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (request *InitializeRequest) SetRequestID(value int64) {
 	request.ProxyRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyRequest.GetType()
+func (request *InitializeRequest) GetType() messagetypes.MessageType {
+	return request.ProxyRequest.GetType()
+}
+
+// SetType inherits docs from ProxyRequest.SetType()
+func (request *InitializeRequest) SetType(value messagetypes.MessageType) {
+	request.ProxyRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

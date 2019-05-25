@@ -29,7 +29,7 @@ type (
 func NewWorkflowMutableInvokeRequest() *WorkflowMutableInvokeRequest {
 	request := new(WorkflowMutableInvokeRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowMutableInvokeRequest
+	request.SetType(messagetypes.WorkflowMutableInvokeRequest)
 	request.SetReplyType(messagetypes.WorkflowMutableInvokeReply)
 
 	return request
@@ -91,6 +91,16 @@ func (request *WorkflowMutableInvokeRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowRequest.SetRequestID()
 func (request *WorkflowMutableInvokeRequest) SetRequestID(value int64) {
 	request.WorkflowRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowRequest.GetType()
+func (request *WorkflowMutableInvokeRequest) GetType() messagetypes.MessageType {
+	return request.WorkflowRequest.GetType()
+}
+
+// SetType inherits docs from WorkflowRequest.SetType()
+func (request *WorkflowMutableInvokeRequest) SetType(value messagetypes.MessageType) {
+	request.WorkflowRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

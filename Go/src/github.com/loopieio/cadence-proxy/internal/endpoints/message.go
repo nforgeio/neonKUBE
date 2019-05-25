@@ -78,40 +78,31 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 		}
 	}()
 
-	// get type of message
+	// switch on message interface type (IProxyRequest/IProxyReply)
 	var err error
-	typeCode := message.GetProxyMessage().Type
-
-	// and switch
 	switch s := message.(type) {
 	case nil:
 
 		// $debug(jack.burns): DELETE THIS!
-		err = fmt.Errorf("nil type for incoming ProxyMessage of type %v", typeCode)
+		err = fmt.Errorf("nil type for incoming ProxyMessage of type %v", message.GetType())
 		logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 
 	// IProxyRequest
 	case messages.IProxyRequest:
 		responseChan <- nil
-
-		// for testing
-		if TestMode {
-			key := message.GetRequestID()
-			TestEndpointsMap[key] = make(chan messages.IProxyReply)
-		}
-		err = handleIProxyRequest(s, typeCode)
+		err = handleIProxyRequest(s)
 
 	// IProxyReply
 	case messages.IProxyReply:
 		responseChan <- nil
-		err = handleIProxyReply(s, typeCode)
+		err = handleIProxyReply(s)
 
 	// Unrecognized type
 	default:
 
 		// $debug(jack.burns): DELETE THIS!
-		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %v", typeCode)
+		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %v", message.GetType())
 		logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 	}

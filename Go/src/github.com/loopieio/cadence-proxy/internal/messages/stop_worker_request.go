@@ -25,7 +25,7 @@ type (
 func NewStopWorkerRequest() *StopWorkerRequest {
 	request := new(StopWorkerRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messagetypes.StopWorkerRequest
+	request.SetType(messagetypes.StopWorkerRequest)
 	request.SetReplyType(messagetypes.StopWorkerReply)
 
 	return request
@@ -54,7 +54,7 @@ func (request *StopWorkerRequest) SetWorkerID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyRequest.Clone()
 func (request *StopWorkerRequest) Clone() IProxyMessage {
 	stopWorkerRequest := NewStopWorkerRequest()
 	var messageClone IProxyMessage = stopWorkerRequest
@@ -63,7 +63,7 @@ func (request *StopWorkerRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyRequest.CopyTo()
 func (request *StopWorkerRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*StopWorkerRequest); ok {
@@ -71,24 +71,34 @@ func (request *StopWorkerRequest) CopyTo(target IProxyMessage) {
 	}
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyRequest.SetProxyMessage()
 func (request *StopWorkerRequest) SetProxyMessage(value *ProxyMessage) {
 	request.ProxyRequest.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyRequest.GetProxyMessage()
 func (request *StopWorkerRequest) GetProxyMessage() *ProxyMessage {
 	return request.ProxyRequest.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyRequest.GetRequestID()
 func (request *StopWorkerRequest) GetRequestID() int64 {
 	return request.ProxyRequest.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyRequest.SetRequestID()
 func (request *StopWorkerRequest) SetRequestID(value int64) {
 	request.ProxyRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyRequest.GetType()
+func (request *StopWorkerRequest) GetType() messagetypes.MessageType {
+	return request.ProxyRequest.GetType()
+}
+
+// SetType inherits docs from ProxyRequest.SetType()
+func (request *StopWorkerRequest) SetType(value messagetypes.MessageType) {
+	request.ProxyRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

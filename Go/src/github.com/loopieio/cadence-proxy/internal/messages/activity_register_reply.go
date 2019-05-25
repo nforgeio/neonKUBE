@@ -22,7 +22,7 @@ type (
 func NewActivityRegisterReply() *ActivityRegisterReply {
 	reply := new(ActivityRegisterReply)
 	reply.ActivityReply = NewActivityReply()
-	reply.Type = messagetypes.ActivityRegisterReply
+	reply.SetType(messagetypes.ActivityRegisterReply)
 
 	return reply
 }
@@ -65,6 +65,16 @@ func (reply *ActivityRegisterReply) GetRequestID() int64 {
 // SetRequestID inherits docs from ActivityReply.SetRequestID()
 func (reply *ActivityRegisterReply) SetRequestID(value int64) {
 	reply.ActivityReply.SetRequestID(value)
+}
+
+// GetType inherits docs from ActivityReply.GetType()
+func (reply *ActivityRegisterReply) GetType() messagetypes.MessageType {
+	return reply.ActivityReply.GetType()
+}
+
+// SetType inherits docs from ActivityReply.SetType()
+func (reply *ActivityRegisterReply) SetType(value messagetypes.MessageType) {
+	reply.ActivityReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

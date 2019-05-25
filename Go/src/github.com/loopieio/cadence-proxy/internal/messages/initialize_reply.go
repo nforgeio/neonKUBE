@@ -22,7 +22,7 @@ type (
 func NewInitializeReply() *InitializeReply {
 	reply := new(InitializeReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.InitializeReply
+	reply.SetType(messagetypes.InitializeReply)
 
 	return reply
 }
@@ -30,7 +30,7 @@ func NewInitializeReply() *InitializeReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (reply *InitializeReply) Clone() IProxyMessage {
 	initializeReply := NewInitializeReply()
 	var messageClone IProxyMessage = initializeReply
@@ -39,29 +39,39 @@ func (reply *InitializeReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *InitializeReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
 func (reply *InitializeReply) SetProxyMessage(value *ProxyMessage) {
 	reply.ProxyReply.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
 func (reply *InitializeReply) GetProxyMessage() *ProxyMessage {
 	return reply.ProxyReply.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyReply.GetRequestID()
 func (reply *InitializeReply) GetRequestID() int64 {
 	return reply.ProxyReply.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (reply *InitializeReply) SetRequestID(value int64) {
 	reply.ProxyReply.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyReply.GetType()
+func (reply *InitializeReply) GetType() messagetypes.MessageType {
+	return reply.ProxyReply.GetType()
+}
+
+// SetType inherits docs from ProxyReply.SetType()
+func (reply *InitializeReply) SetType(value messagetypes.MessageType) {
+	reply.ProxyReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

@@ -22,7 +22,7 @@ type (
 func NewNewWorkerReply() *NewWorkerReply {
 	reply := new(NewWorkerReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.NewWorkerReply
+	reply.SetType(messagetypes.NewWorkerReply)
 
 	return reply
 }
@@ -50,7 +50,7 @@ func (reply *NewWorkerReply) SetWorkerID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (reply *NewWorkerReply) Clone() IProxyMessage {
 	newWorkerReply := NewNewWorkerReply()
 	var messageClone IProxyMessage = newWorkerReply
@@ -59,7 +59,7 @@ func (reply *NewWorkerReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *NewWorkerReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(*NewWorkerReply); ok {
@@ -67,24 +67,34 @@ func (reply *NewWorkerReply) CopyTo(target IProxyMessage) {
 	}
 }
 
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
+// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
 func (reply *NewWorkerReply) SetProxyMessage(value *ProxyMessage) {
 	reply.ProxyReply.SetProxyMessage(value)
 }
 
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
+// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
 func (reply *NewWorkerReply) GetProxyMessage() *ProxyMessage {
 	return reply.ProxyReply.GetProxyMessage()
 }
 
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
+// GetRequestID inherits docs from ProxyReply.GetRequestID()
 func (reply *NewWorkerReply) GetRequestID() int64 {
 	return reply.ProxyReply.GetRequestID()
 }
 
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
+// SetRequestID inherits docs from ProxyReply.SetRequestID()
 func (reply *NewWorkerReply) SetRequestID(value int64) {
 	reply.ProxyReply.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyReply.GetType()
+func (reply *NewWorkerReply) GetType() messagetypes.MessageType {
+	return reply.ProxyReply.GetType()
+}
+
+// SetType inherits docs from ProxyReply.SetType()
+func (reply *NewWorkerReply) SetType(value messagetypes.MessageType) {
+	reply.ProxyReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

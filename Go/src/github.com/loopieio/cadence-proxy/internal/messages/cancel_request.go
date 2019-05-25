@@ -26,7 +26,7 @@ type (
 func NewCancelRequest() *CancelRequest {
 	request := new(CancelRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messagetypes.CancelRequest
+	request.SetType(messagetypes.CancelRequest)
 	request.SetReplyType(messagetypes.CancelReply)
 
 	return request
@@ -88,6 +88,16 @@ func (request *CancelRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (request *CancelRequest) SetRequestID(value int64) {
 	request.ProxyRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyRequest.GetType()
+func (request *CancelRequest) GetType() messagetypes.MessageType {
+	return request.ProxyRequest.GetType()
+}
+
+// SetType inherits docs from ProxyRequest.SetType()
+func (request *CancelRequest) SetType(value messagetypes.MessageType) {
+	request.ProxyRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------

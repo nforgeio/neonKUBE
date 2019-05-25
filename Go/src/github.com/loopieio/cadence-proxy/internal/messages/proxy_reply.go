@@ -23,8 +23,14 @@ type (
 	IProxyReply interface {
 		GetError() *cadenceerrors.CadenceError
 		SetError(value *cadenceerrors.CadenceError)
+		Clone() IProxyMessage
+		CopyTo(target IProxyMessage)
+		SetProxyMessage(value *ProxyMessage)
+		GetProxyMessage() *ProxyMessage
 		GetRequestID() int64
-		SetRequestID(value int64)
+		SetRequestID(int64)
+		GetType() messagetypes.MessageType
+		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -36,7 +42,7 @@ type (
 func NewProxyReply() *ProxyReply {
 	reply := new(ProxyReply)
 	reply.ProxyMessage = NewProxyMessage()
-	reply.Type = messagetypes.Unspecified
+	reply.SetType(messagetypes.Unspecified)
 
 	return reply
 }
@@ -79,6 +85,16 @@ func (reply *ProxyReply) GetRequestID() int64 {
 // SetRequestID inherits docs from ProxyMessage.SetRequestID()
 func (reply *ProxyReply) SetRequestID(value int64) {
 	reply.ProxyMessage.SetRequestID(value)
+}
+
+// GetType inherits docs from ProxyMessage.GetType()
+func (reply *ProxyReply) GetType() messagetypes.MessageType {
+	return reply.ProxyMessage.GetType()
+}
+
+// SetType inherits docs from ProxyMessage.SetType()
+func (reply *ProxyReply) SetType(value messagetypes.MessageType) {
+	reply.ProxyMessage.SetType(value)
 }
 
 // -------------------------------------------------------------------------

@@ -30,7 +30,7 @@ type (
 func NewWorkflowCountRequest() *WorkflowCountRequest {
 	request := new(WorkflowCountRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowCountRequest
+	request.SetType(messagetypes.WorkflowCountRequest)
 	request.SetReplyType(messagetypes.WorkflowCountReply)
 
 	return request
@@ -74,6 +74,16 @@ func (request *WorkflowCountRequest) GetRequestID() int64 {
 // SetRequestID inherits docs from WorkflowRequest.SetRequestID()
 func (request *WorkflowCountRequest) SetRequestID(value int64) {
 	request.WorkflowRequest.SetRequestID(value)
+}
+
+// GetType inherits docs from WorkflowRequest.GetType()
+func (request *WorkflowCountRequest) GetType() messagetypes.MessageType {
+	return request.WorkflowRequest.GetType()
+}
+
+// SetType inherits docs from WorkflowRequest.SetType()
+func (request *WorkflowCountRequest) SetType(value messagetypes.MessageType) {
+	request.WorkflowRequest.SetType(value)
 }
 
 // -------------------------------------------------------------------------
