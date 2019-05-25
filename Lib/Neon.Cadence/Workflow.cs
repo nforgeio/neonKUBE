@@ -156,8 +156,6 @@ namespace Neon.Cadence
     ///     the caller to be thrown as an exception.
     ///     </note>
     /// </item>
-    /// <item>
-    /// </item>
     /// </list>
     /// </remarks>
     public abstract class Workflow : INeonLogger

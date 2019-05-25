@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    WorkflowGetLastResultReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,31 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    [ProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
+    internal class WorkflowGetLastCompletionReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityRequest()
+        public WorkflowGetLastCompletionReply()
         {
+            Type = InternalMessageTypes.WorkflowGetLastResultReply;
         }
 
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// Indicates the workflow's last completion result.
         /// </summary>
-        public long ContextId
+        public byte[] Result
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityRequest();
+            var clone = new WorkflowGetLastCompletionReply();
 
             CopyTo(clone);
 
@@ -61,9 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityRequest)target;
+            var typedTarget = (WorkflowGetLastCompletionReply)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.Result = this.Result;
         }
     }
 }

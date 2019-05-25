@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    WorkflowHasLastCompletionReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,31 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowHasLastResultRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    [ProxyMessage(InternalMessageTypes.WorkflowHasLastResultReply)]
+    internal class WorkflowHasLastCompletionReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityRequest()
+        public WorkflowHasLastCompletionReply()
         {
+            Type = InternalMessageTypes.WorkflowHasLastResultReply;
         }
 
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// Indicates whether the workflow has a last completion result.
         /// </summary>
-        public long ContextId
+        public bool HasResult
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetBoolProperty("HasResult");
+            set => SetBoolProperty("HasResult", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityRequest();
+            var clone = new WorkflowHasLastCompletionReply();
 
             CopyTo(clone);
 
@@ -61,9 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityRequest)target;
+            var typedTarget = (WorkflowHasLastCompletionReply)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.HasResult = this.HasResult;
         }
     }
 }

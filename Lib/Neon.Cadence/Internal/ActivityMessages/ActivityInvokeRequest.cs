@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    ActivityInvokeRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,31 +25,36 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
+    /// a workflow activity.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    [ProxyMessage(InternalMessageTypes.ActivityInvokeRequest)]
+    internal class ActivityInvokeRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityRequest()
+        public ActivityInvokeRequest()
         {
+            Type = InternalMessageTypes.ActivityInvokeRequest;
         }
 
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityInvokeReply;
+
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// Optionally specifies the activity arguments encoded as a byte array.
         /// </summary>
-        public long ContextId
+        public byte[] Args
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetBytesProperty("Args");
+            set => SetBytesProperty("Args", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityRequest();
+            var clone = new ActivityInvokeRequest();
 
             CopyTo(clone);
 
@@ -61,9 +66,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityRequest)target;
+            var typedTarget = (ActivityInvokeRequest)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.Args = this.Args;
         }
     }
 }

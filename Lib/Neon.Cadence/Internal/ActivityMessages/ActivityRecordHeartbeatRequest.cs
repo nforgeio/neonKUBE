@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    ActivityRecordHeartbeatRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,31 +25,35 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// <b>client --> proxy:</b> Records an activity heartbeat.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    [ProxyMessage(InternalMessageTypes.ActivityRecordHeartbeatRequest)]
+    internal class ActivityRecordHeartbeatRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityRequest()
+        public ActivityRecordHeartbeatRequest()
         {
+            Type = InternalMessageTypes.ActivityRecordHeartbeatRequest;
         }
 
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityRecordHeartbeatReply;
+
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// The activity heartbeat details encoded as a byte array.
         /// </summary>
-        public long ContextId
+        public byte[] Details
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetBytesProperty("Details");
+            set => SetBytesProperty("Details", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityRequest();
+            var clone = new ActivityRecordHeartbeatRequest();
 
             CopyTo(clone);
 
@@ -61,9 +65,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityRequest)target;
+            var typedTarget = (ActivityRecordHeartbeatRequest)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.Details = this.Details;
         }
     }
 }

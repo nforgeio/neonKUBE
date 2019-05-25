@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    ActivityExecuteRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,31 +25,45 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// <b>client --> proxy:</b> Starts a workflow activity.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    [ProxyMessage(InternalMessageTypes.ActivityExecuteRequest)]
+    internal class ActivityExecuteRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityRequest()
+        public ActivityExecuteRequest()
         {
+            Type = InternalMessageTypes.ActivityExecuteRequest;
+        }
+
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityExecuteReply;
+
+        /// <summary>
+        /// Optionally specifies the arguments to be passed to the activity encoded
+        /// as a byte array.
+        /// </summary>
+        public byte[] Args
+        {
+            get => GetBytesProperty("Args");
+            set => SetBytesProperty("Args", value);
         }
 
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// The activity start options.
         /// </summary>
-        public long ContextId
+        public InternalActivityOptions Options
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetJsonProperty<InternalActivityOptions>("Options");
+            set => SetJsonProperty("Options", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityRequest();
+            var clone = new ActivityExecuteRequest();
 
             CopyTo(clone);
 
@@ -61,9 +75,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityRequest)target;
+            var typedTarget = (ActivityExecuteRequest)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.Args    = this.Args;
+            typedTarget.Options = this.Options;
         }
     }
 }

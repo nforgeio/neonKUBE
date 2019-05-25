@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    WorkflowGetLastResultRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,31 +25,27 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
+    ///  This can be used by CRON workflows to retrieve state from the last workflow run.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    [ProxyMessage(InternalMessageTypes.WorkflowGetLastResultRequest)]
+    internal class WorkflowGetLastResultRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityRequest()
+        public WorkflowGetLastResultRequest()
         {
+            Type = InternalMessageTypes.WorkflowGetLastResultRequest;
         }
 
-        /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
-        /// </summary>
-        public long ContextId
-        {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
-        }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowGetLastResultReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityRequest();
+            var clone = new WorkflowGetLastResultRequest();
 
             CopyTo(clone);
 
@@ -60,10 +56,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (ActivityRequest)target;
-
-            typedTarget.ContextId = this.ContextId;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityRequest.cs
+// FILE:	    ActivityHasHeartbeatDetailsReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,31 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Base class for all activity requests.
+    /// <b>proxy --> client:</b> Answers a <see cref="ActivityHasHeartbeatDetailsRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
-    internal class ActivityRequest : ProxyRequest
+    [ProxyMessage(InternalMessageTypes.ActivityHasHeartbeatDetailsReply)]
+    internal class ActivityHasHeartbeatDetailsReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityRequest()
+        public ActivityHasHeartbeatDetailsReply()
         {
+            Type = InternalMessageTypes.ActivityHasHeartbeatDetailsReply;
         }
 
         /// <summary>
-        /// Uniquely identifies the activity context associated with this request.
+        /// Indicates whether heartbeat details are available.
         /// </summary>
-        public long ContextId
+        public bool HasDetails
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetBoolProperty("HasDetails");
+            set => SetBoolProperty("HasDetails", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityRequest();
+            var clone = new ActivityHasHeartbeatDetailsReply();
 
             CopyTo(clone);
 
@@ -61,9 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityRequest)target;
+            var typedTarget = (ActivityHasHeartbeatDetailsReply)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.HasDetails = this.HasDetails;
         }
     }
 }
