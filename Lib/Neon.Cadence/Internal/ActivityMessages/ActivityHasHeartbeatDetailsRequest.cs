@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityGetHeartbeatDetailsReply.cs
+// FILE:	    ActivityRecordHeartbeatRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,27 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="ActivityGetHeartbeatDetailsRequest"/>
+    /// <b>client --> proxy:</b> Determines whether a previous failed run on an
+    /// activity recorded heartbeat details.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsReply)]
-    internal class ActivityGetHeartbeatDetailsReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityHasHeartbeatDetailsRequest)]
+    internal class ActivityHasHeartbeatDetailsRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityGetHeartbeatDetailsReply()
+        public ActivityHasHeartbeatDetailsRequest()
         {
-            Type = InternalMessageTypes.ActivityGetHeartbeatDetailsReply;
+            Type = InternalMessageTypes.ActivityHasHeartbeatDetailsRequest;
         }
 
-        /// <summary>
-        /// Returns the activity heartbeat details encoded as a byte array.
-        /// </summary>
-        public byte[] Details
-        {
-            get => GetBytesProperty("Details");
-            set => SetBytesProperty("Details", value);
-        }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityHasHeartbeatDetailsReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityGetHeartbeatDetailsReply();
+            var clone = new ActivityHasHeartbeatDetailsRequest();
 
             CopyTo(clone);
 
@@ -61,10 +56,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (ActivityGetHeartbeatDetailsReply)target;
-
-            typedTarget.Details = this.Details;
         }
     }
 }

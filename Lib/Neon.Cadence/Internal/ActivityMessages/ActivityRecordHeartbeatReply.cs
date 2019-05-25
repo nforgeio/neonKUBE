@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityGetHeartbeatDetailsReply.cs
+// FILE:	    ActivityRecordHeartbeatReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,17 +25,17 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="ActivityGetHeartbeatDetailsRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="ActivityRecordHeartbeatRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsReply)]
-    internal class ActivityGetHeartbeatDetailsReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityRecordHeartbeatReply)]
+    internal class ActivityRecordHeartbeatReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityGetHeartbeatDetailsReply()
+        public ActivityRecordHeartbeatReply()
         {
-            Type = InternalMessageTypes.ActivityGetHeartbeatDetailsReply;
+            Type = InternalMessageTypes.ActivityRecordHeartbeatReply;
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityGetHeartbeatDetailsReply();
+            var clone = new ActivityRecordHeartbeatReply();
 
             CopyTo(clone);
 
@@ -62,7 +62,7 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityGetHeartbeatDetailsReply)target;
+            var typedTarget = (ActivityRecordHeartbeatReply)target;
 
             typedTarget.Details = this.Details;
         }

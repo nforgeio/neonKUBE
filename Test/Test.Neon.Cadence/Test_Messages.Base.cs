@@ -212,14 +212,14 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(0, message.ActivityContextId);
+                Assert.Equal(0, message.ContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.ActivityContextId = 666;
-                Assert.Equal(666, message.ActivityContextId);
+                message.ContextId = 666;
+                Assert.Equal(666, message.ContextId);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -228,7 +228,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ActivityContextId);
+                Assert.Equal(666, message.ContextId);
             }
         }
 
@@ -298,14 +298,14 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(0, message.WorkflowContextId);
+                Assert.Equal(0, message.ContextId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.WorkflowContextId = 666;
-                Assert.Equal(666, message.WorkflowContextId);
+                message.ContextId = 666;
+                Assert.Equal(666, message.ContextId);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -314,7 +314,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.WorkflowContextId);
+                Assert.Equal(666, message.ContextId);
             }
         }
 

@@ -455,7 +455,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>client --> proxy:</b> Records a heartbeat message for an activity.
         /// </summary>
-        ActivityRecordHeartbeatRequest = 209,
+        ActivityRecordHeartbeatRequest = 208,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityRecordHeartbeatRequest"/> message.

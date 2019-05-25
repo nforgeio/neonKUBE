@@ -428,5 +428,221 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Details);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityRecordHeartbeatRequest()
+        {
+            ActivityRecordHeartbeatRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityRecordHeartbeatRequest();
+
+                Assert.Equal(InternalMessageTypes.ActivityRecordHeartbeatReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityRecordHeartbeatRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Details);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                message.Details = new byte[] { 0, 1, 2, 3, 4 };
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityRecordHeartbeatRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityRecordHeartbeatReply()
+        {
+            ActivityRecordHeartbeatReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityRecordHeartbeatReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityRecordHeartbeatReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityRecordHeartbeatReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityHasHeartbeatDetailsRequest()
+        {
+            ActivityHasHeartbeatDetailsRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityHasHeartbeatDetailsRequest();
+
+                Assert.Equal(InternalMessageTypes.ActivityHasHeartbeatDetailsReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityHasHeartbeatDetailsRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityHasHeartbeatDetailsRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityHasHeartbeatDetailsReply()
+        {
+            ActivityHasHeartbeatDetailsReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityHasHeartbeatDetailsReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityHasHeartbeatDetailsReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.False(message.HasDetails);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+                message.HasDetails = true;
+                Assert.True(message.HasDetails);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityHasHeartbeatDetailsReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.HasDetails);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.HasDetails);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.HasDetails);
+            }
+        }
     }
 }

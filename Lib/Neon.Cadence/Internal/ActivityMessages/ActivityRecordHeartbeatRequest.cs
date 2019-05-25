@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityGetHeartbeatDetailsReply.cs
+// FILE:	    ActivityRecordHeartbeatRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,21 +25,24 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="ActivityGetHeartbeatDetailsRequest"/>
+    /// <b>client --> proxy:</b> Records an activity heartbeat.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsReply)]
-    internal class ActivityGetHeartbeatDetailsReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityRecordHeartbeatRequest)]
+    internal class ActivityRecordHeartbeatRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityGetHeartbeatDetailsReply()
+        public ActivityRecordHeartbeatRequest()
         {
-            Type = InternalMessageTypes.ActivityGetHeartbeatDetailsReply;
+            Type = InternalMessageTypes.ActivityRecordHeartbeatRequest;
         }
 
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityRecordHeartbeatReply;
+
         /// <summary>
-        /// Returns the activity heartbeat details encoded as a byte array.
+        /// The activity heartbeat details encoded as a byte array.
         /// </summary>
         public byte[] Details
         {
@@ -50,7 +53,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityGetHeartbeatDetailsReply();
+            var clone = new ActivityRecordHeartbeatRequest();
 
             CopyTo(clone);
 
@@ -62,7 +65,7 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityGetHeartbeatDetailsReply)target;
+            var typedTarget = (ActivityRecordHeartbeatRequest)target;
 
             typedTarget.Details = this.Details;
         }

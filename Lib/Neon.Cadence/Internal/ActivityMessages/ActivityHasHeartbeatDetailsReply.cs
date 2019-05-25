@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityGetHeartbeatDetailsReply.cs
+// FILE:	    ActivityHasHeartbeatDetailsReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="ActivityGetHeartbeatDetailsRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="ActivityHasHeartbeatDetailsRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsReply)]
-    internal class ActivityGetHeartbeatDetailsReply : WorkflowReply
+    [ProxyMessage(InternalMessageTypes.ActivityHasHeartbeatDetailsReply)]
+    internal class ActivityHasHeartbeatDetailsReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityGetHeartbeatDetailsReply()
+        public ActivityHasHeartbeatDetailsReply()
         {
-            Type = InternalMessageTypes.ActivityGetHeartbeatDetailsReply;
+            Type = InternalMessageTypes.ActivityHasHeartbeatDetailsReply;
         }
 
         /// <summary>
-        /// Returns the activity heartbeat details encoded as a byte array.
+        /// Indicates whether heartbeat details are available.
         /// </summary>
-        public byte[] Details
+        public bool HasDetails
         {
-            get => GetBytesProperty("Details");
-            set => SetBytesProperty("Details", value);
+            get => GetBoolProperty("HasDetails");
+            set => SetBoolProperty("HasDetails", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityGetHeartbeatDetailsReply();
+            var clone = new ActivityHasHeartbeatDetailsReply();
 
             CopyTo(clone);
 
@@ -62,9 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityGetHeartbeatDetailsReply)target;
+            var typedTarget = (ActivityHasHeartbeatDetailsReply)target;
 
-            typedTarget.Details = this.Details;
+            typedTarget.HasDetails = this.HasDetails;
         }
     }
 }

@@ -778,7 +778,7 @@ namespace Neon.Cadence
                         {
                             Args              = workflow.Args,
                             Name              = workflow.Name,
-                            WorkflowContextId = workflow.WorkflowContextId
+                            ContextId = workflow.WorkflowContextId
                         };
 
                     var workflowInvokeReply = (WorkflowInvokeReply)await CallClientAsync(workflowInvokeRequest);
