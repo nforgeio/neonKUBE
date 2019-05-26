@@ -76,13 +76,13 @@ namespace Neon.Cadence
     /// </item>
     /// <item>
     ///     <para>
-    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/>,
+    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>,
     ///     passing an optional byte array as workflow arguments as well as optional workflow options.  
     ///     Global workflows have no parent, as opposed to child workflows that run in the context of 
     ///     another workflow (the parent).
     ///     </para>
     ///     <note>
-    ///     <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/> returns immediately
+    ///     <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/> returns immediately
     ///     after the new workflow has been submitted to Cadence.  This method does not wait
     ///     for the workflow to finish.
     ///     </note>

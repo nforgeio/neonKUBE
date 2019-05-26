@@ -36,13 +36,15 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="id">The current ID for the workflow.</param>
         /// <param name="runId">The original ID the workflow.</param>
-        internal WorkflowRun(string runId, string id)
+        /// <param name="domain">Optionally specifies the domain hosting the workflow,</param>
+        public WorkflowRun(string runId, string id, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
 
-            this.RunId = id;
-            this.Id    = id;
+            this.RunId  = runId;
+            this.Id     = id;
+            this.Domain = domain;
         }
 
         /// <summary>
@@ -56,5 +58,10 @@ namespace Neon.Cadence
         /// or potentially restarted.
         /// </summary>
         public string Id { get; private set; }
+
+        /// <summary>
+        /// The domain hosting the workflow.
+        /// </summary>
+        public string Domain { get; private set; }
     }
 }

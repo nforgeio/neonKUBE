@@ -46,8 +46,89 @@ using Neon.Net;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements a client to manage an Uber Cadence cluster.
+    /// Implements a client that can be used to create and manage
+    /// workflows.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// To get started with Cadence, you'll need to deploy a Cadence cluster with
+    /// one or more nodes and the establish a connection to the cluster from your
+    /// workflow/activity implementations and management tools.  This is pretty
+    /// easy to do.
+    /// </para>
+    /// <para>
+    /// First, you'll need to know the URI of at least one of the Cadence cluster
+    /// nodes.  Cadence listens on port <b>79133</b> by default so you cluster URIs
+    /// will typically look like: <b>http://CADENCE-NODE:7933</b>.
+    /// </para>
+    /// <note>
+    /// For production clusters with multiple Cadence nodes, you should specify
+    /// multiple URIs when connecting just in case the one of the nodes may be
+    /// offline for some reason.
+    /// </note>
+    /// <para>
+    /// To establish a connection, you'll construct a <see cref="CadenceSettings"/>
+    /// and add your node URIs to the <see cref="CadenceSettings.Servers"/> list
+    /// and then call the static <see cref="CadenceClient.ConnectAsync(CadenceSettings)"/>
+    /// method to obtain a connected <see cref="CadenceClient"/>.  You'll use this
+    /// for registering workflow and activity workers as well as to manage workflows.
+    /// </para>
+    /// <para>
+    /// You'll implement your workflows and activities by implementing classes that
+    /// derive from <see cref="Workflow"/> and <see cref="Activity"/> and then
+    /// registering these types with Cadence.  Cadence calls these registrations
+    /// workers and uses these to schedule operations for execution by your code.
+    /// Workflows and activities are registered using the fully qualified names 
+    /// of the derived <see cref="Workflow"/> and <see cref="Activity"/> types
+    /// by defaut, but you can customizes this as required (i.e. to add an
+    /// implementation version).
+    /// </para>
+    /// <para>
+    /// Once you have a connected <see cref="CadenceClient"/>, you can create and manage
+    /// Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int)"/>,
+    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>
+    /// and then register workflow and activity workers via <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>
+    /// and <see cref="StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/>.
+    /// </para>
+    /// <para>
+    /// External workflows are started by calling <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>,
+    /// passing the workflow type string, the target Cadence domain along with optional arguments
+    /// (encoded into a byte array) and optional workflow options.  The workflow type string must
+    /// be the same one used when calling <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>.
+    /// </para>
+    /// <note>
+    /// <b>External workflows</b> are top-level workflows that have no workflow parent.
+    /// This is distinugished from <b>child workflows</b> that are executed within the
+    /// context of another workflow via <see cref="Workflow.CallWorkflow(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
+    /// </note>
+    /// <para>
+    /// <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/> returns
+    /// immediately after the workflow is submitted to Cadence and the workflow will be scheduled and
+    /// executed independently.  This method returns a <see cref="WorkflowRun"/> which you'll use
+    /// to identify your running workflow to the methods desribed below.
+    /// </para>
+    /// <para>
+    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowState(WorkflowRun)"/>
+    /// or obtain a workflow result via <see cref="GetWorkflowResult(WorkflowRun)"/>, which blocks until the 
+    /// workflow completes.
+    /// </para>
+    /// <note>
+    /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
+    /// via the <see cref="Workflow.CallWorkflow(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    /// <see cref="Workflow.CallActivity(string, byte[])"/>, and <see cref="Workflow.CallLocalActivity{TActivity}(byte[], LocalActivityOptions)"/>
+    /// methods.
+    /// </note>
+    /// <para>
+    /// Workflows can be signalled via <see cref="SignalWorkflow(string, string, byte[], string)"/> or
+    /// <see cref="SignalWorkflow(string, WorkflowOptions, string, byte[], byte[])"/> that starts the
+    /// workflow if its not already running.  You can query running workflows via 
+    /// <see cref="QueryWorkflow(string, string, byte[], string)"/>.
+    /// </para>
+    /// <para>
+    /// Workflows can be expicitly closed using <see cref="CancelWorkflow(WorkflowRun)"/>,
+    /// <see cref="TerminateWorkflow(WorkflowRun, string, byte[])"/>.
+    /// </para>
+    /// </remarks>
     public partial class CadenceClient : IDisposable
     {
         /// <summary>
@@ -91,12 +172,8 @@ namespace Neon.Cadence
         /// </summary>
         private class EmulatedStartup
         {
-            private CadenceClient client;
-
             public void Configure(IApplicationBuilder app, CadenceClient client)
             {
-                this.client = client;
-
                 app.Run(async context =>
                 {
                     await client.OnEmulatedHttpRequestAsync(context);
@@ -540,7 +617,7 @@ namespace Neon.Cadence
                     {
                         var uri = new Uri(serverUri);
 
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:7933", ",");
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{NetworkPorts.Cadence}", ",");
                     }
 
                     var connectRequest = 

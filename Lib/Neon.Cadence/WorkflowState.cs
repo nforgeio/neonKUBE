@@ -32,9 +32,9 @@ namespace Neon.Cadence
     public class WorkflowState
     {
         /// <summary>
-        /// Describes the original workflow ID as well as the currrent run ID.
+        /// Describes the workflow run.
         /// </summary>
-        public WorkflowRun Execution { get; internal set; }
+        public WorkflowRun Run { get; internal set; }
 
         /// <summary>
         /// Identifies the workflow implementation.

@@ -51,9 +51,9 @@ namespace Neon.Cadence
         /// <param name="domain">The target Cadence domain.</param>
         /// <param name="tasklist">The target task list.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <param name="name">
-        /// Optionally overrides the fully qualified <typeparamref name="TWorkflow"/> name 
-        /// used to register the worker.
+        /// <param name="workflowType">
+        /// Optionally overrides the fully qualified <typeparamref name="TWorkflow"/> type
+        /// name used to register the worker.
         /// </param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
@@ -64,8 +64,8 @@ namespace Neon.Cadence
         /// </para>
         /// <para>
         /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
-        /// as customize the name used to register the workflow, which defaults to the
-        /// fully qualified name of the workflow type.
+        /// as customize the workflow typ name used to register the workflow, which defaults 
+        /// to the fully qualified name of the workflow type.
         /// </para>
         /// <para>
         /// This method returns a <see cref="Worker"/> which may be used by advanced applications
@@ -73,7 +73,7 @@ namespace Neon.Cadence
         /// this is entirely optional.
         /// </para>
         /// </remarks>
-        internal async Task<Worker> StartWorkflowWorkerAsync<TWorkflow>(string domain, string tasklist, WorkerOptions options = null, string name = null)
+        public async Task<Worker> StartWorkflowWorkerAsync<TWorkflow>(string domain, string tasklist, WorkerOptions options = null, string workflowType = null)
             where TWorkflow : Workflow
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
@@ -84,7 +84,7 @@ namespace Neon.Cadence
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {
-                    Name       = name ?? typeof(TWorkflow).FullName,
+                    Name       = workflowType ?? typeof(TWorkflow).FullName,
                     IsWorkflow = true,
                     Domain     = domain,
                     TaskList   = tasklist,
@@ -93,7 +93,7 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            var worker = new Worker(reply.WorkerId);
+            var worker = new Worker(this, reply.WorkerId);
 
             lock (syncLock)
             {
@@ -111,8 +111,8 @@ namespace Neon.Cadence
         /// <param name="domain">The target Cadence domain.</param>
         /// <param name="tasklist">The target task list.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <param name="name">
-        /// Optionally overrides the fully qualified <typeparamref name="TActivity"/> name 
+        /// <param name="activityType">
+        /// Optionally overrides the fully qualified <typeparamref name="TActivity"/> type name 
         /// used to register the worker.
         /// </param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
@@ -133,7 +133,7 @@ namespace Neon.Cadence
         /// this is entirely optional.
         /// </para>
         /// </remarks>
-        internal async Task<Worker> StartActivityWorkerAsync<TActivity>(string domain, string tasklist, WorkerOptions options = null, string name = null)
+        public async Task<Worker> StartActivityWorkerAsync<TActivity>(string domain, string tasklist, WorkerOptions options = null, string activityType = null)
             where TActivity : Activity
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
@@ -144,7 +144,7 @@ namespace Neon.Cadence
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {
-                    Name       = name ?? typeof(TActivity).FullName,
+                    Name       = activityType ?? typeof(TActivity).FullName,
                     IsWorkflow = false,
                     Domain     = domain,
                     TaskList   = tasklist,
@@ -153,7 +153,7 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            var worker = new Worker(reply.WorkerId);
+            var worker = new Worker(this, reply.WorkerId);
 
             lock (syncLock)
             {
@@ -173,10 +173,17 @@ namespace Neon.Cadence
         /// <remarks>
         /// This method does nothing if the worker is already stopped.
         /// </remarks>
-        internal async Task StopWorkerAsync(Worker worker)
+        public async Task StopWorkerAsync(Worker worker)
         {
+            Covenant.Requires<ArgumentNullException>(worker != null);
+
             lock (syncLock)
             {
+                if (object.ReferenceEquals(worker.Client, this))
+                {
+                    throw new InvalidOperationException("The worker passed does not belong to this client connection.");
+                }
+
                 if (!workers.ContainsKey(worker.WorkerId))
                 {
                     // The worker has already been stopped.

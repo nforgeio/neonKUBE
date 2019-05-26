@@ -49,7 +49,6 @@ namespace Neon.Xunit.Cadence
     public sealed class CadenceFixture : ContainerFixture
     {
         private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Cadence to start.
-        private readonly TimeSpan   retryDelay  = TimeSpan.FromSeconds(0.5);    // Time to wait after a failure.
         private CadenceSettings     settings;
 
         /// <summary>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Worker.cs
+// FILE:	    CadenceClient.Activity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -25,30 +27,7 @@ using Neon.Common;
 
 namespace Neon.Cadence
 {
-    /// <summary>
-    /// Identifies a worker registered with Cadence.
-    /// </summary>
-    public class Worker
+    public partial class CadenceClient
     {
-        /// <summary>
-        /// Internal constructor.
-        /// </summary>
-        /// <param name="client">The parent client.</param>
-        /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
-        internal Worker(CadenceClient client, long workerId)
-        {
-            this.Client   = client;
-            this.WorkerId = workerId;
-        }
-
-        /// <summary>
-        /// Returns the parent Cadence client.
-        /// </summary>
-        internal CadenceClient Client { get; private set; }
-
-        /// <summary>
-        /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.
-        /// </summary>
-        internal long WorkerId { get; private set; }
     }
 }
