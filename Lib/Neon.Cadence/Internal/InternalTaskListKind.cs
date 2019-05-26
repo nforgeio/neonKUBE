@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListKind.cs
+// FILE:	    InternalTaskListKind.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,20 +26,20 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the different kinds of task lists.
+    /// <b>INTERNAL USE ONLY:</b> Enumerates the different kinds of task lists.
     /// </summary>
-    public enum TaskListKind
+    public enum InternalTaskListKind
     {
-        // WARNING: These values must match those defined by [InternalTaskListKind].
+        // WARNING: These values must match those defined by [TaskListKind].
 
         /// <summary>
         /// Normal.
         /// </summary>
-        Normal = 0,
+        NORMAL = 0,
 
         /// <summary>
         /// Sticky.
         /// </summary>
-        Sticky = 1
+        STICKY = 1
     }
 }

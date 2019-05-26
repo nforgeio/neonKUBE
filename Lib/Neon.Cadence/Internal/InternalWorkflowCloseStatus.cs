@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListKind.cs
+// FILE:	    InternalWorkflowCloseStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,27 +19,48 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the different kinds of task lists.
+    /// Enumerates the states for a pending activity.
     /// </summary>
-    public enum TaskListKind
+    internal enum InternalWorkflowCloseStatus
     {
-        // WARNING: These values must match those defined by [InternalTaskListKind].
+        // WARNING: These values must match those defined by [WorkflowCloseStatus].
 
         /// <summary>
-        /// Normal.
+        /// The workflow completed successfully.
         /// </summary>
-        Normal = 0,
+        COMPLETED = 0,
 
         /// <summary>
-        /// Sticky.
+        /// The workflow failed.
         /// </summary>
-        Sticky = 1
+        FAILED = 1,
+
+        /// <summary>
+        /// The workflow was cancelled.
+        /// </summary>
+        CANCELLED = 2,
+
+        /// <summary>
+        /// The workflow was terminated.
+        /// </summary>
+        TERMINATED = 3,
+
+        /// <summary>
+        /// The workflow was restarted (aka <i>continued as new</i>).
+        /// </summary>
+        RESTARTED = 4,
+
+        /// <summary>
+        /// The workflow timed out.
+        /// </summary>
+        TIMEDOUT = 5
     }
 }

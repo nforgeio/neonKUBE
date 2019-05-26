@@ -63,8 +63,8 @@ namespace Neon.Cadence.Internal
         /// Workflow close status.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowCloseStatus", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(0)]
-        public int WorkflowCloseStatus { get; set;}
+        [DefaultValue(InternalWorkflowCloseStatus.COMPLETED)]
+        public InternalWorkflowCloseStatus WorkflowCloseStatus { get; set;}
 
         /// <summary>
         /// Workflow history length.

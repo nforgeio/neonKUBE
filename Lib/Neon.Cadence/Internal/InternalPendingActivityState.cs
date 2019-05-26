@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListKind.cs
+// FILE:	    InternalPendingActivityState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,27 +19,33 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the different kinds of task lists.
+    /// Enumerates the states for a pending activity.
     /// </summary>
-    public enum TaskListKind
+    internal enum InternalPendingActivityState
     {
-        // WARNING: These values must match those defined by [InternalTaskListKind].
+        // WARNING: These values must match those defined by [ActivityStatus].
 
         /// <summary>
-        /// Normal.
+        /// The activity has been scheduled but is not running.
         /// </summary>
-        Normal = 0,
+        SCHEDULED = 0,
 
         /// <summary>
-        /// Sticky.
+        /// The activity is running.
         /// </summary>
-        Sticky = 1
+        STARTED = 1,
+
+        /// <summary>
+        /// The activity is running but has a cancel request pending.
+        /// </summary>
+        CANCEL_REQUESTED = 2,
     }
 }

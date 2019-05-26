@@ -49,8 +49,8 @@ namespace Neon.Cadence.Internal
         /// The activity state.
         /// </summary>
         [JsonProperty(PropertyName = "State", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public int State { get; set; }
+        [DefaultValue(InternalPendingActivityState.SCHEDULED)]
+        public InternalPendingActivityState State { get; set; }
 
         /// <summary>
         /// Details from the last activity heartbeart.
@@ -110,7 +110,7 @@ namespace Neon.Cadence.Internal
             {
                 ActivityID             = this.ActivityID,
                 Name                   = this.ActivityType?.Name,
-                State                  = (ActivityStatus)this.State,
+                Status                 = (ActivityStatus)this.State,
                 HeartbeatDetails       = this.HeartbeatDetails,
                 LastHeartbeatTimestamp = new DateTime(this.LastHeartbeatTimestamp),
                 LastStartedTimestamp   = new DateTime(this.LastStartedTimestamp),

@@ -29,6 +29,8 @@ namespace Neon.Cadence
     /// </summary>
     public enum ActivityStatus
     {
+        // WARNING: These values must match those defined by [InternalPendingActivityState].
+
         /// <summary>
         /// The activity is waiting to be started.
         /// </summary>

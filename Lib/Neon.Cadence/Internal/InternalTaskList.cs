@@ -42,7 +42,7 @@ namespace Neon.Cadence.Internal
         /// Indicates the task list kind.
         /// </summary>
         [JsonProperty(PropertyName = "TaskListKind", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(0)]
-        public int TaskListKind { get; set; }
+        [DefaultValue(InternalTaskListKind.NORMAL)]
+        public InternalTaskListKind TaskListKind { get; set; }
     }
 }

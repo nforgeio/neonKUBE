@@ -1418,10 +1418,10 @@ namespace TestCadence
             {
                 ExecutionConfiguration = new InternalWorkflowExecutionConfiguration()
                 {
-                    TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (int)TaskListKind.Sticky },
+                    TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (InternalTaskListKind)TaskListKind.Sticky },
                     ExecutionStartToCloseTimeout   = 1000,
                     TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = (int)ChildTerminationPolicy.RequestCancel
+                    ChildPolicy                    = ChildTerminationPolicy.RequestCancel
                 },
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
@@ -1435,7 +1435,7 @@ namespace TestCadence
                     WorkflowType        = new InternalWorkflowType() { Name = "my-workflow" },
                     StartTime           = 3000,
                     CloseTime           = 4000,
-                    WorkflowCloseStatus = (int)WorkflowCloseStatus.Restarted,
+                    WorkflowCloseStatus = (InternalWorkflowCloseStatus)InternalWorkflowCloseStatus.RESTARTED,
                     HistoryLength       = 5000,
                     ParentDomainId      = "parent-domain",
                     ParentExecution     = new InternalWorkflowExecution() { ID = "parent-id", RunID = "parent-runid" },
@@ -1476,7 +1476,7 @@ namespace TestCadence
                         LastStartedTimestamp   = 13000,
                         MaximumAttempts        = 14000,
                         ScheduledTimestamp     = 15000,
-                        State                  = (int)ActivityStatus.Started
+                        State                  = InternalPendingActivityState.STARTED
                     }
                 }
             };

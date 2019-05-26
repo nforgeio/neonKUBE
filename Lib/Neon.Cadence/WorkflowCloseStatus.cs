@@ -30,6 +30,8 @@ namespace Neon.Cadence
     /// </summary>
     public enum WorkflowCloseStatus
     {
+        // WARNING: These values must match those defined by [InternalWorkflowCloseState].
+
         /// <summary>
         /// The workflow completed successfully.
         /// </summary>
