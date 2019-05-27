@@ -117,6 +117,18 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Constructs an error from a .NET exception.
+        /// </summary>
+        /// <param name="e">The exception.</param>
+        public CadenceError(Exception e)
+        {
+            Covenant.Requires<ArgumentNullException>(e != null);
+
+            this.String = $"{e.GetType().Name}{{{e.Message}}}";
+            this.Type   = "custom";
+        }
+
+        /// <summary>
         /// Specifies the GOLANG error string.
         /// </summary>
         [JsonProperty(PropertyName = "String", Required = Required.Always)]

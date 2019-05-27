@@ -33,6 +33,7 @@ using Neon.Common;
 using Neon.Retry;
 using Neon.Time;
 using Neon.Diagnostics;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -163,12 +164,172 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static Version ZeroVersion = new Version(0, 0, 0);
+        private static object                       syncLock     = new object();
+        private static INeonLogger                  log          = LogManager.Default.GetLogger<Workflow>();
+        private static SemanticVersion              zeroVersion  = new SemanticVersion();
+        private static Dictionary<string, Workflow> idToWorkflow = new Dictionary<string, Workflow>();
+
+        /// <summary>
+        /// Called to handle a workflow related request message received from the cadence-proxy.
+        /// </summary>
+        /// <param name="client">The client that received the request.</param>
+        /// <param name="request">The workflow request message.</param>
+        /// <returns>The reply message.</returns>
+        internal static async Task<ProxyReply> OnProxyRequestAsync(CadenceClient client, WorkflowRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            switch (request.Type)
+            {
+                case InternalMessageTypes.WorkflowInvokeRequest:
+
+                    return await InvokeAsync(client, (WorkflowInvokeRequest)request);
+
+                case InternalMessageTypes.WorkflowSignalReceivedRequest:
+
+                    break;
+
+                case InternalMessageTypes.WorkflowQueryRequest:
+
+                    break;
+
+                case InternalMessageTypes.WorkflowMutableInvokeRequest:
+
+                    break;
+
+                default:
+
+                    throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow invocation.
+        /// </summary>
+        /// <param name="client">The associated cadence client.</param>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal static async Task<ProxyReply> InvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            Workflow workflow;
+
+            lock (syncLock)
+            {
+                var workflowId = request.WorkflowId;
+
+                if (idToWorkflow.TryGetValue(workflowId, out workflow))
+                {
+                    return new WorkflowInvokeReply()
+                    {
+                        Error = new CadenceError($"A workflow with [ID={workflowId}] is already running on this worker.")
+                    };
+                }
+
+                var workflowType = client.GetWorkflowType(request.WorkflowType);
+
+                if (workflowType == null)
+                {
+                    return new WorkflowInvokeReply()
+                    {
+                        Error = new CadenceError($"A workflow [Type={request.WorkflowType}] is not registered for this worker.")
+                    };
+                }
+
+                workflow = (Workflow)Activator.CreateInstance(workflowType);
+
+                idToWorkflow.Add(workflowId, workflow);
+            }
+
+            // We're going to record the workflow implementation version as a mutable
+            // value and then obtain the actual value to set the [OriginalVersion]
+            // property.  The outcome will be that [OriginalVersion] will end up being
+            // set to the [Version] at the time the workflow instance was first
+            // invoked and [Version] will be the current version.
+            //
+            // This will give upgraded workflow implementations a chance to implement 
+            // backwards compatibility for workflows already in flight.
+
+            var versionBytes = await workflow.GetMutableValueAsync("::neon.workflow.original-version",
+                async () =>
+                {
+                    var version = workflow.Version ?? zeroVersion;
+
+                    return await Task.FromResult(Encoding.UTF8.GetBytes(zeroVersion.ToString()));
+                });
+
+            workflow.OriginalVersion = SemanticVersion.Parse(Encoding.UTF8.GetString(versionBytes));
+
+            // Initialize the other workflow properties.
+
+            workflow.Client          = client;
+            workflow.ContextId       = request.ContextId;
+            workflow.Domain          = request.Domain;
+            workflow.RunId           = request.RunId;
+            workflow.TaskList        = request.TaskList;
+            workflow.WorkflowId      = request.WorkflowId;
+            workflow.WorkflowTimeout = request.Timeout;
+            workflow.WorkflowType    = request.WorkflowType;
+
+            // Start the workflow by calling its [RunAsync(args)] method.  This method will
+            // indicate that it has completed via one of these techniques:
+            //
+            //      1. The method returns normally with the workflow result.
+            //
+            //      2. The method calls [RestartAsync(result, args)] which throws an
+            //         [InternalWorkflowRestartException] which will be caught and
+            //         handled here.
+            //
+            //      3. The method throws another exception which will be caught
+            //         and be used to indicate that the workflow failed.
+
+            try
+            {
+                var result = await workflow.RunAsync(request.Args);
+
+                return new WorkflowInvokeReply()
+                {
+                    Result = result
+                };
+            }
+            catch (InternalWorkflowRestartException e)
+            {
+                // $todo(jeff.lill):
+                //
+                // I'm not entirely sure about the Cadence semantics here.  Am I supposed
+                // to terminate the current invocaton by sending a [WorkflowInvokeReply]
+                // back to cadence-proxy or will the workflow continue here?
+                //
+                // It really has to be the former, because the latter case doesn't
+                // make a lot of sense.
+
+                throw new NotImplementedException();
+            }
+            catch (CadenceException e)
+            {
+                await client.ProxyReplyAsync(request,
+                    new WorkflowInvokeReply()
+                    {
+                        Error = e.ToCadenceError()
+                    });
+            }
+            catch (Exception e)
+            {
+                await client.ProxyReplyAsync(request,
+                    new WorkflowInvokeReply()
+                    {
+                        Error = new CadenceError(e)
+                    });
+            }
+        }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private long workflowContextId;
+        private long ContextId;
 
         /// <summary>
         /// Internal constructor.
@@ -179,7 +340,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(args != null);
 
             this.Client            = args.Client;
-            this.workflowContextId = args.WorkerContextId;
+            this.ContextId = args.WorkerContextId;
         }
 
         /// <summary>
@@ -188,18 +349,18 @@ namespace Neon.Cadence
         public CadenceClient Client { get; private set; }
 
         /// <summary>
-        /// Workflow implemenations that support version backwards compatability should
-        /// override this to return the version of the implementation.  This returns
-        /// <c>Version(0, 0, 0)</c> by default.
+        /// Returns the version of the workflow implementation that was executed when
+        /// the workflow was first started.  This can be used to to implement workflow
+        /// backwards compatability.
         /// </summary>
-        public virtual Version Version => ZeroVersion;
+        public SemanticVersion OriginalVersion { get; private set; }
 
         /// <summary>
-        /// Returns the version of the workflow implementation that was executed when
-        /// the workflow was started.  This can be used to to implement backwards
-        /// compatability.
+        /// Workflow implemenations that support version backwards compatability should
+        /// override this to return the version of the implementation.  This returns
+        /// <c>SemanticVersion(0, 0, 0)</c> by default.
         /// </summary>
-        public Version OriginalVersion { get; private set; }
+        public virtual SemanticVersion Version => zeroVersion;
 
         /// <summary>
         /// Returns the domain hosting the workflow.
@@ -413,10 +574,17 @@ namespace Neon.Cadence
         /// Exits and completes the current running workflow and then restarts it, passing the
         /// optional workflow arguments.
         /// </summary>
+        /// <param name="result">Thw workflow result (or <c>null</c>).</param>
         /// <param name="args">Optionally specifies the arguments for the new workflow run.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        protected async Task RestartAsync(byte[] args = null)
+        protected async Task RestartAsync(byte[] result, byte[] args = null)
         {
+            // We're going to throw a [InternalWorkflowRestartException] with the
+            // result and arguments that will be caught and handled by the 
+            // [WorkflowInvoke()] method. 
+            
+
+
             await Task.CompletedTask;
             throw new NotImplementedException();
         }

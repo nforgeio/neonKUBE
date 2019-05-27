@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -79,25 +80,52 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
 
-            options = options ?? new WorkerOptions();
+            Worker worker;
 
-            var reply = (NewWorkerReply)(await CallProxyAsync(
-                new NewWorkerRequest()
-                {
-                    Name       = workflowType ?? typeof(TWorkflow).FullName,
-                    IsWorkflow = true,
-                    Domain     = domain,
-                    TaskList   = tasklist,
-                    Options    = options.ToInternal()
-                }));
+            workflowType = workflowType ?? typeof(TWorkflow).FullName;
+            options      = options ?? new WorkerOptions();
 
-            reply.ThrowOnError();
-
-            var worker = new Worker(this, reply.WorkerId);
-
-            lock (syncLock)
+            using (asyncLock.AcquireAsync())
             {
-                workers.Add(reply.WorkerId, worker);
+                lock (syncLock)
+                {
+                    // Ensure that we haven't already registered a worker for the
+                    // specified workflow, domain, and tasklist.  We'll just ignore
+                    // the call if we already have this registration.
+                    //
+                    // I know that this is a linear search but the number of workflow
+                    // registrations per service will generally be very small and 
+                    // registrations will happen infrequently (typically just once
+                    // per service, when it starts).
+
+                    worker = workers.Values.SingleOrDefault(w => w.IsWorkflow && w.Domain == domain && w.Tasklist == tasklist && w.TypeName == workflowType);
+
+                    if (worker != null)
+                    {
+                        return worker;
+                    }
+                }
+
+                options = options ?? new WorkerOptions();
+
+                var reply = (NewWorkerReply)(await CallProxyAsync(
+                    new NewWorkerRequest()
+                    {
+                        Name       = workflowType,
+                        IsWorkflow = true,
+                        Domain     = domain,
+                        TaskList   = tasklist,
+                        Options    = options.ToInternal()
+                    }));
+
+                reply.ThrowOnError();
+
+                worker = new Worker(this, true, reply.WorkerId, domain, tasklist, workflowType);
+
+                lock (syncLock)
+                {
+                    workers.Add(reply.WorkerId, worker);
+                }
             }
 
             return worker;
@@ -139,25 +167,52 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
 
-            options = options ?? new WorkerOptions();
+            Worker worker;
 
-            var reply = (NewWorkerReply)(await CallProxyAsync(
-                new NewWorkerRequest()
-                {
-                    Name       = activityType ?? typeof(TActivity).FullName,
-                    IsWorkflow = false,
-                    Domain     = domain,
-                    TaskList   = tasklist,
-                    Options    = options.ToInternal()
-                }));
+            activityType = activityType ?? typeof(Activity).FullName;
+            options      = options ?? new WorkerOptions();
 
-            reply.ThrowOnError();
-
-            var worker = new Worker(this, reply.WorkerId);
-
-            lock (syncLock)
+            using (asyncLock.AcquireAsync())
             {
-                workers.Add(reply.WorkerId, worker);
+                lock (syncLock)
+                {
+                    // Ensure that we haven't already registered a worker for the
+                    // specified activity, domain, and tasklist.  We'll just ignore
+                    // the call if we already have this registration.
+                    //
+                    // I know that this is a linear search but the number of activity
+                    // registrations per service will generally be very small and 
+                    // registrations will happen infrequently (typically just once
+                    // per service, when it starts).
+
+                    worker = workers.Values.SingleOrDefault(w => !w.IsWorkflow && w.Domain == domain && w.Tasklist == tasklist && w.TypeName == activityType);
+
+                    if (worker != null)
+                    {
+                        return worker;
+                    }
+                }
+
+                options = options ?? new WorkerOptions();
+
+                var reply = (NewWorkerReply)(await CallProxyAsync(
+                    new NewWorkerRequest()
+                    {
+                        Name       = activityType,
+                        IsWorkflow = false,
+                        Domain     = domain,
+                        TaskList   = tasklist,
+                        Options    = options.ToInternal()
+                    }));
+
+                reply.ThrowOnError();
+
+                worker = new Worker(this, false, reply.WorkerId, domain, tasklist, activityType);
+
+                lock (syncLock)
+                {
+                    workers.Add(reply.WorkerId, worker);
+                }
             }
 
             return worker;

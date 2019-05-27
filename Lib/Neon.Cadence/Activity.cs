@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -31,24 +32,35 @@ namespace Neon.Cadence
     /// </summary>
     public abstract class Activity
     {
-        private long activityContextId;
+        private long contextId;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="args">The low-level worker initialization arguments.</param>
-        internal Activity(WorkerArgs args)
+        /// <param name="cancellationToken">The activity stop cancellation token.</param>
+        internal Activity(WorkerArgs args, CancellationToken cancellationToken)
         {
             Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(cancellationToken != null);
 
             this.Client            = args.Client;
-            this.activityContextId = args.WorkerContextId;
+            this.contextId         = args.WorkerContextId;
+            this.CancellationToken = cancellationToken;
         }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this activity.
         /// </summary>
         public CadenceClient Client { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="CancellationToken"/> that will be cancelled when the activity
+        /// is being stopped.  This can be monitored by activity implementations that would like
+        /// to handle this gracefully by recording a heartbeat with progress information or
+        /// by doing other cleanup.
+        /// </summary>
+        public CancellationToken CancellationToken { get; private set; }
 
         /// <summary>
         /// Called by Cadence to execute an activity.  Derived classes will need to implement

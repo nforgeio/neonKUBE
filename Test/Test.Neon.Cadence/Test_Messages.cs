@@ -72,7 +72,7 @@ namespace TestCadence
                 DebugPrelaunched       = true,
                 DebugDisableHandshakes = false,
                 DebugDisableHeartbeats = true,
-                DebugEmulateProxy      = false,
+                DebugEmulateProxy      = true,
                 //--------------------------------
             };
 

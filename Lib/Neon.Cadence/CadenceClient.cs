@@ -42,6 +42,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -91,6 +92,15 @@ namespace Neon.Cadence
     /// and <see cref="StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/>.
     /// </para>
     /// <para>
+    /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
+    /// the current process implements specific workflow and activity types.  You'll call
+    /// <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/> for
+    /// workflows and <see cref="StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/>
+    /// for activities, passing your custom implementations of <see cref="Workflow"/> and <see cref="Activity"/>
+    /// as the type parameter.  The <b>Neon.Cadence</b> will then automatically handle the instantiation
+    /// of your workflow or activity types and call their <see cref="Workflow.RunAsync(byte[])"/>
+    /// </para>
+    /// <para>
     /// External workflows are started by calling <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>,
     /// passing the workflow type string, the target Cadence domain along with optional arguments
     /// (encoded into a byte array) and optional workflow options.  The workflow type string must
@@ -102,7 +112,7 @@ namespace Neon.Cadence
     /// context of another workflow via <see cref="Workflow.CallWorkflow(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
     /// </note>
     /// <para>
-    /// <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/> returns
+    /// <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/> returns
     /// immediately after the workflow is submitted to Cadence and the workflow will be scheduled and
     /// executed independently.  This method returns a <see cref="WorkflowRun"/> which you'll use
     /// to identify your running workflow to the methods desribed below.
@@ -457,9 +467,12 @@ namespace Neon.Cadence
         // Instance members
 
         private object                          syncLock      = new object();
+        private AsyncMutex                      asyncLock     = new AsyncMutex();
         private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
         private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
+        private Dictionary<string, Type>        workflowTypes = new Dictionary<string, Type>();
+        private Dictionary<string, Type>        activityTypes = new Dictionary<string, Type>();
         private long                            nextRequestId = 0;
         private int                             proxyPort;
         private HttpClient                      proxyClient;
@@ -817,6 +830,50 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the .NET type implementing the named Cadence workflow.
+        /// </summary>
+        /// <param name="workflowType">The Cadence workflow type string.</param>
+        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
+        internal Type GetWorkflowType(string workflowType)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowType != null);
+
+            lock (syncLock)
+            {
+                if (workflowTypes.TryGetValue(workflowType, out var type))
+                {
+                    return type;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the .NET type implementing the named Cadence activity.
+        /// </summary>
+        /// <param name="activityType">The Cadence activity type string.</param>
+        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
+        internal Type GetActivityType(string activityType)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+
+            lock (syncLock)
+            {
+                if (activityTypes.TryGetValue(activityType, out var type))
+                {
+                    return type;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
         /// Called when an HTTP request is received by the integrated web server 
         /// (presumably sent by the associated <b>cadence-proxy</b> process).
         /// </summary>
@@ -957,7 +1014,7 @@ namespace Neon.Cadence
         /// This defaults to unlimited.
         /// </param>
         /// <returns>The reply message.</returns>
-        private async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
+        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
         {
             try
             {
@@ -1014,7 +1071,7 @@ namespace Neon.Cadence
         /// <param name="request">The received request message.</param>
         /// <param name="reply">The reply message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
+        internal async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentNullException>(reply != null);

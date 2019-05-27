@@ -227,7 +227,7 @@ namespace Neon.Cadence.Internal
         WorkflowTerminateReply = 111,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests the a workflow's history.
+        /// <b>client --> proxy:</b> Requests a workflow's history.
         /// </summary>
         WorkflowGetHistoryRequest = 112,
 
@@ -471,5 +471,15 @@ namespace Neon.Cadence.Internal
         /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityHasHeartbeatDetailsRequest"/> message.
         /// </summary>
         ActivityHasHeartbeatDetailsReply = 211,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Signals the client that an activity is being stopped. 
+        /// </summary>
+        ActivityStoppingRequest = 212,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityStoppingRequest"/> message.
+        /// </summary>
+        ActivityStoppingReply = 213,
     }
 }
