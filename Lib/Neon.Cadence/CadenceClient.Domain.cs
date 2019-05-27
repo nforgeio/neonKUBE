@@ -33,7 +33,7 @@ namespace Neon.Cadence
         // Cadence domain related operations.
 
         /// <summary>
-        /// Registers a Cadence domain using the <see cref="RegisterDomainRequest"/> information passed.
+        /// Registers a Cadence domain using the <see cref="InternalRegisterDomainRequest"/> information passed.
         /// </summary>
         /// <param name="request">The domain properties.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -41,7 +41,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        private async Task RegisterDomainAsync(RegisterDomainRequest request)
+        private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
             var domainRegisterRequest =
                 new DomainRegisterRequest()
@@ -75,7 +75,7 @@ namespace Neon.Cadence
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7)
         {
             await RegisterDomainAsync(
-                new RegisterDomainRequest()
+                new InternalRegisterDomainRequest()
                 {
                     Name          = name,
                     Description   = description,

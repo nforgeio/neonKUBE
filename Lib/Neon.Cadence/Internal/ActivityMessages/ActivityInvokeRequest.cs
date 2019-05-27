@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
     /// a workflow activity.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityInvokeRequest)]
+    [InternalProxyMessage(InternalMessageTypes.ActivityInvokeRequest)]
     internal class ActivityInvokeRequest : ActivityRequest
     {
         /// <summary>

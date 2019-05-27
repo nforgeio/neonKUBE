@@ -32,7 +32,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests that the proxy register a Cadence domain.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.DomainRegisterRequest)]
+    [InternalProxyMessage(InternalMessageTypes.DomainRegisterRequest)]
     internal class DomainRegisterRequest : ProxyRequest
     {
         /// <summary>

@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// still healthy.  The proxy should send a <see cref="CancelReply"/>
     /// optionally indicating that there's a problem by specifying an error.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.CancelRequest)]
+    [InternalProxyMessage(InternalMessageTypes.CancelRequest)]
     internal class CancelRequest : ProxyRequest
     {
         /// <summary>

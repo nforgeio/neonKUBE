@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Requests the details for the last heartbeat 
     /// recorded for a failed previous run of the activity.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsRequest)]
+    [InternalProxyMessage(InternalMessageTypes.ActivityGetHeartbeatDetailsRequest)]
     internal class ActivityGetHeartbeatDetailsRequest : ActivityRequest
     {
         /// <summary>

@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Records an activity heartbeat.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityRecordHeartbeatRequest)]
+    [InternalProxyMessage(InternalMessageTypes.ActivityRecordHeartbeatRequest)]
     internal class ActivityRecordHeartbeatRequest : ActivityRequest
     {
         /// <summary>

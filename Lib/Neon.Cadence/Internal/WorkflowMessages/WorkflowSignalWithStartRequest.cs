@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Sends a signal to a workflow, starting the
     /// workflow if it doesn't exist.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowSignalWithStartRequest)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalWithStartRequest)]
     internal class WorkflowSignalWithStartRequest : WorkflowRequest
     {
         /// <summary>

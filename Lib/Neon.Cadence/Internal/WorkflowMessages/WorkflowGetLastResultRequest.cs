@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
     ///  This can be used by CRON workflows to retrieve state from the last workflow run.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowGetLastResultRequest)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultRequest)]
     internal class WorkflowGetLastResultRequest : WorkflowRequest
     {
         /// <summary>

@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// indicating that the operation was canceled, has already completed or doesn't
     /// exist.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.CancelReply)]
+    [InternalProxyMessage(InternalMessageTypes.CancelReply)]
     internal class CancelReply : ProxyReply
     {
         /// <summary>

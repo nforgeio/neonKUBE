@@ -128,7 +128,7 @@ namespace Neon.Cadence.Internal
     /// and <see cref="SetJsonProperty{T}(string, T)"/> helper methods.
     /// </para>
     /// </remarks>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
+    [InternalProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ProxyMessage
     {
         //---------------------------------------------------------------------
@@ -167,7 +167,7 @@ namespace Neon.Cadence.Internal
 
             foreach (var messageClass in cadenceAssembly.GetTypes())
             {
-                var attribute = messageClass.GetCustomAttribute<ProxyMessageAttribute>();
+                var attribute = messageClass.GetCustomAttribute<InternalProxyMessageAttribute>();
 
                 if (attribute != null)
                 {

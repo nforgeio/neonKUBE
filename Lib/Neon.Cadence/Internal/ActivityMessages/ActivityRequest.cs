@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all activity requests.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
+    [InternalProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ActivityRequest : ProxyRequest
     {
         /// <summary>

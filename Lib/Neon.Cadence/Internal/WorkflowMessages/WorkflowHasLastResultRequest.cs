@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
     ///  a completion result.  This can be used by CRON workflows to determine whether the
     ///  last run returned a result.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowHasLastResultRequest)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowHasLastResultRequest)]
     internal class WorkflowHasLastResultRequest : WorkflowRequest
     {
         /// <summary>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RegisterDomainRequest.cs
+// FILE:	    InternalRegisterDomainRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Domain registration details.
     /// </summary>
-    internal class RegisterDomainRequest
+    internal class InternalRegisterDomainRequest
     {
         /// <summary>
         /// The domain name.

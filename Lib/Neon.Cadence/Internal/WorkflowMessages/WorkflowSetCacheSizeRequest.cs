@@ -31,7 +31,7 @@ namespace Neon.Cadence.Internal
     /// need to be retrieved from the Cadence cluster the next time the workflow
     /// instance is assigned to a worker. 
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowSetCacheSizeRequest)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSetCacheSizeRequest)]
     internal class WorkflowSetCacheSizeRequest : WorkflowRequest
     {
         /// <summary>

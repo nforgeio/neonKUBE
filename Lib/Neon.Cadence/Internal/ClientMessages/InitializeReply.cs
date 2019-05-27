@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="InitializeRequest"/>.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.InitializeReply)]
+    [InternalProxyMessage(InternalMessageTypes.InitializeReply)]
     internal class InitializeReply : ProxyReply
     {
         /// <summary>

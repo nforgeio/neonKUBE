@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Sent by either the client or proxy for measuring transaction throughput.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.PingRequest)]
+    [InternalProxyMessage(InternalMessageTypes.PingRequest)]
     internal class PingRequest : ProxyRequest
     {
         /// <summary>

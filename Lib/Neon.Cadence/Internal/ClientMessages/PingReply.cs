@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Sent in response to a <see cref="PingRequest"/>.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.PingReply)]
+    [InternalProxyMessage(InternalMessageTypes.PingReply)]
     internal class PingReply : ProxyReply
     {
         /// <summary>

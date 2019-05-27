@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetResultRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowGetResultReply)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowGetResultReply)]
     internal class WorkflowGetResultReply : WorkflowReply
     {
         /// <summary>

@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Registers with Cadence that the current
     /// connection is capable of executing task and/or activities.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.NewWorkerRequest)]
+    [InternalProxyMessage(InternalMessageTypes.NewWorkerRequest)]
     internal class NewWorkerRequest : ProxyRequest
     {
         /// <summary>

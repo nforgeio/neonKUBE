@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Informs the proxy of the network endpoint
     /// where the library is listening for proxy messages.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.InitializeRequest)]
+    [InternalProxyMessage(InternalMessageTypes.InitializeRequest)]
     internal class InitializeRequest : ProxyRequest
     {
         /// <summary>

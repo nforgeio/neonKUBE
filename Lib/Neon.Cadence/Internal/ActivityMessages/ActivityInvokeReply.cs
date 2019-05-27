@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Answers a <see cref="ActivityInvokeRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityInvokeReply)]
+    [InternalProxyMessage(InternalMessageTypes.ActivityInvokeReply)]
     internal class ActivityInvokeReply : WorkflowReply
     {
         /// <summary>

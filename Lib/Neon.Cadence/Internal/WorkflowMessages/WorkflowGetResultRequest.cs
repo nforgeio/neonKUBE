@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Terminates a workflow execution.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowGetResultRequest)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowGetResultRequest)]
     internal class WorkflowGetResultRequest : WorkflowRequest
     {
         /// <summary>

@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests the details for a named domain.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.DomainDescribeRequest)]
+    [InternalProxyMessage(InternalMessageTypes.DomainDescribeRequest)]
     internal class DomainDescribeRequest : ProxyRequest
     {
         /// <summary>

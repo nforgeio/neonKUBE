@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyMessage.cs
+// FILE:	    InternalProxyMessageAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,13 +34,13 @@ namespace Neon.Cadence.Internal
     /// and also associate the message class with the message type code.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    internal class ProxyMessageAttribute : Attribute
+    internal class InternalProxyMessageAttribute : Attribute
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="type">Specifies the message type to be used when serializing the tagged message.</param>
-        public ProxyMessageAttribute(InternalMessageTypes type)
+        public InternalProxyMessageAttribute(InternalMessageTypes type)
         {
             this.Type = type;
         }

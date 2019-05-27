@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="WorkflowHasLastResultRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.WorkflowHasLastResultReply)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowHasLastResultReply)]
     internal class WorkflowHasLastCompletionReply : WorkflowReply
     {
         /// <summary>

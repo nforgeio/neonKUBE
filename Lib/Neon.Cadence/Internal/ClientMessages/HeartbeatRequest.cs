@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// still healthy.  The proxy should send a <see cref="HeartbeatReply"/>,
     /// possibly indicating that there's a problem by specifying an error.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.HeartbeatRequest)]
+    [InternalProxyMessage(InternalMessageTypes.HeartbeatRequest)]
     internal class HeartbeatRequest : ProxyRequest
     {
         /// <summary>

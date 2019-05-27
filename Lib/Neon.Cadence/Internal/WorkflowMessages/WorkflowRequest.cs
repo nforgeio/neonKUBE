@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all workflow related requests.
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.Unspecified)]
+    [InternalProxyMessage(InternalMessageTypes.Unspecified)]
     internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>

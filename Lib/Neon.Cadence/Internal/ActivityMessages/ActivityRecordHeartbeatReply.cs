@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="ActivityRecordHeartbeatRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityRecordHeartbeatReply)]
+    [InternalProxyMessage(InternalMessageTypes.ActivityRecordHeartbeatReply)]
     internal class ActivityRecordHeartbeatReply : WorkflowReply
     {
         /// <summary>
