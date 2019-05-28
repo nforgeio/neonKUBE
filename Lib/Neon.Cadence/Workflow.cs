@@ -180,6 +180,8 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
 
+            throw new NotImplementedException();
+
             switch (request.Type)
             {
                 case InternalMessageTypes.WorkflowInvokeRequest:
@@ -215,6 +217,8 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
 
+            throw new NotImplementedException();
+
             Workflow workflow;
 
             lock (syncLock)
@@ -248,12 +252,12 @@ namespace Neon.Cadence
             // value and then obtain the actual value to set the [OriginalVersion]
             // property.  The outcome will be that [OriginalVersion] will end up being
             // set to the [Version] at the time the workflow instance was first
-            // invoked and [Version] will be the current version.
+            // invoked and [Version] will return the current version.
             //
             // This will give upgraded workflow implementations a chance to implement 
             // backwards compatibility for workflows already in flight.
 
-            var versionBytes = await workflow.GetMutableValueAsync("::neon.workflow.original-version",
+            var versionBytes = await workflow.GetMutableValueAsync("::neon:original-version",
                 async () =>
                 {
                     var version = workflow.Version ?? zeroVersion;
@@ -297,16 +301,18 @@ namespace Neon.Cadence
             }
             catch (InternalWorkflowRestartException e)
             {
-                // $todo(jeff.lill):
-                //
-                // I'm not entirely sure about the Cadence semantics here.  Am I supposed
-                // to terminate the current invocaton by sending a [WorkflowInvokeReply]
-                // back to cadence-proxy or will the workflow continue here?
-                //
-                // It really has to be the former, because the latter case doesn't
-                // make a lot of sense.
-
-                throw new NotImplementedException();
+                return new WorkflowInvokeReply()
+                {
+                    ContinueAsNew                             = true,
+                    ContinueAsNewArgs                         = e.Args,
+                    ContinueAsNewDomain                       = e.Domain,
+                    ContinueAsNewTaskList                     = e.TaskList,
+                    ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.ExecutionStartToCloseTimeout),
+                    ContinueAsNewScheduleToCloseTimeout       = CadenceHelper.ToCadence(e.ScheduleToCloseTimeout),
+                    ContinueAsNewScheduleToStartTimeout       = CadenceHelper.ToCadence(e.ScheduleToStartTimeout),
+                    ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.StartToCloseTimeout),
+                    ContinueAsNewRetryPolicy                  = e.RetryPolicy.ToInternal()
+                };
             }
             catch (CadenceException e)
             {
@@ -339,7 +345,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 
-            this.Client            = args.Client;
+            this.Client    = args.Client;
             this.ContextId = args.WorkerContextId;
         }
 
@@ -574,19 +580,39 @@ namespace Neon.Cadence
         /// Exits and completes the current running workflow and then restarts it, passing the
         /// optional workflow arguments.
         /// </summary>
-        /// <param name="result">Thw workflow result (or <c>null</c>).</param>
-        /// <param name="args">Optionally specifies the arguments for the new workflow run.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        protected async Task RestartAsync(byte[] result, byte[] args = null)
+        /// <param name="args">Optional arguments for the new run.</param>
+        /// <param name="domain">Optional domain for the new run.</param>
+        /// <param name="tasklist">Optional tasklist for the new run.</param>
+        /// <param name="executionToStartTimeout">Optional execution to start timeout for the new run.</param>
+        /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new run.</param>
+        /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
+        /// <param name="startToCloseTimeout">Optional start to close timeout for the new run.</param>
+        /// <param name="retryPolicy">Optional retry policy for the new run.</param>
+        protected void Restart(
+            byte[]              args                    = null,
+            string              domain                  = null,
+            string              tasklist                = null,
+            TimeSpan            executionToStartTimeout = default,
+            TimeSpan            scheduleToCloseTimeout  = default,
+            TimeSpan            scheduleToStartTimeout  = default,
+            TimeSpan            startToCloseTimeout     = default,
+            CadenceRetryPolicy  retryPolicy             = null)
         {
             // We're going to throw a [InternalWorkflowRestartException] with the
-            // result and arguments that will be caught and handled by the 
-            // [WorkflowInvoke()] method. 
-            
+            // parameters.  This exception will be caught and handled by the 
+            // [WorkflowInvoke()] method which will configure the reply such
+            // that the cadence-proxy will be able to signal Cadence to continue
+            // the workflow with a clean history.
 
-
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            throw new InternalWorkflowRestartException(
+                args:                       args,
+                domain:                     domain,
+                tasklist:                   tasklist,
+                executionToStartTimeout:    executionToStartTimeout,
+                scheduleToCloseTimeout:     scheduleToCloseTimeout,
+                scheduleToStartTimeout:     scheduleToStartTimeout,
+                startToCloseTimeout:        startToCloseTimeout,
+                retryPolicy:                retryPolicy);
         }
 
         //---------------------------------------------------------------------

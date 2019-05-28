@@ -414,15 +414,39 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Result);
                 Assert.Null(message.Error);
+                Assert.False(message.ContinueAsNew);
+                Assert.Null(message.ContinueAsNewArgs);
+                Assert.Equal(0, message.ContinueAsNewExecutionStartToCloseTimeout);
+                Assert.Equal(0, message.ContinueAsNewScheduleToCloseTimeout);
+                Assert.Equal(0, message.ContinueAsNewScheduleToStartTimeout);
+                Assert.Equal(0, message.ContinueAsNewStartToCloseTimeout);
+                Assert.Null(message.ContinueAsNewTaskList);
+                Assert.Null(message.ContinueAsNewDomain);
+                Assert.Null(message.ContinueAsNewRetryPolicy);
 
                 // Round-trip
 
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
+                message.ContinueAsNew = true;
+                message.ContinueAsNewArgs = new byte[] { 5, 6, 7, 8, 9 };
+                message.ContinueAsNewExecutionStartToCloseTimeout = 1000;
+                message.ContinueAsNewScheduleToCloseTimeout = 2000;
+                message.ContinueAsNewScheduleToStartTimeout = 3000;
+                message.ContinueAsNewStartToCloseTimeout = 4000;
+                message.ContinueAsNewTaskList = "my-tasklist";
+                message.ContinueAsNewDomain = "my-domain";
+                message.ContinueAsNewRetryPolicy = new InternalRetryPolicy() { MaximumAttempts = 100 };
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.True(message.ContinueAsNew);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.ContinueAsNewArgs);
+                Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
+                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize());
@@ -433,6 +457,15 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.True(message.ContinueAsNew);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.ContinueAsNewArgs);
+                Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
+                Assert.Equal(2000, message.ContinueAsNewScheduleToCloseTimeout);
+                Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
+                Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
+                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -441,6 +474,15 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.True(message.ContinueAsNew);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.ContinueAsNewArgs);
+                Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
+                Assert.Equal(2000, message.ContinueAsNewScheduleToCloseTimeout);
+                Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
+                Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
+                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -449,6 +491,15 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.True(message.ContinueAsNew);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.ContinueAsNewArgs);
+                Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
+                Assert.Equal(2000, message.ContinueAsNewScheduleToCloseTimeout);
+                Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
+                Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
+                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
+                Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
             }
         }
 

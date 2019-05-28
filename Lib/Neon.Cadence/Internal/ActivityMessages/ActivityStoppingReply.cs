@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Answers a <see cref="ActivityStoppingRequest"/>
     /// </summary>
-    [ProxyMessage(InternalMessageTypes.ActivityStoppingReply)]
+    [InternalProxyMessage(InternalMessageTypes.ActivityStoppingReply)]
     internal class ActivityStoppingReply : WorkflowReply
     {
         /// <summary>
