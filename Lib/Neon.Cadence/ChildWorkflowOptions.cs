@@ -69,9 +69,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ChildTerminationPolicy.ABANDON"/>.
+        /// This defaults to <see cref="ChildTerminationPolicy.Abandon"/>.
         /// </summary>
-        public ChildTerminationPolicy ChildTerminationPolicy { get; set; } = ChildTerminationPolicy.ABANDON;
+        public ChildTerminationPolicy ChildTerminationPolicy { get; set; } = ChildTerminationPolicy.Abandon;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any
@@ -114,7 +114,7 @@ namespace Neon.Cadence.Internal
                 TaskList                     = this.TaskList,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
-                ChildPolicy                  = (int)this.ChildTerminationPolicy,
+                ChildPolicy                  = (InternalChildTerminationPolicy)this.ChildTerminationPolicy,
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy.ToInternal(),
