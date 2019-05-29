@@ -336,7 +336,6 @@ namespace Neon.Cadence
                     ContinueAsNewScheduleToCloseTimeout       = CadenceHelper.ToCadence(e.ScheduleToCloseTimeout),
                     ContinueAsNewScheduleToStartTimeout       = CadenceHelper.ToCadence(e.ScheduleToStartTimeout),
                     ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.StartToCloseTimeout),
-                    ContinueAsNewRetryPolicy                  = e.RetryPolicy.ToInternal()
                 };
             }
             catch (CadenceException e)

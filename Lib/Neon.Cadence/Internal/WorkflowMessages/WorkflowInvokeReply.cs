@@ -128,16 +128,6 @@ namespace Neon.Cadence.Internal
             set => SetStringProperty("ContinueAsNewDomain", value);
         }
 
-        /// <summary>
-        /// Optionally overrides the current workflow's retry policy for the restarted
-        /// workflow when this value is not <c>null</c>.
-        /// </summary>
-        public InternalRetryPolicy ContinueAsNewRetryPolicy
-        {
-            get => GetJsonProperty<InternalRetryPolicy>("ContinueAsNewRetryPolicy");
-            set => SetJsonProperty<InternalRetryPolicy>("ContinueAsNewRetryPolicy", value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -161,7 +151,6 @@ namespace Neon.Cadence.Internal
             typedTarget.ContinueAsNewExecutionStartToCloseTimeout = this.ContinueAsNewExecutionStartToCloseTimeout;
             typedTarget.ContinueAsNewTaskList                     = this.ContinueAsNewTaskList;
             typedTarget.ContinueAsNewDomain                       = this.ContinueAsNewDomain;
-            typedTarget.ContinueAsNewRetryPolicy                  = this.ContinueAsNewRetryPolicy;
             typedTarget.ContinueAsNewScheduleToCloseTimeout       = this.ContinueAsNewScheduleToCloseTimeout;
             typedTarget.ContinueAsNewScheduleToStartTimeout       = this.ContinueAsNewScheduleToStartTimeout;
             typedTarget.ContinueAsNewStartToCloseTimeout          = this.ContinueAsNewStartToCloseTimeout;
