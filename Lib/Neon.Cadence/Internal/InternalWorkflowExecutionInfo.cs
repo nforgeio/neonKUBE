@@ -41,7 +41,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Identifies the workflow implementation.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowType", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Type", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public InternalWorkflowType WorkflowType { get; set; }
 
@@ -62,7 +62,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Workflow close status.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowCloseStatus", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "CloseStatus", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(InternalWorkflowCloseStatus.COMPLETED)]
         public InternalWorkflowCloseStatus WorkflowCloseStatus { get; set;}
 
@@ -102,13 +102,6 @@ namespace Neon.Cadence.Internal
         public InternalMemo Memo { get; set; }
 
         /// <summary>
-        /// Not sure what these are.
-        /// </summary>
-        [JsonProperty(PropertyName = "AutoResetPoints", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public InternalResetPoints AutoResetPoints { get; set; }
-
-        /// <summary>
         /// Converts the instance into a public <see cref="WorkflowState"/>.
         /// </summary>
         public WorkflowState ToPublic()
@@ -132,13 +125,6 @@ namespace Neon.Cadence.Internal
             if (this.CloseTime > 0)
             {
                 executionState.CloseTime = new DateTime(this.CloseTime);
-            }
-
-            executionState.AutoResetPoints = new List<WorkflowResetPoint>();
-
-            foreach (var point in this.AutoResetPoints.Points)
-            {
-                executionState.AutoResetPoints.Add(point.ToPublic());
             }
 
             return executionState;

@@ -10,7 +10,7 @@ type (
 
 	// WorkflowRequest is base type for all workflow requests
 	// All workflow requests will inherit from WorkflowRequest and
-	// a WorkflowRequest contains a WorkflowContextID, which is a int64 property
+	// a WorkflowRequest contains a ContextID, which is a int64 property
 	//
 	// A WorkflowRequest contains a reference to a
 	// ProxyReply struct in memory
@@ -19,11 +19,11 @@ type (
 	}
 
 	// IWorkflowRequest is the interface that all workflow message requests
-	// implement.  It allows access to a WorkflowRequest's WorkflowContextID, a property
+	// implement.  It allows access to a WorkflowRequest's ContextID, a property
 	// that all WorkflowRequests share
 	IWorkflowRequest interface {
-		GetWorkflowContextID() int64
-		SetWorkflowContextID(value int64)
+		GetContextID() int64
+		SetContextID(value int64)
 		GetReplyType() messagetypes.MessageType
 		SetReplyType(value messagetypes.MessageType)
 		GetTimeout() time.Duration
@@ -55,20 +55,20 @@ func NewWorkflowRequest() *WorkflowRequest {
 // -------------------------------------------------------------------------
 // IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
 
-// GetWorkflowContextID gets the ContextId from a WorkflowRequest's properties
+// GetContextID gets the ContextId from a WorkflowRequest's properties
 // map.
 //
 // returns int64 -> the long representing a WorkflowRequest's ContextId
-func (request *WorkflowRequest) GetWorkflowContextID() int64 {
-	return request.GetLongProperty("WorkflowContextId")
+func (request *WorkflowRequest) GetContextID() int64 {
+	return request.GetLongProperty("ContextId")
 }
 
-// SetWorkflowContextID sets the ContextId in a WorkflowRequest's properties map
+// SetContextID sets the ContextId in a WorkflowRequest's properties map
 //
 // param value int64 -> int64 value to set as the WorkflowRequest's ContextId
 // in its properties map
-func (request *WorkflowRequest) SetWorkflowContextID(value int64) {
-	request.SetLongProperty("WorkflowContextId", value)
+func (request *WorkflowRequest) SetContextID(value int64) {
+	request.SetLongProperty("ContextId", value)
 }
 
 // -------------------------------------------------------------------------
@@ -87,7 +87,7 @@ func (request *WorkflowRequest) Clone() IProxyMessage {
 func (request *WorkflowRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(IWorkflowRequest); ok {
-		v.SetWorkflowContextID(request.GetWorkflowContextID())
+		v.SetContextID(request.GetContextID())
 	}
 }
 

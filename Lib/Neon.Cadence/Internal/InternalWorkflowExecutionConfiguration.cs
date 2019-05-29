@@ -42,7 +42,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Maximum time the entire workflow may take to complete end-to-end (nanoseconds).
         /// </summary>
-        [JsonProperty(PropertyName = "ExecutionStartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ExecutionStartToCloseTimeoutSeconds", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(0)]
         public long ExecutionStartToCloseTimeout { get; set; }
 
@@ -58,8 +58,8 @@ namespace Neon.Cadence.Internal
         /// the parent workflow is terminated.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(ChildTerminationPolicy.Abandon)]
-        public ChildTerminationPolicy ChildPolicy { get; set; } = ChildTerminationPolicy.Abandon;
+        [DefaultValue(ChildTerminationPolicy.ABANDON)]
+        public ChildTerminationPolicy ChildPolicy { get; set; } = ChildTerminationPolicy.ABANDON;
 
         /// <summary>
         /// Coverts the instance to a public <see cref="WorkflowConfig"/>.

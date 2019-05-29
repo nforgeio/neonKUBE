@@ -1642,7 +1642,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 	if v, ok := message.(*messages.WorkflowInvokeRequest); ok {
 		s.Equal(messagetypes.WorkflowInvokeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetDomain())
 		s.Nil(v.GetWorkflowID())
@@ -1660,8 +1660,8 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		v.SetName(&name)
 		s.Equal("Foo", *v.GetName())
 
-		v.SetWorkflowContextID(int64(666))
-		s.Equal(int64(666), v.GetWorkflowContextID())
+		v.SetContextID(int64(666))
+		s.Equal(int64(666), v.GetContextID())
 
 		args := []byte{0, 1, 2, 3, 4}
 		v.SetArgs(args)
@@ -1702,7 +1702,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 	if v, ok := message.(*messages.WorkflowInvokeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
-		s.Equal(int64(666), v.GetWorkflowContextID())
+		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal("my-domain", *v.GetDomain())
 		s.Equal("my-workflowid", *v.GetWorkflowID())
@@ -1719,7 +1719,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 	if v, ok := message.(*messages.WorkflowInvokeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
-		s.Equal(int64(666), v.GetWorkflowContextID())
+		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal("my-domain", *v.GetDomain())
 		s.Equal("my-workflowid", *v.GetWorkflowID())
@@ -1744,15 +1744,15 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 	if v, ok := message.(*messages.WorkflowInvokeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetWorkflowContextID(int64(666))
-		s.Equal(int64(666), v.GetWorkflowContextID())
+		v.SetContextID(int64(666))
+		s.Equal(int64(666), v.GetContextID())
 
 		result := []byte{0, 1, 2, 3, 4}
 		v.SetResult(result)
@@ -1772,7 +1772,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(666), v.GetWorkflowContextID())
+		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -1783,7 +1783,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(666), v.GetWorkflowContextID())
+		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -2416,7 +2416,7 @@ func (s *UnitTestSuite) TestWorkflowMutableRequest() {
 		s.Equal(messagetypes.WorkflowMutableReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetMutableID())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
@@ -2427,8 +2427,8 @@ func (s *UnitTestSuite) TestWorkflowMutableRequest() {
 		v.SetMutableID(&mutableID)
 		s.Equal("777", *v.GetMutableID())
 
-		v.SetWorkflowContextID(int64(888))
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		v.SetContextID(int64(888))
+		s.Equal(int64(888), v.GetContextID())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2442,7 +2442,7 @@ func (s *UnitTestSuite) TestWorkflowMutableRequest() {
 	if v, ok := message.(*messages.WorkflowMutableRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetMutableID())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2452,7 +2452,7 @@ func (s *UnitTestSuite) TestWorkflowMutableRequest() {
 	if v, ok := message.(*messages.WorkflowMutableRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetMutableID())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 	}
 }
 
@@ -2471,15 +2471,15 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 		s.Nil(v.GetResult())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetWorkflowContextID(int64(888))
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		v.SetContextID(int64(888))
+		s.Equal(int64(888), v.GetContextID())
 
 		result := []byte{0, 1, 2, 3, 4}
 		v.SetResult(result)
@@ -2500,7 +2500,7 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 	if v, ok := message.(*messages.WorkflowMutableReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
 
@@ -2510,7 +2510,7 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 
 	if v, ok := message.(*messages.WorkflowMutableReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -2531,7 +2531,7 @@ func (s *UnitTestSuite) TestWorkflowMutableInvokeRequest() {
 		s.Equal(messagetypes.WorkflowMutableInvokeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetMutableID())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
@@ -2542,8 +2542,8 @@ func (s *UnitTestSuite) TestWorkflowMutableInvokeRequest() {
 		v.SetMutableID(&mutableID)
 		s.Equal("777", *v.GetMutableID())
 
-		v.SetWorkflowContextID(int64(888))
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		v.SetContextID(int64(888))
+		s.Equal(int64(888), v.GetContextID())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2557,7 +2557,7 @@ func (s *UnitTestSuite) TestWorkflowMutableInvokeRequest() {
 	if v, ok := message.(*messages.WorkflowMutableInvokeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetMutableID())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2567,7 +2567,7 @@ func (s *UnitTestSuite) TestWorkflowMutableInvokeRequest() {
 	if v, ok := message.(*messages.WorkflowMutableInvokeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetMutableID())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 	}
 }
 
@@ -2586,15 +2586,15 @@ func (s *UnitTestSuite) TestWorkflowMutableInvokeReply() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 		s.Nil(v.GetResult())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetWorkflowContextID(int64(888))
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		v.SetContextID(int64(888))
+		s.Equal(int64(888), v.GetContextID())
 
 		result := []byte{0, 1, 2, 3, 4}
 		v.SetResult(result)
@@ -2615,7 +2615,7 @@ func (s *UnitTestSuite) TestWorkflowMutableInvokeReply() {
 	if v, ok := message.(*messages.WorkflowMutableInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
 
@@ -2625,7 +2625,7 @@ func (s *UnitTestSuite) TestWorkflowMutableInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowMutableInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(888), v.GetWorkflowContextID())
+		s.Equal(int64(888), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom, "bar"), v.GetError())
 	}
@@ -2978,7 +2978,7 @@ func (s *UnitTestSuite) TestWorkflowRequest() {
 		s.Equal(v.ReplyType, messagetypes.Unspecified)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(time.Duration(0), v.GetTimeout())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
@@ -2988,8 +2988,8 @@ func (s *UnitTestSuite) TestWorkflowRequest() {
 		v.SetTimeout(time.Second * 5)
 		s.Equal(time.Second*5, v.GetTimeout())
 
-		v.SetWorkflowContextID(int64(555))
-		s.Equal(int64(555), v.GetWorkflowContextID())
+		v.SetContextID(int64(555))
+		s.Equal(int64(555), v.GetContextID())
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -3006,7 +3006,7 @@ func (s *UnitTestSuite) TestWorkflowRequest() {
 	if v, ok := message.(*messages.WorkflowRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(time.Second*5, v.GetTimeout())
-		s.Equal(int64(555), v.GetWorkflowContextID())
+		s.Equal(int64(555), v.GetContextID())
 	}
 }
 
@@ -3022,14 +3022,14 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 	if v, ok := message.(*messages.WorkflowReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
-		s.Equal(int64(0), v.GetWorkflowContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
 		v.SetError(cadenceerrors.NewCadenceError("MyError"))
 
-		v.SetWorkflowContextID(int64(555))
-		s.Equal(int64(555), v.GetWorkflowContextID())
+		v.SetContextID(int64(555))
+		s.Equal(int64(555), v.GetContextID())
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Nil(v.GetError().Type)
@@ -3051,7 +3051,7 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 	if v, ok := message.(*messages.WorkflowReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Nil(v.GetError().Type)
-		s.Equal(int64(555), v.GetWorkflowContextID())
+		s.Equal(int64(555), v.GetContextID())
 		s.Panics(func() { v.GetError().GetType() })
 		s.Equal("MyError", *v.GetError().String)
 	}
@@ -3070,7 +3070,7 @@ func (s *UnitTestSuite) TestActivityRequest() {
 		s.Equal(v.ReplyType, messagetypes.Unspecified)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(time.Duration(0), v.GetTimeout())
-		s.Equal(int64(0), v.GetActivityContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
@@ -3080,8 +3080,8 @@ func (s *UnitTestSuite) TestActivityRequest() {
 		v.SetTimeout(time.Second * 5)
 		s.Equal(time.Second*5, v.GetTimeout())
 
-		v.SetActivityContextID(int64(555))
-		s.Equal(int64(555), v.GetActivityContextID())
+		v.SetContextID(int64(555))
+		s.Equal(int64(555), v.GetContextID())
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -3098,7 +3098,7 @@ func (s *UnitTestSuite) TestActivityRequest() {
 	if v, ok := message.(*messages.ActivityRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(time.Second*5, v.GetTimeout())
-		s.Equal(int64(555), v.GetActivityContextID())
+		s.Equal(int64(555), v.GetContextID())
 	}
 }
 
@@ -3114,14 +3114,14 @@ func (s *UnitTestSuite) TestActivityReply() {
 	if v, ok := message.(*messages.ActivityReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
-		s.Equal(int64(0), v.GetActivityContextID())
+		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
 		v.SetError(cadenceerrors.NewCadenceError("MyError"))
 
-		v.SetActivityContextID(int64(555))
-		s.Equal(int64(555), v.GetActivityContextID())
+		v.SetContextID(int64(555))
+		s.Equal(int64(555), v.GetContextID())
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Nil(v.GetError().Type)
@@ -3143,7 +3143,7 @@ func (s *UnitTestSuite) TestActivityReply() {
 	if v, ok := message.(*messages.ActivityReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Nil(v.GetError().Type)
-		s.Equal(int64(555), v.GetActivityContextID())
+		s.Equal(int64(555), v.GetContextID())
 		s.Panics(func() { v.GetError().GetType() })
 		s.Equal("MyError", *v.GetError().String)
 	}

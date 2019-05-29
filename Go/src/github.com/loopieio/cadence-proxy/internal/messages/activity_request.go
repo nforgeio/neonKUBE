@@ -10,7 +10,7 @@ type (
 
 	// ActivityRequest is base type for all workflow requests
 	// All workflow requests will inherit from ActivityRequest and
-	// a ActivityRequest contains a ActivityContextID, which is a int64 property
+	// a ActivityRequest contains a ContextID, which is a int64 property
 	//
 	// A ActivityRequest contains a reference to a
 	// ProxyReply struct in memory
@@ -19,11 +19,11 @@ type (
 	}
 
 	// IActivityRequest is the interface that all workflow message requests
-	// implement.  It allows access to a ActivityRequest's ActivityContextID, a property
+	// implement.  It allows access to a ActivityRequest's ContextID, a property
 	// that all ActivityRequests share
 	IActivityRequest interface {
-		GetActivityContextID() int64
-		SetActivityContextID(value int64)
+		GetContextID() int64
+		SetContextID(value int64)
 		GetReplyType() messagetypes.MessageType
 		SetReplyType(value messagetypes.MessageType)
 		GetTimeout() time.Duration
@@ -55,20 +55,20 @@ func NewActivityRequest() *ActivityRequest {
 // -------------------------------------------------------------------------
 // IActivityRequest interface methods for implementing the IActivityRequest interface
 
-// GetActivityContextID gets the ContextId from a ActivityRequest's properties
+// GetContextID gets the ContextId from a ActivityRequest's properties
 // map.
 //
 // returns int64 -> the long representing a ActivityRequest's ContextId
-func (request *ActivityRequest) GetActivityContextID() int64 {
-	return request.GetLongProperty("ActivityContextId")
+func (request *ActivityRequest) GetContextID() int64 {
+	return request.GetLongProperty("ContextID")
 }
 
-// SetActivityContextID sets the ContextId in a ActivityRequest's properties map
+// SetContextID sets the ContextId in a ActivityRequest's properties map
 //
 // param value int64 -> int64 value to set as the ActivityRequest's ContextId
 // in its properties map
-func (request *ActivityRequest) SetActivityContextID(value int64) {
-	request.SetLongProperty("ActivityContextId", value)
+func (request *ActivityRequest) SetContextID(value int64) {
+	request.SetLongProperty("ContextID", value)
 }
 
 // -------------------------------------------------------------------------
@@ -87,7 +87,7 @@ func (request *ActivityRequest) Clone() IProxyMessage {
 func (request *ActivityRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(IActivityRequest); ok {
-		v.SetActivityContextID(request.GetActivityContextID())
+		v.SetContextID(request.GetContextID())
 	}
 }
 

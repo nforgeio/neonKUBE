@@ -48,6 +48,33 @@ func NewProxyReply() *ProxyReply {
 }
 
 // -------------------------------------------------------------------------
+// IProxyReply interface methods for implementing the IProxyReply interface
+
+// GetError gets the CadenceError encoded as a JSON string in a ProxyReply's
+// Properties map
+//
+// returns cadenceerrors.CadenceError -> a CadenceError struct encoded with the
+// JSON property values at a ProxyReply's Error property
+func (reply *ProxyReply) GetError() *cadenceerrors.CadenceError {
+	cadenceError := cadenceerrors.NewCadenceErrorEmpty()
+	err := reply.GetJSONProperty("Error", cadenceError)
+	if err != nil {
+		return nil
+	}
+
+	return cadenceError
+}
+
+// SetError sets a CadenceError as a JSON string in a ProxyReply's
+// properties map at the Error Property
+//
+// param cadenceerrors.CadenceError -> the CadenceError to marshal into a
+// JSON string and set at a ProxyReply's Error property
+func (reply *ProxyReply) SetError(value *cadenceerrors.CadenceError) {
+	reply.SetJSONProperty("Error", value)
+}
+
+// -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyMessage.Clone()
@@ -95,31 +122,4 @@ func (reply *ProxyReply) GetType() messagetypes.MessageType {
 // SetType inherits docs from ProxyMessage.SetType()
 func (reply *ProxyReply) SetType(value messagetypes.MessageType) {
 	reply.ProxyMessage.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError gets the CadenceError encoded as a JSON string in a ProxyReply's
-// Properties map
-//
-// returns cadenceerrors.CadenceError -> a CadenceError struct encoded with the
-// JSON property values at a ProxyReply's Error property
-func (reply *ProxyReply) GetError() *cadenceerrors.CadenceError {
-	cadenceError := cadenceerrors.NewCadenceErrorEmpty()
-	err := reply.GetJSONProperty("Error", cadenceError)
-	if err != nil {
-		return nil
-	}
-
-	return cadenceError
-}
-
-// SetError sets a CadenceError as a JSON string in a ProxyReply's
-// properties map at the Error Property
-//
-// param cadenceerrors.CadenceError -> the CadenceError to marshal into a
-// JSON string and set at a ProxyReply's Error property
-func (reply *ProxyReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.SetJSONProperty("Error", value)
 }

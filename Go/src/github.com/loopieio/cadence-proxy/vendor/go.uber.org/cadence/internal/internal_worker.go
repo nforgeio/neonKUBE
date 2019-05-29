@@ -149,6 +149,9 @@ type (
 		// Context to store user provided key/value pairs
 		UserContext context.Context
 
+		// Context cancel function to cancel user context
+		UserContextCancel context.CancelFunc
+
 		// Disable sticky execution
 		DisableStickyExecution bool
 
@@ -159,6 +162,12 @@ type (
 		NonDeterministicWorkflowPolicy NonDeterministicWorkflowPolicy
 
 		DataConverter encoded.DataConverter
+
+		// WorkerStopTimeout is the time delay before hard terminate worker
+		WorkerStopTimeout time.Duration
+
+		// WorkerStopChannel is a read only channel listen on worker close. The worker will close the channel before exit.
+		WorkerStopChannel <-chan struct{}
 	}
 
 	// defaultDataConverter uses thrift encoder/decoder when possible, for everything else use json.
@@ -229,7 +238,7 @@ func verifyDomainExist(client workflowserviceclient.Interface, domain string, lo
 	}
 
 	// exponential backoff retry for upto a minute
-	return backoff.Retry(ctx, descDomainOp, serviceOperationRetryPolicy, isServiceTransientError)
+	return backoff.Retry(ctx, descDomainOp, createDynamicServiceRetryPolicy(ctx), isServiceTransientError)
 }
 
 func newWorkflowWorkerInternal(
@@ -271,9 +280,11 @@ func newWorkflowTaskWorkerInternal(
 		maxTaskPerSecond:  params.WorkerDecisionTasksPerSecond,
 		taskWorker:        poller,
 		identity:          params.Identity,
-		workerType:        "DecisionWorker"},
+		workerType:        "DecisionWorker",
+		shutdownTimeout:   params.WorkerStopTimeout},
 		params.Logger,
 		params.MetricsScope,
+		nil,
 	)
 
 	// laTunnel is the glue that hookup 3 parts
@@ -295,9 +306,11 @@ func newWorkflowTaskWorkerInternal(
 		maxTaskPerSecond:  params.WorkerLocalActivitiesPerSecond,
 		taskWorker:        localActivityTaskPoller,
 		identity:          params.Identity,
-		workerType:        "LocalActivityWorker"},
+		workerType:        "LocalActivityWorker",
+		shutdownTimeout:   params.WorkerStopTimeout},
 		params.Logger,
 		params.MetricsScope,
+		nil,
 	)
 
 	// 3) the result pushed to laTunnel will be send as task to workflow worker to process.
@@ -347,6 +360,7 @@ func newActivityWorker(
 	params workerExecutionParameters,
 	overrides *workerOverrides,
 	env *hostEnvImpl,
+	activityShutdownCh chan struct{},
 ) Worker {
 	ensureRequiredParams(&params)
 	// Get a activity task handler.
@@ -356,7 +370,7 @@ func newActivityWorker(
 	} else {
 		taskHandler = newActivityTaskHandler(service, params, env)
 	}
-	return newActivityTaskWorker(taskHandler, service, domain, params)
+	return newActivityTaskWorker(taskHandler, service, domain, params, activityShutdownCh)
 }
 
 func newActivityTaskWorker(
@@ -364,6 +378,7 @@ func newActivityTaskWorker(
 	service workflowserviceclient.Interface,
 	domain string,
 	workerParams workerExecutionParameters,
+	workerStopCh chan struct{},
 ) (worker Worker) {
 	ensureRequiredParams(&workerParams)
 
@@ -383,9 +398,11 @@ func newActivityTaskWorker(
 			taskWorker:        poller,
 			identity:          workerParams.Identity,
 			workerType:        "ActivityWorker",
-		},
+			shutdownTimeout:   workerParams.WorkerStopTimeout,
+			userContextCancel: workerParams.UserContextCancel},
 		workerParams.Logger,
 		workerParams.MetricsScope,
+		workerStopCh,
 	)
 
 	return &activityWorker{
@@ -724,7 +741,7 @@ func decodeAndAssignValue(dc encoded.DataConverter, from interface{}, toValuePtr
 		toType := reflect.TypeOf(toValuePtr).Elem()
 		assignable := fromType.AssignableTo(toType)
 		if !assignable {
-			return errors.New(fmt.Sprintf("%s is not assignable to  %s", fromType.Name(), toType.Name()))
+			return fmt.Errorf("%s is not assignable to  %s", fromType.Name(), toType.Name())
 		}
 		reflect.ValueOf(toValuePtr).Elem().Set(fv)
 	}
@@ -985,6 +1002,14 @@ func newAggregatedWorker(
 	options WorkerOptions,
 ) (worker Worker) {
 	wOptions := fillWorkerOptionsDefaults(options)
+	workerStopChannel := make(chan struct{}, 1)
+	readOnlyWorkerStopCh := getReadOnlyChannel(workerStopChannel)
+	ctx := wOptions.BackgroundActivityContext
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	backgroundActivityContext, backgroundActivityContextCancel := context.WithCancel(ctx)
+
 	workerParams := workerExecutionParameters{
 		TaskList:                             taskList,
 		ConcurrentPollRoutineSize:            defaultConcurrentPollRoutineSize,
@@ -998,12 +1023,15 @@ func newAggregatedWorker(
 		MetricsScope:                         wOptions.MetricsScope,
 		Logger:                               wOptions.Logger,
 		EnableLoggingInReplay:                wOptions.EnableLoggingInReplay,
-		UserContext:                          wOptions.BackgroundActivityContext,
+		UserContext:                          backgroundActivityContext,
+		UserContextCancel:                    backgroundActivityContextCancel,
 		DisableStickyExecution:               wOptions.DisableStickyExecution,
 		StickyScheduleToStartTimeout:         wOptions.StickyScheduleToStartTimeout,
 		TaskListActivitiesPerSecond:          wOptions.TaskListActivitiesPerSecond,
 		NonDeterministicWorkflowPolicy:       wOptions.NonDeterministicWorkflowPolicy,
 		DataConverter:                        wOptions.DataConverter,
+		WorkerStopTimeout:                    wOptions.WorkerStopTimeout,
+		WorkerStopChannel:                    readOnlyWorkerStopCh,
 	}
 
 	ensureRequiredParams(&workerParams)
@@ -1052,6 +1080,7 @@ func newAggregatedWorker(
 			workerParams,
 			nil,
 			hostEnv,
+			workerStopChannel,
 		)
 	}
 	return &aggregatedWorker{
@@ -1122,6 +1151,10 @@ func isInterfaceNil(i interface{}) bool {
 	return i == nil || reflect.ValueOf(i).IsNil()
 }
 
+func getReadOnlyChannel(c chan struct{}) <-chan struct{} {
+	return c
+}
+
 // encoding is capable of encoding and decoding objects
 type encoding interface {
 	Marshal([]interface{}) ([]byte, error)
@@ -1138,6 +1171,9 @@ func (g jsonEncoding) Marshal(objs []interface{}) ([]byte, error) {
 	enc := json.NewEncoder(&buf)
 	for i, obj := range objs {
 		if err := enc.Encode(obj); err != nil {
+			if err == io.EOF {
+				return nil, fmt.Errorf("missing argument at index %d of type %T", i, obj)
+			}
 			return nil, fmt.Errorf(
 				"unable to encode argument: %d, %v, with json error: %v", i, reflect.TypeOf(obj), err)
 		}
@@ -1249,10 +1285,10 @@ func getTestTags(ctx context.Context) map[string]map[string]string {
 	return nil
 }
 
-var defaultJsonDataConverter encoded.DataConverter = &defaultDataConverter{}
+var defaultJSONDataConverter encoded.DataConverter = &defaultDataConverter{}
 
 func getDefaultDataConverter() encoded.DataConverter {
-	return defaultJsonDataConverter
+	return defaultJSONDataConverter
 }
 
 func (dc *defaultDataConverter) ToData(r ...interface{}) ([]byte, error) {

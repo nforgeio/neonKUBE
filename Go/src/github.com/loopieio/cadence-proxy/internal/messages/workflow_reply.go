@@ -19,8 +19,8 @@ type (
 	// IWorkflowReply is the interface that all workflow message replies
 	// implement.
 	IWorkflowReply interface {
-		GetWorkflowContextID() int64
-		SetWorkflowContextID(value int64)
+		GetContextID() int64
+		SetContextID(value int64)
 		GetError() *cadenceerrors.CadenceError
 		SetError(value *cadenceerrors.CadenceError)
 		Clone() IProxyMessage
@@ -50,20 +50,20 @@ func NewWorkflowReply() *WorkflowReply {
 // -------------------------------------------------------------------------
 // IWorkflowReply interface methods for implementing the IWorkflowReply interface
 
-// GetWorkflowContextID gets the ContextId from a WorkflowReply's properties
+// GetContextID gets the ContextId from a WorkflowReply's properties
 // map.
 //
 // returns int64 -> the long representing a WorkflowReply's ContextId
-func (reply *WorkflowReply) GetWorkflowContextID() int64 {
-	return reply.GetLongProperty("WorkflowContextId")
+func (reply *WorkflowReply) GetContextID() int64 {
+	return reply.GetLongProperty("ContextID")
 }
 
-// SetWorkflowContextID sets the ContextId in a WorkflowReply's properties map
+// SetContextID sets the ContextId in a WorkflowReply's properties map
 //
 // param value int64 -> int64 value to set as the WorkflowReply's ContextId
 // in its properties map
-func (reply *WorkflowReply) SetWorkflowContextID(value int64) {
-	reply.SetLongProperty("WorkflowContextId", value)
+func (reply *WorkflowReply) SetContextID(value int64) {
+	reply.SetLongProperty("ContextID", value)
 }
 
 // -------------------------------------------------------------------------
@@ -82,7 +82,7 @@ func (reply *WorkflowReply) Clone() IProxyMessage {
 func (reply *WorkflowReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(IWorkflowReply); ok {
-		v.SetWorkflowContextID(reply.GetWorkflowContextID())
+		v.SetContextID(reply.GetContextID())
 	}
 }
 
@@ -107,13 +107,13 @@ func (reply *WorkflowReply) SetRequestID(value int64) {
 }
 
 // GetType inherits docs from ProxyReply.GetType()
-func (request *WorkflowReply) GetType() messagetypes.MessageType {
-	return request.ProxyReply.GetType()
+func (reply *WorkflowReply) GetType() messagetypes.MessageType {
+	return reply.ProxyReply.GetType()
 }
 
 // SetType inherits docs from ProxyReply.SetType()
-func (request *WorkflowReply) SetType(value messagetypes.MessageType) {
-	request.ProxyReply.SetType(value)
+func (reply *WorkflowReply) SetType(value messagetypes.MessageType) {
+	reply.ProxyReply.SetType(value)
 }
 
 // -------------------------------------------------------------------------

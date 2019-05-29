@@ -1472,7 +1472,7 @@ namespace TestCadence
                     TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (InternalTaskListKind)TaskListKind.Sticky },
                     ExecutionStartToCloseTimeout   = 1000,
                     TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = ChildTerminationPolicy.RequestCancel
+                    ChildPolicy                    = ChildTerminationPolicy.REQUEST_CANCEL
                 },
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
@@ -1486,7 +1486,7 @@ namespace TestCadence
                     WorkflowType        = new InternalWorkflowType() { Name = "my-workflow" },
                     StartTime           = 3000,
                     CloseTime           = 4000,
-                    WorkflowCloseStatus = (InternalWorkflowCloseStatus)InternalWorkflowCloseStatus.RESTARTED,
+                    WorkflowCloseStatus = (InternalWorkflowCloseStatus)InternalWorkflowCloseStatus.CONTINUED_AS_NEW,
                     HistoryLength       = 5000,
                     ParentDomainId      = "parent-domain",
                     ParentExecution     = new InternalWorkflowExecution() { ID = "parent-id", RunID = "parent-runid" },
@@ -1495,23 +1495,7 @@ namespace TestCadence
                     Memo = new InternalMemo()
                     {
                         Fields = new Dictionary<string, byte[]>() { { "foo", new byte[] { 0, 1, 2, 3, 4 } } }
-                    },
-
-                    AutoResetPoints = new InternalResetPoints()
-                    {
-                        Points = new List<InternalResetPointInfo>()
-                         {
-                             new InternalResetPointInfo()
-                             {
-                                BinaryChecksum           = "my-checksum",
-                                CreatedTimeNano          = 7000,
-                                ExpiringTimeNano         = 8000,
-                                FirstDecisionCompletedId = 9000,
-                                Resettable               = true,
-                                RunId                    = "my-runid"
-                             }
-                         }
-                     }
+                    }
                 },
 
                 PendingActivities = new List<InternalPendingActivityInfo>()
@@ -1588,22 +1572,6 @@ namespace TestCadence
                 Assert.Equal(refField.Value, field.Value);
             }
 
-            Assert.NotNull(info.AutoResetPoints);
-            Assert.NotNull(info.AutoResetPoints.Points);
-            Assert.Equal(expected.WorkflowExecutionInfo.AutoResetPoints.Points.Count, info.AutoResetPoints.Points.Count);
-
-            for (int i = 0; i < expected.WorkflowExecutionInfo.AutoResetPoints.Points.Count; i++)
-            {
-                var refPoint = expected.WorkflowExecutionInfo.AutoResetPoints.Points.ToArray()[i];
-                var point    = info.AutoResetPoints.Points.ToArray()[i];
-
-                Assert.Equal(refPoint.BinaryChecksum, point.BinaryChecksum);
-                Assert.Equal(refPoint.CreatedTimeNano, point.CreatedTimeNano);
-                Assert.Equal(refPoint.ExpiringTimeNano, point.ExpiringTimeNano);
-                Assert.Equal(refPoint.FirstDecisionCompletedId, point.FirstDecisionCompletedId);
-                Assert.Equal(refPoint.Resettable, point.Resettable);
-                Assert.Equal(refPoint.RunId, point.RunId);
-            }
         }
 
         [Fact]
