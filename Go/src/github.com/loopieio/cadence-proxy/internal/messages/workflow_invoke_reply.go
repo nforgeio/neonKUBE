@@ -1,8 +1,6 @@
 package messages
 
 import (
-	cadence "go.uber.org/cadence"
-
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
@@ -210,31 +208,6 @@ func (reply *WorkflowInvokeReply) SetContinueAsNewDomain(value *string) {
 	reply.SetStringProperty("ContinueAsNewDomain", value)
 }
 
-// GetContinueAsNewRetryPolicy gets a WorkflowInvokeReply's retry policy
-// from a WorkflowInvokeReply's properties map.
-//
-// returns cadence.RetryPolicy -> a cadence struct that specifies a workflow
-// instance's retry policy.
-func (reply *WorkflowInvokeReply) GetContinueAsNewRetryPolicy() *cadence.RetryPolicy {
-	policy := new(cadence.RetryPolicy)
-	err := reply.GetJSONProperty("ContinueAsNewRetryPolicy", policy)
-	if err != nil {
-		return nil
-	}
-
-	return policy
-}
-
-// SetContinueAsNewRetryPolicy sets a WorkflowInvokeReply's retry policy
-// in a WorkflowInvokeReply's properties map.
-//
-// param value cadence.RetryPolicy -> a cadence struct that specifies a workflow
-// instance's retry policy to be set in the WorkflowInvokeReply's
-// properties map
-func (reply *WorkflowInvokeReply) SetContinueAsNewRetryPolicy(value *cadence.RetryPolicy) {
-	reply.SetJSONProperty("ContinueAsNewRetryPolicy", value)
-}
-
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -260,7 +233,6 @@ func (reply *WorkflowInvokeReply) CopyTo(target IProxyMessage) {
 		v.SetContinueAsNewStartToCloseTimeout(reply.GetContinueAsNewStartToCloseTimeout())
 		v.SetContinueAsNewTaskList(reply.GetContinueAsNewTaskList())
 		v.SetContinueAsNewDomain(reply.GetContinueAsNewDomain())
-		v.SetContinueAsNewRetryPolicy(reply.GetContinueAsNewRetryPolicy())
 	}
 }
 

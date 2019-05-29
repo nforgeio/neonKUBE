@@ -58,8 +58,9 @@ test: bins
 	
 clean:
 	rm -Rf bin/*
+	rm -f Gopkg.lock
+	
 	rm -f test/messages.test
-
 	rm -f $(LOG_DIR)/test.log
 	rm -f $(LOG_DIR)/messages-cover.out
 	rm -f $(LOG_DIR)/messages-cover.html

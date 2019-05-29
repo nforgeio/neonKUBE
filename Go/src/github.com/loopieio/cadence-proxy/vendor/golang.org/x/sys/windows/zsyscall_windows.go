@@ -196,6 +196,9 @@ var (
 	procTerminateJobObject                 = modkernel32.NewProc("TerminateJobObject")
 	procSetErrorMode                       = modkernel32.NewProc("SetErrorMode")
 	procResumeThread                       = modkernel32.NewProc("ResumeThread")
+	procSetPriorityClass                   = modkernel32.NewProc("SetPriorityClass")
+	procGetPriorityClass                   = modkernel32.NewProc("GetPriorityClass")
+	procSetInformationJobObject            = modkernel32.NewProc("SetInformationJobObject")
 	procDefineDosDeviceW                   = modkernel32.NewProc("DefineDosDeviceW")
 	procDeleteVolumeMountPointW            = modkernel32.NewProc("DeleteVolumeMountPointW")
 	procFindFirstVolumeW                   = modkernel32.NewProc("FindFirstVolumeW")
@@ -2096,6 +2099,44 @@ func ResumeThread(thread Handle) (ret uint32, err error) {
 	r0, _, e1 := syscall.Syscall(procResumeThread.Addr(), 1, uintptr(thread), 0, 0)
 	ret = uint32(r0)
 	if ret == 0xffffffff {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func SetPriorityClass(process Handle, priorityClass uint32) (err error) {
+	r1, _, e1 := syscall.Syscall(procSetPriorityClass.Addr(), 2, uintptr(process), uintptr(priorityClass), 0)
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func GetPriorityClass(process Handle) (ret uint32, err error) {
+	r0, _, e1 := syscall.Syscall(procGetPriorityClass.Addr(), 1, uintptr(process), 0, 0)
+	ret = uint32(r0)
+	if ret == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func SetInformationJobObject(job Handle, JobObjectInformationClass uint32, JobObjectInformation uintptr, JobObjectInformationLength uint32) (ret int, err error) {
+	r0, _, e1 := syscall.Syscall6(procSetInformationJobObject.Addr(), 4, uintptr(job), uintptr(JobObjectInformationClass), uintptr(JobObjectInformation), uintptr(JobObjectInformationLength), 0, 0)
+	ret = int(r0)
+	if ret == 0 {
 		if e1 != 0 {
 			err = errnoErr(e1)
 		} else {
