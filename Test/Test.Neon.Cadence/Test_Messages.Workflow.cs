@@ -1471,9 +1471,9 @@ namespace TestCadence
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
                 {
-                    Execution = new InternalWorkflowExecution()
+                    Execution = new InternalWorkflowExecution2()
                     {
-                        ID = "workflow-id",
+                        ID    = "workflow-id",
                         RunID = "run-id",
                     },
 
