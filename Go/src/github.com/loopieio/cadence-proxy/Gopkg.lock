@@ -228,14 +228,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:143586a82affa4434b01666d886709858ab9b834f815c73d3d6740fa83a7c7e4"
+  digest = "1:f8fac244ec2cb7daef48b0148dcf5a330ac7697fa83c2e1e78e65b21f7f43500"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
     "internal/fs",
   ]
   pruneopts = "UT"
-  revision = "3cb620ac02d09c0648c0ea033ea9706e5d11e416"
+  revision = "65bdadfa96aecebf4dcf888da995a29eab4fc964"
 
 [[projects]]
   digest = "1:ed615c5430ecabbb0fb7629a182da65ecee6523900ac1ac932520860878ffcad"
@@ -491,14 +491,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:107a534dfc1cd42e4f9fc48f335a9af498c99dd43118f925be74c153d1c9a7e2"
+  digest = "1:820be5471f9063bf539a8e4acfcf71151c832932c6ae6aab5aa0e8957e5af173"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "3626398d77499f570be2e36a6ad4fc91963a02c5"
+  revision = "6a60838ec2595395fabc7b2e6c2ae9fb5a87722d"
 
 [[projects]]
   branch = "master"
@@ -510,7 +510,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4e7c1ecd5a6a6a85631afaac45a2f49bcef16ffd4dc83c4614e28a3925307bb8"
+  digest = "1:3cd7a159a8d94466dd18c6790d72cd9a723d3027ed27b4e5f7eee4405732b068"
   name = "golang.org/x/tools"
   packages = [
     "cmd/stringer",
@@ -528,7 +528,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "aa71c3f32488bfee7774668abdf1ae045e013079"
+  revision = "f98590f1bfc84d0afb884c0444d6ba8cef01fff8"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
