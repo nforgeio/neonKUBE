@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowGetLastResultReply.cs
+// FILE:	    WorkflowGetTimeReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,33 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetTimeReply"/>.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
-    internal class WorkflowGetLastLastReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowGetTimeReply)]
+    internal class WorkflowGetTimeReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowGetLastLastReply()
+        public WorkflowGetTimeReply()
         {
-            Type = InternalMessageTypes.WorkflowGetLastResultReply;
+            Type = InternalMessageTypes.WorkflowGetTimeReply;
         }
 
         /// <summary>
-        /// Indicates the workflow's last completion result.
+        /// The current workflow time expressed as 100 nanosecond ticks
+        /// since 01/01/0001 00:00.
         /// </summary>
-        public byte[] Result
+        public DateTime Time
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetDateTimeProperty("Time");
+            set => SetDateTimeProperty("Time", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowGetLastLastReply();
+            var clone = new WorkflowGetTimeReply();
 
             CopyTo(clone);
 
@@ -62,9 +63,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowGetLastLastReply)target;
+            var typedTarget = (WorkflowGetTimeReply)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Time = this.Time;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowGetLastResultReply.cs
+// FILE:	    WorkflowDisconnectContextReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,23 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowDisconnectContextRequest"/>.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
-    internal class WorkflowGetLastLastReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowDisconnectContextReply)]
+    internal class WorkflowDisconnectContextReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowGetLastLastReply()
+        public WorkflowDisconnectContextReply()
         {
-            Type = InternalMessageTypes.WorkflowGetLastResultReply;
-        }
-
-        /// <summary>
-        /// Indicates the workflow's last completion result.
-        /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            Type = InternalMessageTypes.WorkflowDisconnectContextReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowGetLastLastReply();
+            var clone = new WorkflowDisconnectContextReply();
 
             CopyTo(clone);
 
@@ -61,10 +52,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowGetLastLastReply)target;
-
-            typedTarget.Result = this.Result;
         }
     }
 }

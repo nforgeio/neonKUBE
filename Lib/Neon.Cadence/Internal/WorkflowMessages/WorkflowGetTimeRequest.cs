@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowGetLastResultReply.cs
+// FILE:	    WorkflowGetTimeRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,26 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
+    /// <b>client --> proxy:</b> Requests the current workflow time.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
-    internal class WorkflowGetLastLastReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowGetTimeRequest)]
+    internal class WorkflowGetTimeRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowGetLastLastReply()
+        public WorkflowGetTimeRequest()
         {
-            Type = InternalMessageTypes.WorkflowGetLastResultReply;
+            Type = InternalMessageTypes.WorkflowGetTimeRequest;
         }
 
-        /// <summary>
-        /// Indicates the workflow's last completion result.
-        /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowGetTimeReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowGetLastLastReply();
+            var clone = new WorkflowGetTimeRequest();
 
             CopyTo(clone);
 
@@ -61,10 +55,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowGetLastLastReply)target;
-
-            typedTarget.Result = this.Result;
         }
     }
 }

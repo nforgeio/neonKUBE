@@ -305,7 +305,8 @@ namespace Neon.Cadence.Internal
         WorkflowExecuteChildRequest = 126,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message
+        /// after the child is completed.
         /// </summary>
         WorkflowExecuteChildReply = 127,
 
@@ -375,7 +376,7 @@ namespace Neon.Cadence.Internal
         WorkflowSetCacheSizeReply = 137,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Requests the workflow result encoded as a byte array, waiting
+        /// <b>client --> proxy:</b> Requests the workflow result encoded as a byte array, waiting
         /// for the workflow to complete if it is still running.  Note that this request will fail
         /// if the workflow did not run to completion.
         /// </summary>
@@ -387,7 +388,7 @@ namespace Neon.Cadence.Internal
         WorkflowGetResultReply = 139,
 
         /// <summary>
-        ///  <b>proxy --> client:</b> Determines whether the last execution of the workflow has
+        ///  <b>client --> proxy:</b> Determines whether the last execution of the workflow has
         ///  a completion result.  This can be used by CRON workflows to determine whether the
         ///  last run returned a result.
         /// </summary>
@@ -399,7 +400,7 @@ namespace Neon.Cadence.Internal
         WorkflowHasLastResultReply = 141,
 
         /// <summary>
-        ///  <b>proxy --> client:</b> Returns the result from the last execution of the workflow.
+        ///  <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
         ///  This can be used by CRON workflows to retrieve state from the last workflow run.
         /// </summary>
         WorkflowGetLastResultRequest = 142,
@@ -408,6 +409,37 @@ namespace Neon.Cadence.Internal
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetLastResultRequest"/>.
         /// </summary>
         WorkflowGetLastResultReply = 143,
+
+        /// <summary>
+        ///  <b>client --> proxy:</b> Commands the proxy to replace the current workflow context
+        ///  with a new disconnected context.
+        /// </summary>
+        WorkflowDisconnectContextRequest = 144,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDisconnectContextRequest"/>.
+        /// </summary>
+        WorkflowDisconnectContextReply = 145,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Request the current workflow time (UTC).
+        /// </summary>
+        WorkflowGetTimeRequest = 146,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetTimeRequest"/>.
+        /// </summary>
+        WorkflowGetTimeReply = 147,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent to have the workflow sleep for a period of time.
+        /// </summary>
+        WorkflowSleepRequest = 148,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSleepRequest"/>.
+        /// </summary>
+        WorkflowSleepReply = 149,
 
         //---------------------------------------------------------------------
         // Activity messages

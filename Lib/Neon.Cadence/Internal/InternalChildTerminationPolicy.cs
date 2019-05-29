@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ChildTerminationPolicy.cs
+// FILE:	    InternalChildTerminationPolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,15 +23,15 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the possible child workflow behaviors when the parent
-    /// workflow is terminated.
+    /// <b>INTERNAL USE ONLY:</b> Enumerates the possible child workflow behaviors 
+    /// when the parent workflow is terminated.
     /// </summary>
-    public enum ChildTerminationPolicy
+    public enum InternalChildTerminationPolicy
     {
-        // WARNING: These definitions must match those defined for [InternalChildTerminationPolicy].
+        // WARNING: These definitions must match those defined for [ChildTerminationPolicy].
 
         /// <summary>
         /// <para>
@@ -41,7 +41,7 @@ namespace Neon.Cadence
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        Terminate = 0,
+        TERMINATE = 0,
 
         /// <summary>
         /// <para>
@@ -52,12 +52,12 @@ namespace Neon.Cadence
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        RequestCancel = 1,
+        REQUEST_CANCEL = 1,
 
         /// <summary>
         /// Child workflow execution will continue unaffected when parent workflow is
         /// terminated.  This is the default policy.
         /// </summary>
-        Abandon = 2
+        ABANDON = 2
     }
 }

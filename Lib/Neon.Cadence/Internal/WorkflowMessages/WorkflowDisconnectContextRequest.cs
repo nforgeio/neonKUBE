@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowGetLastResultReply.cs
+// FILE:	    WorkflowDisconnectContextRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,27 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
+    /// <b>client --> proxy:</b> Commands cadence-proxy to replace the current workflow
+    /// context with context that is disconnected from the parent context.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
-    internal class WorkflowGetLastLastReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowDisconnectContextRequest)]
+    internal class WorkflowDisconnectContextRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowGetLastLastReply()
+        public WorkflowDisconnectContextRequest()
         {
-            Type = InternalMessageTypes.WorkflowGetLastResultReply;
+            Type = InternalMessageTypes.WorkflowDisconnectContextRequest;
         }
 
-        /// <summary>
-        /// Indicates the workflow's last completion result.
-        /// </summary>
-        public byte[] Result
-        {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
-        }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowDisconnectContextReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowGetLastLastReply();
+            var clone = new WorkflowDisconnectContextRequest();
 
             CopyTo(clone);
 
@@ -61,10 +56,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowGetLastLastReply)target;
-
-            typedTarget.Result = this.Result;
         }
     }
 }

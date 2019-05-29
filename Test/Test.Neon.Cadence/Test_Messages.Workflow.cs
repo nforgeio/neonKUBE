@@ -422,7 +422,6 @@ namespace TestCadence
                 Assert.Equal(0, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Null(message.ContinueAsNewTaskList);
                 Assert.Null(message.ContinueAsNewDomain);
-                Assert.Null(message.ContinueAsNewRetryPolicy);
 
                 // Round-trip
 
@@ -437,7 +436,6 @@ namespace TestCadence
                 message.ContinueAsNewStartToCloseTimeout = 4000;
                 message.ContinueAsNewTaskList = "my-tasklist";
                 message.ContinueAsNewDomain = "my-domain";
-                message.ContinueAsNewRetryPolicy = new InternalRetryPolicy() { MaximumAttempts = 100 };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -446,7 +444,6 @@ namespace TestCadence
                 Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
-                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize());
@@ -465,7 +462,6 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
-                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -482,7 +478,6 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
-                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -499,7 +494,6 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
-                Assert.Equal(100, message.ContinueAsNewRetryPolicy.MaximumAttempts);
             }
         }
 
@@ -1472,7 +1466,7 @@ namespace TestCadence
                     TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (InternalTaskListKind)TaskListKind.Sticky },
                     ExecutionStartToCloseTimeout   = 1000,
                     TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = ChildTerminationPolicy.REQUEST_CANCEL
+                    ChildPolicy                    = InternalChildTerminationPolicy.REQUEST_CANCEL
                 },
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
@@ -2038,11 +2032,11 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_WorkflowHasLastResultReply()
         {
-            WorkflowHasLastCompletionReply message;
+            WorkflowHasLastResultReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowHasLastCompletionReply();
+                message = new WorkflowHasLastResultReply();
 
                 // Empty message.
 
@@ -2050,7 +2044,7 @@ namespace TestCadence
                 stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowHasLastCompletionReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowHasLastResultReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -2069,7 +2063,7 @@ namespace TestCadence
                 stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowHasLastCompletionReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowHasLastResultReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -2127,20 +2121,17 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowGetLastResultRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(555, message.RequestId);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(555, message.RequestId);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
                 Assert.Equal(555, message.RequestId);
             }
         }
@@ -2149,11 +2140,11 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_WorkflowGetLastResultReply()
         {
-            WorkflowGetLastCompletionReply message;
+            WorkflowGetLastLastReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowGetLastCompletionReply();
+                message = new WorkflowGetLastLastReply();
 
                 // Empty message.
 
@@ -2161,7 +2152,7 @@ namespace TestCadence
                 stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowGetLastCompletionReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowGetLastLastReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -2180,7 +2171,478 @@ namespace TestCadence
                 stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowGetLastCompletionReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowGetLastLastReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowDisconnectContextRequest()
+        {
+            WorkflowDisconnectContextRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowDisconnectContextRequest();
+
+                Assert.Equal(InternalMessageTypes.WorkflowDisconnectContextReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowDisconnectContextRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowDisconnectContextRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowDisconnectContextReply()
+        {
+            WorkflowDisconnectContextReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowDisconnectContextReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowDisconnectContextReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowDisconnectContextReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowGetTimeRequest()
+        {
+            WorkflowGetTimeRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowGetTimeRequest();
+
+                Assert.Equal(InternalMessageTypes.WorkflowGetTimeReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowGetTimeRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowGetTimeRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowGetTimeReply()
+        {
+            WorkflowGetTimeReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowGetTimeReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowGetTimeReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Equal(DateTime.MinValue, message.Time);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+                message.Time = new DateTime(2019, 5, 28);
+                Assert.Equal(new DateTime(2019, 5, 28), message.Time);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowGetTimeReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new DateTime(2019, 5, 28), message.Time);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new DateTime(2019, 5, 28), message.Time);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new DateTime(2019, 5, 28), message.Time);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowSleepRequest()
+        {
+            WorkflowSleepRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowSleepRequest();
+
+                Assert.Equal(InternalMessageTypes.WorkflowSleepReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowSleepRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(TimeSpan.Zero, message.Duration);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                message.Duration = TimeSpan.FromDays(2);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(TimeSpan.FromDays(2), message.Duration);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowSleepRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(TimeSpan.FromDays(2), message.Duration);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(TimeSpan.FromDays(2), message.Duration);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(TimeSpan.FromDays(2), message.Duration);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowSleepReply()
+        {
+            WorkflowSleepReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowSleepReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowSleepReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowSleepReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+            }
+        }
+
+        private void AssertEqualChildOptions(InternalChildWorkflowOptions expected, InternalChildWorkflowOptions actual)
+        {
+            Assert.Equal(expected.TaskList, actual.TaskList);
+            Assert.Equal(expected.Domain, actual.Domain);
+            Assert.Equal(expected.ChildPolicy, actual.ChildPolicy);
+            Assert.Equal(expected.CronSchedule, actual.CronSchedule);
+            Assert.Equal(expected.WorkflowID, actual.WorkflowID);
+            Assert.Equal(expected.WaitForCancellation, actual.WaitForCancellation);
+            Assert.Equal(expected.ExecutionStartToCloseTimeout, actual.ExecutionStartToCloseTimeout);
+            Assert.Equal(expected.TaskStartToCloseTimeout, actual.TaskStartToCloseTimeout);
+            Assert.Equal(expected.WorkflowIdReusePolicy, actual.WorkflowIdReusePolicy);
+            Assert.Equal(expected.Memo.Count, actual.Memo.Count);
+            Assert.Equal(expected.RetryPolicy.MaximumAttempts, actual.RetryPolicy.MaximumAttempts);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowExecuteChildRequest()
+        {
+            WorkflowExecuteChildRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowExecuteChildRequest();
+
+                Assert.Equal(InternalMessageTypes.WorkflowExecuteChildReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowExecuteChildRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Args);
+                Assert.Null(message.Options);
+
+                // Round-trip
+
+                var options = new InternalChildWorkflowOptions()
+                {
+                    TaskList                     = "my-tasklist",
+                    Domain                       = "my-domain",
+                    ChildPolicy                  = InternalChildTerminationPolicy.REQUEST_CANCEL,
+                    CronSchedule                 = (new CronSchedule() { Hour = 12 }).ToString(),
+                    WorkflowID                   = "my-workflow",
+                    WaitForCancellation          = true,
+                    ExecutionStartToCloseTimeout = 1000,
+                    TaskStartToCloseTimeout      = 2000,
+                    WorkflowIdReusePolicy        = (int)WorkflowIdReusePolicy.RejectDuplicate,
+                    Memo                         = new Dictionary<string, byte[]> { { "foo", new byte[] { 0, 1, 2, 3, 4 } } },
+                    RetryPolicy                  = new InternalRetryPolicy()
+                    {
+                        MaximumAttempts = 100
+                    }
+                };
+
+                message.RequestId = 555;
+                message.Args = new byte[] { 5, 6, 7, 8, 9 };
+                message.Options = options;
+                Assert.Equal(555, message.RequestId);
+                AssertEqualChildOptions(options, message.Options);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowExecuteChildRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
+                AssertEqualChildOptions(options, message.Options);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                AssertEqualChildOptions(options, message.Options);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                AssertEqualChildOptions(options, message.Options);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowExecuteChildReply()
+        {
+            WorkflowExecuteChildReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowExecuteChildReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowExecuteChildReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Null(message.Result);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+                message.Result = new byte[] { 0, 1, 2, 3, 4 };
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowExecuteChildReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
