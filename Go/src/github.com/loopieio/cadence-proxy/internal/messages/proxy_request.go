@@ -53,6 +53,44 @@ func NewProxyRequest() *ProxyRequest {
 }
 
 // -------------------------------------------------------------------------
+// IProxyRequest interface methods for implementing the IProxyRequest interface
+
+// GetReplyType gets the MessageType used to reply to a specific
+// ProxyRequest
+//
+// returns MessageType -> the message type to reply to the
+// request with
+func (request *ProxyRequest) GetReplyType() messagetypes.MessageType {
+	return request.ReplyType
+}
+
+// SetReplyType sets the MessageType used to reply to a specific
+// ProxyRequest
+//
+// param value MessageType -> the message type to reply to the
+// request with
+func (request *ProxyRequest) SetReplyType(value messagetypes.MessageType) {
+	request.ReplyType = value
+}
+
+// GetTimeout gets the Timeout property from a ProxyRequest's properties map
+// Timeout is a timespan property and indicates the timeout for a specific request
+//
+// returns time.Duration -> the duration for a ProxyRequest's timeout from its properties map
+func (request *ProxyRequest) GetTimeout() time.Duration {
+	return request.GetTimeSpanProperty("Timeout")
+}
+
+// SetTimeout sets the Timeout property in a ProxyRequest's properties map
+// Timeout is a timespan property and indicates the timeout for a specific request
+//
+// param value time.Duration -> the timeout duration to be set in a
+// ProxyRequest's properties map
+func (request *ProxyRequest) SetTimeout(value time.Duration) {
+	request.SetTimeSpanProperty("Timeout", value)
+}
+
+// -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyMessage.Clone()
@@ -99,42 +137,4 @@ func (request *ProxyRequest) GetType() messagetypes.MessageType {
 // SetType inherits docs from ProxyMessage.SetType()
 func (request *ProxyRequest) SetType(value messagetypes.MessageType) {
 	request.ProxyMessage.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType gets the MessageType used to reply to a specific
-// ProxyRequest
-//
-// returns MessageType -> the message type to reply to the
-// request with
-func (request *ProxyRequest) GetReplyType() messagetypes.MessageType {
-	return request.ReplyType
-}
-
-// SetReplyType sets the MessageType used to reply to a specific
-// ProxyRequest
-//
-// param value MessageType -> the message type to reply to the
-// request with
-func (request *ProxyRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ReplyType = value
-}
-
-// GetTimeout gets the Timeout property from a ProxyRequest's properties map
-// Timeout is a timespan property and indicates the timeout for a specific request
-//
-// returns time.Duration -> the duration for a ProxyRequest's timeout from its properties map
-func (request *ProxyRequest) GetTimeout() time.Duration {
-	return request.GetTimeSpanProperty("Timeout")
-}
-
-// SetTimeout sets the Timeout property in a ProxyRequest's properties map
-// Timeout is a timespan property and indicates the timeout for a specific request
-//
-// param value time.Duration -> the timeout duration to be set in a
-// ProxyRequest's properties map
-func (request *ProxyRequest) SetTimeout(value time.Duration) {
-	request.SetTimeSpanProperty("Timeout", value)
 }

@@ -56,11 +56,11 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The workflow was restarted (aka <i>continued as new</i>).
         /// </summary>
-        RESTARTED = 4,
+        CONTINUED_AS_NEW = 4,
 
         /// <summary>
         /// The workflow timed out.
         /// </summary>
-        TIMEDOUT = 5
+        TIMED_OUT = 5
     }
 }

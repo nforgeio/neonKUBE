@@ -122,6 +122,11 @@ func (op *Operation) GetIsCancelled() bool {
 	return op.isCancelled
 }
 
+// SetIsCancelled sets isCancelled
+func (op *Operation) SetIsCancelled(value bool) {
+	op.isCancelled = value
+}
+
 // GetRequestID gets the requestID
 func (op *Operation) GetRequestID() int64 {
 	return op.requestID
@@ -196,8 +201,8 @@ func (op *Operation) SetReply(value messages.IProxyReply, result interface{}) er
 }
 
 // SetCancelled signals the awaiting task that the Operation has
-//been canceled
-func (op *Operation) SetCanceled() {
+// been canceled
+func (op *Operation) SetCancelled() {
 	op.isCancelled = true
 }
 

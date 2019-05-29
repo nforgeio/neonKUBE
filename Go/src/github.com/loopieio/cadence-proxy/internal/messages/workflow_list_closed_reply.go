@@ -91,12 +91,12 @@ func (reply *WorkflowListClosedReply) SetError(value *cadenceerrors.CadenceError
 // -------------------------------------------------------------------------
 // IWorkflowReply interface methods for implementing the IWorkflowReply interface
 
-// GetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowListClosedReply) GetWorkflowContextID() int64 {
-	return reply.WorkflowReply.GetWorkflowContextID()
+// GetContextID inherits docs from WorkflowReply.GetContextID()
+func (reply *WorkflowListClosedReply) GetContextID() int64 {
+	return reply.WorkflowReply.GetContextID()
 }
 
-// SetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowListClosedReply) SetWorkflowContextID(value int64) {
-	reply.WorkflowReply.SetWorkflowContextID(value)
+// SetContextID inherits docs from WorkflowReply.GetContextID()
+func (reply *WorkflowListClosedReply) SetContextID(value int64) {
+	reply.WorkflowReply.SetContextID(value)
 }

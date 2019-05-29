@@ -19,8 +19,8 @@ type (
 	// IActivityReply is the interface that all workflow message replies
 	// implement.
 	IActivityReply interface {
-		GetActivityContextID() int64
-		SetActivityContextID(value int64)
+		GetContextID() int64
+		SetContextID(value int64)
 		GetError() *cadenceerrors.CadenceError
 		SetError(value *cadenceerrors.CadenceError)
 		Clone() IProxyMessage
@@ -50,20 +50,20 @@ func NewActivityReply() *ActivityReply {
 // -------------------------------------------------------------------------
 // IActivityReply interface methods for implementing the IActivityReply interface
 
-// GetActivityContextID gets the ContextId from a ActivityReply's properties
+// GetContextID gets the ContextId from a ActivityReply's properties
 // map.
 //
 // returns int64 -> the long representing a ActivityReply's ContextId
-func (reply *ActivityReply) GetActivityContextID() int64 {
-	return reply.GetLongProperty("ActivityContextId")
+func (reply *ActivityReply) GetContextID() int64 {
+	return reply.GetLongProperty("ContextID")
 }
 
-// SetActivityContextID sets the ContextId in a ActivityReply's properties map
+// SetContextID sets the ContextId in a ActivityReply's properties map
 //
 // param value int64 -> int64 value to set as the ActivityReply's ContextId
 // in its properties map
-func (reply *ActivityReply) SetActivityContextID(value int64) {
-	reply.SetLongProperty("ActivityContextId", value)
+func (reply *ActivityReply) SetContextID(value int64) {
+	reply.SetLongProperty("ContextID", value)
 }
 
 // -------------------------------------------------------------------------
@@ -82,7 +82,7 @@ func (reply *ActivityReply) Clone() IProxyMessage {
 func (reply *ActivityReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(IActivityReply); ok {
-		v.SetActivityContextID(reply.GetActivityContextID())
+		v.SetContextID(reply.GetContextID())
 	}
 }
 

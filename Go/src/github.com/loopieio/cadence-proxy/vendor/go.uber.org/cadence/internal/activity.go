@@ -29,6 +29,7 @@ import (
 	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/internal/common"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type (
@@ -206,6 +207,15 @@ func GetActivityMetricsScope(ctx context.Context) tally.Scope {
 	return env.metricsScope
 }
 
+// GetWorkerStopChannel returns a read-only channel. The closure of this channel indicates the activity worker is stopping.
+// When the worker is stopping, it will close this channel and wait until the worker stop timeout finishes. After the timeout
+// hit, the worker will cancel the activity context and then exit. The timeout can be defined by worker option: WorkerStopTimeout.
+// Use this channel to handle activity graceful exit when the activity worker stops.
+func GetWorkerStopChannel(ctx context.Context) <-chan struct{} {
+	env := getActivityEnv(ctx)
+	return env.workerStopChannel
+}
+
 // RecordActivityHeartbeat sends heartbeat for the currently executing activity
 // If the activity is either cancelled (or) workflow/activity doesn't exist then we would cancel
 // the context with error context.Canceled.
@@ -254,6 +264,7 @@ func WithActivityTask(
 	logger *zap.Logger,
 	scope tally.Scope,
 	dataConverter encoded.DataConverter,
+	workerStopChannel <-chan struct{},
 ) context.Context {
 	var deadline time.Time
 	scheduled := time.Unix(0, task.GetScheduledTimestamp())
@@ -269,6 +280,15 @@ func WithActivityTask(
 	} else {
 		deadline = startToCloseDeadline
 	}
+
+	logger.With(
+		zapcore.Field{Key: tagActivityID, Type: zapcore.StringType, String: *task.ActivityId},
+		zapcore.Field{Key: tagActivityType, Type: zapcore.StringType, String: *task.ActivityType.Name},
+		zapcore.Field{Key: tagWorkflowType, Type: zapcore.StringType, String: *task.WorkflowType.Name},
+		zapcore.Field{Key: tagWorkflowID, Type: zapcore.StringType, String: *task.WorkflowExecution.WorkflowId},
+		zapcore.Field{Key: tagRunID, Type: zapcore.StringType, String: *task.WorkflowExecution.RunId},
+	)
+
 	return context.WithValue(ctx, activityEnvContextKey, &activityEnvironment{
 		taskToken:      task.TaskToken,
 		serviceInvoker: invoker,
@@ -290,7 +310,8 @@ func WithActivityTask(
 		workflowType: &WorkflowType{
 			Name: *task.WorkflowType.Name,
 		},
-		workflowDomain: *task.WorkflowDomain,
+		workflowDomain:    *task.WorkflowDomain,
+		workerStopChannel: workerStopChannel,
 	})
 }
 

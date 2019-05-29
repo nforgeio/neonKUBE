@@ -3,12 +3,16 @@ package endpoints
 import (
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
+
+	"go.uber.org/cadence/workflow"
+	"go.uber.org/zap"
 
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
-
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
-	"go.uber.org/zap"
 )
 
 // -------------------------------------------------------------------------
@@ -244,10 +248,50 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// WorkflowExecutionContext at the specified WorflowContextID
-	workflowExecutionContextID := reply.GetWorkflowContextID()
-	if wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID); wectx == nil {
+	// WorkflowContext at the specified WorflowContextID
+	contextID := reply.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
 		return entityNotExistError
+	}
+
+	// TODO: JACK -- FILL OUT THE REST OF THE OPTIONS
+	// THERE IS NO WITH RETRY POLICY
+	// check for ContinueAsNew
+	if reply.GetContinueAsNew() {
+		continueContext := wectx.GetContext()
+
+		if reply.GetContinueAsNewDomain() != nil {
+			continueContext = workflow.WithWorkflowDomain(continueContext, *reply.GetContinueAsNewDomain())
+		}
+
+		if reply.GetContinueAsNewTaskList() != nil {
+			continueContext = workflow.WithTaskList(continueContext, *reply.GetContinueAsNewTaskList())
+		}
+
+		if reply.GetContinueAsNewExecutionStartToCloseTimeout() > 0 {
+			continueContext = workflow.WithExecutionStartToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewExecutionStartToCloseTimeout()))
+		}
+
+		if reply.GetContinueAsNewScheduleToCloseTimeout() > 0 {
+			continueContext = workflow.WithScheduleToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewScheduleToCloseTimeout()))
+		}
+
+		if reply.GetContinueAsNewScheduleToStartTimeout() > 0 {
+			continueContext = workflow.WithScheduleToStartTimeout(continueContext, time.Duration(reply.GetContinueAsNewScheduleToStartTimeout()))
+		}
+
+		if reply.GetContinueAsNewStartToCloseTimeout() > 0 {
+			continueContext = workflow.WithStartToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewStartToCloseTimeout()))
+		}
+
+		// Start a continue as new instance of the workflow and get the error to send
+		// back to the Neon.Cadence Lib
+		continueError := workflow.NewContinueAsNewError(continueContext, wectx.GetWorkflowFunction(), reply.GetContinueAsNewArgs())
+
+		// create a new custom error and set it in the reply to be handled by the future
+		cadenceError := cadenceerrors.NewCadenceError(continueError.Error(), cadenceerrors.Custom)
+		reply.SetError(cadenceError)
 	}
 
 	// get the Operation corresponding the the reply
@@ -258,9 +302,9 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		return err
 	}
 
-	// remove the WorkflowExecutionContext from the map
+	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
-	_ = cadenceworkflows.WorkflowExecutionContexts.Remove(workflowExecutionContextID)
+	_ = cadenceworkflows.WorkflowContexts.Remove(contextID)
 	_ = Operations.Remove(requestID)
 
 	return nil
@@ -343,9 +387,9 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowMutableInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// WorkflowExecutionContext at the specified WorflowContextID
-	workflowExecutionContextID := reply.GetWorkflowContextID()
-	if wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowExecutionContextID); wectx == nil {
+	// WorkflowContext at the specified WorflowContextID
+	workflowExecutionContextID := reply.GetContextID()
+	if wectx := cadenceworkflows.WorkflowContexts.Get(workflowExecutionContextID); wectx == nil {
 		return entityNotExistError
 	}
 
@@ -357,18 +401,10 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 		return err
 	}
 
-	// remove the WorkflowExecutionContext from the map
+	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
-	_ = cadenceworkflows.WorkflowExecutionContexts.Remove(workflowExecutionContextID)
+	_ = cadenceworkflows.WorkflowContexts.Remove(workflowExecutionContextID)
 	_ = Operations.Remove(requestID)
-
-	return nil
-}
-
-func handleActivityRegisterReply(reply *messages.ActivityRegisterReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }

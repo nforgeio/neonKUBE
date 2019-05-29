@@ -13,18 +13,18 @@ var (
 	// a new cadence Worker is created
 	workerID int64
 
-	// WorkersMap maps a int64 WorkerId to the cadence
+	// Workers maps a int64 WorkerId to the cadence
 	// Worker returned by the Cadence NewWorker() function.
 	// This will be used to stop a worker via the
 	// StopWorkerRequest.
-	WorkersMap = new(Workers)
+	Workers = new(WorkersMap)
 )
 
 type (
 
-	// Workers holds a thread-safe map[interface{}]interface{} that stores
+	// WorkersMap holds a thread-safe map[interface{}]interface{} that stores
 	// cadence Workers with their workerID's
-	Workers struct {
+	WorkersMap struct {
 		sync.Map
 	}
 )
@@ -52,7 +52,7 @@ func GetWorkerID() int64 {
 }
 
 //----------------------------------------------------------------------------
-// Workers instance methods
+// WorkersMap instance methods
 
 // Add adds a new cadence worker and its corresponding WorkerId into
 // the Workers.workers map.  This method is thread-safe.
@@ -64,7 +64,7 @@ func GetWorkerID() int64 {
 // by the Cadence NewWorker() function.  This will be the mapped value
 //
 // returns int64 -> long workerID of the new cadence Worker added to the map
-func (workers *Workers) Add(workerID int64, worker worker.Worker) int64 {
+func (workers *WorkersMap) Add(workerID int64, worker worker.Worker) int64 {
 	workers.Store(workerID, worker)
 	return workerID
 }
@@ -76,7 +76,7 @@ func (workers *Workers) Add(workerID int64, worker worker.Worker) int64 {
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
 // returns int64 -> long workerID of the cadence Worker removed from the map
-func (workers *Workers) Remove(workerID int64) int64 {
+func (workers *WorkersMap) Remove(workerID int64) int64 {
 	workers.Delete(workerID)
 	return workerID
 }
@@ -88,7 +88,7 @@ func (workers *Workers) Remove(workerID int64) int64 {
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
 // returns worker.Worker -> cadence Worker with the specified workerID
-func (workers *Workers) Get(workerID int64) worker.Worker {
+func (workers *WorkersMap) Get(workerID int64) worker.Worker {
 	if v, ok := workers.Load(workerID); ok {
 		if _v, _ok := v.(worker.Worker); _ok {
 			return _v

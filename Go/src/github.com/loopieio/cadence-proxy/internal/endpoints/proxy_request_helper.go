@@ -9,8 +9,6 @@ import (
 	"reflect"
 	"time"
 
-	"go.uber.org/cadence/activity"
-
 	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkers"
@@ -175,12 +173,6 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	case messagetypes.WorkflowDescribeExecutionRequest:
 		if v, ok := request.(*messages.WorkflowDescribeExecutionRequest); ok {
 			reply = handleWorkflowDescribeExecutionRequest(v)
-		}
-
-	// ActivityRegisterRequest
-	case messagetypes.ActivityRegisterRequest:
-		if v, ok := request.(*messages.ActivityRegisterRequest); ok {
-			reply = handleActivityRegisterRequest(v)
 		}
 
 	// PingRequest
@@ -575,16 +567,16 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	}
 
 	// define some variables to hold workflow return values
-	workflowContextID := cadenceworkflows.NextWorkflowContextID()
+	contextID := cadenceworkflows.NextContextID()
 
 	// create workflow function
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
-		wectx := new(cadenceworkflows.WorkflowExecutionContext)
+		wectx := new(cadenceworkflows.WorkflowContext)
 		wectx.SetContext(ctx)
 
-		// set the WorkflowExecutionContext in the
-		// WorkflowExecutionContexts
-		workflowContextID = cadenceworkflows.WorkflowExecutionContexts.Add(workflowContextID, wectx)
+		// set the WorkflowContext in the
+		// WorkflowContexts
+		contextID = cadenceworkflows.WorkflowContexts.Add(contextID, wectx)
 
 		// Send a WorkflowInvokeRequest to the Neon.Cadence Lib
 		// cadence-client
@@ -592,7 +584,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
 		workflowInvokeRequest.SetRequestID(requestID)
 		workflowInvokeRequest.SetArgs(input)
-		workflowInvokeRequest.SetWorkflowContextID(workflowContextID)
+		workflowInvokeRequest.SetContextID(contextID)
 
 		// get the WorkflowInfo (Domain, WorkflowID, RunID, WorkflowType,
 		// TaskList, ExecutionStartToCloseTimeout)
@@ -612,8 +604,8 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		op.SetSettable(settable)
 		Operations.Add(requestID, op)
 
-		// send the request to the Neon.Cadence client
-		go func() {
+		// create the workflow go routine
+		f := func(ctx workflow.Context) {
 
 			// send the WorkflowInvokeRequest
 			var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()
@@ -629,7 +621,11 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 					logger.Error("could not close response body", zap.Error(err))
 				}
 			}()
-		}()
+		}
+
+		// send the request to the Neon.Cadence client
+		// with a workflow go routine
+		workflow.Go(ctx, f)
 
 		// wait for the future to be unblocked
 		var result []byte
@@ -643,6 +639,10 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	// register the workflow
 	// build the reply
 	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *request.GetName()})
+
+	// set the workflow function in the WorkflowContexts map
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx.SetWorkflowFunction(workflowFunc)
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Workflow Successfully Registered", zap.String("WorkflowName", *request.GetName()))
@@ -743,8 +743,8 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 	worker := worker.New(clientHelper.Service, *domain, *taskList, *opts)
 
 	// put the worker and workerID from the new worker to the
-	// WorkersMap and then run the worker by calling Run() on it
-	workerID := cadenceworkers.WorkersMap.Add(cadenceworkers.NextWorkerID(), worker)
+	// Workers map and then run the worker by calling Run() on it
+	workerID := cadenceworkers.Workers.Add(cadenceworkers.NextWorkerID(), worker)
 	err := worker.Start()
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(
@@ -781,7 +781,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	// get the workerID from the request so that we know
 	// what worker to stop
 	workerID := request.GetWorkerID()
-	worker := cadenceworkers.WorkersMap.Get(workerID)
+	worker := cadenceworkers.Workers.Get(workerID)
 	if worker == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(
 			entityNotExistError.Error(),
@@ -791,9 +791,9 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	}
 
 	// stop the worker and
-	// remove it from the cadenceworkers.WorkersMap
+	// remove it from the cadenceworkers.Workers map
 	worker.Stop()
-	workerID = cadenceworkers.WorkersMap.Remove(workerID)
+	workerID = cadenceworkers.Workers.Remove(workerID)
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Worker has been deleted", zap.Int64("WorkerID", workerID))
@@ -1144,9 +1144,9 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		return reply
 	}
 
-	// get the WorkflowContextID and the corresponding context
-	workflowContextID := request.GetWorkflowContextID()
-	wectx := cadenceworkflows.WorkflowExecutionContexts.Get(workflowContextID)
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(
 			entityNotExistError.Error(),
@@ -1157,11 +1157,11 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 	// f function for workflow.MutableSideEffect
 	mutableID := request.GetMutableID()
-	f := func(ctx workflow.Context) interface{} {
+	mutableFunc := func(ctx workflow.Context) interface{} {
 		requestID := NextRequestID()
 		workflowMutableInvokeRequest := messages.NewWorkflowMutableInvokeRequest()
 		workflowMutableInvokeRequest.SetRequestID(requestID)
-		workflowMutableInvokeRequest.SetWorkflowContextID(workflowContextID)
+		workflowMutableInvokeRequest.SetContextID(contextID)
 		workflowMutableInvokeRequest.SetMutableID(mutableID)
 
 		// create the Operation for this request and add it to the operations map
@@ -1171,9 +1171,8 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		op.SetSettable(settable)
 		Operations.Add(requestID, op)
 
-		// create channel for WorkflowMutableInvokeReply and add it
-		// to the mutableChannelsMap
-		go func() {
+		// create the worklfow Go routine
+		f := func(ctx workflow.Context) {
 
 			// send the request to the Neon.Cadence Lib client
 			// send the WorkflowInvokeRequest
@@ -1190,7 +1189,10 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 					logger.Error("could not close response body", zap.Error(err))
 				}
 			}()
-		}()
+		}
+
+		// send the request to the Neon.Cadence client
+		workflow.Go(ctx, f)
 
 		// wait for the future to be unblocked
 		var result []byte
@@ -1227,7 +1229,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	}
 
 	// execute the cadence server SideEffectMutable call
-	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(), *mutableID, f, equals)
+	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(), *mutableID, mutableFunc, equals)
 
 	// extract the result
 	var result interface{}
@@ -1315,37 +1317,6 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 
 	// build reply
 	buildReply(reply, nil, describeWorkflowExecutionResponse)
-
-	return reply
-}
-
-func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	// new InitializeReply
-	reply := createReplyMessage(request)
-
-	// check to see if a connection has been made with the
-	// cadence client
-	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
-
-		return reply
-	}
-
-	// define the activity function
-	var activityFunc func(ctx context.Context) (string, error)
-
-	// register the activity
-	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *request.GetName()})
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *request.GetName()))
-	buildReply(reply, nil)
 
 	return reply
 }

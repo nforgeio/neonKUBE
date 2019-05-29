@@ -69,9 +69,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ChildTerminationPolicy.Abandon"/>.
+        /// This defaults to <see cref="ChildTerminationPolicy.ABANDON"/>.
         /// </summary>
-        public ChildTerminationPolicy ChildTerminationPolicy { get; set; } = ChildTerminationPolicy.Abandon;
+        public ChildTerminationPolicy ChildTerminationPolicy { get; set; } = ChildTerminationPolicy.ABANDON;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any

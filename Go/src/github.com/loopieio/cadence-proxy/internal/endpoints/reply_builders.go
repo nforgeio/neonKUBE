@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
+	"go.uber.org/cadence/workflow"
+
 	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
-	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 )
 
@@ -340,8 +341,4 @@ func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecuti
 			fmt.Printf("%v", v)
 		}
 	}
-}
-
-func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
 }

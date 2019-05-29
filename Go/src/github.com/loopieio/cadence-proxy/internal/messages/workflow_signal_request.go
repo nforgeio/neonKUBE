@@ -188,12 +188,12 @@ func (request *WorkflowSignalRequest) SetTimeout(value time.Duration) {
 // -------------------------------------------------------------------------
 // IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
 
-// GetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
-func (request *WorkflowSignalRequest) GetWorkflowContextID() int64 {
-	return request.WorkflowRequest.GetWorkflowContextID()
+// GetContextID inherits docs from WorkflowRequest.GetContextID()
+func (request *WorkflowSignalRequest) GetContextID() int64 {
+	return request.WorkflowRequest.GetContextID()
 }
 
-// SetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
-func (request *WorkflowSignalRequest) SetWorkflowContextID(value int64) {
-	request.WorkflowRequest.SetWorkflowContextID(value)
+// SetContextID inherits docs from WorkflowRequest.GetContextID()
+func (request *WorkflowSignalRequest) SetContextID(value int64) {
+	request.WorkflowRequest.SetContextID(value)
 }

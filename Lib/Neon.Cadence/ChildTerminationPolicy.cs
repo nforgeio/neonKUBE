@@ -39,7 +39,7 @@ namespace Neon.Cadence
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        Terminate = 0,
+        TERMINATE = 0,
 
         /// <summary>
         /// <para>
@@ -50,12 +50,12 @@ namespace Neon.Cadence
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        RequestCancel = 1,
+        REQUEST_CANCEL = 1,
 
         /// <summary>
         /// Child workflow execution will continue unaffected when parent workflow is
         /// terminated.  This is the default policy.
         /// </summary>
-        Abandon = 2
+        ABANDON = 2
     }
 }
