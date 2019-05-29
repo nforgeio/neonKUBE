@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowGetLastResultReply.cs
+// FILE:	    WorkflowExecuteChildReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,21 +25,21 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowExecuteChildReply"/>.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
-    internal class WorkflowGetLastLastReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteChildReply)]
+    internal class WorkflowExecuteChildReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowGetLastLastReply()
+        public WorkflowExecuteChildReply()
         {
-            Type = InternalMessageTypes.WorkflowGetLastResultReply;
+            Type = InternalMessageTypes.WorkflowExecuteChildReply;
         }
 
         /// <summary>
-        /// Indicates the workflow's last completion result.
+        /// The child workflow results encoded as bytes.
         /// </summary>
         public byte[] Result
         {
@@ -50,7 +50,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowGetLastLastReply();
+            var clone = new WorkflowExecuteChildReply();
 
             CopyTo(clone);
 
@@ -62,7 +62,7 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowGetLastLastReply)target;
+            var typedTarget = (WorkflowExecuteChildReply)target;
 
             typedTarget.Result = this.Result;
         }

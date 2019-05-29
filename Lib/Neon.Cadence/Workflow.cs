@@ -608,8 +608,15 @@ namespace Neon.Cadence
         /// </summary>
         protected async Task<bool> HasPreviousRunResultAsync()
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            var reply = (WorkflowHasLastResultReply)await Client.CallProxyAsync(
+                new WorkflowHasLastResultRequest()
+                {
+                    ContextId = contextId
+                });
+
+            reply.ThrowOnError();
+
+            return reply.HasResult;
         }
 
         /// <summary>
@@ -619,8 +626,15 @@ namespace Neon.Cadence
         /// </summary>
         protected async Task<byte[]> GetPreviousRunResultAsync()
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            var reply = (WorkflowGetLastLastReply)await Client.CallProxyAsync(
+                new WorkflowGetLastResultRequest()
+                {
+                    ContextId = contextId
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
 
         /// <summary>
@@ -630,14 +644,19 @@ namespace Neon.Cadence
         /// </summary>
         /// <remarks>
         /// Under the covers, this replaces the underlying workflow context with
-        /// a new disconnected context that is independent from the parent workflow's
+        /// a new disconnected context that is independent from the parent workflow
         /// context.  This method only substitutes the new context for the first call. 
         /// Subsequent calls won't actually do anything.
         /// </remarks>
         protected async Task DisconnectContextAsync()
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            var reply = (WorkflowDisconnectContextReply)await Client.CallProxyAsync(
+                new WorkflowDisconnectContextRequest()
+                {
+                    ContextId = contextId
+                });
+
+            reply.ThrowOnError();
         }
 
         /// <summary>
@@ -646,8 +665,15 @@ namespace Neon.Cadence
         /// <returns>The current workflow time (UTC).</returns>
         protected async Task<DateTime> UtcNowAsync()
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            var reply = (WorkflowGetTimeReply)await Client.CallProxyAsync(
+                new WorkflowGetTimeRequest()
+                {
+                    ContextId = contextId
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Time;
         }
 
         /// <summary>
@@ -720,17 +746,23 @@ namespace Neon.Cadence
         /// <summary>
         /// Pauses the workflow for at least the period specified.
         /// </summary>
-        /// <param name="delay">The time to delay.</param>
+        /// <param name="duration">The time to sleep.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns></returns>
         /// <exception cref="TaskCanceledException">
         /// Thrown if the operation was cancelled via <see cref="CancellationToken"/> or the
         /// workflow was cancelled externally.
         /// </exception>
-        protected async Task SleepAsync(TimeSpan delay, CancellationToken cancellationToken = default)
+        protected async Task SleepAsync(TimeSpan duration, CancellationToken cancellationToken = default)
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
+                new WorkflowSleepRequest()
+                {
+                    ContextId = contextId,
+                    Duration  = duration
+                });
+
+            reply.ThrowOnError();
         }
 
         /// <summary>

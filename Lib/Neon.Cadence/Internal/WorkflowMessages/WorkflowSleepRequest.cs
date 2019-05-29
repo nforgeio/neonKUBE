@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowGetLastResultReply.cs
+// FILE:	    WorkflowSleepRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,35 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
+    /// <b>client --> proxy:</b> Commands the workflow to sleep for a period of time.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
-    internal class WorkflowGetLastLastReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSleepRequest)]
+    internal class WorkflowSleepRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowGetLastLastReply()
+        public WorkflowSleepRequest()
         {
-            Type = InternalMessageTypes.WorkflowGetLastResultReply;
+            Type = InternalMessageTypes.WorkflowSleepRequest;
         }
 
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSleepReply;
+
         /// <summary>
-        /// Indicates the workflow's last completion result.
+        /// Specifies the time to sleep.
         /// </summary>
-        public byte[] Result
+        public TimeSpan Duration
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetTimeSpanProperty("Duration");
+            set => SetTimeSpanProperty("Duration", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowGetLastLastReply();
+            var clone = new WorkflowSleepRequest();
 
             CopyTo(clone);
 
@@ -62,9 +65,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowGetLastLastReply)target;
+            var typedTarget = (WorkflowSleepRequest)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Duration = this.Duration;
         }
     }
 }

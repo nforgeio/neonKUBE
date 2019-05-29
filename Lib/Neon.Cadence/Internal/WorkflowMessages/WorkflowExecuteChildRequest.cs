@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowGetLastResultReply.cs
+// FILE:	    WorkflowExecuteChildRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,44 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowGetLastResultRequest"/>
+    /// <b>client --> proxy:</b> Commands the workflow to sleep for a period of time.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowGetLastResultReply)]
-    internal class WorkflowGetLastLastReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteChildRequest)]
+    internal class WorkflowExecuteChildRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowGetLastLastReply()
+        public WorkflowExecuteChildRequest()
         {
-            Type = InternalMessageTypes.WorkflowGetLastResultReply;
+            Type = InternalMessageTypes.WorkflowExecuteChildRequest;
+        }
+
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowExecuteChildReply;
+
+        /// <summary>
+        /// Specifies the child workflow arguments.
+        /// </summary>
+        public byte[] Args
+        {
+            get => GetBytesProperty("Args");
+            set => SetBytesProperty("Args", value);
         }
 
         /// <summary>
-        /// Indicates the workflow's last completion result.
+        /// Specifies the child workflow options.
         /// </summary>
-        public byte[] Result
+        public InternalChildWorkflowOptions Options
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetJsonProperty<InternalChildWorkflowOptions>("Options");
+            set => SetJsonProperty<InternalChildWorkflowOptions>("Options", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowGetLastLastReply();
+            var clone = new WorkflowExecuteChildRequest();
 
             CopyTo(clone);
 
@@ -62,9 +74,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowGetLastLastReply)target;
+            var typedTarget = (WorkflowExecuteChildRequest)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Args    = this.Args;
+            typedTarget.Options = this.Options;
         }
     }
 }

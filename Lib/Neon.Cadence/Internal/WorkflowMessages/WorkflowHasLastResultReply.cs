@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowHasLastCompletionReply.cs
+// FILE:	    WorkflowHasLastResultReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,12 +28,12 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Answers a <see cref="WorkflowHasLastResultRequest"/>
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.WorkflowHasLastResultReply)]
-    internal class WorkflowHasLastCompletionReply : WorkflowReply
+    internal class WorkflowHasLastResultReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowHasLastCompletionReply()
+        public WorkflowHasLastResultReply()
         {
             Type = InternalMessageTypes.WorkflowHasLastResultReply;
         }
@@ -50,7 +50,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowHasLastCompletionReply();
+            var clone = new WorkflowHasLastResultReply();
 
             CopyTo(clone);
 
@@ -62,7 +62,7 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowHasLastCompletionReply)target;
+            var typedTarget = (WorkflowHasLastResultReply)target;
 
             typedTarget.HasResult = this.HasResult;
         }

@@ -531,21 +531,16 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Helper method for retrieving a date/time property.
+        /// Helper method for retrieving a date/time property.  These are serialized as the
+        /// <c>long</c> number of nanosecond ticks since 01-01-0001 00:00 which is the
+        /// common time underlying time format for both .NET and GOLANG.
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The double value.</returns>
         internal DateTime GetDateTimeProperty(string key, DateTime def = default)
         {
-            if (Properties.TryGetValue(key, out var value))
-            {
-                return DateTime.ParseExact(value, NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture).ToUniversalTime();
-            }
-            else
-            {
-                return def;
-            }
+            return new DateTime(GetLongProperty(key, def.Ticks));
         }
 
         /// <summary>
@@ -721,7 +716,7 @@ namespace Neon.Cadence.Internal
         /// <param name="value">The property value.</param>
         internal void SetDateTimeProperty(string key, DateTime value)
         {
-            Properties[key] = value.ToString(NeonHelper.DateFormatTZ);
+            Properties[key] = value.Ticks.ToString();
         }
 
         /// <summary>
