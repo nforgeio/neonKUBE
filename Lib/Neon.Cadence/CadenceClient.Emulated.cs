@@ -98,7 +98,7 @@ namespace Neon.Cadence
             /// <summary>
             /// The workflow context ID.
             /// </summary>
-            public long WorkflowContextId { get; set; }
+            public long ContextId { get; set; }
 
             /// <summary>
             /// Identifies the Cadence domain hosting the workflow.
@@ -136,14 +136,14 @@ namespace Neon.Cadence
             public CadenceError Error { get; set; }
         }
 
-        private AsyncMutex                              emulationMutex                = new AsyncMutex();
-        private List<EmulatedCadenceDomain>             emulatedDomains               = new List<EmulatedCadenceDomain>();
-        private Dictionary<long, EmulatedWorker>        emulatedWorkers               = new Dictionary<long, EmulatedWorker>();
-        private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts      = new Dictionary<long, EmulatedWorkflow>();
-        private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows             = new Dictionary<string, EmulatedWorkflow>();
-        private Dictionary<long, Operation>             emulatedOperations            = new Dictionary<long, Operation>();
-        private long                                    nextEmulatedWorkerId          = 0;
-        private long                                    nextEmulatedWorkflowContextId = 0;
+        private AsyncMutex                              emulationMutex           = new AsyncMutex();
+        private List<EmulatedCadenceDomain>             emulatedDomains          = new List<EmulatedCadenceDomain>();
+        private Dictionary<long, EmulatedWorker>        emulatedWorkers          = new Dictionary<long, EmulatedWorker>();
+        private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts = new Dictionary<long, EmulatedWorkflow>();
+        private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows        = new Dictionary<string, EmulatedWorkflow>();
+        private Dictionary<long, Operation>             emulatedOperations       = new Dictionary<long, Operation>();
+        private long                                    nextEmulatedWorkerId     = 0;
+        private long                                    nextEmulatedContextId    = 0;
         private IWebHost                                emulatedHost;
 
         /// <summary>
@@ -735,21 +735,21 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedWorkflowExecuteRequestAsync(WorkflowExecuteRequest request)
         {
-            var workflowContextId = Interlocked.Increment(ref nextEmulatedWorkflowContextId);
+            var contextId = Interlocked.Increment(ref nextEmulatedContextId);
 
             var workflow = new EmulatedWorkflow()
             {
-                WorkflowId        = request.Options.ID ?? Guid.NewGuid().ToString("D"),
-                WorkflowContextId = workflowContextId,
-                Args              = request.Args,
-                Domain            = request.Domain,
-                Name              = request.Workflow,
-                Options           = request.Options
+                WorkflowId = request.Options.ID ?? Guid.NewGuid().ToString("D"),
+                ContextId  = contextId,
+                Args       = request.Args,
+                Domain     = request.Domain,
+                Name       = request.Workflow,
+                Options    = request.Options
             };
 
             using (await emulationMutex.AcquireAsync())
             {
-                emulatedWorkflowContexts.Add(workflowContextId, workflow);
+                emulatedWorkflowContexts.Add(contextId, workflow);
                 emulatedWorkflows.Add(workflow.WorkflowId, workflow);
             }
 
@@ -778,7 +778,7 @@ namespace Neon.Cadence
                         {
                             Args              = workflow.Args,
                             Name              = workflow.Name,
-                            ContextId = workflow.WorkflowContextId
+                            ContextId = workflow.ContextId
                         };
 
                     var workflowInvokeReply = (WorkflowInvokeReply)await CallClientAsync(workflowInvokeRequest);

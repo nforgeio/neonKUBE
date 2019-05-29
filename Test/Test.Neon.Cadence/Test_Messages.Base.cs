@@ -340,7 +340,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
-                Assert.Equal(0, message.WorkflowContextId);
+                Assert.Equal(0, message.ContextId);
 
                 // Round-trip
 
@@ -348,8 +348,8 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
                 Assert.Equal("MyError", message.Error.String);
-                message.WorkflowContextId = 666;
-                Assert.Equal(666, message.WorkflowContextId);
+                message.ContextId = 666;
+                Assert.Equal(666, message.ContextId);
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -359,7 +359,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(666, message.WorkflowContextId);
+                Assert.Equal(666, message.ContextId);
             }
         }
     }

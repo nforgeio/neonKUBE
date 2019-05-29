@@ -46,10 +46,10 @@ namespace Neon.Cadence.Internal
         /// this can remain as its default zero value.
         /// </note>
         /// </summary>
-        public long WorkflowContextId
+        public long ContextId
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetLongProperty("ContextId");
+            set => SetLongProperty("ContextId", value);
         }
 
         /// <inheritdoc/>
@@ -69,7 +69,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowReply)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.ContextId = this.ContextId;
         }
     }
 }

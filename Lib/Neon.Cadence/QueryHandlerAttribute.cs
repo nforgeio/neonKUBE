@@ -41,12 +41,12 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
 
-            this.Query = queryName;
+            this.Name = queryName;
         }
 
         /// <summary>
         /// Returns the query name. 
         /// </summary>
-        public string Query { get; private set; }
+        public string Name { get; private set; }
     }
 }

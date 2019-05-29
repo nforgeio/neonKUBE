@@ -1248,8 +1248,8 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
                 Assert.Equal("MyError", message.Error.String);
-                message.WorkflowContextId = 666;
-                Assert.Equal(666, message.WorkflowContextId);
+                message.ContextId = 666;
+                Assert.Equal(666, message.ContextId);
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
 
                 stream.SetLength(0);

@@ -23,6 +23,7 @@ using Neon.Common;
 using Neon.Xunit;
 
 using Xunit;
+using System.Text;
 
 namespace TestCommon
 {
@@ -75,6 +76,47 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void JsonSerializeBytesStrict()
+        {
+            var before =
+                new JsonTestPerson()
+                {
+                    Name = "Jeff",
+                    Age  = 56
+                };
+
+            var jsonBytes = NeonHelper.JsonSerializeToBytes(before);
+
+            Assert.StartsWith("{", Encoding.UTF8.GetString(jsonBytes));
+
+            var after = NeonHelper.JsonDeserialize<JsonTestPerson>(jsonBytes);
+
+            Assert.Equal("Jeff", after.Name);
+            Assert.Equal(56, after.Age);
+
+            const string unmatchedJson =
+@"
+{
+    ""Name"": ""jeff"",
+    ""Age"": 66,
+    ""Unmatched"": ""Hello""
+}
+";
+            var unmatchedJsonBytes = Encoding.UTF8.GetBytes(unmatchedJson);
+
+            // Verify that we don't see exceptions for a source property
+            // that's not defined in the type by default (when [strict=false])
+
+            NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJsonBytes);
+
+            // Verify that we see exceptions for a source property
+            // that's not defined in the type when [strict=true]
+
+            Assert.Throws<JsonSerializationException>(() => NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJsonBytes, strict: true));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void JsonSerializeRelaxed()
         {
             var before =
@@ -105,6 +147,42 @@ namespace TestCommon
 }
 ";
             NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson, strict: false);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void JsonSerializeBytesRelaxed()
+        {
+            var before =
+                new JsonTestPerson()
+                {
+                    Name = "Jeff",
+                    Age = 56
+                };
+
+            var jsonBytes = NeonHelper.JsonSerializeToBytes(before);
+
+            Assert.StartsWith("{", Encoding.UTF8.GetString(jsonBytes));
+
+            var after = NeonHelper.JsonDeserialize<JsonTestPerson>(jsonBytes);
+
+            Assert.Equal("Jeff", after.Name);
+            Assert.Equal(56, after.Age);
+
+            // Verify that we don't see exceptions for a source property
+            // that's not defined in the type.
+
+            const string unmatchedJson =
+@"
+{
+    ""Name"": ""jeff"",
+    ""Age"": 66,
+    ""Unmatched"": ""Hello""
+}
+";
+            var unmatchedJsonBytes = Encoding.UTF8.GetBytes(unmatchedJson);
+
+            NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJsonBytes, strict: false);
         }
 
         [Fact]
