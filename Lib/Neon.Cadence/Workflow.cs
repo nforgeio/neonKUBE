@@ -164,45 +164,72 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                       syncLock     = new object();
-        private static INeonLogger                  log          = LogManager.Default.GetLogger<Workflow>();
-        private static SemanticVersion              zeroVersion  = new SemanticVersion();
-        private static Dictionary<string, Workflow> idToWorkflow = new Dictionary<string, Workflow>();
+        private static object                               syncLock        = new object();
+        private static INeonLogger                          log             = LogManager.Default.GetLogger<Workflow>();
+        private static SemanticVersion                      zeroVersion     = new SemanticVersion();
+        private static Dictionary<long, Workflow>           idToWorkflow    = new Dictionary<long, Workflow>();
+        private static Dictionary<Type, WorkflowMethodMap>  typeToMethodMap = new Dictionary<Type, WorkflowMethodMap>();
 
         /// <summary>
         /// Called to handle a workflow related request message received from the cadence-proxy.
         /// </summary>
         /// <param name="client">The client that received the request.</param>
         /// <param name="request">The workflow request message.</param>
-        /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> OnProxyRequestAsync(CadenceClient client, WorkflowRequest request)
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        internal static async Task OnProxyRequestAsync(CadenceClient client, WorkflowRequest request)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
 
-            throw new NotImplementedException();
+            ProxyReply reply;
 
             switch (request.Type)
             {
                 case InternalMessageTypes.WorkflowInvokeRequest:
 
-                    return await InvokeAsync(client, (WorkflowInvokeRequest)request);
+                    reply = await InvokeAsync(client, (WorkflowInvokeRequest)request);
+                    break;
 
                 case InternalMessageTypes.WorkflowSignalReceivedRequest:
 
+                    reply = await SignalAsync((WorkflowSignalReceivedRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowQueryRequest:
 
+                    reply = await QueryAsync((WorkflowQueryRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowMutableInvokeRequest:
 
+                    reply = await MutableInvokeAsync((WorkflowMutableInvokeRequest)request);
                     break;
 
                 default:
 
                     throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
+            }
+
+            await client.ProxyReplyAsync(request, reply);
+        }
+
+        /// <summary>
+        /// Thread-safe method that maps a workflow ID to the corresponding workflow instance.
+        /// </summary>
+        /// <param name="contextId">The workflow's context ID.</param>
+        /// <returns>The <see cref="Workflow"/> instance or <c>null</c> if the workflow was not found.</returns>
+        private static Workflow GetWorkflow(long contextId)
+        {
+            lock (syncLock)
+            {
+                if (idToWorkflow.TryGetValue(contextId, out var workflow))
+                {
+                    return workflow;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -217,19 +244,17 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
 
-            throw new NotImplementedException();
-
             Workflow workflow;
 
             lock (syncLock)
             {
-                var workflowId = request.WorkflowId;
+                var contextId = request.ContextId;
 
-                if (idToWorkflow.TryGetValue(workflowId, out workflow))
+                if (idToWorkflow.TryGetValue(contextId, out workflow))
                 {
                     return new WorkflowInvokeReply()
                     {
-                        Error = new CadenceError($"A workflow with [ID={workflowId}] is already running on this worker.")
+                        Error = new CadenceError($"A workflow with [ID={contextId}] is already running on this worker.")
                     };
                 }
 
@@ -245,24 +270,24 @@ namespace Neon.Cadence
 
                 workflow = (Workflow)Activator.CreateInstance(workflowType);
 
-                idToWorkflow.Add(workflowId, workflow);
+                idToWorkflow.Add(contextId, workflow);
             }
 
             // We're going to record the workflow implementation version as a mutable
-            // value and then obtain the actual value to set the [OriginalVersion]
-            // property.  The outcome will be that [OriginalVersion] will end up being
-            // set to the [Version] at the time the workflow instance was first
-            // invoked and [Version] will return the current version.
+            // value and then obtain the value to set the [OriginalVersion] property.
+            // The outcome will be that [OriginalVersion] will end up being set to the 
+            // [Version] at the time the workflow instance was first invoked and [Version] 
+            // will return the current version.
             //
             // This will give upgraded workflow implementations a chance to implement 
             // backwards compatibility for workflows already in flight.
 
-            var versionBytes = await workflow.GetMutableValueAsync("::neon:original-version",
+            var versionBytes = await workflow.GetMutableValueAsync("neon:original-version",
                 async () =>
                 {
                     var version = workflow.Version ?? zeroVersion;
 
-                    return await Task.FromResult(Encoding.UTF8.GetBytes(zeroVersion.ToString()));
+                    return await Task.FromResult(Encoding.UTF8.GetBytes(version.ToString()));
                 });
 
             workflow.OriginalVersion = SemanticVersion.Parse(Encoding.UTF8.GetString(versionBytes));
@@ -270,7 +295,7 @@ namespace Neon.Cadence
             // Initialize the other workflow properties.
 
             workflow.Client          = client;
-            workflow.ContextId       = request.ContextId;
+            workflow.contextId       = request.ContextId;
             workflow.Domain          = request.Domain;
             workflow.RunId           = request.RunId;
             workflow.TaskList        = request.TaskList;
@@ -316,26 +341,179 @@ namespace Neon.Cadence
             }
             catch (CadenceException e)
             {
-                await client.ProxyReplyAsync(request,
-                    new WorkflowInvokeReply()
-                    {
-                        Error = e.ToCadenceError()
-                    });
+                return new WorkflowInvokeReply()
+                {
+                    Error = e.ToCadenceError()
+                };
             }
             catch (Exception e)
             {
-                await client.ProxyReplyAsync(request,
-                    new WorkflowInvokeReply()
+                return new WorkflowInvokeReply()
+                {
+                    Error = new CadenceError(e)
+                };
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow signals.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal static async Task<ProxyReply> SignalAsync(WorkflowSignalReceivedRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            try
+            {
+                var workflow = GetWorkflow(request.ContextId);
+
+                if (workflow != null)
+                {
+                    var method = workflow.methodMap.GetSignalMethod(request.SignalName);
+
+                    if (method != null)
                     {
-                        Error = new CadenceError(e)
-                    });
+                        await (Task)(method.Invoke(workflow, new object[] { request.SignalArgs }));
+
+                        return new WorkflowSignalReply()
+                        {
+                            ContextId = request.ContextId
+                        };
+                    }
+                    else
+                    {
+                        return new WorkflowSignalReply()
+                        {
+                            Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToCadenceError()
+                        };
+                    }
+                }
+                else
+                {
+                    return new WorkflowSignalReply()
+                    {
+                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                return new WorkflowSignalReply()
+                {
+                    Error = new CadenceError(e)
+                };
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow queries.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal static async Task<ProxyReply> QueryAsync(WorkflowQueryRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            try
+            {
+                var workflow = GetWorkflow(request.ContextId);
+
+                if (workflow != null)
+                {
+                    var method = workflow.methodMap.GetQueryMethod(request.QueryName);
+
+                    if (method != null)
+                    {
+                        var result = await (Task<byte[]>)(method.Invoke(workflow, new object[] { request.QueryArgs }));
+
+                        return new WorkflowQueryReply()
+                        {
+                            ContextId = request.ContextId,
+                            Result    = result
+                        };
+                    }
+                    else
+                    {
+                        return new WorkflowQueryReply()
+                        {
+                            Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a query handler for [queryName={request.QueryName}].").ToCadenceError()
+                        };
+                    }
+                }
+                else
+                {
+                    return new WorkflowQueryReply()
+                    {
+                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                return new WorkflowQueryReply()
+                {
+                    Error = new CadenceError(e)
+                };
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow mutable value lookups.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal static async Task<ProxyReply> MutableInvokeAsync(WorkflowMutableInvokeRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            try
+            {
+                var workflow = GetWorkflow(request.ContextId);
+
+                if (workflow != null)
+                {
+                    Func<Task<byte[]>> getter;
+
+                    lock (workflow.idToMutableFunc)
+                    {
+                        if (!workflow.idToMutableFunc.TryGetValue(request.MutableId, out getter))
+                        {
+                            return new WorkflowMutableInvokeReply()
+                            {
+                                Error = new CadenceEntityNotExistsException($"Workflow mutable function callback does not exist for [mutableId={request.MutableId}].").ToCadenceError()
+                            };
+                        }
+                    }
+
+                    return new WorkflowMutableInvokeReply()
+                    {
+                        Result = await getter()
+                    };
+                }
+                else
+                {
+                    return new WorkflowMutableInvokeReply()
+                    {
+                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                return new WorkflowMutableInvokeReply()
+                {
+                    Error = new CadenceError(e)
+                };
             }
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private long ContextId;
+        private long                                    contextId;
+        private WorkflowMethodMap                       methodMap;
+        private Dictionary<string, Func<Task<byte[]>>>  idToMutableFunc;
 
         /// <summary>
         /// Internal constructor.
@@ -345,8 +523,24 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 
-            this.Client    = args.Client;
-            this.ContextId = args.WorkerContextId;
+            this.Client          = args.Client;
+            this.contextId       = args.ContextId;
+            this.idToMutableFunc = new Dictionary<string, Func<Task<byte[]>>>();
+
+            // Generate the signal/query method map for the workflow type if we
+            // haven't already done that for this workflow type.
+
+            var workflowType = this.GetType();
+
+            lock (syncLock)
+            {
+                if (!typeToMethodMap.TryGetValue(workflowType, out methodMap))
+                {
+                    methodMap = WorkflowMethodMap.Create(workflowType);
+
+                    typeToMethodMap.Add(workflowType, methodMap);
+                }
+            }
         }
 
         /// <summary>
@@ -497,8 +691,30 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mutableId));
             Covenant.Requires<ArgumentNullException>(getter != null);
 
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            // We're going to persist the getter function here, keyed
+            // by mutable ID so we'll be able to obtain it when the
+            // cadence-proxy sends us the [WorkflowMutableInvokeRequest].
+
+            lock (idToMutableFunc)
+            {
+                idToMutableFunc.Add(mutableId, getter);
+            }
+
+            var reply = (WorkflowMutableReply)await Client.CallProxyAsync(
+                new WorkflowMutableRequest()
+                {
+                    ContextId = this.contextId,
+                    MutableId = mutableId
+                });
+
+            lock (idToMutableFunc)
+            {
+                idToMutableFunc.Remove(mutableId);
+            }
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
 
         /// <summary>

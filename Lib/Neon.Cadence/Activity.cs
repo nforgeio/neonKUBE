@@ -45,7 +45,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(cancellationToken != null);
 
             this.Client            = args.Client;
-            this.contextId         = args.WorkerContextId;
+            this.contextId         = args.ContextId;
             this.CancellationToken = cancellationToken;
         }
 

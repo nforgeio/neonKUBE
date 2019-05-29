@@ -41,12 +41,12 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-            this.SignalName = signalName;
+            this.Name = signalName;
         }
 
         /// <summary>
         /// Returns the signal name. 
         /// </summary>
-        public string SignalName { get; private set; }
+        public string Name { get; private set; }
     }
 }

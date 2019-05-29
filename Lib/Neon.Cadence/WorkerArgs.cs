@@ -42,6 +42,6 @@ namespace Neon.Cadence
         /// The ID used to reference the corresponding Cadence context managed by
         /// the <b>cadence-proxy</b>.
         /// </summary>
-        internal long WorkerContextId { get; set; }
+        internal long ContextId { get; set; }
     }
 }
