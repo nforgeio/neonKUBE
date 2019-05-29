@@ -1252,6 +1252,11 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		} else if v, ok := result.([]byte); ok {
 			buildReply(reply, nil, v)
 		}
+
+	} else {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			"no value was returned by the mutable side effect call",
+			cadenceerrors.Custom))
 	}
 
 	return reply
