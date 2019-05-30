@@ -47,25 +47,13 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// <para>
-        /// Optionally specifies the maximum time the operation may
-        /// take before it should be aborted.  The operation reply 
-        /// should specify a <see cref="CadenceError"/> of type
-        /// <see cref="CadenceErrorTypes.Timeout"/> when this happens.
-        /// </para>
-        /// <note>
-        /// A <see cref="TimeSpan.Zero"/> (the default) indicates that
-        /// the operation may proceed indefinitely.
-        /// </note>
+        /// Optionally indicates that the operation may be cancelled by the 
+        /// workflow application.
         /// </summary>
-        /// <remarks>
-        /// Note that operations are not required to support this
-        /// property when that's doesn't makes sense.
-        /// </remarks>
-        public TimeSpan Timeout
+        public bool IsCancellable
         {
-            get => GetTimeSpanProperty("Timeout");
-            set => SetTimeSpanProperty("Timeout", value);
+            get => GetBoolProperty("IsCancellable");
+            set => SetBoolProperty("IsCancellable", value);
         }
 
         /// <summary>
@@ -91,8 +79,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ProxyRequest)target;
 
-            typedTarget.RequestId = this.RequestId;
-            typedTarget.Timeout   = this.Timeout;
+            typedTarget.RequestId     = this.RequestId;
+            typedTarget.IsCancellable = this.IsCancellable;
         }
     }
 }

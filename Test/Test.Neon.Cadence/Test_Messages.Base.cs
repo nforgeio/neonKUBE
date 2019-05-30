@@ -129,14 +129,13 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Equal(TimeSpan.Zero, message.Timeout);
+                Assert.False(message.IsCancellable);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.Timeout = TimeSpan.FromSeconds(1.5);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
+                message.IsCancellable = true;
 
                 stream.SetLength(0);
                 stream.Write(message.Serialize(ignoreTypeCode: true));
@@ -145,7 +144,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
+                Assert.True(message.IsCancellable);
             }
         }
 

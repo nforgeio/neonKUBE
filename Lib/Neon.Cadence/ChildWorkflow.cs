@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -25,10 +26,10 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Returned by <see cref="Workflow.StartChildWorkflowAsync(string, byte[], Internal.ChildWorkflowOptions, System.Threading.CancellationToken)"/>
+    /// Returned by <see cref="Workflow.StartChildWorkflowAsync(string, byte[], Internal.ChildWorkflowOptions, CancellationToken?)"/>
     /// to identify the new child workflow.  This valie can then be used to perform
-    /// operations on the workflow like: <see cref="Workflow.SignalChildWorkflow(ChildWorkflow, string, byte[])"/>,
-    /// <see cref="Workflow.CancelChildWorkflow(ChildWorkflow)"/> and <see cref="Workflow.WaitForChildWorkflow(ChildWorkflow)"/>.
+    /// operations on the workflow like: <see cref="Workflow.SignalChildWorkflowAsync(ChildWorkflow, string, byte[])"/>,
+    /// <see cref="Workflow.CancelChildWorkflowAsync(ChildWorkflow)"/> and <see cref="Workflow.WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken?)"/>.
     /// </summary>
     public struct ChildWorkflow
     {

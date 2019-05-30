@@ -65,14 +65,11 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.LibraryAddress);
                 Assert.Equal(0, message.LibraryPort);
-                Assert.Equal(TimeSpan.Zero, message.Timeout);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.Timeout = TimeSpan.FromSeconds(1.5);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 message.LibraryAddress = "1.2.3.4";
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 message.LibraryPort = 666;
@@ -85,7 +82,6 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<InitializeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
 
@@ -94,7 +90,6 @@ namespace TestCadence
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
 
@@ -103,7 +98,6 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
             }

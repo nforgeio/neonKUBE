@@ -109,7 +109,7 @@ namespace Neon.Cadence
     /// <note>
     /// <b>External workflows</b> are top-level workflows that have no workflow parent.
     /// This is distinugished from <b>child workflows</b> that are executed within the
-    /// context of another workflow via <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
+    /// context of another workflow via <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>.
     /// </note>
     /// <para>
     /// <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/> returns
@@ -124,8 +124,9 @@ namespace Neon.Cadence
     /// </para>
     /// <note>
     /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
-    /// via the <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
-    /// <see cref="Workflow.CallActivityAsync(string, byte[])"/>, and <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions)"/>
+    /// via the <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    /// <see cref="Workflow.CallActivityAsync(string, byte[], CancellationToken?)"/>, and
+    /// <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
     /// methods.
     /// </note>
     /// <para>
@@ -1013,8 +1014,9 @@ namespace Neon.Cadence
         /// Optionally specifies the maximum time to wait for the operation to complete.
         /// This defaults to unlimited.
         /// </param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The reply message.</returns>
-        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
+        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken? cancellationToken = null)
         {
             try
             {
@@ -1024,6 +1026,17 @@ namespace Neon.Cadence
                 lock (syncLock)
                 {
                     operations.Add(requestId, operation);
+                }
+
+                if (cancellationToken != null)
+                {
+                    request.IsCancellable = true;
+
+                    cancellationToken.Value.Register(
+                        () =>
+                        {
+                            CallProxyAsync(new CancelRequest() { RequestId = requestId }).Wait();
+                        });
                 }
 
                 var response = await proxyClient.SendRequestAsync(request);
