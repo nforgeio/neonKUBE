@@ -43,6 +43,15 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityInvokeLocalReply;
 
         /// <summary>
+        /// Identifies the activity context.
+        /// </summary>
+        public long ActivityContextId
+        {
+            get => GetLongProperty("ActivityContextId");
+            set => SetLongProperty("ActivityContextId", value);
+        }
+
+        /// <summary>
         /// Identifies the .NET type that implements the local activity. 
         /// </summary>
         public long ActivityTypeId
@@ -77,8 +86,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityInvokeLocalRequest)target;
 
-            typedTarget.ActivityTypeId = this.ActivityTypeId;
-            typedTarget.Args           = this.Args;
+            typedTarget.ActivityContextId = this.ActivityContextId;
+            typedTarget.ActivityTypeId    = this.ActivityTypeId;
+            typedTarget.Args              = this.Args;
         }
     }
 }

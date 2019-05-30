@@ -513,6 +513,8 @@ namespace Neon.Cadence
         private long                                    contextId;
         private WorkflowMethodMap                       methodMap;
         private Dictionary<string, Func<Task<byte[]>>>  idToMutableFunc;
+        private Dictionary<long, Type>                  idToLocalActivityType;
+        private long                                    nextLocalActivityTypeId;
 
         /// <summary>
         /// Internal constructor.
@@ -522,9 +524,10 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 
-            this.Client          = args.Client;
-            this.contextId       = args.ContextId;
-            this.idToMutableFunc = new Dictionary<string, Func<Task<byte[]>>>();
+            this.Client                = args.Client;
+            this.contextId             = args.ContextId;
+            this.idToMutableFunc       = new Dictionary<string, Func<Task<byte[]>>>();
+            this.idToLocalActivityType = new Dictionary<long, Type>();
 
             // Generate the signal/query method map for the workflow type if we
             // haven't already done that for this workflow type.
@@ -1075,7 +1078,8 @@ namespace Neon.Cadence
         protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null, CancellationToken? cancellationToken = null)
             where TActivity : Activity
         {
-            await Task.CompletedTask;
+            // We need to register the local activity type with a 
+
             throw new NotImplementedException();
         }
 

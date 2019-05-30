@@ -912,11 +912,13 @@ namespace TestCadence
                 // Round-trip
 
                 message.RequestId = 555;
-                message.ActivityTypeId = 666;
+                message.ActivityContextId = 666;
+                message.ActivityTypeId = 777;
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
 
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ActivityTypeId);
+                Assert.Equal(666, message.ActivityContextId);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
                 stream.SetLength(0);
@@ -926,7 +928,8 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityInvokeLocalRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ActivityTypeId);
+                Assert.Equal(666, message.ActivityContextId);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
                 // Echo the message via the connection's web server and verify.
@@ -934,7 +937,8 @@ namespace TestCadence
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ActivityTypeId);
+                Assert.Equal(666, message.ActivityContextId);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -942,7 +946,8 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ActivityTypeId);
+                Assert.Equal(666, message.ActivityContextId);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
             }
         }
