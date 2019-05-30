@@ -114,12 +114,11 @@ namespace Neon.Cadence.Internal
                 TaskList                     = this.TaskList,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
-                ChildPolicy                  = (InternalChildTerminationPolicy)this.ChildTerminationPolicy,
+                ChildPolicy                  = (int)this.ChildTerminationPolicy,
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy.ToInternal(),
-                CronSchedule                 = this.CronSchedule.ToInternal(),
-                Memo                         = this.Memo
+                CronSchedule                 = this.CronSchedule.ToInternal()
             };
         }
     }

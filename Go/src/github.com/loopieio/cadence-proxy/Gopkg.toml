@@ -25,6 +25,10 @@
 #   unused-packages = true
 
 [[constraint]]
+  name = "go.uber.org/cadence"
+  version = "0.8.2"
+
+[[constraint]]
   name = "github.com/uber-go/tally"
   version = "3.3.1"
 
@@ -39,10 +43,6 @@
 [[override]]
   name = "github.com/apache/thrift"
   version = "0.9.3"
-
-[[constraint]]
-  name = "go.uber.org/cadence"
-  version = "0.8.2"
 
 [prune]
   go-tests = true

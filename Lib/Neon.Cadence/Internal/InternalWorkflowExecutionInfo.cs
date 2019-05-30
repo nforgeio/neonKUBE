@@ -85,7 +85,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "ParentExecution", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public InternalWorkflowExecution ParentExecution { get; set; }
+        public InternalWorkflowExecution2 ParentExecution { get; set; }
 
         /// <summary>
         /// The workflow execution time.
