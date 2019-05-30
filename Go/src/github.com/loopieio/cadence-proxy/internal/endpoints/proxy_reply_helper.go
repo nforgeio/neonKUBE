@@ -304,7 +304,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		continueError := workflow.NewContinueAsNewError(continueContext, wectx.GetWorkflowFunction(), reply.GetContinueAsNewArgs())
 
 		// create a new custom error and set it in the reply to be handled by the future
-		cadenceError := cadenceerrors.NewCadenceError(continueError.Error(), cadenceerrors.Custom)
+		cadenceError := cadenceerrors.NewCadenceError(continueError.Error())
 		reply.SetError(cadenceError)
 	}
 

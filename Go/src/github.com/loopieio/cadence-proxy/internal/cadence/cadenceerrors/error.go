@@ -26,30 +26,28 @@ func NewCadenceErrorEmpty() *CadenceError {
 // NewCadenceError is the constructor for a CadenceError
 // when supplied parameters
 //
-// param errStr *string -> pointer to the error string
+// param errStr string -> pointer to the error string
 //
-// param errorType CadenceErrorTypes -> the cadence error type
-//
-// param details *string -> pointer to the error details
-func NewCadenceError(errStr string, optParams ...interface{}) *CadenceError {
+// param errorType ...interface{} -> the cadence error type
+func NewCadenceError(errStr string, errType ...CadenceErrorType) *CadenceError {
 	cadenceError := NewCadenceErrorEmpty()
 	cadenceError.String = &errStr
 
-	if len(optParams) > 0 {
-		if v, ok := optParams[0].(CadenceErrorTypes); ok {
-			cadenceError.SetType(v)
-		}
+	if len(errType) > 0 {
+		cadenceError.SetType(errType[0])
+	} else {
+		cadenceError.SetType(Custom)
 	}
 
 	return cadenceError
 }
 
-// GetType gets the CadenceErrorTypes from a CadenceError
+// GetType gets the CadenceErrorType from a CadenceError
 // instance
 //
-// returns CadenceErrorTypes -> the corresponding error type to the
+// returns CadenceErrorType -> the corresponding error type to the
 // string representing the error type in a CadenceError instance
-func (c *CadenceError) GetType() CadenceErrorTypes {
+func (c *CadenceError) GetType() CadenceErrorType {
 	if c.Type == nil {
 		err := fmt.Errorf("no error type set")
 		panic(err)
@@ -74,12 +72,12 @@ func (c *CadenceError) GetType() CadenceErrorTypes {
 	}
 }
 
-// SetType sets the *string to the corresponding CadenceErrorTypes
+// SetType sets the *string to the corresponding CadenceErrorType
 // in a CadenceError instance
 //
-// param errorType CadenceErrorType -> the CadenceErrorTypes to set as a string
+// param errorType CadenceErrorType -> the CadenceErrorType to set as a string
 // in a CadenceError instance
-func (c *CadenceError) SetType(errorType CadenceErrorTypes) {
+func (c *CadenceError) SetType(errorType CadenceErrorType) {
 	var typeString string
 	switch errorType {
 	case Cancelled:

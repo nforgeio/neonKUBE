@@ -2,32 +2,32 @@ package cadenceerrors
 
 import "fmt"
 
-// CadenceErrorTypes is an enumerated list of
+// CadenceErrorType is an enumerated list of
 // all of the cadence error types
-type CadenceErrorTypes int
+type CadenceErrorType int
 
 const (
 
 	// Cancelled indicates that an operation was cancelled
-	Cancelled CadenceErrorTypes = iota
+	Cancelled CadenceErrorType = 0
 
 	// Custom is a custom error
-	Custom
+	Custom CadenceErrorType = 1
 
 	// Generic is a generic error
-	Generic
+	Generic CadenceErrorType = 2
 
 	// Panic is a panic error
-	Panic
+	Panic CadenceErrorType = 3
 
 	// Terminated is a termination error
-	Terminated
+	Terminated CadenceErrorType = 4
 
 	// Timeout is a timeout error
-	Timeout
+	Timeout CadenceErrorType = 5
 )
 
-func (t CadenceErrorTypes) String() string {
+func (t CadenceErrorType) String() string {
 	return [...]string{
 		"cancelled",
 		"custom",
@@ -38,31 +38,31 @@ func (t CadenceErrorTypes) String() string {
 	}[t]
 }
 
-// ErrorTypeToString takes a CadenceErrorTypes and converts it into the corresponding
-// string representation
+// ToCadenceError takes a string value and converts it into the corresponding
+// CadenceErrorType
 //
-// param errorType CadenceErrorType -> the CadenceErrorTypes to convert to a string
+// param value string -> the string representation of a CadenceErrorType
 //
-// returns string -> the string representation of the param errorType CadenceErrorTypes
-func ErrorTypeToString(errorType CadenceErrorTypes) string {
-	var typeString string
-	switch errorType {
-	case Cancelled:
-		typeString = "cancelled"
-	case Custom:
-		typeString = "custom"
-	case Generic:
-		typeString = "generic"
-	case Panic:
-		typeString = "panic"
-	case Terminated:
-		typeString = "terminated"
-	case Timeout:
-		typeString = "timeout"
+// returns CadenceErrorType -> the corresponding CadenceErrorType
+func ToCadenceError(value string) CadenceErrorType {
+	var errType CadenceErrorType
+	switch value {
+	case "cancelled":
+		errType = Cancelled
+	case "custom":
+		errType = Custom
+	case "generic":
+		errType = Generic
+	case "panic":
+		errType = Panic
+	case "terminated":
+		errType = Terminated
+	case "timeout":
+		errType = Timeout
 	default:
-		err := fmt.Errorf("unrecognized error type %s", errorType)
+		err := fmt.Errorf("unrecognized error type %s", value)
 		panic(err)
 	}
 
-	return typeString
+	return errType
 }

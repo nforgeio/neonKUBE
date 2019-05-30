@@ -285,9 +285,7 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 		clientHelper = nil
 
 		// build the rest of the reply with a custom error
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -326,10 +324,7 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 	connectResult := <-connectChan
 	if connectResult != nil {
 		clientHelper = nil
-
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -351,9 +346,7 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messag
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -361,9 +354,7 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messag
 	// build the domain client using a configured CadenceClientHelper instance
 	domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -371,9 +362,7 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messag
 	// send a describe domain request to the cadence server
 	describeDomainResponse, err := domainClient.Describe(context.Background(), *request.GetName())
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -394,9 +383,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messag
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -404,9 +391,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messag
 	// build the domain client using a configured CadenceClientHelper instance
 	domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -426,9 +411,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messag
 	// register the domain using the RegisterDomainRequest
 	err = domainClient.Register(context.Background(), &domainRegisterRequest)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -451,9 +434,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.I
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -461,9 +442,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.I
 	// build the domain client using a configured CadenceClientHelper instance
 	domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -490,9 +469,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.I
 	// Update the domain using the UpdateDomainRequest
 	err = domainClient.Update(context.Background(), &domainUpdateRequest)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -579,9 +556,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -598,9 +573,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 	workerID := cadenceworkers.Workers.Add(cadenceworkers.NextWorkerID(), worker)
 	err := worker.Start()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom), workerID)
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()), workerID)
 
 		return reply
 	}
@@ -622,9 +595,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -634,9 +605,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	workerID := request.GetWorkerID()
 	worker := cadenceworkers.Workers.Get(workerID)
 	if worker == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			entityNotExistError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
 
 		return reply
 	}
@@ -681,9 +650,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -783,9 +750,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -793,9 +758,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -812,9 +775,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	// signalwithstart the specified workflow
 	workflowRun, err := client.ExecuteWorkflow(ctx, *opts, *workflowName, args)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -849,9 +810,7 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -859,9 +818,7 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -877,9 +834,7 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 	// cancel the specified workflow
 	err = client.CancelWorkflow(ctx, *workflowID, *runID)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -901,9 +856,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -911,9 +864,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -931,9 +882,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	// terminate the specified workflow
 	err = client.TerminateWorkflow(ctx, *workflowID, *runID, *reason, details)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -955,9 +904,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -965,9 +912,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -985,9 +930,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 	// signal the specified workflow
 	err = client.SignalWorkflow(ctx, *workflowID, *runID, *signalName, signalArgs)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1009,9 +952,7 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -1019,9 +960,7 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1041,9 +980,7 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	// signalwithstart the specified workflow
 	workflowExecution, err := client.SignalWithStartWorkflow(ctx, *workflowID, *signalName, signalArgs, *opts, *workflow, workflowArgs)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1065,9 +1002,7 @@ func handleWorkflowSetCacheSizeRequest(request *messages.WorkflowSetCacheSizeReq
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -1092,9 +1027,7 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -1102,9 +1035,7 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1122,9 +1053,7 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 	// query the workflow via the cadence client
 	value, err := client.QueryWorkflow(ctx, *workflowID, *runID, *queryName, queryArgs)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1134,9 +1063,7 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 	if value.HasValue() {
 		err = value.Get(&result)
 		if err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(
-				err.Error(),
-				cadenceerrors.Custom))
+			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 			return reply
 		}
@@ -1159,9 +1086,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -1170,9 +1095,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	contextID := request.GetContextID()
 	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			entityNotExistError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
 
 		return reply
 	}
@@ -1259,9 +1182,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 		// check the error of retreiving the value
 		if err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(
-				err.Error(),
-				cadenceerrors.Custom))
+			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 			return reply
 		}
@@ -1275,9 +1196,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		}
 
 	} else {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			"no value was returned by the mutable side effect call",
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError("no value was returned by the mutable sideffect call"))
 	}
 
 	return reply
@@ -1306,9 +1225,7 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -1316,9 +1233,7 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1334,9 +1249,7 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 	// DescribeWorkflow call to cadence client
 	describeWorkflowExecutionResponse, err := client.DescribeWorkflowExecution(ctx, *workflowID, *runID)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1358,9 +1271,7 @@ func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) 
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -1368,9 +1279,7 @@ func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) 
 	// build the cadence client using a configured CadenceClientHelper instance
 	client, err := clientHelper.Builder.BuildCadenceClient()
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1390,9 +1299,7 @@ func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) 
 	var result []byte
 	err = workflowRun.Get(ctx, &result)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -1414,9 +1321,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
 
 		return reply
 	}
@@ -1425,9 +1330,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 	contextID := request.GetContextID()
 	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			entityNotExistError.Error(),
-			cadenceerrors.Custom))
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
 
 		return reply
 	}
@@ -1487,9 +1390,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 		// wait for the future to be unblocked
 		var result interface{}
 		if err := future.Get(ctx, &result); err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(
-				err.Error(),
-				cadenceerrors.Custom))
+			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 		} else {
 			buildReply(reply, nil)
 		}
