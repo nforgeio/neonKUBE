@@ -300,13 +300,12 @@ namespace Neon.Cadence.Internal
         WorkflowInvokeReply = 125,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Initiates execution of a child workflow.
+        /// <b>client --> proxy:</b> Initiates execution of a child workflow.
         /// </summary>
         WorkflowExecuteChildRequest = 126,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message
-        /// after the child is completed.
+        /// <b>proxy --> cl;ient:</b> Sent in response to a <see cref="WorkflowExecuteChildRequest"/> message.
         /// </summary>
         WorkflowExecuteChildReply = 127,
 
@@ -440,6 +439,38 @@ namespace Neon.Cadence.Internal
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSleepRequest"/>.
         /// </summary>
         WorkflowSleepReply = 149,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Waits for a workflow that has already been started
+        /// by a <see cref="WorkflowExecuteChildRequest"/> to finish.
+        /// </summary>
+        WorkflowWaitForChildRequest = 150,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowWaitForChildRequest"/> message
+        /// after the child is finish.
+        /// </summary>
+        WorkflowWaitForChildReply = 151,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sends a signal to a child workflow.
+        /// </summary>
+        WorkflowSignalChildRequest = 152,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalChildRequest"/> message.
+        /// </summary>
+        WorkflowSignalChildReply = 153,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Cancels a child workflow.
+        /// </summary>
+        WorkflowCancelChildRequest = 154,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowCancelChildRequest"/> message.
+        /// </summary>
+        WorkflowCancelChildReply = 155,
 
         //---------------------------------------------------------------------
         // Activity messages

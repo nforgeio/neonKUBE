@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Thrown by <see cref="Workflow.Restart(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// Thrown by <see cref="Workflow.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// to be handled by <see cref="Workflow.InvokeAsync(CadenceClient, WorkflowInvokeRequest)"/>
     /// as one of the special case mechanisms for completing a workflow.
     /// </summary>

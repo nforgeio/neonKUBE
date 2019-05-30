@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteChildReply.cs
+// FILE:	    WorkflowCancelChildReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,34 +25,23 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowExecuteChildReply"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowCancelChildRequest"/>
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteChildReply)]
-    internal class WorkflowExecuteChildReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowCancelChildReply)]
+    internal class WorkflowCancelChildReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteChildReply()
+        public WorkflowCancelChildReply()
         {
-            Type = InternalMessageTypes.WorkflowExecuteChildReply;
-        }
-
-        /// <summary>
-        /// The child workflow identifier.  This will be used in other messages such 
-        /// as <see cref="WorkflowSignalChildRequest"/>, <see cref="WorkflowWaitForChildRequest"/>,
-        /// and <see cref="WorkflowCancelChildRequest"/> to identify the target child workflow.
-        /// </summary>
-        public long ChildId
-        {
-            get => GetLongProperty("ChildId");
-            set => SetLongProperty("ChildId", value);
+            Type = InternalMessageTypes.WorkflowCancelChildReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteChildReply();
+            var clone = new WorkflowCancelChildReply();
 
             CopyTo(clone);
 
@@ -63,10 +52,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowExecuteChildReply)target;
-
-            typedTarget.ChildId = this.ChildId;
         }
     }
 }

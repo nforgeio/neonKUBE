@@ -109,7 +109,7 @@ namespace Neon.Cadence
     /// <note>
     /// <b>External workflows</b> are top-level workflows that have no workflow parent.
     /// This is distinugished from <b>child workflows</b> that are executed within the
-    /// context of another workflow via <see cref="Workflow.CallWorkflow(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
+    /// context of another workflow via <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
     /// </note>
     /// <para>
     /// <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/> returns
@@ -124,8 +124,8 @@ namespace Neon.Cadence
     /// </para>
     /// <note>
     /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
-    /// via the <see cref="Workflow.CallWorkflow(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
-    /// <see cref="Workflow.CallActivity(string, byte[])"/>, and <see cref="Workflow.CallLocalActivity{TActivity}(byte[], LocalActivityOptions)"/>
+    /// via the <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    /// <see cref="Workflow.CallActivityAsync(string, byte[])"/>, and <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions)"/>
     /// methods.
     /// </note>
     /// <para>

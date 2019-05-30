@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteChildReply.cs
+// FILE:	    WorkflowSignalChildRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,23 +25,24 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowExecuteChildReply"/>.
+    /// <b>proxy --> client:</b> Sends a signal to a child workflow.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteChildReply)]
-    internal class WorkflowExecuteChildReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalChildRequest)]
+    internal class WorkflowSignalChildRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteChildReply()
+        public WorkflowSignalChildRequest()
         {
-            Type = InternalMessageTypes.WorkflowExecuteChildReply;
+            Type = InternalMessageTypes.WorkflowSignalChildRequest;
         }
 
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSignalChildReply;
+
         /// <summary>
-        /// The child workflow identifier.  This will be used in other messages such 
-        /// as <see cref="WorkflowSignalChildRequest"/>, <see cref="WorkflowWaitForChildRequest"/>,
-        /// and <see cref="WorkflowCancelChildRequest"/> to identify the target child workflow.
+        /// Identifies child workflow.
         /// </summary>
         public long ChildId
         {
@@ -49,10 +50,28 @@ namespace Neon.Cadence.Internal
             set => SetLongProperty("ChildId", value);
         }
 
+        /// <summary>
+        /// Identifies the signal.
+        /// </summary>
+        public string SignalName
+        {
+            get => GetStringProperty("SignalName");
+            set => SetStringProperty("SignalName", value);
+        }
+
+        /// <summary>
+        /// Optionally specifies the signal arguments.
+        /// </summary>
+        public byte[] SignalArgs
+        {
+            get => GetBytesProperty("SignalArgs");
+            set => SetBytesProperty("SignalArgs", value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteChildReply();
+            var clone = new WorkflowSignalChildRequest();
 
             CopyTo(clone);
 
@@ -64,9 +83,11 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowExecuteChildReply)target;
+            var typedTarget = (WorkflowSignalChildRequest)target;
 
-            typedTarget.ChildId = this.ChildId;
+            typedTarget.ChildId    = this.ChildId;
+            typedTarget.SignalName = this.SignalName;
+            typedTarget.SignalArgs = this.SignalArgs;
         }
     }
 }

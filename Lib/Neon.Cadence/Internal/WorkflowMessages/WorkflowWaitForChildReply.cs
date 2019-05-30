@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecuteChildReply.cs
+// FILE:	    WorkflowWaitForChildReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,34 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowExecuteChildReply"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowWaitForChildRequest"/>.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteChildReply)]
-    internal class WorkflowExecuteChildReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowWaitForChildReply)]
+    internal class WorkflowWaitForChildReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowExecuteChildReply()
+        public WorkflowWaitForChildReply()
         {
-            Type = InternalMessageTypes.WorkflowExecuteChildReply;
+            Type = InternalMessageTypes.WorkflowWaitForChildReply;
         }
 
         /// <summary>
-        /// The child workflow identifier.  This will be used in other messages such 
-        /// as <see cref="WorkflowSignalChildRequest"/>, <see cref="WorkflowWaitForChildRequest"/>,
-        /// and <see cref="WorkflowCancelChildRequest"/> to identify the target child workflow.
+        /// The child workflow results encoded as bytes.
         /// </summary>
-        public long ChildId
+        public byte[] Result
         {
-            get => GetLongProperty("ChildId");
-            set => SetLongProperty("ChildId", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowExecuteChildReply();
+            var clone = new WorkflowWaitForChildReply();
 
             CopyTo(clone);
 
@@ -64,9 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowExecuteChildReply)target;
+            var typedTarget = (WorkflowWaitForChildReply)target;
 
-            typedTarget.ChildId = this.ChildId;
+            typedTarget.Result = this.Result;
         }
     }
 }
