@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -71,70 +69,4 @@ func (request *WorkflowSignalSubscribeRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowSignalSubscribeRequest); ok {
 		v.SetSignalName(request.GetSignalName())
 	}
-}
-
-// SetProxyMessage inherits docs from WorkflowRequest.SetProxyMessage()
-func (request *WorkflowSignalSubscribeRequest) SetProxyMessage(value *ProxyMessage) {
-	request.WorkflowRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from WorkflowRequest.GetProxyMessage()
-func (request *WorkflowSignalSubscribeRequest) GetProxyMessage() *ProxyMessage {
-	return request.WorkflowRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from WorkflowRequest.GetRequestID()
-func (request *WorkflowSignalSubscribeRequest) GetRequestID() int64 {
-	return request.WorkflowRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from WorkflowRequest.SetRequestID()
-func (request *WorkflowSignalSubscribeRequest) SetRequestID(value int64) {
-	request.WorkflowRequest.SetRequestID(value)
-}
-
-// GetType inherits docs from WorkflowRequest.GetType()
-func (request *WorkflowSignalSubscribeRequest) GetType() messagetypes.MessageType {
-	return request.WorkflowRequest.GetType()
-}
-
-// SetType inherits docs from WorkflowRequest.SetType()
-func (request *WorkflowSignalSubscribeRequest) SetType(value messagetypes.MessageType) {
-	request.WorkflowRequest.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from WorkflowRequest.GetReplyType()
-func (request *WorkflowSignalSubscribeRequest) GetReplyType() messagetypes.MessageType {
-	return request.WorkflowRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from WorkflowRequest.SetReplyType()
-func (request *WorkflowSignalSubscribeRequest) SetReplyType(value messagetypes.MessageType) {
-	request.WorkflowRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from WorkflowRequest.GetTimeout()
-func (request *WorkflowSignalSubscribeRequest) GetTimeout() time.Duration {
-	return request.WorkflowRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from WorkflowRequest.SetTimeout()
-func (request *WorkflowSignalSubscribeRequest) SetTimeout(value time.Duration) {
-	request.WorkflowRequest.SetTimeout(value)
-}
-
-// -------------------------------------------------------------------------
-// IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
-
-// GetContextID inherits docs from WorkflowRequest.GetContextID()
-func (request *WorkflowSignalSubscribeRequest) GetContextID() int64 {
-	return request.WorkflowRequest.GetContextID()
-}
-
-// SetContextID inherits docs from WorkflowRequest.GetContextID()
-func (request *WorkflowSignalSubscribeRequest) SetContextID(value int64) {
-	request.WorkflowRequest.SetContextID(value)
 }

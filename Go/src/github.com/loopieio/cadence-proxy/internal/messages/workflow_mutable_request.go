@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -71,70 +69,4 @@ func (request *WorkflowMutableRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowMutableRequest); ok {
 		v.SetMutableID(request.GetMutableID())
 	}
-}
-
-// SetProxyMessage inherits docs from WorkflowRequest.SetProxyMessage()
-func (request *WorkflowMutableRequest) SetProxyMessage(value *ProxyMessage) {
-	request.WorkflowRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from WorkflowRequest.GetProxyMessage()
-func (request *WorkflowMutableRequest) GetProxyMessage() *ProxyMessage {
-	return request.WorkflowRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from WorkflowRequest.GetRequestID()
-func (request *WorkflowMutableRequest) GetRequestID() int64 {
-	return request.WorkflowRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from WorkflowRequest.SetRequestID()
-func (request *WorkflowMutableRequest) SetRequestID(value int64) {
-	request.WorkflowRequest.SetRequestID(value)
-}
-
-// GetType inherits docs from WorkflowRequest.GetType()
-func (request *WorkflowMutableRequest) GetType() messagetypes.MessageType {
-	return request.WorkflowRequest.GetType()
-}
-
-// SetType inherits docs from WorkflowRequest.SetType()
-func (request *WorkflowMutableRequest) SetType(value messagetypes.MessageType) {
-	request.WorkflowRequest.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from WorkflowRequest.GetReplyType()
-func (request *WorkflowMutableRequest) GetReplyType() messagetypes.MessageType {
-	return request.WorkflowRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from WorkflowRequest.SetReplyType()
-func (request *WorkflowMutableRequest) SetReplyType(value messagetypes.MessageType) {
-	request.WorkflowRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from WorkflowRequest.GetTimeout()
-func (request *WorkflowMutableRequest) GetTimeout() time.Duration {
-	return request.WorkflowRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from WorkflowRequest.SetTimeout()
-func (request *WorkflowMutableRequest) SetTimeout(value time.Duration) {
-	request.WorkflowRequest.SetTimeout(value)
-}
-
-// -------------------------------------------------------------------------
-// IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
-
-// GetContextID inherits docs from WorkflowRequest.GetContextID()
-func (request *WorkflowMutableRequest) GetContextID() int64 {
-	return request.WorkflowRequest.GetContextID()
-}
-
-// SetContextID inherits docs from WorkflowRequest.GetContextID()
-func (request *WorkflowMutableRequest) SetContextID(value int64) {
-	request.WorkflowRequest.SetContextID(value)
 }

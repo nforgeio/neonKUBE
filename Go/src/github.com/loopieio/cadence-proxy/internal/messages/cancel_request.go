@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -68,57 +66,4 @@ func (request *CancelRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*CancelRequest); ok {
 		v.SetTargetRequestID(request.GetTargetRequestID())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (request *CancelRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (request *CancelRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (request *CancelRequest) GetRequestID() int64 {
-	return request.ProxyRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (request *CancelRequest) SetRequestID(value int64) {
-	request.ProxyRequest.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyRequest.GetType()
-func (request *CancelRequest) GetType() messagetypes.MessageType {
-	return request.ProxyRequest.GetType()
-}
-
-// SetType inherits docs from ProxyRequest.SetType()
-func (request *CancelRequest) SetType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *CancelRequest) GetReplyType() messagetypes.MessageType {
-	return request.ProxyRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *CancelRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from ProxyRequest.GetTimeout()
-func (request *CancelRequest) GetTimeout() time.Duration {
-	return request.ProxyRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from ProxyRequest.SetTimeout()
-func (request *CancelRequest) SetTimeout(value time.Duration) {
-	request.ProxyRequest.SetTimeout(value)
 }

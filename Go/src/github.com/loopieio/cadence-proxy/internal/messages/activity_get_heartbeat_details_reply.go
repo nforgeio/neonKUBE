@@ -1,7 +1,6 @@
 package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -65,60 +64,4 @@ func (reply *ActivityGetHeartbeatDetailsReply) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ActivityGetHeartbeatDetailsReply); ok {
 		v.SetDetails(reply.GetDetails())
 	}
-}
-
-// SetProxyMessage inherits docs from ActivityReply.SetProxyMessage()
-func (reply *ActivityGetHeartbeatDetailsReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ActivityReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ActivityReply.GetProxyMessage()
-func (reply *ActivityGetHeartbeatDetailsReply) GetProxyMessage() *ProxyMessage {
-	return reply.ActivityReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ActivityReply.GetRequestID()
-func (reply *ActivityGetHeartbeatDetailsReply) GetRequestID() int64 {
-	return reply.ActivityReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from ActivityReply.SetRequestID()
-func (reply *ActivityGetHeartbeatDetailsReply) SetRequestID(value int64) {
-	reply.ActivityReply.SetRequestID(value)
-}
-
-// GetType inherits docs from ActivityReply.GetType()
-func (reply *ActivityGetHeartbeatDetailsReply) GetType() messagetypes.MessageType {
-	return reply.ActivityReply.GetType()
-}
-
-// SetType inherits docs from ActivityReply.SetType()
-func (reply *ActivityGetHeartbeatDetailsReply) SetType(value messagetypes.MessageType) {
-	reply.ActivityReply.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from ActivityReply.GetError()
-func (reply *ActivityGetHeartbeatDetailsReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ActivityReply.GetError()
-}
-
-// SetError inherits docs from ActivityReply.SetError()
-func (reply *ActivityGetHeartbeatDetailsReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ActivityReply.SetError(value)
-}
-
-// -------------------------------------------------------------------------
-// IActivityReply interface methods for implementing the IActivityReply interface
-
-// GetContextID inherits docs from ActivityReply.GetContextID()
-func (reply *ActivityGetHeartbeatDetailsReply) GetContextID() int64 {
-	return reply.ActivityReply.GetContextID()
-}
-
-// SetContextID inherits docs from ActivityReply.GetContextID()
-func (reply *ActivityGetHeartbeatDetailsReply) SetContextID(value int64) {
-	reply.ActivityReply.SetContextID(value)
 }

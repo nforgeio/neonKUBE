@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -22,20 +20,9 @@ type (
 	// implement.  It allows access to a ActivityRequest's ContextID, a property
 	// that all ActivityRequests share
 	IActivityRequest interface {
+		IProxyRequest
 		GetContextID() int64
 		SetContextID(value int64)
-		GetReplyType() messagetypes.MessageType
-		SetReplyType(value messagetypes.MessageType)
-		GetTimeout() time.Duration
-		SetTimeout(value time.Duration)
-		Clone() IProxyMessage
-		CopyTo(target IProxyMessage)
-		SetProxyMessage(value *ProxyMessage)
-		GetProxyMessage() *ProxyMessage
-		GetRequestID() int64
-		SetRequestID(int64)
-		GetType() messagetypes.MessageType
-		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -89,57 +76,4 @@ func (request *ActivityRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(IActivityRequest); ok {
 		v.SetContextID(request.GetContextID())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyRequest.SetProxyMessage()
-func (request *ActivityRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyRequest.GetProxyMessage()
-func (request *ActivityRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
-func (request *ActivityRequest) GetRequestID() int64 {
-	return request.ProxyRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
-func (request *ActivityRequest) SetRequestID(value int64) {
-	request.ProxyRequest.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyRequest.GetType()
-func (request *ActivityRequest) GetType() messagetypes.MessageType {
-	return request.ProxyRequest.GetType()
-}
-
-// SetType inherits docs from ProxyRequest.SetType()
-func (request *ActivityRequest) SetType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *ActivityRequest) GetReplyType() messagetypes.MessageType {
-	return request.ProxyRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from ProxyRequest.SetReplyType()
-func (request *ActivityRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from ProxyRequest.GetTimeout()
-func (request *ActivityRequest) GetTimeout() time.Duration {
-	return request.ProxyRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from ProxyRequest.SetTimeout()
-func (request *ActivityRequest) SetTimeout(value time.Duration) {
-	request.ProxyRequest.SetTimeout(value)
 }

@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -69,57 +67,4 @@ func (request *StopWorkerRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*StopWorkerRequest); ok {
 		v.SetWorkerID(request.GetWorkerID())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyRequest.SetProxyMessage()
-func (request *StopWorkerRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyRequest.GetProxyMessage()
-func (request *StopWorkerRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
-func (request *StopWorkerRequest) GetRequestID() int64 {
-	return request.ProxyRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
-func (request *StopWorkerRequest) SetRequestID(value int64) {
-	request.ProxyRequest.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyRequest.GetType()
-func (request *StopWorkerRequest) GetType() messagetypes.MessageType {
-	return request.ProxyRequest.GetType()
-}
-
-// SetType inherits docs from ProxyRequest.SetType()
-func (request *StopWorkerRequest) SetType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *StopWorkerRequest) GetReplyType() messagetypes.MessageType {
-	return request.ProxyRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *StopWorkerRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from ProxyRequest.GetTimeout()
-func (request *StopWorkerRequest) GetTimeout() time.Duration {
-	return request.ProxyRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from ProxyRequest.SetTimeout()
-func (request *StopWorkerRequest) SetTimeout(value time.Duration) {
-	request.ProxyRequest.SetTimeout(value)
 }

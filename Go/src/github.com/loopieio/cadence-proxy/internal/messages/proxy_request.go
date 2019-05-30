@@ -25,18 +25,11 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
+		IProxyMessage
 		GetReplyType() messagetypes.MessageType
 		SetReplyType(value messagetypes.MessageType)
 		GetTimeout() time.Duration
 		SetTimeout(value time.Duration)
-		Clone() IProxyMessage
-		CopyTo(target IProxyMessage)
-		SetProxyMessage(value *ProxyMessage)
-		GetProxyMessage() *ProxyMessage
-		GetRequestID() int64
-		SetRequestID(int64)
-		GetType() messagetypes.MessageType
-		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -49,6 +42,7 @@ func NewProxyRequest() *ProxyRequest {
 	request.ProxyMessage = NewProxyMessage()
 	request.SetType(messagetypes.Unspecified)
 	request.SetReplyType(messagetypes.Unspecified)
+
 	return request
 }
 
@@ -98,6 +92,7 @@ func (request *ProxyRequest) Clone() IProxyMessage {
 	proxyRequest := NewProxyRequest()
 	var messageClone IProxyMessage = proxyRequest
 	request.CopyTo(messageClone)
+
 	return messageClone
 }
 
@@ -107,34 +102,4 @@ func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(IProxyRequest); ok {
 		v.SetTimeout(request.GetTimeout())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (request *ProxyRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyMessage.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (request *ProxyRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyMessage.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (request *ProxyRequest) GetRequestID() int64 {
-	return request.ProxyMessage.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (request *ProxyRequest) SetRequestID(value int64) {
-	request.ProxyMessage.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyMessage.GetType()
-func (request *ProxyRequest) GetType() messagetypes.MessageType {
-	return request.ProxyMessage.GetType()
-}
-
-// SetType inherits docs from ProxyMessage.SetType()
-func (request *ProxyRequest) SetType(value messagetypes.MessageType) {
-	request.ProxyMessage.SetType(value)
 }

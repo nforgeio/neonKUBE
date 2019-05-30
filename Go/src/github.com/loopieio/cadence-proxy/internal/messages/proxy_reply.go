@@ -11,8 +11,6 @@ type (
 	// a proxy message request.  It implements the IProxyMessage interface
 	// and holds a reference to a ProxyMessage
 	ProxyReply struct {
-
-		// ProxyMessage is a reference to a ProxyMessage type
 		*ProxyMessage
 	}
 
@@ -21,16 +19,9 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyReply
 	IProxyReply interface {
+		IProxyMessage
 		GetError() *cadenceerrors.CadenceError
 		SetError(value *cadenceerrors.CadenceError)
-		Clone() IProxyMessage
-		CopyTo(target IProxyMessage)
-		SetProxyMessage(value *ProxyMessage)
-		GetProxyMessage() *ProxyMessage
-		GetRequestID() int64
-		SetRequestID(int64)
-		GetType() messagetypes.MessageType
-		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -92,34 +83,4 @@ func (reply *ProxyReply) CopyTo(target IProxyMessage) {
 	if v, ok := target.(IProxyReply); ok {
 		v.SetError(reply.GetError())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *ProxyReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyMessage.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *ProxyReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyMessage.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (reply *ProxyReply) GetRequestID() int64 {
-	return reply.ProxyMessage.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (reply *ProxyReply) SetRequestID(value int64) {
-	reply.ProxyMessage.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyMessage.GetType()
-func (reply *ProxyReply) GetType() messagetypes.MessageType {
-	return reply.ProxyMessage.GetType()
-}
-
-// SetType inherits docs from ProxyMessage.SetType()
-func (reply *ProxyReply) SetType(value messagetypes.MessageType) {
-	reply.ProxyMessage.SetType(value)
 }

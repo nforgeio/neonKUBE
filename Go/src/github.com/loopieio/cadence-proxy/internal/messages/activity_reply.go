@@ -1,7 +1,6 @@
 package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -19,18 +18,9 @@ type (
 	// IActivityReply is the interface that all workflow message replies
 	// implement.
 	IActivityReply interface {
+		IProxyReply
 		GetContextID() int64
 		SetContextID(value int64)
-		GetError() *cadenceerrors.CadenceError
-		SetError(value *cadenceerrors.CadenceError)
-		Clone() IProxyMessage
-		CopyTo(target IProxyMessage)
-		SetProxyMessage(value *ProxyMessage)
-		GetProxyMessage() *ProxyMessage
-		GetRequestID() int64
-		SetRequestID(int64)
-		GetType() messagetypes.MessageType
-		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -84,47 +74,4 @@ func (reply *ActivityReply) CopyTo(target IProxyMessage) {
 	if v, ok := target.(IActivityReply); ok {
 		v.SetContextID(reply.GetContextID())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
-func (reply *ActivityReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
-func (reply *ActivityReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyReply.GetRequestID()
-func (reply *ActivityReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyReply.SetRequestID()
-func (reply *ActivityReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyReply.GetType()
-func (reply *ActivityReply) GetType() messagetypes.MessageType {
-	return reply.ProxyReply.GetType()
-}
-
-// SetType inherits docs from ProxyReply.SetType()
-func (reply *ActivityReply) SetType(value messagetypes.MessageType) {
-	reply.ProxyReply.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from IProxyReply.GetError()
-func (reply *ActivityReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
-}
-
-// SetError inherits docs from IProxyReply.SetError()
-func (reply *ActivityReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
 }

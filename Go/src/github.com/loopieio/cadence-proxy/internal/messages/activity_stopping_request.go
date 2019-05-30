@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -71,70 +69,4 @@ func (request *ActivityStoppingRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ActivityStoppingRequest); ok {
 		v.SetActivityID(request.GetActivityID())
 	}
-}
-
-// SetProxyMessage inherits docs from ActivityRequest.SetProxyMessage()
-func (request *ActivityStoppingRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ActivityRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ActivityRequest.GetProxyMessage()
-func (request *ActivityStoppingRequest) GetProxyMessage() *ProxyMessage {
-	return request.ActivityRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ActivityRequest.GetRequestID()
-func (request *ActivityStoppingRequest) GetRequestID() int64 {
-	return request.ActivityRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from ActivityRequest.SetRequestID()
-func (request *ActivityStoppingRequest) SetRequestID(value int64) {
-	request.ActivityRequest.SetRequestID(value)
-}
-
-// GetType inherits docs from ActivityRequest.GetType()
-func (request *ActivityStoppingRequest) GetType() messagetypes.MessageType {
-	return request.ActivityRequest.GetType()
-}
-
-// SetType inherits docs from ActivityRequest.SetType()
-func (request *ActivityStoppingRequest) SetType(value messagetypes.MessageType) {
-	request.ActivityRequest.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from ActivityRequest.GetReplyType()
-func (request *ActivityStoppingRequest) GetReplyType() messagetypes.MessageType {
-	return request.ActivityRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from ActivityRequest.SetReplyType()
-func (request *ActivityStoppingRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ActivityRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from ActivityRequest.GetTimeout()
-func (request *ActivityStoppingRequest) GetTimeout() time.Duration {
-	return request.ActivityRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from ActivityRequest.SetTimeout()
-func (request *ActivityStoppingRequest) SetTimeout(value time.Duration) {
-	request.ActivityRequest.SetTimeout(value)
-}
-
-// -------------------------------------------------------------------------
-// IActivityRequest interface methods for implementing the IActivityRequest interface
-
-// GetContextID inherits docs from ActivityRequest.GetContextID()
-func (request *ActivityStoppingRequest) GetContextID() int64 {
-	return request.ActivityRequest.GetContextID()
-}
-
-// SetContextID inherits docs from ActivityRequest.SetContextID()
-func (request *ActivityStoppingRequest) SetContextID(value int64) {
-	request.ActivityRequest.SetContextID(value)
 }

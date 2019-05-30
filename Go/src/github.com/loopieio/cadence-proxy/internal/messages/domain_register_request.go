@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -141,57 +139,4 @@ func (request *DomainRegisterRequest) CopyTo(target IProxyMessage) {
 		v.SetEmitMetrics(request.GetEmitMetrics())
 		v.SetRetentionDays(request.GetRetentionDays())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyRequest.SetProxyMessage()
-func (request *DomainRegisterRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyRequest.GetProxyMessage()
-func (request *DomainRegisterRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyRequest.GetRequestID()
-func (request *DomainRegisterRequest) GetRequestID() int64 {
-	return request.ProxyRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyRequest.SetRequestID()
-func (request *DomainRegisterRequest) SetRequestID(value int64) {
-	request.ProxyRequest.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyRequest.GetType()
-func (request *DomainRegisterRequest) GetType() messagetypes.MessageType {
-	return request.ProxyRequest.GetType()
-}
-
-// SetType inherits docs from ProxyRequest.SetType()
-func (request *DomainRegisterRequest) SetType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *DomainRegisterRequest) GetReplyType() messagetypes.MessageType {
-	return request.ProxyRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from ProxyRequest.SetReplyType()
-func (request *DomainRegisterRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from ProxyRequest.GetTimeout()
-func (request *DomainRegisterRequest) GetTimeout() time.Duration {
-	return request.ProxyRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from ProxyRequest.SetTimeout()
-func (request *DomainRegisterRequest) SetTimeout(value time.Duration) {
-	request.ProxyRequest.SetTimeout(value)
 }

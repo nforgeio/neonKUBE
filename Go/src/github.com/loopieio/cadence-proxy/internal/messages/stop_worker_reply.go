@@ -1,7 +1,6 @@
 package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -43,47 +42,4 @@ func (reply *StopWorkerReply) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *StopWorkerReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
-}
-
-// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
-func (reply *StopWorkerReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
-func (reply *StopWorkerReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyReply.GetRequestID()
-func (reply *StopWorkerReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyReply.SetRequestID()
-func (reply *StopWorkerReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
-}
-
-// GetType inherits docs from ProxyReply.GetType()
-func (reply *StopWorkerReply) GetType() messagetypes.MessageType {
-	return reply.ProxyReply.GetType()
-}
-
-// SetType inherits docs from ProxyReply.SetType()
-func (reply *StopWorkerReply) SetType(value messagetypes.MessageType) {
-	reply.ProxyReply.SetType(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from ProxyReply.GetError()
-func (reply *StopWorkerReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
-}
-
-// SetError inherits docs from ProxyReply.SetError()
-func (reply *StopWorkerReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
 }
