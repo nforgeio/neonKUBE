@@ -25,7 +25,9 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Commands the workflow to sleep for a period of time.
+    /// <b>client --> proxy:</b> Begins execution of a child workflow returning the
+    /// new workflow IDs.  A subsequent <see cref="WorkflowWaitForChildRequest"/> message
+    /// will be sent to wait for the workflow to actually finish.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteChildRequest)]
     internal class WorkflowExecuteChildRequest : WorkflowRequest

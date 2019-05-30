@@ -98,8 +98,8 @@ namespace Neon.Cadence
     /// <item>
     ///     <para>
     ///     The custom <see cref="Workflow.RunAsync(byte[])"/> method implements the workflow by
-    ///     calling activities via <see cref="CallActivity(string, byte[])"/> or <see cref="CallLocalActivity{TActivity}(byte[], LocalActivityOptions)"/> 
-    ///     and child workflows via <see cref="CallWorkflow(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    ///     calling activities via <see cref="CallActivityAsync(string, byte[])"/> or <see cref="CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions)"/> 
+    ///     and child workflows via <see cref="CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
     ///     making decisions based on their results to call other activities and child workflows, 
     ///     and ultimately return a result or throwing an exception to indicate that the workflow
     ///     failed.
@@ -776,10 +776,132 @@ namespace Neon.Cadence
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
-        protected async Task<byte[]> CallWorkflow(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
+        protected async Task<byte[]> CallChildWorkflowAsync(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            var reply = (WorkflowExecuteChildReply)await Client.CallProxyAsync(
+                new WorkflowExecuteChildRequest()
+                {
+                     Args    = args,
+                     Options = options?.ToInternal()
+                });
+
+            reply.ThrowOnError();
+
+            var reply2 = (WorkflowWaitForChildReply)await Client.CallProxyAsync(
+                new WorkflowWaitForChildRequest()
+                {
+                    ChildId = reply.ChildId
+                });
+
+            reply2.ThrowOnError();
+
+            return reply2.Result;
+        }
+
+        /// <summary>
+        /// Starts a child workflow but does not wait for it to complete.
+        /// </summary>
+        /// <param name="name">The workflow name.</param>
+        /// <param name="args">Optionally specifies the workflow arguments.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>
+        /// Returns an opaque <see cref="ChildWorkflow"/> that identifies the new workflow
+        /// and that can be passed to <see cref="WaitForChildWorkflow(ChildWorkflow)"/>,
+        /// <see cref="SignalChildWorkflow(ChildWorkflow, string, byte[])"/> and
+        /// <see cref="CancelChildWorkflow(ChildWorkflow)"/>.
+        /// </returns>
+        /// <exception cref="CadenceException">
+        /// An exception derived from <see cref="CadenceException"/> will be be thrown 
+        /// if the child workflow did not complete successfully.
+        /// </exception>
+        protected async Task<ChildWorkflow> StartChildWorkflowAsync(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            var reply = (WorkflowExecuteChildReply)await Client.CallProxyAsync(
+                new WorkflowExecuteChildRequest()
+                {
+                    Args    = args,
+                    Options = options?.ToInternal()
+                });
+
+            reply.ThrowOnError();
+
+            return new ChildWorkflow(reply.ChildId);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Signals a child workflow.
+        /// </para>
+        /// <note>
+        /// This method blocks until the child workflow is scheduled and
+        /// actually started on a worker.
+        /// </note>
+        /// </summary>
+        /// <param name="childWorkflow">
+        /// Identifies the child workflow (this is returned by 
+        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
+        /// </param>
+        /// <param name="signalName">Specifies the signal name.</param>
+        /// <param name="signalArgs">Optionally specifies the signal arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        protected async Task SignalChildWorkflow(ChildWorkflow childWorkflow, string signalName, byte[] signalArgs = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+
+            var reply = (WorkflowSignalChildReply)await Client.CallProxyAsync(
+                new WorkflowSignalChildRequest()
+                {
+                    ChildId    = childWorkflow.Id,
+                    SignalName = signalName,
+                    SignalArgs = signalArgs
+                }); ;
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Cancels a child workflow.
+        /// </summary>
+        /// <param name="childWorkflow">
+        /// Identifies the child workflow (this is returned by 
+        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
+        /// </param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        protected async Task CancelChildWorkflow(ChildWorkflow childWorkflow)
+        {
+            var reply = (WorkflowCancelChildReply)await Client.CallProxyAsync(
+                new WorkflowCancelChildRequest()
+                {
+                    ChildId = childWorkflow.Id
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Waits for a child workflow to complete.
+        /// </summary>
+        /// <param name="childWorkflow">
+        /// Identifies the child workflow (this is returned by 
+        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
+        /// </param>
+        /// <returns>The workflow results.</returns>
+        protected async Task<byte[]> WaitForChildWorkflow(ChildWorkflow childWorkflow)
+        {
+            var reply = (WorkflowWaitForChildReply)await Client.CallProxyAsync(
+                new WorkflowWaitForChildRequest()
+                {
+                    ChildId = childWorkflow.Id
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
 
         /// <summary>
@@ -792,7 +914,7 @@ namespace Neon.Cadence
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
-        protected async Task<byte[]> CallActivity(string name, byte[] args = null)
+        protected async Task<byte[]> CallActivityAsync(string name, byte[] args = null)
         {
             await Task.CompletedTask;
             throw new NotImplementedException();
@@ -810,13 +932,13 @@ namespace Neon.Cadence
         /// if the child workflow did not complete successfully.
         /// </exception>
         /// <remarks>
-        /// This method can be used to optimize activities that will complety quickly
+        /// This method can be used to optimize activities that will complete quickly
         /// (within seconds).  Rather than scheduling the activity on any worker that
         /// has registered an implementation for the activity, this method will simply
         /// instantiate an instance of <typeparamref name="TActivity"/> and call its
         /// <see cref="Activity.RunAsync(byte[])"/> method.
         /// </remarks>
-        protected async Task<byte[]> CallLocalActivity<TActivity>(byte[] args = null, LocalActivityOptions options = null)
+        protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null)
             where TActivity : Activity
         {
             await Task.CompletedTask;
@@ -835,7 +957,7 @@ namespace Neon.Cadence
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
         /// <param name="startToCloseTimeout">Optional start to close timeout for the new run.</param>
         /// <param name="retryPolicy">Optional retry policy for the new run.</param>
-        protected void Restart(
+        protected async Task RestartAsync(
             byte[]              args                    = null,
             string              domain                  = null,
             string              tasklist                = null,
@@ -845,6 +967,12 @@ namespace Neon.Cadence
             TimeSpan            startToCloseTimeout     = default,
             CadenceRetryPolicy  retryPolicy             = null)
         {
+            // This method doesn't currently do any async operations but I'd
+            // like to keep the method signature async just in case this changes
+            // in the future.
+
+            await Task.CompletedTask;
+
             // We're going to throw a [InternalWorkflowRestartException] with the
             // parameters.  This exception will be caught and handled by the 
             // [WorkflowInvoke()] method which will configure the reply such
