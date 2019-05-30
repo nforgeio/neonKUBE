@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Specifies the options used for executing an activity.
     /// </summary>
-    internal class ActivityOptions
+    public class ActivityOptions
     {
         /// <summary>
         /// Optionally specifies the tasklist where the activity will be scheduled.
