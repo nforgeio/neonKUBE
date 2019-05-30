@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Thrown by <see cref="Workflow.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
-    /// to be handled by <see cref="Workflow.InvokeAsync(CadenceClient, WorkflowInvokeRequest)"/>
+    /// to be handled by <see cref="Workflow.OnInvokeAsync(CadenceClient, WorkflowInvokeRequest)"/>
     /// as one of the special case mechanisms for completing a workflow.
     /// </summary>
     internal class InternalWorkflowRestartException : Exception

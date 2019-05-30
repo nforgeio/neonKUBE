@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -41,13 +42,21 @@ namespace Neon.Cadence
         private static INeonLogger Log = LogManager.Default.GetLogger<WorkflowMethodMap>();
 
         /// <summary>
-        /// Constructs a method map for a workflow type.
+        /// Constructs a query/signal method map for a workflow type.
         /// </summary>
         /// <param name="workflowType">The workflow type.</param>
         /// <returns>The <see cref="WorkflowMethodMap"/>.</returns>
         public static WorkflowMethodMap Create(Type workflowType)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null);
+
+            // $todo(jeff.lill):
+            //
+            // The code below doesn't not verify that query/signal names are unique
+            // but also doesn't barf.  It will send requets to the last method 
+            // encountered with the same name, which is pretty reasonable.
+            //
+            // In a perfect world, we'd detect this and throw an exception.
 
             var map = new WorkflowMethodMap();
 
@@ -74,7 +83,7 @@ namespace Neon.Cadence
                         continue;
                     }
 
-                    map.nameToSignal[signalHandlerAttribute.Name] = method;
+                    map.nameToSignalMethod[signalHandlerAttribute.Name] = method;
                     continue;
                 }
 
@@ -99,7 +108,7 @@ namespace Neon.Cadence
                         continue;
                     }
 
-                    map.nameToQuery[queryHandlerAttribute.Name] = method;
+                    map.nameToQueryMethod[queryHandlerAttribute.Name] = method;
                     continue;
                 }
             }
@@ -110,8 +119,8 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members.
 
-        private Dictionary<string, MethodInfo> nameToSignal = new Dictionary<string, MethodInfo>();
-        private Dictionary<string, MethodInfo> nameToQuery  = new Dictionary<string, MethodInfo>();
+        private Dictionary<string, MethodInfo> nameToSignalMethod = new Dictionary<string, MethodInfo>();
+        private Dictionary<string, MethodInfo> nameToQueryMethod  = new Dictionary<string, MethodInfo>();
 
         /// <summary>
         /// Private constructor.
@@ -130,7 +139,7 @@ namespace Neon.Cadence
         /// </returns>
         public MethodInfo GetSignalMethod(string name)
         {
-            if (nameToSignal.TryGetValue(name, out var methodInfo))
+            if (nameToSignalMethod.TryGetValue(name, out var methodInfo))
             {
                 return methodInfo;
             }
@@ -150,7 +159,7 @@ namespace Neon.Cadence
         /// </returns>
         public MethodInfo GetQueryMethod(string name)
         {
-            if (nameToQuery.TryGetValue(name, out var methodInfo))
+            if (nameToQueryMethod.TryGetValue(name, out var methodInfo))
             {
                 return methodInfo;
             }
@@ -158,6 +167,24 @@ namespace Neon.Cadence
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Returns the names of the mapped signals.
+        /// </summary>
+        /// <returns>The signal name list.</returns>
+        public List<string> GetSignalNames()
+        {
+            return nameToSignalMethod.Keys.ToList();
+        }
+
+        /// <summary>
+        /// Returns the names of the mapped queries.
+        /// </summary>
+        /// <returns>The query name list.</returns>
+        public List<string> GetQueryNames()
+        {
+            return nameToQueryMethod.Keys.ToList();
         }
     }
 }

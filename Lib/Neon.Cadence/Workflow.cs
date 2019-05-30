@@ -187,22 +187,22 @@ namespace Neon.Cadence
             {
                 case InternalMessageTypes.WorkflowInvokeRequest:
 
-                    reply = await InvokeAsync(client, (WorkflowInvokeRequest)request);
+                    reply = await OnInvokeAsync(client, (WorkflowInvokeRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowSignalReceivedRequest:
 
-                    reply = await SignalAsync((WorkflowSignalReceivedRequest)request);
+                    reply = await OnSignalAsync((WorkflowSignalReceivedRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowQueryRequest:
 
-                    reply = await QueryAsync((WorkflowQueryRequest)request);
+                    reply = await OnQueryAsync((WorkflowQueryRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowMutableInvokeRequest:
 
-                    reply = await MutableInvokeAsync((WorkflowMutableInvokeRequest)request);
+                    reply = await OnMutableInvokeAsync((WorkflowMutableInvokeRequest)request);
                     break;
 
                 default:
@@ -239,7 +239,7 @@ namespace Neon.Cadence
         /// <param name="client">The associated cadence client.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> InvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
+        internal static async Task<ProxyReply> OnInvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
@@ -359,7 +359,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> SignalAsync(WorkflowSignalReceivedRequest request)
+        internal static async Task<ProxyReply> OnSignalAsync(WorkflowSignalReceivedRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -410,7 +410,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> QueryAsync(WorkflowQueryRequest request)
+        internal static async Task<ProxyReply> OnQueryAsync(WorkflowQueryRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -462,7 +462,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> MutableInvokeAsync(WorkflowMutableInvokeRequest request)
+        internal static async Task<ProxyReply> OnMutableInvokeAsync(WorkflowMutableInvokeRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -540,6 +540,20 @@ namespace Neon.Cadence
                     typeToMethodMap.Add(workflowType, methodMap);
                 }
             }
+
+            // Register the Query handlers with Cadence.
+
+            foreach (var queryName in methodMap.GetQueryNames())
+            {
+                SetQueryHandlerAsync(queryName).Wait();
+            }
+
+            // Register the signal handlers with Cadence.
+
+            foreach (var signalName in methodMap.GetSignalNames())
+            {
+                SetSignalHandlerAsync(signalName).Wait();
+            }
         }
 
         /// <summary>
@@ -600,11 +614,51 @@ namespace Neon.Cadence
         protected abstract Task<byte[]> RunAsync(byte[] args);
 
         /// <summary>
+        /// Registers a query handler with Cadence.
+        /// </summary>
+        /// <param name="queryName">The query name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task SetQueryHandlerAsync(string queryName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+
+            var reply = (WorkflowSetQueryHandlerReply)await Client.CallProxyAsync(
+                new WorkflowSetQueryHandlerRequest()
+                {
+                    QueryName = queryName
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Registers a signal handler with Cadence.
+        /// </summary>
+        /// <param name="signalName">The signal name.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task SetSignalHandlerAsync(string signalName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+
+            var reply = (WorkflowSetSignalHandlerReply)await Client.CallProxyAsync(
+                new WorkflowSetSignalHandlerRequest()
+                {
+                    SignalName = signalName
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
         /// Returns <c>true</c> if there is a completion result from previous runs of
         /// this workflow.  This is useful for CRON workflows that would like to pass
         /// ending state from from one workflow run to the next.  This property
         /// indicates whether the last run (if any) returned any state.
         /// </summary>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<bool> HasPreviousRunResultAsync()
         {
             var reply = (WorkflowHasLastResultReply)await Client.CallProxyAsync(
@@ -623,6 +677,10 @@ namespace Neon.Cadence
         /// for CRON workflows that would like to pass information from from one workflow
         /// run to the next.
         /// </summary>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<byte[]> GetPreviousRunResultAsync()
         {
             var reply = (WorkflowGetLastLastReply)await Client.CallProxyAsync(
@@ -647,6 +705,10 @@ namespace Neon.Cadence
         /// context.  This method only substitutes the new context for the first call. 
         /// Subsequent calls won't actually do anything.
         /// </remarks>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task DisconnectContextAsync()
         {
             var reply = (WorkflowDisconnectContextReply)await Client.CallProxyAsync(
@@ -662,6 +724,10 @@ namespace Neon.Cadence
         /// Returns the current time (UTC).
         /// </summary>
         /// <returns>The current workflow time (UTC).</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<DateTime> UtcNowAsync()
         {
             var reply = (WorkflowGetTimeReply)await Client.CallProxyAsync(
@@ -711,6 +777,10 @@ namespace Neon.Cadence
         /// during the replay.
         /// </para>
         /// </remarks>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<byte[]> GetMutableValueAsync(string mutableId, Func<Task<byte[]>> getter)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mutableId));
@@ -752,6 +822,10 @@ namespace Neon.Cadence
         /// Thrown if the operation was cancelled via <see cref="CancellationToken"/> or the
         /// workflow was cancelled externally.
         /// </exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task SleepAsync(TimeSpan duration, CancellationToken cancellationToken = default)
         {
             var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
@@ -776,6 +850,10 @@ namespace Neon.Cadence
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<byte[]> CallChildWorkflowAsync(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -817,6 +895,10 @@ namespace Neon.Cadence
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<ChildWorkflow> StartChildWorkflowAsync(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -849,6 +931,10 @@ namespace Neon.Cadence
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Optionally specifies the signal arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task SignalChildWorkflow(ChildWorkflow childWorkflow, string signalName, byte[] signalArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
@@ -872,6 +958,10 @@ namespace Neon.Cadence
         /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task CancelChildWorkflow(ChildWorkflow childWorkflow)
         {
             var reply = (WorkflowCancelChildReply)await Client.CallProxyAsync(
@@ -891,6 +981,10 @@ namespace Neon.Cadence
         /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
         /// </param>
         /// <returns>The workflow results.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<byte[]> WaitForChildWorkflow(ChildWorkflow childWorkflow)
         {
             var reply = (WorkflowWaitForChildReply)await Client.CallProxyAsync(
@@ -914,6 +1008,10 @@ namespace Neon.Cadence
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<byte[]> CallActivityAsync(string name, byte[] args = null)
         {
             await Task.CompletedTask;
@@ -938,6 +1036,10 @@ namespace Neon.Cadence
         /// instantiate an instance of <typeparamref name="TActivity"/> and call its
         /// <see cref="Activity.RunAsync(byte[])"/> method.
         /// </remarks>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null)
             where TActivity : Activity
         {
