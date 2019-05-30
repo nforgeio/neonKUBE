@@ -27,21 +27,23 @@ func NewWorkflowExecuteChildReply() *WorkflowExecuteChildReply {
 	return reply
 }
 
-// GetResult gets the WorkflowExecuteChild result or nil
-// from a WorkflowExecuteChildReply's properties map.
+// GetChildID gets a WorkflowExecuteChildReply's ChildID value
+// from its properties map. Identifies the child workflow.
 //
-// returns []byte -> []byte representing the result of a workflow execution
-func (reply *WorkflowExecuteChildReply) GetResult() []byte {
-	return reply.GetBytesProperty("Result")
+// returns int64 -> long holding the value
+// of a WorkflowExecuteChildReply's ChildID
+func (reply *WorkflowExecuteChildReply) GetChildID() int64 {
+	return reply.GetLongProperty("ChildId")
 }
 
-// SetResult sets the WorkflowExecuteChild result or nil
-// in a WorkflowExecuteChildReply's properties map.
+// SetChildID sets an WorkflowExecuteChildReply's ChildID value
+// in its properties map. Identifies the child workflow.
 //
-// param value []byte -> []byte representing the result of a cadence
-// child workflow to be set in the WorkflowExecuteChildReply's properties map
-func (reply *WorkflowExecuteChildReply) SetResult(value []byte) {
-	reply.SetBytesProperty("Result", value)
+// param value int64 -> long holding the value
+// of a WorkflowExecuteChildReply's ChildID to be set in the
+// WorkflowExecuteChildReply's properties map.
+func (reply *WorkflowExecuteChildReply) SetChildID(value int64) {
+	reply.SetLongProperty("ChildId", value)
 }
 
 // -------------------------------------------------------------------------
@@ -60,6 +62,6 @@ func (reply *WorkflowExecuteChildReply) Clone() IProxyMessage {
 func (reply *WorkflowExecuteChildReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteChildReply); ok {
-		v.SetResult(reply.GetResult())
+		v.SetChildID(reply.GetChildID())
 	}
 }

@@ -229,6 +229,36 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.WorkflowExecuteChildRequest:
 		message = NewWorkflowExecuteChildRequest()
 
+	// WorkflowWaitForChild
+	case messagetypes.WorkflowWaitForChildReply:
+		message = NewWorkflowWaitForChildReply()
+	case messagetypes.WorkflowWaitForChildRequest:
+		message = NewWorkflowWaitForChildRequest()
+
+	// WorkflowSignalChild
+	case messagetypes.WorkflowSignalChildReply:
+		message = NewWorkflowSignalChildReply()
+	case messagetypes.WorkflowSignalChildRequest:
+		message = NewWorkflowSignalChildRequest()
+
+	// WorkflowCancelChild
+	case messagetypes.WorkflowCancelChildReply:
+		message = NewWorkflowCancelChildReply()
+	case messagetypes.WorkflowCancelChildRequest:
+		message = NewWorkflowCancelChildRequest()
+
+	// WorkflowSetSignalHandler
+	case messagetypes.WorkflowSetSignalHandlerReply:
+		message = NewWorkflowSetSignalHandlerReply()
+	case messagetypes.WorkflowSetSignalHandlerRequest:
+		message = NewWorkflowSetSignalHandlerRequest()
+
+	// WorkflowSetQueryHandler
+	case messagetypes.WorkflowSetQueryHandlerReply:
+		message = NewWorkflowSetQueryHandlerReply()
+	case messagetypes.WorkflowSetQueryHandlerRequest:
+		message = NewWorkflowSetQueryHandlerRequest()
+
 	// --------------------------------------------------------------------------
 	// Activity messages
 

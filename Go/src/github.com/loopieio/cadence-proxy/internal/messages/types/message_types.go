@@ -275,13 +275,12 @@ const (
 	WorkflowInvokeReply MessageType = 125
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Initiates execution of a child workflow.
+	/// <b>client --> proxy:</b> Initiates execution of a child workflow.
 	/// </summary>
 	WorkflowExecuteChildRequest MessageType = 126
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message
-	/// after the child is completed.
+	/// <b>proxy --> cl;ient:</b> Sent in response to a <see cref="WorkflowExecuteChildRequest"/> message.
 	/// </summary>
 	WorkflowExecuteChildReply MessageType = 127
 
@@ -415,6 +414,58 @@ const (
 	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSleepRequest"/>.
 	/// </summary>
 	WorkflowSleepReply MessageType = 149
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Waits for a workflow that has already been started
+	/// by a <see cref="WorkflowExecuteChildRequest"/> to finish.
+	/// </summary>
+	WorkflowWaitForChildRequest MessageType = 150
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowWaitForChildRequest"/> message
+	/// after the child is finish.
+	/// </summary>
+	WorkflowWaitForChildReply MessageType = 151
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sends a signal to a child workflow.
+	/// </summary>
+	WorkflowSignalChildRequest MessageType = 152
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalChildRequest"/> message.
+	/// </summary>
+	WorkflowSignalChildReply MessageType = 153
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Cancels a child workflow.
+	/// </summary>
+	WorkflowCancelChildRequest MessageType = 154
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowCancelChildRequest"/> message.
+	/// </summary>
+	WorkflowCancelChildReply MessageType = 155
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Registers a signal handler by name.
+	/// </summary>
+	WorkflowSetSignalHandlerRequest MessageType = 156
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetSignalHandlerRequest"/> message.
+	/// </summary>
+	WorkflowSetSignalHandlerReply MessageType = 157
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Registers a query handler by name.
+	/// </summary>
+	WorkflowSetQueryHandlerRequest MessageType = 158
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetQueryHandlerRequest"/> message.
+	/// </summary>
+	WorkflowSetQueryHandlerReply MessageType = 159
 
 	//---------------------------------------------------------------------
 	// Activity messages
