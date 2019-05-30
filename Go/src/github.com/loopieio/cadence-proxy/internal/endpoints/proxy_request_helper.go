@@ -220,8 +220,7 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 
 	// send the reply as an http.Request back to the Neon.Cadence Library
 	// via http.PUT
-	var proxyMessage messages.IProxyMessage = reply.GetProxyMessage()
-	resp, err := putToNeonCadenceClient(proxyMessage)
+	resp, err := putToNeonCadenceClient(reply)
 	if err != nil {
 		return err
 	}
@@ -731,8 +730,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		f := func(ctx workflow.Context) {
 
 			// send the WorkflowInvokeRequest
-			var message messages.IProxyMessage = workflowInvokeRequest.GetProxyMessage()
-			resp, err := putToNeonCadenceClient(message)
+			resp, err := putToNeonCadenceClient(workflowInvokeRequest)
 			if err != nil {
 				panic(err)
 			}
@@ -1200,8 +1198,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 			// send the request to the Neon.Cadence Lib client
 			// send the WorkflowInvokeRequest
-			var message messages.IProxyMessage = workflowMutableInvokeRequest.GetProxyMessage()
-			resp, err := putToNeonCadenceClient(message)
+			resp, err := putToNeonCadenceClient(workflowMutableInvokeRequest)
 			if err != nil {
 				panic(err)
 			}
@@ -1424,10 +1421,82 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 		return reply
 	}
 
-	// TODO: JACK -- Implement the workflow signal
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			entityNotExistError.Error(),
+			cadenceerrors.Custom))
 
-	// build the reply
-	buildReply(reply, nil)
+		return reply
+	}
+
+	// get the signal name and channel
+	var signalValue []byte
+	ctx := wectx.GetContext()
+	signalName := request.GetSignalName()
+	signalChan := workflow.GetSignalChannel(ctx, *signalName)
+
+	// create a selector, add a receiver and wait for the signal on
+	// the channel
+	selector := workflow.NewSelector(ctx)
+	selector = selector.AddReceive(signalChan, func(channel workflow.Channel, more bool) {
+		channel.Receive(ctx, &signalValue)
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Received signal!", zap.String("signal", *signalName),
+			zap.Binary("value", signalValue))
+
+		// build the workflowSignalReceivedRequest
+		requestID := NextRequestID()
+		workflowSignalReceivedRequest := messages.NewWorkflowSignalReceivedRequest()
+		workflowSignalReceivedRequest.SetRequestID(requestID)
+		workflowSignalReceivedRequest.SetContextID(contextID)
+		workflowSignalReceivedRequest.SetSignalArgs(signalValue)
+
+		// create the Operation for this request and add it to the operations map
+		op := NewOperation(workflowSignalReceivedRequest.GetRequestID(), workflowSignalReceivedRequest)
+		future, settable := workflow.NewFuture(ctx)
+		op.SetFuture(future)
+		op.SetSettable(settable)
+		Operations.Add(requestID, op)
+
+		// create the worklfow Go routine
+		f := func(ctx workflow.Context) {
+
+			// send the request to the Neon.Cadence Lib client
+			// send the WorkflowInvokeRequest
+			resp, err := putToNeonCadenceClient(workflowSignalReceivedRequest)
+			if err != nil {
+				panic(err)
+			}
+			defer func() {
+
+				// $debug(jack.burns): DELETE THIS!
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Error("could not close response body", zap.Error(err))
+				}
+			}()
+		}
+
+		// send the request to the Neon.Cadence client
+		workflow.Go(ctx, f)
+
+		// wait for the future to be unblocked
+		var result interface{}
+		if err := future.Get(ctx, &result); err != nil {
+			buildReply(reply, cadenceerrors.NewCadenceError(
+				err.Error(),
+				cadenceerrors.Custom))
+		} else {
+			buildReply(reply, nil)
+		}
+	})
+
+	// wait on the channel
+	selector.Select(ctx)
 
 	return reply
 }

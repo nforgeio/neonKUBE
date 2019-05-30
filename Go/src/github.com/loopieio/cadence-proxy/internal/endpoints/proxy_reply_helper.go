@@ -27,6 +27,9 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 	// handle the messages individually based on their message type
 	switch reply.GetType() {
 
+	// -------------------------------------------------------------------------
+	// client message types
+
 	// InitializeReply
 	case messagetypes.InitializeReply:
 		if v, ok := reply.(*messages.InitializeReply); ok {
@@ -75,6 +78,27 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleTerminateReply(v)
 		}
 
+	// NewWorkerReply
+	case messagetypes.NewWorkerReply:
+		if v, ok := reply.(*messages.NewWorkerReply); ok {
+			err = handleNewWorkerReply(v)
+		}
+
+	// StopWorkerReply
+	case messagetypes.StopWorkerReply:
+		if v, ok := reply.(*messages.StopWorkerReply); ok {
+			err = handleStopWorkerReply(v)
+		}
+
+	// PingReply
+	case messagetypes.PingReply:
+		if v, ok := reply.(*messages.PingReply); ok {
+			err = handlePingReply(v)
+		}
+
+	// -------------------------------------------------------------------------
+	// Workflow message types
+
 	// WorkflowExecuteReply
 	case messagetypes.WorkflowExecuteReply:
 		if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
@@ -91,18 +115,6 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 	case messagetypes.WorkflowRegisterReply:
 		if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
 			err = handleWorkflowRegisterReply(v)
-		}
-
-	// NewWorkerReply
-	case messagetypes.NewWorkerReply:
-		if v, ok := reply.(*messages.NewWorkerReply); ok {
-			err = handleNewWorkerReply(v)
-		}
-
-	// StopWorkerReply
-	case messagetypes.StopWorkerReply:
-		if v, ok := reply.(*messages.StopWorkerReply); ok {
-			err = handleStopWorkerReply(v)
 		}
 
 	// WorkflowCancelReply
@@ -147,11 +159,14 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleWorkflowMutableInvokeReply(v)
 		}
 
-	// PingReply
-	case messagetypes.PingReply:
-		if v, ok := reply.(*messages.PingReply); ok {
-			err = handlePingReply(v)
+	// WorkflowSignalReceivedReply
+	case messagetypes.WorkflowSignalReceivedReply:
+		if v, ok := reply.(*messages.WorkflowSignalReceivedReply); ok {
+			err = handleWorkflowSignalReceivedReply(v)
 		}
+
+	// -------------------------------------------------------------------------
+	// Activity message types
 
 	// Undefined message type
 	default:
@@ -388,8 +403,8 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 	logger.Debug("WorkflowMutableInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
 	// WorkflowContext at the specified WorflowContextID
-	workflowExecutionContextID := reply.GetContextID()
-	if wectx := cadenceworkflows.WorkflowContexts.Get(workflowExecutionContextID); wectx == nil {
+	contextID := reply.GetContextID()
+	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
 		return entityNotExistError
 	}
 
@@ -403,7 +418,34 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 
 	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
-	_ = cadenceworkflows.WorkflowContexts.Remove(workflowExecutionContextID)
+	_ = cadenceworkflows.WorkflowContexts.Remove(contextID)
+	_ = Operations.Remove(requestID)
+
+	return nil
+}
+
+func handleWorkflowSignalReceivedReply(reply *messages.WorkflowSignalReceivedReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSignalReceivedReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// WorkflowContext at the specified WorflowContextID
+	contextID := reply.GetContextID()
+	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
+		return entityNotExistError
+	}
+
+	// get the Operation corresponding the the reply
+	requestID := reply.GetRequestID()
+	op := Operations.Get(requestID)
+	err := op.SetReply(reply, nil)
+	if err != nil {
+		return err
+	}
+
+	// remove the WorkflowContext from the map
+	// and remove the Operation from the map
+	_ = cadenceworkflows.WorkflowContexts.Remove(contextID)
 	_ = Operations.Remove(requestID)
 
 	return nil
