@@ -1019,7 +1019,8 @@ namespace Neon.Cadence
         /// Executes an activity and waits for it to complete.
         /// </summary>
         /// <param name="name">Identifies the activity.</param>
-        /// <param name="args">Optionally specifies the activity name.</param>
+        /// <param name="args">Optionally specifies the activity arguments.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="CadenceException">
@@ -1030,10 +1031,22 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> CallActivityAsync(string name, byte[] args = null, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> CallActivityAsync(string name, byte[] args = null, ActivityOptions options = null, CancellationToken? cancellationToken = null)
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            options = options ?? new ActivityOptions();
+
+            var reply = (ActivityExecuteReply)await Client.CallProxyAsync(
+                new ActivityExecuteRequest()
+                {
+                    Args    = args,
+                    Options = options.ToInternal()
+                }); ;
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
 
         /// <summary>

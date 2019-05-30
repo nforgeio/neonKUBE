@@ -564,5 +564,25 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityStoppingRequest"/> message.
         /// </summary>
         ActivityStoppingReply = 213,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Executes a local activity within the context of a workflow.
+        /// </summary>
+        ActivityExecuteLocalRequest = 214,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityExecuteLocalRequest"/> message.
+        /// </summary>
+        ActivityExecuteLocalReply = 215,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Invokes a local activity on an activity worker. 
+        /// </summary>
+        ActivityInvokeLocalRequest = 216,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityInvokeLocalRequest"/> message.
+        /// </summary>
+        ActivityInvokeLocalReply = 217,
     }
 }

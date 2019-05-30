@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityExecuteRequest.cs
+// FILE:	    ActivityInvokeLocalRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,25 +25,34 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Starts a workflow activity.
+    /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
+    /// a local workflow activity.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.ActivityExecuteRequest)]
-    internal class ActivityExecuteRequest : ActivityRequest
+    [InternalProxyMessage(InternalMessageTypes.ActivityInvokeLocalRequest)]
+    internal class ActivityInvokeLocalRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityExecuteRequest()
+        public ActivityInvokeLocalRequest()
         {
-            Type = InternalMessageTypes.ActivityExecuteRequest;
+            Type = InternalMessageTypes.ActivityInvokeLocalRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityExecuteReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityInvokeLocalReply;
 
         /// <summary>
-        /// Optionally specifies the arguments to be passed to the activity encoded
-        /// as a byte array.
+        /// Identifies the .NET type that implements the local activity. 
+        /// </summary>
+        public long ActivityTypeId
+        {
+            get => GetLongProperty("ActivityTypeId");
+            set => SetLongProperty("ActivityTypeId", value);
+        }
+
+        /// <summary>
+        /// Optionally specifies the activity arguments encoded as a byte array.
         /// </summary>
         public byte[] Args
         {
@@ -51,19 +60,10 @@ namespace Neon.Cadence.Internal
             set => SetBytesProperty("Args", value);
         }
 
-        /// <summary>
-        /// The activity start options.
-        /// </summary>
-        public InternalActivityOptions Options
-        {
-            get => GetJsonProperty<InternalActivityOptions>("Options");
-            set => SetJsonProperty<InternalActivityOptions>("Options", value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityExecuteRequest();
+            var clone = new ActivityInvokeLocalRequest();
 
             CopyTo(clone);
 
@@ -75,10 +75,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityExecuteRequest)target;
+            var typedTarget = (ActivityInvokeLocalRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Options = this.Options;
+            typedTarget.ActivityTypeId = this.ActivityTypeId;
+            typedTarget.Args           = this.Args;
         }
     }
 }
