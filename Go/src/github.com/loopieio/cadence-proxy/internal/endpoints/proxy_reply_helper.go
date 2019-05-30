@@ -5,11 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
-
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
+	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"

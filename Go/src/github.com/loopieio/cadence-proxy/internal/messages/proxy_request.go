@@ -1,8 +1,6 @@
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -28,8 +26,6 @@ type (
 		IProxyMessage
 		GetReplyType() messagetypes.MessageType
 		SetReplyType(value messagetypes.MessageType)
-		GetTimeout() time.Duration
-		SetTimeout(value time.Duration)
 	}
 )
 
@@ -67,23 +63,6 @@ func (request *ProxyRequest) SetReplyType(value messagetypes.MessageType) {
 	request.ReplyType = value
 }
 
-// GetTimeout gets the Timeout property from a ProxyRequest's properties map
-// Timeout is a timespan property and indicates the timeout for a specific request
-//
-// returns time.Duration -> the duration for a ProxyRequest's timeout from its properties map
-func (request *ProxyRequest) GetTimeout() time.Duration {
-	return request.GetTimeSpanProperty("Timeout")
-}
-
-// SetTimeout sets the Timeout property in a ProxyRequest's properties map
-// Timeout is a timespan property and indicates the timeout for a specific request
-//
-// param value time.Duration -> the timeout duration to be set in a
-// ProxyRequest's properties map
-func (request *ProxyRequest) SetTimeout(value time.Duration) {
-	request.SetTimeSpanProperty("Timeout", value)
-}
-
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -100,6 +79,6 @@ func (request *ProxyRequest) Clone() IProxyMessage {
 func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	request.ProxyMessage.CopyTo(target)
 	if v, ok := target.(IProxyRequest); ok {
-		v.SetTimeout(request.GetTimeout())
+		v.SetReplyType(request.GetReplyType())
 	}
 }

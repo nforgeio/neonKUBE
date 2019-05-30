@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"reflect"
 
+	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/workflow"
+	"go.uber.org/zap"
 
 	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
-
-	cadenceshared "go.uber.org/cadence/.gen/go/shared"
-	"go.uber.org/zap"
 )
 
 func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {

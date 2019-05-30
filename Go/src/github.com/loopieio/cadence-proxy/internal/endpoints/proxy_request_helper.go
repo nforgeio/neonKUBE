@@ -9,18 +9,18 @@ import (
 	"reflect"
 	"time"
 
+	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+	"go.uber.org/cadence/client"
+	"go.uber.org/cadence/worker"
+	"go.uber.org/cadence/workflow"
+	"go.uber.org/zap"
+
 	cadenceclient "github.com/loopieio/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkers"
 	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
-
-	cadenceshared "go.uber.org/cadence/.gen/go/shared"
-	"go.uber.org/cadence/client"
-	"go.uber.org/cadence/worker"
-	"go.uber.org/cadence/workflow"
-	"go.uber.org/zap"
 )
 
 var (

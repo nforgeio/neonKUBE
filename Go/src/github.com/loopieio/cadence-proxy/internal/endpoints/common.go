@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	"github.com/loopieio/cadence-proxy/internal/server"
-
-	"go.uber.org/zap"
 )
 
 const (
@@ -79,7 +79,7 @@ var (
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy
-	cadenceClientTimeout time.Duration
+	cadenceClientTimeout time.Duration = 30 * time.Second
 )
 
 //----------------------------------------------------------------------------

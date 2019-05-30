@@ -2894,16 +2894,13 @@ func (s *UnitTestSuite) TestProxyRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ProxyRequest); ok {
-		s.Equal(v.ReplyType, messagetypes.Unspecified)
+		s.Equal(messagetypes.Unspecified, v.GetType())
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(time.Duration(0), v.GetTimeout())
+		s.Equal(messagetypes.Unspecified, v.GetReplyType())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
-
-		v.SetTimeout(time.Second * 5)
-		s.Equal(time.Second*5, v.GetTimeout())
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -2919,7 +2916,7 @@ func (s *UnitTestSuite) TestProxyRequest() {
 
 	if v, ok := message.(*messages.ProxyRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(time.Second*5, v.GetTimeout())
+		s.Equal(messagetypes.Unspecified, v.GetReplyType())
 	}
 }
 
@@ -2977,16 +2974,12 @@ func (s *UnitTestSuite) TestWorkflowRequest() {
 	if v, ok := message.(*messages.WorkflowRequest); ok {
 		s.Equal(v.ReplyType, messagetypes.Unspecified)
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(time.Duration(0), v.GetTimeout())
 		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
-
-		v.SetTimeout(time.Second * 5)
-		s.Equal(time.Second*5, v.GetTimeout())
 
 		v.SetContextID(int64(555))
 		s.Equal(int64(555), v.GetContextID())
@@ -3005,7 +2998,6 @@ func (s *UnitTestSuite) TestWorkflowRequest() {
 
 	if v, ok := message.(*messages.WorkflowRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(time.Second*5, v.GetTimeout())
 		s.Equal(int64(555), v.GetContextID())
 	}
 }
@@ -3069,16 +3061,12 @@ func (s *UnitTestSuite) TestActivityRequest() {
 	if v, ok := message.(*messages.ActivityRequest); ok {
 		s.Equal(v.ReplyType, messagetypes.Unspecified)
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(time.Duration(0), v.GetTimeout())
 		s.Equal(int64(0), v.GetContextID())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
-
-		v.SetTimeout(time.Second * 5)
-		s.Equal(time.Second*5, v.GetTimeout())
 
 		v.SetContextID(int64(555))
 		s.Equal(int64(555), v.GetContextID())
@@ -3097,7 +3085,6 @@ func (s *UnitTestSuite) TestActivityRequest() {
 
 	if v, ok := message.(*messages.ActivityRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(time.Second*5, v.GetTimeout())
 		s.Equal(int64(555), v.GetContextID())
 	}
 }
