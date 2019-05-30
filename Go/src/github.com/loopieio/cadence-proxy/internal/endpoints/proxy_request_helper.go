@@ -43,6 +43,9 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	// handle the messages individually based on their message type
 	switch request.GetType() {
 
+	// -------------------------------------------------------------------------
+	// Client message types
+
 	// InitializeRequest
 	case messagetypes.InitializeRequest:
 		if v, ok := request.(*messages.InitializeRequest); ok {
@@ -91,6 +94,27 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 			reply = handleTerminateRequest(v)
 		}
 
+	// NewWorkerRequest
+	case messagetypes.NewWorkerRequest:
+		if v, ok := request.(*messages.NewWorkerRequest); ok {
+			reply = handleNewWorkerRequest(v)
+		}
+
+	// StopWorkerRequest
+	case messagetypes.StopWorkerRequest:
+		if v, ok := request.(*messages.StopWorkerRequest); ok {
+			reply = handleStopWorkerRequest(v)
+		}
+
+	// PingRequest
+	case messagetypes.PingRequest:
+		if v, ok := request.(*messages.PingRequest); ok {
+			reply = handlePingRequest(v)
+		}
+
+	// -------------------------------------------------------------------------
+	// Workflow message types
+
 	// WorkflowRegisterRequest
 	case messagetypes.WorkflowRegisterRequest:
 		if v, ok := request.(*messages.WorkflowRegisterRequest); ok {
@@ -107,18 +131,6 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	case messagetypes.WorkflowInvokeRequest:
 		if v, ok := request.(*messages.WorkflowInvokeRequest); ok {
 			reply = handleWorkflowInvokeRequest(v)
-		}
-
-	// NewWorkerRequest
-	case messagetypes.NewWorkerRequest:
-		if v, ok := request.(*messages.NewWorkerRequest); ok {
-			reply = handleNewWorkerRequest(v)
-		}
-
-	// StopWorkerRequest
-	case messagetypes.StopWorkerRequest:
-		if v, ok := request.(*messages.StopWorkerRequest); ok {
-			reply = handleStopWorkerRequest(v)
 		}
 
 	// WorkflowCancelRequest
@@ -175,11 +187,20 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 			reply = handleWorkflowDescribeExecutionRequest(v)
 		}
 
-	// PingRequest
-	case messagetypes.PingRequest:
-		if v, ok := request.(*messages.PingRequest); ok {
-			reply = handlePingRequest(v)
+	// WorkflowGetResultRequest
+	case messagetypes.WorkflowGetResultRequest:
+		if v, ok := request.(*messages.WorkflowGetResultRequest); ok {
+			reply = handleWorkflowGetResultRequest(v)
 		}
+
+	// WorkflowSignalSubscribeRequest
+	case messagetypes.WorkflowSignalSubscribeRequest:
+		if v, ok := request.(*messages.WorkflowSignalSubscribeRequest); ok {
+			reply = handleWorkflowSignalSubscribeRequest(v)
+		}
+
+	// -------------------------------------------------------------------------
+	// Activity message types
 
 	// Undefined message type
 	default:
@@ -217,7 +238,7 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 }
 
 // -------------------------------------------------------------------------
-// IProxyRequest message type handler methods
+// IProxyRequest client message type handler methods
 
 func handleCancelRequest(request *messages.CancelRequest) messages.IProxyReply {
 
@@ -548,6 +569,108 @@ func handleTerminateRequest(request *messages.TerminateRequest) messages.IProxyR
 	return reply
 }
 
+func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("NewWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new NewWorkerReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			connectionError.Error(),
+			cadenceerrors.Custom))
+
+		return reply
+	}
+
+	// gather the worker.New() parameters
+	// create a new worker using a configured CadenceClientHelper instance
+	domain := request.GetDomain()
+	taskList := request.GetTaskList()
+	opts := request.GetOptions()
+	worker := worker.New(clientHelper.Service, *domain, *taskList, *opts)
+
+	// put the worker and workerID from the new worker to the
+	// Workers map and then run the worker by calling Run() on it
+	workerID := cadenceworkers.Workers.Add(cadenceworkers.NextWorkerID(), worker)
+	err := worker.Start()
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			err.Error(),
+			cadenceerrors.Custom), workerID)
+
+		return reply
+	}
+
+	// build the reply
+	buildReply(reply, nil, workerID)
+
+	return reply
+}
+
+func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("StopWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new StopWorkerReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			connectionError.Error(),
+			cadenceerrors.Custom))
+
+		return reply
+	}
+
+	// get the workerID from the request so that we know
+	// what worker to stop
+	workerID := request.GetWorkerID()
+	worker := cadenceworkers.Workers.Get(workerID)
+	if worker == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			entityNotExistError.Error(),
+			cadenceerrors.Custom))
+
+		return reply
+	}
+
+	// stop the worker and
+	// remove it from the cadenceworkers.Workers map
+	worker.Stop()
+	workerID = cadenceworkers.Workers.Remove(workerID)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Worker has been deleted", zap.Int64("WorkerID", workerID))
+
+	// build the reply
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handlePingRequest(request *messages.PingRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("PingRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new PingReply
+	reply := createReplyMessage(request)
+	buildReply(reply, nil)
+
+	return reply
+}
+
+// -------------------------------------------------------------------------
+// IProxyRequest workflow message type handler methods
+
 func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
@@ -715,105 +838,6 @@ func handleWorkflowInvokeRequest(request *messages.WorkflowInvokeRequest) messag
 	logger.Debug("not implemented exception for message type WorkflowInvokeRequest")
 	return nil
 
-}
-
-func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("NewWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	// new NewWorkerReply
-	reply := createReplyMessage(request)
-
-	// check to see if a connection has been made with the
-	// cadence client
-	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
-
-		return reply
-	}
-
-	// gather the worker.New() parameters
-	// create a new worker using a configured CadenceClientHelper instance
-	domain := request.GetDomain()
-	taskList := request.GetTaskList()
-	opts := request.GetOptions()
-	worker := worker.New(clientHelper.Service, *domain, *taskList, *opts)
-
-	// put the worker and workerID from the new worker to the
-	// Workers map and then run the worker by calling Run() on it
-	workerID := cadenceworkers.Workers.Add(cadenceworkers.NextWorkerID(), worker)
-	err := worker.Start()
-	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			err.Error(),
-			cadenceerrors.Custom), workerID)
-
-		return reply
-	}
-
-	// build the reply
-	buildReply(reply, nil, workerID)
-
-	return reply
-}
-
-func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("StopWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	// new StopWorkerReply
-	reply := createReplyMessage(request)
-
-	// check to see if a connection has been made with the
-	// cadence client
-	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			connectionError.Error(),
-			cadenceerrors.Custom))
-
-		return reply
-	}
-
-	// get the workerID from the request so that we know
-	// what worker to stop
-	workerID := request.GetWorkerID()
-	worker := cadenceworkers.Workers.Get(workerID)
-	if worker == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(
-			entityNotExistError.Error(),
-			cadenceerrors.Custom))
-
-		return reply
-	}
-
-	// stop the worker and
-	// remove it from the cadenceworkers.Workers map
-	worker.Stop()
-	workerID = cadenceworkers.Workers.Remove(workerID)
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Worker has been deleted", zap.Int64("WorkerID", workerID))
-
-	// build the reply
-	buildReply(reply, nil)
-
-	return reply
-}
-
-func handlePingRequest(request *messages.PingRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("PingRequest Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	// new PingReply
-	reply := createReplyMessage(request)
-	buildReply(reply, nil)
-
-	return reply
 }
 
 func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messages.IProxyReply {
@@ -1325,6 +1349,91 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 
 	return reply
 }
+
+func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowGetResultRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowGetResultReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			connectionError.Error(),
+			cadenceerrors.Custom))
+
+		return reply
+	}
+
+	// build the cadence client using a configured CadenceClientHelper instance
+	client, err := clientHelper.Builder.BuildCadenceClient()
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			err.Error(),
+			cadenceerrors.Custom))
+
+		return reply
+	}
+
+	// grab the client.GetWorkflow parameters and
+	workflowID := request.GetWorkflowID()
+	runID := request.GetRunID()
+
+	// create the context to cancel the workflow
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	defer cancel()
+
+	// call GetWorkflow
+	workflowRun := client.GetWorkflow(ctx, *workflowID, *runID)
+
+	// get the result of WorkflowRun
+	var result []byte
+	err = workflowRun.Get(ctx, &result)
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			err.Error(),
+			cadenceerrors.Custom))
+
+		return reply
+	}
+
+	// build the reply
+	buildReply(reply, nil, result)
+
+	return reply
+}
+
+func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSignalSubscribeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowSignalSubscribeReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(
+			connectionError.Error(),
+			cadenceerrors.Custom))
+
+		return reply
+	}
+
+	// TODO: JACK -- Implement the workflow signal
+
+	// build the reply
+	buildReply(reply, nil)
+
+	return reply
+}
+
+// -------------------------------------------------------------------------
+// IProxyRequest activity message type handler methods
 
 // -------------------------------------------------------------------------
 // Helpers for sending ProxyReply messages back to Neon.Cadence Library

@@ -26,6 +26,9 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	// handle the messages individually based on their message type
 	switch reply.GetType() {
 
+	// -------------------------------------------------------------------------
+	// client message types
+
 	// InitializeReply
 	case messagetypes.InitializeReply:
 		if v, ok := reply.(*messages.InitializeReply); ok {
@@ -74,6 +77,27 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildTerminateReply(v, cadenceError)
 		}
 
+	// NewWorkerReply
+	case messagetypes.NewWorkerReply:
+		if v, ok := reply.(*messages.NewWorkerReply); ok {
+			buildNewWorkerReply(v, cadenceError, value)
+		}
+
+	// StopWorkerReply
+	case messagetypes.StopWorkerReply:
+		if v, ok := reply.(*messages.StopWorkerReply); ok {
+			buildStopWorkerReply(v, cadenceError)
+		}
+
+	// PingReply
+	case messagetypes.PingReply:
+		if v, ok := reply.(*messages.PingReply); ok {
+			buildPingReply(v, cadenceError)
+		}
+
+	// -------------------------------------------------------------------------
+	// workflow message types
+
 	// WorkflowExecuteReply
 	case messagetypes.WorkflowExecuteReply:
 		if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
@@ -90,18 +114,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	case messagetypes.WorkflowRegisterReply:
 		if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
 			buildWorkflowRegisterReply(v, cadenceError)
-		}
-
-	// NewWorkerReply
-	case messagetypes.NewWorkerReply:
-		if v, ok := reply.(*messages.NewWorkerReply); ok {
-			buildNewWorkerReply(v, cadenceError, value)
-		}
-
-	// StopWorkerReply
-	case messagetypes.StopWorkerReply:
-		if v, ok := reply.(*messages.StopWorkerReply); ok {
-			buildStopWorkerReply(v, cadenceError)
 		}
 
 	// WorkflowCancelReply
@@ -146,11 +158,32 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowMutableInvokeReply(v, cadenceError, value)
 		}
 
-	// PingReply
-	case messagetypes.PingReply:
-		if v, ok := reply.(*messages.PingReply); ok {
-			buildPingReply(v, cadenceError)
+	// WorkflowTerminateReply
+	case messagetypes.WorkflowTerminateReply:
+		if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
+			buildWorkflowTerminateReply(v, cadenceError)
 		}
+
+	// WorkflowDescribeExecutionReply
+	case messagetypes.WorkflowDescribeExecutionReply:
+		if v, ok := reply.(*messages.WorkflowDescribeExecutionReply); ok {
+			buildWorkflowDescribeExecutionReply(v, cadenceError, value)
+		}
+
+	// WorkflowGetResultReply
+	case messagetypes.WorkflowGetResultReply:
+		if v, ok := reply.(*messages.WorkflowGetResultReply); ok {
+			buildWorkflowGetResultReply(v, cadenceError, value)
+		}
+
+	// WorkflowSignalSubscribeReply
+	case messagetypes.WorkflowSignalSubscribeReply:
+		if v, ok := reply.(*messages.WorkflowSignalSubscribeReply); ok {
+			buildWorkflowSignalSubscribeReply(v, cadenceError)
+		}
+
+	// -------------------------------------------------------------------------
+	// activity message types
 
 	// Undefined message type
 	// This should never happen.
@@ -181,7 +214,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyReply {
 }
 
 // -------------------------------------------------------------------------
-// ProxyReply builders
+// Client message builders
 
 func buildCancelReply(reply *messages.CancelReply, cadenceError *cadenceerrors.CadenceError, wasCancelled ...interface{}) {
 	reply.SetError(cadenceError)
@@ -234,6 +267,27 @@ func buildTerminateReply(reply *messages.TerminateReply, cadenceError *cadenceer
 	reply.SetError(cadenceError)
 }
 
+func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError, workerID ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(workerID) > 0 {
+		if v, ok := workerID[0].(int64); ok {
+			reply.SetWorkerID(v)
+		}
+	}
+}
+
+func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildPingReply(reply *messages.PingReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+// -------------------------------------------------------------------------
+// Workflow message builders
+
 func buildWorkflowRegisterReply(reply *messages.WorkflowRegisterReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
@@ -256,24 +310,6 @@ func buildWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, cadenceError 
 			reply.SetResult(v)
 		}
 	}
-}
-
-func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError, workerID ...interface{}) {
-	reply.SetError(cadenceError)
-
-	if len(workerID) > 0 {
-		if v, ok := workerID[0].(int64); ok {
-			reply.SetWorkerID(v)
-		}
-	}
-}
-
-func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
-}
-
-func buildPingReply(reply *messages.PingReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
 }
 
 func buildWorkflowCancelReply(reply *messages.WorkflowCancelReply, cadenceError *cadenceerrors.CadenceError) {
@@ -337,8 +373,24 @@ func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecuti
 
 	if len(description) > 0 {
 		if v, ok := description[0].(*cadenceshared.DescribeWorkflowExecutionResponse); ok {
-			// TODO: JACK -- IMPLEMENT THIS
-			fmt.Printf("%v", v)
+			reply.SetDetails(v)
 		}
 	}
 }
+
+func buildWorkflowGetResultReply(reply *messages.WorkflowGetResultReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
+func buildWorkflowSignalSubscribeReply(reply *messages.WorkflowSignalSubscribeReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+// -------------------------------------------------------------------------
+// Activity message builders
