@@ -205,6 +205,30 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.WorkflowGetLastResultRequest:
 		message = NewWorkflowGetLastResultRequest()
 
+	// WorkflowDisconnectContext
+	case messagetypes.WorkflowDisconnectContextReply:
+		message = NewWorkflowDisconnectContextReply()
+	case messagetypes.WorkflowDisconnectContextRequest:
+		message = NewWorkflowDisconnectContextRequest()
+
+	// WorkflowGetTime
+	case messagetypes.WorkflowGetTimeReply:
+		message = NewWorkflowGetTimeReply()
+	case messagetypes.WorkflowGetTimeRequest:
+		message = NewWorkflowGetTimeRequest()
+
+	// WorkflowSleep
+	case messagetypes.WorkflowSleepReply:
+		message = NewWorkflowSleepReply()
+	case messagetypes.WorkflowSleepRequest:
+		message = NewWorkflowSleepRequest()
+
+	// WorkflowExecuteChild
+	case messagetypes.WorkflowExecuteChildReply:
+		message = NewWorkflowExecuteChildReply()
+	case messagetypes.WorkflowExecuteChildRequest:
+		message = NewWorkflowExecuteChildRequest()
+
 	// --------------------------------------------------------------------------
 	// Activity messages
 

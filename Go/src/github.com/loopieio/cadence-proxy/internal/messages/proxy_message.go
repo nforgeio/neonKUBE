@@ -440,10 +440,10 @@ func (proxyMessage *ProxyMessage) GetTimeSpanProperty(key string, def ...time.Du
 		if err != nil {
 			panic(err)
 		}
-		return time.Duration(ticks*100) * time.Nanosecond
+		return time.Duration(ticks * 100)
 	}
 
-	d := time.Duration(0) * time.Nanosecond
+	d := time.Duration(0)
 	if len(def) > 0 {
 		d = def[0]
 	}

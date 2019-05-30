@@ -86,8 +86,8 @@ namespace Neon.Cadence.Internal
         /// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((InternalChildTerminationPolicy)ChildTerminationPolicy.Abandon)]
-        public InternalChildTerminationPolicy ChildPolicy { get; set; } = (InternalChildTerminationPolicy)ChildTerminationPolicy.Abandon;
+        [DefaultValue((int)ChildTerminationPolicy.Abandon)]
+        public int ChildPolicy { get; set; } = (int)ChildTerminationPolicy.Abandon;
 
         /// <summary>
         /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended
@@ -139,12 +139,5 @@ namespace Neon.Cadence.Internal
         [JsonProperty(PropertyName = "CronSchedule", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string CronSchedule { get; set; } = null;
-
-        /// <summary>
-        /// Memo - Optional info that will be shown in list workflow.
-        /// </summary>
-        [JsonProperty(PropertyName = "Memo", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public Dictionary<string, byte[]> Memo = null;
     }
 }

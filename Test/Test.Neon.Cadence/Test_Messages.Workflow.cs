@@ -1483,7 +1483,7 @@ namespace TestCadence
                     WorkflowCloseStatus = (InternalWorkflowCloseStatus)InternalWorkflowCloseStatus.CONTINUED_AS_NEW,
                     HistoryLength       = 5000,
                     ParentDomainId      = "parent-domain",
-                    ParentExecution     = new InternalWorkflowExecution() { ID = "parent-id", RunID = "parent-runid" },
+                    ParentExecution     = new InternalWorkflowExecution2() { ID = "parent-id", RunID = "parent-runid" },
                     ExecutionTime       = 6000,
 
                     Memo = new InternalMemo()
@@ -2524,7 +2524,6 @@ namespace TestCadence
             Assert.Equal(expected.ExecutionStartToCloseTimeout, actual.ExecutionStartToCloseTimeout);
             Assert.Equal(expected.TaskStartToCloseTimeout, actual.TaskStartToCloseTimeout);
             Assert.Equal(expected.WorkflowIdReusePolicy, actual.WorkflowIdReusePolicy);
-            Assert.Equal(expected.Memo.Count, actual.Memo.Count);
             Assert.Equal(expected.RetryPolicy.MaximumAttempts, actual.RetryPolicy.MaximumAttempts);
         }
 
@@ -2558,14 +2557,13 @@ namespace TestCadence
                 {
                     TaskList                     = "my-tasklist",
                     Domain                       = "my-domain",
-                    ChildPolicy                  = InternalChildTerminationPolicy.REQUEST_CANCEL,
+                    ChildPolicy                  = (int)InternalChildTerminationPolicy.REQUEST_CANCEL,
                     CronSchedule                 = (new CronSchedule() { Hour = 12 }).ToString(),
                     WorkflowID                   = "my-workflow",
                     WaitForCancellation          = true,
                     ExecutionStartToCloseTimeout = 1000,
                     TaskStartToCloseTimeout      = 2000,
                     WorkflowIdReusePolicy        = (int)WorkflowIdReusePolicy.RejectDuplicate,
-                    Memo                         = new Dictionary<string, byte[]> { { "foo", new byte[] { 0, 1, 2, 3, 4 } } },
                     RetryPolicy                  = new InternalRetryPolicy()
                     {
                         MaximumAttempts = 100
