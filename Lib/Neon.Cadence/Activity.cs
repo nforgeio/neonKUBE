@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence
 {
@@ -36,6 +37,27 @@ namespace Neon.Cadence
     {
         //---------------------------------------------------------------------
         // Static members
+
+        private static object                       syncLock           = new object();
+        private static INeonLogger                  log                = LogManager.Default.GetLogger<Activity>();
+        private static Dictionary<string, Type>     nameToActivityType = new Dictionary<string, Type>();
+
+        /// <summary>
+        /// Registers an activity type.
+        /// </summary>
+        /// <typeparam name="TActivity">The activity implementation type.</typeparam>
+        /// <param name="activityTypeName">The name used to identify the implementation.</param>
+        internal static void Register<TActivity>(string activityTypeName)
+            where TActivity : Activity
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentException>(typeof(TActivity) != typeof(Activity), $"The base [{nameof(Activity)}] class cannot be registered.");
+
+            lock (activityTypeName)
+            {
+                nameToActivityType[activityTypeName] = typeof(TActivity);
+            }
+        }
 
         /// <summary>
         /// Constructs an activity instance of the specified type.

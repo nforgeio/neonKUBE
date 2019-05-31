@@ -195,11 +195,29 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                               syncLock        = new object();
-        private static INeonLogger                          log             = LogManager.Default.GetLogger<Workflow>();
-        private static SemanticVersion                      zeroVersion     = new SemanticVersion();
-        private static Dictionary<long, Workflow>           idToWorkflow    = new Dictionary<long, Workflow>();
-        private static Dictionary<Type, WorkflowMethodMap>  typeToMethodMap = new Dictionary<Type, WorkflowMethodMap>();
+        private static object                               syncLock           = new object();
+        private static INeonLogger                          log                = LogManager.Default.GetLogger<Workflow>();
+        private static SemanticVersion                      zeroVersion        = new SemanticVersion();
+        private static Dictionary<string, Type>             nameToWorkflowType = new Dictionary<string, Type>();
+        private static Dictionary<long, Workflow>           idToWorkflow       = new Dictionary<long, Workflow>();
+        private static Dictionary<Type, WorkflowMethodMap>  typeToMethodMap    = new Dictionary<Type, WorkflowMethodMap>();
+
+        /// <summary>
+        /// Registers a workflow type.
+        /// </summary>
+        /// <typeparam name="TWorkflow">The workflow implementation type.</typeparam>
+        /// <param name="workflowTypeName">The name used to identify the implementation.</param>
+        internal static void Register<TWorkflow>(string workflowTypeName)
+            where TWorkflow : Workflow
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentException>(typeof(TWorkflow) != typeof(Workflow), $"The base [{nameof(Workflow)}] class cannot be registered.");
+
+            lock (nameToWorkflowType)
+            {
+                nameToWorkflowType[workflowTypeName] = typeof(TWorkflow);
+            }
+        }
 
         /// <summary>
         /// Called to handle a workflow related request message received from the cadence-proxy.
