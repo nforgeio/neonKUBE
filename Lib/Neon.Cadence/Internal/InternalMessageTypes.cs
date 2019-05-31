@@ -584,5 +584,16 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityInvokeLocalRequest"/> message.
         /// </summary>
         ActivityInvokeLocalReply = 217,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Registers an activity handler.
+        /// </summary>
+        ActivityRegisterRequest = 218,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityRegisterRequest"/> message.
+        /// </summary>
+        ActivityRegisterReply = 219,
+
     }
 }
