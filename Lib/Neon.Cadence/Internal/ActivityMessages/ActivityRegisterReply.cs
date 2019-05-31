@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityExecuteRequest.cs
+// FILE:	    ActivityRegisterReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,45 +25,23 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Starts a workflow activity.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowRegisterRequest"/>
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.ActivityExecuteRequest)]
-    internal class ActivityExecuteRequest : ActivityRequest
+    [InternalProxyMessage(InternalMessageTypes.ActivityRegisterReply)]
+    internal class ActivityRegisterReply : ActivityReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityExecuteRequest()
+        public ActivityRegisterReply()
         {
-            Type = InternalMessageTypes.ActivityExecuteRequest;
-        }
-
-        /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityExecuteReply;
-
-        /// <summary>
-        /// Optionally specifies the arguments to be passed to the activity encoded
-        /// as a byte array.
-        /// </summary>
-        public byte[] Args
-        {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
-        }
-
-        /// <summary>
-        /// The activity start options.
-        /// </summary>
-        public InternalActivityOptions Options
-        {
-            get => GetJsonProperty<InternalActivityOptions>("Options");
-            set => SetJsonProperty<InternalActivityOptions>("Options", value);
+            Type = InternalMessageTypes.ActivityRegisterReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityExecuteRequest();
+            var clone = new ActivityRegisterReply();
 
             CopyTo(clone);
 
@@ -74,11 +52,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (ActivityExecuteRequest)target;
-
-            typedTarget.Args    = this.Args;
-            typedTarget.Options = this.Options;
         }
     }
 }

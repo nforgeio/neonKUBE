@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityExecuteRequest.cs
+// FILE:	    ActivityRegisterRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,45 +25,35 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Starts a workflow activity.
+    /// <b>client --> proxy:</b> Registers a workflow handler by name.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.ActivityExecuteRequest)]
-    internal class ActivityExecuteRequest : ActivityRequest
+    [InternalProxyMessage(InternalMessageTypes.ActivityRegisterRequest)]
+    internal class ActivityRegisterRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityExecuteRequest()
+        public ActivityRegisterRequest()
         {
-            Type = InternalMessageTypes.ActivityExecuteRequest;
+            Type = InternalMessageTypes.ActivityRegisterRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityExecuteReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityRegisterReply;
 
         /// <summary>
-        /// Optionally specifies the arguments to be passed to the activity encoded
-        /// as a byte array.
+        /// Identifies the workflow implementation.
         /// </summary>
-        public byte[] Args
+        public string Name
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
-        }
-
-        /// <summary>
-        /// The activity start options.
-        /// </summary>
-        public InternalActivityOptions Options
-        {
-            get => GetJsonProperty<InternalActivityOptions>("Options");
-            set => SetJsonProperty<InternalActivityOptions>("Options", value);
+            get => GetStringProperty("Name");
+            set => SetStringProperty("Name", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityExecuteRequest();
+            var clone = new ActivityRegisterRequest();
 
             CopyTo(clone);
 
@@ -75,10 +65,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityExecuteRequest)target;
+            var typedTarget = (ActivityRegisterRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Options = this.Options;
+            typedTarget.Name = this.Name;
         }
     }
 }

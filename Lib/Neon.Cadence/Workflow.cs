@@ -98,7 +98,7 @@ namespace Neon.Cadence
     /// <item>
     ///     <para>
     ///     The custom <see cref="Workflow.RunAsync(byte[])"/> method implements the workflow by
-    ///     calling activities via <see cref="CallActivityAsync(string, byte[], CancellationToken?)"/> or 
+    ///     calling activities via <see cref="CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/> or 
     ///     <see cref="CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions,  CancellationToken?)"/> 
     ///     and child workflows via <see cref="CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
     ///     making decisions based on their results to call other activities and child workflows, 
@@ -113,6 +113,36 @@ namespace Neon.Cadence
     ///     <see cref="NeonHelper.JsonDeserialize(Type, string, bool)"/> methods to serialize
     ///     parameters and results to JSON strings and then encode those as UTF-8 bytes.
     ///     </para>
+    /// </item>
+    /// <item>
+    ///     <para>
+    ///     Cadence also supports executing low overhead <b>local activities</b>.  These activities
+    ///     are executed directly in the current process without needing to be scheduled by the
+    ///     Cadence cluster and invoked on a worker.  Local activities are intended for tasks that
+    ///     will execute quickly, on the order of a few seconds.
+    ///     </para>
+    ///     <para>
+    ///     You'll use the <see cref="CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>,
+    ///     specifying your custom <see cref="Activity"/> implementation.
+    ///     </para>
+    ///     <note>
+    ///     Local activity types do not need to be registered with a Cadence worker.
+    ///     </note>
+    ///     <para>
+    ///     Local activities have some limitations:
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>
+    ///         Local activities cannot heartbeat.
+    ///         </item>
+    ///         <item>
+    ///         Local activity timeouts should be shorter than the decision task timeout
+    ///         of the calling workflow.
+    ///         </item>
+    ///         <item>
+    ///         The .NET Cadence client does not currently support cancellation of local activities.
+    ///         </item>
+    ///     </list>
     /// </item>
     /// <item>
     ///     <para>
@@ -175,9 +205,9 @@ namespace Neon.Cadence
         /// Called to handle a workflow related request message received from the cadence-proxy.
         /// </summary>
         /// <param name="client">The client that received the request.</param>
-        /// <param name="request">The workflow request message.</param>
+        /// <param name="request">The request message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        internal static async Task OnProxyRequestAsync(CadenceClient client, WorkflowRequest request)
+        internal static async Task OnProxyRequestAsync(CadenceClient client, ProxyRequest request)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
@@ -204,6 +234,11 @@ namespace Neon.Cadence
                 case InternalMessageTypes.WorkflowMutableInvokeRequest:
 
                     reply = await OnMutableInvokeAsync((WorkflowMutableInvokeRequest)request);
+                    break;
+
+                case InternalMessageTypes.ActivityExecuteLocalRequest:
+
+                    reply = await OnExecuteLocalActivity(client, (ActivityInvokeLocalRequest)request);
                     break;
 
                 default:
@@ -507,12 +542,69 @@ namespace Neon.Cadence
             }
         }
 
+        /// <summary>
+        /// Handles workflow local activity invocations.
+        /// </summary>
+        /// <param name="client">The client the request was received from.</param>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal static async Task<ProxyReply> OnExecuteLocalActivity(CadenceClient client, ActivityInvokeLocalRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            try
+            {
+                var workflow = GetWorkflow(request.ContextId);
+
+                if (workflow != null)
+                {
+                    Type activityType;
+
+                    lock (workflow.idToLocalActivityType)
+                    {
+                        if (!workflow.idToLocalActivityType.TryGetValue(request.ActivityTypeId, out activityType))
+                        {
+                            return new ActivityExecuteLocalReply()
+                            {
+                                Error = new CadenceEntityNotExistsException($"Activity type does not exist for [activityTypeId={request.ActivityTypeId}].").ToCadenceError()
+                            };
+                        }
+                    }
+
+                    var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
+                    var activity   = Activity.Create(activityType, workerArgs, CancellationToken.None);
+                    var result     = await activity.OnRunAsync(request.Args);
+
+                    return new ActivityExecuteLocalReply()
+                    {
+                        Result = result
+                    };
+                }
+                else
+                {
+                    return new ActivityExecuteLocalReply()
+                    {
+                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                return new ActivityExecuteLocalReply()
+                {
+                    Error = new CadenceError(e)
+                };
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
         private long                                    contextId;
         private WorkflowMethodMap                       methodMap;
         private Dictionary<string, Func<Task<byte[]>>>  idToMutableFunc;
+        private Dictionary<long, Type>                  idToLocalActivityType;
+        private long                                    nextLocalActivityTypeId;
 
         /// <summary>
         /// Internal constructor.
@@ -522,9 +614,10 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(args != null);
 
-            this.Client          = args.Client;
-            this.contextId       = args.ContextId;
-            this.idToMutableFunc = new Dictionary<string, Func<Task<byte[]>>>();
+            this.Client                = args.Client;
+            this.contextId             = args.ContextId;
+            this.idToMutableFunc       = new Dictionary<string, Func<Task<byte[]>>>();
+            this.idToLocalActivityType = new Dictionary<long, Type>();
 
             // Generate the signal/query method map for the workflow type if we
             // haven't already done that for this workflow type.
@@ -1019,7 +1112,8 @@ namespace Neon.Cadence
         /// Executes an activity and waits for it to complete.
         /// </summary>
         /// <param name="name">Identifies the activity.</param>
-        /// <param name="args">Optionally specifies the activity name.</param>
+        /// <param name="args">Optionally specifies the activity arguments.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="CadenceException">
@@ -1030,10 +1124,22 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> CallActivityAsync(string name, byte[] args = null, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> CallActivityAsync(string name, byte[] args = null, ActivityOptions options = null, CancellationToken? cancellationToken = null)
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            options = options ?? new ActivityOptions();
+
+            var reply = (ActivityExecuteReply)await Client.CallProxyAsync(
+                new ActivityExecuteRequest()
+                {
+                    Args    = args,
+                    Options = options.ToInternal()
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
 
         /// <summary>
@@ -1062,8 +1168,41 @@ namespace Neon.Cadence
         protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null, CancellationToken? cancellationToken = null)
             where TActivity : Activity
         {
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            // We need to register the local activity type with a workflow local ID
+            // that we can sent to [cadence-proxy] in the [ActivityExecuteLocalRequest]
+            // such that the proxy can send it back to us in the [ActivityInvokeLocalRequest]
+            // so we'll know which activity type to instantate and run.
+
+            var activityTypeId = Interlocked.Increment(ref nextLocalActivityTypeId);
+
+            lock (idToLocalActivityType)
+            {
+                idToLocalActivityType.Add(activityTypeId, typeof(TActivity));
+            }
+
+            try
+            {
+                var reply = (ActivityExecuteLocalReply)await Client.CallProxyAsync(
+                    new ActivityExecuteLocalRequest()
+                    {
+                        ActivityTypeId = activityTypeId,
+                        Args           = args,
+                        Options        = options.ToInternal()
+                    });
+
+                reply.ThrowOnError();
+
+                return reply.Result;
+            }
+            finally
+            {
+                // Remove the activity type mapping to prevent memory leaks.
+
+                lock (idToLocalActivityType)
+                {
+                    idToLocalActivityType.Remove(activityTypeId);
+                }
+            }
         }
 
         /// <summary>

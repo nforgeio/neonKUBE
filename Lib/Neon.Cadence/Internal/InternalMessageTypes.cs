@@ -359,7 +359,7 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
         /// </summary>
         WorkflowMutableInvokeReply = 135,
-        
+
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
         /// to cache the history of a sticky workflow on a workflow worker as a performance
@@ -564,5 +564,36 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityStoppingRequest"/> message.
         /// </summary>
         ActivityStoppingReply = 213,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Executes a local activity within the context of a workflow.
+        /// </summary>
+        ActivityExecuteLocalRequest = 214,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityExecuteLocalRequest"/> message.
+        /// </summary>
+        ActivityExecuteLocalReply = 215,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Invokes a local activity on an activity worker. 
+        /// </summary>
+        ActivityInvokeLocalRequest = 216,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityInvokeLocalRequest"/> message.
+        /// </summary>
+        ActivityInvokeLocalReply = 217,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Registers an activity handler.
+        /// </summary>
+        ActivityRegisterRequest = 218,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityRegisterRequest"/> message.
+        /// </summary>
+        ActivityRegisterReply = 219,
+
     }
 }

@@ -125,7 +125,7 @@ namespace Neon.Cadence
     /// <note>
     /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
     /// via the <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
-    /// <see cref="Workflow.CallActivityAsync(string, byte[], CancellationToken?)"/>, and
+    /// <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>, and
     /// <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
     /// methods.
     /// </note>

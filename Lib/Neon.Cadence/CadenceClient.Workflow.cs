@@ -30,7 +30,34 @@ namespace Neon.Cadence
     public partial class CadenceClient
     {
         //---------------------------------------------------------------------
-        // Cadence workflow and activity related operations.
+        // Cadence workflow related operations.
+
+        /// <summary>
+        /// Registers a workflow implementation with Cadence.
+        /// </summary>
+        /// <typeparam name="TWorkflow">The <see cref="Workflow"/> derived type implementing the workflow.</typeparam>
+        /// <param name="workflowTypeName">
+        /// Optionally specifies a custom workflow type name that will be used 
+        /// for identifying the workflow implementation in Cadence.  This defaults
+        /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
+        /// </param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task RegisterWorkflow<TWorkflow>(string workflowTypeName = null)
+            where TWorkflow : Workflow
+        {
+            if (string.IsNullOrEmpty(workflowTypeName))
+            {
+                workflowTypeName = workflowTypeName ?? typeof(TWorkflow).FullName;
+            }
+
+            var reply = (WorkflowRegisterReply)await CallProxyAsync(
+                new WorkflowRegisterRequest()
+                {
+                    Name = workflowTypeName
+                });
+
+            reply.ThrowOnError();
+        }
 
         /// <summary>
         /// Starts a global workflow, identifying the workers that implement the workflow
@@ -38,7 +65,7 @@ namespace Neon.Cadence
         /// have no parent, as opposed to child workflows that run in the context of 
         /// another workflow.
         /// </summary>
-        /// <param name="workflowType">
+        /// <param name="workflowTypeName">
         /// The type name used when registering the workers that will handle this workflow.
         /// This name will often be the fully qualified name of the workflow type but 
         /// this may have been customized when the workflow worker was registered.
@@ -47,7 +74,7 @@ namespace Neon.Cadence
         /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <returns>A <see cref="WorkflowRun"/> identifying the new running workflow instance.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow worker registered for <paramref name="workflowType"/>.</exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow worker registered for <paramref name="workflowTypeName"/>.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
         /// <exception cref="CadenceWorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
         /// <remarks>
@@ -55,16 +82,16 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        public async Task<WorkflowRun> StartWorkflowAsync(string workflowType, string domain, byte[] args = null, WorkflowOptions options = null)
+        public async Task<WorkflowRun> StartWorkflowAsync(string workflowTypeName, string domain, byte[] args = null, WorkflowOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowType));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(options != null);
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
                 {
-                    Workflow = workflowType,
+                    Workflow = workflowTypeName,
                     Domain   = domain,
                     Args     = args,
                     Options  = options.ToInternal()
