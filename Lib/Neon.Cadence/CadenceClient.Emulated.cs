@@ -360,6 +360,11 @@ namespace Neon.Cadence
                     await OnEmulatedWorkflowExecuteRequestAsync((WorkflowExecuteRequest)proxyMessage);
                     break;
 
+                case InternalMessageTypes.WorkflowRegisterRequest:
+
+                    await OnEmulatedWorkflowRegisterRequestAsync((WorkflowRegisterRequest)proxyMessage);
+                    break;
+
                 case InternalMessageTypes.WorkflowSetCacheSizeRequest:
 
                     await OnEmulatedWorkflowSetCacheSizeRequestAsync((WorkflowSetCacheSizeRequest)proxyMessage);
@@ -714,13 +719,13 @@ namespace Neon.Cadence
         // Workflow messages
 
         /// <summary>
-        /// Handles emulated <see cref="NewWorkerRequest"/> messages.
+        /// Handles emulated <see cref="WorkflowRegisterRequest"/> messages.
         /// </summary>
         /// <param name="request">The received message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnEmulatedWorkflowNewWorkerRequestAsync(NewWorkerRequest request)
+        private async Task OnEmulatedWorkflowRegisterRequestAsync(WorkflowRegisterRequest request)
         {
-            await EmulatedLibraryClient.SendReplyAsync(request, new NewWorkerReply());
+            await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowRegisterReply());
         }
 
         /// <summary>

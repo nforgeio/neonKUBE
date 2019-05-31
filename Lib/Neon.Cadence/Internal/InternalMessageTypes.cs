@@ -167,16 +167,14 @@ namespace Neon.Cadence.Internal
         // identifying the target workflow client.
 
         /// <summary>
-        /// <b>UNUSED</b>
+        /// <b>client --> proxy:</b> Registers a workflow handler.
         /// </summary>
-        [Obsolete("UNUSED BUT AVAILABLE.")]
-        Unused1 = 100,
+        WorkflowRegisterRequest = 100,
 
         /// <summary>
-        /// <b>UNUSED</b>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowRegisterRequest"/> message.
         /// </summary>
-        [Obsolete("UNUSED BUT AVAILABLE.")]
-        Unused2 = 101,
+        WorkflowRegisterReply = 101,
 
         /// <summary>
         /// <b>client --> proxy:</b> Starts a workflow.
@@ -361,7 +359,7 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
         /// </summary>
         WorkflowMutableInvokeReply = 135,
-        
+
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
         /// to cache the history of a sticky workflow on a workflow worker as a performance
