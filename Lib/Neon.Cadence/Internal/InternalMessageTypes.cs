@@ -167,14 +167,16 @@ namespace Neon.Cadence.Internal
         // identifying the target workflow client.
 
         /// <summary>
-        /// <b>client --> proxy:</b> Registers a workflow handler.
+        /// <b>UNUSED</b>
         /// </summary>
-        WorkflowRegisterRequest = 100,
+        [Obsolete("UNUSED BUT AVAILABLE.")]
+        Unused1 = 100,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowRegisterRequest"/> message.
+        /// <b>UNUSED</b>
         /// </summary>
-        WorkflowRegisterReply = 101,
+        [Obsolete("UNUSED BUT AVAILABLE.")]
+        Unused2 = 101,
 
         /// <summary>
         /// <b>client --> proxy:</b> Starts a workflow.
