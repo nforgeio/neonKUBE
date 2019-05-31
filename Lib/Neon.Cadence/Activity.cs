@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,6 +34,33 @@ namespace Neon.Cadence
     /// </summary>
     public abstract class Activity
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Constructs an activity instance of the specified type.
+        /// </summary>
+        /// <param name="activityType">The activity type.</param>
+        /// <param name="args">The low-level worker initialization arguments.</param>
+        /// <param name="cancellationToken">The activity stop cancellation token.</param>
+        /// <returns>The constructed activity.</returns>
+        internal static Activity Create(Type activityType, WorkerArgs args, CancellationToken cancellationToken)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+
+            var constructor = activityType.GetConstructor(new Type[] { typeof(WorkerArgs), typeof(CancellationToken) });
+
+            if (constructor == null)
+            {
+                throw new InvalidOperationException($"Activity type [{activityType.FullName}] does not have a constructor with [{nameof(WorkerArgs)}, {nameof(CancellationToken)}] parameters.");
+            }
+
+            return (Activity)constructor.Invoke(new object[] { args, cancellationToken });
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private long contextId;
 
         /// <summary>
@@ -61,6 +90,16 @@ namespace Neon.Cadence
         /// by doing other cleanup.
         /// </summary>
         public CancellationToken CancellationToken { get; private set; }
+
+        /// <summary>
+        /// Handles the invocation of the activity.
+        /// </summary>
+        /// <param name="args">The activity arguments encoded into a byte array or <c>null</c>.</param>
+        /// <returns>The activity result encoded as a byte array or <c>null</c>.</returns>
+        internal async Task<byte[]> OnRunAsync(byte[] args)
+        {
+            return await RunAsync(args);
+        }
 
         /// <summary>
         /// Called by Cadence to execute an activity.  Derived classes will need to implement
