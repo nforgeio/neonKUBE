@@ -39,7 +39,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Identifies the workflow implementation.
         /// </summary>
-        public string Name { get; internal set; }
+        public string WorkflowTypeName { get; internal set; }
 
         /// <summary>
         /// Workflow start time or <c>null</c> if the workflow hasn't started yet.

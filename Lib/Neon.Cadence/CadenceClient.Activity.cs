@@ -29,5 +29,34 @@ namespace Neon.Cadence
 {
     public partial class CadenceClient
     {
+        //---------------------------------------------------------------------
+        // Cadence activity related operations.
+
+        /// <summary>
+        /// Registers an activity implementation with Cadence.
+        /// </summary>
+        /// <typeparam name="TActivity">The <see cref="Activity"/> derived type implementing the activity.</typeparam>
+        /// <param name="activityTypeName">
+        /// Optionally specifies a custom activity type name that will be used 
+        /// for identifying the activity implementation in Cadence.  This defaults
+        /// to the fully qualified <typeparamref name="TActivity"/> type name.
+        /// </param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task RegisterActivity<TActivity>(string activityTypeName = null)
+            where TActivity : Activity
+        {
+            if (string.IsNullOrEmpty(activityTypeName))
+            {
+                activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
+            }
+
+            var reply = (ActivityRegisterReply)await CallProxyAsync(
+                new ActivityRegisterRequest()
+                {
+                    Name = activityTypeName
+                });
+
+            reply.ThrowOnError();
+        }
     }
 }
