@@ -298,6 +298,12 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.ActivityStoppingRequest:
 		message = NewActivityStoppingRequest()
 
+	// ActivityRegister
+	case messagetypes.ActivityRegisterReply:
+		message = NewActivityRegisterReply()
+	case messagetypes.ActivityRegisterRequest:
+		message = NewActivityRegisterRequest()
+
 	// default
 	default:
 		return nil

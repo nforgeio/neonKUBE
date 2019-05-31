@@ -69,7 +69,8 @@ func (request *NewWorkerRequest) SetName(value *string) {
 }
 
 // GetIsWorkflow gets a NewWorkerRequest's IsWorkflow value
-// from its properties map
+// from its properties map. Indicates whether we're starting a workflow
+// or an activity worker.
 //
 // returns bool -> bool holding the value
 // of a NewWorkerRequest's IsWorkflow
@@ -78,7 +79,8 @@ func (request *NewWorkerRequest) GetIsWorkflow() bool {
 }
 
 // SetIsWorkflow sets a NewWorkerRequest's IsWorkflow value
-// in its properties map
+// in its properties map. Indicates whether we're starting a workflow
+// or an activity worker.
 //
 // param value bool -> bool that holds the value
 // to be set in the properties map

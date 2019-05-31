@@ -539,4 +539,7 @@ const (
 	/// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityStoppingRequest"/> message.
 	/// </summary>
 	ActivityStoppingReply MessageType = 213
+
+	ActivityRegisterRequest MessageType = 214
+	ActivityRegisterReply   MessageType = 215
 )

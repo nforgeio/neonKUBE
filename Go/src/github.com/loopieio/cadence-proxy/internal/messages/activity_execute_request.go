@@ -34,6 +34,26 @@ func NewActivityExecuteRequest() *ActivityExecuteRequest {
 	return request
 }
 
+// GetName gets a ActivityExecuteRequest's Name field
+// from its properties map.  Specifies the name of the activity to
+// be executed.
+//
+// returns *string -> *string representing the name of the
+// activity to be executed
+func (request *ActivityExecuteRequest) GetName() *string {
+	return request.GetStringProperty("Name")
+}
+
+// SetName sets an ActivityExecuteRequest's Name field
+// from its properties map.  Specifies the name of the activity to
+// be executed.
+//
+// param value *string -> *string representing the name of the
+// activity to be executed
+func (request *ActivityExecuteRequest) SetName(value *string) {
+	request.SetStringProperty("Name", value)
+}
+
 // GetArgs gets a ActivityExecuteRequest's Args field
 // from its properties map.  Args is a []byte that hold the arguments
 // for executing a specific workflow activity
@@ -97,5 +117,6 @@ func (request *ActivityExecuteRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ActivityExecuteRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
+		v.SetName(request.GetName())
 	}
 }
