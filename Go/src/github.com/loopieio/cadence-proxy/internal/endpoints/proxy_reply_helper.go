@@ -164,8 +164,56 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleWorkflowSignalReceivedReply(v)
 		}
 
+	// WorkflowHasLastResultReply
+	case messagetypes.WorkflowHasLastResultReply:
+		if v, ok := reply.(*messages.WorkflowHasLastResultReply); ok {
+			err = handleWorkflowHasLastResultReply(v)
+		}
+
+	// WorkflowGetLastResultReply
+	case messagetypes.WorkflowGetLastResultReply:
+		if v, ok := reply.(*messages.WorkflowGetLastResultReply); ok {
+			err = handleWorkflowGetLastResultReply(v)
+		}
+
+	// WorkflowDisconnectContextReply
+	case messagetypes.WorkflowDisconnectContextReply:
+		if v, ok := reply.(*messages.WorkflowDisconnectContextReply); ok {
+			err = handleWorkflowDisconnectContextReply(v)
+		}
+
+	// WorkflowGetTimeReply
+	case messagetypes.WorkflowGetTimeReply:
+		if v, ok := reply.(*messages.WorkflowGetTimeReply); ok {
+			err = handleWorkflowGetTimeReply(v)
+		}
+
+	// WorkflowSleepReply
+	case messagetypes.WorkflowSleepReply:
+		if v, ok := reply.(*messages.WorkflowSleepReply); ok {
+			err = handleWorkflowSleepReply(v)
+		}
+
 	// -------------------------------------------------------------------------
 	// Activity message types
+
+	// ActivityRegisterReply
+	case messagetypes.ActivityRegisterReply:
+		if v, ok := reply.(*messages.ActivityRegisterReply); ok {
+			err = handleActivityRegisterReply(v)
+		}
+
+	// ActivityExecuteReply
+	case messagetypes.ActivityExecuteReply:
+		if v, ok := reply.(*messages.ActivityExecuteReply); ok {
+			err = handleActivityExecuteReply(v)
+		}
+
+	// ActivityInvokeReply
+	case messagetypes.ActivityInvokeReply:
+		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
+			err = handleActivityInvokeReply(v)
+		}
 
 	// Undefined message type
 	default:
@@ -184,6 +232,12 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 
 	return nil
 }
+
+// -------------------------------------------------------------------------
+// ProxyReply handlers
+
+// -------------------------------------------------------------------------
+// Client message types
 
 func handleCancelReply(reply *messages.CancelReply) error {
 	err := fmt.Errorf("not implemented exception for message type CancelReply")
@@ -249,6 +303,34 @@ func handleTerminateReply(reply *messages.TerminateReply) error {
 	return err
 }
 
+func handlePingReply(reply *messages.PingReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleNewWorkerReply(reply *messages.NewWorkerReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("NewWorkerReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleStopWorkerReply(reply *messages.StopWorkerReply) error {
+	err := fmt.Errorf("not implemented exception for message type StopWorkerReply")
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Error handling StopWorkerReply", zap.Error(err))
+
+	return err
+}
+
+// -------------------------------------------------------------------------
+// Workflow message types
+
 func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
@@ -269,8 +351,6 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		return entityNotExistError
 	}
 
-	// TODO: JACK -- FILL OUT THE REST OF THE OPTIONS
-	// THERE IS NO WITH RETRY POLICY
 	// check for ContinueAsNew
 	if reply.GetContinueAsNew() {
 		continueContext := wectx.GetContext()
@@ -330,22 +410,6 @@ func handleWorkflowRegisterReply(reply *messages.WorkflowRegisterReply) error {
 	logger.Debug("WorkflowRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
-}
-
-func handleNewWorkerReply(reply *messages.NewWorkerReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("NewWorkerReply Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	return nil
-}
-
-func handleStopWorkerReply(reply *messages.StopWorkerReply) error {
-	err := fmt.Errorf("not implemented exception for message type StopWorkerReply")
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling StopWorkerReply", zap.Error(err))
-	return err
 }
 
 func handleWorkflowCancelReply(reply *messages.WorkflowCancelReply) error {
@@ -450,9 +514,88 @@ func handleWorkflowSignalReceivedReply(reply *messages.WorkflowSignalReceivedRep
 	return nil
 }
 
-func handlePingReply(reply *messages.PingReply) error {
+func handleWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowHasLastResultReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowGetLastResultReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleWorkflowDisconnectContextReply(reply *messages.WorkflowDisconnectContextReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowDisconnectContextReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowGetTimeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleWorkflowSleepReply(reply *messages.WorkflowSleepReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSleepReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+// -------------------------------------------------------------------------
+// Activity message types
+
+func handleActivityRegisterReply(reply *messages.ActivityRegisterReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleActivityExecuteReply(reply *messages.ActivityExecuteReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityExecuteReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// WorkflowContext at the specified WorflowContextID
+	contextID := reply.GetContextID()
+	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
+		return entityNotExistError
+	}
+
+	// get the Operation corresponding the the reply
+	requestID := reply.GetRequestID()
+	op := Operations.Get(requestID)
+	err := op.SetReply(reply, reply.GetResult())
+	if err != nil {
+		return err
+	}
+
+	// remove the WorkflowContext from the map
+	// and remove the Operation from the map
+	_ = cadenceworkflows.WorkflowContexts.Remove(contextID)
+	_ = Operations.Remove(requestID)
+
 	return nil
 }

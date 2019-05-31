@@ -3,6 +3,7 @@ package endpoints
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/workflow"
@@ -181,8 +182,56 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowSignalSubscribeReply(v, cadenceError)
 		}
 
+	// WorkflowHasLastResultReply
+	case messagetypes.WorkflowHasLastResultReply:
+		if v, ok := reply.(*messages.WorkflowHasLastResultReply); ok {
+			buildWorkflowHasLastResultReply(v, cadenceError, value)
+		}
+
+	// WorkflowGetLastResultReply
+	case messagetypes.WorkflowGetLastResultReply:
+		if v, ok := reply.(*messages.WorkflowGetLastResultReply); ok {
+			buildWorkflowGetLastResultReply(v, cadenceError, value)
+		}
+
+	// WorkflowDisconnectContextReply
+	case messagetypes.WorkflowDisconnectContextReply:
+		if v, ok := reply.(*messages.WorkflowDisconnectContextReply); ok {
+			buildWorkflowDisconnectContextReply(v, cadenceError)
+		}
+
+	// WorkflowGetTimeReply
+	case messagetypes.WorkflowGetTimeReply:
+		if v, ok := reply.(*messages.WorkflowGetTimeReply); ok {
+			buildWorkflowGetTimeReply(v, cadenceError, value)
+		}
+
+	// WorkflowSleepReply
+	case messagetypes.WorkflowSleepReply:
+		if v, ok := reply.(*messages.WorkflowSleepReply); ok {
+			buildWorkflowSleepReply(v, cadenceError)
+		}
+
 	// -------------------------------------------------------------------------
 	// activity message types
+
+	// ActivityRegisterReply
+	case messagetypes.ActivityRegisterReply:
+		if v, ok := reply.(*messages.ActivityRegisterReply); ok {
+			buildActivityRegisterReply(v, cadenceError)
+		}
+
+	// ActivityExecuteReply
+	case messagetypes.ActivityExecuteReply:
+		if v, ok := reply.(*messages.ActivityExecuteReply); ok {
+			buildActivityExecuteReply(v, cadenceError, value)
+		}
+
+	// ActivityInvokeReply
+	case messagetypes.ActivityInvokeReply:
+		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
+			buildActivityInvokeReply(v, cadenceError, value)
+		}
 
 	// Undefined message type
 	// This should never happen.
@@ -391,5 +440,67 @@ func buildWorkflowSignalSubscribeReply(reply *messages.WorkflowSignalSubscribeRe
 	reply.SetError(cadenceError)
 }
 
+func buildWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply, cadenceError *cadenceerrors.CadenceError, hasResult ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(hasResult) > 0 {
+		if v, ok := hasResult[0].(bool); ok {
+			reply.SetHasResult(v)
+		}
+	}
+}
+
+func buildWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
+func buildWorkflowDisconnectContextReply(reply *messages.WorkflowDisconnectContextReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply, cadenceError *cadenceerrors.CadenceError, t ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(t) > 0 {
+		if v, ok := t[0].(time.Time); ok {
+			reply.SetTime(v)
+		}
+	}
+}
+
+func buildWorkflowSleepReply(reply *messages.WorkflowSleepReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
 // -------------------------------------------------------------------------
 // Activity message builders
+
+func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
+func buildActivityInvokeReply(reply *messages.ActivityInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
