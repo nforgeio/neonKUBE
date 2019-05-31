@@ -209,6 +209,12 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleActivityExecuteReply(v)
 		}
 
+	// ActivityInvokeReply
+	case messagetypes.ActivityInvokeReply:
+		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
+			err = handleActivityInvokeReply(v)
+		}
+
 	// Undefined message type
 	default:
 
@@ -563,6 +569,33 @@ func handleActivityExecuteReply(reply *messages.ActivityExecuteReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityExecuteReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	return nil
+}
+
+func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// WorkflowContext at the specified WorflowContextID
+	contextID := reply.GetContextID()
+	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
+		return entityNotExistError
+	}
+
+	// get the Operation corresponding the the reply
+	requestID := reply.GetRequestID()
+	op := Operations.Get(requestID)
+	err := op.SetReply(reply, reply.GetResult())
+	if err != nil {
+		return err
+	}
+
+	// remove the WorkflowContext from the map
+	// and remove the Operation from the map
+	_ = cadenceworkflows.WorkflowContexts.Remove(contextID)
+	_ = Operations.Remove(requestID)
 
 	return nil
 }

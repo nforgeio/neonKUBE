@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"time"
 
+	"go.uber.org/cadence/activity"
+
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
 	"go.uber.org/cadence/worker"
@@ -729,7 +731,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(workflowInvokeRequest.GetRequestID(), workflowInvokeRequest)
+		op := NewOperation(requestID, workflowInvokeRequest)
 		future, settable := workflow.NewFuture(ctx)
 		op.SetFuture(future)
 		op.SetSettable(settable)
@@ -1632,6 +1634,96 @@ func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages
 // -------------------------------------------------------------------------
 // IProxyRequest activity message type handler methods
 
+func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new ActivityRegisterReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// define some variables to hold workflow return values
+	contextID := cadenceworkflows.NextContextID()
+
+	// define the activity function
+	activityFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
+
+		// create a workflow context entry in the WorkflowContexts map
+		wectx := new(cadenceworkflows.WorkflowContext)
+		wectx.SetContext(ctx)
+
+		// set the WorkflowContext in the
+		// WorkflowContexts
+		contextID = cadenceworkflows.WorkflowContexts.Add(contextID, wectx)
+
+		// Send a WorkflowInvokeRequest to the Neon.Cadence Lib
+		// cadence-client
+		requestID := NextRequestID()
+		activityInvokeRequest := messages.NewActivityInvokeRequest()
+		activityInvokeRequest.SetRequestID(requestID)
+		activityInvokeRequest.SetArgs(input)
+		activityInvokeRequest.SetContextID(contextID)
+
+		// create the Operation for this request and add it to the operations map
+		op := NewOperation(requestID, activityInvokeRequest)
+		future, settable := workflow.NewFuture(ctx)
+		op.SetFuture(future)
+		op.SetSettable(settable)
+		Operations.Add(requestID, op)
+
+		// create the workflow go routine
+		f := func(ctx workflow.Context) {
+
+			// send the WorkflowInvokeRequest
+			resp, err := putToNeonCadenceClient(activityInvokeRequest)
+			if err != nil {
+				panic(err)
+			}
+			defer func() {
+
+				// $debug(jack.burns): DELETE THIS!
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Error("could not close response body", zap.Error(err))
+				}
+			}()
+		}
+
+		// send the request to the Neon.Cadence client
+		// with a workflow go routine
+		workflow.Go(ctx, f)
+
+		// wait for the future to be unblocked
+		var result []byte
+		if err := future.Get(ctx, &result); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	// register the activity
+	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *request.GetName()})
+
+	// set the activity function in the WorkflowContexts map
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx.SetWorkflowFunction(activityFunc)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *request.GetName()))
+	buildReply(reply, nil)
+
+	return reply
+}
+
 func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
@@ -1662,10 +1754,8 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 	opts := request.GetOptions()
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), *opts)
 
-	// define the activity function
-
 	// execute the activity
-	future := workflow.ExecuteActivity(ctx, *request.GetName(), request.GetArgs())
+	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
 
 	// wait for the future to be unblocked
 	var result []byte
@@ -1676,38 +1766,7 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 	}
 
 	// build the reply
-	buildReply(reply, nil)
-
-	return reply
-}
-
-func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	// new ActivityRegisterReply
-	reply := createReplyMessage(request)
-
-	// check to see if a connection has been made with the
-	// cadence client
-	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
-
-		return reply
-	}
-
-	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
-	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
-
-		return reply
-	}
-
-	// build the reply
-	buildReply(reply, nil)
+	buildReply(reply, nil, result)
 
 	return reply
 }

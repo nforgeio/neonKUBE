@@ -34,24 +34,24 @@ func NewActivityExecuteRequest() *ActivityExecuteRequest {
 	return request
 }
 
-// GetName gets a ActivityExecuteRequest's Name field
-// from its properties map.  Specifies the name of the activity to
+// GetActivity gets a ActivityExecuteRequest's Activity field
+// from its properties map.  Specifies the activity to
 // be executed.
 //
-// returns *string -> *string representing the name of the
+// returns *string -> *string representing the activity of the
 // activity to be executed
-func (request *ActivityExecuteRequest) GetName() *string {
-	return request.GetStringProperty("Name")
+func (request *ActivityExecuteRequest) GetActivity() *string {
+	return request.GetStringProperty("Activity")
 }
 
-// SetName sets an ActivityExecuteRequest's Name field
-// from its properties map.  Specifies the name of the activity to
+// SetActivity sets an ActivityExecuteRequest's Activity field
+// from its properties map.  Specifies the activity to
 // be executed.
 //
-// param value *string -> *string representing the name of the
+// param value *string -> *string representing the activity of the
 // activity to be executed
-func (request *ActivityExecuteRequest) SetName(value *string) {
-	request.SetStringProperty("Name", value)
+func (request *ActivityExecuteRequest) SetActivity(value *string) {
+	request.SetStringProperty("Activity", value)
 }
 
 // GetArgs gets a ActivityExecuteRequest's Args field
@@ -117,6 +117,6 @@ func (request *ActivityExecuteRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ActivityExecuteRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
-		v.SetName(request.GetName())
+		v.SetActivity(request.GetActivity())
 	}
 }
