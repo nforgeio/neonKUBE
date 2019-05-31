@@ -304,6 +304,18 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.ActivityRegisterRequest:
 		message = NewActivityRegisterRequest()
 
+	// ActivityExecuteLocal
+	case messagetypes.ActivityExecuteLocalReply:
+		message = NewActivityExecuteLocalReply()
+	case messagetypes.ActivityExecuteLocalRequest:
+		message = NewActivityExecuteLocalRequest()
+
+	// ActivityInvokeLocal
+	case messagetypes.ActivityInvokeLocalReply:
+		message = NewActivityInvokeLocalReply()
+	case messagetypes.ActivityInvokeLocalRequest:
+		message = NewActivityInvokeLocalRequest()
+
 	// default
 	default:
 		return nil
