@@ -9,9 +9,9 @@ import (
 var (
 	mu sync.RWMutex
 
-	// ContextID is incremented (protected by a mutex) every time
+	// contextID is incremented (protected by a mutex) every time
 	// a new cadence workflow.Context is created
-	ContextID int64
+	contextID int64
 
 	// WorkflowContexts maps a int64 ContextId to the cadence
 	// Workflow Context passed to the cadence Workflow functions.
@@ -29,36 +29,39 @@ type (
 	}
 
 	// WorkflowContext holds a Cadence workflow
-	// context, the registered workflow function, and a context cancel function.
+	// context, the registered workflow function, a context cancel function,
+	// and a map of ChildID's to ChildContext.
 	// This struct is used as an intermediate for storing worklfow information
 	// and state while registering and executing cadence workflows
 	WorkflowContext struct {
-		ctx          workflow.Context
-		workflowFunc func(ctx workflow.Context, input []byte) ([]byte, error)
-		cancelFunc   func()
+		ctx           workflow.Context
+		workflowFunc  func(ctx workflow.Context, input []byte) ([]byte, error)
+		cancelFunc    func()
+		childContexts *childContextsMap
 	}
 )
 
 //----------------------------------------------------------------------------
-// ContextID methods
+// contextID methods
 
 // NextContextID increments the global variable
-// ContextID by 1 and is protected by a mutex lock
+// contextID by 1 and is protected by a mutex lock
 func NextContextID() int64 {
 	mu.Lock()
-	curr := ContextID
-	ContextID = ContextID + 1
+	curr := contextID
+	contextID = contextID + 1
 	mu.Unlock()
 
 	return curr
 }
 
 // GetContextID gets the value of the global variable
-// ContextID and is protected by a mutex Read lock
+// contextID and is protected by a mutex Read lock
 func GetContextID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return ContextID
+
+	return contextID
 }
 
 //----------------------------------------------------------------------------
@@ -70,7 +73,9 @@ func GetContextID() int64 {
 // returns *WorkflowContext -> pointer to a newly initialized
 // workflow ExecutionContext in memory
 func NewWorkflowContext() *WorkflowContext {
-	return new(WorkflowContext)
+	wectx := new(WorkflowContext)
+	wectx.childContexts = new(childContextsMap)
+	return wectx
 }
 
 // GetContext gets a WorkflowContext's workflow.Context
@@ -116,45 +121,89 @@ func (wectx *WorkflowContext) SetCancelFunction(value func()) {
 	wectx.cancelFunc = value
 }
 
+// AddChildContext adds a new cadence context and its corresponding ContextId into
+// the WorkflowContext's childContexts map.  This method is thread-safe.
+//
+// param id int64 -> the long id passed to Cadence
+// workflow functions.  This will be the mapped key
+//
+// param cctx *ChildContext -> pointer to the new WorkflowContex used to
+// execute workflow functions. This will be the mapped value
+//
+// returns int64 -> long id of the new ChildContext added to the map
+func (wectx *WorkflowContext) AddChildContext(id int64, cctx *ChildContext) int64 {
+	return wectx.childContexts.Add(id, cctx)
+}
+
+// RemoveChildContext removes key/value entry from the WorkflowContext's
+// childContexts map at the specified
+// ContextId.  This is a thread-safe method.
+//
+// param id int64 -> the long id passed to Cadence
+// workflow functions.  This will be the mapped key
+//
+// returns int64 -> long id of the ChildContext removed from the map
+func (wectx *WorkflowContext) RemoveChildContext(id int64) int64 {
+	return wectx.childContexts.Remove(id)
+}
+
+// GetChildContext gets a childContext from the WorkflowContext's
+// childContextsMap at the specified ContextID.
+// This method is thread-safe.
+//
+// param id int64 -> the long id passed to Cadence
+// workflow functions. This will be the mapped key
+//
+// returns *WorkflowContext -> pointer to ChildContext with the specified id
+func (wectx *WorkflowContext) GetChildContext(id int64) *ChildContext {
+	if v, ok := wectx.childContexts.Load(id); ok {
+		if _v, _ok := v.(*ChildContext); _ok {
+			return _v
+		}
+	}
+
+	return nil
+}
+
 //----------------------------------------------------------------------------
 // WorkflowContextsMap instance methods
 
 // Add adds a new cadence context and its corresponding ContextId into
 // the WorkflowContextsMap map.  This method is thread-safe.
 //
-// param contextID int64 -> the long contextID passed to Cadence
+// param id int64 -> the long id passed to Cadence
 // workflow functions.  This will be the mapped key
 //
 // param wectx *WorkflowContext -> pointer to the new WorkflowContex used to
 // execute workflow functions. This will be the mapped value
 //
-// returns int64 -> long contextID of the new cadence WorkflowContext added to the map
-func (wectxs *WorkflowContextsMap) Add(contextID int64, wectx *WorkflowContext) int64 {
-	wectxs.Store(contextID, wectx)
-	return contextID
+// returns int64 -> long id of the new cadence WorkflowContext added to the map
+func (wectxs *WorkflowContextsMap) Add(id int64, wectx *WorkflowContext) int64 {
+	wectxs.Store(id, wectx)
+	return id
 }
 
 // Remove removes key/value entry from the WorkflowContextsMap map at the specified
 // ContextId.  This is a thread-safe method.
 //
-// param contextID int64 -> the long contextID passed to Cadence
+// param id int64 -> the long id passed to Cadence
 // workflow functions.  This will be the mapped key
 //
-// returns int64 -> long contextID of the WorkflowContext removed from the map
-func (wectxs *WorkflowContextsMap) Remove(contextID int64) int64 {
-	wectxs.Delete(contextID)
-	return contextID
+// returns int64 -> long id of the WorkflowContext removed from the map
+func (wectxs *WorkflowContextsMap) Remove(id int64) int64 {
+	wectxs.Delete(id)
+	return id
 }
 
 // Get gets a WorkflowContext from the WorkflowContextsMap at the specified
 // ContextID.  This method is thread-safe.
 //
-// param contextID int64 -> the long contextID passed to Cadence
+// param id int64 -> the long id passed to Cadence
 // workflow functions.  This will be the mapped key
 //
-// returns *WorkflowContext -> pointer to WorkflowContext with the specified contextID
-func (wectxs *WorkflowContextsMap) Get(contextID int64) *WorkflowContext {
-	if v, ok := wectxs.Load(contextID); ok {
+// returns *WorkflowContext -> pointer to WorkflowContext with the specified id
+func (wectxs *WorkflowContextsMap) Get(id int64) *WorkflowContext {
+	if v, ok := wectxs.Load(id); ok {
 		if _v, _ok := v.(*WorkflowContext); _ok {
 			return _v
 		}

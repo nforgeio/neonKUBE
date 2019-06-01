@@ -233,6 +233,24 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildActivityInvokeReply(v, cadenceError, value)
 		}
 
+	// ActivityHasHeartbeatDetailsReply
+	case messagetypes.ActivityHasHeartbeatDetailsReply:
+		if v, ok := reply.(*messages.ActivityHasHeartbeatDetailsReply); ok {
+			buildActivityHasHeartbeatDetailsReply(v, cadenceError, value)
+		}
+
+	// ActivityGetHeartbeatDetailsReply
+	case messagetypes.ActivityGetHeartbeatDetailsReply:
+		if v, ok := reply.(*messages.ActivityGetHeartbeatDetailsReply); ok {
+			buildActivityGetHeartbeatDetailsReply(v, cadenceError, value)
+		}
+
+	// ActivityRecordHeartbeatReply
+	case messagetypes.ActivityRecordHeartbeatReply:
+		if v, ok := reply.(*messages.ActivityRecordHeartbeatReply); ok {
+			buildActivityRecordHeartbeatReply(v, cadenceError, value)
+		}
+
 	// Undefined message type
 	// This should never happen.
 	default:
@@ -501,6 +519,36 @@ func buildActivityInvokeReply(reply *messages.ActivityInvokeReply, cadenceError 
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
+		}
+	}
+}
+
+func buildActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeatDetailsReply, cadenceError *cadenceerrors.CadenceError, hasDetails ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(hasDetails) > 0 {
+		if v, ok := hasDetails[0].(bool); ok {
+			reply.SetHasDetails(v)
+		}
+	}
+}
+
+func buildActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeatDetailsReply, cadenceError *cadenceerrors.CadenceError, details ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(details) > 0 {
+		if v, ok := details[0].([]byte); ok {
+			reply.SetDetails(v)
+		}
+	}
+}
+
+func buildActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatReply, cadenceError *cadenceerrors.CadenceError, details ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(details) > 0 {
+		if v, ok := details[0].([]byte); ok {
+			reply.SetDetails(v)
 		}
 	}
 }

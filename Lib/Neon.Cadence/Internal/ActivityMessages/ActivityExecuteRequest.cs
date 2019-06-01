@@ -42,6 +42,15 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityExecuteReply;
 
         /// <summary>
+        /// Specifies the activity to execute
+        /// </summary>
+        public string Activity
+        {
+            get => GetStringProperty("Activity");
+            set => SetStringProperty("Activity", value);
+        }
+
+        /// <summary>
         /// Optionally specifies the arguments to be passed to the activity encoded
         /// as a byte array.
         /// </summary>
@@ -77,8 +86,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityExecuteRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Options = this.Options;
+            typedTarget.Activity    = this.Activity;
+            typedTarget.Args        = this.Args;
+            typedTarget.Options     = this.Options;
         }
     }
 }

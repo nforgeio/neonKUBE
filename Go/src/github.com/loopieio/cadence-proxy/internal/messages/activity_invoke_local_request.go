@@ -42,7 +42,7 @@ func (request *ActivityInvokeLocalRequest) GetActivityContextID() int64 {
 	return request.GetLongProperty("ActivityContextId")
 }
 
-// SetActivity sets an ActivityInvokeLocalRequest's ActivityContextID field
+// SetActivityContextID sets an ActivityInvokeLocalRequest's ActivityContextID field
 // from its properties map.  Identifies the activity context.
 //
 // param value int64 -> int64 representing the ActivityContextID of the
@@ -61,7 +61,7 @@ func (request *ActivityInvokeLocalRequest) GetActivityTypeID() int64 {
 	return request.GetLongProperty("ActivityTypeId")
 }
 
-// SetActivity sets an ActivityInvokeLocalRequest's ActivityTypeID field
+// SetActivityTypeID sets an ActivityInvokeLocalRequest's ActivityTypeID field
 // from its properties map.  Identifies the .NET type that
 // implements the local activity.
 //

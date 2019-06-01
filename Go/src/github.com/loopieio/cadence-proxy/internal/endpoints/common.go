@@ -56,10 +56,6 @@ var (
 	// value
 	argumentNilError = errors.New("ArgumentNilError{Message: failed to access nil value.}")
 
-	// failWithError is the custom error that is thrown when we need to signal an
-	// Operation to fail with an error
-	failWithError = errors.New("FailWithError{Message: induce failure.")
-
 	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
 	replyAddress string

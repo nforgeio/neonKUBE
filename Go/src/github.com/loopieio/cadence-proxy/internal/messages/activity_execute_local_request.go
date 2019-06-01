@@ -44,7 +44,7 @@ func (request *ActivityExecuteLocalRequest) GetActivityTypeID() int64 {
 	return request.GetLongProperty("ActivityTypeId")
 }
 
-// SetActivity sets an ActivityExecuteLocalRequest's ActivityTypeID field
+// SetActivityTypeID sets an ActivityExecuteLocalRequest's ActivityTypeID field
 // from its properties map.  Identifies the .NET type that
 // implements the local activity.
 //

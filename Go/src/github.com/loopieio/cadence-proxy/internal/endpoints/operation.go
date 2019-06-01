@@ -1,11 +1,11 @@
 package endpoints
 
 import (
+	"errors"
 	"sync"
 
 	"go.uber.org/cadence"
 	"go.uber.org/cadence/workflow"
-	"go.uber.org/zap"
 
 	"github.com/loopieio/cadence-proxy/internal/messages"
 )
@@ -29,6 +29,7 @@ type (
 		requestID   int64
 		request     messages.IProxyRequest
 		isCancelled bool
+		channel     chan interface{}
 	}
 )
 
@@ -107,31 +108,19 @@ func (op *Operation) SetSettable(value workflow.Settable) {
 
 // SetReply signals the awaiting task that a workflow reply message
 // has been received
-func (op *Operation) SetReply(value messages.IProxyReply, result interface{}) error {
+func (op *Operation) SetReply(reply messages.IProxyReply, result interface{}) error {
 	if op.future == nil {
 		return argumentNilError
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
-
 	settable := op.GetSettable()
-	if err := value.GetError(); err != nil {
+	if err := reply.GetError(); err != nil {
 		settable.Set(nil, cadence.NewCustomError(err.ToString()))
 	} else {
 		settable.Set(result, nil)
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Checking if Future is ready", zap.Bool("Future IsReady", op.future.IsReady()))
-
 	return nil
-}
-
-// SetCancelled signals the awaiting task that the Operation has
-// been canceled
-func (op *Operation) SetCancelled() {
-	op.isCancelled = true
 }
 
 // SetError signals the awaiting task that it should fails with an
@@ -143,6 +132,39 @@ func (op *Operation) SetError(value error) error {
 
 	settable := op.GetSettable()
 	settable.Set(nil, cadence.NewCustomError(value.Error()))
+
+	return nil
+}
+
+// SetCancelled signals the awaiting task that the Operation has
+// been canceled
+func (op *Operation) SetCancelled() {
+	op.isCancelled = true
+}
+
+// GetChannel gets the Operation channel
+func (op *Operation) GetChannel() chan interface{} {
+	return op.channel
+}
+
+// SetChannel sets the Operation channel
+func (op *Operation) SetChannel(value chan interface{}) {
+	op.channel = value
+}
+
+// SendChannel sends an interface{} value over the
+// Operation's channel
+func (op *Operation) SendChannel(reply messages.IProxyReply, result interface{}) error {
+	defer close(op.channel)
+	if op.channel == nil {
+		return argumentNilError
+	}
+
+	if err := reply.GetError(); err != nil {
+		op.channel <- errors.New(err.ToString())
+	} else {
+		op.channel <- result
+	}
 
 	return nil
 }
