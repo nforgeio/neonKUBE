@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"time"
 
+	"go.uber.org/cadence/activity"
+
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
 	"go.uber.org/cadence/worker"
@@ -199,8 +201,50 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 			reply = handleWorkflowSignalSubscribeRequest(v)
 		}
 
+	// WorkflowHasLastResultRequest
+	case messagetypes.WorkflowHasLastResultRequest:
+		if v, ok := request.(*messages.WorkflowHasLastResultRequest); ok {
+			reply = handleWorkflowHasLastResultRequest(v)
+		}
+
+	// WorkflowGetLastResultRequest
+	case messagetypes.WorkflowGetLastResultRequest:
+		if v, ok := request.(*messages.WorkflowGetLastResultRequest); ok {
+			reply = handleWorkflowGetLastResultRequest(v)
+		}
+
+	// WorkflowDisconnectContextRequest
+	case messagetypes.WorkflowDisconnectContextRequest:
+		if v, ok := request.(*messages.WorkflowDisconnectContextRequest); ok {
+			reply = handleWorkflowDisconnectContextRequest(v)
+		}
+
+	// WorkflowGetTimeRequest
+	case messagetypes.WorkflowGetTimeRequest:
+		if v, ok := request.(*messages.WorkflowGetTimeRequest); ok {
+			reply = handleWorkflowGetTimeRequest(v)
+		}
+
+	// WorkflowSleepRequest
+	case messagetypes.WorkflowSleepRequest:
+		if v, ok := request.(*messages.WorkflowSleepRequest); ok {
+			reply = handleWorkflowSleepRequest(v)
+		}
+
 	// -------------------------------------------------------------------------
 	// Activity message types
+
+	// ActivityExecuteRequest
+	case messagetypes.ActivityExecuteRequest:
+		if v, ok := request.(*messages.ActivityExecuteRequest); ok {
+			reply = handleActivityExecuteRequest(v)
+		}
+
+	// ActivityRegisterRequest
+	case messagetypes.ActivityRegisterRequest:
+		if v, ok := request.(*messages.ActivityRegisterRequest); ok {
+			reply = handleActivityRegisterRequest(v)
+		}
 
 	// Undefined message type
 	default:
@@ -687,7 +731,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(workflowInvokeRequest.GetRequestID(), workflowInvokeRequest)
+		op := NewOperation(requestID, workflowInvokeRequest)
 		future, settable := workflow.NewFuture(ctx)
 		op.SetFuture(future)
 		op.SetSettable(settable)
@@ -1402,8 +1446,330 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 	return reply
 }
 
+func handleWorkflowHasLastResultRequest(request *messages.WorkflowHasLastResultRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowHasLastResultRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowHasLastResultReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
+
+		return reply
+	}
+
+	// check if there is a last workflow completion result from the cadence client
+	hasResult := workflow.HasLastCompletionResult(wectx.GetContext())
+
+	// build the reply
+	buildReply(reply, nil, hasResult)
+
+	return reply
+}
+
+func handleWorkflowGetLastResultRequest(request *messages.WorkflowGetLastResultRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowGetLastResultRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowGetLastResultReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
+
+		return reply
+	}
+
+	// get the last completion result from the cadence client
+	var result []byte
+	err := workflow.GetLastCompletionResult(wectx.GetContext(), &result)
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
+	}
+
+	// build the reply
+	buildReply(reply, nil, result)
+
+	return reply
+}
+
+func handleWorkflowDisconnectContextRequest(request *messages.WorkflowDisconnectContextRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowDisconnectContextRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowDisconnectContextReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
+
+		return reply
+	}
+
+	// create a new disconnected context
+	// and then replace the existing one with the new one
+	disconnectedCtx, cancel := workflow.NewDisconnectedContext(wectx.GetContext())
+	wectx.SetContext(disconnectedCtx)
+	wectx.SetCancelFunction(cancel)
+
+	// build the reply
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleWorkflowGetTimeRequest(request *messages.WorkflowGetTimeRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowGetTimeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowGetTimeReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
+
+		return reply
+	}
+
+	// Get the current time that a workflow decision is
+	// started or replayed
+	t := workflow.Now(wectx.GetContext())
+
+	// build the reply
+	buildReply(reply, nil, t)
+
+	return reply
+}
+
+func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSleepRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowSleepReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
+
+		return reply
+	}
+
+	// pause the current workflow for the specified duration
+	err := workflow.Sleep(wectx.GetContext(), request.GetDuration())
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
+	}
+
+	// build the reply
+	buildReply(reply, nil)
+
+	return reply
+}
+
 // -------------------------------------------------------------------------
 // IProxyRequest activity message type handler methods
+
+func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new ActivityRegisterReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// define some variables to hold workflow return values
+	contextID := cadenceworkflows.NextContextID()
+
+	// define the activity function
+	activityFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
+
+		// create a workflow context entry in the WorkflowContexts map
+		wectx := new(cadenceworkflows.WorkflowContext)
+		wectx.SetContext(ctx)
+
+		// set the WorkflowContext in the
+		// WorkflowContexts
+		contextID = cadenceworkflows.WorkflowContexts.Add(contextID, wectx)
+
+		// Send a WorkflowInvokeRequest to the Neon.Cadence Lib
+		// cadence-client
+		requestID := NextRequestID()
+		activityInvokeRequest := messages.NewActivityInvokeRequest()
+		activityInvokeRequest.SetRequestID(requestID)
+		activityInvokeRequest.SetArgs(input)
+		activityInvokeRequest.SetContextID(contextID)
+
+		// create the Operation for this request and add it to the operations map
+		op := NewOperation(requestID, activityInvokeRequest)
+		future, settable := workflow.NewFuture(ctx)
+		op.SetFuture(future)
+		op.SetSettable(settable)
+		Operations.Add(requestID, op)
+
+		// create the workflow go routine
+		f := func(ctx workflow.Context) {
+
+			// send the WorkflowInvokeRequest
+			resp, err := putToNeonCadenceClient(activityInvokeRequest)
+			if err != nil {
+				panic(err)
+			}
+			defer func() {
+
+				// $debug(jack.burns): DELETE THIS!
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Error("could not close response body", zap.Error(err))
+				}
+			}()
+		}
+
+		// send the request to the Neon.Cadence client
+		// with a workflow go routine
+		workflow.Go(ctx, f)
+
+		// wait for the future to be unblocked
+		var result []byte
+		if err := future.Get(ctx, &result); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	// register the activity
+	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *request.GetName()})
+
+	// set the activity function in the WorkflowContexts map
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx.SetWorkflowFunction(activityFunc)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *request.GetName()))
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityExecuteRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new ActivityExecuteReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(connectionError.Error()))
+
+		return reply
+	}
+
+	// get the contextID and the corresponding context
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(entityNotExistError.Error()))
+
+		return reply
+	}
+
+	// get the activity options, the context,
+	// and set the activity options on the context
+	opts := request.GetOptions()
+	ctx := workflow.WithActivityOptions(wectx.GetContext(), *opts)
+
+	// execute the activity
+	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
+
+	// wait for the future to be unblocked
+	var result []byte
+	if err := future.Get(ctx, &result); err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
+	}
+
+	// build the reply
+	buildReply(reply, nil, result)
+
+	return reply
+}
 
 // -------------------------------------------------------------------------
 // Helpers for sending ProxyReply messages back to Neon.Cadence Library

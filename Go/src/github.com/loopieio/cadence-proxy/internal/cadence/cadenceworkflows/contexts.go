@@ -29,12 +29,13 @@ type (
 	}
 
 	// WorkflowContext holds a Cadence workflow
-	// context as well as the workflow function. This struct is used as
-	// an intermediate for storing worklfow information and state while registering
-	// and executing cadence workflows
+	// context, the registered workflow function, and a context cancel function.
+	// This struct is used as an intermediate for storing worklfow information
+	// and state while registering and executing cadence workflows
 	WorkflowContext struct {
-		workflow.Context
+		ctx          workflow.Context
 		workflowFunc func(ctx workflow.Context, input []byte) ([]byte, error)
+		cancelFunc   func()
 	}
 )
 
@@ -76,7 +77,7 @@ func NewWorkflowContext() *WorkflowContext {
 //
 // returns workflow.Context -> a cadence workflow context
 func (wectx *WorkflowContext) GetContext() workflow.Context {
-	return wectx.Context
+	return wectx.ctx
 }
 
 // SetContext sets a WorkflowContext's workflow.Context
@@ -84,7 +85,7 @@ func (wectx *WorkflowContext) GetContext() workflow.Context {
 // param value workflow.Context -> a cadence workflow context to be
 // set as a WorkflowContext's cadence workflow.Context
 func (wectx *WorkflowContext) SetContext(value workflow.Context) {
-	wectx.Context = value
+	wectx.ctx = value
 }
 
 // GetWorkflowFunction gets a WorkflowContext's workflow function
@@ -99,6 +100,20 @@ func (wectx *WorkflowContext) GetWorkflowFunction() func(ctx workflow.Context, i
 // param value func(ctx workflow.Context, input []byte) ([]byte, error) -> a cadence workflow function
 func (wectx *WorkflowContext) SetWorkflowFunction(value func(ctx workflow.Context, input []byte) ([]byte, error)) {
 	wectx.workflowFunc = value
+}
+
+// GetCancelFunction gets a WorkflowContext's context cancel function
+//
+// returns func() -> a cadence workflow context cancel function
+func (wectx *WorkflowContext) GetCancelFunction() func() {
+	return wectx.cancelFunc
+}
+
+// SetCancelFunction sets a WorkflowContext's cancel function
+//
+// param value func() -> a cadence workflow context cancel function
+func (wectx *WorkflowContext) SetCancelFunction(value func()) {
+	wectx.cancelFunc = value
 }
 
 //----------------------------------------------------------------------------

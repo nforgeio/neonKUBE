@@ -34,6 +34,26 @@ func NewActivityExecuteRequest() *ActivityExecuteRequest {
 	return request
 }
 
+// GetActivity gets a ActivityExecuteRequest's Activity field
+// from its properties map.  Specifies the activity to
+// be executed.
+//
+// returns *string -> *string representing the activity of the
+// activity to be executed
+func (request *ActivityExecuteRequest) GetActivity() *string {
+	return request.GetStringProperty("Activity")
+}
+
+// SetActivity sets an ActivityExecuteRequest's Activity field
+// from its properties map.  Specifies the activity to
+// be executed.
+//
+// param value *string -> *string representing the activity of the
+// activity to be executed
+func (request *ActivityExecuteRequest) SetActivity(value *string) {
+	request.SetStringProperty("Activity", value)
+}
+
 // GetArgs gets a ActivityExecuteRequest's Args field
 // from its properties map.  Args is a []byte that hold the arguments
 // for executing a specific workflow activity
@@ -97,5 +117,6 @@ func (request *ActivityExecuteRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ActivityExecuteRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
+		v.SetActivity(request.GetActivity())
 	}
 }

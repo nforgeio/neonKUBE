@@ -539,4 +539,34 @@ const (
 	/// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityStoppingRequest"/> message.
 	/// </summary>
 	ActivityStoppingReply MessageType = 213
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Executes a local activity within the context of a workflow.
+	/// </summary>
+	ActivityExecuteLocalRequest MessageType = 214
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityExecuteLocalRequest"/> message.
+	/// </summary>
+	ActivityExecuteLocalReply MessageType = 215
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Invokes a local activity on an activity worker.
+	/// </summary>
+	ActivityInvokeLocalRequest MessageType = 216
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityInvokeLocalRequest"/> message.
+	/// </summary>
+	ActivityInvokeLocalReply MessageType = 217
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Registers an activity handler.
+	/// </summary>
+	ActivityRegisterRequest MessageType = 218
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityRegisterRequest"/> message.
+	/// </summary>
+	ActivityRegisterReply MessageType = 219
 )
