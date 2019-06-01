@@ -333,7 +333,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityInvokeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.NotNull(message.Activity);
+                Assert.Null(message.Activity);
                 Assert.Null(message.Args);
 
                 // Round-trip

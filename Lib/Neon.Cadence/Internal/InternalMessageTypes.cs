@@ -492,6 +492,16 @@ namespace Neon.Cadence.Internal
         /// </summary>
         WorkflowSetQueryHandlerReply = 159,
 
+        /// <summary>
+        /// <b>proxy --> client:</b> Invokes a query on a workflow.
+        /// </summary>
+        WorkflowQueryInvokeRequest = 160,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueryInvokeRequest"/>.
+        /// </summary>
+        WorkflowQueryInvokeReply = 161,
+
         //---------------------------------------------------------------------
         // Activity messages
 
