@@ -133,7 +133,7 @@ namespace Neon.Cadence
     ///     </para>
     ///     <list type="bullet">
     ///         <item>
-    ///         Local activities cannot heartbeat.
+    ///         Local activities cannot record Cadence heartbeats.
     ///         </item>
     ///         <item>
     ///         Local activity timeouts should be shorter than the decision task timeout
@@ -254,7 +254,7 @@ namespace Neon.Cadence
                     reply = await OnMutableInvokeAsync((WorkflowMutableInvokeRequest)request);
                     break;
 
-                case InternalMessageTypes.ActivityExecuteLocalRequest:
+                case InternalMessageTypes.ActivityInvokeLocalRequest:
 
                     reply = await OnExecuteLocalActivity(client, (ActivityInvokeLocalRequest)request);
                     break;
@@ -623,6 +623,7 @@ namespace Neon.Cadence
         private Dictionary<string, Func<Task<byte[]>>>  idToMutableFunc;
         private Dictionary<long, Type>                  idToLocalActivityType;
         private long                                    nextLocalActivityTypeId;
+        private bool                                    isDisconnected;
 
         /// <summary>
         /// Internal constructor.
@@ -817,6 +818,13 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task DisconnectContextAsync()
         {
+            if (isDisconnected)
+            {
+                // Already disconnected.
+
+                return;
+            }
+
             var reply = (WorkflowDisconnectContextReply)await Client.CallProxyAsync(
                 new WorkflowDisconnectContextRequest()
                 {
@@ -824,6 +832,8 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
+
+            isDisconnected = true;
         }
 
         /// <summary>

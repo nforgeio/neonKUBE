@@ -408,7 +408,7 @@ namespace Neon.Cadence
                     {
                         // We need to set the execute permissions on this file.  We're
                         // going to assume that only the root and current user will
-                        // need to execute rights to the proxy binary.
+                        // need execute rights to the proxy binary.
 
                         var result = NeonHelper.ExecuteCapture("chmod", new object[] { "774", binaryPath });
 
@@ -718,7 +718,7 @@ namespace Neon.Cadence
 
                     if (ProxyProcess != null && !ProxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
                     {
-                        log.LogWarn(() => $"[cadence-proxy]: Did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
+                        log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
                         ProxyProcess.Kill();
                     }
 
@@ -951,9 +951,19 @@ namespace Neon.Cadence
 
                 switch (request.Type)
                 {
-                    case InternalMessageTypes.HeartbeatRequest:
+                    case InternalMessageTypes.WorkflowInvokeRequest:
+                    case InternalMessageTypes.WorkflowSignalReceivedRequest:
+                    case InternalMessageTypes.WorkflowQueryInvokeRequest:
+                    case InternalMessageTypes.WorkflowMutableInvokeRequest:
+                    case InternalMessageTypes.ActivityInvokeLocalRequest:
 
-                        await OnHeartbeatRequest((HeartbeatRequest)request);
+                        await Workflow.OnProxyRequestAsync(this, request);
+                        break;
+
+                    case InternalMessageTypes.ActivityInvokeRequest:
+                    case InternalMessageTypes.ActivityStoppingRequest:
+
+                        await Activity.OnProxyRequestAsync(this, request);
                         break;
 
                     default:
@@ -965,7 +975,7 @@ namespace Neon.Cadence
             }
             else if (reply != null)
             {
-                // [cadence-proxy] sent a reply to a request from the library.
+                // [cadence-proxy] sent a reply to a request from the client.
 
                 Operation operation;
 
@@ -1282,20 +1292,6 @@ namespace Neon.Cadence
             // connection has been closed.
 
             RaiseConnectionClosed(exception);
-        }
-
-        //--------------------------------------------------------------------
-        // These methods handle requests sent by the [cadence-proxy].
-
-        /// <summary>
-        /// Handles <see cref="HeartbeatRequest"/> messages received from the
-        /// <b>cadence-proxy</b>.
-        /// </summary>
-        /// <param name="request">The received request.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnHeartbeatRequest(HeartbeatRequest request)
-        {
-            await ProxyReplyAsync(request, new HeartbeatReply());
         }
     }
 }

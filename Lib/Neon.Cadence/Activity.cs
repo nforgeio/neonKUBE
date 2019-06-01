@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
 
@@ -78,6 +79,40 @@ namespace Neon.Cadence
             }
 
             return (Activity)constructor.Invoke(new object[] { args, cancellationToken });
+        }
+
+
+        /// <summary>
+        /// Called to handle a workflow related request message received from the cadence-proxy.
+        /// </summary>
+        /// <param name="client">The client that received the request.</param>
+        /// <param name="request">The request message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        internal static async Task OnProxyRequestAsync(CadenceClient client, ProxyRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            ProxyReply reply;
+
+            switch (request.Type)
+            {
+                case InternalMessageTypes.ActivityInvokeRequest:
+
+                    throw new NotImplementedException();
+                    break;
+
+                case InternalMessageTypes.ActivityStoppingRequest:
+
+                    throw new NotImplementedException();
+                    break;
+
+                default:
+
+                    throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
+            }
+
+            await client.ProxyReplyAsync(request, reply);
         }
 
         //---------------------------------------------------------------------

@@ -26,7 +26,7 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>client --> proxy:</b> Informs the proxy of the network endpoint
-    /// where the library is listening for proxy messages.
+    /// where the client is listening for proxy messages.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.InitializeRequest)]
     internal class InitializeRequest : ProxyRequest
@@ -43,7 +43,7 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.InitializeReply;
 
         /// <summary>
-        /// The IP address where the Cadence Library is listening for proxy messages
+        /// The IP address where the Cadence client is listening for proxy messages
         /// send by the <b>cadence-proxy</b>.
         /// </summary>
         public string LibraryAddress
@@ -53,7 +53,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The port where the Cadence Library is listening for proxy messages
+        /// The port where the Cadence client is listening for proxy messages
         /// send by the <b>cadence-proxy</b>.
         /// </summary>
         public int LibraryPort

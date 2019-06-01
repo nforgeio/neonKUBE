@@ -203,7 +203,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the library was built as 32-bit.
+        /// Returns <c>true</c> if the client was built as 32-bit.
         /// </summary>
         public static bool Is32BitBuild
         {

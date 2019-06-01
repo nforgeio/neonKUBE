@@ -176,14 +176,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
-        /// useful while debugging the library but should never be set for production.
+        /// useful while debugging the client but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
         internal bool DebugDisableHeartbeats { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
-        /// useful while debugging the library but should never be set for production.
+        /// useful while debugging the client but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
         internal bool DebugIgnoreTimeouts { get; set; } = false;
