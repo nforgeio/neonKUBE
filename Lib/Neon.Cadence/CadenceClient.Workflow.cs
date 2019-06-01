@@ -57,6 +57,8 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
+
+            Workflow.Register<TWorkflow>(workflowTypeName);
         }
 
         /// <summary>

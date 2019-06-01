@@ -43,6 +43,15 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityInvokeReply;
 
         /// <summary>
+        /// Identifies the registered activity type.
+        /// </summary>
+        public string Activity
+        {
+            get => GetStringProperty("Activity");
+            set => SetStringProperty("Activity", value);
+        }
+
+        /// <summary>
         /// Optionally specifies the activity arguments encoded as a byte array.
         /// </summary>
         public byte[] Args
@@ -68,7 +77,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityInvokeRequest)target;
 
-            typedTarget.Args = this.Args;
+            typedTarget.Activity = this.Activity;
+            typedTarget.Args     = this.Args;
         }
     }
 }

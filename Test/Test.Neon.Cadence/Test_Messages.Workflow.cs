@@ -3221,5 +3221,130 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowQueryInvokeRequest()
+        {
+            WorkflowQueryInvokeRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowQueryInvokeRequest();
+
+                Assert.Equal(InternalMessageTypes.WorkflowQueryInvokeReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowQueryInvokeRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ContextId);
+                Assert.Null(message.QueryName);
+                Assert.Null(message.QueryArgs);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                message.ContextId = 666;
+                message.QueryName = "my-query";
+                message.QueryArgs = new byte[] { 0, 1, 2, 3, 4 };
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-query", message.QueryName);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowQueryInvokeRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-query", message.QueryName);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-query", message.QueryName);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-query", message.QueryName);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowQueryInvokeReply()
+        {
+            WorkflowQueryInvokeReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowQueryInvokeReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowQueryInvokeReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Null(message.Result);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+                message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
+                stream.SetLength(0);
+                stream.Write(message.Serialize());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowQueryInvokeReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+            }
+        }
     }
 }

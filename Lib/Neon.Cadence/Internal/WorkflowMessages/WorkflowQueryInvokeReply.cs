@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InitializeRequest.cs
+// FILE:	    WorkflowQueryInvokeReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,47 +25,32 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Informs the proxy of the network endpoint
-    /// where the client is listening for proxy messages.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueryInvokeRequest"/>
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.InitializeRequest)]
-    internal class InitializeRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.WorkflowQueryInvokeReply)]
+    internal class WorkflowQueryInvokeReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public InitializeRequest()
+        public WorkflowQueryInvokeReply()
         {
-            Type = InternalMessageTypes.InitializeRequest;
-        }
-
-        /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.InitializeReply;
-
-        /// <summary>
-        /// The IP address where the Cadence client is listening for proxy messages
-        /// send by the <b>cadence-proxy</b>.
-        /// </summary>
-        public string LibraryAddress
-        {
-            get => GetStringProperty("LibraryAddress");
-            set => SetStringProperty("LibraryAddress", value);
+            Type = InternalMessageTypes.WorkflowQueryInvokeReply;
         }
 
         /// <summary>
-        /// The port where the Cadence client is listening for proxy messages
-        /// send by the <b>cadence-proxy</b>.
+        /// The query result bytes or <c>null</c>.
         /// </summary>
-        public int LibraryPort
+        public byte[] Result
         {
-            get => GetIntProperty("LibraryPort");
-            set => SetIntProperty("LibraryPort", value);
+            get => GetBytesProperty("Result");
+            set => SetBytesProperty("Result", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new InitializeRequest();
+            var clone = new WorkflowQueryInvokeReply();
 
             CopyTo(clone);
 
@@ -77,10 +62,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (InitializeRequest)target;
+            var typedTarget = (WorkflowQueryInvokeReply)target;
 
-            typedTarget.LibraryAddress = this.LibraryAddress;
-            typedTarget.LibraryPort    = this.LibraryPort;
+            typedTarget.Result = this.Result;
         }
     }
 }

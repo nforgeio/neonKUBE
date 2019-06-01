@@ -257,7 +257,7 @@ namespace Neon.Cadence.Internal
         WorkflowListOpenExecutionsReply = 117,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Queries a workflow's last execution.
+        /// <b>client --> proxy:</b> Queries a workflow.
         /// </summary>
         WorkflowQueryRequest = 118,
 
@@ -322,7 +322,7 @@ namespace Neon.Cadence.Internal
         WorkflowSignalSubscribeReply = 129,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Send when a signal is received by the proxy on a subscribed channel.
+        /// <b>proxy --> client:</b> Sent when a signal is received by the proxy on a subscribed channel.
         /// </summary>
         WorkflowSignalReceivedRequest = 130,
 
@@ -332,7 +332,7 @@ namespace Neon.Cadence.Internal
         WorkflowSignalReceivedReply = 131,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Implements the standard Cadence <i>side effect</i> behavior. 
+        /// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior. 
         /// The client will transmit a <see cref="WorkflowMutableInvokeRequest"/> message to the
         /// proxy with a unique <c>MutableId</c>.  The proxy will call the GOLANG Cadence client's
         /// <c>workflow.SideEffect()</c> function, passing it a function that when called,
@@ -343,7 +343,7 @@ namespace Neon.Cadence.Internal
         WorkflowMutableRequest = 132,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
         /// </summary>
         WorkflowMutableReply = 133,
 
@@ -491,6 +491,16 @@ namespace Neon.Cadence.Internal
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetQueryHandlerRequest"/> message.
         /// </summary>
         WorkflowSetQueryHandlerReply = 159,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Invokes a query on a workflow.
+        /// </summary>
+        WorkflowQueryInvokeRequest = 160,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueryInvokeRequest"/>.
+        /// </summary>
+        WorkflowQueryInvokeReply = 161,
 
         //---------------------------------------------------------------------
         // Activity messages

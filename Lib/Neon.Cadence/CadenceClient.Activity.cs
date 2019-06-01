@@ -57,6 +57,8 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
+
+            Activity.Register<TActivity>(activityTypeName);
         }
     }
 }

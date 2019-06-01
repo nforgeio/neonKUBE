@@ -333,14 +333,17 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityInvokeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Activity);
                 Assert.Null(message.Args);
 
                 // Round-trip
 
                 message.RequestId = 555;
+                message.Activity = "my-activity";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
 
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
                 stream.SetLength(0);
@@ -350,6 +353,7 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityInvokeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
                 // Echo the message via the connection's web server and verify.
@@ -357,6 +361,7 @@ namespace TestCadence
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -364,6 +369,7 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
             }
         }

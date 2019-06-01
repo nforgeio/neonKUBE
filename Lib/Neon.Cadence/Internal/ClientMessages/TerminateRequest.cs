@@ -26,7 +26,7 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>client --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
-    /// proxy should send a <see cref="TerminateReply"/> back to the library and
+    /// proxy should send a <see cref="TerminateReply"/> back to the client and
     /// then exit, terminating the process.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.TerminateRequest)]

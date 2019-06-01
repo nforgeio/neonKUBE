@@ -25,7 +25,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence
 {
@@ -36,6 +38,27 @@ namespace Neon.Cadence
     {
         //---------------------------------------------------------------------
         // Static members
+
+        private static object                       syncLock           = new object();
+        private static INeonLogger                  log                = LogManager.Default.GetLogger<Activity>();
+        private static Dictionary<string, Type>     nameToActivityType = new Dictionary<string, Type>();
+
+        /// <summary>
+        /// Registers an activity type.
+        /// </summary>
+        /// <typeparam name="TActivity">The activity implementation type.</typeparam>
+        /// <param name="activityTypeName">The name used to identify the implementation.</param>
+        internal static void Register<TActivity>(string activityTypeName)
+            where TActivity : Activity
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentException>(typeof(TActivity) != typeof(Activity), $"The base [{nameof(Activity)}] class cannot be registered.");
+
+            lock (activityTypeName)
+            {
+                nameToActivityType[activityTypeName] = typeof(TActivity);
+            }
+        }
 
         /// <summary>
         /// Constructs an activity instance of the specified type.
@@ -56,6 +79,40 @@ namespace Neon.Cadence
             }
 
             return (Activity)constructor.Invoke(new object[] { args, cancellationToken });
+        }
+
+
+        /// <summary>
+        /// Called to handle a workflow related request message received from the cadence-proxy.
+        /// </summary>
+        /// <param name="client">The client that received the request.</param>
+        /// <param name="request">The request message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        internal static async Task OnProxyRequestAsync(CadenceClient client, ProxyRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(request != null);
+
+            ProxyReply reply;
+
+            switch (request.Type)
+            {
+                case InternalMessageTypes.ActivityInvokeRequest:
+
+                    throw new NotImplementedException();
+                    break;
+
+                case InternalMessageTypes.ActivityStoppingRequest:
+
+                    throw new NotImplementedException();
+                    break;
+
+                default:
+
+                    throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
+            }
+
+            await client.ProxyReplyAsync(request, reply);
         }
 
         //---------------------------------------------------------------------

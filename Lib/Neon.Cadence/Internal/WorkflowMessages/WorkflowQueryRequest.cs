@@ -25,7 +25,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Sends a signal to a running workflow.
+    /// <b>proxy --> client:</b> Queries a running workflow.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.WorkflowQueryRequest)]
     internal class WorkflowQueryRequest : WorkflowRequest
@@ -51,8 +51,8 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run to be cancelled.  The latest run
-        /// will be cancelled when this is <c>null</c> or empty.
+        /// Identifies the specific workflow run to be queried.  The latest run
+        /// will be queried when this is <c>null</c> or empty.
         /// </summary>
         public string RunId
         {
