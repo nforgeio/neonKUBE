@@ -113,5 +113,32 @@ namespace TestCadence
             Assert.Equal(original.ClientTimeout, parsed.ClientTimeout);
             Assert.Equal(original.ClientTimeout, parsed.ClientTimeout);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void ParseCadenceTimestamp()
+        {
+            var expected = new DateTime(2014, 5, 16, 12, 28, 6);
+
+            expected += TimeSpan.FromSeconds(0.801064);
+
+            // Note that the .NET [DateTimeFormat.ParseExact()] method doesn't seem to
+            // be parsing the last three digits of the fractional seconds when we use
+            // this format string in [CadenceHelper.ParseCadenceTimestamp()].
+            //
+            // I'm not sure why this is happening, but we don't need that much precision,
+            // so we'll do a looser check on the parsed result.
+
+            var parsed = CadenceHelper.ParseCadenceTimestamp("2014-05-16T08:28:06.801064-04:00");
+            var delta = parsed - expected;
+
+            if (delta < TimeSpan.Zero)
+            {
+                delta = -delta;
+            }
+
+            Assert.True(delta.TotalSeconds < 0.001);
+            Assert.Equal(DateTimeKind.Utc, parsed.Kind);
+        }
     }
 }

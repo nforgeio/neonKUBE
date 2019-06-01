@@ -60,7 +60,7 @@ namespace Neon.Cadence
 
             var map = new WorkflowMethodMap();
 
-            foreach (var method in workflowType.GetMethods())
+            foreach (var method in workflowType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
                 // Signal methods are tagged by [SignalHandler], accept a single byte array parameter,
                 // and returns [Task].

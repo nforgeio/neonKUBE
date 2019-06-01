@@ -27,69 +27,92 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds informaation about an executing activity.
+    /// Holds informaation about an executing activity.  This maps directly to the
+    /// GOLANG client's <b>ActivityInfo</b> structure.
     /// </summary>
-    public class ActivityInfo
+    internal class InternalActivityInfo
     {
         /// <summary>
         /// The activity task token.
         /// </summary>
-        public byte[] TaskToken { get; internal set; }
+        public byte[] TaskToken { get; set; }
 
         /// <summary>
         /// The parent workflow type name.
         /// </summary>
-        public string WorkflowTypeName { get; internal set; }
+        public InternalWorkflowType WorkflowType { get; set; }
 
         /// <summary>
         /// The parent workflow domain.
         /// </summary>
-        public string WorkflowDomain { get; internal set; }
+        public string WorkflowDomain { get; set; }
 
         /// <summary>
         /// The parent workflow execution details.
         /// </summary>
-        public WorkflowRun WorkflowRun { get; internal set; }
+        public InternalWorkflowExecution WorkflowExecution { get; set; }
 
         /// <summary>
         /// The activity ID.
         /// </summary>
-        public string ActivityId { get; internal set; }
+        public string ActivityId { get; set; }
 
         /// <summary>
-        /// The activity type name.
+        /// The activity type.
         /// </summary>
-        public string ActivityTypeName { get; internal set; }
+        public InternalActivityType ActivityType { get; set; }
 
         /// <summary>
         /// The activity tasklist.
         /// </summary>
-        public string TaskList { get; internal set; }
+        public string TaskList { get; set; }
 
         /// <summary>
         /// The maximum time between heartbeats.  0 means no heartbeat needed.
         /// </summary>
-        public TimeSpan HeartbeatTimeout { get; internal set; }
+        public long HeartbeatTimeout { get; set; }
 
         /// <summary>
         /// Time (UTC) when the activity was scheduled.
         /// </summary>
-        public DateTime ScheduledTimestamp { get; internal set; }
+        public string ScheduledTimestamp { get; set; }
 
         /// <summary>
         /// Time (UTC) when the activity was started.
         /// </summary>
-        public DateTime StartedTimestamp { get; internal set; }
+        public string StartedTimestamp { get; set; }
 
         /// <summary>
         /// Time (UTC) when the activity will timeout.
         /// </summary>
-        public DateTime Deadline { get; internal set; }
+        public string Deadline { get; set; }
 
         /// <summary>
         /// Indicates how many times the activity was been restarted.  This will be zero
         /// for the first execution, 1 for the second, and so on.
         /// </summary>
-        public int Attempt { get; internal set; }
+        public int Attempt { get; set; }
+
+        /// <summary>
+        /// Converts the instance into a public <see cref="ActivityInfo"/>.
+        /// </summary>
+        public ActivityInfo ToPublic()
+        {
+            return new ActivityInfo()
+            {
+                TaskToken          = this.TaskToken,
+                WorkflowTypeName   = this.WorkflowType?.Name,
+                WorkflowDomain     = this.WorkflowDomain,
+                WorkflowRun        = this.WorkflowExecution.ToPublic(),
+                ActivityId         = this.ActivityId,
+                ActivityTypeName   = this.ActivityType?.Name,
+                TaskList           = this.TaskList,
+                HeartbeatTimeout   = TimeSpan.FromTicks(this.HeartbeatTimeout / 100),
+                ScheduledTimestamp = CadenceHelper.ParseCadenceTimestamp(this.ScheduledTimestamp),
+                StartedTimestamp   = CadenceHelper.ParseCadenceTimestamp(this.StartedTimestamp),
+                Deadline           = CadenceHelper.ParseCadenceTimestamp(this.Deadline),
+                Attempt            = this.Attempt
+            };
+        }
     }
 }

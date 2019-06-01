@@ -34,7 +34,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class for all application Cadence activity implementations.
     /// </summary>
-    public abstract class Activity
+    public abstract class Activity : INeonLogger
     {
         //---------------------------------------------------------------------
         // Private types
@@ -297,6 +297,230 @@ namespace Neon.Cadence
         internal async Task<byte[]> OnRunAsync(byte[] args)
         {
             return await RunAsync(args);
+        }
+
+        /// <summary>
+        /// Ensures that the activity has an associated Cadence context and thus
+        /// is not a local actvity.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
+        private void EnsureNotLocal()
+        {
+            if (!contextId.HasValue)
+            {
+                throw new InvalidOperationException("This operation is not supported for local activity executions.");
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Sends a heartbeat with optional details to Cadence.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
+        /// </note>
+        /// </summary>
+        /// <param name="details">The optional heartbeart details.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
+        /// <remarks>
+        /// <para>
+        /// Long running activities need to send periodic heartbeats back to
+        /// Cadence to prove that the activity is still alive.  This can also
+        /// be used by activities to implement checkpoints or record other
+        /// details.  This method sends a heartbeat with optional details
+        /// encoded as a byte array.
+        /// </para>
+        /// <note>
+        /// The maximum allowed time period between heartbeats is specified in 
+        /// <see cref="ActivityOptions"/> when activities are executed and it's
+        /// also possible to enable automatic heartbeats sent by the Cadence client.
+        /// </note>
+        /// </remarks>
+        public async Task SendHeartbeatAsync(byte[] details = null)
+        {
+            EnsureNotLocal();
+
+            var reply = (ActivityRecordHeartbeatReply)await Client.CallProxyAsync(
+                new ActivityRecordHeartbeatRequest()
+                {
+                    ContextId = this.contextId.Value,
+                    Details   = details
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// <para>
+        /// Determines whether the details from the last recorded heartbeat last
+        /// failed attempt exist.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
+        /// </note>
+        /// </summary>
+        /// <returns>The details from the last heartbeat or <c>null</c>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
+        public async Task<bool> HasLastHeartbeatDetails()
+        {
+            EnsureNotLocal();
+
+            var reply = (ActivityHasHeartbeatDetailsReply)await Client.CallProxyAsync(
+                new ActivityHasHeartbeatDetailsRequest()
+                {
+                    ContextId = this.contextId.Value
+                });
+
+            reply.ThrowOnError();
+
+            return reply.HasDetails;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns the details from the last recorded heartbeat last failed attempt
+        /// at running the activity.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
+        /// </note>
+        /// </summary>
+        /// <returns>The details from the last heartbeat or <c>null</c>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
+        public async Task<byte[]> GetLastHeartbeatDetails()
+        {
+            EnsureNotLocal();
+
+            var reply = (ActivityGetHeartbeatDetailsReply)await Client.CallProxyAsync(
+                new ActivityGetHeartbeatDetailsRequest()
+                {
+                    ContextId = this.contextId.Value
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Details;
+        }
+
+        //---------------------------------------------------------------------
+        // Logging implementation
+
+        // $todo(jeff.lill): Implement these.
+        //
+        // Note that these calls are all synchronous.  Perhaps we should consider dumping
+        // the [INeonLogger] implementations in favor of simpler async methods?
+
+        /// <inheritdoc/>
+        public bool IsLogDebugEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogSInfoEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogInfoEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogWarnEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogErrorEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogSErrorEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogCriticalEnabled => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsLogLevelEnabled(LogLevel logLevel)
+        {
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public void LogDebug(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSInfo(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogInfo(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogWarn(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSError(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogError(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogCritical(object message, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogDebug(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSInfo(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogInfo(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogWarn(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogError(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogSError(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogCritical(object message, Exception e, string activityId = null)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, IEnumerable<string> textFields, IEnumerable<double> numFields)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params string[] textFields)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void LogMetrics(LogLevel level, params double[] numFields)
+        {
         }
     }
 }
