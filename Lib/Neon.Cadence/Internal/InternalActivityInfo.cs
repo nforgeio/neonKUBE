@@ -108,9 +108,9 @@ namespace Neon.Cadence.Internal
                 ActivityTypeName   = this.ActivityType?.Name,
                 TaskList           = this.TaskList,
                 HeartbeatTimeout   = TimeSpan.FromTicks(this.HeartbeatTimeout / 100),
-                ScheduledTimestamp = CadenceHelper.ParseCadenceTimestamp(this.ScheduledTimestamp),
-                StartedTimestamp   = CadenceHelper.ParseCadenceTimestamp(this.StartedTimestamp),
-                Deadline           = CadenceHelper.ParseCadenceTimestamp(this.Deadline),
+                ScheduledTime = CadenceHelper.ParseCadenceTimestamp(this.ScheduledTimestamp),
+                StartedTime   = CadenceHelper.ParseCadenceTimestamp(this.StartedTimestamp),
+                DeadlineTime           = CadenceHelper.ParseCadenceTimestamp(this.Deadline),
                 Attempt            = this.Attempt
             };
         }

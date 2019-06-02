@@ -74,17 +74,17 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Time (UTC) when the activity was scheduled.
         /// </summary>
-        public DateTime ScheduledTimestamp { get; internal set; }
+        public DateTime ScheduledTime { get; internal set; }
 
         /// <summary>
         /// Time (UTC) when the activity was started.
         /// </summary>
-        public DateTime StartedTimestamp { get; internal set; }
+        public DateTime StartedTime { get; internal set; }
 
         /// <summary>
         /// Time (UTC) when the activity will timeout.
         /// </summary>
-        public DateTime Deadline { get; internal set; }
+        public DateTime DeadlineTime { get; internal set; }
 
         /// <summary>
         /// Indicates how many times the activity was been restarted.  This will be zero
