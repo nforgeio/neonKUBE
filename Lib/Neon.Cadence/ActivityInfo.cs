@@ -24,7 +24,7 @@ using Newtonsoft.Json;
 using Neon.Cadence;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
     /// Holds informaation about an executing activity.

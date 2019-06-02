@@ -43,11 +43,80 @@ namespace Neon.Cadence
     /// </summary>
     /// <remarks>
     /// <para>
+    /// Cadence workflows are intended to implement the decision logic around zero
+    /// or more activities that actually interact with the outside world or perform
+    /// longer running computations.  You'll provide this logic in your <see cref="RunAsync(byte[])"/>
+    /// method implementation.  This method accepts workflow parameters as byte array
+    /// and returns the workflow result as another byte array (both of these arrays
+    /// may also be <c>null</c>).
+    /// </para>
+    /// <para>
     /// Workflows are pretty easy to implement.  You'll need to derive your custom
     /// workflow class from <see cref="Workflow"/> and implement a default public
     /// constructor and then need to implement the <see cref="RunAsync(byte[])"/> method,
     /// which is where your workflow logic will reside.  
     /// </para>
+    /// <note>
+    /// <para>
+    /// Workflow logic must be deterministic and idempotent:
+    /// </para>
+    /// <list type="bullet">
+    ///     <item>
+    ///     <para>
+    ///     The code in your <see cref="RunAsync(byte[])"/> method must only rely on
+    ///     state and data returned by Cadence methods for determining what to do.
+    ///     This allows Cadence to replay previously completed workfow steps when
+    ///     a workflow needs to be rescheduled on another worker.
+    ///     </para>
+    ///     <para>
+    ///     This means that you must not call things like <see cref="DateTime.UtcNow"/>
+    ///     directly in your workflow because this will likely return a different 
+    ///     value every time it's called.  Instead, call  
+    ///     </para>
+    ///     </item>
+    ///     <item>
+    ///     <para>
+    ///     Workflows are inherently single threaded.  You should never explicitly
+    ///     create threads within <see cref="RunAsync(byte[])"/> or use things like
+    ///     <see cref="Task.Run(Action)"/> which schedule work on background threads.
+    ///     </para>
+    ///     <note>
+    ///     Workflows are allowed to run multiple activities in parallel and activities
+    ///     can be multi-threaded, it's just the workflow code itself that can't use
+    ///     threads because those will generally interfere with Cadence's ability to
+    ///     replay workflow steps deterministically.
+    ///     </note>
+    ///     </item>
+    ///     <item>
+    ///     Workflows must never obtain the current time by using methods like 
+    ///     <see cref="DateTime.UtcNow"/> directly.  Use <see cref="UtcNowAsync"/>
+    ///     instead.
+    ///     </item>
+    ///     <item>
+    ///     Workflows should never directly query the environment where the workflow 
+    ///     code is currently running.  This includes things like environment variables,
+    ///     the machine host name or IP address, local files, etc.  You should generally
+    ///     use activities for this or obtain this indirectly state via
+    ///     <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>.  Both of
+    ///     these mechanisms will ensure that Cadence can record the state in the
+    ///     workflow history so that it can be replayed if the workflow needs to
+    ///     be rescheduled.
+    ///     </item>
+    ///     <item>
+    ///     Workflows should never obtain things like random numbers or UUIDs 
+    ///     directly since these operations are implicitly are non-deterministic 
+    ///     because they'll return different values every time.  You'll need to
+    ///     use  <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>
+    ///     with a custom function for these as well or use activities, to ensure
+    ///     that the results are recorded in the workflow history.
+    ///     </item>
+    ///     <item>
+    ///     Workflows should never call <see cref="Thread.Sleep(TimeSpan)"/> or 
+    ///     <see cref="Task.Delay(TimeSpan)"/>.  Use <see cref="SleepAsync(TimeSpan)"/>
+    ///     instead.
+    ///     </item>
+    /// </list>
+    /// </note>
     /// <para>
     /// Here's an overview describing the steps necessary to implement, deploy, and
     /// start a workflow:
@@ -731,6 +800,75 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="args">The workflow arguments encoded into a byte array or <c>null</c>.</param>
         /// <returns>The workflow result encoded as a byte array or <c>null</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// There a several Cadence restrictions you need to keep in mind when implementing
+        /// your workflow logic.  These are necessary so that Cadence will be able to
+        /// transparently and deterministically replay previously completed workflow steps
+        /// when workflows need to be restarted due to failures or other reasons.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// Workflow logic must be deterministic and idempotent:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///     <para>
+        ///     The code in your <see cref="RunAsync(byte[])"/> method must only rely on
+        ///     state and data returned by Cadence methods for determining what to do.
+        ///     This allows Cadence to replay previously completed workfow steps when
+        ///     a workflow needs to be rescheduled on another worker.
+        ///     </para>
+        ///     <para>
+        ///     This means that you must not call things like <see cref="DateTime.UtcNow"/>
+        ///     directly in your workflow because this will likely return a different 
+        ///     value every time it's called.  Instead, call  
+        ///     </para>
+        ///     </item>
+        ///     <item>
+        ///     <para>
+        ///     Workflows are inherently single threaded.  You should never explicitly
+        ///     create threads within <see cref="RunAsync(byte[])"/> or use things like
+        ///     <see cref="Task.Run(Action)"/> which schedule work on background threads.
+        ///     </para>
+        ///     <note>
+        ///     Workflows are allowed to run multiple activities in parallel and activities
+        ///     can be multi-threaded, it's just the workflow code itself that can't use
+        ///     threads because those will generally interfere with Cadence's ability to
+        ///     replay workflow steps deterministically.
+        ///     </note>
+        ///     </item>
+        ///     <item>
+        ///     Workflows must never obtain the current time by using methods like 
+        ///     <see cref="DateTime.UtcNow"/> directly.  Use <see cref="UtcNowAsync"/>
+        ///     instead.
+        ///     </item>
+        ///     <item>
+        ///     Workflows should never directly query the environment where the workflow 
+        ///     code is currently running.  This includes things like environment variables,
+        ///     the machine host name or IP address, local files, etc.  You should generally
+        ///     use activities for this or obtain this indirectly state via
+        ///     <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>.  Both of
+        ///     these mechanisms will ensure that Cadence can record the state in the
+        ///     workflow history so that it can be replayed if the workflow needs to
+        ///     be rescheduled.
+        ///     </item>
+        ///     <item>
+        ///     Workflows should never obtain things like random numbers or UUIDs 
+        ///     directly since these operations are implicitly are non-deterministic 
+        ///     because they'll return different values every time.  You'll need to
+        ///     use  <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>
+        ///     with a custom function for these as well or use activities, to ensure
+        ///     that the results are recorded in the workflow history.
+        ///     </item>
+        ///     <item>
+        ///     Workflows should never call <see cref="Thread.Sleep(TimeSpan)"/> or 
+        ///     <see cref="Task.Delay(TimeSpan)"/>.  Use <see cref="SleepAsync(TimeSpan)"/>
+        ///     instead.
+        ///     </item>
+        /// </list>
+        /// </note>
+        /// </remarks>
         protected abstract Task<byte[]> RunAsync(byte[] args);
 
         /// <summary>
@@ -945,25 +1083,20 @@ namespace Neon.Cadence
         /// Pauses the workflow for at least the period specified.
         /// </summary>
         /// <param name="duration">The time to sleep.</param>
-        /// <param name="cancellationToken">Optional cancellation token.</param>
-        /// <returns></returns>
-        /// <exception cref="TaskCanceledException">
-        /// Thrown if the operation was cancelled via <see cref="CancellationToken"/> or the
-        /// workflow was cancelled externally.
-        /// </exception>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TaskCanceledException">Thrown if the operation was cancelled.</exception>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task SleepAsync(TimeSpan duration, CancellationToken? cancellationToken = null)
+        protected async Task SleepAsync(TimeSpan duration)
         {
             var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
                 new WorkflowSleepRequest()
                 {
                     ContextId = contextId,
                     Duration  = duration
-                },
-                cancellationToken: cancellationToken);
+                });
 
             reply.ThrowOnError();
         }

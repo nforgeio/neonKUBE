@@ -34,12 +34,75 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class for all application Cadence activity implementations.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Cadence activities are intended to perform most of the work related to
+    /// actually implementing a workflow.  This includes interacting with the
+    /// outside world by obtaining and updating external state as well as performing
+    /// long running computations and operations.  Activities are where you'll 
+    /// interact with databases and external services.
+    /// </para>
+    /// <para>
+    /// Workflows are generally intended to invoke one or more activities
+    /// and then use their results to decide which other activities need to
+    /// run and then combine these activity results into the workflow result,
+    /// as required.  Workflows can be considered to handle the decisions
+    /// and activities are responsible for doing things.
+    /// </para>
+    /// <para>
+    /// Activities are very easy to implement, simply derive your custom
+    /// activity type from <see cref="Activity"/> and then implement a
+    /// <see cref="RunAsync(byte[])"/> method with your custom code.
+    /// This accepts a byte array with your custom activity arguments 
+    /// as a parameter and returns a byte array as your activity result.
+    /// Both of these values may be <c>null</c>.  Activities report failures
+    /// by throwing an exception from their <see cref="RunAsync(byte[])"/>
+    /// methods.
+    /// </para>
+    /// <para>
+    /// Unlike the <see cref="Workflow.RunAsync(byte[])"/> method, the 
+    /// <see cref="Activity.RunAsync(byte[])"/> method implementations has
+    /// few limitations.  This method can use threads, can reference global
+    /// state like time, environment variables and perform non-itempotent 
+    /// operations like generating random numbers, UUIDs, etc.
+    /// </para>
+    /// <note>
+    /// Although activities are not required to be idempotent from a Cadence
+    /// perspective, this may be required for some workflows.  You'll need
+    /// to carefully code your activities for these situations.
+    /// </note>
+    /// <para>
+    /// The only real requirement for most activties is that your <see cref="RunAsync(byte[])"/>
+    /// needs to call <see cref="SendHeartbeatAsync(byte[])"/> periodically at
+    /// an interval no greater than <see cref="Info"/>.<see cref="ActivityInfo.HeartbeatTimeout"/>.
+    /// This proves to Cadence that the activity is still healthy and running and
+    /// also provides an opportunity for long running and computationally expecsive
+    /// activities to checkpoint their current state so they won't need to start
+    /// completely over when the activity is rescheduled.
+    /// </para>
+    /// <para>
+    /// Cadence supports two kinds of activities: <b>normal</b> and <b>local</b>.
+    /// <b>normal</b> activities are registered via <see cref="CadenceClient.RegisterActivity{TActivity}(string)"/>
+    /// and are scheduled by the Cadence cluster to be executed on workers.  Workflows
+    /// invoke theses using <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>.
+    /// </para>
+    /// <para>
+    /// <b>local</b> activities simply run on the local worker without needing to
+    /// be registered or scheduled by the Cadence cluster.  These are very low overhead
+    /// and intended for for simple short running activities (a few seconds).
+    /// Workflows invoke local activities using <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>.
+    /// Local activities do not support heartbeats.
+    /// </para>
+    /// <note>
+    /// You can distinguish between normal and local activities via <see cref="IsLocal"/>.
+    /// </note>
+    /// </remarks>
     public abstract class Activity : INeonLogger
     {
         //---------------------------------------------------------------------
         // Private types
 
-        private struct ActivityInfo
+        private struct ConstructInfo
         {
             /// <summary>
             /// The activity type.
@@ -55,16 +118,16 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                               syncLock           = new object();
-        private static INeonLogger                          log                = LogManager.Default.GetLogger<Activity>();
-        private static Type[]                               noTypeArgs         = new Type[0];
-        private static object[]                             noArgs             = new object[0];
+        private static object                               syncLock   = new object();
+        private static INeonLogger                          log        = LogManager.Default.GetLogger<Activity>();
+        private static Type[]                               noTypeArgs = new Type[0];
+        private static object[]                             noArgs     = new object[0];
 
         // These dictionaries are used to cache reflected activity
         // constructors for better performance.
 
-        private static Dictionary<string, ActivityInfo>     nameToActivityInfo = new Dictionary<string, ActivityInfo>();
-        private static Dictionary<Type, ConstructorInfo>    typeToConstructor  = new Dictionary<Type, ConstructorInfo>();
+        private static Dictionary<string, ConstructInfo>    nameToConstructInfo = new Dictionary<string, ConstructInfo>();
+        private static Dictionary<Type, ConstructorInfo>    typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
 
         /// <summary>
         /// Registers an activity type.
@@ -77,19 +140,19 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
             Covenant.Requires<ArgumentException>(typeof(TActivity) != typeof(Activity), $"The base [{nameof(Activity)}] class cannot be registered.");
 
-            var activityInfo = new ActivityInfo();
+            var constructInfo = new ConstructInfo();
 
-            activityInfo.Type        = typeof(TActivity);
-            activityInfo.Constructor = activityInfo.Type.GetConstructor(noTypeArgs);
+            constructInfo.Type        = typeof(TActivity);
+            constructInfo.Constructor = constructInfo.Type.GetConstructor(noTypeArgs);
 
-            if (activityInfo.Constructor == null)
+            if (constructInfo.Constructor == null)
             {
-                throw new ArgumentException($"Activity type [{activityInfo.Type.FullName}] does not have a default constructor.");
+                throw new ArgumentException($"Activity type [{constructInfo.Type.FullName}] does not have a default constructor.");
             }
 
             lock (syncLock)
             {
-                nameToActivityInfo[activityTypeName] = activityInfo;
+                nameToConstructInfo[activityTypeName] = constructInfo;
             }
         }
 
@@ -138,17 +201,17 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(activityTypeName != null);
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            ActivityInfo activityInfo;
+            ConstructInfo constructInfo;
 
             lock (syncLock)
             {
-                if (!nameToActivityInfo.TryGetValue(activityTypeName, out activityInfo))
+                if (!nameToConstructInfo.TryGetValue(activityTypeName, out constructInfo))
                 {
                     throw new ArgumentException($"No activty type is registered for [{activityTypeName}].");
                 }
             }
 
-            var activity = (Activity)activityInfo.Constructor.Invoke(noArgs);
+            var activity = (Activity)constructInfo.Constructor.Invoke(noArgs);
 
             activity.Initialize(client, contextId);
 
@@ -226,7 +289,8 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private long? contextId;
+        private long?           contextId;
+        private ActivityInfo    cachedInfo;
 
         /// <summary>
         /// Default constructor.
@@ -241,30 +305,49 @@ namespace Neon.Cadence
         public CadenceClient Client { get; private set; }
 
         /// <summary>
-        /// The cancallation token source (linked to <see cref="CancellationToken"/>).
+        /// Returns <c>true</c> for a local activity execution.
         /// </summary>
-        private CancellationTokenSource CancellationTokenSource { get; set; }
+        public bool IsLocal => !contextId.HasValue;
 
         /// <summary>
-        /// Returns the <see cref="CancellationToken"/> that will be cancelled when the activity
-        /// is being stopped due to the local activity working being stopped.  
+        /// Returns the additional information about the activity and the workflow
+        /// that invoked it.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Activities have a limited time to terminate gracefully when the worker is being stopped.
-        /// This is defaults to 10 seconds but may be customized when the worker is started
-        /// by setting the <see cref="WorkerOptions.WorkerStopTimeout"/> property.  Activities
-        /// that don't return from their <see cref="RunAsync(byte[])"/> method within this
-        /// limit will unceremoniously terminated.
-        /// </para>
-        /// <para>
-        /// For longer running activities, it's a best practice to monitor the 
-        /// <see cref="CancellationToken"/> to try to handle worker stopping by recording
-        /// a heartbeat with progress information and/or by doing other cleanup 
-        /// and then promptly returning from its <see cref="RunAsync(byte[])"/> method.
-        /// </para>
-        /// </remarks>
-        public CancellationToken CancellationToken { get; private set; }
+        public ActivityInfo Info
+        {
+            get
+            {
+                // Return the cached value if there is one otherwise query
+                // Cadence for the info and cache it.
+                
+                // $note(jeff.lill):
+                //
+                // I could have used a lock here to prevent an app from
+                // calling this simultaniously on two different threads,
+                // resulting in multiple queries to the cadence-proxy,
+                // but that's probably very unlikely to happen in the
+                // real world and since the info returned is invariant,
+                // having this happen would be harmless anyway.
+                // 
+                // So, that wasn't worth the trouble.
+
+                if (cachedInfo != null)
+                {
+                    return cachedInfo;
+                }
+
+                var reply = (ActivityGetInfoReply)Client.CallProxyAsync(
+                    new ActivityGetInfoRequest()
+                    {
+                        ContextId = this.contextId.Value,
+
+                    }).Result;
+
+                reply.ThrowOnError();
+
+                return this.cachedInfo = reply.Info.ToPublic();
+            }
+        }
 
         /// <summary>
         /// Called internally to initialize the activity.
@@ -275,10 +358,8 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            this.Client                  = client;
-            this.CancellationTokenSource = new CancellationTokenSource();
-            this.CancellationToken       = this.CancellationTokenSource.Token;
-            this.contextId               = contextId;
+            this.Client    = client;
+            this.contextId = contextId;
         }
 
         /// <summary>
@@ -306,7 +387,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         private void EnsureNotLocal()
         {
-            if (!contextId.HasValue)
+            if (!IsLocal)
             {
                 throw new InvalidOperationException("This operation is not supported for local activity executions.");
             }
@@ -323,6 +404,7 @@ namespace Neon.Cadence
         /// <param name="details">The optional heartbeart details.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
+        /// <exception cref="CadenceCancelledException">Thrown if the activity has been cancelled.</exception>
         /// <remarks>
         /// <para>
         /// Long running activities need to send periodic heartbeats back to
@@ -335,6 +417,13 @@ namespace Neon.Cadence
         /// The maximum allowed time period between heartbeats is specified in 
         /// <see cref="ActivityOptions"/> when activities are executed and it's
         /// also possible to enable automatic heartbeats sent by the Cadence client.
+        /// </note>
+        /// <note>
+        /// For non-local activities, this sending a heartbeat will result in
+        /// a <see cref="CadenceCancelledException"/> being thrown when the
+        /// activity has been canceled.  You should generally allow this exception
+        /// to exit your <see cref="RunAsync(byte[])"/> method or catch it,
+        /// do any cleanup, and then rethrow the exception.
         /// </note>
         /// </remarks>
         public async Task SendHeartbeatAsync(byte[] details = null)
