@@ -605,5 +605,14 @@ namespace Neon.Cadence.Internal
         /// </summary>
         ActivityRegisterReply = 219,
 
+        /// <summary>
+        /// <b>client --> proxy:</b> Requests information about an activity.
+        /// </summary>
+        ActivityGetInfoRequest = 220,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityGetInfoRequest"/> message.
+        /// </summary>
+        ActivityGetInfoReply = 221,
     }
 }

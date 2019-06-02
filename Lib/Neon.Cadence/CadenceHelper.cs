@@ -18,7 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
+using System.Diagnostics.Contracts;
+using System.Globalization;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -78,6 +79,21 @@ namespace Neon.Cadence
             timespan = Normalize(timespan);
 
             return timespan.Ticks * 100;
+        }
+
+        /// <summary>
+        /// Parses a Cadence timestamp string and converts it to a UTC
+        /// <see cref="DateTime"/>.
+        /// </summary>
+        /// <param name="timestamp">The timestamp string.</param>
+        /// <returns>The parsed <see cref="DateTime"/>.</returns>
+        public static DateTime ParseCadenceTimestamp(string timestamp)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp));
+
+            var dateTimeOffset = DateTimeOffset.ParseExact(timestamp, "yyyy-MM-ddTHH:mm:ss.ffffffzzz", CultureInfo.InvariantCulture);
+
+            return new DateTime(dateTimeOffset.ToUniversalTime().Ticks, DateTimeKind.Utc);
         }
     }
 }

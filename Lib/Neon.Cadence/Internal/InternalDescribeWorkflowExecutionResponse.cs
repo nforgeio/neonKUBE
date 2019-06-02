@@ -63,7 +63,7 @@ namespace Neon.Cadence.Internal
                 Execution     = this.WorkflowExecutionInfo?.ToPublic()
             };
 
-            details.Activities = new List<ActivityInfo>();
+            details.Activities = new List<DescribedActivityInfo>();
 
             foreach (var activity in this.PendingActivities)
             {

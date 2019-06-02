@@ -34,6 +34,7 @@ using Neon.Retry;
 using Neon.Time;
 using Neon.Diagnostics;
 using Neon.Tasks;
+using System.Reflection;
 
 namespace Neon.Cadence
 {
@@ -43,12 +44,9 @@ namespace Neon.Cadence
     /// <remarks>
     /// <para>
     /// Workflows are pretty easy to implement.  You'll need to derive your custom
-    /// workflow class from <see cref="Workflow"/> and implement a public constructor
-    /// with a single <see cref="WorkerArgs"/> parameter and have your
-    /// constructor call the corresponding base <see cref="Workflow(WorkerArgs)"/>)
-    /// constructor to initialize the instance.  You'll also need to implement the
-    /// <see cref="RunAsync(byte[])"/> method, which is where your workflow logic
-    /// will reside.  
+    /// workflow class from <see cref="Workflow"/> and implement a default public
+    /// constructor and then need to implement the <see cref="RunAsync(byte[])"/> method,
+    /// which is where your workflow logic will reside.  
     /// </para>
     /// <para>
     /// Here's an overview describing the steps necessary to implement, deploy, and
@@ -213,7 +211,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             Covenant.Requires<ArgumentException>(typeof(TWorkflow) != typeof(Workflow), $"The base [{nameof(Workflow)}] class cannot be registered.");
 
-            lock (nameToWorkflowType)
+            lock (syncLock)
             {
                 nameToWorkflowType[workflowTypeName] = typeof(TWorkflow);
             }
@@ -256,7 +254,7 @@ namespace Neon.Cadence
 
                 case InternalMessageTypes.ActivityInvokeLocalRequest:
 
-                    reply = await OnExecuteLocalActivity(client, (ActivityInvokeLocalRequest)request);
+                    reply = await OnInvokeLocalActivity(client, (ActivityInvokeLocalRequest)request);
                     break;
 
                 default:
@@ -293,17 +291,18 @@ namespace Neon.Cadence
         /// <param name="client">The associated cadence client.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> OnInvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
+        internal static async Task<WorkflowInvokeReply> OnInvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
 
-            Workflow workflow;
+            Workflow    workflow;
+            Type        workflowType;
+
+            var contextId = request.ContextId;
 
             lock (syncLock)
             {
-                var contextId = request.ContextId;
-
                 if (idToWorkflow.TryGetValue(contextId, out workflow))
                 {
                     return new WorkflowInvokeReply()
@@ -312,7 +311,7 @@ namespace Neon.Cadence
                     };
                 }
 
-                var workflowType = client.GetWorkflowType(request.WorkflowType);
+                workflowType = client.GetWorkflowType(request.WorkflowType);
 
                 if (workflowType == null)
                 {
@@ -322,8 +321,14 @@ namespace Neon.Cadence
                     };
                 }
 
-                workflow = (Workflow)Activator.CreateInstance(workflowType);
+            }
 
+            workflow = (Workflow)Activator.CreateInstance(workflowType);
+
+            workflow.Initialize(client, contextId);
+
+            lock (syncLock)
+            {
                 idToWorkflow.Add(contextId, workflow);
             }
 
@@ -412,7 +417,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> OnSignalAsync(WorkflowSignalReceivedRequest request)
+        internal static async Task<WorkflowSignalReply> OnSignalAsync(WorkflowSignalReceivedRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -463,7 +468,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> OnQueryAsync(WorkflowQueryRequest request)
+        internal static async Task<WorkflowQueryReply> OnQueryAsync(WorkflowQueryRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -515,7 +520,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> OnMutableInvokeAsync(WorkflowMutableInvokeRequest request)
+        internal static async Task<WorkflowMutableInvokeReply> OnMutableInvokeAsync(WorkflowMutableInvokeRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -527,7 +532,7 @@ namespace Neon.Cadence
                 {
                     Func<Task<byte[]>> getter;
 
-                    lock (workflow.idToMutableFunc)
+                    lock (syncLock)
                     {
                         if (!workflow.idToMutableFunc.TryGetValue(request.MutableId, out getter))
                         {
@@ -566,7 +571,7 @@ namespace Neon.Cadence
         /// <param name="client">The client the request was received from.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ProxyReply> OnExecuteLocalActivity(CadenceClient client, ActivityInvokeLocalRequest request)
+        internal static async Task<ActivityExecuteLocalReply> OnInvokeLocalActivity(CadenceClient client, ActivityInvokeLocalRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -578,7 +583,7 @@ namespace Neon.Cadence
                 {
                     Type activityType;
 
-                    lock (workflow.idToLocalActivityType)
+                    lock (syncLock)
                     {
                         if (!workflow.idToLocalActivityType.TryGetValue(request.ActivityTypeId, out activityType))
                         {
@@ -590,7 +595,7 @@ namespace Neon.Cadence
                     }
 
                     var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
-                    var activity   = Activity.Create(activityType, workerArgs, CancellationToken.None);
+                    var activity   = Activity.Create(activityType, client, null);
                     var result     = await activity.OnRunAsync(request.Args);
 
                     return new ActivityExecuteLocalReply()
@@ -626,15 +631,23 @@ namespace Neon.Cadence
         private bool                                    isDisconnected;
 
         /// <summary>
-        /// Internal constructor.
+        /// Default constructor.
         /// </summary>
-        /// <param name="args">The low-level worker initialization arguments.</param>
-        protected Workflow(WorkerArgs args)
+        public Workflow()
         {
-            Covenant.Requires<ArgumentNullException>(args != null);
+        }
 
-            this.Client                = args.Client;
-            this.contextId             = args.ContextId;
+        /// <summary>
+        /// Called internally to initialize the workflow.
+        /// </summary>
+        /// <param name="client">The associated client.</param>
+        /// <param name="contextId">The workflow's context ID.</param>
+        internal void Initialize(CadenceClient client, long contextId)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            this.Client                = client;
+            this.contextId             = contextId;
             this.idToMutableFunc       = new Dictionary<string, Func<Task<byte[]>>>();
             this.idToLocalActivityType = new Dictionary<long, Type>();
 
@@ -906,7 +919,7 @@ namespace Neon.Cadence
             // by mutable ID so we'll be able to obtain it when the
             // cadence-proxy sends us the [WorkflowMutableInvokeRequest].
 
-            lock (idToMutableFunc)
+            lock (syncLock)
             {
                 idToMutableFunc.Add(mutableId, getter);
             }
@@ -918,7 +931,7 @@ namespace Neon.Cadence
                     MutableId = mutableId
                 });
 
-            lock (idToMutableFunc)
+            lock (syncLock)
             {
                 idToMutableFunc.Remove(mutableId);
             }
@@ -1203,7 +1216,7 @@ namespace Neon.Cadence
 
             var activityTypeId = Interlocked.Increment(ref nextLocalActivityTypeId);
 
-            lock (idToLocalActivityType)
+            lock (syncLock)
             {
                 idToLocalActivityType.Add(activityTypeId, typeof(TActivity));
             }
@@ -1226,7 +1239,7 @@ namespace Neon.Cadence
             {
                 // Remove the activity type mapping to prevent memory leaks.
 
-                lock (idToLocalActivityType)
+                lock (syncLock)
                 {
                     idToLocalActivityType.Remove(activityTypeId);
                 }

@@ -43,6 +43,6 @@ namespace Neon.Cadence
         /// <summary>
         /// Describes the workflow's scheduled and executing activities.
         /// </summary>
-        public List<ActivityInfo> Activities { get; internal set; }
+        public List<DescribedActivityInfo> Activities { get; internal set; }
     }
 }

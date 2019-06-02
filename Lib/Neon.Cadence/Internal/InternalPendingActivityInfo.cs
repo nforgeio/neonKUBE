@@ -102,11 +102,11 @@ namespace Neon.Cadence.Internal
         public long ExpirationTimestamp { get; set; }
 
         /// <summary>
-        /// Converts the instance into the corresponding public <see cref="ActivityInfo"/>.
+        /// Converts the instance into the corresponding public <see cref="DescribedActivityInfo"/>.
         /// </summary>
-        public ActivityInfo ToPublic()
+        public DescribedActivityInfo ToPublic()
         {
-            return new ActivityInfo()
+            return new DescribedActivityInfo()
             {
                 ActivityID             = this.ActivityID,
                 Name                   = this.ActivityType?.Name,
