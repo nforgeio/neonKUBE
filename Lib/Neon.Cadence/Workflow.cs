@@ -451,7 +451,7 @@ namespace Neon.Cadence
                     Result = result
                 };
             }
-            catch (InternalWorkflowRestartException e)
+            catch (WorkflowRestartException e)
             {
                 return new WorkflowInvokeReply()
                 {
@@ -1391,6 +1391,11 @@ namespace Neon.Cadence
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
         /// <param name="startToCloseTimeout">Optional start to close timeout for the new run.</param>
         /// <param name="retryPolicy">Optional retry policy for the new run.</param>
+        /// <remarks>
+        /// This works by throwing a <see cref="WorkflowRestartException"/> that will be
+        /// caught and handled by the base <see cref="Workflow"/> class.    You'll need to allow
+        /// this exception to exit your <see cref="RunAsync(byte[])"/> method for this to work.
+        /// </remarks>
         protected async Task RestartAsync(
             byte[]              args                    = null,
             string              domain                  = null,
@@ -1413,7 +1418,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new InternalWorkflowRestartException(
+            throw new WorkflowRestartException(
                 args:                       args,
                 domain:                     domain,
                 tasklist:                   tasklist,

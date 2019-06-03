@@ -91,11 +91,42 @@ namespace Neon.Cadence
     /// be registered or scheduled by the Cadence cluster.  These are very low overhead
     /// and intended for for simple short running activities (a few seconds).
     /// Workflows invoke local activities using <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>.
-    /// Local activities do not support heartbeats.
+    /// <b>Local activities do not support heartbeats.</b>
     /// </para>
     /// <note>
     /// You can distinguish between normal and local activities via <see cref="IsLocal"/>.
     /// </note>
+    /// <para>
+    /// Non-local activities may be cancelled explicitly and all activities will be
+    /// cancelled if the parent workflow or the local worker is stopped.  Well behaved
+    /// activities will monitor their <see cref="CancellationToken"/> for cancellation
+    /// by registering a handler, periodically calling <see cref="CancellationToken.IsCancellationRequested"/>
+    /// or <see cref="CancellationToken.ThrowIfCancellationRequested"/>.  Non-local activities 
+    /// that implement checkpoints can use this as an opportunity to call <see cref="SendHeartbeatAsync(byte[])"/>
+    /// and persist checkpoint state and all activities should then throw or rethrow a 
+    /// <see cref="TaskCanceledException"/> from their <see cref="RunAsync(byte[])"/>
+    /// method.
+    /// </para>
+    /// <para>
+    /// It is often necessary for an activity to be considered complete after an
+    /// external event occurs.  For example, an order processing system may may have
+    /// an activity that records a potential order in a database and then notifies
+    /// an actual person to review and then manually confirm the order.
+    /// </para>
+    /// <para>
+    /// The activity could potentially poll the database for the confirmation but this
+    /// is messy and probably won't scale well.  Cadence supports an alternative 
+    /// mechanism where the activity gives its <b>task token</b> (an opaque byte array
+    /// from <see cref="Info"/>.<see cref="ActivityInfo.TaskToken"/>) to the external 
+    /// system and then calls <see cref="CompleteExternallyAsync()"/> which exits
+    /// <see cref="RunAsync(byte[])"/> and tells Cadence to wait for an external
+    /// completion.
+    /// </para>
+    /// <para>
+    /// Then the external system can complete the activity by connecting a <see cref="CadenceClient"/>
+    /// to the cluster and calling <see cref="CadenceClient.CompleteActivityAsync()"/> passing
+    /// a result or exception.
+    /// </para>
     /// </remarks>
     public abstract class Activity : INeonLogger
     {
@@ -118,10 +149,11 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                               syncLock   = new object();
-        private static INeonLogger                          log        = LogManager.Default.GetLogger<Activity>();
-        private static Type[]                               noTypeArgs = new Type[0];
-        private static object[]                             noArgs     = new object[0];
+        private static object                               syncLock            = new object();
+        private static INeonLogger                          log                 = LogManager.Default.GetLogger<Activity>();
+        private static Type[]                               noTypeArgs          = new Type[0];
+        private static object[]                             noArgs              = new object[0];
+        private static Dictionary<long, Activity>           contextIdToActivity = new Dictionary<long, Activity>();
 
         // These dictionaries are used to cache reflected activity
         // constructors for better performance.
@@ -240,7 +272,7 @@ namespace Neon.Cadence
 
                 case InternalMessageTypes.ActivityStoppingRequest:
 
-                    throw new NotImplementedException();
+                    reply = await ActivityStoppingRequest(client, (ActivityStoppingRequest)request);
                     break;
 
                 default:
@@ -277,6 +309,13 @@ namespace Neon.Cadence
                     Error = e.ToCadenceError()
                 };
             }
+            catch (TaskCanceledException e)
+            {
+                return new ActivityInvokeReply()
+                {
+                    Error = new CadenceCancelledException(e.Message).ToCadenceError()
+                };
+            }
             catch (Exception e)
             {
                 return new ActivityInvokeReply()
@@ -286,10 +325,29 @@ namespace Neon.Cadence
             }
         }
 
+        /// <summary>
+        /// Handles received <see cref="ActivityStoppingRequest"/> messages.
+        /// </summary>
+        /// <param name="client">The receiving Cadence client.</param>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        private static async Task<ActivityStoppingReply> ActivityStoppingRequest(CadenceClient client, ActivityStoppingRequest request)
+        {
+            lock (syncLock)
+            {
+                if (contextIdToActivity.TryGetValue(request.ContextId, out var activity))
+                {
+                    activity.CancellationTokenSource.Cancel();
+                }
+            }
+
+            return await Task.FromResult(new ActivityStoppingReply());
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
-        private long?           contextId;
+        private long?           contextId;      // Will be NULL for local activities.
         private ActivityInfo    cachedInfo;
 
         /// <summary>
@@ -308,6 +366,30 @@ namespace Neon.Cadence
         /// Returns <c>true</c> for a local activity execution.
         /// </summary>
         public bool IsLocal => !contextId.HasValue;
+
+        /// <summary>
+        /// The internal cancellation token source.
+        /// </summary>
+        internal CancellationTokenSource CancellationTokenSource { get; private set; }
+
+        /// <summary>
+        /// Returns the activity's cancellation token.  Activities can monitor this
+        /// to gracefully handle activity cancellation.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// We recommend that all non-local activities that run for relatively long periods,
+        /// monitor <see cref="CancellationToken"/> for activity cancellation so that they
+        /// can gracefully ternminate including potentially calling <see cref="SendHeartbeatAsync(byte[])"/>
+        /// to checkpoint the current activity state.
+        /// </para>
+        /// <para>
+        /// Cancelled activities should throw a <see cref="TaskCanceledException"/> from
+        /// their <see cref="OnRunAsync(byte[])"/> method rather than returning a result
+        /// so that Cadence will reschedule the activity if possible.
+        /// </para>
+        /// </remarks>
+        public CancellationToken CancellationToken { get; private set; }
 
         /// <summary>
         /// Returns the additional information about the activity and the workflow
@@ -358,8 +440,10 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            this.Client    = client;
-            this.contextId = contextId;
+            this.Client                  = client;
+            this.contextId               = contextId;
+            this.CancellationTokenSource = new CancellationTokenSource();
+            this.CancellationToken       = CancellationTokenSource.Token;
         }
 
         /// <summary>
@@ -377,7 +461,28 @@ namespace Neon.Cadence
         /// <returns>Thye activity results.</returns>
         internal async Task<byte[]> OnRunAsync(byte[] args)
         {
-            return await RunAsync(args);
+            try
+            {
+                if (!IsLocal)
+                {
+                    lock (syncLock)
+                    {
+                        contextIdToActivity[contextId.Value] = this;
+                    }
+                }
+
+                return await RunAsync(args);
+            }
+            finally
+            {
+                if (!IsLocal)
+                {
+                    lock (syncLock)
+                    {
+                        contextIdToActivity.Remove(contextId.Value);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -404,7 +509,6 @@ namespace Neon.Cadence
         /// <param name="details">The optional heartbeart details.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
-        /// <exception cref="CadenceCancelledException">Thrown if the activity has been cancelled.</exception>
         /// <remarks>
         /// <para>
         /// Long running activities need to send periodic heartbeats back to
@@ -417,13 +521,6 @@ namespace Neon.Cadence
         /// The maximum allowed time period between heartbeats is specified in 
         /// <see cref="ActivityOptions"/> when activities are executed and it's
         /// also possible to enable automatic heartbeats sent by the Cadence client.
-        /// </note>
-        /// <note>
-        /// For non-local activities, this sending a heartbeat will result in
-        /// a <see cref="CadenceCancelledException"/> being thrown when the
-        /// activity has been canceled.  You should generally allow this exception
-        /// to exit your <see cref="RunAsync(byte[])"/> method or catch it,
-        /// do any cleanup, and then rethrow the exception.
         /// </note>
         /// </remarks>
         public async Task SendHeartbeatAsync(byte[] details = null)
@@ -490,6 +587,22 @@ namespace Neon.Cadence
             reply.ThrowOnError();
 
             return reply.Details;
+        }
+
+        /// <summary>
+        /// This method may be called within <see cref="RunAsync(byte[])"/> to indicate that the
+        /// activity will be completed externally.  
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// This method works by throwing an <see cref="ActivityExternalCompletionException"/> which
+        /// will be caught and handled by the base <see cref="Activity"/> class.  You'll need to allow
+        /// this exception to exit your <see cref="RunAsync(byte[])"/> method for this to work.
+        /// </remarks>
+        public async Task CompleteExternallyAsync()
+        {
+            await Task.CompletedTask;
+            throw new ActivityExternalCompletionException();
         }
 
         //---------------------------------------------------------------------

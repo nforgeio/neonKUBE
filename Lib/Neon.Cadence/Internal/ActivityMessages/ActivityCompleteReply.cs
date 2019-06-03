@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityStoppingRequest.cs
+// FILE:	    ActivityCompleteReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,36 +25,23 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
-    /// a workflow activity.
+    /// <b>proxy --> client:</b> Answers a <see cref="ActivityCompleteRequest"/>
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.ActivityStoppingRequest)]
-    internal class ActivityStoppingRequest : ActivityRequest
+    [InternalProxyMessage(InternalMessageTypes.ActivityCompleteReply)]
+    internal class ActivityCompleteReply : ActivityReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityStoppingRequest()
+        public ActivityCompleteReply()
         {
-            Type = InternalMessageTypes.ActivityStoppingRequest;
-        }
-
-        /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityStoppingReply;
-
-        /// <summary>
-        /// Specifies the activity being stopped.
-        /// </summary>
-        public string ActivityId
-        {
-            get => GetStringProperty("ActivityId");
-            set => SetStringProperty("ActivityId", value);
+            Type = InternalMessageTypes.ActivityCompleteReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityStoppingRequest();
+            var clone = new ActivityCompleteReply();
 
             CopyTo(clone);
 
@@ -65,10 +52,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (ActivityStoppingRequest)target;
-
-            typedTarget.ActivityId = this.ActivityId;
         }
     }
 }

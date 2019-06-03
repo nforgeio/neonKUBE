@@ -60,5 +60,17 @@ namespace Neon.Cadence
 
             Activity.Register<TActivity>(activityTypeName);
         }
+
+        /// <summary>
+        /// Used to complete an activity externally.
+        /// </summary>
+        /// <param name="taskToken">The opaque activity task token.</param>
+        /// <param name="result">Passed as the activity result for activity success.</param>
+        /// <param name="e">Passed as an exception when the activity failed.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task CompleteActivityAsync(byte[] taskToken, byte[] result = null, Exception e = null)
+        {
+        }
     }
 }

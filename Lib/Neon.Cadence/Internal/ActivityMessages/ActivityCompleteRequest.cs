@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityStoppingRequest.cs
+// FILE:	    ActivityCompleteRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,33 +28,33 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
     /// a workflow activity.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.ActivityStoppingRequest)]
-    internal class ActivityStoppingRequest : ActivityRequest
+    [InternalProxyMessage(InternalMessageTypes.ActivityCompleteRequest)]
+    internal class ActivityCompleteRequest : ActivityRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityStoppingRequest()
+        public ActivityCompleteRequest()
         {
-            Type = InternalMessageTypes.ActivityStoppingRequest;
+            Type = InternalMessageTypes.ActivityCompleteRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityStoppingReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityCompleteReply;
 
         /// <summary>
-        /// Specifies the activity being stopped.
+        /// The opaque activity task token.
         /// </summary>
-        public string ActivityId
+        public byte[] TaskToken
         {
-            get => GetStringProperty("ActivityId");
-            set => SetStringProperty("ActivityId", value);
+            get => GetBytesProperty("TaskToken");
+            set => SetBytesProperty("TaskToken", value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new ActivityStoppingRequest();
+            var clone = new ActivityCompleteRequest();
 
             CopyTo(clone);
 
@@ -66,9 +66,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (ActivityStoppingRequest)target;
+            var typedTarget = (ActivityCompleteRequest)target;
 
-            typedTarget.ActivityId = this.ActivityId;
+            typedTarget.TaskToken = this.TaskToken;
         }
     }
 }

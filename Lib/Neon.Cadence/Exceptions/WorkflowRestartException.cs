@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalWorkflowRestartException.cs
+// FILE:	    WorkflowRestartException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,14 +24,14 @@ using Newtonsoft.Json;
 using Neon.Cadence;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
     /// Thrown by <see cref="Workflow.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
-    /// to be handled by <see cref="Workflow.OnInvokeAsync(CadenceClient, WorkflowInvokeRequest)"/>
-    /// as one of the special case mechanisms for completing a workflow.
+    /// to be handled internally by <see cref="Workflow"/> as one of the special case 
+    /// mechanisms for completing a workflow.
     /// </summary>
-    internal class InternalWorkflowRestartException : Exception
+    internal class WorkflowRestartException : Exception
     {
         /// <summary>
         /// Constructor.
@@ -44,7 +44,7 @@ namespace Neon.Cadence.Internal
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
         /// <param name="startToCloseTimeout">Optional start to close timeout for the new run.</param>
         /// <param name="retryPolicy">Optional retry policy for the new run.</param>
-        public InternalWorkflowRestartException(
+        public WorkflowRestartException(
             byte[]              args                    = null,
             string              domain                  = null,
             string              tasklist                = null,
