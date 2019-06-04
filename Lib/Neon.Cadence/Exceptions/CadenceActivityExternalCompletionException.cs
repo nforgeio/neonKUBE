@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityExternalCompletionException.cs
+// FILE:	    CadenceActivityExternalCompletionException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,14 +32,14 @@ namespace Neon.Cadence
     /// within their <see cref="Activity.RunAsync(byte[])"/> methods which will throw this
     /// internal exception, exiting the run method.  This exception will be caught by
     /// the <see cref="Activity"/> base class and used to signal Cadence that the activity
-    /// will be completed externally via a call to <see cref="CadenceClient.CadenceClient.CompleteActivityAsync()"/>.
+    /// will be completed externally via a call to <see cref="CadenceClient.CompleteActivityAsync(byte[], byte[], Exception)"/>.
     /// </summary>
-    internal class ActivityExternalCompletionException : Exception
+    internal class CadenceActivityExternalCompletionException : Exception
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ActivityExternalCompletionException()
+        public CadenceActivityExternalCompletionException()
             : base()
         {
         }

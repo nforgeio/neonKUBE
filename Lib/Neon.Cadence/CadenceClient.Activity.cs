@@ -71,6 +71,8 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task CompleteActivityAsync(byte[] taskToken, byte[] result = null, Exception e = null)
         {
+            await Task.CompletedTask;
+            throw new CadenceActivityExternalCompletionException();
         }
     }
 }

@@ -124,8 +124,8 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// Then the external system can complete the activity by connecting a <see cref="CadenceClient"/>
-    /// to the cluster and calling <see cref="CadenceClient.CompleteActivityAsync()"/> passing
-    /// a result or exception.
+    /// to the cluster and calling <see cref="CadenceClient.CompleteActivityAsync(byte[], byte[], Exception)"/>
+    /// passing a result or exception.
     /// </para>
     /// </remarks>
     public abstract class Activity : INeonLogger
@@ -595,14 +595,14 @@ namespace Neon.Cadence
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
-        /// This method works by throwing an <see cref="ActivityExternalCompletionException"/> which
+        /// This method works by throwing an <see cref="CadenceActivityExternalCompletionException"/> which
         /// will be caught and handled by the base <see cref="Activity"/> class.  You'll need to allow
         /// this exception to exit your <see cref="RunAsync(byte[])"/> method for this to work.
         /// </remarks>
         public async Task CompleteExternallyAsync()
         {
             await Task.CompletedTask;
-            throw new ActivityExternalCompletionException();
+            throw new CadenceActivityExternalCompletionException();
         }
 
         //---------------------------------------------------------------------

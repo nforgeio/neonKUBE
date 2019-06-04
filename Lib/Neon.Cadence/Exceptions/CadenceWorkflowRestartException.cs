@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRestartException.cs
+// FILE:	    CadenceWorkflowRestartException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,7 +31,7 @@ namespace Neon.Cadence
     /// to be handled internally by <see cref="Workflow"/> as one of the special case 
     /// mechanisms for completing a workflow.
     /// </summary>
-    internal class WorkflowRestartException : Exception
+    internal class CadenceWorkflowRestartException : Exception
     {
         /// <summary>
         /// Constructor.
@@ -44,7 +44,7 @@ namespace Neon.Cadence
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
         /// <param name="startToCloseTimeout">Optional start to close timeout for the new run.</param>
         /// <param name="retryPolicy">Optional retry policy for the new run.</param>
-        public WorkflowRestartException(
+        public CadenceWorkflowRestartException(
             byte[]              args                    = null,
             string              domain                  = null,
             string              tasklist                = null,
