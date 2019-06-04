@@ -816,7 +816,7 @@ namespace Neon.CodeGen
                 // A data model interface is allowed to implement another 
                 // data model interface to specify a base class.  Note that
                 // only one of these references is allowed and it may only
-                // be a reference to another data model (not an arbtrary 
+                // be a reference to another data model (not an arbitrary 
                 // type).
 
                 var baseInterface = (Type)null;
@@ -928,8 +928,8 @@ namespace Neon.CodeGen
             }
 
             // Ensure that all service method parameter and result types are either
-            // a primitive .NET type, a type implemented within [mscorlib] or 
-            // reference a loaded data model.
+            // a primitive .NET type, a supported types implemented within [mscorlib] 
+            // or reference a loaded data model.
 
             foreach (var serviceModel in nameToServiceModel.Values)
             {
@@ -1080,10 +1080,42 @@ namespace Neon.CodeGen
                 return true;
             }
 
-            // NOTE: Value types (AKA struct) implicitly have a default parameterless constructor.
+            // We only support non-primitive and non-datamodel types from these
+            // standard .NET assemblies:
 
-            if (type.Assembly.FullName.Contains("System.Private.CoreLib") &&
-                type.IsValueType || type.GetConstructor(new Type[0]) != null)
+            if (!type.Assembly.FullName.StartsWith("System.Private.CoreLib") &&
+                !type.Assembly.FullName.StartsWith("System.ObjectModel"))
+            {
+                return false;
+            }
+
+            // JSON.NET supports some generic types that don't have default
+            // constructors.
+
+            var ignoreConstructor = false;
+
+            if (type.IsGenericType)
+            {
+                var backTickPos = type.FullName.IndexOf('`');
+
+                if (backTickPos != -1)
+                {
+                    var genericName = type.FullName.Substring(0, backTickPos);
+
+                    switch (genericName)
+                    {
+                        case "System.Collections.ObjectModel.ReadOnlyCollection":
+                        case "System.Collections.ObjectModel.ReadOnlyDictionary":
+
+                            ignoreConstructor = true;
+                            break;
+                    }
+                }
+            }
+
+            // NOTE: Value types (AKA structs) implicitly have a default parameterless constructor.
+
+            if (ignoreConstructor || type.IsValueType || type.GetConstructor(new Type[0]) != null)
             {
                 return true;
             }
@@ -3070,7 +3102,7 @@ namespace Neon.CodeGen
                         genericParams += ", ";
                     }
 
-                    genericParams += genericParamType.Name;
+                    genericParams += ResolveTypeReference(genericParamType);
                 }
 
                 if (generateUx)
@@ -3087,6 +3119,7 @@ namespace Neon.CodeGen
             }
 
             Covenant.Assert(false); // We should never get here.
+            
             return null;
         }
 
