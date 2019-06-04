@@ -57,6 +57,10 @@ namespace Neon.Common
 
                     settings.MissingMemberHandling = MissingMemberHandling.Ignore;
 
+                    // Allow cyclic data.
+
+                    settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+
                     // Serialize dates as UTC like: 2012-07-27T18:51:45.534Z
                     //
                     // The nice thing about this is that Couchbase and other NoSQL database will
@@ -88,6 +92,10 @@ namespace Neon.Common
                     // Treat missing members as errors for strict parsing.
 
                     settings.MissingMemberHandling = MissingMemberHandling.Error;
+
+                    // Allow cyclic data.
+
+                    settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 
                     // Serialize dates as UTC like: 2012-07-27T18:51:45.534Z
                     //
