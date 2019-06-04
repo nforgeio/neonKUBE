@@ -85,7 +85,12 @@ OPTIONS:
 
             var newLogin        = NeonHelper.YamlDeserialize<KubeLogin>(File.ReadAllText(commandLine.Arguments.First()));
             var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
-            var currentContext  = KubeHelper.CurrentContext;
+
+            // $todo(jeff.lill():
+            //
+            // This is a bit odd.  Why didn't we serialize this here originally?
+
+            newLogin.Context.Extension = newLogin.Extensions;
 
             // Add/replace the context.
 

@@ -105,7 +105,7 @@ namespace Neon.Kube
 
                     // Validate the extension's cluster definition.
 
-                    cachedExtensions.ClusterDefinition.Validate();
+                    cachedExtensions.ClusterDefinition?.Validate();
 
                     // We need to fixup some references.
 
