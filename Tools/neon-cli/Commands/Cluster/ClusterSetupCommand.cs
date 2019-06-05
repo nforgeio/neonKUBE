@@ -1136,6 +1136,8 @@ networking:
                     {
                         try
                         {
+                            master.Status = "configure: kube-apiserver";
+
                             master.InvokeIdempotentAction("setup/cluster-kube-apiserver",
                                 () =>
                                 {
@@ -1153,7 +1155,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             master.LogException(e);
                         }
 
-                        master.Status = "kube-apiserver configured";
+                        master.Status = string.Empty;
                     }
 
                     //---------------------------------------------------------
