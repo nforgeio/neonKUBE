@@ -45,7 +45,7 @@ namespace Renci.SshNet
                 using (var source = fileInfo.OpenRead())
                 {
                     UploadTimes(channel, input, fileInfo);
-                    UploadFileModeAndName(channel, input, source.Length, string.Empty);
+                    UploadFileModeAndName(channel, input, source.Length, fileInfo.Name);
                     UploadFileContent(channel, input, source, fileInfo.Name);
                 }
             }
@@ -81,6 +81,17 @@ namespace Renci.SshNet
                 CheckReturnCode(input);
 
                 UploadTimes(channel, input, directoryInfo);
+
+                // $todo(jeff.lill):
+                //
+                // This is next line is likely broken as well as described here:
+                //
+                //      https://github.com/sshnet/SSH.NET/pull/515
+                //      https://github.com/nforgeio/neonKUBE/issues/450
+                // 
+                // I don't think this matters for neonKUBE deployment but may be
+                // a problem for other applications.
+
                 UploadDirectoryModeAndName(channel, input, ".");
                 UploadDirectoryContent(channel, input, directoryInfo);
             }
