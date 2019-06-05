@@ -88,12 +88,21 @@ namespace Renci.SshNet
                 //
                 //      https://github.com/sshnet/SSH.NET/pull/515
                 //      https://github.com/nforgeio/neonKUBE/issues/450
+                //      https://nvd.nist.gov/vuln/detail/CVE-2018-20685
                 // 
                 // I don't think this matters for neonKUBE deployment but may be
-                // a problem for other applications.
-
+                // a problem for other applications.  We're going to throw an
+                // exception so users will know what's happening.
+                //
+                // I'll need to understand what's going on here better before making
+                // a change.  I believe that all I'll need to do is replace the "."
+                // parameter with the actual remote directory path.
+#if !TODO
+                throw new NotSupportedException("The [ScpClient.Upload(DirectoryInfo, string)] method is not currently supported.");
+#else
                 UploadDirectoryModeAndName(channel, input, ".");
                 UploadDirectoryContent(channel, input, directoryInfo);
+#endif
             }
         }
 
