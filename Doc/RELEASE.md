@@ -63,6 +63,12 @@
 
     * Be sure to set the branch to the new release branch.
 
+5. Archive the source code:
+
+  1. Close all Visual Studio windows.
+  2. Run `neon-archive.cmd` in a command window.
+  3. Archive `C:\neonKUBE.zip` to AWS S3 and the local disk.
+
  # Release Version Conventions
 
 * Use semantic versioning.
