@@ -1,63 +1,63 @@
-Name: wrt-jeff-small
-Datacenter: wrt-00
-Environment: development
-TimeSources:
+name: wrt-jeff-small
+datacenter: wrt-00
+environment: development
+timeSources:
 - pool.ntp.org
-AllowUnitTesting: true
-Kubernetes:
-  AllowPodsOnMasters: true
-Ceph:
-  OSDDriveSize: 32GiB
-Hosting:
-  Environment: xenserver
-  VmHostUsername: $<<XENSERVER_USERNAME>>
-  VmHostPassword: $<<XENSERVER_PASSWORD>>
-  VmNamePrefix: jeff
-  VmHosts:
-  - Name: WRT-00-XEN-00
-    Address: 10.100.128.85
-  - Name: WRT-00-XEN-01
-    Address: 10.100.128.91
-#  - Name: WRT-00-XEN-02
-#    Address: 10.100.128.97
-  - Name: WRT-00-XEN-03
-    Address: 10.100.128.103
-  - Name: WRT-00-XEN-04
-    Address: 10.100.128.109
-  XenServer:
-     Snapshot: true
-Network:
-  PremiseSubnet: 10.100.0.0/16
-  NodesSubnet: 10.100.32.0/22
-NodeOptions:
-   Upgrade: none
-   PasswordLength: 20
-Nodes:
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+ceph:
+  osdDriveSize: 32GiB
+hosting:
+  environment: xenserver
+  vmHostUsername: $<<XENSERVER_USERNAME>>
+  vmHostPassword: $<<XENSERVER_PASSWORD>>
+  vmNamePrefix: jeff
+  vmHosts:
+  - name: WRT-00-XEN-00
+    address: 10.100.128.85
+  - name: WRT-00-XEN-01
+    address: 10.100.128.91
+  - name: WRT-00-XEN-02
+    address: 10.100.128.97
+  - name: WRT-00-XEN-03
+    address: 10.100.128.103
+  - name: WRT-00-XEN-04
+    address: 10.100.128.109
+  xenServer:
+     snapshot: true
+network:
+  premiseSubnet: 10.100.0.0/16
+  nodesSubnet: 10.100.32.0/22
+nodeOptions:
+   upgrade: none
+   passwordLength: 20
+nodes:
    master-0:
-     Role: master
-     PrivateAddress: 10.100.32.0
-     VmHost: WRT-00-XEN-00
-     VmProcessors: 4
-     VmMemory: 4GiB
-     VmDisk: 32GiB
+     role: master
+     privateAddress: 10.100.32.0
+     vmHost: WRT-00-XEN-00
+     vmProcessors: 4
+     vmMemory: 4GiB
+     vmDisk: 32GiB
    worker-0:
-     Role: worker
-     PrivateAddress: 10.100.32.10
-     VmHost: WRT-00-XEN-01
-     VmProcessors: 4
-     VmMemory: 4GiB
-     VmDisk: 32GiB
+     role: worker
+     privateAddress: 10.100.32.10
+     vmHost: WRT-00-XEN-01
+     vmProcessors: 4
+     vmMemory: 4GiB
+     vmDisk: 32GiB
    worker-1:
-     Role: worker
-     PrivateAddress: 10.100.32.11
-     VmHost: WRT-00-XEN-03
-     VmProcessors: 4
-     VmMemory: 4GiB
-     VmDisk: 32GiB
+     role: worker
+     privateAddress: 10.100.32.11
+     vmHost: WRT-00-XEN-03
+     vmProcessors: 4
+     vmMemory: 4GiB
+     vmDisk: 32GiB
    worker-2:
-     Role: worker
-     PrivateAddress: 10.100.32.12
-     VmHost: WRT-00-XEN-04
-     VmProcessors: 4
-     VmMemory: 4GiB
-     VmDisk: 32GiB
+     role: worker
+     privateAddress: 10.100.32.12
+     vmHost: WRT-00-XEN-04
+     vmProcessors: 4
+     vmMemory: 4GiB
+     vmDisk: 32GiB
