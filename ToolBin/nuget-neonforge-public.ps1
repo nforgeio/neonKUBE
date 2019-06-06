@@ -71,7 +71,7 @@ SetVersion Neon.Kube.Machine
 SetVersion Neon.Kube.Service
 SetVersion Neon.Kube.XenServer
 SetVersion Neon.Nats
-# SetVersion Neon.SSH.NET
+SetVersion Neon.SSH.NET
 SetVersion Neon.Web
 SetVersion Neon.XenServer
 SetVersion Neon.Xunit
@@ -99,7 +99,7 @@ Publish Neon.Kube.Machine
 Publish Neon.Kube.Service
 Publish Neon.Kube.XenServer
 Publish Neon.Nats
-# Publish Neon.SSH.NET
+Publish Neon.SSH.NET
 Publish Neon.Web
 Publish Neon.XenServer
 Publish Neon.Xunit
