@@ -482,7 +482,7 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task Timeout()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(2));
+            var policy = new ExponentialRetryPolicy(TransientDetector, maxAttempts: 6, initialRetryInterval: TimeSpan.FromSeconds(0.5), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(1.5));
             var times  = new List<DateTime>();
 
             Assert.Equal(6, policy.MaxAttempts);
