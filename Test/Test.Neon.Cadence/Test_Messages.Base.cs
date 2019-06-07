@@ -69,13 +69,13 @@ namespace TestCadence
 
                 message = new ProxyMessage();
 
-                message.Properties.Add("One", "1");
-                message.Properties.Add("Two", "2");
-                message.Properties.Add("Empty", string.Empty);
-                message.Properties.Add("Null", null);
+                message.Properties.Add(new PropertyNameUtf8("One"), "1");
+                message.Properties.Add(new PropertyNameUtf8("Two"), "2");
+                message.Properties.Add(new PropertyNameUtf8("Empty"), string.Empty);
+                message.Properties.Add(new PropertyNameUtf8("Null"), null);
 
-                message.SetJsonProperty("Complex", new ComplexType() { Name = "foo", Value = "bar" });
-                message.SetJsonProperty("Person", new Person() { Name = "Jack", Age = 10 });
+                message.SetJsonProperty(new PropertyNameUtf8("Complex"), new ComplexType() { Name = "foo", Value = "bar" });
+                message.SetJsonProperty(new PropertyNameUtf8("Person"), new Person() { Name = "Jack", Age = 10 });
 
                 message.Attachments.Add(new byte[] { 0, 1, 2, 3, 4 });
                 message.Attachments.Add(new byte[0]);
@@ -88,16 +88,16 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
                 Assert.Equal(InternalMessageTypes.Unspecified, message.Type);
                 Assert.Equal(6, message.Properties.Count);
-                Assert.Equal("1", message.Properties["One"]);
-                Assert.Equal("2", message.Properties["Two"]);
-                Assert.Empty(message.Properties["Empty"]);
-                Assert.Null(message.Properties["Null"]);
+                Assert.Equal("1", message.Properties[new PropertyNameUtf8("One")]);
+                Assert.Equal("2", message.Properties[new PropertyNameUtf8("Two")]);
+                Assert.Empty(message.Properties[new PropertyNameUtf8("Empty")]);
+                Assert.Null(message.Properties[new PropertyNameUtf8("Null")]);
 
-                var complex = message.GetJsonProperty<ComplexType>("Complex");
+                var complex = message.GetJsonProperty<ComplexType>(new PropertyNameUtf8("Complex"));
                 Assert.Equal("foo", complex.Name);
                 Assert.Equal("bar", complex.Value);
 
-                var person = message.GetJsonProperty<Person>("Person");
+                var person = message.GetJsonProperty<Person>(new PropertyNameUtf8("Person"));
                 Assert.Equal("Jack", person.Name);
                 Assert.Equal(10, person.Age);
 

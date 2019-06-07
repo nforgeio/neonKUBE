@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowHasLastResultReply.cs
+// FILE:	    PropertyNameUtf8.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,53 +18,53 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text;
+
+using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Common;
+using System.Diagnostics.Contracts;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowHasLastResultRequest"/>
+    /// Maps a property name string to its UTF-8 form.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowHasLastResultReply)]
-    internal class WorkflowHasLastResultReply : WorkflowReply
+    internal struct PropertyNameUtf8
     {
         /// <summary>
-        /// Default constructor.
+        /// Constructor.
         /// </summary>
-        public WorkflowHasLastResultReply()
+        /// <param name="name">The property name string.</param>
+        public PropertyNameUtf8(string name)
         {
-            Type = InternalMessageTypes.WorkflowHasLastResultReply;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            this.Name     = name;
+            this.NameUtf8 = Encoding.UTF8.GetBytes(name);
         }
 
         /// <summary>
-        /// Indicates whether the workflow has a last completion result.
+        /// Returns the property name as a string.
         /// </summary>
-        public bool HasResult
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// Returns the property name encoded as IUTF-8 bytes.
+        /// </summary>
+        public byte[] NameUtf8 { get; private set; }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
         {
-            get => GetBoolProperty(PropertyNames.HasResult);
-            set => SetBoolProperty(PropertyNames.HasResult, value);
+            return Name.GetHashCode();
         }
 
         /// <inheritdoc/>
-        internal override ProxyMessage Clone()
+        public override bool Equals(object obj)
         {
-            var clone = new WorkflowHasLastResultReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-
-            var typedTarget = (WorkflowHasLastResultReply)target;
-
-            typedTarget.HasResult = this.HasResult;
+            return Name.Equals(obj);
         }
     }
 }

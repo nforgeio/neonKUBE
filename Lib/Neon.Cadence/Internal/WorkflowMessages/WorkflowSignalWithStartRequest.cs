@@ -48,8 +48,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Workflow
         {
-            get => GetStringProperty("Workflow");
-            set => SetStringProperty("Workflow", value);
+            get => GetStringProperty(PropertyNames.Workflow);
+            set => SetStringProperty(PropertyNames.Workflow, value);
         }
 
         /// <summary>
@@ -57,8 +57,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string WorkflowId
         {
-            get => GetStringProperty("WorkflowId");
-            set => SetStringProperty("WorkflowId", value);
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
         }
 
         /// <summary>
@@ -66,8 +66,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string SignalName
         {
-            get => GetStringProperty("SignalName");
-            set => SetStringProperty("SignalName", value);
+            get => GetStringProperty(PropertyNames.SignalName);
+            set => SetStringProperty(PropertyNames.SignalName, value);
         }
 
         /// <summary>
@@ -75,8 +75,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] SignalArgs
         {
-            get => GetBytesProperty("SignalArgs");
-            set => SetBytesProperty("SignalArgs", value);
+            get => GetBytesProperty(PropertyNames.SignalArgs);
+            set => SetBytesProperty(PropertyNames.SignalArgs, value);
         }
 
         /// <summary>
@@ -84,8 +84,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalStartWorkflowOptions Options
         {
-            get => GetJsonProperty<InternalStartWorkflowOptions>("Options");
-            set => SetJsonProperty<InternalStartWorkflowOptions>("Options", value);
+            get => GetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options);
+            set => SetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options, value);
         }
 
         /// <summary>
@@ -93,8 +93,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] WorkflowArgs
         {
-            get => GetBytesProperty("WorkflowArgs");
-            set => SetBytesProperty("WorkflowArgs", value);
+            get => GetBytesProperty(PropertyNames.WorkflowArgs);
+            set => SetBytesProperty(PropertyNames.WorkflowArgs, value);
         }
 
         /// <inheritdoc/>

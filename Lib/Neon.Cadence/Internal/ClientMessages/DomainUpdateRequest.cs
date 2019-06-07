@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Name
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string UpdatedInfoDescription
         {
-            get => GetStringProperty("UpdatedInfoDescription");
-            set => SetStringProperty("UpdatedInfoDescription", value);
+            get => GetStringProperty(PropertyNames.UpdatedInfoDescription);
+            set => SetStringProperty(PropertyNames.UpdatedInfoDescription, value);
         }
 
         /// <summary>
@@ -64,8 +64,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string UpdatedInfoOwnerEmail
         {
-            get => GetStringProperty("UpdatedInfoOwnerEmail");
-            set => SetStringProperty("UpdatedInfoOwnerEmail", value);
+            get => GetStringProperty(PropertyNames.UpdatedInfoOwnerEmail);
+            set => SetStringProperty(PropertyNames.UpdatedInfoOwnerEmail, value);
         }
 
         /// <summary>
@@ -73,8 +73,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public bool ConfigurationEmitMetrics
         {
-            get => GetBoolProperty("ConfigurationEmitMetrics");
-            set => SetBoolProperty("ConfigurationEmitMetrics", value);
+            get => GetBoolProperty(PropertyNames.ConfigurationEmitMetrics);
+            set => SetBoolProperty(PropertyNames.ConfigurationEmitMetrics, value);
         }
 
         /// <summary>
@@ -82,8 +82,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public int ConfigurationRetentionDays
         {
-            get => GetIntProperty("ConfigurationRetentionDays");
-            set => SetIntProperty("ConfigurationRetentionDays", value);
+            get => GetIntProperty(PropertyNames.ConfigurationRetentionDays);
+            set => SetIntProperty(PropertyNames.ConfigurationRetentionDays, value);
         }
 
         /// <inheritdoc/>

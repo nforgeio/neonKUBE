@@ -43,8 +43,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalWorkflowExecution Execution
         {
-            get => GetJsonProperty<InternalWorkflowExecution>("Execution");
-            set => SetJsonProperty<InternalWorkflowExecution>("Execution", value);
+            get => GetJsonProperty<InternalWorkflowExecution>(PropertyNames.Execution);
+            set => SetJsonProperty<InternalWorkflowExecution>(PropertyNames.Execution, value);
         }
 
         /// <inheritdoc/>

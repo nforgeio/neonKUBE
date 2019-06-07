@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Activity
         {
-            get => GetStringProperty("Activity");
-            set => SetStringProperty("Activity", value);
+            get => GetStringProperty(PropertyNames.Activity);
+            set => SetStringProperty(PropertyNames.Activity, value);
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Args
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetBytesProperty(PropertyNames.Args);
+            set => SetBytesProperty(PropertyNames.Args, value);
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalActivityOptions Options
         {
-            get => GetJsonProperty<InternalActivityOptions>("Options");
-            set => SetJsonProperty<InternalActivityOptions>("Options", value);
+            get => GetJsonProperty<InternalActivityOptions>(PropertyNames.Options);
+            set => SetJsonProperty<InternalActivityOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>

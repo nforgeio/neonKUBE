@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Name
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Args
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetBytesProperty(PropertyNames.Args);
+            set => SetBytesProperty(PropertyNames.Args, value);
         }
 
         /// <summary>
@@ -64,8 +64,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Domain
         {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <summary>
@@ -73,8 +73,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string WorkflowId
         {
-            get => GetStringProperty("WorkflowId");
-            set => SetStringProperty("WorkflowId", value);
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
         }
 
         /// <summary>
@@ -82,8 +82,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string RunId
         {
-            get => GetStringProperty("RunId");
-            set => SetStringProperty("RunId", value);
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
         }
 
         /// <summary>
@@ -91,8 +91,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string WorkflowType
         {
-            get => GetStringProperty("WorkflowType");
-            set => SetStringProperty("WorkflowType", value);
+            get => GetStringProperty(PropertyNames.WorkflowType);
+            set => SetStringProperty(PropertyNames.WorkflowType, value);
         }
 
         /// <summary>
@@ -100,8 +100,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string TaskList
         {
-            get => GetStringProperty("TaskList");
-            set => SetStringProperty("TaskList", value);
+            get => GetStringProperty(PropertyNames.TaskList);
+            set => SetStringProperty(PropertyNames.TaskList, value);
         }
 
         /// <summary>
@@ -109,8 +109,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public TimeSpan ExecutionStartToCloseTimeout
         {
-            get => GetTimeSpanProperty("ExecutionStartToCloseTimeout");
-            set => SetTimeSpanProperty("ExecutionStartToCloseTimeout", value);
+            get => GetTimeSpanProperty(PropertyNames.ExecutionStartToCloseTimeout);
+            set => SetTimeSpanProperty(PropertyNames.ExecutionStartToCloseTimeout, value);
         }
 
         /// <inheritdoc/>

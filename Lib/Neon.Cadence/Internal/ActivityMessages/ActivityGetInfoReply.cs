@@ -43,8 +43,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalActivityInfo Info
         {
-            get => GetJsonProperty<InternalActivityInfo>("Info");
-            set => SetJsonProperty<InternalActivityInfo>("Info", value);
+            get => GetJsonProperty<InternalActivityInfo>(PropertyNames.Info);
+            set => SetJsonProperty<InternalActivityInfo>(PropertyNames.Info, value);
         }
 
         /// <inheritdoc/>

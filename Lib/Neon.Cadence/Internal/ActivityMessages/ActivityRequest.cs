@@ -42,8 +42,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ContextId
         {
-            get => GetLongProperty("ContextId");
-            set => SetLongProperty("ContextId", value);
+            get => GetLongProperty(PropertyNames.ContextId);
+            set => SetLongProperty(PropertyNames.ContextId, value);
         }
 
         /// <inheritdoc/>

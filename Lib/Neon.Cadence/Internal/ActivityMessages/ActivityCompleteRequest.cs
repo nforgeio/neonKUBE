@@ -47,8 +47,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] TaskToken
         {
-            get => GetBytesProperty("TaskToken");
-            set => SetBytesProperty("TaskToken", value);
+            get => GetBytesProperty(PropertyNames.TaskToken);
+            set => SetBytesProperty(PropertyNames.TaskToken, value);
         }
 
         /// <inheritdoc/>

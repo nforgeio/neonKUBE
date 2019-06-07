@@ -43,8 +43,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long WorkerId
         {
-            get => GetLongProperty("WorkerId");
-            set => SetLongProperty("WorkerId", value);
+            get => GetLongProperty(PropertyNames.WorkerId);
+            set => SetLongProperty(PropertyNames.WorkerId, value);
         }
 
         /// <inheritdoc/>

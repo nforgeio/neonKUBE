@@ -47,8 +47,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ActivityContextId
         {
-            get => GetLongProperty("ActivityContextId");
-            set => SetLongProperty("ActivityContextId", value);
+            get => GetLongProperty(PropertyNames.ActivityContextId);
+            set => SetLongProperty(PropertyNames.ActivityContextId, value);
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ActivityTypeId
         {
-            get => GetLongProperty("ActivityTypeId");
-            set => SetLongProperty("ActivityTypeId", value);
+            get => GetLongProperty(PropertyNames.ActivityTypeId);
+            set => SetLongProperty(PropertyNames.ActivityTypeId, value);
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Args
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetBytesProperty(PropertyNames.Args);
+            set => SetBytesProperty(PropertyNames.Args, value);
         }
 
         /// <inheritdoc/>

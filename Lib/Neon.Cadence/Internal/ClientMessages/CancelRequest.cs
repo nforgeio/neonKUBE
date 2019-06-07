@@ -48,8 +48,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long TargetRequestId
         {
-            get => GetLongProperty("TargetRequestId");
-            set => SetLongProperty("TargetRequestId", value);
+            get => GetLongProperty(PropertyNames.TargetRequestId);
+            set => SetLongProperty(PropertyNames.TargetRequestId, value);
         }
 
         /// <inheritdoc/>

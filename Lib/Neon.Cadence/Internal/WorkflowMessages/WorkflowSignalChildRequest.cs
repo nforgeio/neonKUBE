@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ChildId
         {
-            get => GetLongProperty("ChildId");
-            set => SetLongProperty("ChildId", value);
+            get => GetLongProperty(PropertyNames.ChildId);
+            set => SetLongProperty(PropertyNames.ChildId, value);
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string SignalName
         {
-            get => GetStringProperty("SignalName");
-            set => SetStringProperty("SignalName", value);
+            get => GetStringProperty(PropertyNames.SignalName);
+            set => SetStringProperty(PropertyNames.SignalName, value);
         }
 
         /// <summary>
@@ -64,8 +64,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] SignalArgs
         {
-            get => GetBytesProperty("SignalArgs");
-            set => SetBytesProperty("SignalArgs", value);
+            get => GetBytesProperty(PropertyNames.SignalArgs);
+            set => SetBytesProperty(PropertyNames.SignalArgs, value);
         }
 
         /// <inheritdoc/>

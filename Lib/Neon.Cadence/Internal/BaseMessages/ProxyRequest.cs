@@ -42,8 +42,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long RequestId
         {
-            get => GetLongProperty("RequestId");
-            set => SetLongProperty("RequestId", value);
+            get => GetLongProperty(PropertyNames.RequestId);
+            set => SetLongProperty(PropertyNames.RequestId, value);
         }
 
         /// <summary>
@@ -52,8 +52,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public bool IsCancellable
         {
-            get => GetBoolProperty("IsCancellable");
-            set => SetBoolProperty("IsCancellable", value);
+            get => GetBoolProperty(PropertyNames.IsCancellable);
+            set => SetBoolProperty(PropertyNames.IsCancellable, value);
         }
 
         /// <summary>

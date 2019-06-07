@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Domain
         {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Workflow
         {
-            get => GetStringProperty("Workflow");
-            set => SetStringProperty("Workflow", value);
+            get => GetStringProperty(PropertyNames.Workflow);
+            set => SetStringProperty(PropertyNames.Workflow, value);
         }
 
         /// <summary>
@@ -64,8 +64,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Args
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetBytesProperty(PropertyNames.Args);
+            set => SetBytesProperty(PropertyNames.Args, value);
         }
 
         /// <summary>
@@ -73,8 +73,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalStartWorkflowOptions Options
         {
-            get => GetJsonProperty<InternalStartWorkflowOptions>("Options");
-            set => SetJsonProperty<InternalStartWorkflowOptions>("Options", value);
+            get => GetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options);
+            set => SetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>

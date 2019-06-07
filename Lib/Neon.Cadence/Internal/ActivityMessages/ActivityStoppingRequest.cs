@@ -47,8 +47,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string ActivityId
         {
-            get => GetStringProperty("ActivityId");
-            set => SetStringProperty("ActivityId", value);
+            get => GetStringProperty(PropertyNames.ActivityId);
+            set => SetStringProperty(PropertyNames.ActivityId, value);
         }
 
         /// <inheritdoc/>

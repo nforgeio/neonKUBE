@@ -51,8 +51,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Name
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
         }
 
         /// <summary>
@@ -60,8 +60,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Description
         {
-            get => GetStringProperty("Description");
-            set => SetStringProperty("Description", value);
+            get => GetStringProperty(PropertyNames.Description);
+            set => SetStringProperty(PropertyNames.Description, value);
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string OwnerEmail
         {
-            get => GetStringProperty("OwnerEmail");
-            set => SetStringProperty("OwnerEmail", value);
+            get => GetStringProperty(PropertyNames.OwnerEmail);
+            set => SetStringProperty(PropertyNames.OwnerEmail, value);
         }
 
         /// <summary>
@@ -78,8 +78,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public bool EmitMetrics
         {
-            get => GetBoolProperty("EmitMetrics");
-            set => SetBoolProperty("EmitMetrics", value);
+            get => GetBoolProperty(PropertyNames.EmitMetrics);
+            set => SetBoolProperty(PropertyNames.EmitMetrics, value);
         }
 
         /// <summary>
@@ -87,8 +87,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public int RetentionDays
         {
-            get => GetIntProperty("RetentionDays");
-            set => SetIntProperty("RetentionDays", value);
+            get => GetIntProperty(PropertyNames.RetentionDays);
+            set => SetIntProperty(PropertyNames.RetentionDays, value);
         }
 
         /// <inheritdoc/>

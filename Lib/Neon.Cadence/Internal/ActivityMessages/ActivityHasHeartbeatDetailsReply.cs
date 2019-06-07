@@ -43,8 +43,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public bool HasDetails
         {
-            get => GetBoolProperty("HasDetails");
-            set => SetBoolProperty("HasDetails", value);
+            get => GetBoolProperty(PropertyNames.HasDetails);
+            set => SetBoolProperty(PropertyNames.HasDetails, value);
         }
 
         /// <inheritdoc/>

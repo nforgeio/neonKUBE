@@ -42,8 +42,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long RequestId
         {
-            get => GetLongProperty("RequestId");
-            set => SetLongProperty("RequestId", value);
+            get => GetLongProperty(PropertyNames.RequestId);
+            set => SetLongProperty(PropertyNames.RequestId, value);
         }
 
         /// <summary>
@@ -51,8 +51,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public CadenceError Error
         {
-            get => GetJsonProperty<CadenceError>("Error");
-            set => SetJsonProperty<CadenceError>("Error", value);
+            get => GetJsonProperty<CadenceError>(PropertyNames.Error);
+            set => SetJsonProperty<CadenceError>(PropertyNames.Error, value);
         }
 
         /// <inheritdoc/>

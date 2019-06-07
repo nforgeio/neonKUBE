@@ -44,8 +44,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public DateTime Time
         {
-            get => GetDateTimeProperty("Time");
-            set => SetDateTimeProperty("Time", value);
+            get => GetDateTimeProperty(PropertyNames.Time);
+            set => SetDateTimeProperty(PropertyNames.Time, value);
         }
 
         /// <inheritdoc/>
