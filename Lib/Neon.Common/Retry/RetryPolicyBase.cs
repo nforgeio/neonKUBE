@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Time;
 
 namespace Neon.Retry
 {
@@ -33,7 +34,7 @@ namespace Neon.Retry
     public abstract class RetryPolicyBase : IRetryPolicy
     {
         private INeonLogger log;
-        private DateTime    utcDeadline;
+        private DateTime    sysDeadline;
 
         /// <summary>
         /// Constructor.
@@ -54,20 +55,20 @@ namespace Neon.Retry
                 // Compute the UTC deadline, taking care not not to
                 // exceed the end-of-time.
 
-                var utcNow = DateTime.UtcNow;
+                var utcNow = SysTime.Now;
 
                 if (timeout >= DateTime.MaxValue - utcNow)
                 {
-                    utcDeadline = DateTime.MaxValue;
+                    sysDeadline = DateTime.MaxValue;
                 }
                 else
                 {
-                    utcDeadline = utcNow + timeout.Value;
+                    sysDeadline = utcNow + timeout.Value;
                 }
             }
             else
             {
-                utcDeadline = DateTime.MaxValue;
+                sysDeadline = DateTime.MaxValue;
             }
         }
 
@@ -110,7 +111,7 @@ namespace Neon.Retry
         {
             Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero);
 
-            var maxDelay = utcDeadline - DateTime.UtcNow;
+            var maxDelay = sysDeadline - DateTime.UtcNow;
 
             if (delay > maxDelay)
             {

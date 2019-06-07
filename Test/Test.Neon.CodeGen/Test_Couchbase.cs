@@ -96,6 +96,7 @@ namespace TestCodeGen.Couchbase
                 Id   = 0,
                 Name = "Jack",
                 Age  = 10,
+                Gender = Gender.Male,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
@@ -104,6 +105,7 @@ namespace TestCodeGen.Couchbase
                 Id   = 1,
                 Name = "Jill",
                 Age  = 11,
+                Gender = Gender.Female,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
@@ -185,6 +187,7 @@ namespace TestCodeGen.Couchbase
 
             Assert.Equal(jack.Name, clone.Name);
             Assert.Equal(jack.Age, clone.Age);
+            Assert.Equal(jack.Gender, clone.Gender);
             Assert.NotSame(jack.Data, clone.Data);
 
             //-----------------------------------------------------------------
@@ -210,6 +213,7 @@ namespace TestCodeGen.Couchbase
                 Id   = 0,
                 Name = "Jack",
                 Age  = 10,
+                Gender = Gender.Male,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
@@ -218,6 +222,7 @@ namespace TestCodeGen.Couchbase
                 Id   = 1,
                 Name = "Jill",
                 Age  = 11,
+                Gender = Gender.Female,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             };
 
@@ -299,6 +304,7 @@ namespace TestCodeGen.Couchbase
 
             Assert.Equal(jack.Name, clone.Name);
             Assert.Equal(jack.Age, clone.Age);
+            Assert.Equal(jack.Gender, clone.Gender);
             Assert.NotSame(jack.Data, clone.Data);
 
             //-----------------------------------------------------------------
@@ -325,6 +331,7 @@ namespace TestCodeGen.Couchbase
                 Id   = 0,
                 Name = "Jack",
                 Age  = 10,
+                Gender = Gender.Male,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
@@ -341,6 +348,7 @@ namespace TestCodeGen.Couchbase
             Assert.Equal(jack.Id, jackRead.Id);
             Assert.Equal(jack.Name, jackRead.Name);
             Assert.Equal(jack.Age, jackRead.Age);
+            Assert.Equal(jack.Gender, jackRead.Gender);
             Assert.Equal(jack.Data, jackRead.Data);
             Assert.Equal(182, (int)jObject["Height"]);
             Assert.Equal(jack, jackRead);
@@ -366,6 +374,7 @@ namespace TestCodeGen.Couchbase
                 Id   = 0,
                 Name = "Jack",
                 Age  = 10,
+                Gender = Gender.Male,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             };
 
@@ -377,6 +386,7 @@ namespace TestCodeGen.Couchbase
             Assert.Equal(jack.Id, person.Id);
             Assert.Equal(jack.Name, person.Name);
             Assert.Equal(jack.Age, person.Age);
+            Assert.Equal(jack.Gender, person.Gender);
             Assert.Equal(jack.Data, person.Data);
 
             var personDoc = await bucket.FindDocumentSafeAsync<Person>(Person.CreateKey("0"));
@@ -385,6 +395,7 @@ namespace TestCodeGen.Couchbase
             Assert.Equal(jack.Id, personDoc.Content.Id);
             Assert.Equal(jack.Name, personDoc.Content.Name);
             Assert.Equal(jack.Age, personDoc.Content.Age);
+            Assert.Equal(jack.Gender, personDoc.Content.Gender);
             Assert.Equal(jack.Data, personDoc.Content.Data);
         }
 
@@ -402,7 +413,8 @@ namespace TestCodeGen.Couchbase
             {
                 Id   = 0,
                 Name = "Jack",
-                Age  = 10
+                Age  = 10,
+                Gender = Gender.Male,
             };
 
             await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
@@ -411,7 +423,8 @@ namespace TestCodeGen.Couchbase
             {
                 Id   = 1,
                 Name = "Jill",
-                Age  = 11
+                Age  = 11,
+                Gender = Gender.Female,
             };
 
             await bucket.UpsertSafeAsync(jill, persistTo: PersistTo.One);
@@ -420,7 +433,8 @@ namespace TestCodeGen.Couchbase
             {
                 Id   = 2,
                 Name = "John",
-                Age  = 12
+                Age  = 12,
+                Gender = Gender.Male,
             };
 
             await bucket.UpsertSafeAsync(john, persistTo: PersistTo.One);
@@ -495,7 +509,8 @@ namespace TestCodeGen.Couchbase
             {
                 Id   = 0,
                 Name = "Jack-Custom",
-                Age  = 10
+                Age  = 10,
+                Gender = Gender.Male
             };
 
             await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
@@ -504,7 +519,8 @@ namespace TestCodeGen.Couchbase
             {
                 Id   = 1,
                 Name = "Jill-Custom",
-                Age  = 11
+                Age  = 11,
+                Gender = Gender.Female
             };
 
             await bucket.UpsertSafeAsync(jill, persistTo: PersistTo.One);
@@ -513,7 +529,8 @@ namespace TestCodeGen.Couchbase
             {
                 Id   = 2,
                 Name = "John-Custom",
-                Age  = 12
+                Age  = 12,
+                Gender = Gender.Male
             };
 
             await bucket.UpsertSafeAsync(john, persistTo: PersistTo.One);

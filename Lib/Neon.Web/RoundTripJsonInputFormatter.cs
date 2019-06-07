@@ -44,11 +44,20 @@ namespace Neon.Web
     /// </summary>
     public sealed class RoundTripJsonInputFormatter : TextInputFormatter
     {
+        private Func<Type, bool>    allowRoundtripFormatter;
+
         /// <summary>
         /// Constructor.
         /// </summary>
-        public RoundTripJsonInputFormatter()
+        /// <param name="allowRoundtripFormatter">
+        /// Optional lamba function that returns <c>true</c> if the type is allowed
+        /// to be handled by the formatter.  Passing <c>null</c> indicates that all
+        /// types should be handled.
+        /// </param>
+        public RoundTripJsonInputFormatter(Func<Type, bool> allowRoundtripFormatter = null)
         {
+            this.allowRoundtripFormatter = allowRoundtripFormatter;
+
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
             SupportedEncodings.Add(Encoding.UTF8);
         }
@@ -56,18 +65,12 @@ namespace Neon.Web
         /// <inheritdoc/>
         protected override bool CanReadType(Type type)
         {
-            if (WebHelper.IsRoundTripType(type))
+            if (allowRoundtripFormatter == null)
             {
                 return true;
             }
 
-            if (type.Implements<IRoundtripData>())
-            {
-                WebHelper.RegisterRoundTripType(type);
-                return true;
-            }
-
-            return false;
+            return allowRoundtripFormatter(type);
         }
 
         /// <inheritdoc/>

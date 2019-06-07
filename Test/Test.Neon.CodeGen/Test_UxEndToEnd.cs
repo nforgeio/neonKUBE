@@ -92,13 +92,14 @@ namespace TestCodeGen.UxAspNet
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        public Person CreatePerson(int id, string name, int age)
+        public Person CreatePerson(int id, string name, int age, Gender gender)
         {
             return new Person()
             {
                 Id = id,
                 Name = name,
-                Age = age
+                Age = age,
+                Gender = gender
             };
         }
 
@@ -368,11 +369,12 @@ namespace TestCodeGen.UxAspNet
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task CreatePerson()
         {
-            var person = await client.CreatePersonAsync(10, "Jeff", 58);
+            var person = await client.CreatePersonAsync(10, "Jeff", 58, Gender.Male);
 
             Assert.Equal(10, person.Id);
             Assert.Equal("Jeff", person.Name);
             Assert.Equal(58, person.Age);
+            Assert.Equal(Gender.Male, person.Gender);
         }
 
         [Fact]
@@ -383,7 +385,8 @@ namespace TestCodeGen.UxAspNet
             {
                 Id = 10,
                 Name = "Jeff",
-                Age = 58
+                Age = 58,
+                Gender = Gender.Male
             };
 
             var modified = await client.IncrementAgeAsync(person);
@@ -391,6 +394,7 @@ namespace TestCodeGen.UxAspNet
             Assert.Equal(10, modified.Id);
             Assert.Equal("Jeff", modified.Name);
             Assert.Equal(59, modified.Age);
+            Assert.Equal(Gender.Male, modified.Gender);
         }
 
         [Fact]
@@ -458,6 +462,7 @@ namespace TestCodeGen.UxAspNet
                 Id = 1,
                 Name = "Jack",
                 Age = 10,
+                Gender = Gender.Male,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             });
 
@@ -466,6 +471,7 @@ namespace TestCodeGen.UxAspNet
                 Id = 2,
                 Name = "Jill",
                 Age = 11,
+                Gender = Gender.Female,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             });
 
@@ -486,6 +492,7 @@ namespace TestCodeGen.UxAspNet
                     Id = 1,
                     Name = "Jack",
                     Age = 10,
+                    Gender = Gender.Male,
                     Data = new byte[] { 0, 1, 2, 3, 4 }
                 },
                 new Person()
@@ -493,6 +500,7 @@ namespace TestCodeGen.UxAspNet
                     Id = 2,
                     Name = "Jill",
                     Age = 11,
+                    Gender = Gender.Female,
                     Data = new byte[] { 5, 6, 7, 8, 9 }
                 }
             };
@@ -526,11 +534,13 @@ namespace TestCodeGen.UxAspNet
 
             person.Name = "Jack";
             person.Age = 10;
+            person.Gender = Gender.Male;
 
             jObject = person.ToJObject();
 
             Assert.Equal("Jack", (string)jObject["Name"]);
             Assert.Equal(10, (int)jObject["Age"]);
+            Assert.Equal(Gender.Male, NeonHelper.ParseEnum<Gender>((string)jObject["Gender"]));
             Assert.Equal("very tricky!", (string)jObject["Unknown"]);
         }
 

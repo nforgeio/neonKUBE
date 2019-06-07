@@ -47,6 +47,21 @@ namespace Test.Neon.Models.Definitions
         string ChildProperty { get; set; }
     }
 
+    public enum Gender
+    {
+        [EnumMember(Value = "unspecified")]
+        Unspecified = 0,
+
+        [EnumMember(Value = "male")]
+        Male = 1,
+
+        [EnumMember(Value = "female")]
+        Female = 2,
+
+        [EnumMember(Value = "other")]
+        Other = 3
+    }
+
     [Persistable]
     public interface Person
     {
@@ -54,6 +69,7 @@ namespace Test.Neon.Models.Definitions
         int Id { get; set; }
         string Name { get; set; }
         int Age { get; set; }
+        Gender Gender { get; set; }
         byte[] Data { get; set; }
     }
 
@@ -84,6 +100,8 @@ namespace Test.Neon.Models.Definitions
         string Name { get; set; }
         [JsonProperty(PropertyName = "my-age")]
         int Age { get; set; }
+        [JsonProperty(PropertyName = "my-gender")]
+        Gender Gender { get; set; }
         [JsonProperty(PropertyName = "my-data")]
         byte[] Data { get; set; }
     }
@@ -98,6 +116,8 @@ namespace Test.Neon.Models.Definitions
         string Name { get; set; }
         [JsonProperty(PropertyName = "my-age")]
         int Age { get; set; }
+        [JsonProperty(PropertyName = "my-gender")]
+        Gender Gender { get; set; }
         [JsonProperty(PropertyName = "my-data")]
         byte[] Data { get; set; }
     }
@@ -134,11 +154,11 @@ namespace Test.Neon.Models.Definitions
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        Person CreatePerson(int id, string name, int age);
+        Person CreatePerson(int id, string name, int age, Gender gender);
 
         [HttpGet]
         [Route("nonpersistable-person/{id}/{name}/{age}")]
-        NonPersistablePerson CreateNonPersisablePerson(int id, string name, int age);
+        NonPersistablePerson CreateNonPersisablePerson(int id, string name, int age, Gender gender);
 
         [HttpPut]
         Person IncrementAge([FromBody] Person person);
@@ -211,7 +231,6 @@ namespace Test.Neon.Models.Definitions
         Person[] GetPersonArray([FromBody] Person[] value);
     }
 
-
     [ServiceModel]
     [Route("/TestUxAspNetFixture")]
     public interface TestUxAspNetFixtureController
@@ -236,7 +255,7 @@ namespace Test.Neon.Models.Definitions
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        Person CreatePerson(int id, string name, int age);
+        Person CreatePerson(int id, string name, int age, Gender gender);
 
         [HttpPut]
         Person IncrementAge([FromBody] Person person);

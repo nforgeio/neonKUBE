@@ -133,6 +133,13 @@ namespace Neon.Web
         /// <param name="builder">The MVC builder.</param>
         /// <param name="disableRoundTripFormatters">Optionally disable adding the round-trip formatters.</param>
         /// <param name="disableNewtonsoftFormatters">Optionally disable the Newtonsoft JSON formatters.</param>
+        /// <param name="allowRoundtripFormatter">
+        /// Optional lamda function that can be used to customize which types allowed
+        /// to be handled by the custom round-trip formatters.  When this is <c>null</c>, 
+        /// all types will be handled by the formatters, otherwise only those types
+        /// where this function returns <c>true</c> will be handled by the custom formatters.
+        /// Other types will be passed on to the remaining formatters.
+        /// </param>
         /// <returns>The <paramref name="builder"/>.</returns>
         /// <remarks>
         /// <para>
@@ -142,7 +149,11 @@ namespace Neon.Web
         /// all upgraded at the same time as a monolithic app.
         /// </para>
         /// </remarks>
-        public static IMvcBuilder AddNeon(this IMvcBuilder builder, bool disableRoundTripFormatters = false, bool disableNewtonsoftFormatters = false)
+        public static IMvcBuilder AddNeon(
+            this IMvcBuilder    builder, 
+            bool                disableRoundTripFormatters  = false, 
+            bool                disableNewtonsoftFormatters = false,
+            Func<Type, bool>    allowRoundtripFormatter     = null)
         {
             // Add any Newtonsodt formatters first so we can insert the round-trip
             // formatters before them below so the round-trip formatters will take
@@ -158,8 +169,8 @@ namespace Neon.Web
                 builder.AddMvcOptions(
                     options =>
                     {
-                        options.InputFormatters.Insert(0, new RoundTripJsonInputFormatter());
-                        options.OutputFormatters.Insert(0, new RoundTripJsonOutputFormatter());
+                        options.InputFormatters.Insert(0, new RoundTripJsonInputFormatter(allowRoundtripFormatter));
+                        options.OutputFormatters.Insert(0, new RoundTripJsonOutputFormatter(allowRoundtripFormatter));
                     });
             }
 
