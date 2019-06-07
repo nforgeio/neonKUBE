@@ -1212,6 +1212,21 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         node.Status = string.Empty;
                     }
 
+                    // Install the network CNI.
+
+                    switch (cluster.Definition.Network.Cni)
+                    {
+                        case NetworkCni.Calico:
+
+                            DeployCalicoCni(firstMaster);
+                            break;
+
+                        case NetworkCni.Istio:
+                        default:
+
+                            throw new NotImplementedException($"The [{cluster.Definition.Network.Cni}] CNI support is not implemented.");
+                    }
+
                     // Allow pods to be scheduled on master nodes if enabled.
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-master-pods",
@@ -1233,24 +1248,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                             if (allowPodsOnMasters)
                             {
+                                firstMaster.SudoCommand(@"until [ `kubectl get nodes | grep ""NotReady"" | wc -l ` == ""0"" ]; do     sleep 1; done", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
                                 firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+                                firstMaster.SudoCommand(@"until [ `kubectl get nodes -o json | jq .items[].spec | grep ""NoSchedule"" | wc -l ` == ""0"" ]; do     sleep 1; done", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
                             }
                         });
-
-                    // Install the network CNI.
-
-                    switch (cluster.Definition.Network.Cni)
-                    {
-                        case NetworkCni.Calico:
-
-                            DeployCalicoCni(firstMaster);
-                            break;
-
-                        case NetworkCni.Istio:
-                        default:
-
-                            throw new NotImplementedException($"The [{cluster.Definition.Network.Cni}] CNI support is not implemented.");
-                    }
 
                     // Install Istio.
 
@@ -1400,10 +1402,6 @@ subjects:
                     var script =
 $@"#!/bin/bash
 
-# Configure RBAC:
-
-kubectl apply -f {kubeSetupInfo.CalicoRbacYamlUri}
-
 # We need to edit the setup manifest to specify the 
 # cluster subnet before applying it.
 
@@ -1485,18 +1483,11 @@ cd istio
 chmod 330 bin/*
 cp bin/* /usr/local/bin
 
-#Install the Istio CNI:
-
-helm template install/kubernetes/helm/istio-cni --name=istio-cni --namespace=istio-system | kubectl apply -f -
-
-
 # Install Istio's CRDs:
 
-helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
-kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-10.yaml
-kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-11.yaml
+helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
 
-# Verify that all 53 Istio CRDs were committed to the Kubernetes api-server
+# Verify that all 58 Istio CRDs were committed to the Kubernetes api-server
 
 until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""58"" ]; do
     sleep 1
