@@ -459,7 +459,12 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            await client.SetWorkflowCacheSize(10000);
+            //---------------------------------------------------------------
+            // $todo(jeff.lill): Uncomment this once Jack merges his support.
+
+            //await client.SetWorkflowCacheSize(10000);
+
+            //---------------------------------------------------------------
 
             return client;
         }
