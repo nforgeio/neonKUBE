@@ -888,7 +888,7 @@ namespace Neon.Cadence
             if (request.Method != "PUT")
             {
                 response.StatusCode = StatusCodes.Status405MethodNotAllowed;
-                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted with [PUT].");
+                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted via [PUT].");
                 return;
             }
 
