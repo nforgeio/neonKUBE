@@ -53,7 +53,7 @@ namespace Neon.Kube
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
         private const string defaultHelmVersion          = "2.12.3";
-        private const string defaultCalicoVersion        = "3.3";
+        private const string defaultCalicoVersion        = "3.7";
         private const string defaultIstioVersion         = "1.1.3";
 
         private string[] supportedDockerVersions
@@ -264,7 +264,7 @@ namespace Neon.Kube
                 // we do decide to allow for custom CNIs, we'll need to figure this out.
 
                 CalicoRbacYamlUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
-                CalicoSetupYamlUri          = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml",
+                CalicoSetupYamlUri          = $"https://docs.projectcalico.org/v{calicoVersion}/manifests/calico.yaml",
 
                 IstioLinuxUri               = $"https://github.com/istio/istio/releases/download/{istioVersion}/istio-{istioVersion}-linux.tar.gz"
             };
