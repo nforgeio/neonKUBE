@@ -38,6 +38,7 @@ using Neon.Web;
 using Neon.Xunit;
 
 using Test.Neon.UxModels;
+using Newtonsoft.Json.Linq;
 
 using Xunit;
 using Xunit.Abstractions;
@@ -91,13 +92,14 @@ namespace TestCodeGen.UxAspNet
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        public Person CreatePerson(int id, string name, int age)
+        public Person CreatePerson(int id, string name, int age, Gender gender)
         {
             return new Person()
             {
                 Id = id,
                 Name = name,
-                Age = age
+                Age = age,
+                Gender = gender
             };
         }
 
@@ -367,11 +369,12 @@ namespace TestCodeGen.UxAspNet
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task CreatePerson()
         {
-            var person = await client.CreatePersonAsync(10, "Jeff", 58);
+            var person = await client.CreatePersonAsync(10, "Jeff", 58, Gender.Male);
 
             Assert.Equal(10, person.Id);
             Assert.Equal("Jeff", person.Name);
             Assert.Equal(58, person.Age);
+            Assert.Equal(Gender.Male, person.Gender);
         }
 
         [Fact]
@@ -382,7 +385,8 @@ namespace TestCodeGen.UxAspNet
             {
                 Id = 10,
                 Name = "Jeff",
-                Age = 58
+                Age = 58,
+                Gender = Gender.Male
             };
 
             var modified = await client.IncrementAgeAsync(person);
@@ -390,6 +394,7 @@ namespace TestCodeGen.UxAspNet
             Assert.Equal(10, modified.Id);
             Assert.Equal("Jeff", modified.Name);
             Assert.Equal(59, modified.Age);
+            Assert.Equal(Gender.Male, modified.Gender);
         }
 
         [Fact]
@@ -457,6 +462,7 @@ namespace TestCodeGen.UxAspNet
                 Id = 1,
                 Name = "Jack",
                 Age = 10,
+                Gender = Gender.Male,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             });
 
@@ -465,6 +471,7 @@ namespace TestCodeGen.UxAspNet
                 Id = 2,
                 Name = "Jill",
                 Age = 11,
+                Gender = Gender.Female,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             });
 
@@ -485,6 +492,7 @@ namespace TestCodeGen.UxAspNet
                     Id = 1,
                     Name = "Jack",
                     Age = 10,
+                    Gender = Gender.Male,
                     Data = new byte[] { 0, 1, 2, 3, 4 }
                 },
                 new Person()
@@ -492,11 +500,133 @@ namespace TestCodeGen.UxAspNet
                     Id = 2,
                     Name = "Jill",
                     Age = 11,
+                    Gender = Gender.Female,
                     Data = new byte[] { 5, 6, 7, 8, 9 }
                 }
             };
 
             Assert.Equal(list, await client.GetPersonArrayAsync(list));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void RoundTripUnknown()
+        {
+            // Verify that persisted properties that were unknown
+            // at compile time are still round-tripped successfuly.
+            // We're going to test this by accessing the backing
+            // [JObject].  We're also going to verify that these
+            // unknown properties are included in the equality
+            // tests.
+            //
+            // This requirement was the inspiration for this entire code
+            // generation thing and it's funny that it took me this
+            // much time to actually test it.
+
+            var jObject = new JObject();
+
+            // Verify that we can round trip the "Unknown" property.
+
+            jObject.Add("Unknown", "very tricky!");
+            jObject.Add("__T", typeof(Person).FullName);
+
+            var person = Person.CreateFrom(jObject.ToString());
+
+            person.Name = "Jack";
+            person.Age = 10;
+            person.Gender = Gender.Male;
+
+            jObject = person.ToJObject();
+
+            Assert.Equal("Jack", (string)jObject["Name"]);
+            Assert.Equal(10, (int)jObject["Age"]);
+            Assert.Equal(Gender.Male, NeonHelper.ParseEnum<Gender>((string)jObject["Gender"]));
+            Assert.Equal("very tricky!", (string)jObject["Unknown"]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void Derived()
+        {
+            //-------------------------------------------------------------
+            // Verify that [BaseModel] works.
+
+            var baseModel = new BaseModel();
+
+            Assert.Null(baseModel.ParentProperty);
+
+            baseModel.ParentProperty = "Hello World!";
+            Assert.Equal("Hello World!", baseModel.ParentProperty);
+
+            baseModel = BaseModel.CreateFrom(baseModel.ToString());
+            Assert.Equal("Hello World!", baseModel.ParentProperty);
+
+            //-------------------------------------------------------------
+            // Verify that [DerivedModel] works too.
+
+            var derivedModel = new DerivedModel();
+
+            Assert.Null(derivedModel.ParentProperty);
+            Assert.Null(derivedModel.ChildProperty);
+
+            derivedModel.ParentProperty = "parent";
+            derivedModel.ChildProperty = "child";
+
+            derivedModel = DerivedModel.CreateFrom(derivedModel.ToString());
+
+            Assert.Equal("parent", derivedModel.ParentProperty);
+            Assert.Equal("child", derivedModel.ChildProperty);
+
+            //-------------------------------------------------------------
+            // Verify Equals():
+
+            var value1 = new DerivedModel() { ParentProperty = "parent", ChildProperty = "child" };
+            var value2 = new DerivedModel() { ParentProperty = "parent", ChildProperty = "child" };
+
+            Assert.True(value1.Equals(value1));
+            Assert.True(value1.Equals(value2));
+            Assert.True(value2.Equals(value1));
+
+            Assert.False(value1.Equals(null));
+            Assert.False(value1.Equals("Hello World!"));
+
+            // Verify that a change to the parent class property is detected.
+
+            value1.ParentProperty = "DIFFERENT";
+
+            Assert.True(value1.Equals(value1));
+
+            Assert.False(value1.Equals(value2));
+            Assert.False(value2.Equals(value1));
+            Assert.False(value1.Equals(null));
+            Assert.False(value1.Equals("Hello World!"));
+
+            // Verify that a change to the derived class property is detected.
+
+            value1.ParentProperty = "parent";
+            value1.ChildProperty = "DIFFERENT";
+
+            Assert.True(value1.Equals(value1));
+
+            Assert.False(value1.Equals(value2));
+            Assert.False(value2.Equals(value1));
+            Assert.False(value1.Equals(null));
+            Assert.False(value1.Equals("Hello World!"));
+
+            //-------------------------------------------------------------
+            // Verify that we can use [ToDerived<TResult>()] to create a derived instance
+            // from the base type.  This also exercises [RoundtripDataFactory] a bit.
+
+            derivedModel = new DerivedModel() { ParentProperty = "parent", ChildProperty = "child" };
+
+            baseModel = BaseModel.CreateFrom(derivedModel.ToString());
+
+            Assert.Equal("parent", baseModel.ParentProperty);
+
+            derivedModel = baseModel.ToDerived<DerivedModel>();
+
+            Assert.Equal("parent", derivedModel.ParentProperty);
+            Assert.Equal("child", derivedModel.ChildProperty);
         }
     }
 }

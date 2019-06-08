@@ -18,34 +18,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
-
+using Neon.Cadence;
 using Neon.Cadence.Internal;
+using Neon.Common;
 
 namespace Neon.Cadence
 {
@@ -73,9 +52,9 @@ namespace Neon.Cadence
         /// <param name="domain">The target Cadence domain.</param>
         /// <param name="tasklist">The target task list.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <param name="name">
-        /// Optionally overrides the fully qualified <typeparamref name="TWorkflow"/> name 
-        /// used to register the worker.
+        /// <param name="workflowType">
+        /// Optionally overrides the fully qualified <typeparamref name="TWorkflow"/> type
+        /// name used to register the worker.
         /// </param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
@@ -86,8 +65,8 @@ namespace Neon.Cadence
         /// </para>
         /// <para>
         /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
-        /// as customize the name used to register the workflow, which defaults to the
-        /// fully qualified name of the workflow type.
+        /// as customize the workflow typ name used to register the workflow, which defaults 
+        /// to the fully qualified name of the workflow type.
         /// </para>
         /// <para>
         /// This method returns a <see cref="Worker"/> which may be used by advanced applications
@@ -95,31 +74,58 @@ namespace Neon.Cadence
         /// this is entirely optional.
         /// </para>
         /// </remarks>
-        internal async Task<Worker> StartWorkflowWorkerAsync<TWorkflow>(string domain, string tasklist, WorkerOptions options = null, string name = null)
+        public async Task<Worker> StartWorkflowWorkerAsync<TWorkflow>(string domain, string tasklist, WorkerOptions options = null, string workflowType = null)
             where TWorkflow : Workflow
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
 
-            options = options ?? new WorkerOptions();
+            Worker worker;
 
-            var reply = (NewWorkerReply)(await CallProxyAsync(
-                new NewWorkerRequest()
-                {
-                    Name       = name ?? typeof(TWorkflow).FullName,
-                    IsWorkflow = true,
-                    Domain     = domain,
-                    TaskList   = tasklist,
-                    Options    = options.ToInternal()
-                }));
+            workflowType = workflowType ?? typeof(TWorkflow).FullName;
+            options      = options ?? new WorkerOptions();
 
-            reply.ThrowOnError();
-
-            var worker = new Worker(reply.WorkerId);
-
-            lock (syncLock)
+            using (asyncLock.AcquireAsync())
             {
-                workers.Add(reply.WorkerId, worker);
+                lock (syncLock)
+                {
+                    // Ensure that we haven't already registered a worker for the
+                    // specified workflow, domain, and tasklist.  We'll just ignore
+                    // the call if we already have this registration.
+                    //
+                    // I know that this is a linear search but the number of workflow
+                    // registrations per service will generally be very small and 
+                    // registrations will happen infrequently (typically just once
+                    // per service, when it starts).
+
+                    worker = workers.Values.SingleOrDefault(w => w.IsWorkflow && w.Domain == domain && w.Tasklist == tasklist && w.TypeName == workflowType);
+
+                    if (worker != null)
+                    {
+                        return worker;
+                    }
+                }
+
+                options = options ?? new WorkerOptions();
+
+                var reply = (NewWorkerReply)(await CallProxyAsync(
+                    new NewWorkerRequest()
+                    {
+                        Name       = workflowType,
+                        IsWorkflow = true,
+                        Domain     = domain,
+                        TaskList   = tasklist,
+                        Options    = options.ToInternal()
+                    }));
+
+                reply.ThrowOnError();
+
+                worker = new Worker(this, true, reply.WorkerId, domain, tasklist, workflowType);
+
+                lock (syncLock)
+                {
+                    workers.Add(reply.WorkerId, worker);
+                }
             }
 
             return worker;
@@ -133,8 +139,8 @@ namespace Neon.Cadence
         /// <param name="domain">The target Cadence domain.</param>
         /// <param name="tasklist">The target task list.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <param name="name">
-        /// Optionally overrides the fully qualified <typeparamref name="TActivity"/> name 
+        /// <param name="activityType">
+        /// Optionally overrides the fully qualified <typeparamref name="TActivity"/> type name 
         /// used to register the worker.
         /// </param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
@@ -155,31 +161,58 @@ namespace Neon.Cadence
         /// this is entirely optional.
         /// </para>
         /// </remarks>
-        internal async Task<Worker> StartActivityWorkerAsync<TActivity>(string domain, string tasklist, WorkerOptions options = null, string name = null)
+        public async Task<Worker> StartActivityWorkerAsync<TActivity>(string domain, string tasklist, WorkerOptions options = null, string activityType = null)
             where TActivity : Activity
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
 
-            options = options ?? new WorkerOptions();
+            Worker worker;
 
-            var reply = (NewWorkerReply)(await CallProxyAsync(
-                new NewWorkerRequest()
-                {
-                    Name       = name ?? typeof(TActivity).FullName,
-                    IsWorkflow = false,
-                    Domain     = domain,
-                    TaskList   = tasklist,
-                    Options    = options.ToInternal()
-                }));
+            activityType = activityType ?? typeof(Activity).FullName;
+            options      = options ?? new WorkerOptions();
 
-            reply.ThrowOnError();
-
-            var worker = new Worker(reply.WorkerId);
-
-            lock (syncLock)
+            using (asyncLock.AcquireAsync())
             {
-                workers.Add(reply.WorkerId, worker);
+                lock (syncLock)
+                {
+                    // Ensure that we haven't already registered a worker for the
+                    // specified activity, domain, and tasklist.  We'll just ignore
+                    // the call if we already have this registration.
+                    //
+                    // I know that this is a linear search but the number of activity
+                    // registrations per service will generally be very small and 
+                    // registrations will happen infrequently (typically just once
+                    // per service, when it starts).
+
+                    worker = workers.Values.SingleOrDefault(w => !w.IsWorkflow && w.Domain == domain && w.Tasklist == tasklist && w.TypeName == activityType);
+
+                    if (worker != null)
+                    {
+                        return worker;
+                    }
+                }
+
+                options = options ?? new WorkerOptions();
+
+                var reply = (NewWorkerReply)(await CallProxyAsync(
+                    new NewWorkerRequest()
+                    {
+                        Name       = activityType,
+                        IsWorkflow = false,
+                        Domain     = domain,
+                        TaskList   = tasklist,
+                        Options    = options.ToInternal()
+                    }));
+
+                reply.ThrowOnError();
+
+                worker = new Worker(this, false, reply.WorkerId, domain, tasklist, activityType);
+
+                lock (syncLock)
+                {
+                    workers.Add(reply.WorkerId, worker);
+                }
             }
 
             return worker;
@@ -195,10 +228,17 @@ namespace Neon.Cadence
         /// <remarks>
         /// This method does nothing if the worker is already stopped.
         /// </remarks>
-        internal async Task StopWorkerAsync(Worker worker)
+        public async Task StopWorkerAsync(Worker worker)
         {
+            Covenant.Requires<ArgumentNullException>(worker != null);
+
             lock (syncLock)
             {
+                if (object.ReferenceEquals(worker.Client, this))
+                {
+                    throw new InvalidOperationException("The worker passed does not belong to this client connection.");
+                }
+
                 if (!workers.ContainsKey(worker.WorkerId))
                 {
                     // The worker has already been stopped.

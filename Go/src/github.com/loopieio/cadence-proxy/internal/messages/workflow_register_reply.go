@@ -1,7 +1,23 @@
+//-----------------------------------------------------------------------------
+// FILE:		workflow_register_reply.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -23,7 +39,7 @@ type (
 func NewWorkflowRegisterReply() *WorkflowRegisterReply {
 	reply := new(WorkflowRegisterReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.Type = messagetypes.WorkflowRegisterReply
+	reply.SetType(messagetypes.WorkflowRegisterReply)
 
 	return reply
 }
@@ -43,50 +59,4 @@ func (reply *WorkflowRegisterReply) Clone() IProxyMessage {
 // CopyTo inherits docs from WorkflowReply.CopyTo()
 func (reply *WorkflowRegisterReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
-}
-
-// SetProxyMessage inherits docs from WorkflowReply.SetProxyMessage()
-func (reply *WorkflowRegisterReply) SetProxyMessage(value *ProxyMessage) {
-	reply.WorkflowReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from WorkflowReply.GetProxyMessage()
-func (reply *WorkflowRegisterReply) GetProxyMessage() *ProxyMessage {
-	return reply.WorkflowReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from WorkflowReply.GetRequestID()
-func (reply *WorkflowRegisterReply) GetRequestID() int64 {
-	return reply.WorkflowReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from WorkflowReply.SetRequestID()
-func (reply *WorkflowRegisterReply) SetRequestID(value int64) {
-	reply.WorkflowReply.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from WorkflowReply.GetError()
-func (reply *WorkflowRegisterReply) GetError() *cadenceerrors.CadenceError {
-	return reply.WorkflowReply.GetError()
-}
-
-// SetError inherits docs from WorkflowReply.SetError()
-func (reply *WorkflowRegisterReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.WorkflowReply.SetError(value)
-}
-
-// -------------------------------------------------------------------------
-// IWorkflowReply interface methods for implementing the IWorkflowReply interface
-
-// GetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowRegisterReply) GetWorkflowContextID() int64 {
-	return reply.WorkflowReply.GetWorkflowContextID()
-}
-
-// SetWorkflowContextID inherits docs from WorkflowReply.GetWorkflowContextID()
-func (reply *WorkflowRegisterReply) SetWorkflowContextID(value int64) {
-	reply.WorkflowReply.SetWorkflowContextID(value)
 }

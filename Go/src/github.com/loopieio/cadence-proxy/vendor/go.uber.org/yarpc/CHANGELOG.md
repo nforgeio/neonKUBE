@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.38.0] - 2019-05-20
+### Changed
+- The Thrift encoding attempts to close the request body immediately after
+  reading the request bytes. This significantly reduces TChannel/Thrift memory
+  usage in some scenarios.
+
+## [1.37.4] - 2019-05-02
+### Fixed
+- Fixed duplicated tracing headers being set with gRPC.
+
+## [1.37.3] - 2019-04-29
+### Fixed
+- Fixed pending heap deadlock that occured when attempting to remove a peer that
+  was already removed.
+
 ## [1.37.2] - 2019-04-08
 ### Removed
 - Revert: Use separate context for grpc streams once dial has been completed.
@@ -1076,6 +1091,9 @@ This release requires regeneration of ThriftRW code.
 
 - Initial release.
 
+[1.38.0]: https://github.com/yarpc/yarpc-go/compare/v1.37.4...v1.38.0
+[1.37.4]: https://github.com/yarpc/yarpc-go/compare/v1.37.3...v1.37.4
+[1.37.3]: https://github.com/yarpc/yarpc-go/compare/v1.37.2...v1.37.3
 [1.37.2]: https://github.com/yarpc/yarpc-go/compare/v1.37.1...v1.37.2
 [1.37.1]: https://github.com/yarpc/yarpc-go/compare/v1.37.0...v1.37.1
 [1.37.0]: https://github.com/yarpc/yarpc-go/compare/v1.36.2...v1.37.0

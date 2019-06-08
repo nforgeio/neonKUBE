@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="WorkflowMutableRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowMutableReply)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowMutableReply)]
     internal class WorkflowMutableReply : WorkflowReply
     {
         /// <summary>
@@ -42,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowMutableReply()
         {
-            Type = MessageTypes.WorkflowMutableReply;
+            Type = InternalMessageTypes.WorkflowMutableReply;
         }
 
         /// <summary>

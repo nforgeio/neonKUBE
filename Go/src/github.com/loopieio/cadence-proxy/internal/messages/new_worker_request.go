@@ -1,8 +1,23 @@
+//-----------------------------------------------------------------------------
+// FILE:		new_worker_request.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
-	"time"
-
 	worker "go.uber.org/cadence/worker"
 
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
@@ -28,7 +43,7 @@ type (
 func NewNewWorkerRequest() *NewWorkerRequest {
 	request := new(NewWorkerRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.Type = messagetypes.NewWorkerRequest
+	request.SetType(messagetypes.NewWorkerRequest)
 	request.SetReplyType(messagetypes.NewWorkerReply)
 
 	return request
@@ -71,7 +86,8 @@ func (request *NewWorkerRequest) SetName(value *string) {
 }
 
 // GetIsWorkflow gets a NewWorkerRequest's IsWorkflow value
-// from its properties map
+// from its properties map. Indicates whether we're starting a workflow
+// or an activity worker.
 //
 // returns bool -> bool holding the value
 // of a NewWorkerRequest's IsWorkflow
@@ -80,7 +96,8 @@ func (request *NewWorkerRequest) GetIsWorkflow() bool {
 }
 
 // SetIsWorkflow sets a NewWorkerRequest's IsWorkflow value
-// in its properties map
+// in its properties map. Indicates whether we're starting a workflow
+// or an activity worker.
 //
 // param value bool -> bool that holds the value
 // to be set in the properties map
@@ -134,7 +151,7 @@ func (request *NewWorkerRequest) SetOptions(value *worker.Options) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyRequest.Clone()
 func (request *NewWorkerRequest) Clone() IProxyMessage {
 	newWorkerRequest := NewNewWorkerRequest()
 	var messageClone IProxyMessage = newWorkerRequest
@@ -143,7 +160,7 @@ func (request *NewWorkerRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyRequest.CopyTo()
 func (request *NewWorkerRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*NewWorkerRequest); ok {
@@ -153,47 +170,4 @@ func (request *NewWorkerRequest) CopyTo(target IProxyMessage) {
 		v.SetTaskList(request.GetTaskList())
 		v.SetOptions(request.GetOptions())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (request *NewWorkerRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (request *NewWorkerRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (request *NewWorkerRequest) GetRequestID() int64 {
-	return request.ProxyRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (request *NewWorkerRequest) SetRequestID(value int64) {
-	request.ProxyRequest.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from ProxyRequest.GetReplyType()
-func (request *NewWorkerRequest) GetReplyType() messagetypes.MessageType {
-	return request.ProxyRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from ProxyRequest.SetReplyType()
-func (request *NewWorkerRequest) SetReplyType(value messagetypes.MessageType) {
-	request.ProxyRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from ProxyRequest.GetTimeout()
-func (request *NewWorkerRequest) GetTimeout() time.Duration {
-	return request.ProxyRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from ProxyRequest.SetTimeout()
-func (request *NewWorkerRequest) SetTimeout(value time.Duration) {
-	request.ProxyRequest.SetTimeout(value)
 }

@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all workflow related requests.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
+    [InternalProxyMessage(InternalMessageTypes.Unspecified)]
     internal class WorkflowRequest : ProxyRequest
     {
         /// <summary>
@@ -53,10 +46,10 @@ namespace Neon.Cadence.Internal
         /// this can remain as its default zero value.
         /// </note>
         /// </summary>
-        public long WorkflowContextId
+        public long ContextId
         {
-            get => GetLongProperty("WorkflowContextId");
-            set => SetLongProperty("WorkflowContextId", value);
+            get => GetLongProperty("ContextId");
+            set => SetLongProperty("ContextId", value);
         }
 
         /// <inheritdoc/>
@@ -76,7 +69,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowRequest)target;
 
-            typedTarget.WorkflowContextId = this.WorkflowContextId;
+            typedTarget.ContextId = this.ContextId;
         }
     }
 }

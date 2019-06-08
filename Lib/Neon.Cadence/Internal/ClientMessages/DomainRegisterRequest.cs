@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -39,7 +32,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests that the proxy register a Cadence domain.
     /// </summary>
-    [ProxyMessage(MessageTypes.DomainRegisterRequest)]
+    [InternalProxyMessage(InternalMessageTypes.DomainRegisterRequest)]
     internal class DomainRegisterRequest : ProxyRequest
     {
         /// <summary>
@@ -47,11 +40,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public DomainRegisterRequest()
         {
-            Type = MessageTypes.DomainRegisterRequest;
+            Type = InternalMessageTypes.DomainRegisterRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.DomainRegisterReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainRegisterReply;
 
         /// <summary>
         /// Name for the new domain.

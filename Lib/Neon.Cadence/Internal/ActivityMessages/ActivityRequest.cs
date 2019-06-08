@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all activity requests.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
+    [InternalProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ActivityRequest : ProxyRequest
     {
         /// <summary>
@@ -47,10 +40,10 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Uniquely identifies the activity context associated with this request.
         /// </summary>
-        public long ActivityContextId
+        public long ContextId
         {
-            get => GetLongProperty("ActivityContextId");
-            set => SetLongProperty("ActivityContextId", value);
+            get => GetLongProperty("ContextId");
+            set => SetLongProperty("ContextId", value);
         }
 
         /// <inheritdoc/>
@@ -70,7 +63,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityRequest)target;
 
-            typedTarget.ActivityContextId = this.ActivityContextId;
+            typedTarget.ContextId = this.ContextId;
         }
     }
 }

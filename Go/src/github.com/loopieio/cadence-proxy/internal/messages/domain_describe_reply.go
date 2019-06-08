@@ -1,10 +1,26 @@
+//-----------------------------------------------------------------------------
+// FILE:		domain_describe_reply.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
 	"errors"
 
 	domain "github.com/loopieio/cadence-proxy/internal/cadence/cadencedomains"
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -25,7 +41,7 @@ type (
 func NewDomainDescribeReply() *DomainDescribeReply {
 	reply := new(DomainDescribeReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.DomainDescribeReply
+	reply.SetType(messagetypes.DomainDescribeReply)
 
 	return reply
 }
@@ -180,7 +196,7 @@ func (reply *DomainDescribeReply) SetConfigurationEmitMetrics(value bool) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (reply *DomainDescribeReply) Clone() IProxyMessage {
 	domainDescribeReply := NewDomainDescribeReply()
 	var messageClone IProxyMessage = domainDescribeReply
@@ -189,7 +205,7 @@ func (reply *DomainDescribeReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *DomainDescribeReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(*DomainDescribeReply); ok {
@@ -200,37 +216,4 @@ func (reply *DomainDescribeReply) CopyTo(target IProxyMessage) {
 		v.SetDomainInfoStatus(reply.GetDomainInfoStatus())
 		v.SetDomainInfoOwnerEmail(reply.GetDomainInfoOwnerEmail())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *DomainDescribeReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *DomainDescribeReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (reply *DomainDescribeReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (reply *DomainDescribeReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from ProxyReply.GetError()
-func (reply *DomainDescribeReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
-}
-
-// SetError inherits docs from ProxyReply.SetError()
-func (reply *DomainDescribeReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
 }

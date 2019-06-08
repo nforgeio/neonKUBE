@@ -816,7 +816,7 @@ namespace Neon.CodeGen
                 // A data model interface is allowed to implement another 
                 // data model interface to specify a base class.  Note that
                 // only one of these references is allowed and it may only
-                // be a reference to another data model (not an arbtrary 
+                // be a reference to another data model (not an arbitrary 
                 // type).
 
                 var baseInterface = (Type)null;
@@ -928,8 +928,8 @@ namespace Neon.CodeGen
             }
 
             // Ensure that all service method parameter and result types are either
-            // a primitive .NET type, a type implemented within [mscorlib] or 
-            // reference a loaded data model.
+            // a primitive .NET type, a supported types implemented within [mscorlib] 
+            // or reference a loaded data model.
 
             foreach (var serviceModel in nameToServiceModel.Values)
             {
@@ -1080,10 +1080,42 @@ namespace Neon.CodeGen
                 return true;
             }
 
-            // NOTE: Value types (AKA struct) implicitly have a default parameterless constructor.
+            // We only support non-primitive and non-datamodel types from these
+            // standard .NET assemblies:
 
-            if (type.Assembly.FullName.Contains("System.Private.CoreLib") &&
-                type.IsValueType || type.GetConstructor(new Type[0]) != null)
+            if (!type.Assembly.FullName.StartsWith("System.Private.CoreLib") &&
+                !type.Assembly.FullName.StartsWith("System.ObjectModel"))
+            {
+                return false;
+            }
+
+            // JSON.NET supports some generic types that don't have default
+            // constructors.
+
+            var ignoreConstructor = false;
+
+            if (type.IsGenericType)
+            {
+                var backTickPos = type.FullName.IndexOf('`');
+
+                if (backTickPos != -1)
+                {
+                    var genericName = type.FullName.Substring(0, backTickPos);
+
+                    switch (genericName)
+                    {
+                        case "System.Collections.ObjectModel.ReadOnlyCollection":
+                        case "System.Collections.ObjectModel.ReadOnlyDictionary":
+
+                            ignoreConstructor = true;
+                            break;
+                    }
+                }
+            }
+
+            // NOTE: Value types (AKA structs) implicitly have a default parameterless constructor.
+
+            if (ignoreConstructor || type.IsValueType || type.GetConstructor(new Type[0]) != null)
             {
                 return true;
             }
@@ -1178,7 +1210,7 @@ namespace Neon.CodeGen
             }
             else
             {
-                var baseTypeRef = " : IRoundtripData";
+                var baseTypeRef = string.Empty;
 
                 if (dataModel.IsDerived)
                 {
@@ -1215,7 +1247,7 @@ namespace Neon.CodeGen
 
                 if (Settings.RoundTrip)
                 {
-                    if (genPersistence)
+                    if (genPersistence && dataModel.IsPersistable)
                     {
                         // We need to generate a custom Linq2Couchbase document filter attribute for
                         // each persisted data model.
@@ -1228,7 +1260,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// be able to transparently add a <c>where</c> clause that filters by entity type");
                         writer.WriteLine($"        /// to all queries for this entity type.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        private class {className}Filter : Couchbase.Linq.Filters.IDocumentFilter<{className}>");
+                        writer.WriteLine($"        private class {className}Filter : global::Couchbase.Linq.Filters.IDocumentFilter<{className}>");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            //-----------------------------------------------------------------");
                         writer.WriteLine($"            // Static members:");
@@ -1260,8 +1292,12 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
-                    writer.WriteLine();
-                    writer.WriteLine($"        public const string PersistedType = \"{dataModel.PersistedType}\";");
+
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        public const string PersistedType = \"{dataModel.PersistedType}\";");
+                    }
 
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -1285,7 +1321,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            // Register the document filter with Linq2Couchbase.");
                         writer.WriteLine();
-                        writer.WriteLine($"            Couchbase.Linq.Filters.DocumentFilterManager.SetFilter<{className}>(new {className}Filter());");
+                        writer.WriteLine($"            global::Couchbase.Linq.Filters.DocumentFilterManager.SetFilter<{className}>(new {className}Filter());");
                         writer.WriteLine($"        }}");
                     }
 
@@ -1410,24 +1446,28 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"            return CreateFrom(response.JsonText);");
                     writer.WriteLine($"        }}");
-                    writer.WriteLine();
-                    writer.WriteLine($"        /// <summary>");
-                    writer.WriteLine($"        /// Determines whether another entity instance has the same underlying type as this class.");
-                    writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        /// <param name=\"instance\">The instance to be tested or <c>null</c>.</param>");
-                    writer.WriteLine($"        /// <returns>");
-                    writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
-                    writer.WriteLine($"        /// the same type as the current class.");
-                    writer.WriteLine($"        /// </returns>");
-                    writer.WriteLine($"        public static bool SameTypeAs(IRoundtripData instance)");
-                    writer.WriteLine($"        {{");
-                    writer.WriteLine($"            if (instance == null)");
-                    writer.WriteLine($"            {{");
-                    writer.WriteLine($"                return false;");
-                    writer.WriteLine($"            }}");
-                    writer.WriteLine();
-                    writer.WriteLine($"            return instance.__T == {className}.PersistedType;");
-                    writer.WriteLine($"        }}");
+
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Determines whether another entity instance has the same underlying type as this class.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        /// <param name=\"instance\">The instance to be tested or <c>null</c>.</param>");
+                        writer.WriteLine($"        /// <returns>");
+                        writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
+                        writer.WriteLine($"        /// the same type as the current class.");
+                        writer.WriteLine($"        /// </returns>");
+                        writer.WriteLine($"        public static bool SameTypeAs(IPersistableType instance)");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            if (instance == null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                return false;");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            return instance.__T == {className}.PersistedType;");
+                        writer.WriteLine($"        }}");
+                    }
 
                     // For data models tagged with [Persistable], we need to generate the static GetKey(...) method.
 
@@ -1492,8 +1532,12 @@ namespace Neon.CodeGen
                     writer.WriteLine();
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Instance members:");
-                    writer.WriteLine();
-                    writer.WriteLine($"        private string cachedT;");
+
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine($"        private string cachedT;");
+                    }
 
                     // Generate the backing __JObject property.
 
@@ -1835,9 +1879,12 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    // Serialize the [__T] property
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        // Serialize the [__T] property
 
-                    writer.WriteLine($"            this.__JObject[\"__T\"] = PersistedType;");
+                        writer.WriteLine($"            this.__JObject[\"__T\"] = PersistedType;");
+                    }
 
                     writer.WriteLine();
                     writer.WriteLine($"            return this.__JObject;");
@@ -1862,7 +1909,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Renders the instance as JSON text, optionally formatting the output.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"indented\">Optionally pass <c>true</c> to format the output.</param>");
-                    writer.WriteLine($"        /// <returns>The serialized JSON string.</returns>"); 
+                    writer.WriteLine($"        /// <returns>The serialized JSON string.</returns>");
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -2008,34 +2055,37 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        }}");
 
-                    //---------------------------------------------------------
-                    // Generate the persisted type property.
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        //---------------------------------------------------------
+                        // Generate the persisted type property.
 
-                    writer.WriteLine();
-                    writer.WriteLine($"        /// <summary>");
-                    writer.WriteLine($"        /// Identifies the persisted type.");
-                    writer.WriteLine($"        /// </summary>");
-                    writer.WriteLine($"        public string __T");
-                    writer.WriteLine($"        {{");
-                    writer.WriteLine($"            get");
-                    writer.WriteLine($"            {{");
-                    writer.WriteLine($"                 if (cachedT != null)");
-                    writer.WriteLine($"                 {{");
-                    writer.WriteLine($"                     return cachedT;");
-                    writer.WriteLine($"                 }}");
-                    writer.WriteLine();
-                    writer.WriteLine($"                 cachedT = (string)__JObject[\"__T\"];");
-                    writer.WriteLine();
-                    writer.WriteLine($"                 if (cachedT != null)");
-                    writer.WriteLine($"                 {{");
-                    writer.WriteLine($"                     return cachedT;");
-                    writer.WriteLine($"                 }}");
-                    writer.WriteLine();
-                    writer.WriteLine($"                 return PersistedType;");
-                    writer.WriteLine($"            }}");
-                    writer.WriteLine();
-                    writer.WriteLine($"            set => cachedT = value;");
-                    writer.WriteLine($"        }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"        /// <summary>");
+                        writer.WriteLine($"        /// Identifies the persisted type.");
+                        writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        public string __T");
+                        writer.WriteLine($"        {{");
+                        writer.WriteLine($"            get");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                 if (cachedT != null)");
+                        writer.WriteLine($"                 {{");
+                        writer.WriteLine($"                     return cachedT;");
+                        writer.WriteLine($"                 }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"                 cachedT = (string)__JObject[\"__T\"];");
+                        writer.WriteLine();
+                        writer.WriteLine($"                 if (cachedT != null)");
+                        writer.WriteLine($"                 {{");
+                        writer.WriteLine($"                     return cachedT;");
+                        writer.WriteLine($"                 }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"                 return PersistedType;");
+                        writer.WriteLine($"            }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            set => cachedT = value;");
+                        writer.WriteLine($"        }}");
+                    }
 
                     //---------------------------------------------------------
                     // Generate any persistance related members.
@@ -3052,7 +3102,7 @@ namespace Neon.CodeGen
                         genericParams += ", ";
                     }
 
-                    genericParams += genericParamType.Name;
+                    genericParams += ResolveTypeReference(genericParamType);
                 }
 
                 if (generateUx)
@@ -3069,6 +3119,7 @@ namespace Neon.CodeGen
             }
 
             Covenant.Assert(false); // We should never get here.
+            
             return null;
         }
 

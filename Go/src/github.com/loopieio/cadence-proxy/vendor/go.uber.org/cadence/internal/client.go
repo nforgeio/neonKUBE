@@ -65,7 +65,6 @@ type (
 		// The errors it can return:
 		//	- EntityNotExistsError, if domain does not exists
 		//	- BadRequestError
-		//	- WorkflowExecutionAlreadyStartedError
 		//	- InternalServiceError
 		//
 		// The current timeout resolution implementation is in seconds and uses math.Ceil(d.Seconds()) as the duration. But is
@@ -85,6 +84,21 @@ type (
 		// GetRunID() will always return "run ID 1" and  Get(ctx context.Context, valuePtr interface{}) will return the result of second run.
 		// NOTE: DO NOT USE THIS API INSIDE A WORKFLOW, USE workflow.ExecuteChildWorkflow instead
 		ExecuteWorkflow(ctx context.Context, options StartWorkflowOptions, workflow interface{}, args ...interface{}) (WorkflowRun, error)
+
+		// GetWorkfow retrieves a workflow execution and return a WorkflowRun instance
+		// - workflow ID of the workflow.
+		// - runID can be default(empty string). if empty string then it will pick the last running execution of that workflow ID.
+		//
+		// WorkflowRun has three methods:
+		//  - GetID() string: which return workflow ID (which is same as StartWorkflowOptions.ID if provided)
+		//  - GetRunID() string: which return the first started workflow run ID (please see below)
+		//  - Get(ctx context.Context, valuePtr interface{}) error: which will fill the workflow
+		//    execution result to valuePtr, if workflow execution is a success, or return corresponding
+		//    error. This is a blocking API.
+		// NOTE: if the retrieved workflow returned ContinueAsNewError during the workflow execution, the
+		// return result of GetRunID() will be the retrieved workflow run ID, not the new run ID caused by ContinueAsNewError,
+		// however, Get(ctx context.Context, valuePtr interface{}) will return result from the run which did not return ContinueAsNewError.
+		GetWorkflow(ctx context.Context, workflowID string, runID string) WorkflowRun
 
 		// SignalWorkflow sends a signals to a workflow in execution
 		// - workflow ID of the workflow.
@@ -205,6 +219,38 @@ type (
 		//  - EntityNotExistError
 		ListOpenWorkflow(ctx context.Context, request *s.ListOpenWorkflowExecutionsRequest) (*s.ListOpenWorkflowExecutionsResponse, error)
 
+		// ListWorkflow gets workflow executions based on query. This API only works with ElasticSearch,
+		// and will return BadRequestError when using Cassandra or MySQL. The query is basically the SQL WHERE clause,
+		// examples:
+		//  - "(WorkflowID = 'wid1' or (WorkflowType = 'type2' and WorkflowID = 'wid2'))".
+		//  - "CloseTime between '2019-08-27T15:04:05+00:00' and '2019-08-28T15:04:05+00:00'".
+		//  - to list only open workflow use "CloseTime = missing"
+		// Retrieved workflow executions are sorted by StartTime in descending order when list open workflow,
+		// and sorted by CloseTime in descending order for other queries.
+		// The errors it can return:
+		//  - BadRequestError
+		//  - InternalServiceError
+		ListWorkflow(ctx context.Context, request *s.ListWorkflowExecutionsRequest) (*s.ListWorkflowExecutionsResponse, error)
+
+		// ScanWorkflow gets workflow executions based on query. This API only works with ElasticSearch,
+		// and will return BadRequestError when using Cassandra or MySQL. The query is basically the SQL WHERE clause
+		// (see ListWorkflow for query examples).
+		// ScanWorkflow should be used when retrieving large amount of workflows and order is not needed.
+		// It will use more ElasticSearch resources than ListWorkflow, but will be several times faster
+		// when retrieving millions of workflows.
+		// The errors it can return:
+		//  - BadRequestError
+		//  - InternalServiceError
+		ScanWorkflow(ctx context.Context, request *s.ListWorkflowExecutionsRequest) (*s.ListWorkflowExecutionsResponse, error)
+
+		// CountWorkflow gets number of workflow executions based on query. This API only works with ElasticSearch,
+		// and will return BadRequestError when using Cassandra or MySQL. The query is basically the SQL WHERE clause
+		// (see ListWorkflow for query examples).
+		// The errors it can return:
+		//  - BadRequestError
+		//  - InternalServiceError
+		CountWorkflow(ctx context.Context, request *s.CountWorkflowExecutionsRequest) (*s.CountWorkflowExecutionsResponse, error)
+
 		// QueryWorkflow queries a given workflow execution and returns the query result synchronously. Parameter workflowID
 		// and queryType are required, other parameters are optional. The workflowID and runID (optional) identify the
 		// target workflow execution that this query will be send to. If runID is not specified (empty string), server will
@@ -298,6 +344,9 @@ type (
 		// │ │ │ │ │
 		// * * * * *
 		CronSchedule string
+
+		// Memo - Optional info that will be showed in list workflow.
+		Memo map[string]interface{}
 	}
 
 	// RetryPolicy defines the retry policy

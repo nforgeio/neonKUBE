@@ -1,3 +1,20 @@
+//-----------------------------------------------------------------------------
+// FILE:		common.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package endpoints
 
 import (
@@ -11,10 +28,10 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/loopieio/cadence-proxy/internal/messages"
 	"github.com/loopieio/cadence-proxy/internal/server"
-
-	"go.uber.org/zap"
 )
 
 const (
@@ -33,9 +50,9 @@ const (
 var (
 	mu sync.RWMutex
 
-	// RequestID is incremented (protected by a mutex) every time
+	// requestID is incremented (protected by a mutex) every time
 	// a new request message is sent
-	RequestID int64
+	requestID int64
 
 	// logger for all endpoints to utilize
 	logger *zap.Logger
@@ -52,6 +69,10 @@ var (
 	// entity cannot be found in the cadence server
 	entityNotExistError = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
 
+	// argumentNullError is the custom error that is thrown when trying to access a nil
+	// value
+	argumentNilError = errors.New("ArgumentNilError{Message: failed to access nil value.}")
+
 	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
 	replyAddress string
@@ -67,31 +88,37 @@ var (
 	// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes
 	// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
 	// <c>false</c>
-	debugPrelaunch = false
+	debugPrelaunch = true
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy
-	cadenceClientTimeout time.Duration
+	cadenceClientTimeout time.Duration = 30 * time.Second
 )
 
+//----------------------------------------------------------------------------
+// RequestID thread-safe methods
+
 // NextRequestID increments the package variable
-// RequestID by 1 and is protected by a mutex lock
+// requestID by 1 and is protected by a mutex lock
 func NextRequestID() int64 {
 	mu.Lock()
-	curr := RequestID
-	RequestID = RequestID + 1
+	curr := requestID
+	requestID = requestID + 1
 	mu.Unlock()
 
 	return curr
 }
 
 // GetRequestID gets the value of the global variable
-// RequestID and is protected by a mutex Read lock
+// requestID and is protected by a mutex Read lock
 func GetRequestID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return RequestID
+	return requestID
 }
+
+//----------------------------------------------------------------------------
+// ProxyMessage processing helpers
 
 func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 

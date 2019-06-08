@@ -1,3 +1,20 @@
+//-----------------------------------------------------------------------------
+// FILE:		proxy_reply.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
@@ -11,8 +28,6 @@ type (
 	// a proxy message request.  It implements the IProxyMessage interface
 	// and holds a reference to a ProxyMessage
 	ProxyReply struct {
-
-		// ProxyMessage is a reference to a ProxyMessage type
 		*ProxyMessage
 	}
 
@@ -21,10 +36,9 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyReply
 	IProxyReply interface {
+		IProxyMessage
 		GetError() *cadenceerrors.CadenceError
 		SetError(value *cadenceerrors.CadenceError)
-		GetRequestID() int64
-		SetRequestID(value int64)
 	}
 )
 
@@ -36,49 +50,9 @@ type (
 func NewProxyReply() *ProxyReply {
 	reply := new(ProxyReply)
 	reply.ProxyMessage = NewProxyMessage()
-	reply.Type = messagetypes.Unspecified
+	reply.SetType(messagetypes.Unspecified)
 
 	return reply
-}
-
-// -------------------------------------------------------------------------
-// IProxyMessage interface methods for implementing the IProxyMessage interface
-
-// Clone inherits docs from ProxyMessage.Clone()
-func (reply *ProxyReply) Clone() IProxyMessage {
-	proxyReply := NewProxyReply()
-	var messageClone IProxyMessage = proxyReply
-	reply.CopyTo(messageClone)
-
-	return messageClone
-}
-
-// CopyTo inherits docs from ProxyMessage.CopyTo()
-func (reply *ProxyReply) CopyTo(target IProxyMessage) {
-	reply.ProxyMessage.CopyTo(target)
-	if v, ok := target.(IProxyReply); ok {
-		v.SetError(reply.GetError())
-	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *ProxyReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyMessage.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *ProxyReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyMessage.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (reply *ProxyReply) GetRequestID() int64 {
-	return reply.ProxyMessage.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (reply *ProxyReply) SetRequestID(value int64) {
-	reply.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -106,4 +80,24 @@ func (reply *ProxyReply) GetError() *cadenceerrors.CadenceError {
 // JSON string and set at a ProxyReply's Error property
 func (reply *ProxyReply) SetError(value *cadenceerrors.CadenceError) {
 	reply.SetJSONProperty("Error", value)
+}
+
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Clone inherits docs from ProxyMessage.Clone()
+func (reply *ProxyReply) Clone() IProxyMessage {
+	proxyReply := NewProxyReply()
+	var messageClone IProxyMessage = proxyReply
+	reply.CopyTo(messageClone)
+
+	return messageClone
+}
+
+// CopyTo inherits docs from ProxyMessage.CopyTo()
+func (reply *ProxyReply) CopyTo(target IProxyMessage) {
+	reply.ProxyMessage.CopyTo(target)
+	if v, ok := target.(IProxyReply); ok {
+		v.SetError(reply.GetError())
+	}
 }

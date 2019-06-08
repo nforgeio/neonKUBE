@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeRequest)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowInvokeRequest)]
     internal class WorkflowInvokeRequest : WorkflowRequest
     {
         /// <summary>
@@ -42,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowInvokeRequest()
         {
-            Type = MessageTypes.WorkflowInvokeRequest;
+            Type = InternalMessageTypes.WorkflowInvokeRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowInvokeReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowInvokeReply;
 
         /// <summary>
         /// Identifies the workflow implementation to be started.

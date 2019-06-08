@@ -1,3 +1,20 @@
+//-----------------------------------------------------------------------------
+// FILE:		workflow_invoke_request.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
@@ -29,7 +46,7 @@ type (
 func NewWorkflowInvokeRequest() *WorkflowInvokeRequest {
 	request := new(WorkflowInvokeRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowInvokeRequest
+	request.SetType(messagetypes.WorkflowInvokeRequest)
 	request.SetReplyType(messagetypes.WorkflowInvokeReply)
 
 	return request
@@ -73,6 +90,114 @@ func (request *WorkflowInvokeRequest) SetArgs(value []byte) {
 	request.SetBytesProperty("Args", value)
 }
 
+// GetWorkflowID gets a WorkflowInvokeRequest's WorkflowID value
+// from its properties map. The original workflow ID.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowID
+func (request *WorkflowInvokeRequest) GetWorkflowID() *string {
+	return request.GetStringProperty("WorkflowId")
+}
+
+// SetWorkflowID sets an WorkflowInvokeRequest's WorkflowID value
+// in its properties map. The original workflow ID.
+//
+// param value *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowID
+func (request *WorkflowInvokeRequest) SetWorkflowID(value *string) {
+	request.SetStringProperty("WorkflowId", value)
+}
+
+// GetWorkflowType gets a WorkflowInvokeRequest's WorkflowType value
+// from its properties map. The original workflow Type.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowType
+func (request *WorkflowInvokeRequest) GetWorkflowType() *string {
+	return request.GetStringProperty("WorkflowType")
+}
+
+// SetWorkflowType sets an WorkflowInvokeRequest's WorkflowType value
+// in its properties map. The original workflow Type.
+//
+// param value *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's WorkflowType
+func (request *WorkflowInvokeRequest) SetWorkflowType(value *string) {
+	request.SetStringProperty("WorkflowType", value)
+}
+
+// GetRunID gets a WorkflowInvokeRequest's RunID value
+// from its properties map. The workflow run ID.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's RunID
+func (request *WorkflowInvokeRequest) GetRunID() *string {
+	return request.GetStringProperty("RunId")
+}
+
+// SetRunID sets a WorkflowInvokeRequest's RunID value
+// in its properties map. The workflow run ID.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowInvokeRequest) SetRunID(value *string) {
+	request.SetStringProperty("RunId", value)
+}
+
+// GetDomain gets a WorkflowInvokeRequest's Domain value
+// from its properties map. The domain where the workflow is executing.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's Domain
+func (request *WorkflowInvokeRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a WorkflowInvokeRequest's Domain value
+// in its properties map. The domain where the workflow is executing.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowInvokeRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
+// GetTaskList gets a WorkflowInvokeRequest's TaskList value
+// from its properties map. The tasklist where the workflow is executing.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowInvokeRequest's TaskList
+func (request *WorkflowInvokeRequest) GetTaskList() *string {
+	return request.GetStringProperty("TaskList")
+}
+
+// SetTaskList sets a WorkflowInvokeRequest's TaskList value
+// in its properties map. The tasklist where the workflow is executing.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowInvokeRequest) SetTaskList(value *string) {
+	request.SetStringProperty("TaskList", value)
+}
+
+// GetExecutionStartToCloseTimeout gets a WorkflowInvokeRequest's
+// ExecutionStartToCloseTimeout property in its properties map.
+// This is the The maximum duration the workflow is allowed to run.
+//
+// returns time.Duration -> the The maximum duration the workflow is allowed to run
+func (request *WorkflowInvokeRequest) GetExecutionStartToCloseTimeout() time.Duration {
+	return request.GetTimeSpanProperty("ExecutionStartToCloseTimeout")
+}
+
+// SetExecutionStartToCloseTimeout sets a WorkflowInvokeRequest's
+// ExecutionStartToCloseTimeout property in its properties map.
+// This is the The maximum duration the workflow is allowed to run.
+//
+// param value time.Duration -> the The maximum duration the workflow is allowed to run
+func (request *WorkflowInvokeRequest) SetExecutionStartToCloseTimeout(value time.Duration) {
+	request.SetTimeSpanProperty("ExecutionStartToCloseTimeout", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -91,61 +216,11 @@ func (request *WorkflowInvokeRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowInvokeRequest); ok {
 		v.SetName(request.GetName())
 		v.SetArgs(request.GetArgs())
+		v.SetDomain(request.GetDomain())
+		v.SetWorkflowID(request.GetWorkflowID())
+		v.SetWorkflowType(request.GetWorkflowType())
+		v.SetRunID(request.GetRunID())
+		v.SetTaskList(request.GetTaskList())
+		v.SetExecutionStartToCloseTimeout(request.GetExecutionStartToCloseTimeout())
 	}
-}
-
-// SetProxyMessage inherits docs from WorkflowRequest.SetProxyMessage()
-func (request *WorkflowInvokeRequest) SetProxyMessage(value *ProxyMessage) {
-	request.WorkflowRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from WorkflowRequest.GetProxyMessage()
-func (request *WorkflowInvokeRequest) GetProxyMessage() *ProxyMessage {
-	return request.WorkflowRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from WorkflowRequest.GetRequestID()
-func (request *WorkflowInvokeRequest) GetRequestID() int64 {
-	return request.WorkflowRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from WorkflowRequest.SetRequestID()
-func (request *WorkflowInvokeRequest) SetRequestID(value int64) {
-	request.WorkflowRequest.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from WorkflowRequest.GetReplyType()
-func (request *WorkflowInvokeRequest) GetReplyType() messagetypes.MessageType {
-	return request.WorkflowRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from WorkflowRequest.SetReplyType()
-func (request *WorkflowInvokeRequest) SetReplyType(value messagetypes.MessageType) {
-	request.WorkflowRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from WorkflowRequest.GetTimeout()
-func (request *WorkflowInvokeRequest) GetTimeout() time.Duration {
-	return request.WorkflowRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from WorkflowRequest.SetTimeout()
-func (request *WorkflowInvokeRequest) SetTimeout(value time.Duration) {
-	request.WorkflowRequest.SetTimeout(value)
-}
-
-// -------------------------------------------------------------------------
-// IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
-
-// GetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
-func (request *WorkflowInvokeRequest) GetWorkflowContextID() int64 {
-	return request.WorkflowRequest.GetWorkflowContextID()
-}
-
-// SetWorkflowContextID inherits docs from WorkflowRequest.SetWorkflowContextID()
-func (request *WorkflowInvokeRequest) SetWorkflowContextID(value int64) {
-	request.WorkflowRequest.SetWorkflowContextID(value)
 }

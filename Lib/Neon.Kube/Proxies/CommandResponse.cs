@@ -65,10 +65,7 @@ namespace Neon.Kube
         /// Returns <c>true</c> if the command exit code was zero, 
         /// <b>false</b> otherwise.
         /// </summary>
-        public bool Success
-        {
-            get { return ExitCode == 0; }
-        }
+        public bool Success => ExitCode == 0;
 
         /// <summary>
         /// Indicates whether the command failed because the proxy is faulted due to a previous error.

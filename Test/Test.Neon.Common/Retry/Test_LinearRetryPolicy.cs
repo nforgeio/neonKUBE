@@ -470,12 +470,12 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task Timeout()
         {
-            var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2), timeout: TimeSpan.FromSeconds(5));
+            var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 6, retryInterval: TimeSpan.FromSeconds(0.5), timeout: TimeSpan.FromSeconds(1.5));
             var times  = new List<DateTime>();
 
-            Assert.Equal(4, policy.MaxAttempts);
-            Assert.Equal(TimeSpan.FromSeconds(2), policy.RetryInterval);
-            Assert.Equal(TimeSpan.FromSeconds(5), policy.Timeout);
+            Assert.Equal(6, policy.MaxAttempts);
+            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.RetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
 
             await Assert.ThrowsAsync<TransientException>(
                 async () =>
@@ -490,7 +490,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.Equal(4, times.Count);
+            Assert.True(times.Count < 6);
         }
     }
 }

@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -32,9 +25,9 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Sends a signal to a running workflow.
+    /// <b>proxy --> client:</b> Queries a running workflow.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowQueryRequest)]
+    [InternalProxyMessage(InternalMessageTypes.WorkflowQueryRequest)]
     internal class WorkflowQueryRequest : WorkflowRequest
     {
         /// <summary>
@@ -42,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowQueryRequest()
         {
-            Type = MessageTypes.WorkflowQueryRequest;
+            Type = InternalMessageTypes.WorkflowQueryRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowQueryReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowQueryReply;
 
         /// <summary>
         /// Identifies the workflow by ID.
@@ -58,8 +51,8 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run to be cancelled.  The latest run
-        /// will be cancelled when this is <c>null</c> or empty.
+        /// Identifies the specific workflow run to be queried.  The latest run
+        /// will be queried when this is <c>null</c> or empty.
         /// </summary>
         public string RunId
         {

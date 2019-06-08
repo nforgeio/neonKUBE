@@ -18,19 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence
 {
@@ -42,15 +33,50 @@ namespace Neon.Cadence
         /// <summary>
         /// Internal constructor.
         /// </summary>
+        /// <param name="client">The parent client.</param>
+        /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
         /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
-        internal Worker(long workerId)
+        /// <param name="domain">The Cadence domain where the worker is registered.</param>
+        /// <param name="taskList">The Cadence tasklist.</param>
+        /// <param name="typeName">The registered workflow or activity type name.</param>
+        internal Worker(CadenceClient client, bool isWorkflow, long workerId, string domain, string taskList, string typeName)
         {
-            this.WorkerId = workerId;
+            this.Client     = client;
+            this.IsWorkflow = isWorkflow;
+            this.WorkerId   = workerId;
+            this.Domain     = domain;
+            this.Tasklist   = taskList;
+            this.TypeName   = typeName;
         }
+
+        /// <summary>
+        /// Returns the parent Cadence client.
+        /// </summary>
+        internal CadenceClient Client { get; private set; }
+
+        /// <summary>
+        /// Used to distinguish between workflow and activity workers.
+        /// </summary>
+        internal bool IsWorkflow { get; private set;}
 
         /// <summary>
         /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.
         /// </summary>
         internal long WorkerId { get; private set; }
+
+        /// <summary>
+        /// Returns the Cadence domain where the worker is registered.
+        /// </summary>
+        internal string Domain { get; private set; }
+
+        /// <summary>
+        /// Returns the Cadence tasklist.
+        /// </summary>
+        internal string Tasklist { get; private set; }
+
+        /// <summary>
+        /// Returns the registered workflow or activity type name.
+        /// </summary>
+        internal string TypeName { get; private set; }
     }
 }

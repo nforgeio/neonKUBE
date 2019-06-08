@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -33,10 +26,10 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>client --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
-    /// proxy should send a <see cref="TerminateReply"/> back to the library and
+    /// proxy should send a <see cref="TerminateReply"/> back to the client and
     /// then exit, terminating the process.
     /// </summary>
-    [ProxyMessage(MessageTypes.TerminateRequest)]
+    [InternalProxyMessage(InternalMessageTypes.TerminateRequest)]
     internal class TerminateRequest : ProxyRequest
     {
         /// <summary>
@@ -44,11 +37,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public TerminateRequest()
         {
-            Type = MessageTypes.TerminateRequest;
+            Type = InternalMessageTypes.TerminateRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.TerminateReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.TerminateReply;
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()

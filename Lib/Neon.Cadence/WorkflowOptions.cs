@@ -18,19 +18,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence
 {
@@ -72,23 +65,26 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This defaults to <see cref="WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly"/>.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
         /// </summary>
-        public WorkflowIDReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
         
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
         /// server will start new workflow execution if needed based on the retry policy.
         /// </summary>
-        public CadenceRetryPolicy RetryPolicy { get; set; } = null;
+        public CadenceRetryPolicy RetryPolicy { get; set; }
 
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  See <see cref="CronSchedule"/>
         /// for more information.
         /// </summary>
-        [JsonProperty(PropertyName = "CronSchedule", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
         public CronSchedule CronSchedule { get; set; }
+
+        /// <summary>
+        /// Optionally specifies workflow metadata as a dictionary of named byte array values.
+        /// </summary>
+        public Dictionary<string, byte[]> Memo { get; set; }
 
         /// <summary>
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
@@ -110,6 +106,7 @@ namespace Neon.Cadence
                 RetryPolicy                     = this.RetryPolicy.ToInternal(),
                 WorkflowIdReusePolicy           = (int)this.WorkflowIdReusePolicy,
                 CronSchedule                    = this.CronSchedule.ToInternal(),
+                Memo                            = this.Memo
             };
         }
     }

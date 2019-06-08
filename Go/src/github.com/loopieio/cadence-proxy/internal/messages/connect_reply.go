@@ -1,7 +1,23 @@
+//-----------------------------------------------------------------------------
+// FILE:		connect_reply.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -30,7 +46,7 @@ func NewConnectReply() *ConnectReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from IProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (reply *ConnectReply) Clone() IProxyMessage {
 	connectReply := NewConnectReply()
 	var messageClone IProxyMessage = connectReply
@@ -39,40 +55,7 @@ func (reply *ConnectReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from IProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *ConnectReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
-}
-
-// SetProxyMessage inherits docs from IProxyMessage.SetProxyMessage()
-func (reply *ConnectReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from IProxyMessage.GetProxyMessage()
-func (reply *ConnectReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from IProxyMessage.GetRequestID()
-func (reply *ConnectReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from IProxyMessage.SetRequestID()
-func (reply *ConnectReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from ProxyReply.GetError()
-func (reply *ConnectReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
-}
-
-// SetError inherits docs from ProxyReply.SetError()
-func (reply *ConnectReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
 }

@@ -1,8 +1,23 @@
+//-----------------------------------------------------------------------------
+// FILE:		proxy_request.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -25,12 +40,9 @@ type (
 	// to use any methods defined.  The primary use of this interface is to
 	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
+		IProxyMessage
 		GetReplyType() messagetypes.MessageType
 		SetReplyType(value messagetypes.MessageType)
-		GetRequestID() int64
-		SetRequestID(value int64)
-		GetTimeout() time.Duration
-		SetTimeout(value time.Duration)
 	}
 )
 
@@ -41,48 +53,10 @@ type (
 func NewProxyRequest() *ProxyRequest {
 	request := new(ProxyRequest)
 	request.ProxyMessage = NewProxyMessage()
-	request.Type = messagetypes.Unspecified
+	request.SetType(messagetypes.Unspecified)
 	request.SetReplyType(messagetypes.Unspecified)
+
 	return request
-}
-
-// -------------------------------------------------------------------------
-// IProxyMessage interface methods for implementing the IProxyMessage interface
-
-// Clone inherits docs from ProxyMessage.Clone()
-func (request *ProxyRequest) Clone() IProxyMessage {
-	proxyRequest := NewProxyRequest()
-	var messageClone IProxyMessage = proxyRequest
-	request.CopyTo(messageClone)
-	return messageClone
-}
-
-// CopyTo inherits docs from ProxyMessage.CopyTo()
-func (request *ProxyRequest) CopyTo(target IProxyMessage) {
-	request.ProxyMessage.CopyTo(target)
-	if v, ok := target.(IProxyRequest); ok {
-		v.SetTimeout(request.GetTimeout())
-	}
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (request *ProxyRequest) SetProxyMessage(value *ProxyMessage) {
-	request.ProxyMessage.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (request *ProxyRequest) GetProxyMessage() *ProxyMessage {
-	return request.ProxyMessage.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (request *ProxyRequest) GetRequestID() int64 {
-	return request.ProxyMessage.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (request *ProxyRequest) SetRequestID(value int64) {
-	request.ProxyMessage.SetRequestID(value)
 }
 
 // -------------------------------------------------------------------------
@@ -106,19 +80,22 @@ func (request *ProxyRequest) SetReplyType(value messagetypes.MessageType) {
 	request.ReplyType = value
 }
 
-// GetTimeout gets the Timeout property from a ProxyRequest's properties map
-// Timeout is a timespan property and indicates the timeout for a specific request
-//
-// returns time.Duration -> the duration for a ProxyRequest's timeout from its properties map
-func (request *ProxyRequest) GetTimeout() time.Duration {
-	return request.GetTimeSpanProperty("Timeout")
+// -------------------------------------------------------------------------
+// IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Clone inherits docs from ProxyMessage.Clone()
+func (request *ProxyRequest) Clone() IProxyMessage {
+	proxyRequest := NewProxyRequest()
+	var messageClone IProxyMessage = proxyRequest
+	request.CopyTo(messageClone)
+
+	return messageClone
 }
 
-// SetTimeout sets the Timeout property in a ProxyRequest's properties map
-// Timeout is a timespan property and indicates the timeout for a specific request
-//
-// param value time.Duration -> the timeout duration to be set in a
-// ProxyRequest's properties map
-func (request *ProxyRequest) SetTimeout(value time.Duration) {
-	request.SetTimeSpanProperty("Timeout", value)
+// CopyTo inherits docs from ProxyMessage.CopyTo()
+func (request *ProxyRequest) CopyTo(target IProxyMessage) {
+	request.ProxyMessage.CopyTo(target)
+	if v, ok := target.(IProxyRequest); ok {
+		v.SetReplyType(request.GetReplyType())
+	}
 }

@@ -1,3 +1,20 @@
+//-----------------------------------------------------------------------------
+// FILE:		proxy_message.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
@@ -53,6 +70,8 @@ type (
 		GetProxyMessage() *ProxyMessage
 		GetRequestID() int64
 		SetRequestID(int64)
+		GetType() messagetypes.MessageType
+		SetType(value messagetypes.MessageType)
 	}
 )
 
@@ -65,6 +84,7 @@ func NewProxyMessage() *ProxyMessage {
 	message := new(ProxyMessage)
 	message.Properties = make(map[string]*string)
 	message.Attachments = make([][]byte, 0)
+	message.SetType(messagetypes.Unspecified)
 
 	return message
 }
@@ -148,6 +168,10 @@ func handleUnspecifiedMessageType(typeCode []string) IProxyMessage {
 			return NewWorkflowRequest()
 		case "WorkflowReply":
 			return NewWorkflowReply()
+		case "ActivityReply":
+			return NewActivityReply()
+		case "ActivityRequest":
+			return NewActivityRequest()
 		default:
 			return NewProxyMessage()
 		}
@@ -316,6 +340,20 @@ func (proxyMessage *ProxyMessage) SetRequestID(value int64) {
 	proxyMessage.SetLongProperty("RequestId", value)
 }
 
+// GetType gets the message type
+//
+// returns messagetypes.MessageType -> the type of message
+func (proxyMessage *ProxyMessage) GetType() messagetypes.MessageType {
+	return proxyMessage.Type
+}
+
+// SetType sets the message type
+//
+// param value messagetypes.MessageType -> the message type to set
+func (proxyMessage *ProxyMessage) SetType(value messagetypes.MessageType) {
+	proxyMessage.Type = value
+}
+
 // -------------------------------------------------------------------------
 // Helper methods derived classes can use for retreiving typed message properties
 
@@ -419,10 +457,10 @@ func (proxyMessage *ProxyMessage) GetTimeSpanProperty(key string, def ...time.Du
 		if err != nil {
 			panic(err)
 		}
-		return time.Duration(ticks*100) * time.Nanosecond
+		return time.Duration(ticks * 100)
 	}
 
-	d := time.Duration(0) * time.Nanosecond
+	d := time.Duration(0)
 	if len(def) > 0 {
 		d = def[0]
 	}

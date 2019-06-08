@@ -50,7 +50,7 @@ namespace Neon.Common
     /// </para>
     /// <para>
     /// This works fine for lots of applications, but with a framework like Neon, it is
-    /// useful to have a global service provider that allows the library to register
+    /// useful to have a global service provider that allows the client to register
     /// default services for applications that are not coded to be aware of dependency
     /// injection.  The problem with the Microsoft DependencyInjection design is that
     /// additional services registered after a <c>BuildServiceProvider()</c> call will 

@@ -19,19 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence
 {
@@ -50,12 +41,12 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
 
-            this.Query = queryName;
+            this.Name = queryName;
         }
 
         /// <summary>
         /// Returns the query name. 
         /// </summary>
-        public string Query { get; private set; }
+        public string Name { get; private set; }
     }
 }

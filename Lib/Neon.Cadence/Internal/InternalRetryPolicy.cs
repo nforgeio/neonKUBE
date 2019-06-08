@@ -19,25 +19,20 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
 using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <para>
-    /// Used to serialize standard Neon <see cref="IRetryPolicy"/> instances into a
-    /// form compatible with the Cadence GOLANG client.  This class maps closely to
-    /// the Cadence GOLANG client structure:
+    /// <b>INTERNAL USE ONLY:</b> Used to serialize standard Neon <see cref="IRetryPolicy"/> 
+    /// instances into a form compatible with the Cadence GOLANG client.  This class maps
+    /// to the Cadence GOLANG client structure:
     /// </para>
     /// <para>
     /// https://godoc.org/go.uber.org/cadence/internal#RetryPolicy

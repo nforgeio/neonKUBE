@@ -263,7 +263,14 @@ cadence-proxy/
         messages/
             types/
                 message_types.go
-            all message types
+            proxy_message.go
+            proxy_reply.go
+            proxy_request.go
+            workflow_request.go
+            workflow_reply.go
+            *
+            * (all inheriting message types)
+            *
             message_factory.go
         server/
             instance.go

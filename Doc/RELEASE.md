@@ -26,19 +26,17 @@
 4. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
    required Kubernetes version as required.
 
-5. Open the **Properties** each of the library projects and update the **Release notes**.
-
-6. Rebuild the RELEASE version via:
+5. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
+6. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
-8. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+7. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-9. Push the `release-VERSION` branch to GitHub.
+8. Push the `release-VERSION` branch to GitHub.
 
-10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
@@ -63,9 +61,11 @@
 
     * Be sure to set the branch to the new release branch.
 
-5. Backup the repo and upload it to S3 and local backup drive.  Run this in a command window:
+5. Archive the source code:
 
-  `neon-archive`
+  1. Close all Visual Studio windows.
+  2. Run `neon-archive.cmd` in a command window.
+  3. Archive `C:\neonKUBE.zip` to AWS S3 and the local disk.
 
  # Release Version Conventions
 

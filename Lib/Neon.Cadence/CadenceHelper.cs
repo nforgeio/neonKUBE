@@ -18,34 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
-
+using System.Globalization;
+using Neon.Cadence;
 using Neon.Cadence.Internal;
+using Neon.Common;
 
 namespace Neon.Cadence
 {
@@ -102,6 +79,21 @@ namespace Neon.Cadence
             timespan = Normalize(timespan);
 
             return timespan.Ticks * 100;
+        }
+
+        /// <summary>
+        /// Parses a Cadence timestamp string and converts it to a UTC
+        /// <see cref="DateTime"/>.
+        /// </summary>
+        /// <param name="timestamp">The timestamp string.</param>
+        /// <returns>The parsed <see cref="DateTime"/>.</returns>
+        public static DateTime ParseCadenceTimestamp(string timestamp)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp));
+
+            var dateTimeOffset = DateTimeOffset.ParseExact(timestamp, "yyyy-MM-ddTHH:mm:ss.ffffffzzz", CultureInfo.InvariantCulture);
+
+            return new DateTime(dateTimeOffset.ToUniversalTime().Ticks, DateTimeKind.Utc);
         }
     }
 }

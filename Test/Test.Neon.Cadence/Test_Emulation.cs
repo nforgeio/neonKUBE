@@ -54,8 +54,7 @@ namespace TestCadence
         /// </summary>
         public class HelloWorkflow : Workflow
         {
-            public HelloWorkflow(WorkerConstructorArgs args)
-                : base(args)
+            public HelloWorkflow()
             {
             }
 
@@ -81,7 +80,7 @@ namespace TestCadence
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
-                DebugEmulateProxy      = true,
+                DebugEmulateProxy      = false,
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
                 //DebugDisableHeartbeats = true,
                 //DebugIgnoreTimeouts    = true
@@ -147,10 +146,10 @@ namespace TestCadence
                 message = new InitializeRequest();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.LibraryAddress);
@@ -166,10 +165,10 @@ namespace TestCadence
                 Assert.Equal(666, message.LibraryPort);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
@@ -331,10 +330,10 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // UpdateDomain:
 
-            var updateDomainRequest = new UpdateDomainRequest();
+            var updateDomainRequest = new DomainUpdateArgs();
 
-            updateDomainRequest.Configuration.EmitMetrics   = true;
-            updateDomainRequest.Configuration.RetentionDays = 77;
+            updateDomainRequest.Options.EmitMetrics   = true;
+            updateDomainRequest.Options.RetentionDays = 77;
             updateDomainRequest.DomainInfo.OwnerEmail       = "foo@bar.com";
             updateDomainRequest.DomainInfo.Description      = "new description";
 

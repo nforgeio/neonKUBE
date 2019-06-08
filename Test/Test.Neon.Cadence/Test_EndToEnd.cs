@@ -53,7 +53,7 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DebugPrelaunched       = false,
+                DebugPrelaunched       = true,
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
@@ -109,10 +109,10 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // UpdateDomain:
 
-            var updateDomainRequest = new UpdateDomainRequest();
+            var updateDomainRequest = new DomainUpdateArgs();
 
-            updateDomainRequest.Configuration.EmitMetrics   = true;
-            updateDomainRequest.Configuration.RetentionDays = 77;
+            updateDomainRequest.Options.EmitMetrics   = true;
+            updateDomainRequest.Options.RetentionDays = 77;
             updateDomainRequest.DomainInfo.OwnerEmail       = "foo@bar.com";
             updateDomainRequest.DomainInfo.Description      = "new description";
 

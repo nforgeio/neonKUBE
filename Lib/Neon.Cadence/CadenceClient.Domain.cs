@@ -18,34 +18,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
-
+using Neon.Cadence;
 using Neon.Cadence.Internal;
+using Neon.Common;
 
 namespace Neon.Cadence
 {
@@ -55,7 +33,7 @@ namespace Neon.Cadence
         // Cadence domain related operations.
 
         /// <summary>
-        /// Registers a Cadence domain using the <see cref="RegisterDomainRequest"/> information passed.
+        /// Registers a Cadence domain using the <see cref="InternalRegisterDomainRequest"/> information passed.
         /// </summary>
         /// <param name="request">The domain properties.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -63,7 +41,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        private async Task RegisterDomainAsync(RegisterDomainRequest request)
+        private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
             var domainRegisterRequest =
                 new DomainRegisterRequest()
@@ -97,7 +75,7 @@ namespace Neon.Cadence
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7)
         {
             await RegisterDomainAsync(
-                new RegisterDomainRequest()
+                new InternalRegisterDomainRequest()
                 {
                     Name          = name,
                     Description   = description,
@@ -115,7 +93,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        public async Task<DescribeDomainResponse> DescribeDomainAsync(string name)
+        public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
             var domainDescribeRequest =
                 new DomainDescribeRequest()
@@ -127,7 +105,7 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            return new DescribeDomainResponse()
+            return new DomainDescription()
             {
                 DomainInfo = new DomainInfo()
                 {
@@ -137,7 +115,7 @@ namespace Neon.Cadence
                     Status      = reply.DomainInfoStatus
                 },
 
-                Configuration = new DomainConfiguation()
+                Configuration = new DomainOptions()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
@@ -151,10 +129,10 @@ namespace Neon.Cadence
         /// <param name="name">Identifies the target domain.</param>
         /// <param name="request">The updated domain information.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
+        public async Task UpdateDomainAsync(string name, DomainUpdateArgs request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
-            Covenant.Requires<ArgumentNullException>(request.Configuration != null);
+            Covenant.Requires<ArgumentNullException>(request.Options != null);
             Covenant.Requires<ArgumentNullException>(request.DomainInfo != null);
 
             var domainUpdateRequest 
@@ -163,8 +141,8 @@ namespace Neon.Cadence
                     Name                       = name,
                     UpdatedInfoDescription     = request.DomainInfo.Description,
                     UpdatedInfoOwnerEmail      = request.DomainInfo.OwnerEmail,
-                    ConfigurationEmitMetrics   = request.Configuration.EmitMetrics,
-                    ConfigurationRetentionDays = request.Configuration.RetentionDays
+                    ConfigurationEmitMetrics   = request.Options.EmitMetrics,
+                    ConfigurationRetentionDays = request.Options.RetentionDays
                 };
 
             var reply = await CallProxyAsync(domainUpdateRequest);

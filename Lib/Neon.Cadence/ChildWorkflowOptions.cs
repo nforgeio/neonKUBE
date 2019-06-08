@@ -18,18 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 
 namespace Neon.Cadence.Internal
 {
@@ -77,9 +69,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ChildWorkflowPolicy.ChildWorkflowPolicyAbandon"/>.
+        /// This defaults to <see cref="ChildTerminationPolicy.Abandon"/>.
         /// </summary>
-        public ChildWorkflowPolicy ChildPolicy { get; set; } = ChildWorkflowPolicy.ChildWorkflowPolicyAbandon;
+        public ChildTerminationPolicy ChildTerminationPolicy { get; set; } = ChildTerminationPolicy.Abandon;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any
@@ -89,9 +81,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This defaults to <see cref="WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly"/>.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
         /// </summary>
-        public int WorkflowIdReusePolicy { get; set; } = (int)WorkflowIDReusePolicy.WorkflowIDReusePolicyAllowDuplicateFailedOnly;
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
 
         /// <summary>
         /// Optionally specifies a retry policy.
@@ -103,6 +95,11 @@ namespace Neon.Cadence.Internal
         /// for more information.
         /// </summary>
         public CronSchedule CronSchedule { get; set; }
+
+        /// <summary>
+        /// Optionally specifies workflow metadata as a dictionary of named byte array values.
+        /// </summary>
+        public Dictionary<string, byte[]> Memo { get; set; }
 
         /// <summary>
         /// Converts this instance into the corresponding internal object.
@@ -117,7 +114,7 @@ namespace Neon.Cadence.Internal
                 TaskList                     = this.TaskList,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
-                ChildPolicy                  = (int)this.ChildPolicy,
+                ChildPolicy                  = (int)this.ChildTerminationPolicy,
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy.ToInternal(),

@@ -1,3 +1,20 @@
+//-----------------------------------------------------------------------------
+// FILE:		message_types.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messagetypes
 
 // MessageType is an enumerated mapping
@@ -12,121 +29,121 @@ const (
 	Unspecified MessageType = 0
 
 	//---------------------------------------------------------------------
-	// Global messages
+	// Client messages
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Informs the proxy of the network endpoint where the
-	/// library is listening for proxy messages.  The proxy should respond with an
+	/// <b>client --> proxy:</b> Informs the proxy of the network endpoint where the
+	/// client is listening for proxy messages.  The proxy should respond with an
 	/// <see cref="InitializeReply"/> when it's ready to begin receiving inbound
 	/// proxy messages.
 	/// </summary>
 	InitializeRequest MessageType = 1
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="InitializeRequest"/> message
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="InitializeRequest"/> message
 	/// to indicate that the proxy ready to begin receiving inbound proxy messages.
 	/// </summary>
 	InitializeReply MessageType = 2
 
 	/// <summary>
-	/// library --> proxy: Requests that the proxy establish a connection to a Cadence
+	/// client --> proxy: Requests that the proxy establish a connection to a Cadence
 	/// cluster.  This maps to a <c>NewClient()</c> in the proxy.
 	/// </summary>
 	ConnectRequest MessageType = 3
 
 	/// <summary>
-	/// proxy --> library: Sent in response to a <see cref="ConnectRequest"/> message.
+	/// proxy --> client: Sent in response to a <see cref="ConnectRequest"/> message.
 	/// </summary>
 	ConnectReply MessageType = 4
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
-	/// proxy should send a <see cref="TerminateReply"/> back to the library and
+	/// <b>client --> proxy:</b> Signals the proxy that it should terminate gracefully.  The
+	/// proxy should send a <see cref="TerminateReply"/> back to the client and
 	/// then exit terminating the process.
 	/// </summary>
 	TerminateRequest MessageType = 5
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="TerminateRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="TerminateRequest"/> message.
 	/// </summary>
 	TerminateReply MessageType = 6
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Requests that the proxy register a Cadence domain.
+	/// <b>client --> proxy:</b> Requests that the proxy register a Cadence domain.
 	/// </summary>
 	DomainRegisterRequest MessageType = 7
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="DomainRegisterRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainRegisterRequest"/> message.
 	/// </summary>
 	DomainRegisterReply MessageType = 8
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Requests that the proxy return the details for a Cadence domain.
+	/// <b>client --> proxy:</b> Requests that the proxy return the details for a Cadence domain.
 	/// </summary>
 	DomainDescribeRequest MessageType = 9
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="DomainDescribeRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDescribeRequest"/> message.
 	/// </summary>
 	DomainDescribeReply MessageType = 10
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Requests that the proxy update a Cadence domain.
+	/// <b>client --> proxy:</b> Requests that the proxy update a Cadence domain.
 	/// </summary>
 	DomainUpdateRequest MessageType = 11
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="DomainUpdateRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainUpdateRequest"/> message.
 	/// </summary>
 	DomainUpdateReply MessageType = 12
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent periodically (every second) by the library to the
+	/// <b>client --> proxy:</b> Sent periodically (every second) by the client to the
 	/// proxy to verify that it is still healthy.
 	/// </summary>
 	HeartbeatRequest MessageType = 13
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="HeartbeatRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="HeartbeatRequest"/> message.
 	/// </summary>
 	HeartbeatReply MessageType = 14
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent to request that a pending operation be cancelled.
+	/// <b>client --> proxy:</b> Sent to request that a pending operation be cancelled.
 	/// </summary>
 	CancelRequest MessageType = 15
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="CancelRequest"/> message
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="CancelRequest"/> message
 	/// indicating that the operation was canceled or that it already completed or no longer
 	/// exists.
 	/// </summary>
 	CancelReply MessageType = 16
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Indicates that the application is capable of handling workflows
+	/// <b>client --> proxy:</b> Indicates that the application is capable of handling workflows
 	/// and activities within a specific Cadence domain and task lisk.
 	/// </summary>
 	NewWorkerRequest MessageType = 17
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="NewWorkerRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="NewWorkerRequest"/> message.
 	/// </summary>
 	NewWorkerReply MessageType = 18
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Stops a Cadence worker.
+	/// <b>client --> proxy:</b> Stops a Cadence worker.
 	/// </summary>
 	StopWorkerRequest MessageType = 19
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="StopWorkerRequest"/> message
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="StopWorkerRequest"/> message
 	/// </summary>
 	StopWorkerReply MessageType = 20
 
 	/// <summary>
-	/// Sent from either the library or proxy mainly for measuring the raw throughput of
+	/// Sent from either the client or proxy mainly for measuring the raw throughput of
 	/// client/proxy transactions.  The receiver simply responds immediately with a
 	/// <see cref="PingReply"/>.
 	/// </summary>
@@ -144,223 +161,183 @@ const (
 	// identifying the target workflow client.
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Registers a workflow handler.
+	/// <b>client --> proxy:</b> Registers a workflow handler.
 	/// </summary>
 	WorkflowRegisterRequest MessageType = 100
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRegisterRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowRegisterRequest"/> message.
 	/// </summary>
 	WorkflowRegisterReply MessageType = 101
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Starts a workflow.
+	/// <b>client --> proxy:</b> Starts a workflow.
 	/// </summary>
 	WorkflowExecuteRequest MessageType = 102
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowExecuteRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowExecuteRequest"/> message.
 	/// </summary>
 	WorkflowExecuteReply MessageType = 103
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Signals a workflow.
+	/// <b>client --> proxy:</b> Signals a running workflow.
 	/// </summary>
 	WorkflowSignalRequest MessageType = 104
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWorkflowRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalRequest"/> message.
 	/// </summary>
 	WorkflowSignalReply MessageType = 105
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Signals a workflow starting it if necessary.
+	///<b>client --> proxy:</b> Signals a workflow starting it first if necessary.
 	/// </summary>
 	WorkflowSignalWithStartRequest MessageType = 106
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalWithStartRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalWithStartRequest"/> message.
 	/// </summary>
 	WorkflowSignalWithStartReply MessageType = 107
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Cancels a workflow.
+	/// <b>client --> proxy:</b> Cancels a workflow.
 	/// </summary>
 	WorkflowCancelRequest MessageType = 108
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCancelRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowCancelRequest"/> message.
 	/// </summary>
 	WorkflowCancelReply MessageType = 109
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Terminates a workflow.
+	/// <b>client --> proxy:</b> Terminates a workflow.
 	/// </summary>
 	WorkflowTerminateRequest MessageType = 110
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowTerminateRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowTerminateRequest"/> message.
 	/// </summary>
 	WorkflowTerminateReply MessageType = 111
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Requests the a workflow's history.
+	/// <b>client --> proxy:</b> Requests a workflow's history.
 	/// </summary>
 	WorkflowGetHistoryRequest MessageType = 112
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowGetHistoryRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetHistoryRequest"/> message.
 	/// </summary>
 	WorkflowGetWorkflowHistoryReply MessageType = 113
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Indicates that an activity has completed.
+	/// <b>client --> proxy:</b> Requests the list of closed workflows.
 	/// </summary>
-	WorkflowCompleteActivityRequest MessageType = 114
+	WorkflowListClosedRequest MessageType = 114
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCompleteActivityRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowListClosedRequest"/> message.
 	/// </summary>
-	WorkflowCompleteActivityReply MessageType = 115
+	WorkflowListClosedReply MessageType = 115
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Indicates that the activity with a specified ID as completed has completed.
+	/// <b>client --> proxy:</b> Requests the list of open workflows.
 	/// </summary>
-	WorkflowCompleteActivityByIdRequest MessageType = 116
+	WorkflowListOpenExecutionsRequest MessageType = 116
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowCompleteActivityByIdRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowListOpenExecutionsRequest"/> message.
 	/// </summary>
-	WorkflowCompleteActivityByIdReply MessageType = 117
+	WorkflowListOpenExecutionsReply MessageType = 117
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Records an activity heartbeat.
+	/// <b>client --> proxy:</b> Queries a workflow's last execution.
 	/// </summary>
-	WorkflowRecordActivityHeartbeatRequest MessageType = 118
+	WorkflowQueryRequest MessageType = 118
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowQueryRequest"/> message.
 	/// </summary>
-	WorkflowRecordActivityHeartbeatReply MessageType = 119
+	WorkflowQueryReply MessageType = 119
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Records a heartbeat for an activity specified by ID.
+	/// <b>client --> proxy:</b> Returns information about a worflow execution.
 	/// </summary>
-	WorkflowRecordActivityHeartbeatByIdRequest MessageType = 120
+	WorkflowDescribeExecutionRequest MessageType = 120
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowRecordActivityHeartbeatByIdRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDescribeExecutionRequest"/> message.
 	/// </summary>
-	WorkflowRecordActivityHeartbeatByIdReply MessageType = 121
-
-	/// <summary>
-	/// <b>library --> proxy:</b> Requests the list of closed workflows.
-	/// </summary>
-	WorkflowListClosedRequest MessageType = 122
-
-	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListClosedRequest"/> message.
-	/// </summary>
-	WorkflowListClosedReply MessageType = 123
-
-	/// <summary>
-	/// <b>library --> proxy:</b> Requests the list of open workflows.
-	/// </summary>
-	WorkflowListOpenWorkflowRequest MessageType = 124
-
-	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowListOpenWorkflowRequest"/> message.
-	/// </summary>
-	WorkflowListOpenReply MessageType = 125
-
-	/// <summary>
-	/// <b>library --> proxy:</b> Queries a workflow's last execution.
-	/// </summary>
-	WorkflowQueryRequest MessageType = 126
-
-	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowQueryRequest"/> message.
-	/// </summary>
-	WorkflowQueryReply MessageType = 127
-
-	/// <summary>
-	/// <b>library --> proxy:</b> Returns information about a worflow execution.
-	/// </summary>
-	WorkflowDescribeWorkflowExecutionRequest MessageType = 128
-
-	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowDescribeWorkflowExecutionRequest"/> message.
-	/// </summary>
-	WorkflowDescribexecutionReply MessageType = 129
+	WorkflowDescribeExecutionReply MessageType = 121
 
 	/// <summary>
 	/// <b>RESERVED:</b> This is not currently implemented.
 	/// </summary>
-	WorkflowDescribeTaskListRequest MessageType = 130
+	WorkflowDescribeTaskListRequest MessageType = 122
 
 	/// <summary>
 	/// <b>RESERVED:</b> This is not currently implemented.
 	/// </summary>
-	WorkflowDescribeTaskListReply MessageType = 131
+	WorkflowDescribeTaskListReply MessageType = 123
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Commands the client library and associated .NET application
+	/// <b>proxy --> client:</b> Commands the client client and associated .NET application
 	/// to process a workflow instance.
 	/// </summary>
-	WorkflowInvokeRequest MessageType = 132
+	WorkflowInvokeRequest MessageType = 124
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
 	/// </summary>
-	WorkflowInvokeReply MessageType = 133
+	WorkflowInvokeReply MessageType = 125
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Initiates execution of a child workflow.
+	/// <b>client --> proxy:</b> Initiates execution of a child workflow.
 	/// </summary>
-	WorkflowExecuteChildRequest MessageType = 134
+	WorkflowExecuteChildRequest MessageType = 126
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowInvokeRequest"/> message.
+	/// <b>proxy --> cl;ient:</b> Sent in response to a <see cref="WorkflowExecuteChildRequest"/> message.
 	/// </summary>
-	WorkflowExecuteChildReply MessageType = 135
+	WorkflowExecuteChildReply MessageType = 127
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Indicates that .NET application wishes to consume signals from
+	/// <b>client --> proxy:</b> Indicates that .NET application wishes to consume signals from
 	/// a named channel.  Any signals received by the proxy will be forwarded to the
-	/// library via <see cref="WorkflowSignalReceivedRequest"/> messages.
+	/// client via <see cref="WorkflowSignalReceivedRequest"/> messages.
 	/// </summary>
-	WorkflowSignalSubscribeRequest MessageType = 136
+	WorkflowSignalSubscribeRequest MessageType = 128
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="WorkflowSignalSubscribeRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalSubscribeRequest"/> message.
 	/// </summary>
-	WorkflowSignalSubscribeReply MessageType = 137
+	WorkflowSignalSubscribeReply MessageType = 129
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Send when a signal is received by the proxy on a subscribed channel.
+	/// <b>proxy --> client:</b> Send when a signal is received by the proxy on a subscribed channel.
 	/// </summary>
-	WorkflowSignalReceivedRequest MessageType = 138
+	WorkflowSignalReceivedRequest MessageType = 130
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
 	/// </summary>
-	WorkflowSignalReceivedReply MessageType = 139
+	WorkflowSignalReceivedReply MessageType = 131
 
 	/// <summary>
 	/// <b>proxy --> client:</b> Implements the standard Cadence <i>side effect</i> behavior.
 	/// The client will transmit a <see cref="WorkflowMutableInvokeRequest"/> message to the
 	/// proxy with a unique <c>MutableId</c>.  The proxy will call the GOLANG Cadence client's
-	/// <c>workflow.SideEffect()</c> function, passing it a function that when called,
+	/// <c>workflow.SideEffect()</c> function passing it a function that when called
 	/// sends a <see cref="WorkflowMutableInvokeRequest"/> back to the client including the
 	/// <c>MutableId</c> and then waits for a <see cref="WorkflowMutableInvokeReply"/>
 	/// and then returns the result from this reply back to Cadence.
 	/// </summary>
-	WorkflowMutableRequest MessageType = 140
+	WorkflowMutableRequest MessageType = 132
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
 	/// </summary>
-	WorkflowMutableReply MessageType = 141
+	WorkflowMutableReply MessageType = 133
 
 	/// <summary>
 	/// <b>proxy --> client:</b> Sent by the proxy to the client the first time a mutable
@@ -368,89 +345,245 @@ const (
 	/// side effect value to be persisted in the workflow history and returned back to
 	/// the the .NET workflow application.
 	/// </summary>
-	WorkflowMutableInvokeRequest MessageType = 142
+	WorkflowMutableInvokeRequest MessageType = 134
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
 	/// </summary>
-	WorkflowMutableInvokeReply MessageType = 143
+	WorkflowMutableInvokeReply MessageType = 135
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
 	/// to cache the history of a sticky workflow on a workflow worker as a performance
-	/// optimization.  When this is exceeded for a workflow, its full history will
+	/// optimization.  When this is exceeded for a workflow its full history will
 	/// need to be retrieved from the Cadence cluster the next time the workflow
 	/// instance is assigned to a worker.
 	/// </summary>
-	WorkflowSetCacheSizeRequest MessageType = 23
+	WorkflowSetCacheSizeRequest MessageType = 136
 
 	/// <summary>
 	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetCacheSizeRequest"/>.
 	/// </summary>
-	WorkflowSetCacheSizeReply MessageType = 24
+	WorkflowSetCacheSizeReply MessageType = 137
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Requests the workflow result encoded as a byte array waiting
+	/// for the workflow to complete if it is still running.  Note that this request will fail
+	/// if the workflow did not run to completion.
+	/// </summary>
+	WorkflowGetResultRequest MessageType = 138
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetResultRequest"/>.
+	/// </summary>
+	WorkflowGetResultReply MessageType = 139
+
+	/// <summary>
+	///  <b>client --> proxy:</b> Determines whether the last execution of the workflow has
+	///  a completion result.  This can be used by CRON workflows to determine whether the
+	///  last run returned a result.
+	/// </summary>
+	WorkflowHasLastResultRequest MessageType = 140
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowHasLastResultRequest"/>.
+	/// </summary>
+	WorkflowHasLastResultReply MessageType = 141
+
+	/// <summary>
+	///  <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
+	///  This can be used by CRON workflows to retrieve state from the last workflow run.
+	/// </summary>
+	WorkflowGetLastResultRequest MessageType = 142
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetLastResultRequest"/>.
+	/// </summary>
+	WorkflowGetLastResultReply MessageType = 143
+
+	/// <summary>
+	///  <b>client --> proxy:</b> Commands the proxy to replace the current workflow context
+	///  with a new disconnected context.
+	/// </summary>
+	WorkflowDisconnectContextRequest MessageType = 144
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowDisconnectContextRequest"/>.
+	/// </summary>
+	WorkflowDisconnectContextReply MessageType = 145
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Request the current workflow time (UTC).
+	/// </summary>
+	WorkflowGetTimeRequest MessageType = 146
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetTimeRequest"/>.
+	/// </summary>
+	WorkflowGetTimeReply MessageType = 147
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent to have the workflow sleep for a period of time.
+	/// </summary>
+	WorkflowSleepRequest MessageType = 148
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSleepRequest"/>.
+	/// </summary>
+	WorkflowSleepReply MessageType = 149
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Waits for a workflow that has already been started
+	/// by a <see cref="WorkflowExecuteChildRequest"/> to finish.
+	/// </summary>
+	WorkflowWaitForChildRequest MessageType = 150
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowWaitForChildRequest"/> message
+	/// after the child is finish.
+	/// </summary>
+	WorkflowWaitForChildReply MessageType = 151
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sends a signal to a child workflow.
+	/// </summary>
+	WorkflowSignalChildRequest MessageType = 152
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalChildRequest"/> message.
+	/// </summary>
+	WorkflowSignalChildReply MessageType = 153
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Cancels a child workflow.
+	/// </summary>
+	WorkflowCancelChildRequest MessageType = 154
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowCancelChildRequest"/> message.
+	/// </summary>
+	WorkflowCancelChildReply MessageType = 155
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Registers a signal handler by name.
+	/// </summary>
+	WorkflowSetSignalHandlerRequest MessageType = 156
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetSignalHandlerRequest"/> message.
+	/// </summary>
+	WorkflowSetSignalHandlerReply MessageType = 157
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Registers a query handler by name.
+	/// </summary>
+	WorkflowSetQueryHandlerRequest MessageType = 158
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetQueryHandlerRequest"/> message.
+	/// </summary>
+	WorkflowSetQueryHandlerReply MessageType = 159
 
 	//---------------------------------------------------------------------
 	// Activity messages
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Commands the client library and associated .NET application
-	/// to process an activity instance.
+	/// <b>client --> proxy:</b> Executes an activity within the context of a workflow.
 	/// </summary>
-	ActivityInvokeRequest MessageType = 200
+	ActivityExecuteRequest MessageType = 200
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Sent in response to a <see cref="ActivityInvokeRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityExecuteRequest"/> message.
 	/// </summary>
-	ActivityInvokeReply MessageType = 201
+	ActivityExecuteReply MessageType = 201
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Requests the heartbeat details from the last failed attempt.
+	/// <b>proxy --> client:</b> Invokes an activity on an activity worker.
 	/// </summary>
-	ActivityGetHeartbeatDetailsRequest MessageType = 202
+	ActivityInvokeRequest MessageType = 202
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityGetHeartbeatDetailsRequest"/> message.
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityInvokeRequest"/> message.
 	/// </summary>
-	ActivityGetHeartbeatDetailsReply MessageType = 203
+	ActivityInvokeReply MessageType = 203
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Logs a message for an activity.
+	/// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity run.
 	/// </summary>
-	ActivityLogRequest MessageType = 204
+	ActivityGetHeartbeatDetailsRequest MessageType = 204
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityLogRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityGetHeartbeatDetailsRequest"/> message.
 	/// </summary>
-	ActivityLogReply MessageType = 205
+	ActivityGetHeartbeatDetailsReply MessageType = 205
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Records a heartbeat message for an activity.
+	/// <b>client --> proxy:</b> Logs a message for an activity.
 	/// </summary>
-	ActivityRecordHeartbeatRequest MessageType = 206
+	ActivityLogRequest MessageType = 206
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityRecordHeartbeatRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityLogRequest"/> message.
 	/// </summary>
-	ActivityRecordHeartbeatReply MessageType = 207
+	ActivityLogReply MessageType = 207
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Determines whether an activity execution has any heartbeat details.
+	/// <b>client --> proxy:</b> Records a heartbeat message for an activity.
 	/// </summary>
-	ActivityHasHeartbeatDetailsRequest MessageType = 208
+	ActivityRecordHeartbeatRequest MessageType = 208
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityHasHeartbeatDetailsRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityRecordHeartbeatRequest"/> message.
 	/// </summary>
-	ActivityHasHeartbeatDetailsReply MessageType = 209
+	ActivityRecordHeartbeatReply MessageType = 209
 
 	/// <summary>
-	/// <b>library --> proxy:</b> Signals that the application executing an activity is terminating
-	/// giving the the proxy a chance to gracefully inform Cadence and then terminate the activity.
+	/// <b>client --> proxy:</b> Determines whether an activity execution has any heartbeat details.
 	/// </summary>
-	ActivityStopRequest MessageType = 210
+	ActivityHasHeartbeatDetailsRequest MessageType = 210
 
 	/// <summary>
-	/// <b>proxy --> library:</b> Sent in response to a <see cref="ActivityStopRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityHasHeartbeatDetailsRequest"/> message.
 	/// </summary>
-	ActivityStopReply MessageType = 211
+	ActivityHasHeartbeatDetailsReply MessageType = 211
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Signals the client that an activity is being stopped.
+	/// </summary>
+	ActivityStoppingRequest MessageType = 212
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityStoppingRequest"/> message.
+	/// </summary>
+	ActivityStoppingReply MessageType = 213
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Executes a local activity within the context of a workflow.
+	/// </summary>
+	ActivityExecuteLocalRequest MessageType = 214
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="ActivityExecuteLocalRequest"/> message.
+	/// </summary>
+	ActivityExecuteLocalReply MessageType = 215
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Invokes a local activity on an activity worker.
+	/// </summary>
+	ActivityInvokeLocalRequest MessageType = 216
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="ActivityInvokeLocalRequest"/> message.
+	/// </summary>
+	ActivityInvokeLocalReply MessageType = 217
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Registers an activity handler.
+	/// </summary>
+	ActivityRegisterRequest MessageType = 218
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityRegisterRequest"/> message.
+	/// </summary>
+	ActivityRegisterReply MessageType = 219
 )

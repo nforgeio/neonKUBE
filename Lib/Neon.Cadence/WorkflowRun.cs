@@ -18,34 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
-
+using Neon.Cadence;
 using Neon.Cadence.Internal;
+using Neon.Common;
 
 namespace Neon.Cadence
 {
@@ -59,13 +36,15 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="id">The current ID for the workflow.</param>
         /// <param name="runId">The original ID the workflow.</param>
-        internal WorkflowRun(string runId, string id)
+        /// <param name="domain">Optionally specifies the domain hosting the workflow,</param>
+        public WorkflowRun(string runId, string id, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
 
-            this.RunId = id;
-            this.Id    = id;
+            this.RunId  = runId;
+            this.Id     = id;
+            this.Domain = domain;
         }
 
         /// <summary>
@@ -79,5 +58,10 @@ namespace Neon.Cadence
         /// or potentially restarted.
         /// </summary>
         public string Id { get; private set; }
+
+        /// <summary>
+        /// The domain hosting the workflow.
+        /// </summary>
+        public string Domain { get; private set; }
     }
 }

@@ -174,6 +174,8 @@ type (
 		executionTimeout time.Duration
 
 		heartbeatDetails []byte
+
+		workerStopChannel chan struct{}
 	}
 )
 
@@ -212,7 +214,8 @@ func newTestWorkflowEnvironmentImpl(s *WorkflowTestSuite) *testWorkflowEnvironme
 
 		changeVersions: make(map[string]Version),
 
-		doneChannel: make(chan struct{}),
+		doneChannel:       make(chan struct{}),
+		workerStopChannel: make(chan struct{}),
 	}
 
 	// move forward the mock clock to start time.
@@ -360,6 +363,10 @@ func (env *testWorkflowEnvironmentImpl) setWorkerOptions(options WorkerOptions) 
 	if options.DataConverter != nil {
 		env.workerOptions.DataConverter = options.DataConverter
 	}
+}
+
+func (env *testWorkflowEnvironmentImpl) setWorkerStopChannel(c chan struct{}) {
+	env.workerStopChannel = c
 }
 
 func (env *testWorkflowEnvironmentImpl) setActivityTaskList(tasklist string, activityFns ...interface{}) {
@@ -1274,7 +1281,7 @@ func (m *mockWrapper) getMockReturn(ctx interface{}, input []byte) (retArgs mock
 	fnType := reflect.TypeOf(m.fn)
 	reflectArgs, err := decodeArgs(m.dataConverter, fnType, input)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("Decode error: %v in %v of type %T", err.Error(), m.name, m.fn))
 	}
 	realArgs := m.getCtxArg(ctx)
 	for _, arg := range reflectArgs {
@@ -1408,12 +1415,13 @@ func (m *mockWrapper) executeMockWithActualArgs(ctx interface{}, inputArgs []int
 func (env *testWorkflowEnvironmentImpl) newTestActivityTaskHandler(taskList string, dataConverter encoded.DataConverter) ActivityTaskHandler {
 	wOptions := fillWorkerOptionsDefaults(env.workerOptions)
 	params := workerExecutionParameters{
-		TaskList:      taskList,
-		Identity:      wOptions.Identity,
-		MetricsScope:  wOptions.MetricsScope,
-		Logger:        wOptions.Logger,
-		UserContext:   wOptions.BackgroundActivityContext,
-		DataConverter: dataConverter,
+		TaskList:          taskList,
+		Identity:          wOptions.Identity,
+		MetricsScope:      wOptions.MetricsScope,
+		Logger:            wOptions.Logger,
+		UserContext:       wOptions.BackgroundActivityContext,
+		DataConverter:     dataConverter,
+		WorkerStopChannel: env.workerStopChannel,
 	}
 	ensureRequiredParams(&params)
 
@@ -1687,13 +1695,13 @@ func (env *testWorkflowEnvironmentImpl) getMockedVersion(mockedChangeID, changeI
 				reflectValues[0].Interface(), reflectValues[0].Interface()))
 		}
 		return reflectValues[0].Interface().(Version), true
-	} else {
-		if len(mockRet) != 1 || !reflect.TypeOf(mockRet[0]).AssignableTo(reflect.TypeOf(DefaultVersion)) {
-			panic(fmt.Sprintf("mock of GetVersion has incorrect return type, expected workflow.Version, but actual is %T (%v)",
-				mockRet[0], mockRet[0]))
-		}
-		return mockRet[0].(Version), true
 	}
+
+	if len(mockRet) != 1 || !reflect.TypeOf(mockRet[0]).AssignableTo(reflect.TypeOf(DefaultVersion)) {
+		panic(fmt.Sprintf("mock of GetVersion has incorrect return type, expected workflow.Version, but actual is %T (%v)",
+			mockRet[0], mockRet[0]))
+	}
+	return mockRet[0].(Version), true
 }
 
 func getMockMethodForGetVersion(changeID string) string {

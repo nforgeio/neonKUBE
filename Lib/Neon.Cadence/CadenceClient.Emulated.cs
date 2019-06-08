@@ -41,13 +41,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
-
-using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
@@ -99,7 +98,7 @@ namespace Neon.Cadence
             /// <summary>
             /// The workflow context ID.
             /// </summary>
-            public long WorkflowContextId { get; set; }
+            public long ContextId { get; set; }
 
             /// <summary>
             /// Identifies the Cadence domain hosting the workflow.
@@ -137,14 +136,14 @@ namespace Neon.Cadence
             public CadenceError Error { get; set; }
         }
 
-        private AsyncMutex                              emulationMutex                = new AsyncMutex();
-        private List<EmulatedCadenceDomain>             emulatedDomains               = new List<EmulatedCadenceDomain>();
-        private Dictionary<long, EmulatedWorker>        emulatedWorkers               = new Dictionary<long, EmulatedWorker>();
-        private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts      = new Dictionary<long, EmulatedWorkflow>();
-        private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows             = new Dictionary<string, EmulatedWorkflow>();
-        private Dictionary<long, Operation>             emulatedOperations            = new Dictionary<long, Operation>();
-        private long                                    nextEmulatedWorkerId          = 0;
-        private long                                    nextEmulatedWorkflowContextId = 0;
+        private AsyncMutex                              emulationMutex           = new AsyncMutex();
+        private List<EmulatedCadenceDomain>             emulatedDomains          = new List<EmulatedCadenceDomain>();
+        private Dictionary<long, EmulatedWorker>        emulatedWorkers          = new Dictionary<long, EmulatedWorker>();
+        private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts = new Dictionary<long, EmulatedWorkflow>();
+        private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows        = new Dictionary<string, EmulatedWorkflow>();
+        private Dictionary<long, Operation>             emulatedOperations       = new Dictionary<long, Operation>();
+        private long                                    nextEmulatedWorkerId     = 0;
+        private long                                    nextEmulatedContextId    = 0;
         private IWebHost                                emulatedHost;
 
         /// <summary>
@@ -247,7 +246,7 @@ namespace Neon.Cadence
             var response     = context.Response;
             var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
 
-            if (EmulatedLibraryClient == null && proxyMessage.Type != MessageTypes.InitializeRequest)
+            if (EmulatedLibraryClient == null && proxyMessage.Type != InternalMessageTypes.InitializeRequest)
             {
                 response.StatusCode = StatusCodes.Status400BadRequest;
                 await response.WriteAsync($"Unexpected Message: Waiting for an [{nameof(InitializeRequest)}] message to specify the [cadence-client] network endpoint.");
@@ -298,57 +297,57 @@ namespace Neon.Cadence
                 //-------------------------------------------------------------
                 // Client messages
 
-                case MessageTypes.CancelRequest:
+                case InternalMessageTypes.CancelRequest:
 
                     await OnEmulatedCancelRequestAsync((CancelRequest)proxyMessage);
                     break;
 
-                case MessageTypes.DomainDescribeRequest:
+                case InternalMessageTypes.DomainDescribeRequest:
 
                     await OnEmulatedDomainDescribeRequestAsync((DomainDescribeRequest)proxyMessage);
                     break;
 
-                case MessageTypes.DomainRegisterRequest:
+                case InternalMessageTypes.DomainRegisterRequest:
 
                     await OnEmulatedDomainRegisterRequestAsync((DomainRegisterRequest)proxyMessage);
                     break;
 
-                case MessageTypes.DomainUpdateRequest:
+                case InternalMessageTypes.DomainUpdateRequest:
 
                     await OnEmulatedDomainUpdateRequestAsync((DomainUpdateRequest)proxyMessage);
                     break;
 
-                case MessageTypes.HeartbeatRequest:
+                case InternalMessageTypes.HeartbeatRequest:
 
                     await OnEmulatedHeartbeatRequestAsync((HeartbeatRequest) proxyMessage);
                     break;
 
-                case MessageTypes.InitializeRequest:
+                case InternalMessageTypes.InitializeRequest:
 
                     await OnEmulatedInitializeRequestAsync((InitializeRequest)proxyMessage);
                     break;
 
-                case MessageTypes.ConnectRequest:
+                case InternalMessageTypes.ConnectRequest:
 
                     await OnEmulatedConnectRequestAsync((ConnectRequest)proxyMessage);
                     break;
 
-                case MessageTypes.TerminateRequest:
+                case InternalMessageTypes.TerminateRequest:
 
                     await OnEmulatedTerminateRequestAsync((TerminateRequest)proxyMessage);
                     break;
 
-                case MessageTypes.NewWorkerRequest:
+                case InternalMessageTypes.NewWorkerRequest:
 
                     await OnEmulatedNewWorkerRequestAsync((NewWorkerRequest)proxyMessage);
                     break;
 
-                case MessageTypes.StopWorkerRequest:
+                case InternalMessageTypes.StopWorkerRequest:
 
                     await OnEmulatedStopWorkerRequestAsync((StopWorkerRequest)proxyMessage);
                     break;
 
-                case MessageTypes.PingRequest:
+                case InternalMessageTypes.PingRequest:
 
                     await OnEmulatedPingRequestAsync((PingRequest)proxyMessage);
                     break;
@@ -356,17 +355,17 @@ namespace Neon.Cadence
                 //-------------------------------------------------------------
                 // Workflow messages
 
-                case MessageTypes.WorkflowExecuteRequest:
+                case InternalMessageTypes.WorkflowExecuteRequest:
 
                     await OnEmulatedWorkflowExecuteRequestAsync((WorkflowExecuteRequest)proxyMessage);
                     break;
 
-                case MessageTypes.WorkflowRegisterRequest:
+                case InternalMessageTypes.WorkflowRegisterRequest:
 
                     await OnEmulatedWorkflowRegisterRequestAsync((WorkflowRegisterRequest)proxyMessage);
                     break;
 
-                case MessageTypes.WorkflowSetCacheSizeRequest:
+                case InternalMessageTypes.WorkflowSetCacheSizeRequest:
 
                     await OnEmulatedWorkflowSetCacheSizeRequestAsync((WorkflowSetCacheSizeRequest)proxyMessage);
                     break;
@@ -736,21 +735,21 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEmulatedWorkflowExecuteRequestAsync(WorkflowExecuteRequest request)
         {
-            var workflowContextId = Interlocked.Increment(ref nextEmulatedWorkflowContextId);
+            var contextId = Interlocked.Increment(ref nextEmulatedContextId);
 
             var workflow = new EmulatedWorkflow()
             {
-                WorkflowId        = request.Options.ID ?? Guid.NewGuid().ToString("D"),
-                WorkflowContextId = workflowContextId,
-                Args              = request.Args,
-                Domain            = request.Domain,
-                Name              = request.Workflow,
-                Options           = request.Options
+                WorkflowId = request.Options.ID ?? Guid.NewGuid().ToString("D"),
+                ContextId  = contextId,
+                Args       = request.Args,
+                Domain     = request.Domain,
+                Name       = request.Workflow,
+                Options    = request.Options
             };
 
             using (await emulationMutex.AcquireAsync())
             {
-                emulatedWorkflowContexts.Add(workflowContextId, workflow);
+                emulatedWorkflowContexts.Add(contextId, workflow);
                 emulatedWorkflows.Add(workflow.WorkflowId, workflow);
             }
 
@@ -779,7 +778,7 @@ namespace Neon.Cadence
                         {
                             Args              = workflow.Args,
                             Name              = workflow.Name,
-                            WorkflowContextId = workflow.WorkflowContextId
+                            ContextId = workflow.ContextId
                         };
 
                     var workflowInvokeReply = (WorkflowInvokeReply)await CallClientAsync(workflowInvokeRequest);

@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Sent in response to a <see cref="PingRequest"/>.
     /// </summary>
-    [ProxyMessage(MessageTypes.PingReply)]
+    [InternalProxyMessage(InternalMessageTypes.PingReply)]
     internal class PingReply : ProxyReply
     {
         /// <summary>
@@ -42,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public PingReply()
         {
-            Type = MessageTypes.PingReply;
+            Type = InternalMessageTypes.PingReply;
         }
 
         /// <inheritdoc/>

@@ -1,7 +1,23 @@
+//-----------------------------------------------------------------------------
+// FILE:		initialize_reply.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -22,7 +38,7 @@ type (
 func NewInitializeReply() *InitializeReply {
 	reply := new(InitializeReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.InitializeReply
+	reply.SetType(messagetypes.InitializeReply)
 
 	return reply
 }
@@ -30,7 +46,7 @@ func NewInitializeReply() *InitializeReply {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ProxyMessage.Clone()
+// Clone inherits docs from ProxyReply.Clone()
 func (reply *InitializeReply) Clone() IProxyMessage {
 	initializeReply := NewInitializeReply()
 	var messageClone IProxyMessage = initializeReply
@@ -39,40 +55,7 @@ func (reply *InitializeReply) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ProxyMessage.CopyTo()
+// CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *InitializeReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
-}
-
-// SetProxyMessage inherits docs from ProxyMessage.SetProxyMessage()
-func (reply *InitializeReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyMessage.GetProxyMessage()
-func (reply *InitializeReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyMessage.GetRequestID()
-func (reply *InitializeReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyMessage.SetRequestID()
-func (reply *InitializeReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from ProxyReply.GetError()
-func (reply *InitializeReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
-}
-
-// SetError inherits docs from ProxyReply.SetError()
-func (reply *InitializeReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
 }

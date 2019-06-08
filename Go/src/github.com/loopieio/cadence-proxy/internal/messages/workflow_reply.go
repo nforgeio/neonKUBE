@@ -1,7 +1,23 @@
+//-----------------------------------------------------------------------------
+// FILE:		workflow_reply.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
-	"github.com/loopieio/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -19,8 +35,9 @@ type (
 	// IWorkflowReply is the interface that all workflow message replies
 	// implement.
 	IWorkflowReply interface {
-		GetWorkflowContextID() int64
-		SetWorkflowContextID(value int64)
+		IProxyReply
+		GetContextID() int64
+		SetContextID(value int64)
 	}
 )
 
@@ -32,7 +49,7 @@ type (
 func NewWorkflowReply() *WorkflowReply {
 	reply := new(WorkflowReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.Type = messagetypes.Unspecified
+	reply.SetType(messagetypes.Unspecified)
 
 	return reply
 }
@@ -40,20 +57,20 @@ func NewWorkflowReply() *WorkflowReply {
 // -------------------------------------------------------------------------
 // IWorkflowReply interface methods for implementing the IWorkflowReply interface
 
-// GetWorkflowContextID gets the ContextId from a WorkflowReply's properties
+// GetContextID gets the ContextId from a WorkflowReply's properties
 // map.
 //
 // returns int64 -> the long representing a WorkflowReply's ContextId
-func (reply *WorkflowReply) GetWorkflowContextID() int64 {
-	return reply.GetLongProperty("WorkflowContextId")
+func (reply *WorkflowReply) GetContextID() int64 {
+	return reply.GetLongProperty("ContextID")
 }
 
-// SetWorkflowContextID sets the ContextId in a WorkflowReply's properties map
+// SetContextID sets the ContextId in a WorkflowReply's properties map
 //
 // param value int64 -> int64 value to set as the WorkflowReply's ContextId
 // in its properties map
-func (reply *WorkflowReply) SetWorkflowContextID(value int64) {
-	reply.SetLongProperty("WorkflowContextId", value)
+func (reply *WorkflowReply) SetContextID(value int64) {
+	reply.SetLongProperty("ContextID", value)
 }
 
 // -------------------------------------------------------------------------
@@ -72,39 +89,6 @@ func (reply *WorkflowReply) Clone() IProxyMessage {
 func (reply *WorkflowReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(IWorkflowReply); ok {
-		v.SetWorkflowContextID(reply.GetWorkflowContextID())
+		v.SetContextID(reply.GetContextID())
 	}
-}
-
-// SetProxyMessage inherits docs from ProxyReply.SetProxyMessage()
-func (reply *WorkflowReply) SetProxyMessage(value *ProxyMessage) {
-	reply.ProxyReply.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from ProxyReply.GetProxyMessage()
-func (reply *WorkflowReply) GetProxyMessage() *ProxyMessage {
-	return reply.ProxyReply.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from ProxyReply.GetRequestID()
-func (reply *WorkflowReply) GetRequestID() int64 {
-	return reply.ProxyReply.GetRequestID()
-}
-
-// SetRequestID inherits docs from ProxyReply.SetRequestID()
-func (reply *WorkflowReply) SetRequestID(value int64) {
-	reply.ProxyReply.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyReply interface methods for implementing the IProxyReply interface
-
-// GetError inherits docs from IProxyReply.GetError()
-func (reply *WorkflowReply) GetError() *cadenceerrors.CadenceError {
-	return reply.ProxyReply.GetError()
-}
-
-// SetError inherits docs from IProxyReply.SetError()
-func (reply *WorkflowReply) SetError(value *cadenceerrors.CadenceError) {
-	reply.ProxyReply.SetError(value)
 }

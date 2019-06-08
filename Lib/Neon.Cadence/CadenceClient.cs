@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -39,19 +38,108 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
-
-using Neon.Cadence.Internal;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements a client to manage an Uber Cadence cluster.
+    /// Implements a client that can be used to create and manage
+    /// workflows.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// To get started with Cadence, you'll need to deploy a Cadence cluster with
+    /// one or more nodes and the establish a connection to the cluster from your
+    /// workflow/activity implementations and management tools.  This is pretty
+    /// easy to do.
+    /// </para>
+    /// <para>
+    /// First, you'll need to know the URI of at least one of the Cadence cluster
+    /// nodes.  Cadence listens on port <b>79133</b> by default so you cluster URIs
+    /// will typically look like: <b>http://CADENCE-NODE:7933</b>.
+    /// </para>
+    /// <note>
+    /// For production clusters with multiple Cadence nodes, you should specify
+    /// multiple URIs when connecting just in case the one of the nodes may be
+    /// offline for some reason.
+    /// </note>
+    /// <para>
+    /// To establish a connection, you'll construct a <see cref="CadenceSettings"/>
+    /// and add your node URIs to the <see cref="CadenceSettings.Servers"/> list
+    /// and then call the static <see cref="CadenceClient.ConnectAsync(CadenceSettings)"/>
+    /// method to obtain a connected <see cref="CadenceClient"/>.  You'll use this
+    /// for registering workflow and activity workers as well as to manage workflows.
+    /// </para>
+    /// <para>
+    /// You'll implement your workflows and activities by implementing classes that
+    /// derive from <see cref="Workflow"/> and <see cref="Activity"/> and then
+    /// registering these types with Cadence.  Cadence calls these registrations
+    /// workers and uses these to schedule operations for execution by your code.
+    /// Workflows and activities are registered using the fully qualified names 
+    /// of the derived <see cref="Workflow"/> and <see cref="Activity"/> types
+    /// by defaut, but you can customizes this as required (i.e. to add an
+    /// implementation version).
+    /// </para>
+    /// <para>
+    /// Once you have a connected <see cref="CadenceClient"/>, you can create and manage
+    /// Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int)"/>,
+    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>
+    /// and then register workflow and activity workers via <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>
+    /// and <see cref="StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/>.
+    /// </para>
+    /// <para>
+    /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
+    /// the current process implements specific workflow and activity types.  You'll call
+    /// <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/> for
+    /// workflows and <see cref="StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/>
+    /// for activities, passing your custom implementations of <see cref="Workflow"/> and <see cref="Activity"/>
+    /// as the type parameter.  The <b>Neon.Cadence</b> will then automatically handle the instantiation
+    /// of your workflow or activity types and call their <see cref="Workflow.RunAsync(byte[])"/>
+    /// </para>
+    /// <para>
+    /// External workflows are started by calling <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>,
+    /// passing the workflow type string, the target Cadence domain along with optional arguments
+    /// (encoded into a byte array) and optional workflow options.  The workflow type string must
+    /// be the same one used when calling <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>.
+    /// </para>
+    /// <note>
+    /// <b>External workflows</b> are top-level workflows that have no workflow parent.
+    /// This is distinugished from <b>child workflows</b> that are executed within the
+    /// context of another workflow via <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>.
+    /// </note>
+    /// <para>
+    /// <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/> returns
+    /// immediately after the workflow is submitted to Cadence and the workflow will be scheduled and
+    /// executed independently.  This method returns a <see cref="WorkflowRun"/> which you'll use
+    /// to identify your running workflow to the methods desribed below.
+    /// </para>
+    /// <para>
+    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowState(WorkflowRun)"/>
+    /// or obtain a workflow result via <see cref="GetWorkflowResult(WorkflowRun)"/>, which blocks until the 
+    /// workflow completes.
+    /// </para>
+    /// <note>
+    /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
+    /// via the <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    /// <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>, and
+    /// <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
+    /// methods.
+    /// </note>
+    /// <para>
+    /// Workflows can be signalled via <see cref="SignalWorkflow(string, string, byte[], string)"/> or
+    /// <see cref="SignalWorkflow(string, WorkflowOptions, string, byte[], byte[])"/> that starts the
+    /// workflow if its not already running.  You can query running workflows via 
+    /// <see cref="QueryWorkflow(string, string, byte[], string)"/>.
+    /// </para>
+    /// <para>
+    /// Workflows can be expicitly closed using <see cref="CancelWorkflow(WorkflowRun)"/>,
+    /// <see cref="TerminateWorkflow(WorkflowRun, string, byte[])"/>.
+    /// </para>
+    /// </remarks>
     public partial class CadenceClient : IDisposable
     {
         /// <summary>
@@ -95,12 +183,8 @@ namespace Neon.Cadence
         /// </summary>
         private class EmulatedStartup
         {
-            private CadenceClient client;
-
             public void Configure(IApplicationBuilder app, CadenceClient client)
             {
-                this.client = client;
-
                 app.Run(async context =>
                 {
                     await client.OnEmulatedHttpRequestAsync(context);
@@ -324,7 +408,7 @@ namespace Neon.Cadence
                     {
                         // We need to set the execute permissions on this file.  We're
                         // going to assume that only the root and current user will
-                        // need to execute rights to the proxy binary.
+                        // need execute rights to the proxy binary.
 
                         var result = NeonHelper.ExecuteCapture("chmod", new object[] { "774", binaryPath });
 
@@ -375,14 +459,7 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            //-----------------------------------------
-            // $debug(jeff.lill):
-            //
-            // Uncomment this call after Jack has implemented this
-            // functionality.
-
-            // await client.SetWorkflowCacheSize(10000);
-            //-----------------------------------------
+            await client.SetWorkflowCacheSize(10000);
 
             return client;
         }
@@ -391,9 +468,12 @@ namespace Neon.Cadence
         // Instance members
 
         private object                          syncLock      = new object();
+        private AsyncMutex                      asyncLock     = new AsyncMutex();
         private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
         private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
+        private Dictionary<string, Type>        workflowTypes = new Dictionary<string, Type>();
+        private Dictionary<string, Type>        activityTypes = new Dictionary<string, Type>();
         private long                            nextRequestId = 0;
         private int                             proxyPort;
         private HttpClient                      proxyClient;
@@ -551,7 +631,7 @@ namespace Neon.Cadence
                     {
                         var uri = new Uri(serverUri);
 
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:7933", ",");
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{NetworkPorts.Cadence}", ",");
                     }
 
                     var connectRequest = 
@@ -638,7 +718,7 @@ namespace Neon.Cadence
 
                     if (ProxyProcess != null && !ProxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
                     {
-                        log.LogWarn(() => $"[cadence-proxy]: Did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
+                        log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
                         ProxyProcess.Kill();
                     }
 
@@ -719,7 +799,7 @@ namespace Neon.Cadence
         /// was closed normally or due to an error by examining the <see cref="CadenceClientClosedArgs"/>
         /// arguments passed to the handler.
         /// </summary>
-        public event CadenceClientClosedDelegate ConnectionClosed;
+        public event CadenceClosedDelegate ConnectionClosed;
 
         /// <summary>
         /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already
@@ -748,6 +828,50 @@ namespace Neon.Cadence
             // Signal the background threads that they need to exit.
 
             closingConnection = true;
+        }
+
+        /// <summary>
+        /// Returns the .NET type implementing the named Cadence workflow.
+        /// </summary>
+        /// <param name="workflowType">The Cadence workflow type string.</param>
+        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
+        internal Type GetWorkflowType(string workflowType)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowType != null);
+
+            lock (syncLock)
+            {
+                if (workflowTypes.TryGetValue(workflowType, out var type))
+                {
+                    return type;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the .NET type implementing the named Cadence activity.
+        /// </summary>
+        /// <param name="activityType">The Cadence activity type string.</param>
+        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
+        internal Type GetActivityType(string activityType)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+
+            lock (syncLock)
+            {
+                if (activityTypes.TryGetValue(activityType, out var type))
+                {
+                    return type;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         /// <summary>
@@ -827,9 +951,19 @@ namespace Neon.Cadence
 
                 switch (request.Type)
                 {
-                    case MessageTypes.HeartbeatRequest:
+                    case InternalMessageTypes.WorkflowInvokeRequest:
+                    case InternalMessageTypes.WorkflowSignalReceivedRequest:
+                    case InternalMessageTypes.WorkflowQueryInvokeRequest:
+                    case InternalMessageTypes.WorkflowMutableInvokeRequest:
+                    case InternalMessageTypes.ActivityInvokeLocalRequest:
 
-                        await OnHeartbeatRequest((HeartbeatRequest)request);
+                        await Workflow.OnProxyRequestAsync(this, request);
+                        break;
+
+                    case InternalMessageTypes.ActivityInvokeRequest:
+                    case InternalMessageTypes.ActivityStoppingRequest:
+
+                        await Activity.OnProxyRequestAsync(this, request);
                         break;
 
                     default:
@@ -841,7 +975,7 @@ namespace Neon.Cadence
             }
             else if (reply != null)
             {
-                // [cadence-proxy] sent a reply to a request from the library.
+                // [cadence-proxy] sent a reply to a request from the client.
 
                 Operation operation;
 
@@ -890,8 +1024,9 @@ namespace Neon.Cadence
         /// Optionally specifies the maximum time to wait for the operation to complete.
         /// This defaults to unlimited.
         /// </param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The reply message.</returns>
-        private async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default)
+        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken? cancellationToken = null)
         {
             try
             {
@@ -901,6 +1036,17 @@ namespace Neon.Cadence
                 lock (syncLock)
                 {
                     operations.Add(requestId, operation);
+                }
+
+                if (cancellationToken != null)
+                {
+                    request.IsCancellable = true;
+
+                    cancellationToken.Value.Register(
+                        () =>
+                        {
+                            CallProxyAsync(new CancelRequest() { RequestId = requestId }).Wait();
+                        });
                 }
 
                 var response = await proxyClient.SendRequestAsync(request);
@@ -948,7 +1094,7 @@ namespace Neon.Cadence
         /// <param name="request">The received request message.</param>
         /// <param name="reply">The reply message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
+        internal async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentNullException>(reply != null);
@@ -1113,7 +1259,7 @@ namespace Neon.Cadence
                             var notAwaitingThis = Task.Run(
                                 async () =>
                                 {
-                                    if (operation.Request.Type != MessageTypes.CancelRequest)
+                                    if (operation.Request.Type != InternalMessageTypes.CancelRequest)
                                     {
                                         await CallProxyAsync(new CancelRequest() { TargetRequestId = operation.RequestId }, timeout: TimeSpan.FromSeconds(1));
                                     }
@@ -1146,20 +1292,6 @@ namespace Neon.Cadence
             // connection has been closed.
 
             RaiseConnectionClosed(exception);
-        }
-
-        //--------------------------------------------------------------------
-        // These methods handle requests sent by the [cadence-proxy].
-
-        /// <summary>
-        /// Handles <see cref="HeartbeatRequest"/> messages received from the
-        /// <b>cadence-proxy</b>.
-        /// </summary>
-        /// <param name="request">The received request.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnHeartbeatRequest(HeartbeatRequest request)
-        {
-            await ProxyReplyAsync(request, new HeartbeatReply());
         }
     }
 }

@@ -52,40 +52,36 @@ namespace TestCadence
             {
                 message = new InitializeRequest();
 
-                Assert.Equal(MessageTypes.InitializeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.InitializeReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.LibraryAddress);
                 Assert.Equal(0, message.LibraryPort);
-                Assert.Equal(TimeSpan.Zero, message.Timeout);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.Timeout = TimeSpan.FromSeconds(1.5);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 message.LibraryAddress = "1.2.3.4";
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 message.LibraryPort = 666;
                 Assert.Equal(666, message.LibraryPort);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
 
@@ -94,7 +90,6 @@ namespace TestCadence
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
 
@@ -103,7 +98,6 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal(1.5, message.Timeout.TotalSeconds);
                 Assert.Equal("1.2.3.4", message.LibraryAddress);
                 Assert.Equal(666, message.LibraryPort);
             }
@@ -122,10 +116,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -138,10 +132,10 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<InitializeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<InitializeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -171,15 +165,15 @@ namespace TestCadence
             {
                 message = new ConnectRequest();
 
-                Assert.Equal(MessageTypes.ConnectReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.ConnectReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<ConnectRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<ConnectRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Endpoints);
@@ -197,10 +191,10 @@ namespace TestCadence
                 message.ClientTimeout = TimeSpan.FromSeconds(30);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<ConnectRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<ConnectRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
@@ -240,10 +234,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<ConnectReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<ConnectReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -256,10 +250,10 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<ConnectReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<ConnectReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -296,15 +290,15 @@ namespace TestCadence
             {
                 message = new DomainDescribeRequest();
 
-                Assert.Equal(MessageTypes.DomainDescribeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.DomainDescribeReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
@@ -317,10 +311,10 @@ namespace TestCadence
                 Assert.Equal("my-domain", message.Name);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
@@ -354,10 +348,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -388,10 +382,10 @@ namespace TestCadence
                 Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -440,15 +434,15 @@ namespace TestCadence
             {
                 message = new DomainRegisterRequest();
 
-                Assert.Equal(MessageTypes.DomainRegisterReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.DomainRegisterReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
@@ -473,10 +467,10 @@ namespace TestCadence
                 Assert.Equal(14, message.RetentionDays);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-domain", message.Name);
@@ -522,10 +516,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -538,10 +532,10 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -572,15 +566,15 @@ namespace TestCadence
             {
                 message = new DomainUpdateRequest();
 
-                Assert.Equal(MessageTypes.DomainUpdateReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.DomainUpdateReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
@@ -605,10 +599,10 @@ namespace TestCadence
                 Assert.Equal(7, message.ConfigurationRetentionDays);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-name", message.Name);
@@ -654,10 +648,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -669,10 +663,10 @@ namespace TestCadence
                 message.Error = new CadenceError("MyError");
                 Assert.Equal("MyError", message.Error.String);
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -703,15 +697,15 @@ namespace TestCadence
             {
                 message = new TerminateRequest();
 
-                Assert.Equal(MessageTypes.TerminateReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.TerminateReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<TerminateRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<TerminateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
 
@@ -721,10 +715,10 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<TerminateRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<TerminateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -755,10 +749,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<TerminateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -771,10 +765,10 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<TerminateReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<TerminateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -805,15 +799,15 @@ namespace TestCadence
             {
                 message = new HeartbeatRequest();
 
-                Assert.Equal(MessageTypes.HeartbeatReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.HeartbeatReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<HeartbeatRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<HeartbeatRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
 
@@ -823,10 +817,10 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<HeartbeatRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<HeartbeatRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -857,10 +851,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<HeartbeatReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<HeartbeatReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -873,10 +867,10 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<HeartbeatReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<HeartbeatReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -907,15 +901,15 @@ namespace TestCadence
             {
                 message = new CancelRequest();
 
-                Assert.Equal(MessageTypes.CancelReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.CancelReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<CancelRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<CancelRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
 
@@ -926,10 +920,10 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<CancelRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<CancelRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.TargetRequestId);
@@ -963,10 +957,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<CancelReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<CancelReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -981,10 +975,10 @@ namespace TestCadence
                 Assert.True(message.WasCancelled);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<CancelReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<CancelReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -1018,15 +1012,15 @@ namespace TestCadence
             {
                 message = new NewWorkerRequest();
 
-                Assert.Equal(MessageTypes.NewWorkerReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.NewWorkerReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<NewWorkerRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<NewWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
@@ -1052,10 +1046,10 @@ namespace TestCadence
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<NewWorkerRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<NewWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Name);
@@ -1104,10 +1098,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<NewWorkerReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<NewWorkerReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -1121,10 +1115,10 @@ namespace TestCadence
                 Assert.Equal(666, message.WorkerId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<NewWorkerReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<NewWorkerReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
@@ -1155,15 +1149,15 @@ namespace TestCadence
             {
                 message = new StopWorkerRequest();
 
-                Assert.Equal(MessageTypes.StopWorkerReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.StopWorkerReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<StopWorkerRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<StopWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.WorkerId);
@@ -1176,10 +1170,10 @@ namespace TestCadence
                 Assert.Equal(666, message.WorkerId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<StopWorkerRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<StopWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.WorkerId);
@@ -1213,10 +1207,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<StopWorkerReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<StopWorkerReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -1227,10 +1221,10 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<StopWorkerReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<StopWorkerReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -1258,15 +1252,15 @@ namespace TestCadence
             {
                 message = new PingRequest();
 
-                Assert.Equal(MessageTypes.PingReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.PingReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<PingRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<PingRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
 
@@ -1276,10 +1270,10 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<PingRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<PingRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -1310,10 +1304,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<PingReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<PingReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -1324,10 +1318,10 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<PingReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<PingReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
@@ -1355,15 +1349,15 @@ namespace TestCadence
             {
                 message = new WorkflowSetCacheSizeRequest();
 
-                Assert.Equal(MessageTypes.WorkflowSetCacheSizeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSetCacheSizeReply, message.ReplyType);
 
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.Size);
@@ -1376,10 +1370,10 @@ namespace TestCadence
                 Assert.Equal(20000, message.Size);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeRequest>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(20000, message.Size);
@@ -1413,10 +1407,10 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -1427,10 +1421,10 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.Serialize());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeReply>(stream, ignoreTypeCode: true);
+                message = ProxyMessage.Deserialize<WorkflowSetCacheSizeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 

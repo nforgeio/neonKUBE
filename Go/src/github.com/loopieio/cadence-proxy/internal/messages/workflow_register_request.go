@@ -1,8 +1,23 @@
+//-----------------------------------------------------------------------------
+// FILE:		workflow_register_request.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package messages
 
 import (
-	"time"
-
 	messagetypes "github.com/loopieio/cadence-proxy/internal/messages/types"
 )
 
@@ -30,7 +45,7 @@ type (
 func NewWorkflowRegisterRequest() *WorkflowRegisterRequest {
 	request := new(WorkflowRegisterRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.Type = messagetypes.WorkflowRegisterRequest
+	request.SetType(messagetypes.WorkflowRegisterRequest)
 	request.SetReplyType(messagetypes.WorkflowRegisterReply)
 
 	return request
@@ -72,60 +87,4 @@ func (request *WorkflowRegisterRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowRegisterRequest); ok {
 		v.SetName(request.GetName())
 	}
-}
-
-// SetProxyMessage inherits docs from WorkflowRequest.SetProxyMessage()
-func (request *WorkflowRegisterRequest) SetProxyMessage(value *ProxyMessage) {
-	request.WorkflowRequest.SetProxyMessage(value)
-}
-
-// GetProxyMessage inherits docs from WorkflowRequest.GetProxyMessage()
-func (request *WorkflowRegisterRequest) GetProxyMessage() *ProxyMessage {
-	return request.WorkflowRequest.GetProxyMessage()
-}
-
-// GetRequestID inherits docs from WorkflowRequest.GetRequestID()
-func (request *WorkflowRegisterRequest) GetRequestID() int64 {
-	return request.WorkflowRequest.GetRequestID()
-}
-
-// SetRequestID inherits docs from WorkflowRequest.SetRequestID()
-func (request *WorkflowRegisterRequest) SetRequestID(value int64) {
-	request.WorkflowRequest.SetRequestID(value)
-}
-
-// -------------------------------------------------------------------------
-// IProxyRequest interface methods for implementing the IProxyRequest interface
-
-// GetReplyType inherits docs from WorkflowRequest.GetReplyType()
-func (request *WorkflowRegisterRequest) GetReplyType() messagetypes.MessageType {
-	return request.WorkflowRequest.GetReplyType()
-}
-
-// SetReplyType inherits docs from WorkflowRequest.SetReplyType()
-func (request *WorkflowRegisterRequest) SetReplyType(value messagetypes.MessageType) {
-	request.WorkflowRequest.SetReplyType(value)
-}
-
-// GetTimeout inherits docs from WorkflowRequest.GetTimeout()
-func (request *WorkflowRegisterRequest) GetTimeout() time.Duration {
-	return request.WorkflowRequest.GetTimeout()
-}
-
-// SetTimeout inherits docs from WorkflowRequest.SetTimeout()
-func (request *WorkflowRegisterRequest) SetTimeout(value time.Duration) {
-	request.WorkflowRequest.SetTimeout(value)
-}
-
-// -------------------------------------------------------------------------
-// IWorkflowRequest interface methods for implementing the IWorkflowRequest interface
-
-// GetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
-func (request *WorkflowRegisterRequest) GetWorkflowContextID() int64 {
-	return request.WorkflowRequest.GetWorkflowContextID()
-}
-
-// SetWorkflowContextID inherits docs from WorkflowRequest.GetWorkflowContextID()
-func (request *WorkflowRegisterRequest) SetWorkflowContextID(value int64) {
-	request.WorkflowRequest.SetWorkflowContextID(value)
 }

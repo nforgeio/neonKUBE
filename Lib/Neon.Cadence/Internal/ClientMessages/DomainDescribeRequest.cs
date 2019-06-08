@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests the details for a named domain.
     /// </summary>
-    [ProxyMessage(MessageTypes.DomainDescribeRequest)]
+    [InternalProxyMessage(InternalMessageTypes.DomainDescribeRequest)]
     internal class DomainDescribeRequest : ProxyRequest
     {
         /// <summary>
@@ -42,11 +35,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public DomainDescribeRequest()
         {
-            Type = MessageTypes.DomainDescribeRequest;
+            Type = InternalMessageTypes.DomainDescribeRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.DomainDescribeReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDescribeReply;
 
         /// <summary>
         /// The target Cadence domain name.

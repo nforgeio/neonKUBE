@@ -1,3 +1,20 @@
+//-----------------------------------------------------------------------------
+// FILE:		workers.go
+// CONTRIBUTOR: John C Burnes
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cadenceworkers
 
 import (
@@ -9,50 +26,50 @@ import (
 var (
 	mu sync.RWMutex
 
-	// WorkerID is incremented (protected by a mutex) every time
+	// workerID is incremented (protected by a mutex) every time
 	// a new cadence Worker is created
-	WorkerID int64
+	workerID int64
 
-	// WorkersMap maps a int64 WorkerId to the cadence
+	// Workers maps a int64 WorkerId to the cadence
 	// Worker returned by the Cadence NewWorker() function.
 	// This will be used to stop a worker via the
 	// StopWorkerRequest.
-	WorkersMap = new(Workers)
+	Workers = new(WorkersMap)
 )
 
 type (
 
-	// Workers holds a thread-safe map[interface{}]interface{} that stores
+	// WorkersMap holds a thread-safe map[interface{}]interface{} that stores
 	// cadence Workers with their workerID's
-	Workers struct {
+	WorkersMap struct {
 		sync.Map
 	}
 )
 
 //----------------------------------------------------------------------------
-// WorkerID methods
+// workerID methods
 
 // NextWorkerID increments the global variable
-// WorkerID by 1 and is protected by a mutex lock
+// workerID by 1 and is protected by a mutex lock
 func NextWorkerID() int64 {
 	mu.Lock()
-	curr := WorkerID
-	WorkerID = WorkerID + 1
+	curr := workerID
+	workerID = workerID + 1
 	mu.Unlock()
 
 	return curr
 }
 
 // GetWorkerID gets the value of the global variable
-// WorkerID and is protected by a mutex Read lock
+// workerID and is protected by a mutex Read lock
 func GetWorkerID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-	return WorkerID
+	return workerID
 }
 
 //----------------------------------------------------------------------------
-// Workers instance methods
+// WorkersMap instance methods
 
 // Add adds a new cadence worker and its corresponding WorkerId into
 // the Workers.workers map.  This method is thread-safe.
@@ -64,20 +81,20 @@ func GetWorkerID() int64 {
 // by the Cadence NewWorker() function.  This will be the mapped value
 //
 // returns int64 -> long workerID of the new cadence Worker added to the map
-func (workers *Workers) Add(workerID int64, worker worker.Worker) int64 {
-	WorkersMap.Map.Store(workerID, worker)
+func (workers *WorkersMap) Add(workerID int64, worker worker.Worker) int64 {
+	workers.Store(workerID, worker)
 	return workerID
 }
 
-// Delete removes key/value entry from the Workers map at the specified
+// Remove removes key/value entry from the Workers map at the specified
 // WorkerId.  This is a thread-safe method.
 //
 // param workerID int64 -> the long workerID to the cadence Worker
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
 // returns int64 -> long workerID of the cadence Worker removed from the map
-func (workers *Workers) Delete(workerID int64) int64 {
-	WorkersMap.Map.Delete(workerID)
+func (workers *WorkersMap) Remove(workerID int64) int64 {
+	workers.Delete(workerID)
 	return workerID
 }
 
@@ -88,8 +105,8 @@ func (workers *Workers) Delete(workerID int64) int64 {
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
 // returns worker.Worker -> cadence Worker with the specified workerID
-func (workers *Workers) Get(workerID int64) worker.Worker {
-	if v, ok := WorkersMap.Map.Load(workerID); ok {
+func (workers *WorkersMap) Get(workerID int64) worker.Worker {
+	if v, ok := workers.Load(workerID); ok {
 		if _v, _ok := v.(worker.Worker); _ok {
 			return _v
 		}
