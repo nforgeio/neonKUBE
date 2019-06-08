@@ -402,18 +402,20 @@ namespace Neon.Cadence.Internal
         public List<byte[]> Attachments { get; private set; } = new List<byte[]>();
 
         /// <summary>
-        /// Serializes the message to bytes.
+        /// Serializes the message to a pooled <see cref="MemoryStream"/>.  Be sure to
+        /// add the stream returned back to the <see cref="MemoryStreamPool"/> when you've 
+        /// finished with it.
         /// </summary>
         /// <param name="ignoreTypeCode">Optionally ignore unspecified message types (used for unit testing).</param>
-        /// <returns>The serialized byte array.</returns>
-        public byte[] Serialize(bool ignoreTypeCode = false)
+        /// <returns>A <see cref="MemoryStream"/> holding the serialized message.</returns>
+        public MemoryStream SerializeAsStream(bool ignoreTypeCode = false)
         {
             if (!ignoreTypeCode && Type == InternalMessageTypes.Unspecified)
             {
                 throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
             }
 
-            var output = MemoryStreamPool.AllocStream();
+            var output = MemoryStreamPool.Alloc();
 
             try
             {
@@ -449,11 +451,47 @@ namespace Neon.Cadence.Internal
                     }
                 }
 
+                // Rewind the stream.
+
+                output.Position = 0;
+            }
+            catch
+            {
+                MemoryStreamPool.Free(output);
+                throw;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Serializes the message to bytes.
+        /// </para>
+        /// <note>
+        /// This method is intended for testing purposes.  Use <see cref="SerializeAsStream(bool)"/>
+        /// for production since that method will perform better by not needing to allocate a
+        /// byte array with the message contents for every call.
+        /// </note>
+        /// </summary>
+        /// <param name="ignoreTypeCode">Optionally ignore unspecified message types (used for unit testing).</param>
+        /// <returns>The serialized byte array.</returns>
+        public byte[] SerializeAsBytes(bool ignoreTypeCode = false)
+        {
+            if (!ignoreTypeCode && Type == InternalMessageTypes.Unspecified)
+            {
+                throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
+            }
+
+            var output = SerializeAsStream(ignoreTypeCode);
+
+            try
+            {
                 return output.ToArray();
             }
             finally
             {
-                MemoryStreamPool.FreeStream(output);
+                MemoryStreamPool.Free(output);
             }
         }
 

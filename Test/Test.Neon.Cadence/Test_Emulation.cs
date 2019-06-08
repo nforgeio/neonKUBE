@@ -80,7 +80,7 @@ namespace TestCadence
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
-                DebugEmulateProxy      = false,
+                DebugEmulateProxy      = true,
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
                 //DebugDisableHeartbeats = true,
                 //DebugIgnoreTimeouts    = true
@@ -112,7 +112,7 @@ namespace TestCadence
         private TMessage EchoToProxy<TMessage>(TMessage message)
             where TMessage : ProxyMessage, new()
         {
-            var bytes   = message.Serialize();
+            var bytes   = message.SerializeAsBytes();
             var content = new ByteArrayContent(bytes);
 
             content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
@@ -146,7 +146,7 @@ namespace TestCadence
                 message = new InitializeRequest();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<InitializeRequest>(stream);
@@ -165,7 +165,7 @@ namespace TestCadence
                 Assert.Equal(666, message.LibraryPort);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<InitializeRequest>(stream);

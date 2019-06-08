@@ -47,7 +47,7 @@ namespace Neon.Cadence.Internal
         /// Allocates a stream from the pool.
         /// </summary>
         /// <returns>The allocated stream.</returns>
-        public static MemoryStream AllocStream()
+        public static MemoryStream Alloc()
         {
             MemoryStream stream;
 
@@ -70,7 +70,7 @@ namespace Neon.Cadence.Internal
         /// Frees the stream by adding it back to the pool.
         /// </summary>
         /// <param name="stream"></param>
-        public static void FreeStream(MemoryStream stream)
+        public static void Free(MemoryStream stream)
         {
             Covenant.Requires<ArgumentNullException>(stream != null);
 

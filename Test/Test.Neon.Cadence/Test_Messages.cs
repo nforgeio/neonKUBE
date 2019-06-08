@@ -72,7 +72,7 @@ namespace TestCadence
                 DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
                 DebugDisableHeartbeats = false,
-                DebugEmulateProxy      = false,
+                DebugEmulateProxy      = true,
                 //--------------------------------
             };
 
@@ -159,7 +159,7 @@ namespace TestCadence
             where TMessage : ProxyMessage, new()
         {
 #if DEBUG
-            var bytes   = message.Serialize();
+            var bytes   = message.SerializeAsBytes();
             var content = new ByteArrayContent(bytes);
 
             content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
@@ -194,7 +194,7 @@ namespace TestCadence
         private TMessage EchoToProxy<TMessage>(TMessage message)
             where TMessage : ProxyMessage, new()
         {
-            var bytes   = message.Serialize();
+            var bytes   = message.SerializeAsBytes();
             var content = new ByteArrayContent(bytes);
 
             content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);

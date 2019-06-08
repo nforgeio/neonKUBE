@@ -232,7 +232,16 @@ namespace Neon.Cadence
 
             response.ContentType = ProxyMessage.ContentType;
 
-            await response.Body.WriteAsync(clonedMessage.Serialize());
+            var stream = clonedMessage.SerializeAsStream();
+
+            try
+            {
+                await stream.CopyToAsync(response.Body);
+            }
+            finally
+            {
+                MemoryStreamPool.Free(stream);
+            }
         }
 
         /// <summary>
