@@ -63,6 +63,10 @@
 
     * Be sure to set the branch to the new release branch.
 
+5. Backup the repo and upload it to S3 and local backup drive.  Run this in a command window:
+
+  `neon-archive`
+
  # Release Version Conventions
 
 * Use semantic versioning.
