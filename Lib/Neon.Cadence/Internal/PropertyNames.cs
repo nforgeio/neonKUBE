@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -34,6 +35,9 @@ namespace Neon.Cadence.Internal
     /// </summary>
     internal static class PropertyNames
     {
+        //---------------------------------------------------------------------
+        // Proxy message property names.
+
         public static PropertyNameUtf8 Activity { get; private set; }                                  = new PropertyNameUtf8("Activity");
         public static PropertyNameUtf8 ActivityContextId { get; private set; }                         = new PropertyNameUtf8("ActivityContextId");
         public static PropertyNameUtf8 ActivityId { get; private set; }                                = new PropertyNameUtf8("ActivityId");
@@ -99,5 +103,106 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 WorkflowArgs { get; private set; }                              = new PropertyNameUtf8("WorkflowArgs");
         public static PropertyNameUtf8 WorkflowId { get; private set; }                                = new PropertyNameUtf8("WorkflowId");
         public static PropertyNameUtf8 WorkflowType { get; private set; }                              = new PropertyNameUtf8("WorkflowType");
+
+        // These properties are use for unit testing:
+
+        public static PropertyNameUtf8 TestOne { get; private set; }                                   = new PropertyNameUtf8("TestOne");
+        public static PropertyNameUtf8 TestTwo { get; private set; }                                   = new PropertyNameUtf8("TestTwo");
+        public static PropertyNameUtf8 TestEmpty { get; private set; }                                 = new PropertyNameUtf8("TestEmpty");
+        public static PropertyNameUtf8 TestNull { get; private set; }                                  = new PropertyNameUtf8("TestNull");
+        public static PropertyNameUtf8 TestComplex { get; private set; }                               = new PropertyNameUtf8("TestComplex");
+        public static PropertyNameUtf8 TestPerson { get; private set; }                                = new PropertyNameUtf8("TestPerson");
+
+        //---------------------------------------------------------------------
+        // Lookup related methods
+
+        // IMPLEMENTATION NOTE:
+        // --------------------
+        // We're going to implement a custom hash table here that stores all of the
+        // property name instances listed above and then can lookup an instance based
+        // on a Span<byte> of the UTF-8 encoded bytes for the property name.  We're
+        // doing this rather than using a regular Dictionary to avoid having to
+        // extract the property name bytes from serialized messages reducing the
+        // number of memory allocations.
+
+        private static List<PropertyNameUtf8>[] buckets = new List<PropertyNameUtf8>[61];
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static PropertyNames()
+        {
+            // Initialize the hash table bucket lists.
+
+            for (int i = 0; i < buckets.Length; i++)
+            {
+                buckets[i] = new List<PropertyNameUtf8>();
+            }
+
+            // Reflect the static [PropertyNameUtf8] properties and add them to the hash table.
+
+            foreach (var property in typeof(PropertyNames).GetProperties(BindingFlags.Static | BindingFlags.Public))
+            {
+                if (property.PropertyType != typeof(PropertyNameUtf8))
+                {
+                    continue;
+                }
+
+                Add((PropertyNameUtf8)property.GetValue(null));
+            }
+        }
+
+        /// <summary>
+        /// Adds a property name to the internal hash table.
+        /// </summary>
+        /// <param name="propertyName">The property name.</param>
+        private static void Add(PropertyNameUtf8 propertyName)
+        {
+            var hashCode = propertyName.GetHashCode();
+
+            buckets[hashCode % buckets.Length].Add(propertyName);
+        }
+
+        /// <summary>
+        /// Looks up a property name from a <c>byte</c> <see cref="Span{T}"/>.
+        /// </summary>
+        /// <param name="byteSpan">The byte span.</param>
+        /// <returns>The <see cref="PropertyNameUtf8"/>.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the requested property name does not exist.</exception>
+        public static PropertyNameUtf8 Lookup(Span<byte> byteSpan)
+        {
+            Covenant.Requires<ArgumentNullException>(byteSpan != null);
+
+            var hashCode = PropertyNameUtf8.ComputeHash(byteSpan);
+            var list     = buckets[hashCode % buckets.Length];
+
+            foreach (var item in list)
+            {
+                if (item.GetHashCode() != hashCode && item.NameUtf8.Length != byteSpan.Length)
+                {
+                    continue;   // Definitely not equal.
+                }
+
+                var equal = true;
+
+                for (int i = 0; i < byteSpan.Length; i++)
+                {
+                    if (byteSpan[i] != item.NameUtf8[i])
+                    {
+                        equal = false;
+                        break;
+                    }
+                }
+
+                if (equal)
+                {
+                    return item; 
+                }
+            }
+
+            // This should never happen.
+
+            throw new KeyNotFoundException(Encoding.UTF8.GetString(byteSpan.ToArray()));
+        }
     }
 }

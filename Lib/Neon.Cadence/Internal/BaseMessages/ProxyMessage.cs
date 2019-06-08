@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -132,6 +133,18 @@ namespace Neon.Cadence.Internal
     internal class ProxyMessage
     {
         //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// The return value of <see cref="ReadPropertyNameBytes(BinaryReader)"/>.
+        /// </summary>
+        private ref struct PropertyNameBytes
+        {
+            public byte[]       Bytes;
+            public Span<byte>   Span;
+        }
+
+        //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
@@ -149,6 +162,10 @@ namespace Neon.Cadence.Internal
 
         // This referernces the [Neon.Cadence] assembly.
         private static Assembly cadenceAssembly;
+
+        // Used to pool UTF-8 encoded byte arrays used to deserialize message
+        // property names.
+        private static ArrayPool<byte> bytesPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Static constructor.
@@ -230,10 +247,18 @@ namespace Neon.Cadence.Internal
 
                     for (int i = 0; i < argCount; i++)
                     {
-                        var name  = ReadString(reader);
-                        var value = ReadString(reader);
+                        var propertyNameBytes = ReadPropertyNameBytes(reader);
 
-                        message.Properties.Add(new PropertyNameUtf8(name), value);
+                        try
+                        {
+                            var value = ReadString(reader);
+
+                            message.Properties.Add(PropertyNames.Lookup(propertyNameBytes.Span), value);
+                        }
+                        finally
+                        {
+                            bytesPool.Return(propertyNameBytes.Bytes);
+                        }
                     }
 
                     // Read the attachments.
@@ -278,7 +303,7 @@ namespace Neon.Cadence.Internal
         /// Deserialzes a string.
         /// </summary>
         /// <param name="reader">The input reader.</param>
-        /// <returns></returns>
+        /// <returns>The string.</returns>
         private static string ReadString(BinaryReader reader)
         {
             var length = reader.ReadInt32();
@@ -294,6 +319,39 @@ namespace Neon.Cadence.Internal
             else
             {
                 return Encoding.UTF8.GetString(reader.ReadBytes(length));
+            }
+        }
+
+        /// <summary>
+        /// Deserialzes a string as UTF-8 bytes allocated from a local pool.
+        /// The value returned should be added back to the pool when you're
+        /// donw with it.
+        /// </summary>
+        /// <param name="reader">The input reader.</param>
+        /// <returns>The UTF-8 encoded string bytes.</returns>
+        private static PropertyNameBytes ReadPropertyNameBytes(BinaryReader reader)
+        {
+            var length = reader.ReadInt32();
+
+            if (length == -1)
+            {
+                throw new FormatException("Message property names cannot be NULL.");
+            }
+            else if (length == 0)
+            {
+                throw new FormatException("Message property names cannot be empty.");
+            }
+            else
+            {
+                var bytes = bytesPool.Rent(length);
+
+                reader.Read(bytes, 0, length);
+
+                return new PropertyNameBytes()
+                {
+                    Bytes = bytes,
+                    Span  = new Span<byte>(bytes, 0, length)
+                };
             }
         }
 
@@ -363,7 +421,9 @@ namespace Neon.Cadence.Internal
                 throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
             }
 
-            using (var output = new MemoryStream())
+            var output = MemoryStreamPool.AllocStream();
+
+            try
             {
                 using (var writer = new BinaryWriter(output, Encoding.UTF8, leaveOpen: true))
                 {
@@ -373,10 +433,10 @@ namespace Neon.Cadence.Internal
 
                     writer.Write(Properties.Count);
 
-                    foreach (var arg in Properties)
+                    foreach (var property in Properties)
                     {
-                        WriteString(writer, arg.Key);
-                        WriteString(writer, arg.Value);
+                        WriteString(writer, property.Key);
+                        WriteString(writer, property.Value);
                     }
 
                     // Write the attachments.
@@ -398,6 +458,10 @@ namespace Neon.Cadence.Internal
                 }
 
                 return output.ToArray();
+            }
+            finally
+            {
+                MemoryStreamPool.FreeStream(output);
             }
         }
 

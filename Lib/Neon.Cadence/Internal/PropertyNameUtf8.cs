@@ -31,8 +31,68 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Maps a property name string to its UTF-8 form.
     /// </summary>
-    internal struct PropertyNameUtf8
+    internal class PropertyNameUtf8
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Computes the hash code for a byte array.
+        /// </summary>
+        /// <param name="bytes">The byte array.</param>
+        /// <returns>The hash code.</returns>
+        public static int ComputeHash(byte[] bytes)
+        {
+            return ComputeHash(new Span<byte>(bytes));
+        }
+
+        /// <summary>
+        /// Computes the hash code for a <c>byte</c> <see cref="Span{T}"/>.
+        /// </summary>
+        /// <param name="bytes">The byte array.</param>
+        /// <returns>The hash code.</returns>
+        public static int ComputeHash(Span<byte> bytes)
+        {
+            var hashCode = 0;
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                hashCode ^= (bytes[i]) << (i % 4);
+            }
+
+            return hashCode;
+        }
+
+        /// <summary>
+        /// Compares a <b>byte</b> <see cref="Span{T}"/> against a <c>byte</c> array
+        /// for equality.
+        /// </summary>
+        /// <param name="byteSpan">The byte span.</param>
+        /// <param name="byteArray">The byte array.</param>
+        /// <returns><c>true</c> if the items are equal.</returns>
+        public static bool Equal(Span<byte> byteSpan, byte[] byteArray)
+        {
+            if (byteSpan.Length != byteArray.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < byteSpan.Length; i++)
+            {
+                if (byteSpan[i] != byteArray[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private int hashCode;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -43,6 +103,7 @@ namespace Neon.Cadence.Internal
 
             this.Name     = name;
             this.NameUtf8 = Encoding.UTF8.GetBytes(name);
+            this.hashCode = ComputeHash(this.NameUtf8);
         }
 
         /// <summary>
@@ -58,13 +119,25 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return Name.GetHashCode();
+            return hashCode;
         }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return Name.Equals(obj);
+            var other = obj as PropertyNameUtf8;
+
+            if (other == null)
+            {
+                return false;
+            }
+
+            if (this.hashCode != other.hashCode)
+            {
+                return false;
+            }
+
+            return Name.Equals(other.Name);
         }
     }
 }
