@@ -178,7 +178,7 @@ namespace TestCadence
             return ProxyMessage.Deserialize<TMessage>(response.Content.ReadAsStreamAsync().Result);
 #else
             // The RELEASE client doesn't support the "/echo" endpoint so we'll
-            // simply return the input message so the tests will pass.
+            // simply return the input message so the unit tests will pass.
 
             return message;
 #endif
