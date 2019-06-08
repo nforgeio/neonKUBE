@@ -67,6 +67,8 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 EmitMetrics { get; private set; }                               = new PropertyNameUtf8("EmitMetrics");
         public static PropertyNameUtf8 Endpoints { get; private set; }                                 = new PropertyNameUtf8("Endpoints");
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");
+        //public static PropertyNameUtf8 ErrorDetails { get; private set; }                              = new PropertyNameUtf8("ErrorDetails");
+        //public static PropertyNameUtf8 ErrorType { get; private set; }                                 = new PropertyNameUtf8("ErrorType");
         public static PropertyNameUtf8 Execution { get; private set; }                                 = new PropertyNameUtf8("Execution");
         public static PropertyNameUtf8 ExecutionStartToCloseTimeout { get; private set; }              = new PropertyNameUtf8("ExecutionStartToCloseTimeout");
         public static PropertyNameUtf8 HasDetails { get; private set; }                                = new PropertyNameUtf8("HasDetails");

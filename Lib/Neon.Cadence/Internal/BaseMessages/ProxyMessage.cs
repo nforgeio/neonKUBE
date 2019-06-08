@@ -31,14 +31,6 @@ using Neon.Common;
 using Neon.Collections;
 using Neon.Data;
 
-// $todo(jeff.lill)
-//
-// Performance could be improved by maintaining output stream and buffer pools
-// rather than allocating these every time.
-//
-// We should also try to convert the serialize/deserialize methods to be async
-// and work on streams.
-
 namespace Neon.Cadence.Internal
 {
     /// <summary>
@@ -215,6 +207,15 @@ namespace Neon.Cadence.Internal
         public static TMessage Deserialize<TMessage>(Stream input, bool ignoreTypeCode = false)
             where TMessage : ProxyMessage, new()
         {
+            //--------------------------------
+            // $debug(jeff.lill): DELETE THIS!
+
+            var bytes = input.ReadToEnd();
+
+            input = new MemoryStream(bytes);
+
+            //--------------------------------
+
             using (var reader = new BinaryReader(input, Encoding.UTF8, leaveOpen: true))
             {
                 // Read the message type and create a message instance of the specified type.
