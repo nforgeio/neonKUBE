@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 //
 // The current implementation is based on [AsyncReaderWriterLock] for simplicitly 
 // and because that is well tested.  There could be minor efficency gains to
-// reimplement this from scratch.
+// reimplement this from scratch using [SemaphoreSlim].
 
 namespace Neon.Tasks
 {
@@ -39,10 +39,9 @@ namespace Neon.Tasks
     /// <remarks>
     /// <note>
     /// <para>
-    /// <b>IMPORTANT:</b> This class is based on <see cref="SemaphoreSlim"/> under the covers and
-    /// and does not allow a single task to acquire the lock more than once.  This differs from
-    /// how the regular <see cref="Mutex"/> classes work which do allow a single thread to acquire
-    /// the mutex more than once.
+    /// <b>IMPORTANT:</b> This class does not allow a single task to acquire the lock more than once.  
+    /// This differs from how the regular <see cref="Mutex"/> classes work which do allow a single 
+    /// thread to acquire the mutex more than once.
     /// </para>
     /// <para>
     /// This means that you cannot expect to acquire a mutex in a task and then call into a
@@ -85,12 +84,6 @@ namespace Neon.Tasks
     /// <see cref="AsyncMutex"/>'s <see cref="Dispose()"/> method ensures that any tasks
     /// waiting for a lock will be unblocked with an <see cref="ObjectDisposedException"/>.
     /// </para>
-    /// <note>
-    /// <see cref="AsyncMutex"/> does not support any kind of reentrant <see cref="Task"/> locking 
-    /// support.  Child tasks will be considered to be completely independent of the parent
-    /// and <b>will not</b> inherit the parent's lock and a single task will not be able to acquire 
-    /// the same lock multiple times.
-    /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
     public class AsyncMutex : IDisposable
