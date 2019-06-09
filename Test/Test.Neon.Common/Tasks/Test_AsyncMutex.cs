@@ -43,20 +43,21 @@ namespace TestCommon
         public async Task Basic()
         {
             // Create a mutex and then several tasks that acquire the mutex for
-            // varying periods of timev veryfying that each obtains exclusive
+            // a period of time, verifying that each obtains exclusive
             // access.
 
-            var refCount = 0;
-            var error = false;
-            var tasks = new List<Task>();
+            var taskCount = 12;
+            var refCount  = 0;
+            var error     = false;
+            var tasks     = new List<Task>();
             var stopwatch = new Stopwatch();
-            var testTime = defaultTimeout - TimeSpan.FromSeconds(2);
+            var testTime  = defaultTimeout - TimeSpan.FromSeconds(2);
 
             stopwatch.Start();
 
             using (var mutex = new AsyncMutex())
             {
-                for (int i = 0; i < 20; i++)
+                for (int i = 0; i < taskCount; i++)
                 {
                     tasks.Add(Task.Run(
                         async () =>
@@ -77,7 +78,7 @@ namespace TestCommon
                                     {
                                         Interlocked.Increment(ref refCount);
 
-                                        await Task.Delay(NeonHelper.PseudoRandomTimespan(TimeSpan.FromMilliseconds(250)));
+                                        await Task.Delay(TimeSpan.FromMilliseconds(250));
                                     }
                                     finally
                                     {
@@ -101,10 +102,10 @@ namespace TestCommon
             // Create a mutex, acquire it, and then create another task that will
             // attempt to acquire it as well (and will fail because the mutex has
             // already been acquired).  Then dispose the mutex and verify that the
-            // task saw the [ObjectDisposedException].
+            // waiting task saw the [ObjectDisposedException].
 
-            var mutex = new AsyncMutex();
-            var inTask = false;
+            var mutex    = new AsyncMutex();
+            var inTask   = false;
             var acquired = false;
             var disposed = false;
 
