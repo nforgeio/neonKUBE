@@ -104,7 +104,7 @@ namespace Neon.Tasks
         /// The disposable lock returned by an <see cref="AsyncReaderWriterLock"/> granting read
         /// or write access to a resource.  Call <see cref="Dispose"/> to release the lock.
         /// </summary>
-        private class Lock : IDisposable
+        private struct Lock : IDisposable
         {
             private AsyncReaderWriterLock   parent;
             private bool                    isWriteLock;
