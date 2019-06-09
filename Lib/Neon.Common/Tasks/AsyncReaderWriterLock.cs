@@ -359,7 +359,7 @@ namespace Neon.Tasks
         /// that writers have exclusive access.  Writers are given priority over readers.
         /// </note>
         /// </remarks>
-        public Task<IDisposable> GetWriteLockAsync()
+        public NonDisposableTask<IDisposable> GetWriteLockAsync()
         {
             lock (syncLock)
             {
@@ -374,14 +374,14 @@ namespace Neon.Tasks
                     Interlocked.Increment(ref writerCount);
 #endif
                     lockStatus = -1;
-                    return noWaitWriterLockTask;
+                    return new NonDisposableTask<IDisposable>(noWaitWriterLockTask);
                 }
                 else
                 {
                     var writeWaitTcs = new TaskCompletionSource<IDisposable>();
 
                     waitingWriterTcsQueue.Enqueue(writeWaitTcs);
-                    return writeWaitTcs.Task;
+                    return new NonDisposableTask<IDisposable>(writeWaitTcs.Task);
                 }
             }
         }

@@ -37,6 +37,19 @@ namespace Neon.Tasks
     /// Implements an <c>async</c>/<c>await</c> friendly equivalent of <see cref="Mutex"/>.
     /// </summary>
     /// <remarks>
+    /// <note>
+    /// <para>
+    /// <b>IMPORTANT:</b> This class is based on <see cref="SemaphoreSlim"/> under the covers and
+    /// and does not allow a single task to acquire the lock more than once.  This differs from
+    /// how the regular <see cref="Mutex"/> classes work which do allow a single thread to acquire
+    /// the mutex more than once.
+    /// </para>
+    /// <para>
+    /// This means that you cannot expect to acquire a mutex in a task and then call into a
+    /// method that will also attempt to acquire the same mutex.  Doing this will result in 
+    /// a deadlock.
+    /// </para>
+    /// </note>
     /// <para>
     /// This class can be used to grant a task exclusive access to a resource.  This class is
     /// pretty easy to use.  Simply instantiate an instance and then call <see cref="AcquireAsync"/>
@@ -156,13 +169,7 @@ namespace Neon.Tasks
         /// </summary>
         /// <returns>The <see cref="IDisposable"/> instance to be disposed to release the lock.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the lock is disposed before or after this method is called.</exception>
-        /// <remarks>
-        /// <note>
-        /// This class allows multiple readers to hold the lock at any given time but requires
-        /// that writers have exclusive access.  Writers are given priority over readers.
-        /// </note>
-        /// </remarks>
-        public Task<IDisposable> AcquireAsync()
+        public NonDisposableTask<IDisposable> AcquireAsync()
         {
             if (isDisposed)
             {

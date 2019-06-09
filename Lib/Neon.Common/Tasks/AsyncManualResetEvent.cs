@@ -191,7 +191,7 @@ namespace Neon.Tasks
         /// Wait asynchronously for the event to be signalled.
         /// </summary>
         /// <exception cref="ObjectDisposedException">Thrown if the event has already been closed or is closed before it is signalled.</exception>
-        public Task WaitAsync()
+        public NonDisposableTask WaitAsync()
         {
             lock (syncLock)
             {
@@ -204,11 +204,11 @@ namespace Neon.Tasks
                 {
                     // The event is signalled so there's no need to block the caller.
 
-                    return Task.FromResult(true);
+                    return new NonDisposableTask(Task.FromResult(true));
                 }
                 else
                 {
-                    return tcs.Task;
+                    return new NonDisposableTask(tcs.Task);
                 }
             }
         }
