@@ -127,7 +127,7 @@ func (op *Operation) SetSettable(value workflow.Settable) {
 // has been received
 func (op *Operation) SetReply(reply messages.IProxyReply, result interface{}) error {
 	if op.future == nil {
-		return argumentNilError
+		return errArgumentNil
 	}
 
 	settable := op.GetSettable()
@@ -144,7 +144,7 @@ func (op *Operation) SetReply(reply messages.IProxyReply, result interface{}) er
 // error
 func (op *Operation) SetError(value error) error {
 	if op.future == nil {
-		return argumentNilError
+		return errArgumentNil
 	}
 
 	settable := op.GetSettable()
@@ -174,7 +174,7 @@ func (op *Operation) SetChannel(value chan interface{}) {
 func (op *Operation) SendChannel(reply messages.IProxyReply, result interface{}) error {
 	defer close(op.channel)
 	if op.channel == nil {
-		return argumentNilError
+		return errArgumentNil
 	}
 
 	if err := reply.GetError(); err != nil {

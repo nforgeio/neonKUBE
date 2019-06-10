@@ -401,7 +401,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	// WorkflowContext at the specified WorflowContextID
 	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		return entityNotExistError
+		return errEntityNotExist
 	}
 
 	// check for ContinueAsNew
@@ -526,7 +526,7 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
-		return entityNotExistError
+		return errEntityNotExist
 	}
 
 	// get the Operation corresponding the the reply
@@ -558,7 +558,7 @@ func handleWorkflowSignalReceivedReply(reply *messages.WorkflowSignalReceivedRep
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
-		return entityNotExistError
+		return errEntityNotExist
 	}
 
 	// get the Operation corresponding the the reply
@@ -649,7 +649,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := cadenceactivities.ActivityContexts.Get(contextID); actx == nil {
-		return entityNotExistError
+		return errEntityNotExist
 	}
 
 	// get the Operation corresponding the the reply
@@ -705,7 +705,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := cadenceactivities.ActivityContexts.Get(contextID); actx == nil {
-		return entityNotExistError
+		return errEntityNotExist
 	}
 
 	// get the Operation corresponding the the reply

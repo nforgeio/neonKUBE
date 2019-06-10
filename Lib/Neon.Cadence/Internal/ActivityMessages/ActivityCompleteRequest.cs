@@ -51,6 +51,24 @@ namespace Neon.Cadence.Internal
             set => SetBytesProperty(PropertyNames.TaskToken, value);
         }
 
+        /// <summary>
+        /// Returns the result to send to the activity complete call encoded as a byte array.
+        /// </summary>
+        public byte[] Result
+        {
+            get => GetBytesProperty(PropertyNames.Result);
+            set => SetBytesProperty(PropertyNames.Result, value);
+        }
+
+        /// <summary>
+        /// Returns the error to send to the activity complete call encoded as a string.
+        /// </summary>
+        public string CompleteError
+        {
+            get => GetStringProperty(PropertyNames.CompleteError);
+            set => SetStringProperty(PropertyNames.CompleteError, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -68,7 +86,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityCompleteRequest)target;
 
-            typedTarget.TaskToken = this.TaskToken;
+            typedTarget.TaskToken       = this.TaskToken;
+            typedTarget.Result          = this.Result;
+            typedTarget.CompleteError   = this.CompleteError;
         }
     }
 }

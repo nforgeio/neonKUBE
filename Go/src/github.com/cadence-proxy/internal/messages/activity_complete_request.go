@@ -18,6 +18,8 @@
 package messages
 
 import (
+	"errors"
+
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -66,6 +68,44 @@ func (request *ActivityCompleteRequest) SetTaskToken(value []byte) {
 	request.SetBytesProperty("TaskToken", value)
 }
 
+// GetResult gets a ActivityCompleteRequest's Result field
+// from its properties map. Result is the []byte result to set in the activity
+// complete call.
+//
+// returns []byte -> []byte value of the result to set in activity complete
+func (request *ActivityCompleteRequest) GetResult() []byte {
+	return request.GetBytesProperty("Result")
+}
+
+// SetResult sets an ActivityCompleteRequest's Result field
+// from its properties map.  Result is the []byte result to set in the activity
+// complete call.
+//
+// param value []byte -> []byte value of the result to set in activity complete
+func (request *ActivityCompleteRequest) SetResult(value []byte) {
+	request.SetBytesProperty("Result", value)
+}
+
+// GetCompleteError gets a ActivityCompleteRequest's CompleteError field
+// from its properties map. CompleteError is the error to set in the activity
+// complete call.
+//
+// returns error -> error to set in activity complete
+func (request *ActivityCompleteRequest) GetCompleteError() error {
+	errStr := request.GetStringProperty("CompleteError")
+	return errors.New(*errStr)
+}
+
+// SetCompleteError sets an ActivityCompleteRequest's CompleteError field
+// from its properties map.  CompleteError is the error to set in the activity
+// complete call.
+//
+// param value error -> error value to set in activity complete
+func (request *ActivityCompleteRequest) SetCompleteError(value error) {
+	errStr := value.Error()
+	request.SetStringProperty("CompleteError", &errStr)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -83,5 +123,7 @@ func (request *ActivityCompleteRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityCompleteRequest); ok {
 		v.SetTaskToken(request.GetTaskToken())
+		v.SetResult(request.GetResult())
+		v.SetCompleteError(request.GetCompleteError())
 	}
 }

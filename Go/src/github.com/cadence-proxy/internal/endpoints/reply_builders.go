@@ -22,6 +22,8 @@ import (
 	"reflect"
 	"time"
 
+	"go.uber.org/cadence/activity"
+
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
@@ -266,6 +268,18 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	case messagetypes.ActivityRecordHeartbeatReply:
 		if v, ok := reply.(*messages.ActivityRecordHeartbeatReply); ok {
 			buildActivityRecordHeartbeatReply(v, cadenceError, value)
+		}
+
+	// ActivityGetInfoReply
+	case messagetypes.ActivityGetInfoReply:
+		if v, ok := reply.(*messages.ActivityGetInfoReply); ok {
+			buildActivityGetInfoReply(v, cadenceError, value)
+		}
+
+	// ActivityCompleteReply
+	case messagetypes.ActivityCompleteReply:
+		if v, ok := reply.(*messages.ActivityCompleteReply); ok {
+			buildActivityCompleteReply(v, cadenceError)
 		}
 
 	// Undefined message type
@@ -568,4 +582,18 @@ func buildActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatRe
 			reply.SetDetails(v)
 		}
 	}
+}
+
+func buildActivityGetInfoReply(reply *messages.ActivityGetInfoReply, cadenceError *cadenceerrors.CadenceError, info ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(info) > 0 {
+		if v, ok := info[0].(activity.Info); ok {
+			reply.SetInfo(&v)
+		}
+	}
+}
+
+func buildActivityCompleteReply(reply *messages.ActivityCompleteReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
 }

@@ -61,17 +61,17 @@ var (
 	// cadence-proxy is listening on.  This gets set in main.go
 	Instance *server.Instance
 
-	// connectionError is the custom error that is thrown when the cadence-proxy
+	// errConnection is the custom error that is thrown when the cadence-proxy
 	// is not able to establish a connection with the cadence server
-	connectionError = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
+	errConnection = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
 
-	// entityNotExistError is the custom error that is thrown when a cadence
+	// errEntityNotExist is the custom error that is thrown when a cadence
 	// entity cannot be found in the cadence server
-	entityNotExistError = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
+	errEntityNotExist = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
 
 	// argumentNullError is the custom error that is thrown when trying to access a nil
 	// value
-	argumentNilError = errors.New("ArgumentNilError{Message: failed to access nil value.}")
+	errArgumentNil = errors.New("ArgumentNilError{Message: failed to access nil value.}")
 
 	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
