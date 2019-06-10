@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ChildId
         {
-            get => GetLongProperty("ChildId");
-            set => SetLongProperty("ChildId", value);
+            get => GetLongProperty(PropertyNames.ChildId);
+            set => SetLongProperty(PropertyNames.ChildId, value);
         }
 
         /// <inheritdoc/>

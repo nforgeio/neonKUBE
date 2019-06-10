@@ -50,8 +50,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public int Size
         {
-            get => GetIntProperty("Size");
-            set => SetIntProperty("Size", value);
+            get => GetIntProperty(PropertyNames.Size);
+            set => SetIntProperty(PropertyNames.Size, value);
         }
 
         /// <inheritdoc/>

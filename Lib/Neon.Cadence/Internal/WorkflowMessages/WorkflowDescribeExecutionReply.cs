@@ -43,8 +43,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalDescribeWorkflowExecutionResponse Details
         {
-            get => GetJsonProperty<InternalDescribeWorkflowExecutionResponse>("Details");
-            set => SetJsonProperty<InternalDescribeWorkflowExecutionResponse>("Details", value);
+            get => GetJsonProperty<InternalDescribeWorkflowExecutionResponse>(PropertyNames.Details);
+            set => SetJsonProperty<InternalDescribeWorkflowExecutionResponse>(PropertyNames.Details, value);
         }
 
         /// <inheritdoc/>

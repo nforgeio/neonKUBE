@@ -43,8 +43,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Result
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetBytesProperty(PropertyNames.Result);
+            set => SetBytesProperty(PropertyNames.Result, value);
         }
 
         /// <summary>
@@ -54,8 +54,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public bool ContinueAsNew
         {
-            get => GetBoolProperty("ContinueAsNew");
-            set => SetBoolProperty("ContinueAsNew", value);
+            get => GetBoolProperty(PropertyNames.ContinueAsNew);
+            set => SetBoolProperty(PropertyNames.ContinueAsNew, value);
         }
 
         /// <summary>
@@ -64,8 +64,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] ContinueAsNewArgs
         {
-            get => GetBytesProperty("ContinueAsNewArgs");
-            set => SetBytesProperty("ContinueAsNewArgs", value);
+            get => GetBytesProperty(PropertyNames.ContinueAsNewArgs);
+            set => SetBytesProperty(PropertyNames.ContinueAsNewArgs, value);
         }
 
         /// <summary>
@@ -74,8 +74,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ContinueAsNewExecutionStartToCloseTimeout
         {
-            get => GetLongProperty("ContinueAsNewExecutionStartToCloseTimeout");
-            set => SetLongProperty("ContinueAsNewExecutionStartToCloseTimeout", value);
+            get => GetLongProperty(PropertyNames.ContinueAsNewExecutionStartToCloseTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewExecutionStartToCloseTimeout, value);
         }
 
         /// <summary>
@@ -84,8 +84,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ContinueAsNewScheduleToCloseTimeout
         {
-            get => GetLongProperty("ContinueAsNewScheduleToCloseTimeout");
-            set => SetLongProperty("ContinueAsNewScheduleToCloseTimeout", value);
+            get => GetLongProperty(PropertyNames.ContinueAsNewScheduleToCloseTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewScheduleToCloseTimeout, value);
         }
 
         /// <summary>
@@ -94,8 +94,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ContinueAsNewScheduleToStartTimeout
         {
-            get => GetLongProperty("ContinueAsNewScheduleToStartTimeout");
-            set => SetLongProperty("ContinueAsNewScheduleToStartTimeout", value);
+            get => GetLongProperty(PropertyNames.ContinueAsNewScheduleToStartTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewScheduleToStartTimeout, value);
         }
 
         /// <summary>
@@ -104,8 +104,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long ContinueAsNewStartToCloseTimeout
         {
-            get => GetLongProperty("ContinueAsNewStartToCloseTimeout");
-            set => SetLongProperty("ContinueAsNewStartToCloseTimeout", value);
+            get => GetLongProperty(PropertyNames.ContinueAsNewStartToCloseTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewStartToCloseTimeout, value);
         }
 
         /// <summary>
@@ -114,8 +114,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string ContinueAsNewTaskList
         {
-            get => GetStringProperty("ContinueAsNewTaskList");
-            set => SetStringProperty("ContinueAsNewTaskList", value);
+            get => GetStringProperty(PropertyNames.ContinueAsNewTaskList);
+            set => SetStringProperty(PropertyNames.ContinueAsNewTaskList, value);
         }
 
         /// <summary>
@@ -124,8 +124,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string ContinueAsNewDomain
         {
-            get => GetStringProperty("ContinueAsNewDomain");
-            set => SetStringProperty("ContinueAsNewDomain", value);
+            get => GetStringProperty(PropertyNames.ContinueAsNewDomain);
+            set => SetStringProperty(PropertyNames.ContinueAsNewDomain, value);
         }
 
         /// <inheritdoc/>

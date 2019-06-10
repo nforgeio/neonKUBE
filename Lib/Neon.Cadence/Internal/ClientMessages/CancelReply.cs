@@ -47,8 +47,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public bool WasCancelled
         {
-            get => GetBoolProperty("WasCancelled");
-            set => SetBoolProperty("WasCancelled", value);
+            get => GetBoolProperty(PropertyNames.WasCancelled);
+            set => SetBoolProperty(PropertyNames.WasCancelled, value);
         }
 
         /// <inheritdoc/>

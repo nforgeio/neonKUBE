@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string WorkflowId
         {
-            get => GetStringProperty("WorkflowId");
-            set => SetStringProperty("WorkflowId", value);
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string RunId
         {
-            get => GetStringProperty("RunId");
-            set => SetStringProperty("RunId", value);
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string QueryName
         {
-            get => GetStringProperty("QueryName");
-            set => SetStringProperty("QueryName", value);
+            get => GetStringProperty(PropertyNames.QueryName);
+            set => SetStringProperty(PropertyNames.QueryName, value);
         }
 
         /// <summary>
@@ -74,8 +74,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] QueryArgs
         {
-            get => GetBytesProperty("QueryArgs");
-            set => SetBytesProperty("QueryArgs", value);
+            get => GetBytesProperty(PropertyNames.QueryArgs);
+            set => SetBytesProperty(PropertyNames.QueryArgs, value);
         }
 
         /// <inheritdoc/>

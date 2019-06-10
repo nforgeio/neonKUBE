@@ -28,6 +28,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -43,7 +44,6 @@ using Neon.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
-using System.Text.RegularExpressions;
 
 namespace NeonCli
 {
@@ -109,10 +109,12 @@ OPTIONS:
     --force             - Don't prompt before removing existing contexts
                           that reference the target cluster.
 ";
-        private const string logBeginMarker = "# CLUSTER-BEGIN-SETUP ############################################################";
-        private const string logEndMarker = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
-        private const string logFailedMarker = "# CLUSTER-END-SETUP-FAILED #######################################################";
-        private const string joinCommandMarker = "kubeadm join";
+        private const string        logBeginMarker    = "# CLUSTER-BEGIN-SETUP ############################################################";
+        private const string        logEndMarker      = "# CLUSTER-END-SETUP-SUCCESS ######################################################";
+        private const string        logFailedMarker   = "# CLUSTER-END-SETUP-FAILED #######################################################";
+        private const string        joinCommandMarker = "kubeadm join";
+        private const int           maxJoinAttempts   = 5;
+        private readonly TimeSpan   joinRetryDelay    = TimeSpan.FromSeconds(5);
 
         private KubeConfigContext       kubeContext;
         private KubeContextExtension    kubeContextExtension;
@@ -404,13 +406,12 @@ OPTIONS:
                         // Note that we're assuming that there's only one of each in the config
                         // we downloaded from the cluster.
 
-                        var newCluster = newConfig.Clusters.Single();
-                        var newContext = newConfig.Contexts.Single();
-                        var newUser = newConfig.Users.Single();
-
+                        var newCluster      = newConfig.Clusters.Single();
+                        var newContext      = newConfig.Contexts.Single();
+                        var newUser         = newConfig.Users.Single();
                         var existingCluster = existingConfig.GetCluster(newCluster.Name);
                         var existingContext = existingConfig.GetContext(newContext.Name);
-                        var existingUser = existingConfig.GetUser(newUser.Name);
+                        var existingUser    = existingConfig.GetUser(newUser.Name);
 
                         if (existingConfig != null)
                         {
@@ -837,7 +838,7 @@ ff02::2         ip6-allrouters
                 {
                     Thread.Sleep(stepDelay);
 
-                    node.Status = "setup: kubernetes repo";
+                    node.Status = "setup: kubernetes apt repository";
 
                     var bundle = CommandBundle.FromScript(
 $@"#!/bin/bash
@@ -994,7 +995,6 @@ networking:
                         });
 
                     firstMaster.Status = "done";
-                    
 
                     // kubectl config:
 
@@ -1088,8 +1088,27 @@ networking:
                                     master.InvokeIdempotentAction("setup/cluster-join",
                                             () =>
                                             {
+                                                var joined = false;
+
                                                 master.Status = "join: as master";
-                                                master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane");
+
+                                                for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
+                                                {
+                                                    var response = master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
+
+                                                    if (response.Success)
+                                                    {
+                                                        joined = true;
+                                                        break;
+                                                    }
+
+                                                    Thread.Sleep(joinRetryDelay);
+                                                }
+
+                                                if (!joined)
+                                                {
+                                                    throw new Exception($"Unable to join node [{master.Name}] to the after [{maxJoinAttempts}] attempts.");
+                                                }
                                             });
 
                                     // Pull the Kubernetes images:
@@ -1111,19 +1130,20 @@ networking:
                         master.Status = "joined";
                     }
 
-
-                    // Configure kube-apiserver on all the masters
+                    // Configure [kube-apiserver] on all the masters
 
                     foreach (var master in cluster.Masters)
                     {
                         try
                         {
+                            master.Status = "configure: kube-apiserver";
+
                             master.InvokeIdempotentAction("setup/cluster-kube-apiserver",
                                 () =>
                                 {
                                     master.Status = "configure: kube-apiserver";
                                     master.SudoCommand(CommandBundle.FromScript(
-        @"#!/bin/bash
+@"#!/bin/bash
 
 sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,Priority,ResourceQuota/' /etc/kubernetes/manifests/kube-apiserver.yaml
 "));
@@ -1135,7 +1155,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             master.LogException(e);
                         }
 
-                        master.Status = "kube-apiserver configured";
+                        master.Status = string.Empty;
                     }
 
                     //---------------------------------------------------------
@@ -1148,8 +1168,27 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             worker.InvokeIdempotentAction("setup/cluster-join",
                                 () =>
                                 {
+                                    var joined = false;
+
                                     worker.Status = "join: as worker";
-                                    worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand);
+
+                                    for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
+                                    {
+                                        var response = worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand, RunOptions.Defaults & ~RunOptions.FaultOnError);
+
+                                        if (response.Success)
+                                        {
+                                            joined = true;
+                                            break;
+                                        }
+
+                                        Thread.Sleep(joinRetryDelay);
+                                    }
+
+                                    if (!joined)
+                                    {
+                                        throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
+                                    }
                                 });
                         }
                         catch (Exception e)
@@ -1173,6 +1212,21 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         node.Status = string.Empty;
                     }
 
+                    // Install the network CNI.
+
+                    switch (cluster.Definition.Network.Cni)
+                    {
+                        case NetworkCni.Calico:
+
+                            DeployCalicoCni(firstMaster);
+                            break;
+
+                        case NetworkCni.Istio:
+                        default:
+
+                            throw new NotImplementedException($"The [{cluster.Definition.Network.Cni}] CNI support is not implemented.");
+                    }
+
                     // Allow pods to be scheduled on master nodes if enabled.
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-master-pods",
@@ -1194,24 +1248,11 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                             if (allowPodsOnMasters)
                             {
+                                firstMaster.SudoCommand(@"until [ `kubectl get nodes | grep ""NotReady"" | wc -l ` == ""0"" ]; do     sleep 1; done", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
                                 firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
+                                firstMaster.SudoCommand(@"until [ `kubectl get nodes -o json | jq .items[].spec | grep ""NoSchedule"" | wc -l ` == ""0"" ]; do     sleep 1; done", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
                             }
                         });
-
-                    // Install the network CNI.
-
-                    switch (cluster.Definition.Network.Cni)
-                    {
-                        case NetworkCni.Calico:
-
-                            DeployCalicoCni(firstMaster);
-                            break;
-
-                        case NetworkCni.Istio:
-                        default:
-
-                            throw new NotImplementedException($"The [{cluster.Definition.Network.Cni}] CNI support is not implemented.");
-                    }
 
                     // Install Istio.
 
@@ -1361,10 +1402,6 @@ subjects:
                     var script =
 $@"#!/bin/bash
 
-# Configure RBAC:
-
-kubectl apply -f {kubeSetupInfo.CalicoRbacYamlUri}
-
 # We need to edit the setup manifest to specify the 
 # cluster subnet before applying it.
 
@@ -1446,18 +1483,11 @@ cd istio
 chmod 330 bin/*
 cp bin/* /usr/local/bin
 
-#Install the Istio CNI:
-
-helm template install/kubernetes/helm/istio-cni --name=istio-cni --namespace=istio-system | kubectl apply -f -
-
-
 # Install Istio's CRDs:
 
-helm template install/kubernetes/helm/istio-init --name istio-init --namespace istio-system | kubectl apply -f -
-kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-10.yaml
-kubectl apply -f install/kubernetes/helm/istio-init/files/crd-certmanager-11.yaml
+helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
 
-# Verify that all 53 Istio CRDs were committed to the Kubernetes api-server
+# Verify that all 58 Istio CRDs were committed to the Kubernetes api-server
 
 until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""58"" ]; do
     sleep 1

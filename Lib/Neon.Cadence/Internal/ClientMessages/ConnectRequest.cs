@@ -57,8 +57,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Endpoints
         {
-            get => GetStringProperty("Endpoints");
-            set => SetStringProperty("Endpoints", value);
+            get => GetStringProperty(PropertyNames.Endpoints);
+            set => SetStringProperty(PropertyNames.Endpoints, value);
         }
 
         /// <summary>
@@ -66,8 +66,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Identity
         {
-            get => GetStringProperty("Identity");
-            set => SetStringProperty("Identity", value);
+            get => GetStringProperty(PropertyNames.Identity);
+            set => SetStringProperty(PropertyNames.Identity, value);
         }
 
         /// <summary>
@@ -75,8 +75,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public TimeSpan ClientTimeout
         {
-            get => GetTimeSpanProperty("ClientTimeout");
-            set => SetTimeSpanProperty("ClientTimeout", value);
+            get => GetTimeSpanProperty(PropertyNames.ClientTimeout);
+            set => SetTimeSpanProperty(PropertyNames.ClientTimeout, value);
         }
 
         /// <inheritdoc/>

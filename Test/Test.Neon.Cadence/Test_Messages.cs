@@ -69,10 +69,10 @@ namespace TestCadence
 
                 //--------------------------------
                 // $debug(jeff.lill): DELETE THIS!
-                DebugPrelaunched       = true,
+                DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
-                DebugDisableHeartbeats = false,
-                DebugEmulateProxy      = false,
+                DebugDisableHeartbeats = true,
+                DebugEmulateProxy      = true,
                 //--------------------------------
             };
 
@@ -102,48 +102,50 @@ namespace TestCadence
 
             // Verify that non-existant property values return the default for the requested type.
 
-            Assert.Null(message.GetStringProperty("foo"));
-            Assert.Equal(0, message.GetIntProperty("foo"));
-            Assert.Equal(0L, message.GetLongProperty("foo"));
-            Assert.False(message.GetBoolProperty("foo"));
-            Assert.Equal(0.0, message.GetDoubleProperty("foo"));
-            Assert.Equal(DateTime.MinValue, message.GetDateTimeProperty("foo"));
-            Assert.Equal(TimeSpan.Zero, message.GetTimeSpanProperty("foo"));
+            var fooProperty = new PropertyNameUtf8("foo");
+
+            Assert.Null(message.GetStringProperty(fooProperty));
+            Assert.Equal(0, message.GetIntProperty(fooProperty));
+            Assert.Equal(0L, message.GetLongProperty(fooProperty));
+            Assert.False(message.GetBoolProperty(fooProperty));
+            Assert.Equal(0.0, message.GetDoubleProperty(fooProperty));
+            Assert.Equal(DateTime.MinValue, message.GetDateTimeProperty(fooProperty));
+            Assert.Equal(TimeSpan.Zero, message.GetTimeSpanProperty(fooProperty));
 
             // Verify that we can override default values for non-existant properties.
 
-            Assert.Equal("bar", message.GetStringProperty("foo", "bar"));
-            Assert.Equal(123, message.GetIntProperty("foo", 123));
-            Assert.Equal(456L, message.GetLongProperty("foo", 456L));
-            Assert.True(message.GetBoolProperty("foo", true));
-            Assert.Equal(123.456, message.GetDoubleProperty("foo", 123.456));
-            Assert.Equal(new DateTime(2019, 4, 14), message.GetDateTimeProperty("foo", new DateTime(2019, 4, 14)));
-            Assert.Equal(TimeSpan.FromSeconds(123), message.GetTimeSpanProperty("foo", TimeSpan.FromSeconds(123)));
+            Assert.Equal("bar", message.GetStringProperty(fooProperty, "bar"));
+            Assert.Equal(123, message.GetIntProperty(fooProperty, 123));
+            Assert.Equal(456L, message.GetLongProperty(fooProperty, 456L));
+            Assert.True(message.GetBoolProperty(fooProperty, true));
+            Assert.Equal(123.456, message.GetDoubleProperty(fooProperty, 123.456));
+            Assert.Equal(new DateTime(2019, 4, 14), message.GetDateTimeProperty(fooProperty, new DateTime(2019, 4, 14)));
+            Assert.Equal(TimeSpan.FromSeconds(123), message.GetTimeSpanProperty(fooProperty, TimeSpan.FromSeconds(123)));
 
             // Verify that we can write and then read properties.
 
-            message.SetStringProperty("foo", "bar");
-            Assert.Equal("bar", message.GetStringProperty("foo"));
+            message.SetStringProperty(fooProperty, "bar");
+            Assert.Equal("bar", message.GetStringProperty(fooProperty));
 
-            message.SetIntProperty("foo", 123);
-            Assert.Equal(123, message.GetIntProperty("foo"));
+            message.SetIntProperty(fooProperty, 123);
+            Assert.Equal(123, message.GetIntProperty(fooProperty));
 
-            message.SetLongProperty("foo", 456L);
-            Assert.Equal(456L, message.GetLongProperty("foo"));
+            message.SetLongProperty(fooProperty, 456L);
+            Assert.Equal(456L, message.GetLongProperty(fooProperty));
 
-            message.SetBoolProperty("foo", true);
-            Assert.True(message.GetBoolProperty("foo"));
+            message.SetBoolProperty(fooProperty, true);
+            Assert.True(message.GetBoolProperty(fooProperty));
 
-            message.SetDoubleProperty("foo", 123.456);
-            Assert.Equal(123.456, message.GetDoubleProperty("foo"));
+            message.SetDoubleProperty(fooProperty, 123.456);
+            Assert.Equal(123.456, message.GetDoubleProperty(fooProperty));
 
             var date = new DateTime(2019, 4, 14).ToUniversalTime();
 
-            message.SetDateTimeProperty("foo", date);
-            Assert.Equal(date, message.GetDateTimeProperty("foo"));
+            message.SetDateTimeProperty(fooProperty, date);
+            Assert.Equal(date, message.GetDateTimeProperty(fooProperty));
 
-            message.SetTimeSpanProperty("foo", TimeSpan.FromSeconds(123));
-            Assert.Equal(TimeSpan.FromSeconds(123), message.GetTimeSpanProperty("foo"));
+            message.SetTimeSpanProperty(fooProperty, TimeSpan.FromSeconds(123));
+            Assert.Equal(TimeSpan.FromSeconds(123), message.GetTimeSpanProperty(fooProperty));
         }
 
         /// <summary>
@@ -157,7 +159,7 @@ namespace TestCadence
             where TMessage : ProxyMessage, new()
         {
 #if DEBUG
-            var bytes   = message.Serialize();
+            var bytes   = message.SerializeAsBytes();
             var content = new ByteArrayContent(bytes);
 
             content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
@@ -176,7 +178,7 @@ namespace TestCadence
             return ProxyMessage.Deserialize<TMessage>(response.Content.ReadAsStreamAsync().Result);
 #else
             // The RELEASE client doesn't support the "/echo" endpoint so we'll
-            // simply return the input message so the tests will pass.
+            // simply return the input message so the unit tests will pass.
 
             return message;
 #endif
@@ -192,7 +194,7 @@ namespace TestCadence
         private TMessage EchoToProxy<TMessage>(TMessage message)
             where TMessage : ProxyMessage, new()
         {
-            var bytes   = message.Serialize();
+            var bytes   = message.SerializeAsBytes();
             var content = new ByteArrayContent(bytes);
 
             content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);

@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Name
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
         }
 
         /// <inheritdoc/>

@@ -37,48 +37,11 @@ namespace Neon.Web
     /// </summary>
     public static partial class WebHelper
     {
-        // Identifies the types that can be serialized and deserialized by the round-trip formatters.
-
-        private static HashSet<Type> roundTripTypes = new HashSet<Type>();
-
         /// <summary>
         /// Static constructor.
         /// </summary>
         static WebHelper()
         {
-        }
-
-        /// <summary>
-        /// Registers a type as being round-trippable.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        internal static void RegisterRoundTripType(Type type)
-        {
-            lock (roundTripTypes)
-            {
-                if (!roundTripTypes.Contains(type))
-                {
-                    roundTripTypes.Add(type);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Determines whether a type is round-trippable.
-        /// </summary>
-        /// <param name="type">The type to be tested.</param>
-        /// <returns><c>true</c> if the type is round-trippable.</returns>
-        internal static bool IsRoundTripType(Type type)
-        {
-            if (type.IsEnum)
-            {
-                return true;    // All enum types are supported.
-            }
-
-            lock (roundTripTypes)
-            {
-                return roundTripTypes.Contains(type);
-            }
         }
 
         /// <summary>

@@ -58,7 +58,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRegisterRequest>(stream);
@@ -73,7 +73,7 @@ namespace TestCadence
                 Assert.Equal("Foo", message.Name);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRegisterRequest>(stream);
@@ -110,7 +110,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRegisterReply>(stream);
@@ -126,7 +126,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRegisterReply>(stream);
@@ -165,7 +165,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteRequest>(stream);
@@ -194,7 +194,7 @@ namespace TestCadence
                 Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteRequest>(stream);
@@ -246,7 +246,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream);
@@ -266,7 +266,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream);
@@ -311,7 +311,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowInvokeRequest>(stream);
@@ -348,7 +348,7 @@ namespace TestCadence
                 Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowInvokeRequest>(stream);
@@ -406,7 +406,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowInvokeReply>(stream);
@@ -446,7 +446,7 @@ namespace TestCadence
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowInvokeReply>(stream);
@@ -512,7 +512,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelRequest>(stream);
@@ -534,7 +534,7 @@ namespace TestCadence
                 Assert.Equal("my-domain", message.Domain);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelRequest>(stream);
@@ -577,7 +577,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelReply>(stream);
@@ -593,7 +593,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelReply>(stream);
@@ -632,7 +632,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowTerminateRequest>(stream);
@@ -657,7 +657,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowTerminateRequest>(stream);
@@ -703,7 +703,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowTerminateReply>(stream);
@@ -719,7 +719,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowTerminateReply>(stream);
@@ -758,7 +758,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalRequest>(stream);
@@ -783,7 +783,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalRequest>(stream);
@@ -829,7 +829,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReply>(stream);
@@ -845,7 +845,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReply>(stream);
@@ -884,7 +884,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalWithStartRequest>(stream);
@@ -916,7 +916,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalWithStartRequest>(stream);
@@ -971,7 +971,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalWithStartReply>(stream);
@@ -989,7 +989,7 @@ namespace TestCadence
                 message.Execution = new InternalWorkflowExecution() { ID = "666", RunID = "777" };
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalWithStartReply>(stream);
@@ -1034,7 +1034,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryRequest>(stream);
@@ -1059,7 +1059,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryRequest>(stream);
@@ -1105,7 +1105,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryReply>(stream);
@@ -1123,7 +1123,7 @@ namespace TestCadence
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryReply>(stream);
@@ -1165,7 +1165,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableRequest>(stream);
@@ -1184,7 +1184,7 @@ namespace TestCadence
                 Assert.Equal("my-mutable", message.MutableId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableRequest>(stream);
@@ -1227,7 +1227,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableReply>(stream);
@@ -1247,7 +1247,7 @@ namespace TestCadence
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableReply>(stream);
@@ -1289,7 +1289,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableInvokeRequest>(stream);
@@ -1305,7 +1305,7 @@ namespace TestCadence
                 Assert.Equal("my-mutable", message.MutableId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableInvokeRequest>(stream);
@@ -1345,7 +1345,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableInvokeReply>(stream);
@@ -1363,7 +1363,7 @@ namespace TestCadence
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableInvokeReply>(stream);
@@ -1405,7 +1405,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDescribeExecutionRequest>(stream);
@@ -1424,7 +1424,7 @@ namespace TestCadence
                 Assert.Equal("777", message.RunId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDescribeExecutionRequest>(stream);
@@ -1581,7 +1581,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDescribeExecutionReply>(stream);
@@ -1599,7 +1599,7 @@ namespace TestCadence
                 message.Details = GetDescribeWorkflow();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDescribeExecutionReply>(stream);
@@ -1641,7 +1641,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetResultRequest>(stream);
@@ -1660,7 +1660,7 @@ namespace TestCadence
                 Assert.Equal("777", message.RunId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetResultRequest>(stream);
@@ -1703,7 +1703,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetResultReply>(stream);
@@ -1721,7 +1721,7 @@ namespace TestCadence
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetResultReply>(stream);
@@ -1763,7 +1763,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalSubscribeRequest>(stream);
@@ -1779,7 +1779,7 @@ namespace TestCadence
                 Assert.Equal("my-signal", message.SignalName);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalSubscribeRequest>(stream);
@@ -1819,7 +1819,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalSubscribeReply>(stream);
@@ -1835,7 +1835,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalSubscribeReply>(stream);
@@ -1874,7 +1874,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReceivedRequest>(stream);
@@ -1893,7 +1893,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReceivedRequest>(stream);
@@ -1936,7 +1936,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReceivedReply>(stream);
@@ -1952,7 +1952,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReceivedReply>(stream);
@@ -1991,7 +1991,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowHasLastResultRequest>(stream);
@@ -2004,7 +2004,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowHasLastResultRequest>(stream);
@@ -2041,7 +2041,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowHasLastResultReply>(stream);
@@ -2060,7 +2060,7 @@ namespace TestCadence
                 Assert.True(message.HasResult);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowHasLastResultReply>(stream);
@@ -2102,7 +2102,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetLastResultRequest>(stream);
@@ -2115,7 +2115,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetLastResultRequest>(stream);
@@ -2149,7 +2149,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetLastLastReply>(stream);
@@ -2168,7 +2168,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetLastLastReply>(stream);
@@ -2210,7 +2210,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDisconnectContextRequest>(stream);
@@ -2223,7 +2223,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDisconnectContextRequest>(stream);
@@ -2257,7 +2257,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDisconnectContextReply>(stream);
@@ -2273,7 +2273,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDisconnectContextReply>(stream);
@@ -2312,7 +2312,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetTimeRequest>(stream);
@@ -2325,7 +2325,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetTimeRequest>(stream);
@@ -2359,7 +2359,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetTimeReply>(stream);
@@ -2378,7 +2378,7 @@ namespace TestCadence
                 Assert.Equal(new DateTime(2019, 5, 28), message.Time);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetTimeReply>(stream);
@@ -2420,7 +2420,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSleepRequest>(stream);
@@ -2436,7 +2436,7 @@ namespace TestCadence
                 Assert.Equal(TimeSpan.FromDays(2), message.Duration);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSleepRequest>(stream);
@@ -2473,7 +2473,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSleepReply>(stream);
@@ -2489,7 +2489,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSleepReply>(stream);
@@ -2542,7 +2542,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteChildRequest>(stream);
@@ -2578,7 +2578,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteChildRequest>(stream);
@@ -2618,7 +2618,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteChildReply>(stream);
@@ -2637,7 +2637,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ChildId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteChildReply>(stream);
@@ -2679,7 +2679,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowWaitForChildRequest>(stream);
@@ -2695,7 +2695,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ChildId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowWaitForChildRequest>(stream);
@@ -2732,7 +2732,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowWaitForChildReply>(stream);
@@ -2751,7 +2751,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowWaitForChildReply>(stream);
@@ -2793,7 +2793,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalChildRequest>(stream);
@@ -2815,7 +2815,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalChildRequest>(stream);
@@ -2858,7 +2858,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalChildReply>(stream);
@@ -2874,7 +2874,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalChildReply>(stream);
@@ -2913,7 +2913,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelChildRequest>(stream);
@@ -2929,7 +2929,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ChildId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelChildRequest>(stream);
@@ -2966,7 +2966,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelChildReply>(stream);
@@ -2982,7 +2982,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelChildReply>(stream);
@@ -3021,7 +3021,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetSignalHandlerRequest>(stream);
@@ -3037,7 +3037,7 @@ namespace TestCadence
                 Assert.Equal("my-signal", message.SignalName);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetSignalHandlerRequest>(stream);
@@ -3074,7 +3074,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetSignalHandlerReply>(stream);
@@ -3090,7 +3090,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetSignalHandlerReply>(stream);
@@ -3129,7 +3129,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetQueryHandlerRequest>(stream);
@@ -3145,7 +3145,7 @@ namespace TestCadence
                 Assert.Equal("my-query", message.QueryName);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetQueryHandlerRequest>(stream);
@@ -3182,7 +3182,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetQueryHandlerReply>(stream);
@@ -3198,7 +3198,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetQueryHandlerReply>(stream);
@@ -3237,7 +3237,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryInvokeRequest>(stream);
@@ -3259,7 +3259,7 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryInvokeRequest>(stream);
@@ -3302,7 +3302,7 @@ namespace TestCadence
                 // Empty message.
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryInvokeReply>(stream);
@@ -3320,7 +3320,7 @@ namespace TestCadence
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize());
+                stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryInvokeReply>(stream);

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityInfo.cs
+// FILE:	    InternalActivityInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,64 +19,77 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Cadence;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Describes the current state of a scheduled or executing activity.
+    /// Holds informaation about an executing activity.
     /// </summary>
     public class ActivityInfo
     {
         /// <summary>
+        /// The activity task token.
+        /// </summary>
+        public byte[] TaskToken { get; internal set; }
+
+        /// <summary>
+        /// The parent workflow type name.
+        /// </summary>
+        public string WorkflowTypeName { get; internal set; }
+
+        /// <summary>
+        /// The parent workflow domain.
+        /// </summary>
+        public string WorkflowDomain { get; internal set; }
+
+        /// <summary>
+        /// The parent workflow execution details.
+        /// </summary>
+        public WorkflowRun WorkflowRun { get; internal set; }
+
+        /// <summary>
         /// The activity ID.
         /// </summary>
-        public string ActivityID { get; internal set; }
+        public string ActivityId { get; internal set; }
 
         /// <summary>
-        /// Identifies the activity type.
+        /// The activity type name.
         /// </summary>
-        public string Name { get; internal set; }
+        public string ActivityTypeName { get; internal set; }
 
         /// <summary>
-        /// The activity state.
+        /// The activity tasklist.
         /// </summary>
-        public ActivityStatus Status { get; internal set; }
+        public string TaskList { get; internal set; }
 
         /// <summary>
-        /// Details from the last activity heartbeart.
+        /// The maximum time between heartbeats.  0 means no heartbeat needed.
         /// </summary>
-        public byte[] HeartbeatDetails { get; internal set; }
+        public TimeSpan HeartbeatTimeout { get; internal set; }
 
         /// <summary>
-        /// Time when the last activity heartbeat was received.
+        /// Time (UTC) when the activity was scheduled.
         /// </summary>
-        public DateTime LastHeartbeatTimestamp { get; internal set; }
+        public DateTime ScheduledTime { get; internal set; }
 
         /// <summary>
-        /// Time when the activity was most recently started.
+        /// Time (UTC) when the activity was started.
         /// </summary>
-        public DateTime LastStartedTimestamp { get; internal set; }
+        public DateTime StartedTime { get; internal set; }
 
         /// <summary>
-        /// The number of times the activity has been started/restarted.
+        /// Time (UTC) when the activity will timeout.
+        /// </summary>
+        public DateTime DeadlineTime { get; internal set; }
+
+        /// <summary>
+        /// Indicates how many times the activity was been restarted.  This will be zero
+        /// for the first execution, 1 for the second, and so on.
         /// </summary>
         public int Attempt { get; internal set; }
-
-        /// <summary>
-        /// The maximum times the activity may be started.
-        /// </summary>
-        public int MaximumAttempts { get; internal set; }
-
-        /// <summary>
-        /// Time when the activity is scheduled to run.
-        /// </summary>
-        public DateTime ScheduledTimestamp { get; internal set; }
-
-        /// <summary>
-        /// Time when the activity must complete.
-        /// </summary>
-        public DateTime ExpirationTimestamp { get; internal set; }
     }
 }

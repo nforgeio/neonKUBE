@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -29,14 +30,6 @@ using Neon.Cadence;
 using Neon.Common;
 using Neon.Collections;
 using Neon.Data;
-
-// $todo(jeff.lill)
-//
-// Performance could be improved by maintaining output stream and buffer pools
-// rather than allocating these every time.
-//
-// We should also try to convert the serialize/deserialize methods to be async
-// and work on streams.
 
 namespace Neon.Cadence.Internal
 {
@@ -124,13 +117,25 @@ namespace Neon.Cadence.Internal
     /// </para>
     /// <para>
     /// Note that more complex message property may be passed as JSON strings
-    /// that can be serialized and deserialized via the <see cref="GetJsonProperty{T}(string)"/>
-    /// and <see cref="SetJsonProperty{T}(string, T)"/> helper methods.
+    /// that can be serialized and deserialized via the <see cref="GetJsonProperty{T}(PropertyNameUtf8)"/>
+    /// and <see cref="SetJsonProperty{T}(PropertyNameUtf8, T)"/> helper methods.
     /// </para>
     /// </remarks>
     [InternalProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ProxyMessage
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// The return value of <see cref="ReadPropertyNameBytes(BinaryReader)"/>.
+        /// </summary>
+        private ref struct PropertyNameBytes
+        {
+            public byte[]       Bytes;
+            public Span<byte>   Span;
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -149,6 +154,10 @@ namespace Neon.Cadence.Internal
 
         // This referernces the [Neon.Cadence] assembly.
         private static Assembly cadenceAssembly;
+
+        // Used to pool UTF-8 encoded byte arrays used to deserialize message
+        // property names.
+        private static ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Static constructor.
@@ -230,10 +239,18 @@ namespace Neon.Cadence.Internal
 
                     for (int i = 0; i < argCount; i++)
                     {
-                        var name  = ReadString(reader);
-                        var value = ReadString(reader);
+                        var propertyNameBytes = ReadPropertyNameBytes(reader);
 
-                        message.Properties.Add(name, value);
+                        try
+                        {
+                            var value = ReadString(reader);
+
+                            message.Properties.Add(PropertyNames.Lookup(propertyNameBytes.Span), value);
+                        }
+                        finally
+                        {
+                            bufferPool.Return(propertyNameBytes.Bytes);
+                        }
                     }
 
                     // Read the attachments.
@@ -278,7 +295,7 @@ namespace Neon.Cadence.Internal
         /// Deserialzes a string.
         /// </summary>
         /// <param name="reader">The input reader.</param>
-        /// <returns></returns>
+        /// <returns>The string.</returns>
         private static string ReadString(BinaryReader reader)
         {
             var length = reader.ReadInt32();
@@ -293,7 +310,51 @@ namespace Neon.Cadence.Internal
             }
             else
             {
-                return Encoding.UTF8.GetString(reader.ReadBytes(length));
+                var bytes = bufferPool.Rent(length);
+
+                try
+                {
+                    reader.Read(bytes, 0, length);
+
+                    return Encoding.UTF8.GetString(bytes, 0, length);
+                }
+                finally
+                {
+                    bufferPool.Return(bytes);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deserialzes a string as UTF-8 bytes allocated from a local pool.
+        /// The value returned should be added back to the pool when you're
+        /// donw with it.
+        /// </summary>
+        /// <param name="reader">The input reader.</param>
+        /// <returns>The UTF-8 encoded string bytes.</returns>
+        private static PropertyNameBytes ReadPropertyNameBytes(BinaryReader reader)
+        {
+            var length = reader.ReadInt32();
+
+            if (length == -1)
+            {
+                throw new FormatException("Message property names cannot be NULL.");
+            }
+            else if (length == 0)
+            {
+                throw new FormatException("Message property names cannot be empty.");
+            }
+            else
+            {
+                var bytes = bufferPool.Rent(length);
+
+                reader.Read(bytes, 0, length);
+
+                return new PropertyNameBytes()
+                {
+                    Bytes = bytes,
+                    Span  = new Span<byte>(bytes, 0, length)
+                };
             }
         }
 
@@ -311,8 +372,35 @@ namespace Neon.Cadence.Internal
             else
             {
                 writer.Write(value.Length);
-                writer.Write(Encoding.UTF8.GetBytes(value));
+
+                if (value.Length > 0)
+                {
+                    var byteCount = Encoding.UTF8.GetByteCount(value);
+                    var bytes     = bufferPool.Rent(byteCount);
+
+                    try
+                    {
+                        Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 0);
+
+                        writer.Write(bytes, 0, byteCount);
+                    }
+                    finally
+                    {
+                        bufferPool.Return(bytes);
+                    }
+                }
             }
+        }
+
+        /// <summary>
+        /// Serialize a string from a <see cref="PropertyNameUtf8"/>.
+        /// </summary>
+        /// <param name="writer">The output writer.</param>
+        /// <param name="value">The string being serialized.</param>
+        private static void WriteString(BinaryWriter writer, PropertyNameUtf8 value)
+        {
+            writer.Write(value.NameUtf8.Length);
+            writer.Write(value.NameUtf8);
         }
 
         //---------------------------------------------------------------------
@@ -333,7 +421,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Returns a case insensitive dictionary that maps argument names to value strings.
         /// </summary>
-        public NiceDictionary<string, string> Properties { get; private set; } = new NiceDictionary<string, string>();
+        public NiceDictionary<PropertyNameUtf8, string> Properties { get; private set; } = new NiceDictionary<PropertyNameUtf8, string>();
 
         /// <summary>
         /// Returns the list of binary attachments.
@@ -341,18 +429,22 @@ namespace Neon.Cadence.Internal
         public List<byte[]> Attachments { get; private set; } = new List<byte[]>();
 
         /// <summary>
-        /// Serializes the message to bytes.
+        /// Serializes the message to a pooled <see cref="MemoryStream"/>.  Be sure to
+        /// add the stream returned back to the <see cref="MemoryStreamPool"/> when you've 
+        /// finished with it.
         /// </summary>
         /// <param name="ignoreTypeCode">Optionally ignore unspecified message types (used for unit testing).</param>
-        /// <returns>The serialized byte array.</returns>
-        public byte[] Serialize(bool ignoreTypeCode = false)
+        /// <returns>A <see cref="MemoryStream"/> holding the serialized message.</returns>
+        public MemoryStream SerializeAsStream(bool ignoreTypeCode = false)
         {
             if (!ignoreTypeCode && Type == InternalMessageTypes.Unspecified)
             {
                 throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
             }
 
-            using (var output = new MemoryStream())
+            var output = MemoryStreamPool.Alloc();
+
+            try
             {
                 using (var writer = new BinaryWriter(output, Encoding.UTF8, leaveOpen: true))
                 {
@@ -362,10 +454,10 @@ namespace Neon.Cadence.Internal
 
                     writer.Write(Properties.Count);
 
-                    foreach (var arg in Properties)
+                    foreach (var property in Properties)
                     {
-                        WriteString(writer, arg.Key);
-                        WriteString(writer, arg.Value);
+                        WriteString(writer, property.Key);
+                        WriteString(writer, property.Value);
                     }
 
                     // Write the attachments.
@@ -386,7 +478,47 @@ namespace Neon.Cadence.Internal
                     }
                 }
 
+                // Rewind the stream.
+
+                output.Position = 0;
+            }
+            catch
+            {
+                MemoryStreamPool.Free(output);
+                throw;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Serializes the message to bytes.
+        /// </para>
+        /// <note>
+        /// This method is intended for testing purposes.  Use <see cref="SerializeAsStream(bool)"/>
+        /// for production since that method will perform better by not needing to allocate a
+        /// byte array with the message contents for every call.
+        /// </note>
+        /// </summary>
+        /// <param name="ignoreTypeCode">Optionally ignore unspecified message types (used for unit testing).</param>
+        /// <returns>The serialized byte array.</returns>
+        public byte[] SerializeAsBytes(bool ignoreTypeCode = false)
+        {
+            if (!ignoreTypeCode && Type == InternalMessageTypes.Unspecified)
+            {
+                throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
+            }
+
+            var output = SerializeAsStream(ignoreTypeCode);
+
+            try
+            {
                 return output.ToArray();
+            }
+            finally
+            {
+                MemoryStreamPool.Free(output);
             }
         }
 
@@ -426,7 +558,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The string value.</returns>
-        internal string GetStringProperty(string key, string def = null)
+        internal string GetStringProperty(PropertyNameUtf8 key, string def = null)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -444,7 +576,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The integer value.</returns>
-        internal int GetIntProperty(string key, int def = 0)
+        internal int GetIntProperty(PropertyNameUtf8 key, int def = 0)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -462,7 +594,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The long value.</returns>
-        internal long GetLongProperty(string key, long def = 0)
+        internal long GetLongProperty(PropertyNameUtf8 key, long def = 0)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -480,7 +612,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The long value.</returns>
-        internal bool GetBoolProperty(string key, bool def = false)
+        internal bool GetBoolProperty(PropertyNameUtf8 key, bool def = false)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -499,7 +631,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The long value.</returns>
-        internal TEnum GetEnumProperty<TEnum>(string key, TEnum def = default(TEnum))
+        internal TEnum GetEnumProperty<TEnum>(PropertyNameUtf8 key, TEnum def = default(TEnum))
             where TEnum : struct
         {
             if (Properties.TryGetValue(key, out var value))
@@ -518,7 +650,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The double value.</returns>
-        internal double GetDoubleProperty(string key, double def = 0.0)
+        internal double GetDoubleProperty(PropertyNameUtf8 key, double def = 0.0)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -536,7 +668,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The double value.</returns>
-        internal DateTime GetDateTimeProperty(string key, DateTime def = default)
+        internal DateTime GetDateTimeProperty(PropertyNameUtf8 key, DateTime def = default)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -554,7 +686,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The double value.</returns>
-        internal TimeSpan GetTimeSpanProperty(string key, TimeSpan def = default)
+        internal TimeSpan GetTimeSpanProperty(PropertyNameUtf8 key, TimeSpan def = default)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -592,7 +724,7 @@ namespace Neon.Cadence.Internal
         ///     Dereferencing the property and changing a subproperty value won't
         ///     actually persist the change back to the underlying property.  You'll
         ///     need to dereference the property to a variable, change the subproperty,
-        ///     and then use <see cref="SetJsonProperty{T}(string, T)"/> to persist the
+        ///     and then use <see cref="SetJsonProperty{T}(PropertyNameUtf8, T)"/> to persist the
         ///     change. 
         ///     </item>
         /// </list>
@@ -602,7 +734,7 @@ namespace Neon.Cadence.Internal
         /// </para>
         /// </note>
         /// </remarks>
-        internal T GetJsonProperty<T>(string key)
+        internal T GetJsonProperty<T>(PropertyNameUtf8 key)
             where T : class, new()
         {
             if (Properties.TryGetValue(key, out var value))
@@ -632,7 +764,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>]
         /// <returns>The byte array or <c>null</c>.</returns>
-        internal byte[] GetBytesProperty(string key)
+        internal byte[] GetBytesProperty(PropertyNameUtf8 key)
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -657,7 +789,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetStringProperty(string key, string value)
+        internal void SetStringProperty(PropertyNameUtf8 key, string value)
         {
             Properties[key] = value;
         }
@@ -667,7 +799,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetIntProperty(string key, int value)
+        internal void SetIntProperty(PropertyNameUtf8 key, int value)
         {
             Properties[key] = value.ToString(CultureInfo.InvariantCulture);
         }
@@ -677,7 +809,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetLongProperty(string key, long value)
+        internal void SetLongProperty(PropertyNameUtf8 key, long value)
         {
             Properties[key] = value.ToString();
         }
@@ -687,7 +819,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetBoolProperty(string key, bool value)
+        internal void SetBoolProperty(PropertyNameUtf8 key, bool value)
         {
             Properties[key] = NeonHelper.ToBoolString(value);
         }
@@ -698,7 +830,7 @@ namespace Neon.Cadence.Internal
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetEnumProperty<TEnum>(string key, TEnum value)
+        internal void SetEnumProperty<TEnum>(PropertyNameUtf8 key, TEnum value)
             where TEnum : struct
         {
             Properties[key] = NeonHelper.EnumToString(value);
@@ -709,7 +841,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetDoubleProperty(string key, double value)
+        internal void SetDoubleProperty(PropertyNameUtf8 key, double value)
         {
             Properties[key] = value.ToString("G") ;
         }
@@ -719,7 +851,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetDateTimeProperty(string key, DateTime value)
+        internal void SetDateTimeProperty(PropertyNameUtf8 key, DateTime value)
         {
             Properties[key] = value.ToString(NeonHelper.DateFormatTZ);
         }
@@ -729,7 +861,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetTimeSpanProperty(string key, TimeSpan value)
+        internal void SetTimeSpanProperty(PropertyNameUtf8 key, TimeSpan value)
         {
             Properties[key] = value.Ticks.ToString(CultureInfo.InvariantCulture);
         }
@@ -740,7 +872,7 @@ namespace Neon.Cadence.Internal
         /// <typeparam name="T">The property type.</typeparam>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetJsonProperty<T>(string key, T value)
+        internal void SetJsonProperty<T>(PropertyNameUtf8 key, T value)
             where T : class, new()
         {
             string json;
@@ -771,7 +903,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
-        internal void SetBytesProperty(string key, byte[] value)
+        internal void SetBytesProperty(PropertyNameUtf8 key, byte[] value)
         {
             if (value == null)
             {

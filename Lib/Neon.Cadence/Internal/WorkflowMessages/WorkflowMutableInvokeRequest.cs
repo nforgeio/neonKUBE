@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string MutableId
         {
-            get => GetStringProperty("MutableId");
-            set => SetStringProperty("MutableId", value);
+            get => GetStringProperty(PropertyNames.MutableId);
+            set => SetStringProperty(PropertyNames.MutableId, value);
         }
 
         /// <inheritdoc/>

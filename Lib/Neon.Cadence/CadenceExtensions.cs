@@ -49,17 +49,25 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
-            var bytes   = request.Serialize();
-            var content = new ByteArrayContent(bytes);
+            var stream = request.SerializeAsStream();
 
-            content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
-
-            var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+            try
             {
-                Content = content
-            };
+                var content = new StreamContent(stream);
 
-            return await client.SendAsync(httpRequest);
+                content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+                {
+                    Content = content
+                };
+
+                return await client.SendAsync(httpRequest);
+            }
+            finally
+            {
+                MemoryStreamPool.Free(stream);
+            }
         }
 
         /// <summary>
@@ -89,17 +97,25 @@ namespace Neon.Cadence
 
             reply.RequestId = request.RequestId;
 
-            var bytes   = reply.Serialize();
-            var content = new ByteArrayContent(bytes);
+            var stream = reply.SerializeAsStream();
 
-            content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
-
-            var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+            try
             {
-                Content = content
-            };
+                var content = new StreamContent(stream);
 
-            return await client.SendAsync(httpRequest);
+                content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+                {
+                    Content = content
+                };
+
+                return await client.SendAsync(httpRequest);
+            }
+            finally
+            {
+                MemoryStreamPool.Free(stream);
+            }
         }
     }
 }

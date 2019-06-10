@@ -47,8 +47,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Name
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
         }
 
         /// <summary>
@@ -56,8 +56,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public bool IsWorkflow
         {
-            get => GetBoolProperty("IsWorkflow");
-            set => SetBoolProperty("IsWorkflow", value);
+            get => GetBoolProperty(PropertyNames.IsWorkflow);
+            set => SetBoolProperty(PropertyNames.IsWorkflow, value);
         }
 
         /// <summary>
@@ -65,8 +65,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string Domain
         {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <summary>
@@ -74,8 +74,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string TaskList
         {
-            get => GetStringProperty("TaskList");
-            set => SetStringProperty("TaskList", value);
+            get => GetStringProperty(PropertyNames.TaskList);
+            set => SetStringProperty(PropertyNames.TaskList, value);
         }
 
         /// <summary>
@@ -83,8 +83,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalWorkerOptions Options
         {
-            get => GetJsonProperty<InternalWorkerOptions>("Options");
-            set => SetJsonProperty<InternalWorkerOptions>("Options", value);
+            get => GetJsonProperty<InternalWorkerOptions>(PropertyNames.Options);
+            set => SetJsonProperty<InternalWorkerOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>

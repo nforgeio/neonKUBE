@@ -43,8 +43,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Result
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetBytesProperty(PropertyNames.Result);
+            set => SetBytesProperty(PropertyNames.Result, value);
         }
 
         /// <inheritdoc/>

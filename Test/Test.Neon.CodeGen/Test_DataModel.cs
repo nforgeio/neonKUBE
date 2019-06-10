@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -186,6 +187,21 @@ namespace TestCodeGen.DataModel
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, Order = 3)]
         [DefaultValue("Populate")]
         string Populate { get; set; }
+    }
+
+    public interface ReadOnlyCollectionsModel
+    {
+        [JsonProperty(PropertyName = "Collection")]
+        ReadOnlyCollection<string> Collection { get; set; }
+
+        [JsonProperty(PropertyName = "Dictionary")]
+        ReadOnlyDictionary<string, string> Dictionary { get; set; }
+    }
+
+    public interface ListOfListModel
+    {
+        [JsonProperty(PropertyName = "List")]
+        List<List<string>> List { get; set; }
     }
 
     [NoCodeGen]
@@ -989,6 +1005,73 @@ namespace TestCodeGen.DataModel
                 Assert.NotSame(complexData["DoubleArray"], clonedComplexData["DoubleArray"]);
                 Assert.NotSame(((int[][])complexData["DoubleArray"])[0], ((int[][])clonedComplexData["DoubleArray"])[0]);
                 Assert.NotSame(((int[][])complexData["DoubleArray"])[1], ((int[][])clonedComplexData["DoubleArray"])[1]);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void ReadOnlyCollections()
+        {
+            // Verify serializing read-only collection properties.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<ReadOnlyCollectionsModel>();
+
+                data["Collection"] = new ReadOnlyCollection<string>(new List<string> { "one", "two", "three" });
+                data["Dictionary"] = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>() { { "one", "1" } });
+
+                data = context.CreateDataWrapperFrom<ReadOnlyCollectionsModel>(data.ToString());
+
+                Assert.Equal(new List<string> { "one", "two", "three" }, data["Collection"]);
+                Assert.Equal(new Dictionary<string, string>() { { "one", "1" } }, data["Dictionary"]);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void ListOfList()
+        {
+            // Verify serializing a list of lists.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_DataModel).Namespace,
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<ListOfListModel>();
+
+                var list = new List<List<string>>();
+
+                list.Add(new List<string>() { "zero", "one", "two" });
+                list.Add(new List<string>() { "three", "four", "five" });
+
+                data["List"] = list;
+
+                data = context.CreateDataWrapperFrom<ListOfListModel>(data.ToString());
+
+                Assert.Equal(list, data["List"]);
             }
         }
     }

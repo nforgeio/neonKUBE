@@ -48,8 +48,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string LibraryAddress
         {
-            get => GetStringProperty("LibraryAddress");
-            set => SetStringProperty("LibraryAddress", value);
+            get => GetStringProperty(PropertyNames.LibraryAddress);
+            set => SetStringProperty(PropertyNames.LibraryAddress, value);
         }
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public int LibraryPort
         {
-            get => GetIntProperty("LibraryPort");
-            set => SetIntProperty("LibraryPort", value);
+            get => GetIntProperty(PropertyNames.LibraryPort);
+            set => SetIntProperty(PropertyNames.LibraryPort, value);
         }
 
         /// <inheritdoc/>

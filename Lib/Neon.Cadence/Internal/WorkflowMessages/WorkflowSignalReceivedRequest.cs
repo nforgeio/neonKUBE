@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string SignalName
         {
-            get => GetStringProperty("SignalName");
-            set => SetStringProperty("SignalName", value);
+            get => GetStringProperty(PropertyNames.SignalName);
+            set => SetStringProperty(PropertyNames.SignalName, value);
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] SignalArgs
         {
-            get => GetBytesProperty("SignalArgs");
-            set => SetBytesProperty("SignalArgs", value);
+            get => GetBytesProperty(PropertyNames.SignalArgs);
+            set => SetBytesProperty(PropertyNames.SignalArgs, value);
         }
 
         /// <inheritdoc/>

@@ -459,7 +459,12 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            await client.SetWorkflowCacheSize(10000);
+            //---------------------------------------------------------------
+            // $todo(jeff.lill): Uncomment this once Jack merges his support.
+
+            //await client.SetWorkflowCacheSize(10000);
+
+            //---------------------------------------------------------------
 
             return client;
         }
@@ -888,7 +893,7 @@ namespace Neon.Cadence
             if (request.Method != "PUT")
             {
                 response.StatusCode = StatusCodes.Status405MethodNotAllowed;
-                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted with [PUT].");
+                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted via [PUT].");
                 return;
             }
 

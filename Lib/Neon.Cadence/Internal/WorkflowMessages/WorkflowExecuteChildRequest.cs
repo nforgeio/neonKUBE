@@ -48,8 +48,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Args
         {
-            get => GetBytesProperty("Args");
-            set => SetBytesProperty("Args", value);
+            get => GetBytesProperty(PropertyNames.Args);
+            set => SetBytesProperty(PropertyNames.Args, value);
         }
 
         /// <summary>
@@ -57,8 +57,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public InternalChildWorkflowOptions Options
         {
-            get => GetJsonProperty<InternalChildWorkflowOptions>("Options");
-            set => SetJsonProperty<InternalChildWorkflowOptions>("Options", value);
+            get => GetJsonProperty<InternalChildWorkflowOptions>(PropertyNames.Options);
+            set => SetJsonProperty<InternalChildWorkflowOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>

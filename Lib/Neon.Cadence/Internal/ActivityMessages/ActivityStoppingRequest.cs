@@ -43,12 +43,12 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityStoppingReply;
 
         /// <summary>
-        /// Specifies the activity being stopped.fs
+        /// Specifies the activity being stopped.
         /// </summary>
         public string ActivityId
         {
-            get => GetStringProperty("ActivityId");
-            set => SetStringProperty("ActivityId", value);
+            get => GetStringProperty(PropertyNames.ActivityId);
+            set => SetStringProperty(PropertyNames.ActivityId, value);
         }
 
         /// <inheritdoc/>

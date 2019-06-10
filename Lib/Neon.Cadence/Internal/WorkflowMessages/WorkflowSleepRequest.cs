@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public TimeSpan Duration
         {
-            get => GetTimeSpanProperty("Duration");
-            set => SetTimeSpanProperty("Duration", value);
+            get => GetTimeSpanProperty(PropertyNames.Duration);
+            set => SetTimeSpanProperty(PropertyNames.Duration, value);
         }
 
         /// <inheritdoc/>

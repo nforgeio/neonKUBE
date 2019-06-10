@@ -85,7 +85,7 @@ namespace Neon.Cadence
             workflowType = workflowType ?? typeof(TWorkflow).FullName;
             options      = options ?? new WorkerOptions();
 
-            using (asyncLock.AcquireAsync())
+            using (await asyncLock.AcquireAsync())
             {
                 lock (syncLock)
                 {
@@ -172,7 +172,7 @@ namespace Neon.Cadence
             activityType = activityType ?? typeof(Activity).FullName;
             options      = options ?? new WorkerOptions();
 
-            using (asyncLock.AcquireAsync())
+            using (await asyncLock.AcquireAsync())
             {
                 lock (syncLock)
                 {

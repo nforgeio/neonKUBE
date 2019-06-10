@@ -91,25 +91,27 @@ namespace TestCodeGen.AspNet
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        public Person CreatePerson(int id, string name, int age)
+        public Person CreatePerson(int id, string name, int age, Gender gender)
         {
             return new Person()
             {
                 Id = id,
                 Name = name,
-                Age = age
+                Age = age,
+                Gender = gender
             };
         }
 
         [HttpGet]
         [Route("nonpersistable-person/{id}/{name}/{age}")]
-        public NonPersistablePerson CreateNonPersisablePerson(int id, string name, int age)
+        public NonPersistablePerson CreateNonPersisablePerson(int id, string name, int age, Gender gender)
         {
             return new NonPersistablePerson()
             {
                 Id = id,
                 Name = name,
-                Age = age
+                Age = age,
+                Gender = gender
             };
         }
 
@@ -379,22 +381,24 @@ namespace TestCodeGen.AspNet
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task CreatePerson()
         {
-            var person = await client.CreatePersonAsync(10, "Jeff", 58);
+            var person = await client.CreatePersonAsync(10, "Jeff", 58, Gender.Male);
 
             Assert.Equal(10, person.Id);
             Assert.Equal("Jeff", person.Name);
             Assert.Equal(58, person.Age);
+            Assert.Equal(Gender.Male, person.Gender);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
         public async Task CreateNonPersisablePersonAsync()
         {
-            var person = await client.CreateNonPersisablePersonAsync(10, "Jeff", 58);
+            var person = await client.CreateNonPersisablePersonAsync(10, "Jill", 50, Gender.Female);
 
             Assert.Equal(10, person.Id);
-            Assert.Equal("Jeff", person.Name);
-            Assert.Equal(58, person.Age);
+            Assert.Equal("Jill", person.Name);
+            Assert.Equal(50, person.Age);
+            Assert.Equal(Gender.Female, person.Gender);
         }
 
         [Fact]
@@ -405,7 +409,8 @@ namespace TestCodeGen.AspNet
             {
                 Id = 10,
                 Name = "Jeff",
-                Age = 58
+                Age = 58,
+                Gender = Gender.Male
             };
 
             var modified = await client.IncrementAgeAsync(person);
@@ -413,6 +418,7 @@ namespace TestCodeGen.AspNet
             Assert.Equal(10, modified.Id);
             Assert.Equal("Jeff", modified.Name);
             Assert.Equal(59, modified.Age);
+            Assert.Equal(Gender.Male, modified.Gender);
         }
 
         [Fact]
@@ -480,6 +486,7 @@ namespace TestCodeGen.AspNet
                 Id = 1,
                 Name = "Jack",
                 Age = 10,
+                Gender = Gender.Male,
                 Data = new byte[] { 0, 1, 2, 3, 4 }
             });
 
@@ -488,6 +495,7 @@ namespace TestCodeGen.AspNet
                 Id = 2,
                 Name = "Jill",
                 Age = 11,
+                Gender = Gender.Female,
                 Data = new byte[] { 5, 6, 7, 8, 9 }
             });
 
@@ -508,6 +516,7 @@ namespace TestCodeGen.AspNet
                     Id = 1,
                     Name = "Jack",
                     Age = 10,
+                    Gender = Gender.Male,
                     Data = new byte[] { 0, 1, 2, 3, 4 }
                 },
                 new Person()
@@ -515,6 +524,7 @@ namespace TestCodeGen.AspNet
                     Id = 2,
                     Name = "Jill",
                     Age = 11,
+                    Gender = Gender.Female,
                     Data = new byte[] { 5, 6, 7, 8, 9 }
                 }
             };
@@ -548,11 +558,13 @@ namespace TestCodeGen.AspNet
 
             person.Name = "Jack";
             person.Age = 10;
+            person.Gender = Gender.Male;
 
             jObject = person.ToJObject();
 
             Assert.Equal("Jack", (string)jObject["Name"]);
             Assert.Equal(10, (int)jObject["Age"]);
+            Assert.Equal(Gender.Male, NeonHelper.ParseEnum<Gender>((string)jObject["Gender"]));
             Assert.Equal("very tricky!", (string)jObject["Unknown"]);
         }
 

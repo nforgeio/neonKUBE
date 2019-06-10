@@ -57,7 +57,7 @@ namespace TestCadence
                 message = new ProxyMessage();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
@@ -69,35 +69,35 @@ namespace TestCadence
 
                 message = new ProxyMessage();
 
-                message.Properties.Add("One", "1");
-                message.Properties.Add("Two", "2");
-                message.Properties.Add("Empty", string.Empty);
-                message.Properties.Add("Null", null);
-
-                message.SetJsonProperty("Complex", new ComplexType() { Name = "foo", Value = "bar" });
-                message.SetJsonProperty("Person", new Person() { Name = "Jack", Age = 10 });
+                message.Properties.Add(PropertyNames.TestOne, "1");
+                message.Properties.Add(PropertyNames.TestTwo, "2");
+                message.Properties.Add(PropertyNames.TestEmpty, string.Empty);
+                message.Properties.Add(PropertyNames.TestNull, null);
+                
+                message.SetJsonProperty(PropertyNames.TestComplex, new ComplexType() { Name = "foo", Value = "bar" });
+                message.SetJsonProperty(PropertyNames.TestPerson, new Person() { Name = "Jack", Age = 10 });
 
                 message.Attachments.Add(new byte[] { 0, 1, 2, 3, 4 });
                 message.Attachments.Add(new byte[0]);
                 message.Attachments.Add(null);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyMessage>(stream, ignoreTypeCode: true);
                 Assert.Equal(InternalMessageTypes.Unspecified, message.Type);
                 Assert.Equal(6, message.Properties.Count);
-                Assert.Equal("1", message.Properties["One"]);
-                Assert.Equal("2", message.Properties["Two"]);
-                Assert.Empty(message.Properties["Empty"]);
-                Assert.Null(message.Properties["Null"]);
+                Assert.Equal("1", message.Properties[PropertyNames.TestOne]);
+                Assert.Equal("2", message.Properties[PropertyNames.TestTwo]);
+                Assert.Empty(message.Properties[PropertyNames.TestEmpty]);
+                Assert.Null(message.Properties[PropertyNames.TestNull]);
 
-                var complex = message.GetJsonProperty<ComplexType>("Complex");
+                var complex = message.GetJsonProperty<ComplexType>(PropertyNames.TestComplex);
                 Assert.Equal("foo", complex.Name);
                 Assert.Equal("bar", complex.Value);
 
-                var person = message.GetJsonProperty<Person>("Person");
+                var person = message.GetJsonProperty<Person>(PropertyNames.TestPerson);
                 Assert.Equal("Jack", person.Name);
                 Assert.Equal(10, person.Age);
 
@@ -123,7 +123,7 @@ namespace TestCadence
                 message = new ProxyRequest();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
@@ -138,7 +138,7 @@ namespace TestCadence
                 message.IsCancellable = true;
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
@@ -163,7 +163,7 @@ namespace TestCadence
                 message = new ProxyReply();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
@@ -180,7 +180,7 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ProxyReply>(stream, ignoreTypeCode: true);
@@ -205,7 +205,7 @@ namespace TestCadence
                 message = new ActivityRequest();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
@@ -221,7 +221,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
@@ -246,7 +246,7 @@ namespace TestCadence
                 message = new ActivityReply();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
@@ -265,7 +265,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ActivityContextId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ActivityReply>(stream, ignoreTypeCode: true);
@@ -291,7 +291,7 @@ namespace TestCadence
                 message = new WorkflowRequest();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
@@ -307,7 +307,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
@@ -332,7 +332,7 @@ namespace TestCadence
                 message = new WorkflowReply();
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
@@ -351,7 +351,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
 
                 stream.SetLength(0);
-                stream.Write(message.Serialize(ignoreTypeCode: true));
+                stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);

@@ -46,8 +46,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public string QueryName
         {
-            get => GetStringProperty("QueryName");
-            set => SetStringProperty("QueryName", value);
+            get => GetStringProperty(PropertyNames.QueryName);
+            set => SetStringProperty(PropertyNames.QueryName, value);
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] QueryArgs
         {
-            get => GetBytesProperty("QueryArgs");
-            set => SetBytesProperty("QueryArgs", value);
+            get => GetBytesProperty(PropertyNames.QueryArgs);
+            set => SetBytesProperty(PropertyNames.QueryArgs, value);
         }
 
         /// <inheritdoc/>

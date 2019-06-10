@@ -91,12 +91,15 @@ namespace Neon.Web
         /// <param name="source">The service source container or <c>null</c> to copy from <see cref="NeonHelper.ServiceContainer"/>.</param>
         /// <param name="disableNewtonsoft">Optionally disable adding Newtonsoft JSON support.</param>
         /// <param name="disableResponseCompression">Optionally disable response compression.</param>
+        /// <returns>The <paramref name="builder"/>.</returns>
         public static IMvcBuilder AddNeon(
             IMvcBuilder         builder, 
             IServiceContainer   source = null,
             bool                disableNewtonsoft = false, 
             bool                disableResponseCompression = false)
         {
+            Covenant.Requires<ArgumentNullException>(builder != null);
+
             source = source ?? NeonHelper.ServiceContainer;
 
             foreach (var service in source)
@@ -130,6 +133,14 @@ namespace Neon.Web
         /// <param name="builder">The MVC builder.</param>
         /// <param name="disableRoundTripFormatters">Optionally disable adding the round-trip formatters.</param>
         /// <param name="disableNewtonsoftFormatters">Optionally disable the Newtonsoft JSON formatters.</param>
+        /// <param name="allowRoundtripFormatter">
+        /// Optional lamda function that can be used to customize which types allowed
+        /// to be handled by the custom round-trip formatters.  When this is <c>null</c>, 
+        /// all types will be handled by the formatters, otherwise only those types
+        /// where this function returns <c>true</c> will be handled by the custom formatters.
+        /// Other types will be passed on to the remaining formatters.
+        /// </param>
+        /// <returns>The <paramref name="builder"/>.</returns>
         /// <remarks>
         /// <para>
         /// This provides both backwards and forwards data compatibility on both the client and service
@@ -138,7 +149,11 @@ namespace Neon.Web
         /// all upgraded at the same time as a monolithic app.
         /// </para>
         /// </remarks>
-        public static void AddNeon(this IMvcBuilder builder, bool disableRoundTripFormatters = false, bool disableNewtonsoftFormatters = false)
+        public static IMvcBuilder AddNeon(
+            this IMvcBuilder    builder, 
+            bool                disableRoundTripFormatters  = false, 
+            bool                disableNewtonsoftFormatters = false,
+            Func<Type, bool>    allowRoundtripFormatter     = null)
         {
             // Add any Newtonsodt formatters first so we can insert the round-trip
             // formatters before them below so the round-trip formatters will take
@@ -154,10 +169,12 @@ namespace Neon.Web
                 builder.AddMvcOptions(
                     options =>
                     {
-                        options.InputFormatters.Insert(0, new RoundTripJsonInputFormatter());
-                        options.OutputFormatters.Insert(0, new RoundTripJsonOutputFormatter());
+                        options.InputFormatters.Insert(0, new RoundTripJsonInputFormatter(allowRoundtripFormatter));
+                        options.OutputFormatters.Insert(0, new RoundTripJsonOutputFormatter(allowRoundtripFormatter));
                     });
             }
+
+            return builder;
         }
     }
 }
