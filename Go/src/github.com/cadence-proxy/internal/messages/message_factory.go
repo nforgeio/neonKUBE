@@ -276,6 +276,12 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.WorkflowSetQueryHandlerRequest:
 		message = NewWorkflowSetQueryHandlerRequest()
 
+	// WorkflowQueryInvoke
+	case messagetypes.WorkflowQueryInvokeReply:
+		message = NewWorkflowQueryInvokeReply()
+	case messagetypes.WorkflowQueryInvokeRequest:
+		message = NewWorkflowQueryInvokeRequest()
+
 	// --------------------------------------------------------------------------
 	// Activity messages
 
@@ -332,6 +338,18 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewActivityInvokeLocalReply()
 	case messagetypes.ActivityInvokeLocalRequest:
 		message = NewActivityInvokeLocalRequest()
+
+	// ActivityGetInfo
+	case messagetypes.ActivityGetInfoReply:
+		message = NewActivityGetInfoReply()
+	case messagetypes.ActivityGetInfoRequest:
+		message = NewActivityGetInfoRequest()
+
+	// ActivityComplete
+	case messagetypes.ActivityCompleteReply:
+		message = NewActivityCompleteReply()
+	case messagetypes.ActivityCompleteRequest:
+		message = NewActivityCompleteRequest()
 
 	// default
 	default:

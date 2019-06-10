@@ -251,7 +251,7 @@ const (
 	WorkflowListOpenExecutionsReply MessageType = 117
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Queries a workflow's last execution.
+	/// <b>client --> proxy:</b> Queries a workflow.
 	/// </summary>
 	WorkflowQueryRequest MessageType = 118
 
@@ -314,7 +314,7 @@ const (
 	WorkflowSignalSubscribeReply MessageType = 129
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Send when a signal is received by the proxy on a subscribed channel.
+	/// <b>proxy --> client:</b> Sent when a signal is received by the proxy on a subscribed channel.
 	/// </summary>
 	WorkflowSignalReceivedRequest MessageType = 130
 
@@ -324,7 +324,7 @@ const (
 	WorkflowSignalReceivedReply MessageType = 131
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Implements the standard Cadence <i>side effect</i> behavior.
+	/// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior.
 	/// The client will transmit a <see cref="WorkflowMutableInvokeRequest"/> message to the
 	/// proxy with a unique <c>MutableId</c>.  The proxy will call the GOLANG Cadence client's
 	/// <c>workflow.SideEffect()</c> function passing it a function that when called
@@ -335,7 +335,7 @@ const (
 	WorkflowMutableRequest MessageType = 132
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
 	/// </summary>
 	WorkflowMutableReply MessageType = 133
 
@@ -484,6 +484,16 @@ const (
 	/// </summary>
 	WorkflowSetQueryHandlerReply MessageType = 159
 
+	/// <summary>
+	/// <b>proxy --> client:</b> Invokes a query on a workflow.
+	/// </summary>
+	WorkflowQueryInvokeRequest MessageType = 160
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueryInvokeRequest"/>.
+	/// </summary>
+	WorkflowQueryInvokeReply MessageType = 161
+
 	//---------------------------------------------------------------------
 	// Activity messages
 
@@ -586,4 +596,24 @@ const (
 	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityRegisterRequest"/> message.
 	/// </summary>
 	ActivityRegisterReply MessageType = 219
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Requests information about an activity.
+	/// </summary>
+	ActivityGetInfoRequest MessageType = 220
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityGetInfoRequest"/> message.
+	/// </summary>
+	ActivityGetInfoReply MessageType = 221
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Requests that an activity be completed externally.
+	/// </summary>
+	ActivityCompleteRequest MessageType = 222
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityCompleteRequest"/> message.
+	/// </summary>
+	ActivityCompleteReply MessageType = 223
 )
