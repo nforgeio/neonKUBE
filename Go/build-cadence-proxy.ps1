@@ -22,7 +22,7 @@
 
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
-$projectPath  = "$env:GOPATH\src\github.com\loopieio\cadence-proxy"
+$projectPath  = "$env:GOPATH\src\github.com\cadence-proxy"
 $logPath      = "$buildPath\build-cadence-proxy.log"
 $orgDirectory = Get-Location
 

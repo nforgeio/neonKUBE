@@ -53,7 +53,7 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DebugPrelaunched       = true,
+                DebugPrelaunched       = false,
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
