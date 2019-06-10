@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		workflow_query_reply.go
+// FILE:		workflow_query_invoke_reply.go
 // CONTRIBUTOR: John C Burnes
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
