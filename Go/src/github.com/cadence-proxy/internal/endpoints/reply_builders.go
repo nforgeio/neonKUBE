@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 // FILE:		reply_builders.go
-// CONTRIBUTOR: John C Burnes
+// CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,9 +22,8 @@ import (
 	"reflect"
 	"time"
 
-	"go.uber.org/cadence/activity"
-
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 

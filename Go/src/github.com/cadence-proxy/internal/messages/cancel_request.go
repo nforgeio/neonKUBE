@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 // FILE:		cancel_request.go
-// CONTRIBUTOR: John C Burnes
+// CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
