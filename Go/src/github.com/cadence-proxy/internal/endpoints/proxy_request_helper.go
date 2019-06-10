@@ -340,10 +340,10 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 
 	// set endpoint to cadence cluster
 	// and identity
-	// set cadenceClientTimeout
+	// get cadenceClientTimeout
 	endpoints := *request.GetEndpoints()
 	identity := *request.GetIdentity()
-	cadenceClientTimeout = request.GetClientTimeout()
+	timeout := request.GetClientTimeout()
 
 	// client options
 	opts := client.Options{
@@ -407,6 +407,9 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 
 		return reply
 	}
+
+	// set the timeout
+	cadenceClientTimeout = timeout
 
 	// build the reply
 	buildReply(reply, nil)
@@ -589,7 +592,7 @@ func handleInitializeRequest(request *messages.InitializeRequest) messages.IProx
 	)
 
 	// $debug(jack.burns): DELETE THIS!
-	if debugPrelaunch {
+	if DebugPrelaunch {
 		replyAddress = "http://127.0.0.2:5001/"
 	}
 

@@ -83,16 +83,16 @@ var (
 	// indicates the server continues to run
 	terminate bool
 
-	// INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-client</b>
-	// will not perform the <see cref="InitializeRequest"/>/<see cref="InitializeReply"/>
-	// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes
-	// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
-	// <c>false</c>
-	debugPrelaunch = false
+	// DebugPrelaunch INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
+	// already be running for debugging purposes.  When this is true, the
+	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
+	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
+	// This defaults to false.
+	DebugPrelaunch = false
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy
-	cadenceClientTimeout time.Duration
+	cadenceClientTimeout time.Duration = time.Second * 30
 )
 
 //----------------------------------------------------------------------------

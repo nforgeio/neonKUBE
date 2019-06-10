@@ -30,6 +30,13 @@ var (
 	// variables to put command line args in
 	address, logLevel string
 	debugMode         bool
+
+	// INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
+	// already be running for debugging purposes.  When this is true, the
+	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
+	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
+	// This defaults to false.
+	debugPrelaunch = true
 )
 
 func main() {
@@ -43,6 +50,11 @@ func main() {
 	// endpoint debugging
 	if debugMode {
 		endpoints.Debug = true
+	}
+
+	// debug prelaunched
+	if debugPrelaunch {
+		endpoints.DebugPrelaunch = true
 	}
 
 	// set the log level and if the program should run in debug mode

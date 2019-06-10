@@ -68,6 +68,26 @@ func (request *ActivityInvokeRequest) SetArgs(value []byte) {
 	request.SetBytesProperty("Args", value)
 }
 
+// GetActivity gets a ActivityInvokeRequest's Activity field
+// from its properties map.  Specifies the activity to
+// be invoked.
+//
+// returns *string -> *string representing the activity of the
+// activity to be invoked
+func (request *ActivityInvokeRequest) GetActivity() *string {
+	return request.GetStringProperty("Activity")
+}
+
+// SetActivity sets an ActivityInvokeRequest's Activity field
+// from its properties map.  Specifies the activity to
+// be invoked.
+//
+// param value *string -> *string representing the activity of the
+// activity to be invoked
+func (request *ActivityInvokeRequest) SetActivity(value *string) {
+	request.SetStringProperty("Activity", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -85,5 +105,6 @@ func (request *ActivityInvokeRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityInvokeRequest); ok {
 		v.SetArgs(request.GetArgs())
+		v.SetActivity(request.GetActivity())
 	}
 }

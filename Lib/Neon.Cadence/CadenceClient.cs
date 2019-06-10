@@ -642,9 +642,10 @@ namespace Neon.Cadence
                     var connectRequest = 
                         new ConnectRequest()
                         {
-                            Endpoints = sbEndpoints.ToString(),
-                            Identity  = settings.ClientIdentity
-                        };
+                            Endpoints       = sbEndpoints.ToString(),
+                            Identity        = settings.ClientIdentity,
+                            ClientTimeout   = TimeSpan.FromSeconds(1)
+                };
 
 
                     CallProxyAsync(connectRequest).Result.ThrowOnError();
