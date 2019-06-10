@@ -592,7 +592,7 @@ func handleInitializeRequest(request *messages.InitializeRequest) messages.IProx
 	)
 
 	// $debug(jack.burns): DELETE THIS!
-	if DebugPrelaunch {
+	if DebugPrelaunched {
 		replyAddress = "http://127.0.0.2:5001/"
 	}
 

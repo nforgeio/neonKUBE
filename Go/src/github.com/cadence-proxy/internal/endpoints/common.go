@@ -83,12 +83,12 @@ var (
 	// indicates the server continues to run
 	terminate bool
 
-	// DebugPrelaunch INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
+	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the
 	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
 	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
-	DebugPrelaunch = false
+	DebugPrelaunched = false
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy

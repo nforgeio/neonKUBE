@@ -425,8 +425,8 @@ namespace Neon.Cadence
             // Launch the proxy with a console window when we're running in DEBUG
             // mode on Windows.  We'll ignore this for the other platforms.
 
-            var debugOption = settings.Debug ? " --debug" : string.Empty;
-            var commandLine = $"--listen {endpoint.Address}:{endpoint.Port} --log-level {settings.LogLevel}{debugOption}";
+            var debugOption             = settings.Debug ? " --debug" : string.Empty;
+            var commandLine             = $"--listen {endpoint.Address}:{endpoint.Port} --log-level {settings.LogLevel}{debugOption}";
 
             if (NeonHelper.IsWindows)
             {

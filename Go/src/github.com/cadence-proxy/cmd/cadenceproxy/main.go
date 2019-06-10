@@ -36,7 +36,7 @@ var (
 	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
 	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
-	debugPrelaunch = false
+	debugPrelaunched = false
 )
 
 func main() {
@@ -53,8 +53,8 @@ func main() {
 	}
 
 	// debug prelaunched
-	if debugPrelaunch {
-		endpoints.DebugPrelaunch = true
+	if debugPrelaunched {
+		endpoints.DebugPrelaunched = true
 	}
 
 	// set the log level and if the program should run in debug mode
