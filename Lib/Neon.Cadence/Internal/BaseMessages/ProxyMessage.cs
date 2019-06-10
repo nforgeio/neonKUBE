@@ -157,7 +157,7 @@ namespace Neon.Cadence.Internal
 
         // Used to pool UTF-8 encoded byte arrays used to deserialize message
         // property names.
-        private static ArrayPool<byte> bytesPool = ArrayPool<byte>.Shared;
+        private static ArrayPool<byte> bufferPool = ArrayPool<byte>.Shared;
 
         /// <summary>
         /// Static constructor.
@@ -249,7 +249,7 @@ namespace Neon.Cadence.Internal
                         }
                         finally
                         {
-                            bytesPool.Return(propertyNameBytes.Bytes);
+                            bufferPool.Return(propertyNameBytes.Bytes);
                         }
                     }
 
@@ -310,7 +310,18 @@ namespace Neon.Cadence.Internal
             }
             else
             {
-                return Encoding.UTF8.GetString(reader.ReadBytes(length));
+                var bytes = bufferPool.Rent(length);
+
+                try
+                {
+                    reader.Read(bytes, 0, length);
+
+                    return Encoding.UTF8.GetString(bytes, 0, length);
+                }
+                finally
+                {
+                    bufferPool.Return(bytes);
+                }
             }
         }
 
@@ -335,7 +346,7 @@ namespace Neon.Cadence.Internal
             }
             else
             {
-                var bytes = bytesPool.Rent(length);
+                var bytes = bufferPool.Rent(length);
 
                 reader.Read(bytes, 0, length);
 
@@ -361,7 +372,23 @@ namespace Neon.Cadence.Internal
             else
             {
                 writer.Write(value.Length);
-                writer.Write(Encoding.UTF8.GetBytes(value));
+
+                if (value.Length > 0)
+                {
+                    var byteCount = Encoding.UTF8.GetByteCount(value);
+                    var bytes     = bufferPool.Rent(byteCount);
+
+                    try
+                    {
+                        Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 0);
+
+                        writer.Write(bytes, 0, byteCount);
+                    }
+                    finally
+                    {
+                        bufferPool.Return(bytes);
+                    }
+                }
             }
         }
 
