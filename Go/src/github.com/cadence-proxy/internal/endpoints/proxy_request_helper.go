@@ -248,6 +248,30 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 			reply = handleWorkflowSleepRequest(v)
 		}
 
+	// WorkflowExecuteChildRequest
+	case messagetypes.WorkflowExecuteChildRequest:
+		if v, ok := request.(*messages.WorkflowExecuteChildRequest); ok {
+			reply = handleWorkflowExecuteChildRequest(v)
+		}
+
+	// WorkflowWaitForChildRequest
+	case messagetypes.WorkflowWaitForChildRequest:
+		if v, ok := request.(*messages.WorkflowWaitForChildRequest); ok {
+			reply = handleWorkflowWaitForChildRequest(v)
+		}
+
+	// WorkflowSignalChildRequest
+	case messagetypes.WorkflowSignalChildRequest:
+		if v, ok := request.(*messages.WorkflowSignalChildRequest); ok {
+			reply = handleWorkflowSignalChildRequest(v)
+		}
+
+	// WorkflowCancelChildRequest
+	case messagetypes.WorkflowCancelChildRequest:
+		if v, ok := request.(*messages.WorkflowCancelChildRequest); ok {
+			reply = handleWorkflowCancelChildRequest(v)
+		}
+
 	// -------------------------------------------------------------------------
 	// Activity message types
 
@@ -350,21 +374,14 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 	// new ConnectReply
 	reply := createReplyMessage(request)
 
-	// set endpoint to cadence cluster
-	// and identity
-	// get cadenceClientTimeout
-	endpoints := *request.GetEndpoints()
-	identity := *request.GetIdentity()
-	timeout := request.GetClientTimeout()
-
 	// client options
 	opts := client.Options{
-		Identity: identity,
+		Identity: *request.GetIdentity(),
 	}
 
 	// setup the CadenceClientHelper
 	clientHelper = cadenceclient.NewCadenceClientHelper()
-	clientHelper.SetHostPort(endpoints)
+	clientHelper.SetHostPort(*request.GetEndpoints())
 	clientHelper.SetClientOptions(&opts)
 
 	err := clientHelper.SetupServiceConfig()
@@ -421,7 +438,7 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 	}
 
 	// set the timeout
-	cadenceClientTimeout = timeout
+	cadenceClientTimeout = request.GetClientTimeout()
 
 	// build the reply
 	buildReply(reply, nil)
@@ -655,12 +672,12 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 		return reply
 	}
 
-	// gather the worker.New() parameters
 	// create a new worker using a configured CadenceClientHelper instance
-	domain := request.GetDomain()
-	taskList := request.GetTaskList()
-	opts := request.GetOptions()
-	worker := worker.New(clientHelper.Service, *domain, *taskList, *opts)
+	worker := worker.New(clientHelper.Service,
+		*request.GetDomain(),
+		*request.GetTaskList(),
+		*request.GetOptions(),
+	)
 
 	// put the worker and workerID from the new worker to the
 	// Workers map and then run the worker by calling Run() on it
@@ -857,17 +874,17 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 		return reply
 	}
 
-	// grab the client.ExecuteWorkflow parameters
-	opts := request.GetOptions()
-	args := request.GetArgs()
-	workflowName := request.GetWorkflow()
-
 	// create the context
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
-	workflowRun, err := client.ExecuteWorkflow(ctx, *opts, *workflowName, args)
+	workflowRun, err := client.ExecuteWorkflow(ctx,
+		*request.GetOptions(),
+		*request.GetWorkflow(),
+		request.GetArgs(),
+	)
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -875,9 +892,10 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	}
 
 	// extract the workflow ID and RunID
-	workflowExecution := new(workflow.Execution)
-	workflowExecution.ID = workflowRun.GetID()
-	workflowExecution.RunID = workflowRun.GetRunID()
+	workflowExecution := workflow.Execution{
+		ID:    workflowRun.GetID(),
+		RunID: workflowRun.GetRunID(),
+	}
 
 	// build the reply
 	buildReply(reply, nil, workflowExecution)
@@ -917,16 +935,16 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 		return reply
 	}
 
-	// grab the client.CancelWorkflow parameters and
-	workflowID := request.GetWorkflowID()
-	runID := request.GetRunID()
-
 	// create the context to cancel the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// cancel the specified workflow
-	err = client.CancelWorkflow(ctx, *workflowID, *runID)
+	err = client.CancelWorkflow(ctx,
+		*request.GetWorkflowID(),
+		*request.GetRunID(),
+	)
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -963,18 +981,18 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 		return reply
 	}
 
-	// grab the client.TerminateWorkflow parameters and
-	workflowID := request.GetWorkflowID()
-	runID := request.GetRunID()
-	reason := request.GetReason()
-	details := request.GetDetails()
-
 	// create the context to terminate the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// terminate the specified workflow
-	err = client.TerminateWorkflow(ctx, *workflowID, *runID, *reason, details)
+	err = client.TerminateWorkflow(ctx,
+		*request.GetWorkflowID(),
+		*request.GetRunID(),
+		*request.GetReason(),
+		request.GetDetails(),
+	)
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1011,18 +1029,18 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 		return reply
 	}
 
-	// grab the client.SignalWorkflow parameters
-	workflowID := request.GetWorkflowID()
-	runID := request.GetRunID()
-	signalName := request.GetSignalName()
-	signalArgs := request.GetSignalArgs()
-
 	// create the context to signal the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// signal the specified workflow
-	err = client.SignalWorkflow(ctx, *workflowID, *runID, *signalName, signalArgs)
+	err = client.SignalWorkflow(ctx,
+		*request.GetWorkflowID(),
+		*request.GetRunID(),
+		*request.GetSignalName(),
+		request.GetSignalArgs(),
+	)
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1059,20 +1077,20 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 		return reply
 	}
 
-	// grab the client.SignalWithStartWorkflow parameters
-	workflowID := request.GetWorkflowID()
-	signalName := request.GetSignalName()
-	signalArgs := request.GetSignalArgs()
-	opts := request.GetOptions()
-	workflowArgs := request.GetWorkflowArgs()
-	workflow := request.GetWorkflow()
-
 	// create the context
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
-	workflowExecution, err := client.SignalWithStartWorkflow(ctx, *workflowID, *signalName, signalArgs, *opts, *workflow, workflowArgs)
+	workflowExecution, err := client.SignalWithStartWorkflow(ctx,
+		*request.GetWorkflowID(),
+		*request.GetSignalName(),
+		request.GetSignalArgs(),
+		*request.GetOptions(),
+		*request.GetWorkflow(),
+		request.GetWorkflowArgs(),
+	)
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1134,18 +1152,18 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 		return reply
 	}
 
-	// get the properties from the request
-	workflowID := request.GetWorkflowID()
-	runID := request.GetRunID()
-	queryName := request.GetQueryName()
-	queryArgs := request.GetQueryArgs()
-
 	// create the context
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// query the workflow via the cadence client
-	value, err := client.QueryWorkflow(ctx, *workflowID, *runID, *queryName, queryArgs)
+	value, err := client.QueryWorkflow(ctx,
+		*request.GetWorkflowID(),
+		*request.GetRunID(),
+		*request.GetQueryName(),
+		request.GetQueryArgs(),
+	)
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1206,8 +1224,8 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		workflowMutableInvokeRequest.SetMutableID(mutableID)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(workflowMutableInvokeRequest.GetRequestID(), workflowMutableInvokeRequest)
 		future, settable := workflow.NewFuture(ctx)
+		op := NewOperation(workflowMutableInvokeRequest.GetRequestID(), workflowMutableInvokeRequest)
 		op.SetFuture(future)
 		op.SetSettable(settable)
 		op.SetRequestID(requestID)
@@ -1270,7 +1288,11 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	}
 
 	// execute the cadence server SideEffectMutable call
-	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(), *mutableID, mutableFunc, equals)
+	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(),
+		*mutableID,
+		mutableFunc,
+		equals,
+	)
 
 	// extract the result
 	var result interface{}
@@ -1337,16 +1359,12 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 		return reply
 	}
 
-	// grab the client.CancelWorkflow parameters and
-	workflowID := request.GetWorkflowID()
-	runID := request.GetRunID()
-
 	// create the context to cancel the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// DescribeWorkflow call to cadence client
-	describeWorkflowExecutionResponse, err := client.DescribeWorkflowExecution(ctx, *workflowID, *runID)
+	describeWorkflowExecutionResponse, err := client.DescribeWorkflowExecution(ctx, *request.GetWorkflowID(), *request.GetRunID())
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1383,16 +1401,15 @@ func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) 
 		return reply
 	}
 
-	// grab the client.GetWorkflow parameters and
-	workflowID := request.GetWorkflowID()
-	runID := request.GetRunID()
-
 	// create the context to cancel the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// call GetWorkflow
-	workflowRun := client.GetWorkflow(ctx, *workflowID, *runID)
+	workflowRun := client.GetWorkflow(ctx,
+		*request.GetWorkflowID(),
+		*request.GetRunID(),
+	)
 
 	// get the result of WorkflowRun
 	var result []byte
@@ -1434,20 +1451,19 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 		return reply
 	}
 
-	// get the signal name and channel
+	// get context and placeholder to set
+	// the signal value in
 	var signalValue []byte
 	ctx := wectx.GetContext()
-	signalName := request.GetSignalName()
-	signalChan := workflow.GetSignalChannel(ctx, *signalName)
 
 	// create a selector, add a receiver and wait for the signal on
 	// the channel
 	selector := workflow.NewSelector(ctx)
-	selector = selector.AddReceive(signalChan, func(channel workflow.Channel, more bool) {
+	selector = selector.AddReceive(workflow.GetSignalChannel(ctx, *request.GetSignalName()), func(channel workflow.Channel, more bool) {
 		channel.Receive(ctx, &signalValue)
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Received signal!", zap.String("signal", *signalName),
+		logger.Debug("Received signal!", zap.String("signal", *request.GetSignalName()),
 			zap.Binary("value", signalValue))
 
 		// build the workflowSignalReceivedRequest
@@ -1519,19 +1535,15 @@ func handleWorkflowHasLastResultRequest(request *messages.WorkflowHasLastResultR
 	}
 
 	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
 		return reply
 	}
 
-	// check if there is a last workflow completion result from the cadence client
-	hasResult := workflow.HasLastCompletionResult(wectx.GetContext())
-
 	// build the reply
-	buildReply(reply, nil, hasResult)
+	buildReply(reply, nil, workflow.HasLastCompletionResult(wectx.GetContext()))
 
 	return reply
 }
@@ -1553,8 +1565,7 @@ func handleWorkflowGetLastResultRequest(request *messages.WorkflowGetLastResultR
 	}
 
 	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1593,8 +1604,7 @@ func handleWorkflowDisconnectContextRequest(request *messages.WorkflowDisconnect
 	}
 
 	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1630,20 +1640,15 @@ func handleWorkflowGetTimeRequest(request *messages.WorkflowGetTimeRequest) mess
 	}
 
 	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
 		return reply
 	}
 
-	// Get the current time that a workflow decision is
-	// started or replayed
-	t := workflow.Now(wectx.GetContext())
-
 	// build the reply
-	buildReply(reply, nil, t)
+	buildReply(reply, nil, workflow.Now(wectx.GetContext()))
 
 	return reply
 }
@@ -1665,8 +1670,7 @@ func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages
 	}
 
 	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1680,6 +1684,188 @@ func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages
 
 		return reply
 	}
+
+	// build the reply
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowExecuteChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowExecuteChildReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+
+		return reply
+	}
+
+	// get the contextID and the corresponding context
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+
+		return reply
+	}
+
+	// set options on the context
+	// set cancellation on the context
+	ctx := workflow.WithChildOptions(wectx.GetContext(), *request.GetOptions())
+	ctx, cancel := workflow.WithCancel(ctx)
+
+	// execute the child workflow
+	childFuture := workflow.ExecuteChildWorkflow(ctx,
+		*request.GetWorkflow(),
+		request.GetArgs(),
+	)
+
+	// create the new ChildContext
+	cctx := cadenceworkflows.NewChildContext()
+	cctx.SetCancelFunction(cancel)
+	cctx.SetFuture(childFuture)
+
+	// add the ChildWorkflowFuture and the cancel func to the
+	// ChildContexts map in the parent workflow's entry
+	// in the WorkflowContexts map
+	childID := wectx.AddChildContext(cadenceworkflows.NextChildID(), cctx)
+
+	// build the reply
+	buildReply(reply, nil, childID)
+
+	return reply
+}
+
+func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowWaitForChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowWaitForChildReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+
+		return reply
+	}
+
+	// get the child context from the parent workflow context
+	childID := request.GetChildID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	cctx := wectx.GetChildContext(childID)
+	if cctx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+
+		return reply
+	}
+
+	// wait on the child workflow
+	var result []byte
+	if err := cctx.GetFuture().GetChildWorkflowExecution().Get(wectx.GetContext(), result); err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
+	}
+
+	// remove the child context
+	defer func() {
+		_ = wectx.RemoveChildContext(childID)
+	}()
+
+	// build the reply
+	buildReply(reply, nil, result)
+
+	return reply
+}
+
+func handleWorkflowSignalChildRequest(request *messages.WorkflowSignalChildRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowSignalChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowSignalChildReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+
+		return reply
+	}
+
+	// get the child context from the parent workflow context
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	cctx := wectx.GetChildContext(request.GetChildID())
+	if cctx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+
+		return reply
+	}
+
+	// signal the child workflow
+	ctx := wectx.GetContext()
+	future := cctx.GetFuture().SignalChildWorkflow(ctx,
+		*request.GetSignalName(),
+		request.GetSignalArgs(),
+	)
+
+	// wait on the future
+	var result []byte
+	if err := future.Get(ctx, result); err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
+	}
+
+	// build the reply
+	buildReply(reply, nil, result)
+
+	return reply
+}
+
+func handleWorkflowCancelChildRequest(request *messages.WorkflowCancelChildRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowCancelChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new WorkflowCancelChildReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+
+		return reply
+	}
+
+	// get the child context from the parent workflow context
+	childID := request.GetChildID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	cctx := wectx.GetChildContext(childID)
+	if cctx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+
+		return reply
+	}
+
+	// call the cancel function
+	go cctx.GetCancelFunction()
+
+	// remove the child context
+	defer func() {
+		_ = wectx.RemoveChildContext(childID)
+	}()
 
 	// build the reply
 	buildReply(reply, nil)
@@ -1886,11 +2072,8 @@ func handleActivityHasHeartbeatDetailsRequest(request *messages.ActivityHasHeart
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
-	// get the activity heartbeat details
-	hasHeartbeatDetails := activity.HasHeartbeatDetails(ctx)
-
 	// build the reply
-	buildReply(reply, nil, hasHeartbeatDetails)
+	buildReply(reply, nil, activity.HasHeartbeatDetails(ctx))
 
 	return reply
 }
@@ -1982,11 +2165,8 @@ func handleActivityGetInfoRequest(request *messages.ActivityGetInfoRequest) mess
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
-	// get the activity info
-	info := activity.GetInfo(ctx)
-
 	// build the reply
-	buildReply(reply, nil, info)
+	buildReply(reply, nil, activity.GetInfo(ctx))
 
 	return reply
 }
@@ -2015,18 +2195,17 @@ func handleActivityCompleteRequest(request *messages.ActivityCompleteRequest) me
 		return reply
 	}
 
-	// get the TaskToken, CompleteError, and Result
-	// from the ActivityCompleteRequest
-	taskToken := request.GetTaskToken()
-	completeError := request.GetCompleteError()
-	result := request.GetResult()
-
 	// create the context
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// complete the activity
-	err = client.CompleteActivity(ctx, taskToken, result, completeError)
+	err = client.CompleteActivity(ctx,
+		request.GetTaskToken(),
+		request.GetResult(),
+		request.GetCompleteError(),
+	)
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 

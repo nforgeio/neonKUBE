@@ -44,6 +44,23 @@ func NewWorkflowSignalChildReply() *WorkflowSignalChildReply {
 	return reply
 }
 
+// GetResult gets the child workflow signal result or nil
+// from a WorkflowSignalChildReply's properties map.
+//
+// returns []byte -> []byte representing the result of a child workflow signal
+func (reply *WorkflowSignalChildReply) GetResult() []byte {
+	return reply.GetBytesProperty("Result")
+}
+
+// SetResult sets the child workflow signal result or nil
+// in a WorkflowSignalChildReply's properties map.
+//
+// param value []byte -> []byte representing the result of a child workflow signal
+// to be set in the WorkflowSignalChildReply's properties map
+func (reply *WorkflowSignalChildReply) SetResult(value []byte) {
+	reply.SetBytesProperty("Result", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -59,4 +76,7 @@ func (reply *WorkflowSignalChildReply) Clone() IProxyMessage {
 // CopyTo inherits docs from WorkflowReply.CopyTo()
 func (reply *WorkflowSignalChildReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
+	if v, ok := target.(*WorkflowSignalChildReply); ok {
+		v.SetResult(reply.GetResult())
+	}
 }

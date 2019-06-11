@@ -51,6 +51,26 @@ func NewWorkflowExecuteChildRequest() *WorkflowExecuteChildRequest {
 	return request
 }
 
+// GetWorkflow gets a WorkflowExecuteChildRequest's Workflow value
+// from its properties map.  Identifies the child workflow implementation
+// to be started.
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowExecuteChildRequest's Workflow
+func (request *WorkflowExecuteChildRequest) GetWorkflow() *string {
+	return request.GetStringProperty("Workflow")
+}
+
+// SetWorkflow sets a WorkflowExecuteChildRequest's Workflow value
+// in its properties map. Identifies the child workflow implementation
+// to be started.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowExecuteChildRequest) SetWorkflow(value *string) {
+	request.SetStringProperty("Workflow", value)
+}
+
 // GetArgs gets a WorkflowExecuteChildRequest's Args field
 // from its properties map.  Args is a []byte that
 // specifies the child workflow arguments.
@@ -112,6 +132,7 @@ func (request *WorkflowExecuteChildRequest) Clone() IProxyMessage {
 func (request *WorkflowExecuteChildRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteChildRequest); ok {
+		v.SetWorkflow(request.GetWorkflow())
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
 	}

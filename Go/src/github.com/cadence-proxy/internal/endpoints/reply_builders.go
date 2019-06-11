@@ -230,6 +230,30 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowSleepReply(v, cadenceError)
 		}
 
+	// WorkflowExecuteChildReply
+	case messagetypes.WorkflowExecuteChildReply:
+		if v, ok := reply.(*messages.WorkflowExecuteChildReply); ok {
+			buildWorkflowExecuteChildReply(v, cadenceError, value)
+		}
+
+	// WorkflowWaitForChildReply
+	case messagetypes.WorkflowWaitForChildReply:
+		if v, ok := reply.(*messages.WorkflowWaitForChildReply); ok {
+			buildWorkflowWaitForChildReply(v, cadenceError, value)
+		}
+
+	// WorkflowSignalChildReply
+	case messagetypes.WorkflowSignalChildReply:
+		if v, ok := reply.(*messages.WorkflowSignalChildReply); ok {
+			buildWorkflowSignalChildReply(v, cadenceError, value)
+		}
+
+	// WorkflowCancelChildReply
+	case messagetypes.WorkflowCancelChildReply:
+		if v, ok := reply.(*messages.WorkflowCancelChildReply); ok {
+			buildWorkflowCancelChildReply(v, cadenceError)
+		}
+
 	// -------------------------------------------------------------------------
 	// activity message types
 
@@ -392,8 +416,8 @@ func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceErro
 	reply.SetError(cadenceError)
 
 	if len(execution) > 0 {
-		if v, ok := execution[0].(*workflow.Execution); ok {
-			reply.SetExecution(v)
+		if v, ok := execution[0].(workflow.Execution); ok {
+			reply.SetExecution(&v)
 		}
 	}
 }
@@ -523,6 +547,40 @@ func buildWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply, cadenceErro
 }
 
 func buildWorkflowSleepReply(reply *messages.WorkflowSleepReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, cadenceError *cadenceerrors.CadenceError, childID ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(childID) > 0 {
+		if v, ok := childID[0].(int64); ok {
+			reply.SetChildID(v)
+		}
+	}
+}
+
+func buildWorkflowWaitForChildReply(reply *messages.WorkflowWaitForChildReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
+func buildWorkflowSignalChildReply(reply *messages.WorkflowSignalChildReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
+func buildWorkflowCancelChildReply(reply *messages.WorkflowCancelChildReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 

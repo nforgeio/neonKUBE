@@ -44,6 +44,15 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowExecuteChildReply;
 
         /// <summary>
+        /// Specifies the child workflow to be executed.
+        /// </summary>
+        public string Workflow
+        {
+            get => GetStringProperty(PropertyNames.Workflow);
+            set => SetStringProperty(PropertyNames.Workflow, value);
+        }
+
+        /// <summary>
         /// Specifies the child workflow arguments.
         /// </summary>
         public byte[] Args
@@ -78,8 +87,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteChildRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Options = this.Options;
+            typedTarget.Workflow    = this.Workflow;
+            typedTarget.Args        = this.Args;
+            typedTarget.Options     = this.Options;
         }
     }
 }

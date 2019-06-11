@@ -38,6 +38,15 @@ namespace Neon.Cadence.Internal
             Type = InternalMessageTypes.WorkflowSignalChildReply;
         }
 
+        /// <summary>
+        /// Returns the result of signaling a child workflow
+        /// </summary>
+        public byte[] Result
+        {
+            get => GetBytesProperty(PropertyNames.Result);
+            set => SetBytesProperty(PropertyNames.Result, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -52,6 +61,10 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
+
+            var typedTarget = (WorkflowSignalChildReply)target;
+
+            typedTarget.Result = this.Result;
         }
     }
 }

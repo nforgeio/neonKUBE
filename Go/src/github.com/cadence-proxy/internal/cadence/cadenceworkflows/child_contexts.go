@@ -25,10 +25,10 @@ import (
 
 var (
 
-	// childContextID is incremented (protected by a mutex) every
+	// childID is incremented (protected by a mutex) every
 	// time a new cadence workflow.Context is created by a
 	// child workflow
-	childContextID int64
+	childID int64
 )
 
 type (
@@ -43,34 +43,32 @@ type (
 	// It holds a workflow Context, Future, Settable,
 	// and cancellation function
 	ChildContext struct {
-		ctx        workflow.Context
-		future     workflow.Future
-		settable   workflow.Settable
+		future     workflow.ChildWorkflowFuture
 		cancelFunc func()
 	}
 )
 
 //----------------------------------------------------------------------------
-// childContextID methods
+// childID methods
 
-// NextChildContextID increments the global variable
-// childContextID by 1 and is protected by a mutex lock
-func NextChildContextID() int64 {
+// NextChildID increments the global variable
+// childID by 1 and is protected by a mutex lock
+func NextChildID() int64 {
 	mu.Lock()
-	curr := childContextID
-	childContextID = childContextID + 1
+	curr := childID
+	childID = childID + 1
 	mu.Unlock()
 
 	return curr
 }
 
-// GetChildContextID gets the value of the global variable
-// childContextID and is protected by a mutex Read lock
-func GetChildContextID() int64 {
+// GetChildID gets the value of the global variable
+// childID and is protected by a mutex Read lock
+func GetChildID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	return childContextID
+	return childID
 }
 
 //----------------------------------------------------------------------------
@@ -83,21 +81,6 @@ func GetChildContextID() int64 {
 // ChildContext in memory
 func NewChildContext() *ChildContext {
 	return new(ChildContext)
-}
-
-// GetContext gets a ChildContext's workflow.Context
-//
-// returns workflow.Context -> a cadence workflow context
-func (cctx *ChildContext) GetContext() workflow.Context {
-	return cctx.ctx
-}
-
-// SetContext sets a ChildContext's workflow.Context
-//
-// param value workflow.Context -> a cadence workflow context to be
-// set as a ChildContext's cadence workflow.Context
-func (cctx *ChildContext) SetContext(value workflow.Context) {
-	cctx.ctx = value
 }
 
 // GetCancelFunction gets a ChildContext's context cancel function
@@ -114,34 +97,19 @@ func (cctx *ChildContext) SetCancelFunction(value func()) {
 	cctx.cancelFunc = value
 }
 
-// GetFuture gets a ChildContext's workflow.Future
+// GetFuture gets a ChildContext's workflow.ChildWorkflowFuture
 //
-// returns workflow.Future -> a cadence workflow.Future
-func (cctx *ChildContext) GetFuture() workflow.Future {
+// returns workflow.ChildWorkflowFuture -> a cadence workflow.ChildWorkflowFuture
+func (cctx *ChildContext) GetFuture() workflow.ChildWorkflowFuture {
 	return cctx.future
 }
 
-// SetFuture sets a ChildContext's workflow.Future
+// SetFuture sets a ChildContext's workflow.ChildWorkflowFuture
 //
-// param value workflow.Future -> a cadence workflow.Future to be
-// set as a ChildContext's cadence workflow.Future
-func (cctx *ChildContext) SetFuture(value workflow.Future) {
+// param value workflow.ChildWorkflowFuture -> a cadence workflow.ChildWorkflowFuture to be
+// set as a ChildContext's cadence workflow.ChildWorkflowFuture
+func (cctx *ChildContext) SetFuture(value workflow.ChildWorkflowFuture) {
 	cctx.future = value
-}
-
-// GetSettable gets a ChildContext's workflow.Settable
-//
-// returns workflow.Settable -> a cadence workflow.Settable
-func (cctx *ChildContext) GetSettable() workflow.Settable {
-	return cctx.settable
-}
-
-// SetSettable sets a ChildContext's workflow.Settable
-//
-// param value workflow.Settable -> a cadence workflow.Settable to be
-// set as a ChildContext's cadence workflow.Settable
-func (cctx *ChildContext) SetSettable(value workflow.Settable) {
-	cctx.settable = value
 }
 
 //----------------------------------------------------------------------------
