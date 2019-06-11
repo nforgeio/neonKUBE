@@ -1287,17 +1287,17 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.TaskToken);
                 Assert.Null(message.Result);
-                Assert.Null(message.CompleteError);
+                Assert.Null(message.Error);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.TaskToken = new byte[] { 0, 1, 2, 3, 4 };
-                message.CompleteError = "my-error";
+                message.Error = new CadenceError(new CadenceEntityNotExistsException("my-error"));
                 message.Result = new byte[] { 5, 6, 7, 8, 9 };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.TaskToken);
-                Assert.Equal("my-error", message.CompleteError);
+                Assert.Equal("CadenceEntityNotExistsException{my-error}", message.Error.String);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Result);
 
                 stream.SetLength(0);
@@ -1315,7 +1315,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.TaskToken);
-                Assert.Equal("my-error", message.CompleteError);
+                Assert.Equal("CadenceEntityNotExistsException{my-error}", message.Error.String);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Result);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -1324,7 +1324,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.TaskToken);
-                Assert.Equal("my-error", message.CompleteError);
+                Assert.Equal("CadenceEntityNotExistsException{my-error}", message.Error.String);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Result);
             }
         }

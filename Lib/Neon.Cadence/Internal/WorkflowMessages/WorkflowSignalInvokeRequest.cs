@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalRequest.cs
+// FILE:	    WorkflowSignalInvokeRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,19 +27,19 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Sends a signal to a running workflow.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalRequest)]
-    internal class WorkflowSignalRequest : WorkflowRequest
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalInvokeRequest)]
+    internal class WorkflowSignalInvokeRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalRequest()
+        public WorkflowSignalInvokeRequest()
         {
-            Type = InternalMessageTypes.WorkflowSignalRequest;
+            Type = InternalMessageTypes.WorkflowSignalInvokeRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSignalReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSignalInvokeReply;
 
         /// <summary>
         /// Identifies the workflow by ID.
@@ -81,7 +81,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalRequest();
+            var clone = new WorkflowSignalInvokeRequest();
 
             CopyTo(clone);
 
@@ -93,7 +93,7 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalRequest)target;
+            var typedTarget = (WorkflowSignalInvokeRequest)target;
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;

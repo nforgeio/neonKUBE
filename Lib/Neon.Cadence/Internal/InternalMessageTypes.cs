@@ -189,12 +189,12 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>client --> proxy:</b> Signals a running workflow.
         /// </summary>
-        WorkflowSignalRequest = 104,
+        WorkflowSignalInvokeRequest = 104,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalInvokeRequest"/> message.
         /// </summary>
-        WorkflowSignalReply = 105,
+        WorkflowSignalInvokeReply = 105,
 
         /// <summary>
         ///<b>client --> proxy:</b> Signals a workflow, starting it first if necessary.

@@ -67,7 +67,6 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 EmitMetrics { get; private set; }                               = new PropertyNameUtf8("EmitMetrics");
         public static PropertyNameUtf8 Endpoints { get; private set; }                                 = new PropertyNameUtf8("Endpoints");
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");
-        public static PropertyNameUtf8 CompleteError { get; private set; }                             = new PropertyNameUtf8("CompleteError");
 
         //------------------------------------------------------------------------------------
         // $todo(jeff.lill): Delete these after Jack stops serializing this in reply messages.

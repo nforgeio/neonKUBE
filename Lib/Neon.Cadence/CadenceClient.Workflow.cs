@@ -237,8 +237,8 @@ namespace Neon.Cadence
 
             runId = runId ?? string.Empty;
 
-            var reply = (WorkflowSignalReply)await CallProxyAsync(
-                new WorkflowSignalRequest()
+            var reply = (WorkflowSignalInvokeReply)await CallProxyAsync(
+                new WorkflowSignalInvokeRequest()
                 {
                     WorkflowId = workflowId,
                     SignalName = signalName,

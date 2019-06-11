@@ -486,7 +486,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<WorkflowSignalReply> OnSignalAsync(WorkflowSignalReceivedRequest request)
+        internal static async Task<WorkflowSignalInvokeReply> OnSignalAsync(WorkflowSignalReceivedRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -502,14 +502,14 @@ namespace Neon.Cadence
                     {
                         await (Task)(method.Invoke(workflow, new object[] { request.SignalArgs }));
 
-                        return new WorkflowSignalReply()
+                        return new WorkflowSignalInvokeReply()
                         {
                             ContextId = request.ContextId
                         };
                     }
                     else
                     {
-                        return new WorkflowSignalReply()
+                        return new WorkflowSignalInvokeReply()
                         {
                             Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToCadenceError()
                         };
@@ -517,7 +517,7 @@ namespace Neon.Cadence
                 }
                 else
                 {
-                    return new WorkflowSignalReply()
+                    return new WorkflowSignalInvokeReply()
                     {
                         Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
                     };
@@ -525,7 +525,7 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
-                return new WorkflowSignalReply()
+                return new WorkflowSignalInvokeReply()
                 {
                     Error = new CadenceError(e)
                 };

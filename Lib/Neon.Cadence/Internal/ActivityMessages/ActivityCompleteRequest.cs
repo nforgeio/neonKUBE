@@ -52,7 +52,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Returns the result to send to the activity complete call encoded as a byte array.
+        /// The activity result.
         /// </summary>
         public byte[] Result
         {
@@ -61,12 +61,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Returns the error to send to the activity complete call encoded as a string.
+        /// The activity error.
         /// </summary>
-        public string CompleteError
+        public CadenceError Error
         {
-            get => GetStringProperty(PropertyNames.CompleteError);
-            set => SetStringProperty(PropertyNames.CompleteError, value);
+            get => GetJsonProperty<CadenceError>(PropertyNames.Error);
+            set => SetJsonProperty<CadenceError>(PropertyNames.Error, value);
         }
 
         /// <inheritdoc/>
@@ -86,9 +86,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityCompleteRequest)target;
 
-            typedTarget.TaskToken       = this.TaskToken;
-            typedTarget.Result          = this.Result;
-            typedTarget.CompleteError   = this.CompleteError;
+            typedTarget.TaskToken = this.TaskToken;
+            typedTarget.Result    = this.Result;
+            typedTarget.Error     = this.Error;
         }
     }
 }

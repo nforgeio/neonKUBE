@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalReply.cs
+// FILE:	    WorkflowSignalInvokeReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,23 +25,23 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalInvokeRequest"/>
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalReply)]
-    internal class WorkflowSignalReply : WorkflowReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalInvokeReply)]
+    internal class WorkflowSignalInvokeReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalReply()
+        public WorkflowSignalInvokeReply()
         {
-            Type = InternalMessageTypes.WorkflowSignalReply;
+            Type = InternalMessageTypes.WorkflowSignalInvokeReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalReply();
+            var clone = new WorkflowSignalInvokeReply();
 
             CopyTo(clone);
 
