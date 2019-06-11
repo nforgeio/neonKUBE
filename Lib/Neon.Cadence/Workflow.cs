@@ -746,7 +746,7 @@ namespace Neon.Cadence
 
             foreach (var signalName in methodMap.GetSignalNames())
             {
-                SetSignalHandlerAsync(signalName).Wait();
+                SignalSubscribeAsync(signalName).Wait();
             }
         }
 
@@ -890,16 +890,16 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Registers a signal handler with Cadence.
+        /// Subscribes a workflow to a signal.
         /// </summary>
         /// <param name="signalName">The signal name.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task SetSignalHandlerAsync(string signalName)
+        private async Task SignalSubscribeAsync(string signalName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-            var reply = (WorkflowSetSignalHandlerReply)await Client.CallProxyAsync(
-                new WorkflowSetSignalHandlerRequest()
+            var reply = (WorkflowSignalSubscribeReply)await Client.CallProxyAsync(
+                new WorkflowSignalSubscribeRequest()
                 {
                     SignalName = signalName
                 });
