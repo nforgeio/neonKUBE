@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		workflow_signal_reply.go
+// FILE:		workflow_signal_received_reply.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -49,8 +49,8 @@ func NewWorkflowSignalInvokeReply() *WorkflowSignalInvokeReply {
 
 // Clone inherits docs from WorkflowReply.Clone()
 func (reply *WorkflowSignalInvokeReply) Clone() IProxyMessage {
-	workflowSignalReply := NewWorkflowSignalInvokeReply()
-	var messageClone IProxyMessage = workflowSignalReply
+	workflowSignalInvokeReply := NewWorkflowSignalInvokeReply()
+	var messageClone IProxyMessage = workflowSignalInvokeReply
 	reply.CopyTo(messageClone)
 
 	return messageClone

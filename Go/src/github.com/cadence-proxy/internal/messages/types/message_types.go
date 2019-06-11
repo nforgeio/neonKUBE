@@ -183,12 +183,12 @@ const (
 	/// <summary>
 	/// <b>client --> proxy:</b> Signals a running workflow.
 	/// </summary>
-	WorkflowSignalInvokeRequest MessageType = 104
+	WorkflowSignalRequest MessageType = 104
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalInvokeRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalRequest"/> message.
 	/// </summary>
-	WorkflowSignalInvokeReply MessageType = 105
+	WorkflowSignalReply MessageType = 105
 
 	/// <summary>
 	///<b>client --> proxy:</b> Signals a workflow starting it first if necessary.
@@ -304,7 +304,7 @@ const (
 	/// <summary>
 	/// <b>client --> proxy:</b> Indicates that .NET application wishes to consume signals from
 	/// a named channel.  Any signals received by the proxy will be forwarded to the
-	/// client via <see cref="WorkflowSignalReceivedRequest"/> messages.
+	/// client via <see cref="WorkflowSignalInvokeRequest"/> messages.
 	/// </summary>
 	WorkflowSignalSubscribeRequest MessageType = 128
 
@@ -316,12 +316,12 @@ const (
 	/// <summary>
 	/// <b>proxy --> client:</b> Sent when a signal is received by the proxy on a subscribed channel.
 	/// </summary>
-	WorkflowSignalReceivedRequest MessageType = 130
+	WorkflowSignalInvokeRequest MessageType = 130
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowSignalReceivedRequest"/> message.
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowSignalInvokeRequest"/> message.
 	/// </summary>
-	WorkflowSignalReceivedReply MessageType = 131
+	WorkflowSignalInvokeReply MessageType = 131
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior.

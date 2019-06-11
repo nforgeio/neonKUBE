@@ -204,11 +204,11 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.WorkflowSignalSubscribeRequest:
 		message = NewWorkflowSignalSubscribeRequest()
 
-	// WorkflowSignalReceived
-	case messagetypes.WorkflowSignalReceivedReply:
-		message = NewWorkflowSignalReceivedReply()
-	case messagetypes.WorkflowSignalReceivedRequest:
-		message = NewWorkflowSignalReceivedRequest()
+	// WorkflowSignal
+	case messagetypes.WorkflowSignalReply:
+		message = NewWorkflowSignalReply()
+	case messagetypes.WorkflowSignalRequest:
+		message = NewWorkflowSignalRequest()
 
 	// WorkflowHasLastResult
 	case messagetypes.WorkflowHasLastResultReply:
@@ -263,12 +263,6 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowCancelChildReply()
 	case messagetypes.WorkflowCancelChildRequest:
 		message = NewWorkflowCancelChildRequest()
-
-	// WorkflowSetSignalHandler
-	case messagetypes.WorkflowSetSignalHandlerReply:
-		message = NewWorkflowSetSignalHandlerReply()
-	case messagetypes.WorkflowSetSignalHandlerRequest:
-		message = NewWorkflowSetSignalHandlerRequest()
 
 	// WorkflowSetQueryHandler
 	case messagetypes.WorkflowSetQueryHandlerReply:

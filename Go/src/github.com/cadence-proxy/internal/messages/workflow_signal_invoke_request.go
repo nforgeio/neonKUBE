@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		workflow_signal_request.go
+// FILE:		workflow_signal_received_request.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -30,8 +30,7 @@ type (
 	// WorkflowRequest struct in memory and ReplyType, which is
 	// the corresponding MessageType for replying to this WorkflowRequest
 	//
-	// A WorkflowSignalInvokeRequest will pass all of the given data and options
-	// necessary to signal a cadence workflow via the cadence client
+	// A WorkflowSignalInvokeRequest sends a received signal to a running workflow.
 	WorkflowSignalInvokeRequest struct {
 		*WorkflowRequest
 	}
@@ -50,44 +49,8 @@ func NewWorkflowSignalInvokeRequest() *WorkflowSignalInvokeRequest {
 	return request
 }
 
-// GetWorkflowID gets a WorkflowSignalInvokeRequest's WorkflowID value
-// from its properties map
-//
-// returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalInvokeRequest's WorkflowID
-func (request *WorkflowSignalInvokeRequest) GetWorkflowID() *string {
-	return request.GetStringProperty("WorkflowId")
-}
-
-// SetWorkflowID sets an WorkflowSignalInvokeRequest's WorkflowID value
-// in its properties map
-//
-// param value *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalInvokeRequest's WorkflowID
-func (request *WorkflowSignalInvokeRequest) SetWorkflowID(value *string) {
-	request.SetStringProperty("WorkflowId", value)
-}
-
-// GetRunID gets a WorkflowSignalInvokeRequest's RunID value
-// from its properties map
-//
-// returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalInvokeRequest's RunID
-func (request *WorkflowSignalInvokeRequest) GetRunID() *string {
-	return request.GetStringProperty("RunId")
-}
-
-// SetRunID sets a WorkflowSignalInvokeRequest's RunID value
-// in its properties map
-//
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
-func (request *WorkflowSignalInvokeRequest) SetRunID(value *string) {
-	request.SetStringProperty("RunId", value)
-}
-
 // GetSignalName gets a WorkflowSignalInvokeRequest's SignalName value
-// from its properties map
+// from its properties map. Identifies the signal.
 //
 // returns *string -> pointer to a string in memory holding the value
 // of a WorkflowSignalInvokeRequest's SignalName
@@ -96,7 +59,7 @@ func (request *WorkflowSignalInvokeRequest) GetSignalName() *string {
 }
 
 // SetSignalName sets a WorkflowSignalInvokeRequest's SignalName value
-// in its properties map
+// in its properties map. Identifies the signal.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
@@ -129,8 +92,8 @@ func (request *WorkflowSignalInvokeRequest) SetSignalArgs(value []byte) {
 
 // Clone inherits docs from WorkflowRequest.Clone()
 func (request *WorkflowSignalInvokeRequest) Clone() IProxyMessage {
-	workflowSignalRequest := NewWorkflowSignalInvokeRequest()
-	var messageClone IProxyMessage = workflowSignalRequest
+	workflowSignalInvokeRequest := NewWorkflowSignalInvokeRequest()
+	var messageClone IProxyMessage = workflowSignalInvokeRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
@@ -140,8 +103,6 @@ func (request *WorkflowSignalInvokeRequest) Clone() IProxyMessage {
 func (request *WorkflowSignalInvokeRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowSignalInvokeRequest); ok {
-		v.SetWorkflowID(request.GetWorkflowID())
-		v.SetRunID(request.GetRunID())
 		v.SetSignalName(request.GetSignalName())
 		v.SetSignalArgs(request.GetSignalArgs())
 	}

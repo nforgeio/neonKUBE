@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		workflow_signal_received_reply.go
+// FILE:		workflow_signal_reply.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,23 +23,23 @@ import (
 
 type (
 
-	// WorkflowSignalReceivedReply is a WorkflowReply of MessageType
-	// WorkflowSignalReceivedReply.  It holds a reference to a WorkflowReply in memory
-	// and is the reply type to a WorkflowSignalReceivedRequest
-	WorkflowSignalReceivedReply struct {
+	// WorkflowSignalReply is a WorkflowReply of MessageType
+	// WorkflowSignalReply.  It holds a reference to a WorkflowReply in memory
+	// and is the reply type to a WorkflowSignalRequest
+	WorkflowSignalReply struct {
 		*WorkflowReply
 	}
 )
 
-// NewWorkflowSignalReceivedReply is the default constructor for
-// a WorkflowSignalReceivedReply
+// NewWorkflowSignalReply is the default constructor for
+// a WorkflowSignalReply
 //
-// returns *WorkflowSignalReceivedReply -> a pointer to a newly initialized
-// WorkflowSignalReceivedReply in memory
-func NewWorkflowSignalReceivedReply() *WorkflowSignalReceivedReply {
-	reply := new(WorkflowSignalReceivedReply)
+// returns *WorkflowSignalReply -> a pointer to a newly initialized
+// WorkflowSignalReply in memory
+func NewWorkflowSignalReply() *WorkflowSignalReply {
+	reply := new(WorkflowSignalReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(messagetypes.WorkflowSignalReceivedReply)
+	reply.SetType(messagetypes.WorkflowSignalReply)
 
 	return reply
 }
@@ -48,15 +48,15 @@ func NewWorkflowSignalReceivedReply() *WorkflowSignalReceivedReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from WorkflowReply.Clone()
-func (reply *WorkflowSignalReceivedReply) Clone() IProxyMessage {
-	workflowSignalReceivedReply := NewWorkflowSignalReceivedReply()
-	var messageClone IProxyMessage = workflowSignalReceivedReply
+func (reply *WorkflowSignalReply) Clone() IProxyMessage {
+	workflowSignalReply := NewWorkflowSignalReply()
+	var messageClone IProxyMessage = workflowSignalReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from WorkflowReply.CopyTo()
-func (reply *WorkflowSignalReceivedReply) CopyTo(target IProxyMessage) {
+func (reply *WorkflowSignalReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
 }

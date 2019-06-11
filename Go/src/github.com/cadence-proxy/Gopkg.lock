@@ -195,7 +195,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:0de31727c88e9f4a4ae70c28b6caa27f39b25788daf2dc4f7406013421228144"
+  digest = "1:e89f2cdede55684adbe44b5566f55838ad2aee1dff348d14b73ccf733607b671"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
@@ -203,8 +203,8 @@
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "50c4339db732beb2165735d2cde0bff78eb3c5a5"
-  version = "v0.9.3"
+  revision = "2641b987480bca71fb39738eb8c8b0d577cb1d76"
+  version = "v0.9.4"
 
 [[projects]]
   branch = "master"
@@ -227,15 +227,15 @@
   version = "v0.4.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:f8fac244ec2cb7daef48b0148dcf5a330ac7697fa83c2e1e78e65b21f7f43500"
+  digest = "1:403b810b43500b5b0a9a24a47347e31dc2783ccae8cf97c891b46f5b0496fa1a"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
     "internal/fs",
   ]
   pruneopts = "UT"
-  revision = "65bdadfa96aecebf4dcf888da995a29eab4fc964"
+  revision = "833678b5bb319f2d20a475cb165c6cc59c2cc77c"
+  version = "v0.0.2"
 
 [[projects]]
   digest = "1:ed615c5430ecabbb0fb7629a182da65ecee6523900ac1ac932520860878ffcad"
@@ -319,10 +319,9 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:91906caaca1235cbceec3ed7ff3f9525153537fa50f2159087e875fd16884943"
+  digest = "1:a6c627edf66c41ecf6c29aa4594ff74273d25edf49370bce74c340cb3ffe2f97"
   name = "go.uber.org/cadence"
   packages = [
-    ".",
     ".gen/go/cadence",
     ".gen/go/cadence/workflowserviceclient",
     ".gen/go/cadence/workflowservicetest",
@@ -477,7 +476,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cfa2cf0178b3794b4046746a796e7f51c5b49be7a16902a8909e51d0167791e6"
+  digest = "1:a9dae730d62b3c7db6fe5da3eaaff8cfd02fef64e98b6e7c6ddb9e60d4a58b3d"
   name = "golang.org/x/net"
   packages = [
     "bpf",
@@ -488,18 +487,18 @@
     "ipv6",
   ]
   pruneopts = "UT"
-  revision = "f3200d17e092c607f615320ecaad13d87ad9a2b3"
+  revision = "3f473d35a33aa6fdd203e306dc439b797820e3f1"
 
 [[projects]]
   branch = "master"
-  digest = "1:820be5471f9063bf539a8e4acfcf71151c832932c6ae6aab5aa0e8957e5af173"
+  digest = "1:2a96b14fed8617c9e499777c03ec21f35dfd5b396f0b05fcdd7eff9e6c67f196"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "6a60838ec2595395fabc7b2e6c2ae9fb5a87722d"
+  revision = "93c9922d18aeb82498a065f07aec7ad7fa60dfb7"
 
 [[projects]]
   branch = "master"
@@ -511,7 +510,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3cd7a159a8d94466dd18c6790d72cd9a723d3027ed27b4e5f7eee4405732b068"
+  digest = "1:043812800110e543ddbdc127f4dbbcf13ab283148d1d284ebeba3317a7e7c0e6"
   name = "golang.org/x/tools"
   packages = [
     "cmd/stringer",
@@ -529,7 +528,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "f98590f1bfc84d0afb884c0444d6ba8cef01fff8"
+  revision = "d73e1c7e250b19f9948138e2df37cea712e8f06f"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -579,7 +578,6 @@
     "github.com/google/uuid",
     "github.com/stretchr/testify/suite",
     "github.com/uber-go/tally",
-    "go.uber.org/cadence",
     "go.uber.org/cadence/.gen/go/cadence/workflowserviceclient",
     "go.uber.org/cadence/.gen/go/shared",
     "go.uber.org/cadence/activity",
