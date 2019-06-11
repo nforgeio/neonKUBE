@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalInvokeRequest.cs
+// FILE:	    WorkflowSignalRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,21 +25,40 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Sends a received signal to a running workflow.
+    /// <b>proxy --> client:</b> Sends a signal to a running workflow.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalInvokeRequest)]
-    internal class WorkflowSignalInvokeRequest : WorkflowRequest
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalRequest)]
+    internal class WorkflowSignalequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalInvokeRequest()
+        public WorkflowSignalequest()
         {
-            Type = InternalMessageTypes.WorkflowSignalInvokeRequest;
+            Type = InternalMessageTypes.WorkflowSignalRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSignalInvokeReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSignalReply;
+
+        /// <summary>
+        /// Identifies the workflow by ID.
+        /// </summary>
+        public string WorkflowId
+        {
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
+        }
+
+        /// <summary>
+        /// Identifies the specific workflow run to be cancelled.  The latest run
+        /// will be cancelled when this is <c>null</c> or empty.
+        /// </summary>
+        public string RunId
+        {
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
+        }
 
         /// <summary>
         /// Identifies the signal.
@@ -62,7 +81,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalInvokeRequest();
+            var clone = new WorkflowSignalequest();
 
             CopyTo(clone);
 
@@ -74,8 +93,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalInvokeRequest)target;
+            var typedTarget = (WorkflowSignalequest)target;
 
+            typedTarget.WorkflowId = this.WorkflowId;
+            typedTarget.RunId      = this.RunId;
             typedTarget.SignalName = this.SignalName;
             typedTarget.SignalArgs = this.SignalArgs;
         }

@@ -306,9 +306,9 @@ namespace Neon.Cadence
                     reply = await OnInvokeAsync(client, (WorkflowInvokeRequest)request);
                     break;
 
-                case InternalMessageTypes.WorkflowSignalReceivedRequest:
+                case InternalMessageTypes.WorkflowSignalInvokeRequest:
 
-                    reply = await OnSignalAsync((WorkflowSignalReceivedRequest)request);
+                    reply = await OnSignalAsync((WorkflowSignalInvokeRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowQueryRequest:
@@ -486,7 +486,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<WorkflowSignalInvokeReply> OnSignalAsync(WorkflowSignalReceivedRequest request)
+        internal static async Task<WorkflowSignalReply> OnSignalAsync(WorkflowSignalInvokeRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -502,14 +502,14 @@ namespace Neon.Cadence
                     {
                         await (Task)(method.Invoke(workflow, new object[] { request.SignalArgs }));
 
-                        return new WorkflowSignalInvokeReply()
+                        return new WorkflowSignalReply()
                         {
                             ContextId = request.ContextId
                         };
                     }
                     else
                     {
-                        return new WorkflowSignalInvokeReply()
+                        return new WorkflowSignalReply()
                         {
                             Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToCadenceError()
                         };
@@ -517,7 +517,7 @@ namespace Neon.Cadence
                 }
                 else
                 {
-                    return new WorkflowSignalInvokeReply()
+                    return new WorkflowSignalReply()
                     {
                         Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
                     };
@@ -525,7 +525,7 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
-                return new WorkflowSignalInvokeReply()
+                return new WorkflowSignalReply()
                 {
                     Error = new CadenceError(e)
                 };

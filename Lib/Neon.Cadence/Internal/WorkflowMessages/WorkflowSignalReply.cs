@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowSignalReceivedRequest.cs
+// FILE:	    WorkflowSignalReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,44 +25,23 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Sends a received signal to a running workflow.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowSignalequest"/>
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalReceivedRequest)]
-    internal class WorkflowSignalReceivedRequest : WorkflowRequest
+    [InternalProxyMessage(InternalMessageTypes.WorkflowSignalReply)]
+    internal class WorkflowSignalReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalReceivedRequest()
+        public WorkflowSignalReply()
         {
-            Type = InternalMessageTypes.WorkflowSignalReceivedRequest;
-        }
-
-        /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSignalReceivedReply;
-
-        /// <summary>
-        /// Identifies the signal.
-        /// </summary>
-        public string SignalName
-        {
-            get => GetStringProperty(PropertyNames.SignalName);
-            set => SetStringProperty(PropertyNames.SignalName, value);
-        }
-
-        /// <summary>
-        /// Optionally specifies the signal arguments.
-        /// </summary>
-        public byte[] SignalArgs
-        {
-            get => GetBytesProperty(PropertyNames.SignalArgs);
-            set => SetBytesProperty(PropertyNames.SignalArgs, value);
+            Type = InternalMessageTypes.WorkflowSignalReply;
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalReceivedRequest();
+            var clone = new WorkflowSignalReply();
 
             CopyTo(clone);
 
@@ -73,11 +52,6 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (WorkflowSignalReceivedRequest)target;
-
-            typedTarget.SignalName = this.SignalName;
-            typedTarget.SignalArgs = this.SignalArgs;
         }
     }
 }
