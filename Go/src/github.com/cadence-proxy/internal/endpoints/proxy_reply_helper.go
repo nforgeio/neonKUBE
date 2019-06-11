@@ -158,6 +158,12 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleWorkflowQueryReply(v)
 		}
 
+	// WorkflowQueryInvokeReply
+	case messagetypes.WorkflowQueryInvokeReply:
+		if v, ok := reply.(*messages.WorkflowQueryInvokeReply); ok {
+			err = handleWorkflowQueryInvokeReply(v)
+		}
+
 	// WorkflowSetCacheSizeReply
 	case messagetypes.WorkflowSetCacheSizeReply:
 		if v, ok := reply.(*messages.WorkflowSetCacheSizeReply); ok {
@@ -174,12 +180,6 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 	case messagetypes.WorkflowMutableInvokeReply:
 		if v, ok := reply.(*messages.WorkflowMutableInvokeReply); ok {
 			err = handleWorkflowMutableInvokeReply(v)
-		}
-
-	// WorkflowSignalReceivedReply
-	case messagetypes.WorkflowSignalReceivedReply:
-		if v, ok := reply.(*messages.WorkflowSignalReceivedReply); ok {
-			err = handleWorkflowSignalReceivedReply(v)
 		}
 
 	// WorkflowHasLastResultReply
@@ -443,7 +443,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
-	err := op.SetReply(reply, reply.GetResult())
+	err := op.SetReply(reply.GetResult(), reply.GetError())
 	if err != nil {
 		return err
 	}
@@ -468,11 +468,51 @@ func handleWorkflowCancelReply(reply *messages.WorkflowCancelReply) error {
 }
 
 func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) error {
-	err := fmt.Errorf("not implemented exception for message type WorkflowSignalInvokeReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowSignalInvokeReply", zap.Error(err))
-	return err
+	logger.Debug("WorkflowSignalInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// defer removal of the Operation from the map
+	requestID := reply.GetRequestID()
+	defer Operations.Remove(requestID)
+
+	// WorkflowContext at the specified WorflowContextID
+	if wectx := cadenceworkflows.WorkflowContexts.Get(reply.GetContextID()); wectx == nil {
+		return errEntityNotExist
+	}
+
+	// get the Operation corresponding the the reply
+	op := Operations.Get(requestID)
+	err := op.SetReply(true, reply.GetError())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowQueryInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// defer removal of the Operation from the map
+	requestID := reply.GetRequestID()
+	defer Operations.Remove(requestID)
+
+	// WorkflowContext at the specified WorflowContextID
+	if wectx := cadenceworkflows.WorkflowContexts.Get(reply.GetContextID()); wectx == nil {
+		return errEntityNotExist
+	}
+
+	// get the Operation corresponding the the reply
+	op := Operations.Get(requestID)
+	err := op.SetReply(reply.GetResult(), reply.GetError())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func handleWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply) error {
@@ -512,58 +552,18 @@ func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowMutableInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// get request and context ids
-	// and defer their removal
-	contextID := reply.GetContextID()
+	// defer removal of the Operation from the map
 	requestID := reply.GetRequestID()
-	defer func() {
-
-		// remove the WorkflowContext from the map
-		// and remove the Operation from the map
-		_ = cadenceworkflows.WorkflowContexts.Remove(contextID)
-		_ = Operations.Remove(requestID)
-	}()
+	defer Operations.Remove(requestID)
 
 	// WorkflowContext at the specified WorflowContextID
-	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
+	if wectx := cadenceworkflows.WorkflowContexts.Get(reply.GetContextID()); wectx == nil {
 		return errEntityNotExist
 	}
 
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
-	err := op.SetReply(reply, reply.GetResult())
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func handleWorkflowSignalReceivedReply(reply *messages.WorkflowSignalReceivedReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalReceivedReply Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	// get request and context ids
-	// and defer their removal
-	contextID := reply.GetContextID()
-	requestID := reply.GetRequestID()
-	defer func() {
-
-		// remove the WorkflowContext from the map
-		// and remove the Operation from the map
-		_ = cadenceworkflows.WorkflowContexts.Remove(contextID)
-		_ = Operations.Remove(requestID)
-	}()
-
-	// WorkflowContext at the specified WorflowContextID
-	if wectx := cadenceworkflows.WorkflowContexts.Get(contextID); wectx == nil {
-		return errEntityNotExist
-	}
-
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	err := op.SetReply(reply, nil)
+	err := op.SetReply(reply.GetResult(), reply.GetError())
 	if err != nil {
 		return err
 	}
@@ -654,7 +654,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
-	err := op.SendChannel(reply, reply.GetResult())
+	err := op.SendChannel(reply.GetResult(), reply.GetError())
 	if err != nil {
 		return err
 	}
@@ -710,7 +710,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
 
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
-	err := op.SendChannel(reply, true)
+	err := op.SendChannel(true, reply.GetError())
 	if err != nil {
 		return err
 	}

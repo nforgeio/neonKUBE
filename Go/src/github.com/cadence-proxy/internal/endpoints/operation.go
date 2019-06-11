@@ -21,7 +21,8 @@ import (
 	"errors"
 	"sync"
 
-	"go.uber.org/cadence"
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
+
 	"go.uber.org/cadence/workflow"
 
 	"github.com/cadence-proxy/internal/messages"
@@ -125,14 +126,14 @@ func (op *Operation) SetSettable(value workflow.Settable) {
 
 // SetReply signals the awaiting task that a workflow reply message
 // has been received
-func (op *Operation) SetReply(reply messages.IProxyReply, result interface{}) error {
+func (op *Operation) SetReply(result interface{}, cadenceError *cadenceerrors.CadenceError) error {
 	if op.future == nil {
 		return errArgumentNil
 	}
 
 	settable := op.GetSettable()
-	if err := reply.GetError(); err != nil {
-		settable.Set(nil, cadence.NewCustomError(err.ToString()))
+	if cadenceError != nil {
+		settable.Set(nil, errors.New(cadenceError.ToString()))
 	} else {
 		settable.Set(result, nil)
 	}
@@ -142,13 +143,13 @@ func (op *Operation) SetReply(reply messages.IProxyReply, result interface{}) er
 
 // SetError signals the awaiting task that it should fails with an
 // error
-func (op *Operation) SetError(value error) error {
+func (op *Operation) SetError(value *cadenceerrors.CadenceError) error {
 	if op.future == nil {
 		return errArgumentNil
 	}
 
 	settable := op.GetSettable()
-	settable.Set(nil, cadence.NewCustomError(value.Error()))
+	settable.SetError(errors.New(value.ToString()))
 
 	return nil
 }
@@ -171,14 +172,14 @@ func (op *Operation) SetChannel(value chan interface{}) {
 
 // SendChannel sends an interface{} value over the
 // Operation's channel
-func (op *Operation) SendChannel(reply messages.IProxyReply, result interface{}) error {
+func (op *Operation) SendChannel(result interface{}, cadenceError *cadenceerrors.CadenceError) error {
 	defer close(op.channel)
 	if op.channel == nil {
 		return errArgumentNil
 	}
 
-	if err := reply.GetError(); err != nil {
-		op.channel <- errors.New(err.ToString())
+	if cadenceError != nil {
+		op.channel <- errors.New(cadenceError.ToString())
 	} else {
 		op.channel <- result
 	}

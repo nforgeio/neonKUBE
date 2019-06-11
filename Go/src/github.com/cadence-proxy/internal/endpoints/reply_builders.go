@@ -140,12 +140,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowCancelReply(v, cadenceError)
 		}
 
-	// WorkflowSignalInvokeReply
-	case messagetypes.WorkflowSignalInvokeReply:
-		if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
-			buildWorkflowSignalInvokeReply(v, cadenceError)
-		}
-
 	// WorkflowSignalWithStartReply
 	case messagetypes.WorkflowSignalWithStartReply:
 		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
@@ -192,12 +186,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	case messagetypes.WorkflowGetResultReply:
 		if v, ok := reply.(*messages.WorkflowGetResultReply); ok {
 			buildWorkflowGetResultReply(v, cadenceError, value)
-		}
-
-	// WorkflowSignalSubscribeReply
-	case messagetypes.WorkflowSignalSubscribeReply:
-		if v, ok := reply.(*messages.WorkflowSignalSubscribeReply); ok {
-			buildWorkflowSignalSubscribeReply(v, cadenceError)
 		}
 
 	// WorkflowHasLastResultReply
@@ -252,6 +240,18 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	case messagetypes.WorkflowCancelChildReply:
 		if v, ok := reply.(*messages.WorkflowCancelChildReply); ok {
 			buildWorkflowCancelChildReply(v, cadenceError)
+		}
+
+	// WorkflowSignalReply
+	case messagetypes.WorkflowSignalReply:
+		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
+			buildWorkflowSignalReply(v, cadenceError)
+		}
+
+	// WorkflowSignalSubscribeReply
+	case messagetypes.WorkflowSignalSubscribeReply:
+		if v, ok := reply.(*messages.WorkflowSignalSubscribeReply); ok {
+			buildWorkflowSignalSubscribeReply(v, cadenceError)
 		}
 
 	// -------------------------------------------------------------------------
@@ -440,7 +440,11 @@ func buildWorkflowTerminateReply(reply *messages.WorkflowTerminateReply, cadence
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowSignalSubscribeReply(reply *messages.WorkflowSignalSubscribeReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowSignalReply(reply *messages.WorkflowSignalReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
@@ -506,10 +510,6 @@ func buildWorkflowGetResultReply(reply *messages.WorkflowGetResultReply, cadence
 			reply.SetResult(v)
 		}
 	}
-}
-
-func buildWorkflowSignalSubscribeReply(reply *messages.WorkflowSignalSubscribeReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
 }
 
 func buildWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply, cadenceError *cadenceerrors.CadenceError, hasResult ...interface{}) {
