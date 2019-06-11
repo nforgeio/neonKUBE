@@ -958,7 +958,7 @@ namespace Neon.Cadence
                 switch (request.Type)
                 {
                     case InternalMessageTypes.WorkflowInvokeRequest:
-                    case InternalMessageTypes.WorkflowSignalReceivedRequest:
+                    case InternalMessageTypes.WorkflowSignalInvokeRequest:
                     case InternalMessageTypes.WorkflowQueryInvokeRequest:
                     case InternalMessageTypes.WorkflowMutableInvokeRequest:
                     case InternalMessageTypes.ActivityInvokeLocalRequest:

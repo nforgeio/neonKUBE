@@ -745,15 +745,15 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowSignalInvokeRequest()
+        public void Test_WorkflowSignalRequest()
         {
-            WorkflowSignalInvokeRequest message;
+            WorkflowSignalequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowSignalInvokeRequest();
+                message = new WorkflowSignalequest();
 
-                Assert.Equal(InternalMessageTypes.WorkflowSignalInvokeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSignalReply, message.ReplyType);
 
                 // Empty message.
 
@@ -761,7 +761,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalInvokeRequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
@@ -786,7 +786,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalInvokeRequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
@@ -818,13 +818,13 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowSignalInvokeReply()
+        public void Test_WorkflowSignalReply()
         {
-            WorkflowSignalInvokeReply message;
+            WorkflowSignalReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowSignalInvokeReply();
+                message = new WorkflowSignalReply();
 
                 // Empty message.
 
@@ -832,7 +832,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalInvokeReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -848,7 +848,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalInvokeReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
@@ -1861,15 +1861,15 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowSignalReceivedRequest()
+        public void Test_WorkflowSignalInvokeRequest()
         {
-            WorkflowSignalReceivedRequest message;
+            WorkflowSignalInvokeRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowSignalReceivedRequest();
+                message = new WorkflowSignalInvokeRequest();
 
-                Assert.Equal(InternalMessageTypes.WorkflowSignalReceivedReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.WorkflowSignalInvokeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1877,7 +1877,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalReceivedRequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalInvokeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.SignalName);
@@ -1896,7 +1896,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalReceivedRequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalInvokeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(555, message.RequestId);
@@ -1925,13 +1925,13 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowSignalReceivedReply()
+        public void Test_WorkflowSignalInvokeReply()
         {
-            WorkflowSignalReceivedReply message;
+            WorkflowSignalInvokeReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowSignalReceivedReply();
+                message = new WorkflowSignalInvokeReply();
 
                 // Empty message.
 
@@ -1939,7 +1939,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalReceivedReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalInvokeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
@@ -1955,7 +1955,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalReceivedReply>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalInvokeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
