@@ -176,10 +176,8 @@ namespace Neon.Cadence
             }
         }
 
-#if DEBUG
         /// <summary>
-        /// Configures a partially implemented emulation of a <b>cadence-proxy</b>
-        /// for low-level testing.
+        /// Configures an emulation of a <b>cadence-proxy</b> for unit testing.
         /// </summary>
         private class EmulatedStartup
         {
@@ -191,7 +189,6 @@ namespace Neon.Cadence
                 });
             }
         }
-#endif
 
         /// <summary>
         /// Used for tracking pending <b>cadence-proxy</b> operations.
@@ -559,7 +556,6 @@ namespace Neon.Cadence
 
             proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
 
-#if DEBUG
             if (!settings.DebugEmulateProxy)
             {
                 if (!Settings.DebugPrelaunched)
@@ -588,9 +584,6 @@ namespace Neon.Cadence
 
                 emulatedHost.Start();
             }
-#else
-            ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
-#endif
 
             // Create the HTTP client we'll use to communicate with the [cadence-proxy].
 
@@ -748,7 +741,6 @@ namespace Neon.Cadence
                 timeoutThread = null;
             }
 
-#if DEBUG
             if (emulatedHost != null)
             {
                 emulatedHost.Dispose();
@@ -760,7 +752,6 @@ namespace Neon.Cadence
                 EmulatedLibraryClient.Dispose();
                 EmulatedLibraryClient = null;
             }
-#endif
 
             if (proxyClient != null)
             {
@@ -913,12 +904,12 @@ namespace Neon.Cadence
 
                         await OnRootRequestAsync(context);
                         break;
-#if DEBUG
+
                     case "/echo":
 
                         await OnEchoRequestAsync(context);
                         break;
-#endif
+
                     default:
 
                         response.StatusCode = StatusCodes.Status404NotFound;

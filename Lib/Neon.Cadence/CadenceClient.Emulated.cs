@@ -15,8 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if DEBUG
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -54,14 +52,6 @@ namespace Neon.Cadence
     {
         //---------------------------------------------------------------------
         // Emulated [cadence-proxy] implementation:
-        //
-        // IMPLEMENTATION NOTE:
-        // --------------------
-        // This is a low-fidelity emulation of Cadence functionality.  This is intended
-        // to be used for verifying some of the bigger picture .NET Cadence client functionality
-        // independently from the [cadence-proxy].
-        //
-        // This is not intended for unit testing actual workflows.
 
         /// <summary>
         /// Used to track emulated Cadence domains.
@@ -812,5 +802,3 @@ namespace Neon.Cadence
         }
     }
 }
-
-#endif
