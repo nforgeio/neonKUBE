@@ -23,104 +23,104 @@ import (
 
 type (
 
-	// WorkflowSignalRequest is WorkflowRequest of MessageType
-	// WorkflowSignalRequest.
+	// WorkflowSignalInvokeRequest is WorkflowRequest of MessageType
+	// WorkflowSignalInvokeRequest.
 	//
-	// A WorkflowSignalRequest contains a reference to a
+	// A WorkflowSignalInvokeRequest contains a reference to a
 	// WorkflowRequest struct in memory and ReplyType, which is
 	// the corresponding MessageType for replying to this WorkflowRequest
 	//
-	// A WorkflowSignalRequest will pass all of the given data and options
+	// A WorkflowSignalInvokeRequest will pass all of the given data and options
 	// necessary to signal a cadence workflow via the cadence client
-	WorkflowSignalRequest struct {
+	WorkflowSignalInvokeRequest struct {
 		*WorkflowRequest
 	}
 )
 
-// NewWorkflowSignalRequest is the default constructor for a WorkflowSignalRequest
+// NewWorkflowSignalInvokeRequest is the default constructor for a WorkflowSignalInvokeRequest
 //
-// returns *WorkflowSignalRequest -> a reference to a newly initialized
-// WorkflowSignalRequest in memory
-func NewWorkflowSignalRequest() *WorkflowSignalRequest {
-	request := new(WorkflowSignalRequest)
+// returns *WorkflowSignalInvokeRequest -> a reference to a newly initialized
+// WorkflowSignalInvokeRequest in memory
+func NewWorkflowSignalInvokeRequest() *WorkflowSignalInvokeRequest {
+	request := new(WorkflowSignalInvokeRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowSignalRequest)
-	request.SetReplyType(messagetypes.WorkflowSignalReply)
+	request.SetType(messagetypes.WorkflowSignalInvokeRequest)
+	request.SetReplyType(messagetypes.WorkflowSignalInvokeReply)
 
 	return request
 }
 
-// GetWorkflowID gets a WorkflowSignalRequest's WorkflowID value
+// GetWorkflowID gets a WorkflowSignalInvokeRequest's WorkflowID value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalRequest's WorkflowID
-func (request *WorkflowSignalRequest) GetWorkflowID() *string {
+// of a WorkflowSignalInvokeRequest's WorkflowID
+func (request *WorkflowSignalInvokeRequest) GetWorkflowID() *string {
 	return request.GetStringProperty("WorkflowId")
 }
 
-// SetWorkflowID sets an WorkflowSignalRequest's WorkflowID value
+// SetWorkflowID sets an WorkflowSignalInvokeRequest's WorkflowID value
 // in its properties map
 //
 // param value *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalRequest's WorkflowID
-func (request *WorkflowSignalRequest) SetWorkflowID(value *string) {
+// of a WorkflowSignalInvokeRequest's WorkflowID
+func (request *WorkflowSignalInvokeRequest) SetWorkflowID(value *string) {
 	request.SetStringProperty("WorkflowId", value)
 }
 
-// GetRunID gets a WorkflowSignalRequest's RunID value
+// GetRunID gets a WorkflowSignalInvokeRequest's RunID value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalRequest's RunID
-func (request *WorkflowSignalRequest) GetRunID() *string {
+// of a WorkflowSignalInvokeRequest's RunID
+func (request *WorkflowSignalInvokeRequest) GetRunID() *string {
 	return request.GetStringProperty("RunId")
 }
 
-// SetRunID sets a WorkflowSignalRequest's RunID value
+// SetRunID sets a WorkflowSignalInvokeRequest's RunID value
 // in its properties map
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowSignalRequest) SetRunID(value *string) {
+func (request *WorkflowSignalInvokeRequest) SetRunID(value *string) {
 	request.SetStringProperty("RunId", value)
 }
 
-// GetSignalName gets a WorkflowSignalRequest's SignalName value
+// GetSignalName gets a WorkflowSignalInvokeRequest's SignalName value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalRequest's SignalName
-func (request *WorkflowSignalRequest) GetSignalName() *string {
+// of a WorkflowSignalInvokeRequest's SignalName
+func (request *WorkflowSignalInvokeRequest) GetSignalName() *string {
 	return request.GetStringProperty("SignalName")
 }
 
-// SetSignalName sets a WorkflowSignalRequest's SignalName value
+// SetSignalName sets a WorkflowSignalInvokeRequest's SignalName value
 // in its properties map
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowSignalRequest) SetSignalName(value *string) {
+func (request *WorkflowSignalInvokeRequest) SetSignalName(value *string) {
 	request.SetStringProperty("SignalName", value)
 }
 
-// GetSignalArgs gets a WorkflowSignalRequest's SignalArgs field
+// GetSignalArgs gets a WorkflowSignalInvokeRequest's SignalArgs field
 // from its properties map.  SignalArgs is a []byte holding the arguments
 // for signaling a specific workflow
 //
 // returns []byte -> a []byte of representing workflow parameters
 // or arguments for invoking
-func (request *WorkflowSignalRequest) GetSignalArgs() []byte {
+func (request *WorkflowSignalInvokeRequest) GetSignalArgs() []byte {
 	return request.GetBytesProperty("SignalArgs")
 }
 
-// SetSignalArgs sets an WorkflowSignalRequest's SignalArgs field
+// SetSignalArgs sets an WorkflowSignalInvokeRequest's SignalArgs field
 // from its properties map.  SignalArgs is a []byte holding the arguments
 // for signaling a specific workflow
 //
 // param value []byte -> []byte of representing workflow parameters
 // or arguments for invoking
-func (request *WorkflowSignalRequest) SetSignalArgs(value []byte) {
+func (request *WorkflowSignalInvokeRequest) SetSignalArgs(value []byte) {
 	request.SetBytesProperty("SignalArgs", value)
 }
 
@@ -128,8 +128,8 @@ func (request *WorkflowSignalRequest) SetSignalArgs(value []byte) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from WorkflowRequest.Clone()
-func (request *WorkflowSignalRequest) Clone() IProxyMessage {
-	workflowSignalRequest := NewWorkflowSignalRequest()
+func (request *WorkflowSignalInvokeRequest) Clone() IProxyMessage {
+	workflowSignalRequest := NewWorkflowSignalInvokeRequest()
 	var messageClone IProxyMessage = workflowSignalRequest
 	request.CopyTo(messageClone)
 
@@ -137,9 +137,9 @@ func (request *WorkflowSignalRequest) Clone() IProxyMessage {
 }
 
 // CopyTo inherits docs from WorkflowRequest.CopyTo()
-func (request *WorkflowSignalRequest) CopyTo(target IProxyMessage) {
+func (request *WorkflowSignalInvokeRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
-	if v, ok := target.(*WorkflowSignalRequest); ok {
+	if v, ok := target.(*WorkflowSignalInvokeRequest); ok {
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetRunID(request.GetRunID())
 		v.SetSignalName(request.GetSignalName())

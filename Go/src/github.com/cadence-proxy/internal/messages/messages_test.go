@@ -2033,8 +2033,8 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 	}
 }
 
-func (s *UnitTestSuite) TestWorkflowSignalRequest() {
-	var message messages.IProxyMessage = messages.NewWorkflowSignalRequest()
+func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
+	var message messages.IProxyMessage = messages.NewWorkflowSignalInvokeRequest()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -2044,8 +2044,8 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.WorkflowSignalRequest); ok {
-		s.Equal(messagetypes.WorkflowSignalReply, v.ReplyType)
+	if v, ok := message.(*messages.WorkflowSignalInvokeRequest); ok {
+		s.Equal(messagetypes.WorkflowSignalInvokeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
@@ -2082,7 +2082,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.WorkflowSignalRequest); ok {
+	if v, ok := message.(*messages.WorkflowSignalInvokeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-signal", *v.GetSignalName())
@@ -2094,7 +2094,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.WorkflowSignalRequest); ok {
+	if v, ok := message.(*messages.WorkflowSignalInvokeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-signal", *v.GetSignalName())
@@ -2103,8 +2103,8 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 	}
 }
 
-func (s *UnitTestSuite) TestWorkflowSignalReply() {
-	var message messages.IProxyMessage = messages.NewWorkflowSignalReply()
+func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
+	var message messages.IProxyMessage = messages.NewWorkflowSignalInvokeReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -2114,7 +2114,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.WorkflowSignalReply); ok {
+	if v, ok := message.(*messages.WorkflowSignalInvokeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -2135,7 +2135,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.WorkflowSignalReply); ok {
+	if v, ok := message.(*messages.WorkflowSignalInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
 	}
@@ -2144,7 +2144,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.WorkflowSignalReply); ok {
+	if v, ok := message.(*messages.WorkflowSignalInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
 	}

@@ -18,8 +18,7 @@
 package messages
 
 import (
-	"errors"
-
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -86,24 +85,28 @@ func (request *ActivityCompleteRequest) SetResult(value []byte) {
 	request.SetBytesProperty("Result", value)
 }
 
-// GetCompleteError gets a ActivityCompleteRequest's CompleteError field
-// from its properties map. CompleteError is the error to set in the activity
+// GetError gets a ActivityCompleteRequest's Error field
+// from its properties map. Error is the *cadenceerrors.CadenceError to set in the activity
 // complete call.
 //
-// returns error -> error to set in activity complete
-func (request *ActivityCompleteRequest) GetCompleteError() error {
-	errStr := request.GetStringProperty("CompleteError")
-	return errors.New(*errStr)
+// returns *cadenceerrors.CadenceError -> *cadenceerrors.CadenceError to set in activity complete
+func (request *ActivityCompleteRequest) GetError() *cadenceerrors.CadenceError {
+	cadenceError := cadenceerrors.NewCadenceErrorEmpty()
+	err := request.GetJSONProperty("Error", cadenceError)
+	if err != nil {
+		return nil
+	}
+
+	return cadenceError
 }
 
-// SetCompleteError sets an ActivityCompleteRequest's CompleteError field
-// from its properties map.  CompleteError is the error to set in the activity
+// SetError sets an ActivityCompleteRequest's Error field
+// from its properties map.  Error is the *cadenceerrors.CadenceError to set in the activity
 // complete call.
 //
-// param value error -> error value to set in activity complete
-func (request *ActivityCompleteRequest) SetCompleteError(value error) {
-	errStr := value.Error()
-	request.SetStringProperty("CompleteError", &errStr)
+// param value *cadenceerrors.CadenceError -> *cadenceerrors.CadenceError value to set in activity complete
+func (request *ActivityCompleteRequest) SetError(value *cadenceerrors.CadenceError) {
+	request.SetJSONProperty("Error", value)
 }
 
 // -------------------------------------------------------------------------
@@ -124,6 +127,6 @@ func (request *ActivityCompleteRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ActivityCompleteRequest); ok {
 		v.SetTaskToken(request.GetTaskToken())
 		v.SetResult(request.GetResult())
-		v.SetCompleteError(request.GetCompleteError())
+		v.SetError(request.GetError())
 	}
 }

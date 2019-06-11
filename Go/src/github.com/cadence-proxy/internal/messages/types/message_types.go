@@ -183,12 +183,12 @@ const (
 	/// <summary>
 	/// <b>client --> proxy:</b> Signals a running workflow.
 	/// </summary>
-	WorkflowSignalRequest MessageType = 104
+	WorkflowSignalInvokeRequest MessageType = 104
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSignalInvokeRequest"/> message.
 	/// </summary>
-	WorkflowSignalReply MessageType = 105
+	WorkflowSignalInvokeReply MessageType = 105
 
 	/// <summary>
 	///<b>client --> proxy:</b> Signals a workflow starting it first if necessary.

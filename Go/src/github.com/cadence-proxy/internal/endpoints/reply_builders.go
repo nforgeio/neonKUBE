@@ -140,10 +140,10 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowCancelReply(v, cadenceError)
 		}
 
-	// WorkflowSignalReply
-	case messagetypes.WorkflowSignalReply:
-		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
-			buildWorkflowSignalReply(v, cadenceError)
+	// WorkflowSignalInvokeReply
+	case messagetypes.WorkflowSignalInvokeReply:
+		if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
+			buildWorkflowSignalInvokeReply(v, cadenceError)
 		}
 
 	// WorkflowSignalWithStartReply
@@ -440,7 +440,7 @@ func buildWorkflowTerminateReply(reply *messages.WorkflowTerminateReply, cadence
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowSignalReply(reply *messages.WorkflowSignalReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 

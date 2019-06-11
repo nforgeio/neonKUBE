@@ -20,6 +20,7 @@ package endpoints
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -164,10 +165,10 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 			reply = handleWorkflowTerminateRequest(v)
 		}
 
-	// WorkflowSignalRequest
-	case messagetypes.WorkflowSignalRequest:
-		if v, ok := request.(*messages.WorkflowSignalRequest); ok {
-			reply = handleWorkflowSignalRequest(v)
+	// WorkflowSignalInvokeRequest
+	case messagetypes.WorkflowSignalInvokeRequest:
+		if v, ok := request.(*messages.WorkflowSignalInvokeRequest); ok {
+			reply = handleWorkflowSignalInvokeRequest(v)
 		}
 
 	// WorkflowSignalWithStartRequest
@@ -1005,12 +1006,12 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	return reply
 }
 
-func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messages.IProxyReply {
+func handleWorkflowSignalInvokeRequest(request *messages.WorkflowSignalInvokeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSignalInvokeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// new WorkflowSignalReply
+	// new WorkflowSignalInvokeReply
 	reply := createReplyMessage(request)
 
 	// check to see if a connection has been made with the
@@ -2203,7 +2204,7 @@ func handleActivityCompleteRequest(request *messages.ActivityCompleteRequest) me
 	err = client.CompleteActivity(ctx,
 		request.GetTaskToken(),
 		request.GetResult(),
-		request.GetCompleteError(),
+		errors.New(request.GetError().ToString()),
 	)
 
 	if err != nil {

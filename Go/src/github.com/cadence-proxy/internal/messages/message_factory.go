@@ -127,10 +127,10 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowCancelRequest()
 
 	// WorkflowSignal
-	case messagetypes.WorkflowSignalRequest:
-		message = NewWorkflowSignalRequest()
-	case messagetypes.WorkflowSignalReply:
-		message = NewWorkflowSignalReply()
+	case messagetypes.WorkflowSignalInvokeRequest:
+		message = NewWorkflowSignalInvokeRequest()
+	case messagetypes.WorkflowSignalInvokeReply:
+		message = NewWorkflowSignalInvokeReply()
 
 	// WorkflowTerminate
 	case messagetypes.WorkflowTerminateReply:

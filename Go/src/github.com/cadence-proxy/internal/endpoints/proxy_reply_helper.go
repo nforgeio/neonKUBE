@@ -140,10 +140,10 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleWorkflowCancelReply(v)
 		}
 
-	// WorkflowSignalReply
-	case messagetypes.WorkflowSignalReply:
-		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
-			err = handleWorkflowSignalReply(v)
+	// WorkflowSignalInvokeReply
+	case messagetypes.WorkflowSignalInvokeReply:
+		if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
+			err = handleWorkflowSignalInvokeReply(v)
 		}
 
 	// WorkflowSignalWithStartReply
@@ -467,11 +467,11 @@ func handleWorkflowCancelReply(reply *messages.WorkflowCancelReply) error {
 	return err
 }
 
-func handleWorkflowSignalReply(reply *messages.WorkflowSignalReply) error {
-	err := fmt.Errorf("not implemented exception for message type WorkflowSignalReply")
+func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) error {
+	err := fmt.Errorf("not implemented exception for message type WorkflowSignalInvokeReply")
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling WorkflowSignalReply", zap.Error(err))
+	logger.Debug("Error handling WorkflowSignalInvokeReply", zap.Error(err))
 	return err
 }
 

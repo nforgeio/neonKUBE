@@ -44,7 +44,7 @@ func NewWorkflowSignalChildRequest() *WorkflowSignalChildRequest {
 	request := new(WorkflowSignalChildRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
 	request.SetType(messagetypes.WorkflowSignalChildRequest)
-	request.SetReplyType(messagetypes.WorkflowSignalReply)
+	request.SetReplyType(messagetypes.WorkflowSignalChildReply)
 
 	return request
 }

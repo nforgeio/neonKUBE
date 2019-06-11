@@ -23,23 +23,23 @@ import (
 
 type (
 
-	// WorkflowSignalReply is a WorkflowReply of MessageType
-	// WorkflowSignalReply.  It holds a reference to a WorkflowReply in memory
-	// and is the reply type to a WorkflowSignalRequest
-	WorkflowSignalReply struct {
+	// WorkflowSignalInvokeReply is a WorkflowReply of MessageType
+	// WorkflowSignalInvokeReply.  It holds a reference to a WorkflowReply in memory
+	// and is the reply type to a WorkflowSignalInvokeRequest
+	WorkflowSignalInvokeReply struct {
 		*WorkflowReply
 	}
 )
 
-// NewWorkflowSignalReply is the default constructor for
-// a WorkflowSignalReply
+// NewWorkflowSignalInvokeReply is the default constructor for
+// a WorkflowSignalInvokeReply
 //
-// returns *WorkflowSignalReply -> a pointer to a newly initialized
-// WorkflowSignalReply in memory
-func NewWorkflowSignalReply() *WorkflowSignalReply {
-	reply := new(WorkflowSignalReply)
+// returns *WorkflowSignalInvokeReply -> a pointer to a newly initialized
+// WorkflowSignalInvokeReply in memory
+func NewWorkflowSignalInvokeReply() *WorkflowSignalInvokeReply {
+	reply := new(WorkflowSignalInvokeReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(messagetypes.WorkflowSignalReply)
+	reply.SetType(messagetypes.WorkflowSignalInvokeReply)
 
 	return reply
 }
@@ -48,8 +48,8 @@ func NewWorkflowSignalReply() *WorkflowSignalReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from WorkflowReply.Clone()
-func (reply *WorkflowSignalReply) Clone() IProxyMessage {
-	workflowSignalReply := NewWorkflowSignalReply()
+func (reply *WorkflowSignalInvokeReply) Clone() IProxyMessage {
+	workflowSignalReply := NewWorkflowSignalInvokeReply()
 	var messageClone IProxyMessage = workflowSignalReply
 	reply.CopyTo(messageClone)
 
@@ -57,6 +57,6 @@ func (reply *WorkflowSignalReply) Clone() IProxyMessage {
 }
 
 // CopyTo inherits docs from WorkflowReply.CopyTo()
-func (reply *WorkflowSignalReply) CopyTo(target IProxyMessage) {
+func (reply *WorkflowSignalInvokeReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
 }
