@@ -2322,7 +2322,7 @@
             </para>
             <para>
             This works fine for lots of applications, but with a framework like Neon, it is
-            useful to have a global service provider that allows the library to register
+            useful to have a global service provider that allows the client to register
             default services for applications that are not coded to be aware of dependency
             injection.  The problem with the Microsoft DependencyInjection design is that
             additional services registered after a <c>BuildServiceProvider()</c> call will 
@@ -2670,7 +2670,7 @@
         </member>
         <member name="P:Neon.Common.NeonHelper.Is32BitBuild">
             <summary>
-            Returns <c>true</c> if the library was built as 32-bit.
+            Returns <c>true</c> if the client was built as 32-bit.
             </summary>
         </member>
         <member name="M:Neon.Common.NeonHelper.RegisterMisspelledUtf8Provider">
@@ -2924,12 +2924,39 @@
             entirely custom settings.
             </remarks>
         </member>
+        <member name="M:Neon.Common.NeonHelper.JsonSerializeToBytes(System.Object,Newtonsoft.Json.Formatting)">
+            <summary>
+            Serializes an object to UTF-8 encoded JSON bytes.
+            </summary>
+            <param name="value">The value to be serialized.</param>
+            <param name="format">Output formatting option (defaults to <see cref="F:Newtonsoft.Json.Formatting.None"/>).</param>
+            <returns>The UTF-8 encoded JSON bytes.</returns>
+            <remarks>
+            This method uses the default <see cref="F:Neon.Common.NeonHelper.JsonRelaxedSerializerSettings"/> when specific
+            settings are not passed.  You may pass <see cref="F:Neon.Common.NeonHelper.JsonStrictSerializerSettings"/> or
+            entirely custom settings.
+            </remarks>
+        </member>
         <member name="M:Neon.Common.NeonHelper.JsonDeserialize``1(System.String,System.Boolean)">
             <summary>
             Deserializes JSON text, optionally requiring strict mapping of input properties to the target type.
             </summary>
             <typeparam name="T">The desired output type.</typeparam>
             <param name="json">The JSON text.</param>
+            <param name="strict">Optionally require that all input properties map to <typeparamref name="T"/> properties.</param>
+            <returns>The parsed <typeparamref name="T"/>.</returns>
+            <remarks>
+            This method uses the default <see cref="F:Neon.Common.NeonHelper.JsonRelaxedSerializerSettings"/> when specific
+            settings are not passed.  You may pass <see cref="F:Neon.Common.NeonHelper.JsonStrictSerializerSettings"/> or
+            entirely custom settings.
+            </remarks>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.JsonDeserialize``1(System.Byte[],System.Boolean)">
+            <summary>
+            Deserializes UITF-8 encoded JSON bytes, optionally requiring strict mapping of input properties to the target type.
+            </summary>
+            <typeparam name="T">The desired output type.</typeparam>
+            <param name="jsonBytes">The UTF-8 encoded JSON bytes.</param>
             <param name="strict">Optionally require that all input properties map to <typeparamref name="T"/> properties.</param>
             <returns>The parsed <typeparamref name="T"/>.</returns>
             <remarks>
@@ -2952,6 +2979,20 @@
             entirely custom settings.
             </remarks>
         </member>
+        <member name="M:Neon.Common.NeonHelper.JsonDeserialize(System.Type,System.Byte[],System.Boolean)">
+            <summary>
+            Non-generic method that deserializes UTF-8 encoded JSON bytes, optionally requiring strict mapping of input properties to the target type.
+            </summary>
+            <param name="type">The target type.</param>
+            <param name="jsonBytes">The UTF-8 encoded JSON bytes.</param>
+            <param name="strict">Optionally require that all input properties map to <paramref name="type"/> properties.</param>
+            <returns>The parsed <c>object</c>.</returns>
+            <remarks>
+            This method uses the default <see cref="F:Neon.Common.NeonHelper.JsonRelaxedSerializerSettings"/> when specific
+            settings are not passed.  You may pass <see cref="F:Neon.Common.NeonHelper.JsonStrictSerializerSettings"/> or
+            entirely custom settings.
+            </remarks>
+        </member>
         <member name="M:Neon.Common.NeonHelper.JsonSerialize(System.Object,Newtonsoft.Json.JsonSerializerSettings,Newtonsoft.Json.Formatting)">
             <summary>
             Serializes an object to JSON text using custom settings.
@@ -2960,6 +3001,20 @@
             <param name="format">Output formatting option (defaults to <see cref="F:Newtonsoft.Json.Formatting.None"/>).</param>
             <param name="settings">The optional settings or <c>null</c> to use <see cref="F:Neon.Common.NeonHelper.JsonStrictSerializerSettings"/>.</param>
             <returns>The JSON text.</returns>
+            <remarks>
+            This method uses the default <see cref="F:Neon.Common.NeonHelper.JsonRelaxedSerializerSettings"/> when specific
+            settings are not passed.  You may pass <see cref="F:Neon.Common.NeonHelper.JsonStrictSerializerSettings"/> or
+            entirely custom settings.
+            </remarks>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.JsonSerializeToBytes(System.Object,Newtonsoft.Json.JsonSerializerSettings,Newtonsoft.Json.Formatting)">
+            <summary>
+            Serializes an object to UTF-8 encoded JSON bytes using custom settings.
+            </summary>
+            <param name="value">The value to be serialized.</param>
+            <param name="format">Output formatting option (defaults to <see cref="F:Newtonsoft.Json.Formatting.None"/>).</param>
+            <param name="settings">The optional settings or <c>null</c> to use <see cref="F:Neon.Common.NeonHelper.JsonStrictSerializerSettings"/>.</param>
+            <returns>The ITF-8 encoded JSON bytes.</returns>
             <remarks>
             This method uses the default <see cref="F:Neon.Common.NeonHelper.JsonRelaxedSerializerSettings"/> when specific
             settings are not passed.  You may pass <see cref="F:Neon.Common.NeonHelper.JsonStrictSerializerSettings"/> or
@@ -4931,11 +4986,6 @@
             was generated as a round-trip data model.
             </summary>
         </member>
-        <member name="P:Neon.Data.IRoundtripData.__T">
-            <summary>
-            Returns the string identifying the entity type.
-            </summary>
-        </member>
         <member name="M:Neon.Data.IRoundtripData.ToString(System.Boolean)">
             <summary>
             Renders the instance as JSON text, optionally formatting the output.
@@ -5215,42 +5265,42 @@
             Defines the methods and properties for a diagnostics logger. 
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.INeonLogger.IsDebugEnabled">
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogDebugEnabled">
             <summary>
             Returns <c>true</c> if <b>debug</b> logging is enabled.
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.INeonLogger.IsSInfoEnabled">
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogSInfoEnabled">
             <summary>
             Returns <c>true</c> if <b>sinfo</b> logging is enabled.
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.INeonLogger.IsInfoEnabled">
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogInfoEnabled">
             <summary>
             Returns <c>true</c> if <b>info</b> logging is enabled.
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.INeonLogger.IsWarnEnabled">
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogWarnEnabled">
             <summary>
             Returns <c>true</c> if <b>warn</b> logging is enabled.
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.INeonLogger.IsErrorEnabled">
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogErrorEnabled">
             <summary>
             Returns <c>true</c> if <b>error</b> logging is enabled.
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.INeonLogger.IsSErrorEnabled">
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogSErrorEnabled">
             <summary>
             Returns <c>true</c> if <b>serror</b> logging is enabled.
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.INeonLogger.IsCriticalEnabled">
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogCriticalEnabled">
             <summary>
             Returns <c>true</c> if <b>critical</b> logging is enabled.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.IsEnabled(Neon.Diagnostics.LogLevel)">
+        <member name="M:Neon.Diagnostics.INeonLogger.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
             <summary>
             Indicates whether logging is enabled for a specific log level.
             </summary>
@@ -5834,28 +5884,28 @@
             </summary>
             <returns>The text.</returns>
         </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsDebugEnabled">
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogDebugEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsSInfoEnabled">
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogSInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsInfoEnabled">
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsWarnEnabled">
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogWarnEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsErrorEnabled">
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsSErrorEnabled">
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogSErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsCriticalEnabled">
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogCriticalEnabled">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.IsEnabled(Neon.Diagnostics.LogLevel)">
+        <member name="M:Neon.Diagnostics.LogRecorder.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.LogRecorder.LogDebug(System.Object,System.String)">
@@ -5933,25 +5983,25 @@
             </exception>
             <returns>The formatted message.</returns>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsDebugEnabled">
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogDebugEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsErrorEnabled">
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsSErrorEnabled">
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogSErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsCriticalEnabled">
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogCriticalEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsInfoEnabled">
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsSInfoEnabled">
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogSInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsWarnEnabled">
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogWarnEnabled">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.Boolean,System.IO.TextWriter)">
@@ -5981,7 +6031,7 @@
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.IsEnabled(Neon.Diagnostics.LogLevel)">
+        <member name="M:Neon.Diagnostics.NeonLogger.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLogger.Normalize(System.String)">
@@ -6103,31 +6153,31 @@
             </summary>
             <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to be wrapped.</param>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsDebugEnabled">
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogDebugEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsErrorEnabled">
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsSErrorEnabled">
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogSErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsCriticalEnabled">
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogCriticalEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsInfoEnabled">
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsSInfoEnabled">
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogSInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsWarnEnabled">
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogWarnEnabled">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.IsEnabled(Microsoft.Extensions.Logging.LogLevel)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.IsEnabled(Neon.Diagnostics.LogLevel)">
+        <member name="M:Neon.Diagnostics.NeonLoggerShim.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.Normalize(System.String)">
@@ -9627,6 +9677,18 @@
             Implements an <c>async</c>/<c>await</c> friendly equivalent of <see cref="T:System.Threading.Mutex"/>.
             </summary>
             <remarks>
+            <note>
+            <para>
+            <b>IMPORTANT:</b> This class does not allow a single task to acquire the lock more than once.  
+            This differs from how the regular <see cref="T:System.Threading.Mutex"/> classes work which do allow a single 
+            thread to acquire the mutex more than once.
+            </para>
+            <para>
+            This means that you cannot expect to acquire a mutex in a task and then call into a
+            method that will also attempt to acquire the same mutex.  Doing this will result in 
+            a deadlock.
+            </para>
+            </note>
             <para>
             This class can be used to grant a task exclusive access to a resource.  This class is
             pretty easy to use.  Simply instantiate an instance and then call <see cref="M:Neon.Tasks.AsyncMutex.AcquireAsync"/>
@@ -9662,12 +9724,6 @@
             <see cref="T:Neon.Tasks.AsyncMutex"/>'s <see cref="M:Neon.Tasks.AsyncMutex.Dispose"/> method ensures that any tasks
             waiting for a lock will be unblocked with an <see cref="T:System.ObjectDisposedException"/>.
             </para>
-            <note>
-            <see cref="T:Neon.Tasks.AsyncMutex"/> does not support any kind of reentrant <see cref="T:System.Threading.Tasks.Task"/> locking 
-            support.  Child tasks will be considered to be completely independent of the parent
-            and <b>will not</b> inherit the parent's lock and a single task will not be able to acquire 
-            the same lock multiple times.
-            </note>
             </remarks>
             <threadsafety instance="true"/>
         </member>
@@ -9715,12 +9771,6 @@
             </summary>
             <returns>The <see cref="T:System.IDisposable"/> instance to be disposed to release the lock.</returns>
             <exception cref="T:System.ObjectDisposedException">Thrown if the lock is disposed before or after this method is called.</exception>
-            <remarks>
-            <note>
-            This class allows multiple readers to hold the lock at any given time but requires
-            that writers have exclusive access.  Writers are given priority over readers.
-            </note>
-            </remarks>
         </member>
         <member name="T:Neon.Tasks.AsyncPeriodicTask">
             <summary>
@@ -9953,6 +10003,51 @@
         <member name="M:Neon.Tasks.AsyncReaderWriterLock.ReleaseWriteLock">
             <summary>
             Called by a <see cref="T:Neon.Tasks.AsyncReaderWriterLock.Lock"/> to release a write lock.
+            </summary>
+        </member>
+        <member name="T:Neon.Tasks.NonDisposableTask">
+            <summary>
+            Used to convert a <see cref="T:System.Threading.Tasks.Task"/> into an awaitable that that does not
+            implement <see cref="T:System.IDisposable"/>.  This is useful for avoiding confusion
+            and hard to debug problems when async methods return an <see cref="T:System.IDisposable"/>
+            intended to be referenced in a <c>using</c> statement.  It is very easy to forget
+            the <c>await</c> keyword in this situation and because <see cref="T:System.Threading.Tasks.Task"/>
+            also implements <see cref="T:System.IDisposable"/>, there will be no compiler error
+            or warning.  Wrapping the task with this structure addresses this.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.NonDisposableTask.#ctor(System.Threading.Tasks.Task)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="task">The task being wrapped.</param>
+        </member>
+        <member name="M:Neon.Tasks.NonDisposableTask.GetAwaiter">
+            <summary>
+            Returns the task's awaiter.
+            </summary>
+        </member>
+        <member name="T:Neon.Tasks.NonDisposableTask`1">
+            <summary>
+            Used to convert a <see cref="T:System.Threading.Tasks.Task`1"/> into an awaitable that that does not
+            implement <see cref="T:System.IDisposable"/>.  This is useful for avoiding confusion
+            and hard to debug problems when async methods return an <see cref="T:System.IDisposable"/>
+            intended to be referenced in a <c>using</c> statement.  It is very easy to forget
+            the <c>await</c> keyword in this situation and because <see cref="T:System.Threading.Tasks.Task`1"/>
+            also implements <see cref="T:System.IDisposable"/>, there will be no compiler error
+            or warning.  Wrapping the task with this structure addresses this.
+            </summary>
+            <typeparam name="T">The task result type.</typeparam>
+        </member>
+        <member name="M:Neon.Tasks.NonDisposableTask`1.#ctor(System.Threading.Tasks.Task{`0})">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="task">The task being wrapped.</param>
+        </member>
+        <member name="M:Neon.Tasks.NonDisposableTask`1.GetAwaiter">
+            <summary>
+            Returns the task's awaiter.
             </summary>
         </member>
         <member name="T:Neon.Time.GatedTimer">
@@ -11587,6 +11682,24 @@
             <returns>The response.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
             <exception cref="T:System.InvalidOperationException">Thrown when the request has already been sent by the <see cref="T:System.Net.Http.HttpClient"/> class.</exception>
+        </member>
+        <member name="T:System.AppDomainExtensions">
+            <summary>
+            Implements <see cref="T:System.AppDomain"/> extension methods.
+            </summary>
+        </member>
+        <member name="M:System.AppDomainExtensions.GetUserAssemblies(System.AppDomain)">
+            <summary>
+            Enumerates all non <b>System</b> and <b>Microsoft</b> assemblies currently
+            loaded in the <see cref="T:System.AppDomain"/>.  This can be used as a performance
+            optimization when you only need to scan user assemblies.
+            </summary>
+            <param name="appDomain"></param>
+            <returns>The enumerated assemblies.</returns>
+            <remarks>
+            We also use this to work around this Visual Studio bug: 
+            <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
+            </remarks>
         </member>
         <member name="T:System.EnumExtensions">
             <summary>
