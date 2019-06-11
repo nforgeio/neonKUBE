@@ -473,14 +473,14 @@ namespace Neon.Cadence.Internal
         WorkflowCancelChildReply = 155,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Registers a signal handler by name.
+        /// Available message ID.
         /// </summary>
-        WorkflowSetSignalHandlerRequest = 156,
+        UnusedRequest0 = 156,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetSignalHandlerRequest"/> message.
+        /// Available reply ID.
         /// </summary>
-        WorkflowSetSignalHandlerReply = 157,
+        unusedReply0 = 157,
 
         /// <summary>
         /// <b>client --> proxy:</b> Registers a query handler by name.

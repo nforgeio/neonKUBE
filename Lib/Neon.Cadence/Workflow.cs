@@ -898,8 +898,8 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-            var reply = (WorkflowSetSignalHandlerReply)await Client.CallProxyAsync(
-                new WorkflowSetSignalHandlerRequest()
+            var reply = (WorkflowSignalSubscribeReply)await Client.CallProxyAsync(
+                new WorkflowSignalSubscribeRequest()
                 {
                     SignalName = signalName
                 });
