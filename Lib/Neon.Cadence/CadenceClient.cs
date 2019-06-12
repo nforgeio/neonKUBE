@@ -554,6 +554,7 @@ namespace Neon.Cadence
         private int                             workflowCacheSize;
         private Thread                          heartbeatThread;
         private Thread                          timeoutThread;
+        private Thread                          emulationThread;
 
         /// <summary>
         /// Constructor.
@@ -624,7 +625,7 @@ namespace Neon.Cadence
 
             proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
 
-            if (!settings.DebugEmulateProxy)
+            if (!settings.Emulate)
             {
                 if (!Settings.DebugPrelaunched)
                 {
@@ -726,6 +727,12 @@ namespace Neon.Cadence
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
+
+            if (settings.Emulate)
+            {
+                emulationThread = new Thread(new ThreadStart(EmulationThread));
+                emulationThread.Start();
+            }
         }
 
         /// <summary>

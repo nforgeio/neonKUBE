@@ -123,7 +123,7 @@ namespace Neon.Cadence
     /// </para>
     /// <list type="number">
     /// <item>
-    ///     A custom workflow is implemented by deriving a class from <see cref="Workflow"/>,
+    ///     A custom workflow is implemented by deriving a class from <see cref="Workflow"/>,a
     ///     implementing the workflow logic via a <see cref="Workflow.RunAsync(byte[])"/>
     ///     method.  Any custom workflow activities will need to be implemented as classes
     ///     derived from <see cref="Activity"/>.
@@ -132,15 +132,10 @@ namespace Neon.Cadence
     ///     <para>
     ///     The custom <see cref="Workflow"/> class needs to be deployed as a service or
     ///     application that creates a <see cref="CadenceClient"/> connected to a Cadence
-    ///     cluster.  This application needs to call <see cref="CadenceClient.StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>
-    ///     and <see cref="CadenceClient.StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/> to
+    ///     cluster.  This application needs to call <see cref="CadenceClient.StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>
+    ///     and <see cref="CadenceClient.StartActivityWorkerAsync(string, string, WorkerOptions)"/> to
     ///     start the workflow and activity workers as required.
     ///     </para>
-    ///     <note>
-    ///     By default, both workflow and activity workers will be registered using the
-    ///     fully qualified name of the custom <see cref="Workflow"/> or <see cref="Activity"/>
-    ///     derived implementation classes.  These names can be customized as required.
-    ///     </note>
     /// </item>
     /// <item>
     ///     <para>
