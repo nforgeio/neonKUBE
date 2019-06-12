@@ -35,7 +35,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers a workflow implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TWorkflow">The <see cref="Workflow"/> derived type implementing the workflow.</typeparam>
+        /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived type implementing the workflow.</typeparam>
         /// <param name="workflowTypeName">
         /// Optionally specifies a custom workflow type name that will be used 
         /// for identifying the workflow implementation in Cadence.  This defaults
@@ -43,7 +43,7 @@ namespace Neon.Cadence
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null)
-            where TWorkflow : Workflow
+            where TWorkflow : WorkflowBase
         {
             if (string.IsNullOrEmpty(workflowTypeName))
             {
@@ -58,7 +58,7 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            Workflow.Register<TWorkflow>(workflowTypeName);
+            WorkflowBase.Register<TWorkflow>(workflowTypeName);
         }
 
         /// <summary>
@@ -80,10 +80,9 @@ namespace Neon.Cadence
         /// complete.
         /// </remarks>
         public async Task<WorkflowRun> StartWorkflowAsync<TWorkflow>(string domain, byte[] args = null, WorkflowOptions options = null)
-            where TWorkflow : Workflow
+            where TWorkflow : WorkflowBase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(options != null);
 
             return await StartWorkflowAsync(domain, typeof(TWorkflow).FullName, args, options);
         }
@@ -115,7 +114,6 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(options != null);
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()

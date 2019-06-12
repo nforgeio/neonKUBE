@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to tag a <see cref="Workflow"/> method that will be called to handle an
+    /// Used to tag a <see cref="WorkflowBase"/> method that will be called to handle an
     /// external query.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]

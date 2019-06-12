@@ -36,8 +36,6 @@ using Neon.IO;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
-using Activity = Neon.Cadence.Activity;
-
 using Xunit;
 
 namespace TestCadence
@@ -54,7 +52,7 @@ namespace TestCadence
         /// <summary>
         /// This workflow does nothing besides returning "Hello World!" as UTF-8.
         /// </summary>
-        public class HelloWorkflow : Workflow
+        public class HelloWorkflow : WorkflowBase
         {
             public HelloWorkflow()
             {
@@ -71,7 +69,7 @@ namespace TestCadence
         /// <summary>
         /// This activity does nothing besides returning "Hello World!" as UTF-8.
         /// </summary>
-        public class HelloActivity : Activity
+        public class HelloActivity : ActivityBase
         {
             public HelloActivity()
             {

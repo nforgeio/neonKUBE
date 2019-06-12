@@ -77,11 +77,11 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// You'll implement your workflows and activities by implementing classes that
-    /// derive from <see cref="Workflow"/> and <see cref="Activity"/> and then
+    /// derive from <see cref="WorkflowBase"/> and <see cref="ActivityBase"/> and then
     /// registering these types with Cadence.  Then you'll start workflow or activity
     /// workers so that Cadence will begin scheduling operations for execution by your code.
     /// Workflows and activities are registered using the fully qualified names 
-    /// of the derived <see cref="Workflow"/> and <see cref="Activity"/> types
+    /// of the derived <see cref="WorkflowBase"/> and <see cref="ActivityBase"/> types
     /// by defaut, but you can customize this if desired.
     /// </para>
     /// <para>
@@ -108,9 +108,9 @@ namespace Neon.Cadence
     /// the current process implements specific workflow and activity types.  You'll call
     /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> for
     /// workflows and <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
-    /// for activities, passing your custom implementations of <see cref="Workflow"/> and <see cref="Activity"/>
+    /// for activities, passing your custom implementations of <see cref="WorkflowBase"/> and <see cref="ActivityBase"/>
     /// as the type parameter.  The <b>Neon.Cadence</b> will then automatically handle the instantiation
-    /// of your workflow or activity types and call their <see cref="Workflow.RunAsync(byte[])"/>
+    /// of your workflow or activity types and call their <see cref="WorkflowBase.RunAsync(byte[])"/>
     /// </para>
     /// <para>
     /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync{TWorkflow}(string, byte[], WorkflowOptions)"/> 
@@ -122,7 +122,7 @@ namespace Neon.Cadence
     /// <note>
     /// <b>External workflows</b> are top-level workflows that have no workflow parent.
     /// This is distinugished from <b>child workflows</b> that are executed within the
-    /// context of another workflow via <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>.
+    /// context of another workflow via <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>.
     /// </note>
     /// <para>
     /// <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/> returns
@@ -136,12 +136,12 @@ namespace Neon.Cadence
     /// workflow completes.
     /// </para>
     /// <note>
-    /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
-    /// via the <see cref="Workflow.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken?)"/>,
-    /// <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
-    /// <see cref="Workflow.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken?)"/>
-    /// <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>, and
-    /// <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
+    /// Child workflows and activities are started from within a <see cref="WorkflowBase"/> implementation
+    /// via the <see cref="WorkflowBase.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    /// <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    /// <see cref="WorkflowBase.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken?)"/>
+    /// <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>, and
+    /// <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
     /// methods.
     /// </note>
     /// <para>
@@ -1032,13 +1032,13 @@ namespace Neon.Cadence
                     case InternalMessageTypes.WorkflowMutableInvokeRequest:
                     case InternalMessageTypes.ActivityInvokeLocalRequest:
 
-                        await Workflow.OnProxyRequestAsync(this, request);
+                        await WorkflowBase.OnProxyRequestAsync(this, request);
                         break;
 
                     case InternalMessageTypes.ActivityInvokeRequest:
                     case InternalMessageTypes.ActivityStoppingRequest:
 
-                        await Activity.OnProxyRequestAsync(this, request);
+                        await ActivityBase.OnProxyRequestAsync(this, request);
                         break;
 
                     default:

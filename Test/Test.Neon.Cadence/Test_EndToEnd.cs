@@ -45,7 +45,29 @@ namespace TestCadence
     /// </summary>
     public sealed class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
-        CadenceFixture      fixture;
+        //---------------------------------------------------------------------
+        // Workflow and Activity classes.
+
+        private class HelloWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
+            }
+        }
+
+        private class HelloActivity : ActivityBase
+        {
+            protected override Task<byte[]> RunAsync(byte[] args)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Test implementations:
+
+        CadenceFixture fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -201,6 +223,35 @@ namespace TestCadence
 
             Console.WriteLine($"Transactions/sec: {totalTps}");
             Console.WriteLine($"Latency (average): {1.0 / totalTps}");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_HelloWorld()
+        {
+            Worker worker = null;
+
+            try
+            {
+                await client.RegisterDomainAsync("test-domain");
+
+                worker = await client.StartWorkflowWorkerAsync("test-domain");
+
+                await client.RegisterWorkflowAsync<HelloWorkflow>();
+
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain");
+                var result = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
+            }
+            finally
+            {
+                if (worker != null)
+                {
+                    await client.StopWorkerAsync(worker);
+                }
+            }
         }
     }
 }
