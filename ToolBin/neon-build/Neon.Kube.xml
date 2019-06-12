@@ -7062,16 +7062,16 @@
             <summary>Branch: cadence</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 19ffeda8</summary>
+            <summary>Commit: a925d70d</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 19ffeda81cfdbc7152b48564d4bb17b7fd3ec056</summary>
+            <summary>Sha: a925d70d4c861cf13ab7c21191032d4bc06d07f8</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 42</summary>
+            <summary>Commits on top of base version: 49</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: 0.5.2-alpha-42-g19ffeda8</summary>
+            <summary>Tag: 0.5.2-alpha-49-ga925d70d</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: 0.5.2-alpha</summary>
@@ -7098,7 +7098,7 @@
             <summary>Minor: 5</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 44</summary>
+            <summary>Patch: 51</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>
