@@ -42,7 +42,7 @@ namespace Neon.Cadence
         /// to the fully qualified <typeparamref name="TActivity"/> type name.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task RegisterActivity<TActivity>(string activityTypeName = null)
+        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
             where TActivity : Activity
         {
             if (string.IsNullOrEmpty(activityTypeName))

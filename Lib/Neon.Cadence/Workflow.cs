@@ -209,8 +209,8 @@ namespace Neon.Cadence
     /// <item>
     ///     <para>
     ///     Workflow instances can be signalled when external events occur via the 
-    ///     <see cref="CadenceClient.SignalWorkflow(string, string, byte[], string)"/> or
-    ///     <see cref="CadenceClient.SignalWorkflow(string, WorkflowOptions, string, byte[], byte[])"/>
+    ///     <see cref="CadenceClient.SignalWorkflowAsync(string, string, byte[], string)"/> or
+    ///     <see cref="CadenceClient.SignalWorkflowAsync(string, WorkflowOptions, string, byte[], byte[])"/>
     ///     methods.  Signals are identified by a string name and may include a byte
     ///     array payload.  Workflows receive signals by implementing a receive method
     ///     accepting a byte array payload parameter and tagging the method with a
@@ -230,7 +230,7 @@ namespace Neon.Cadence
     /// </item>
     /// <item>
     ///     <para>
-    ///     Running workflows can also be queried via <see cref="CadenceClient.QueryWorkflow(string, string, byte[], string)"/>.
+    ///     Running workflows can also be queried via <see cref="CadenceClient.QueryWorkflowAsync(string, string, byte[], string)"/>.
     ///     Queries are identified by a name and may include optional arguments encoded 
     ///     as a byte array and return a result encoded as a byte array or <c>null</c>.
     ///     Workflows receive queries by implementing a receive method accepting the

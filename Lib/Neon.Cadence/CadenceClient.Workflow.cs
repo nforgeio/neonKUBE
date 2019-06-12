@@ -42,7 +42,7 @@ namespace Neon.Cadence
         /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task RegisterWorkflow<TWorkflow>(string workflowTypeName = null)
+        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null)
             where TWorkflow : Workflow
         {
             if (string.IsNullOrEmpty(workflowTypeName))
@@ -141,7 +141,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task<WorkflowDetails> GetWorkflowState(WorkflowRun run)
+        public async Task<WorkflowDetails> GetWorkflowStateAsync(WorkflowRun run)
         {
             Covenant.Requires<ArgumentNullException>(run != null);
 
@@ -166,7 +166,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task<byte[]> GetWorkflowResult(WorkflowRun run)
+        public async Task<byte[]> GetWorkflowResultAsync(WorkflowRun run)
         {
             Covenant.Requires<ArgumentNullException>(run != null);
 
@@ -197,7 +197,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task CancelWorkflow(WorkflowRun run)
+        public async Task CancelWorkflowAsync(WorkflowRun run)
         {
             Covenant.Requires<ArgumentNullException>(run != null);
 
@@ -228,7 +228,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task TerminateWorkflow(WorkflowRun run, string reason = null, byte[] details = null)
+        public async Task TerminateWorkflowAsync(WorkflowRun run, string reason = null, byte[] details = null)
         {
             Covenant.Requires<ArgumentNullException>(run != null);
 
@@ -257,7 +257,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task SignalWorkflow(string workflowId, string signalName, byte[] signalArgs = null, string runId = null)
+        public async Task SignalWorkflowAsync(string workflowId, string signalName, byte[] signalArgs = null, string runId = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
@@ -288,7 +288,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task SignalWorkflow(string workflowId, WorkflowOptions options, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null)
+        public async Task SignalWorkflowAsync(string workflowId, WorkflowOptions options, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(options != null);
@@ -320,7 +320,7 @@ namespace Neon.Cadence
         /// <returns>The query result encoded as a byte array.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task<byte[]> QueryWorkflow(string workflowId, string queryName, byte[] queryArgs = null, string runId = null)
+        public async Task<byte[]> QueryWorkflowAsync(string workflowId, string queryName, byte[] queryArgs = null, string runId = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
@@ -355,7 +355,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="maxCacheSize">The maximum number of bytes to cache for each sticky workflow.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task SetWorkflowCacheSize(int maxCacheSize)
+        public async Task SetWorkflowCacheSizeAsync(int maxCacheSize)
         {
             Covenant.Requires<ArgumentNullException>(maxCacheSize >= 0);
 
@@ -376,7 +376,7 @@ namespace Neon.Cadence
         /// by this client as a performance optimization.
         /// </summary>
         /// <returns>The maximum individual workflow cache size in bytes.</returns>
-        public async Task<int> GetworkflowCacheSize()
+        public async Task<int> GetworkflowCacheSizeAsync()
         {
             return await Task.FromResult(workflowCacheSize);
         }

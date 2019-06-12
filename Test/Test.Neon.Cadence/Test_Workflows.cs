@@ -106,9 +106,13 @@ namespace TestCadence
 
                 worker = await client.StartWorkflowWorkerAsync("test-domain");
 
-                await client.RegisterWorkflow<HelloWorkflow>();
+                await client.RegisterWorkflowAsync<HelloWorkflow>();
 
                 var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain");
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
             }
             finally
             {

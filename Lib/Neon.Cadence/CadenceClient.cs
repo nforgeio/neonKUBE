@@ -131,8 +131,8 @@ namespace Neon.Cadence
     /// to identify your running workflow to the methods desribed below.
     /// </para>
     /// <para>
-    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowState(WorkflowRun)"/>
-    /// or obtain a workflow result via <see cref="GetWorkflowResult(WorkflowRun)"/>, which blocks until the 
+    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowStateAsync(WorkflowRun)"/>
+    /// or obtain a workflow result via <see cref="GetWorkflowResultAsync(WorkflowRun)"/>, which blocks until the 
     /// workflow completes.
     /// </para>
     /// <note>
@@ -145,14 +145,14 @@ namespace Neon.Cadence
     /// methods.
     /// </note>
     /// <para>
-    /// Workflows can be signalled via <see cref="SignalWorkflow(string, string, byte[], string)"/> or
-    /// <see cref="SignalWorkflow(string, WorkflowOptions, string, byte[], byte[])"/> that starts the
+    /// Workflows can be signalled via <see cref="SignalWorkflowAsync(string, string, byte[], string)"/> or
+    /// <see cref="SignalWorkflowAsync(string, WorkflowOptions, string, byte[], byte[])"/> that starts the
     /// workflow if its not already running.  You can query running workflows via 
-    /// <see cref="QueryWorkflow(string, string, byte[], string)"/>.
+    /// <see cref="QueryWorkflowAsync(string, string, byte[], string)"/>.
     /// </para>
     /// <para>
-    /// Workflows can be expicitly closed using <see cref="CancelWorkflow(WorkflowRun)"/>,
-    /// <see cref="TerminateWorkflow(WorkflowRun, string, byte[])"/>.
+    /// Workflows can be expicitly closed using <see cref="CancelWorkflowAsync(WorkflowRun)"/>,
+    /// <see cref="TerminateWorkflowAsync(WorkflowRun, string, byte[])"/>.
     /// </para>
     /// <para><b>Arguments and Results</b></para>
     /// <para>
@@ -533,7 +533,7 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            await client.SetWorkflowCacheSize(10000);
+            await client.SetWorkflowCacheSizeAsync(10000);
 
             return client;
         }

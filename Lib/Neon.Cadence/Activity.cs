@@ -82,7 +82,7 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// Cadence supports two kinds of activities: <b>normal</b> and <b>local</b>.
-    /// <b>normal</b> activities are registered via <see cref="CadenceClient.RegisterActivity{TActivity}(string)"/>
+    /// <b>normal</b> activities are registered via <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string)"/>
     /// and are scheduled by the Cadence cluster to be executed on workers.  Workflows
     /// invoke theses using <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>.
     /// </para>
@@ -548,7 +548,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <returns>The details from the last heartbeat or <c>null</c>.</returns>
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
-        public async Task<bool> HasLastHeartbeatDetails()
+        public async Task<bool> HasLastHeartbeatDetailsAsync()
         {
             EnsureNotLocal();
 
@@ -574,7 +574,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <returns>The details from the last heartbeat or <c>null</c>.</returns>
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
-        public async Task<byte[]> GetLastHeartbeatDetails()
+        public async Task<byte[]> GetLastHeartbeatDetailsAsync()
         {
             EnsureNotLocal();
 
