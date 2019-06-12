@@ -88,7 +88,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Implementation
 
-        CadenceFixture fixture;
+        CadenceFixture      fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -99,7 +99,7 @@ namespace TestCadence
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
-                Emulate      = true,
+                Emulate                = true,
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
                 //DebugDisableHeartbeats = true,
                 //DebugIgnoreTimeouts    = true

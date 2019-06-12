@@ -113,10 +113,11 @@ namespace Neon.Cadence
     /// of your workflow or activity types and call their <see cref="Workflow.RunAsync(byte[])"/>
     /// </para>
     /// <para>
-    /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>,
-    /// passing the workflow type string, the target Cadence domain along with optional arguments
-    /// (encoded into a byte array) and optional workflow options.  The workflow type string must
-    /// be the same one used when calling <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
+    /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync{TWorkflow}(string, byte[], WorkflowOptions)"/> 
+    /// or <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>, passing the workflow 
+    /// type string, the target Cadence domain along with optional arguments (encoded into a byte array) 
+    /// and optional workflow options.  The workflow type string must be the same one used when calling 
+    /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
     /// </para>
     /// <note>
     /// <b>External workflows</b> are top-level workflows that have no workflow parent.
@@ -136,7 +137,9 @@ namespace Neon.Cadence
     /// </para>
     /// <note>
     /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
-    /// via the <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    /// via the <see cref="Workflow.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    /// <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    /// <see cref="Workflow.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken?)"/>
     /// <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>, and
     /// <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
     /// methods.

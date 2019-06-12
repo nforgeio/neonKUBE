@@ -62,10 +62,37 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts a global workflow, identifying the workers that implement the workflow
-        /// as well as the Cadence domain where the workflow will run.  Global workflows
-        /// have no parent, as opposed to child workflows that run in the context of 
-        /// another workflow.
+        /// Starts a global workflow, identifying the workers that implement the workflow 
+        /// as well as the Cadence domain where the  workflow will run.  Global workflows 
+        /// have no parent, as opposed to child workflows that run in the context of another workflow.
+        /// </summary>
+        /// <typeparam name="TWorkflow">Identifies the workflow to be exedcuted.</typeparam>
+        /// <param name="domain">Specifies the Cadence domain where the workflow will run.</param>
+        /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
+        /// <param name="options">Specifies the workflow options.</param>
+        /// <returns>A <see cref="WorkflowRun"/> identifying the new running workflow instance.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <typeparamref name="TWorkflow"/>.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
+        /// <exception cref="CadenceWorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
+        /// <remarks>
+        /// This method kicks off a new workflow instance and returns after Cadence has
+        /// queued the operation but the method <b>does not</b> wait for the workflow to
+        /// complete.
+        /// </remarks>
+        public async Task<WorkflowRun> StartWorkflowAsync<TWorkflow>(string domain, byte[] args = null, WorkflowOptions options = null)
+            where TWorkflow : Workflow
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(options != null);
+
+            return await StartWorkflowAsync(domain, typeof(TWorkflow).FullName, args, options);
+        }
+
+        /// <summary>
+        /// Starts a global workflow using a specific workflow type name, identifying the
+        /// workers that implement the workflow as well as the Cadence domain where the 
+        /// workflow will run.  Global workflows have no parent, as opposed to child 
+        /// workflows that run in the context of another workflow.
         /// </summary>
         /// <param name="workflowTypeName">
         /// The type name used when registering the workers that will handle this workflow.
@@ -76,7 +103,7 @@ namespace Neon.Cadence
         /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <returns>A <see cref="WorkflowRun"/> identifying the new running workflow instance.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow worker registered for <paramref name="workflowTypeName"/>.</exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
         /// <exception cref="CadenceWorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
         /// <remarks>
