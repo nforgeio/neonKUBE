@@ -149,6 +149,15 @@ namespace Neon.Cadence
         public bool Debug { get; set; } = false;
 
         /// <summary>
+        /// Optionally specifies that a local in-memory Cadence emulation should be started
+        /// for unit testing.
+        /// </summary>
+        [JsonProperty(PropertyName = "Emulate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "emulate", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Emulate { get; set; } = false;
+
+        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
         /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and
@@ -165,14 +174,6 @@ namespace Neon.Cadence
         /// <c>false</c>.
         /// </summary>
         internal bool DebugDisableHandshakes { get; set; } = false;
-
-        /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Optionally specifies that the real <b>cadence-proxy</b>
-        /// should not be started and a partially implemented local emulation should be started 
-        /// in its place.  This is used internally for low-level testing and should never be 
-        /// enabled for production (because it won't work).
-        /// </summary>
-        internal bool DebugEmulateProxy { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be

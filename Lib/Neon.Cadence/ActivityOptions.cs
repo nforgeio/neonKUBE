@@ -35,7 +35,7 @@ namespace Neon.Cadence.Internal
         /// Optionally specifies the tasklist where the activity will be scheduled.
         /// This defaults to the same task list as the parent workflow.
         /// </summary>
-        public string TaskList { get; set; }
+        public string TaskList { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the end-to-end timeout for the activity.  The 
@@ -67,21 +67,6 @@ namespace Neon.Cadence.Internal
         /// finished until that actually complete.  This defaults to <c>false</c>.
         /// </summary>
         public bool WaitForCancellation { get; set; }
-
-        ///// <summary>
-        //// ActivityID - Business level activity ID, this is not needed for most of the cases if you have
-        //// to specify this then talk to cadence team. This is something will be done in future.
-        //// Optional: default empty string
-        ///// </summary>
-        ///// 
-
-#if TODO
-        /// <summary>
-        /// Optionally specifies a business ID to be used for an activity.  This is not currently
-        /// implemented by Cadence.
-        /// </summary>
-        public string ActivityID { get; set; } = string.Empty;
-#endif
 
         /// <summary>
         /// Optionally specifies the activity retry policy.  The default value is <c>null</c> which specifies

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceClient.Emulated.cs
+// FILE:	    CadenceClient.Emulate.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -14,8 +14,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#if DEBUG
 
 using System;
 using System.Collections.Generic;
@@ -54,14 +52,6 @@ namespace Neon.Cadence
     {
         //---------------------------------------------------------------------
         // Emulated [cadence-proxy] implementation:
-        //
-        // IMPLEMENTATION NOTE:
-        // --------------------
-        // This is a low-fidelity emulation of Cadence functionality.  This is intended
-        // to be used for verifying some of the bigger picture .NET Cadence client functionality
-        // independently from the [cadence-proxy].
-        //
-        // This is not intended for unit testing actual workflows.
 
         /// <summary>
         /// Used to track emulated Cadence domains.
@@ -78,22 +68,19 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to track emulated Cadence worker (registrations).
-        /// </summary>
-        private class EmulatedWorker
-        {
-            public long WorkerId { get; set;}
-        }
-
-        /// <summary>
-        /// Used to track emulated workflows.
+        /// Used to track an emulated workflow.
         /// </summary>
         private class EmulatedWorkflow
         {
             /// <summary>
             /// The workflow ID.
             /// </summary>
-            public string WorkflowId { get; set; }
+            public string Id { get; set; }
+
+            /// <summary>
+            /// The workflow RunID.
+            /// </summary>
+            public string RunId { get; set; }
 
             /// <summary>
             /// The workflow context ID.
@@ -134,17 +121,76 @@ namespace Neon.Cadence
             /// The workflow error or <c>null</c>.
             /// </summary>
             public CadenceError Error { get; set; }
+
+            /// <summary>
+            /// Set when the workflow is executing on a worker.
+            /// </summary>
+            public Worker Worker { get; set; }
+
+            /// <summary>
+            /// The list of executing child workflows.
+            /// </summary>
+            public List<EmulatedWorkflow> ChildWorkflows { get; set; } = new List<EmulatedWorkflow>();
+
+            /// <summary>
+            /// The list of executing child activities.
+            /// </summary>
+            public List<EmulatedActivity> ChildActivities { get; set; } = new List<EmulatedActivity>();
+
+            // $todo(jeff.lill): Add queues for tracking pending signals and queries.
         }
 
-        private AsyncMutex                              emulationMutex           = new AsyncMutex();
-        private List<EmulatedCadenceDomain>             emulatedDomains          = new List<EmulatedCadenceDomain>();
-        private Dictionary<long, EmulatedWorker>        emulatedWorkers          = new Dictionary<long, EmulatedWorker>();
-        private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts = new Dictionary<long, EmulatedWorkflow>();
-        private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows        = new Dictionary<string, EmulatedWorkflow>();
-        private Dictionary<long, Operation>             emulatedOperations       = new Dictionary<long, Operation>();
-        private long                                    nextEmulatedWorkerId     = 0;
-        private long                                    nextEmulatedContextId    = 0;
-        private IWebHost                                emulatedHost;
+        /// <summary>
+        /// Used to track an emulated workflow.
+        /// </summary>
+        private class EmulatedActivity
+        {
+            /// <summary>
+            /// The activity ID.
+            /// </summary>
+            public string Id { get; set; }
+
+            /// <summary>
+            /// The activity context ID.
+            /// </summary>
+            public long ContextId { get; set; }
+
+            /// <summary>
+            /// Set when the activity is executing on a worker.
+            /// </summary>
+            public Worker Worker { get; set; }
+        }
+
+        /// <summary>
+        /// Used to track emulated Cadence worker (registrations).
+        /// </summary>
+        private class EmulatedWorker
+        {
+            /// <summary>
+            /// The worker ID.
+            /// </summary>
+            public long WorkerId { get; set; }
+
+            /// <summary>
+            /// The workflows currently executing on the worker.
+            /// </summary>
+            public List<EmulatedWorkflow> Workflows { get; set; } = new List<EmulatedWorkflow>();
+
+            /// <summary>
+            /// The activities currently executing on the worker.
+            /// </summary>
+            public List<EmulatedActivity> Activities { get; set; } = new List<EmulatedActivity>();
+        }
+
+        private AsyncMutex                                  emulationMutex           = new AsyncMutex();
+        private Dictionary<string, EmulatedCadenceDomain>   emulatedDomains          = new Dictionary<string, EmulatedCadenceDomain>();
+        private Dictionary<long, EmulatedWorker>            emulatedWorkers          = new Dictionary<long, EmulatedWorker>();
+        private Dictionary<long, EmulatedWorkflow>          emulatedWorkflowContexts = new Dictionary<long, EmulatedWorkflow>();
+        private Dictionary<string, EmulatedWorkflow>        emulatedWorkflows        = new Dictionary<string, EmulatedWorkflow>();
+        private Dictionary<long, Operation>                 emulatedOperations       = new Dictionary<long, Operation>();
+        private long                                        nextEmulatedWorkerId     = 0;
+        private long                                        nextEmulatedContextId    = 0;
+        private IWebHost                                    emulatedHost;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Set this to <c>false</c> to emulate an unhealthy
@@ -158,7 +204,6 @@ namespace Neon.Cadence
         /// after the first <see cref="InitializeRequest"/> has been received.
         /// </summary>
         internal HttpClient EmulatedLibraryClient { get; private set; }
-
 
         /// <summary>
         /// Called when an HTTP request is received by the integrated web server 
@@ -540,7 +585,7 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                if (!emulatedDomains.Any(d => d.Name == request.Domain))
+                if (!emulatedDomains.ContainsKey(request.Domain))
                 {
                     await EmulatedLibraryClient.SendReplyAsync(request,
                         new NewWorkerReply()
@@ -581,7 +626,10 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
+                if (!emulatedDomains.TryGetValue(request.Name, out domain))
+                {
+                    domain = null;
+                }
             }
 
             if (domain == null)
@@ -624,7 +672,7 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                if (emulatedDomains.SingleOrDefault(d => d.Name == request.Name) != null)
+                if (emulatedDomains.ContainsKey(request.Name))
                 {
                     reply.Error = new CadenceDomainAlreadyExistsException($"Domain [{request.Name}] already exists.").ToCadenceError();
 
@@ -633,6 +681,7 @@ namespace Neon.Cadence
                 }
 
                 emulatedDomains.Add(
+                    request.Name,
                     new EmulatedCadenceDomain()
                     {
                         Name          = request.Name,
@@ -669,7 +718,10 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
+                if (!emulatedDomains.TryGetValue(request.Name, out domain))
+                {
+                    domain = null;
+                }
             }
 
             if (domain == null)
@@ -748,7 +800,7 @@ namespace Neon.Cadence
 
             var workflow = new EmulatedWorkflow()
             {
-                WorkflowId = request.Options.ID ?? Guid.NewGuid().ToString("D"),
+                Id = request.Options.ID ?? Guid.NewGuid().ToString("D"),
                 ContextId  = contextId,
                 Args       = request.Args,
                 Domain     = request.Domain,
@@ -759,7 +811,7 @@ namespace Neon.Cadence
             using (await emulationMutex.AcquireAsync())
             {
                 emulatedWorkflowContexts.Add(contextId, workflow);
-                emulatedWorkflows.Add(workflow.WorkflowId, workflow);
+                emulatedWorkflows.Add(workflow.Id, workflow);
             }
 
             await EmulatedLibraryClient.SendReplyAsync(request,
@@ -767,8 +819,8 @@ namespace Neon.Cadence
                 {
                     Execution = new InternalWorkflowExecution()
                     {
-                        ID    = workflow.WorkflowId,
-                        RunID = workflow.WorkflowId
+                        ID    = workflow.Id,
+                        RunID = workflow.Id
                     }
                 });
 
@@ -810,7 +862,35 @@ namespace Neon.Cadence
         {
             await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowSetCacheSizeReply());
         }
+
+        //---------------------------------------------------------------------
+        // Emulation implementation:
+
+        /// <summary>
+        /// Handles emulation related background activities.
+        /// </summary>
+        private void EmulationThread()
+        {
+            var sleepTime = TimeSpan.FromSeconds(1);
+
+            try
+            {
+                while (!closingConnection)
+                {
+                    Thread.Sleep(sleepTime);
+                }
+            }
+            catch (Exception e)
+            {
+                // We shouldn't see any exceptions here except perhaps
+                // [TaskCanceledException] when the connection is in
+                // the process of being closed.
+
+                if (!closingConnection || !(e is TaskCanceledException))
+                {
+                    log.LogError(e);
+                }
+            }
+        }
     }
 }
-
-#endif

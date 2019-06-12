@@ -36,6 +36,8 @@ using Neon.IO;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
+using Activity = Neon.Cadence.Activity;
+
 using Xunit;
 
 namespace TestCadence
@@ -66,10 +68,27 @@ namespace TestCadence
             }
         }
 
+        /// <summary>
+        /// This activity does nothing besides returning "Hello World!" as UTF-8.
+        /// </summary>
+        public class HelloActivity : Activity
+        {
+            public HelloActivity()
+            {
+            }
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                await Task.CompletedTask;
+
+                return Encoding.UTF8.GetBytes("Hello World!");
+            }
+        }
+
         //---------------------------------------------------------------------
         // Implementation
 
-        CadenceFixture      fixture;
+        CadenceFixture fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -80,7 +99,7 @@ namespace TestCadence
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
-                DebugEmulateProxy      = true,
+                Emulate      = true,
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
                 //DebugDisableHeartbeats = true,
                 //DebugIgnoreTimeouts    = true
@@ -365,28 +384,31 @@ namespace TestCadence
 
             // Verify parameter checks.
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkflowWorkerAsync<HelloWorkflow>(null, tasklist));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>("", tasklist));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, null));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, ""));
+            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkflowWorkerAsync(null, tasklist));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync("", tasklist));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync(domain, null));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync(domain, ""));
 
             // This operation should fail because the domain has not yet been registered.
 
-            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, "test"));
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.StartWorkflowWorkerAsync(domain, "test"));
 
-            // Register the domain and then start a worker.
+            // Register the domain and then start workflow and activity workers.
 
             await client.RegisterDomainAsync(domain);
 
-            var worker = await client.StartWorkflowWorkerAsync<HelloWorkflow>(domain, tasklist);
+            var workflowWorker = await client.StartWorkflowWorkerAsync(domain, tasklist);
+            var activityWorker = await client.StartActivityWorkerAsync(domain, tasklist);
 
-            // Stop the worker.
+            // Stop the workers.
 
-            await client.StopWorkerAsync(worker);
+            await client.StopWorkerAsync(workflowWorker);
+            await client.StopWorkerAsync(activityWorker);
 
-            // Stop the worker again to verify that we don't see any errors.
+            // Stop the workers again to verify that we don't see any errors.
 
-            await client.StopWorkerAsync(worker);
+            await client.StopWorkerAsync(workflowWorker);
+            await client.StopWorkerAsync(activityWorker);
         }
 
         [Fact]

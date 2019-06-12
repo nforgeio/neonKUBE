@@ -46,9 +46,10 @@ namespace Neon.Cadence
         public string ID { get; set; } = null;
 
         /// <summary>
-        /// Specifies the tasklist where this workflow will be scheduled.
+        /// Specifies the tasklist where this workflow will be scheduled.  This
+        /// defaults to <b>"default"</b>.
         /// </summary>
-        public string TaskList { get; set; }
+        public string TaskList { get; set; } = "default";
 
         /// <summary>
         /// Specifies the maximum time the workflow may run from start
