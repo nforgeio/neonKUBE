@@ -89,9 +89,11 @@ func GetContextID() int64 {
 //
 // returns *WorkflowContext -> pointer to a newly initialized
 // workflow ExecutionContext in memory
-func NewWorkflowContext() *WorkflowContext {
+func NewWorkflowContext(ctx workflow.Context) *WorkflowContext {
 	wectx := new(WorkflowContext)
 	wectx.childContexts = new(childContextsMap)
+	wectx.SetContext(ctx)
+
 	return wectx
 }
 

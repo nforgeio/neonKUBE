@@ -91,13 +91,13 @@ func (request *ActivityExecuteLocalRequest) SetArgs(value []byte) {
 	request.SetBytesProperty("Args", value)
 }
 
-// GetOptions gets a ActivityExecutionRequest's local
-// activity start options.
+// GetOptions gets a ActivityExecuteLocalRequest's local
+// activity options.
 //
-// returns client.StartActivityOptions -> a cadence client struct that contains the
+// returns *workflow.LocalActivityOptions -> a cadence client struct that contains the
 // options for executing a workflow activity
-func (request *ActivityExecuteLocalRequest) GetOptions() *workflow.ActivityOptions {
-	opts := new(workflow.ActivityOptions)
+func (request *ActivityExecuteLocalRequest) GetOptions() *workflow.LocalActivityOptions {
+	opts := new(workflow.LocalActivityOptions)
 	err := request.GetJSONProperty("Options", opts)
 	if err != nil {
 		return nil
@@ -106,13 +106,13 @@ func (request *ActivityExecuteLocalRequest) GetOptions() *workflow.ActivityOptio
 	return opts
 }
 
-// SetOptions sets a ActivityExecutionRequest's local
-// activity start options.
+// SetOptions sets a ActivityExecuteLocalRequest's local
+// activity options.
 //
-// param value client.StartActivityOptions -> a cadence client struct that contains the
-// options for executing a workflow activity to be set in the ActivityExecutionRequest's
+// param value *workflow.LocalActivityOptions -> a cadence client struct that contains the
+// options for executing a workflow activity to be set in the ActivityExecuteLocalRequest's
 // properties map
-func (request *ActivityExecuteLocalRequest) SetOptions(value *workflow.ActivityOptions) {
+func (request *ActivityExecuteLocalRequest) SetOptions(value *workflow.LocalActivityOptions) {
 	request.SetJSONProperty("Options", value)
 }
 

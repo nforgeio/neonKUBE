@@ -1090,7 +1090,6 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Nil(v.GetName())
 		s.Nil(v.GetDomain())
 		s.Nil(v.GetTaskList())
 		s.Nil(v.GetOptions())
@@ -1100,10 +1099,6 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
-
-		name := "my-workflow"
-		v.SetName(&name)
-		s.Equal("my-workflow", *v.GetName())
 
 		domain := "my-domain"
 		v.SetDomain(&domain)
@@ -1128,7 +1123,6 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-workflow", *v.GetName())
 		s.Equal("my-domain", *v.GetDomain())
 		s.Equal("my-tasks", *v.GetTaskList())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
@@ -1140,7 +1134,6 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-workflow", *v.GetName())
 		s.Equal("my-domain", *v.GetDomain())
 		s.Equal("my-tasks", *v.GetTaskList())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)

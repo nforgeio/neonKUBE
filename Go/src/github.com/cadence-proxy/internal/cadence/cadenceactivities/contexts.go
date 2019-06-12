@@ -20,6 +20,8 @@ package cadenceactivities
 import (
 	"context"
 	"sync"
+
+	"go.uber.org/cadence/workflow"
 )
 
 var (
@@ -50,6 +52,7 @@ type (
 	// and state while registering and executing cadence activitys
 	ActivityContext struct {
 		ctx          context.Context
+		workflowCtx  workflow.Context
 		activityFunc func(ctx context.Context, input []byte) ([]byte, error)
 		cancelFunc   func()
 	}
@@ -86,8 +89,24 @@ func GetContextID() int64 {
 //
 // returns *ActivityContext -> pointer to a newly initialized
 // activity ExecutionContext in memory
-func NewActivityContext() *ActivityContext {
-	return new(ActivityContext)
+func NewActivityContext(ctx ...interface{}) *ActivityContext {
+	actx := new(ActivityContext)
+
+	if len(ctx) > 0 {
+		c := ctx[0]
+
+		if v, ok := c.(workflow.Context); ok {
+			actx.SetWorkflowContext(v)
+			return actx
+		}
+
+		if v, ok := c.(context.Context); ok {
+			actx.SetContext(v)
+			return actx
+		}
+	}
+
+	return actx
 }
 
 // GetContext gets a ActivityContext's context.Context
@@ -103,6 +122,21 @@ func (actx *ActivityContext) GetContext() context.Context {
 // set as a ActivityContext's cadence context.Context
 func (actx *ActivityContext) SetContext(value context.Context) {
 	actx.ctx = value
+}
+
+// GetWorkflowContext gets a ActivityContext's workflow.Context
+//
+// returns workflow.Context -> a cadence context context
+func (actx *ActivityContext) GetWorkflowContext() workflow.Context {
+	return actx.workflowCtx
+}
+
+// SetWorkflowContext sets a ActivityContext's workflow.Context
+//
+// param value workflow.Context -> a cadence activity context to be
+// set as a ActivityContext's cadence workflow.Context
+func (actx *ActivityContext) SetWorkflowContext(value workflow.Context) {
+	actx.workflowCtx = value
 }
 
 // GetActivityFunction gets a ActivityContext's activity function

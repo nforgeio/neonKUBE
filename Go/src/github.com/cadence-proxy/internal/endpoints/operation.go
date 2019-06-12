@@ -45,6 +45,7 @@ type (
 		future      workflow.Future
 		settable    workflow.Settable
 		requestID   int64
+		contextID   int64
 		request     messages.IProxyRequest
 		isCancelled bool
 		channel     chan interface{}
@@ -82,6 +83,16 @@ func (op *Operation) GetRequestID() int64 {
 // SetRequestID sets the requestID
 func (op *Operation) SetRequestID(value int64) {
 	op.requestID = value
+}
+
+// GetContextID gets the contextID
+func (op *Operation) GetContextID() int64 {
+	return op.contextID
+}
+
+// SetContextID sets the contextID
+func (op *Operation) SetContextID(value int64) {
+	op.contextID = value
 }
 
 // GetRequest gets the request

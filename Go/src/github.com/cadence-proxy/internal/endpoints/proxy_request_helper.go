@@ -312,6 +312,12 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 			reply = handleActivityCompleteRequest(v)
 		}
 
+	// ActivityExecuteLocalRequest
+	case messagetypes.ActivityExecuteLocalRequest:
+		if v, ok := request.(*messages.ActivityExecuteLocalRequest); ok {
+			reply = handleActivityExecuteLocalRequest(v)
+		}
+
 	// Undefined message type
 	default:
 
@@ -766,8 +772,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
 
 		// new WorkflowContext
-		wectx := cadenceworkflows.NewWorkflowContext()
-		wectx.SetContext(ctx)
+		wectx := cadenceworkflows.NewWorkflowContext(ctx)
 
 		// set the WorkflowContext in WorkflowContexts
 		contextID = cadenceworkflows.WorkflowContexts.Add(contextID, wectx)
@@ -777,8 +782,8 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		requestID := NextRequestID()
 		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
 		workflowInvokeRequest.SetRequestID(requestID)
-		workflowInvokeRequest.SetArgs(input)
 		workflowInvokeRequest.SetContextID(contextID)
+		workflowInvokeRequest.SetArgs(input)
 
 		// get the WorkflowInfo (Domain, WorkflowID, RunID, WorkflowType,
 		// TaskList, ExecutionStartToCloseTimeout)
@@ -796,6 +801,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		future, settable := workflow.NewFuture(ctx)
 		op.SetFuture(future)
 		op.SetSettable(settable)
+		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
 		// create the workflow go routine
@@ -1108,6 +1114,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		op := NewOperation(workflowMutableInvokeRequest.GetRequestID(), workflowMutableInvokeRequest)
 		op.SetFuture(future)
 		op.SetSettable(settable)
+		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
 		// create the worklfow Go routine
@@ -1336,6 +1343,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 		workflowSignalInvokeRequest := messages.NewWorkflowSignalInvokeRequest()
 		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
 		workflowSignalInvokeRequest.SetSignalName(signalName)
+		workflowSignalInvokeRequest.SetContextID(contextID)
 
 		// create the Operation for this request and add it to the operations map
 		requestID := NextRequestID()
@@ -1343,6 +1351,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 		op := NewOperation(requestID, workflowSignalInvokeRequest)
 		op.SetFuture(future)
 		op.SetSettable(settable)
+		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
 		// send a request to the
@@ -1802,7 +1811,8 @@ func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHand
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1820,6 +1830,7 @@ func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHand
 		workflowQueryInvokeRequest := messages.NewWorkflowQueryInvokeRequest()
 		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
 		workflowQueryInvokeRequest.SetQueryName(queryName)
+		workflowQueryInvokeRequest.SetContextID(contextID)
 
 		// create the Operation for this request and add it to the operations map
 		requestID := NextRequestID()
@@ -1827,6 +1838,7 @@ func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHand
 		op := NewOperation(requestID, workflowQueryInvokeRequest)
 		op.SetFuture(future)
 		op.SetSettable(settable)
+		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
 		// send a request to the
@@ -1958,8 +1970,7 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 	activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 
 		// create an activity context entry in the ActivityContexts map
-		actx := cadenceactivities.NewActivityContext()
-		actx.SetContext(ctx)
+		actx := cadenceactivities.NewActivityContext(ctx)
 
 		// add the context to ActivityContexts
 		contextID = cadenceactivities.ActivityContexts.Add(contextID, actx)
@@ -1973,13 +1984,10 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 		activityInvokeRequest.SetContextID(contextID)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, activityInvokeRequest)
-
-		// create the channel to wait for reply
 		invokeReplyChannel := make(chan interface{})
+		op := NewOperation(requestID, activityInvokeRequest)
 		op.SetChannel(invokeReplyChannel)
-
-		// add the operation
+		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
 		// get worker stop channel on the context
@@ -2019,13 +2027,10 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 			activityStoppingRequest.SetContextID(contextID)
 
 			// create the Operation for this request and add it to the operations map
-			op := NewOperation(requestID, activityStoppingRequest)
-
-			// create the channel to wait for ActivityStoppingReply
 			stoppingReplyChan := make(chan interface{})
+			op := NewOperation(requestID, activityStoppingRequest)
 			op.SetChannel(stoppingReplyChan)
-
-			// add the operation
+			op.SetContextID(contextID)
 			Operations.Add(requestID, op)
 
 			// send the request and wait for the reply
@@ -2277,6 +2282,110 @@ func handleActivityCompleteRequest(request *messages.ActivityCompleteRequest) me
 	return reply
 }
 
+func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("ActivityExecuteLocalRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+
+	// new ActivityExecuteLocalReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+
+		return reply
+	}
+
+	contextID := request.GetContextID()
+	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+
+		return reply
+	}
+
+	// the local activity function
+	localActivityFunc := func(ctx workflow.Context, activityTypeID int64, args []byte) ([]byte, error) {
+
+		// create an activity context entry in the ActivityContexts map
+		actx := cadenceactivities.NewActivityContext(ctx)
+
+		// add the context to ActivityContexts
+		activityContextID := cadenceactivities.ActivityContexts.Add(cadenceactivities.NextContextID(), actx)
+
+		// Send a ActivityInvokeLocalRequest to the Neon.Cadence Lib
+		// cadence-client
+		requestID := NextRequestID()
+		activityInvokeLocalRequest := messages.NewActivityInvokeLocalRequest()
+		activityInvokeLocalRequest.SetRequestID(requestID)
+		activityInvokeLocalRequest.SetContextID(contextID)
+		activityInvokeLocalRequest.SetArgs(args)
+		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
+		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
+
+		// create the Operation for this request and add it to the operations map
+		future, settable := workflow.NewFuture(ctx)
+		op := NewOperation(requestID, activityInvokeLocalRequest)
+		op.SetFuture(future)
+		op.SetSettable(settable)
+		op.SetContextID(activityContextID)
+		Operations.Add(requestID, op)
+
+		// send a request to the
+		// Neon.Cadence Lib
+		f := func(ctx workflow.Context) {
+
+			// send the ActivityInvokeRequest
+			resp, err := putToNeonCadenceClient(activityInvokeLocalRequest)
+			if err != nil {
+				panic(err)
+			}
+			defer func() {
+
+				// $debug(jack.burns): DELETE THIS!
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Error("could not close response body", zap.Error(err))
+				}
+			}()
+		}
+
+		// send the request
+		workflow.Go(ctx, f)
+
+		// wait for the future to be unblocked
+		var result []byte
+		if err := future.Get(ctx, &result); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	// get the activity options, the context,
+	// and set the activity options on the context
+	opts := request.GetOptions()
+	ctx := wectx.GetContext()
+	if opts != nil {
+		ctx = workflow.WithLocalActivityOptions(ctx, *opts)
+	}
+
+	// register the local activity function
+	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, request.GetArgs())
+
+	// wait for the future to be unblocked
+	var result []byte
+	if err := future.Get(ctx, &result); err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+	} else {
+		buildReply(reply, nil, result)
+	}
+
+	return reply
+}
+
 // -------------------------------------------------------------------------
 // Helpers for sending ProxyReply messages back to Neon.Cadence Library
 
@@ -2304,7 +2413,9 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	}
 
 	// set the request header to specified content type
+	// and disable http request compression
 	req.Header.Set("Content-Type", ContentType)
+	req.Header.Set("Accept-Encoding", "identity")
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Neon.Cadence Library request",

@@ -305,6 +305,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildActivityCompleteReply(v, cadenceError)
 		}
 
+	// ActivityExecuteLocalReply
+	case messagetypes.ActivityExecuteLocalReply:
+		if v, ok := reply.(*messages.ActivityExecuteLocalReply); ok {
+			buildActivityExecuteLocalReply(v, cadenceError, value)
+		}
+
 	// Undefined message type
 	// This should never happen.
 	default:
@@ -653,4 +659,14 @@ func buildActivityGetInfoReply(reply *messages.ActivityGetInfoReply, cadenceErro
 
 func buildActivityCompleteReply(reply *messages.ActivityCompleteReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
+}
+
+func buildActivityExecuteLocalReply(reply *messages.ActivityExecuteLocalReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
 }
