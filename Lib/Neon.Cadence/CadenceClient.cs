@@ -72,30 +72,89 @@ namespace Neon.Cadence
     /// and add your node URIs to the <see cref="CadenceSettings.Servers"/> list
     /// and then call the static <see cref="CadenceClient.ConnectAsync(CadenceSettings)"/>
     /// method to obtain a connected <see cref="CadenceClient"/>.  You'll use this
-    /// for registering workflow and activity workers as well as to manage workflows.
+    /// for registering workflows and activities types as well as the workers that
+    /// indicate that workflows and activities can be executed in the current process.
     /// </para>
     /// <para>
     /// You'll implement your workflows and activities by implementing classes that
     /// derive from <see cref="Workflow"/> and <see cref="Activity"/> and then
-    /// registering these types with Cadence.  Cadence calls these registrations
-    /// workers and uses these to schedule operations for execution by your code.
+    /// registering these types with Cadence.  Then you'll start workflow or activity
+    /// workers so that Cadence will begin scheduling operations for execution by your code.
     /// Workflows and activities are registered using the fully qualified names 
     /// of the derived <see cref="Workflow"/> and <see cref="Activity"/> types
-    /// by defaut, but you can customizes this as required (i.e. to add an
-    /// implementation version).
+    /// by defaut, but you can customize this if desired.
     /// </para>
     /// <para>
-    /// Once you have a connected <see cref="CadenceClient"/>, you can create and manage
-    /// Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int)"/>,
-    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>
-    /// and then register workflow and activity workers via <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>
-    /// and <see cref="StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/>.
+    /// Cadence supports the concept of domains and task lists.  Domains and task lists are
+    /// used to organize workflows and activities.  Workflows and activities essentially 
+    /// reside in a registered domain, which is essentially just a namespace specified by
+    /// a string.  The combination of a domain along with a workflow or activity type name
+    /// must be unique within a Cadence cluster.  Once you have a connected <see cref="CadenceClient"/>,
+    /// you can create and manage Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int)"/>,
+    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>.
+    /// Domains can be used provide isolated areas for different teams and/or different environments
+    /// (e.g. production, staging, and test).
+    /// </para>
+    /// <para>
+    /// Cadence workers are started to indicate that the current process can execute workflows
+    /// and activities from a Cadence domain, and optionally a task list (discussed further below).
+    /// You'll call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> to start
+    /// a workflow worker and  <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
+    /// for an activity worker.  These calls indicate to Cadence that it can begin scheduling
+    /// workflow and activity executions from the current client.
+    /// </para>
+    /// <para>
+    /// Task lists provide an additional way to customize where workflows and activities are executed.
+    /// A task list is simply a string used in addition to the domain to indicate which workflows and
+    /// activities will be scheduled for execution by workers.  For regular (top-level) workflows,
+    /// the tasklist <b>"default"</b> will be used when not otherwise specified.  Any non-empty custom
+    /// string is allowed for task lists.  Child workflow and activity task lists will default to
+    /// the parent workflow's task list by default.
+    /// </para>
+    /// <para>
+    /// Task lists are typically only required for somewhat advanced deployments.  Let's go through
+    /// an example to see how this works.  Imagine that you're a movie studio that needs to render
+    /// an animated movie with Cadence.  You've implemented a workflow that breaks the movie up into
+    /// 5 minute segments and then schedules an activity to render each segment.  Now assume that 
+    /// we have two kinds of servers, one just a basic general purpose server and the other that
+    /// includes high-end GPUs that are required for rendering.  In the simple case, you'd like
+    /// the workflows to run on the regular server and the activites to run on the GPU machines
+    /// (because there's no point in wasting any expensive GPU machine resources on the workflow).
+    /// </para>
+    /// <para>
+    /// This scenario can addressed by having the applications running on the regular machines
+    /// call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> and those
+    /// running on the GPU servers call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
+    /// Both could specify the domain as <b>"render"</b> and leave task list as <b>"default"</b>.
+    /// With this setup, workflows will be scheduled on the regular machines and activities
+    /// on the GPU machines, accomplishing our simple goal.
+    /// </para>
+    /// <para>
+    /// Now imagine a more complex scenario where we need to render two movies on the cluster at 
+    /// the same time and we'd like to dedicate two thirds of our GPU machines to <b>movie1</b> and
+    /// the other third to <b>movie2</b>.  This can be accomplished via task lists.
+    /// </para>
+    /// <para>
+    /// We'd start by defining a task list for each movie: <b>"movie1"</b> and <b>movie2</b> and
+    /// call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> twice on the
+    /// regular machines, once for each task list.  This will schedule workflows for each movie
+    /// on these machines (this is OK for this scenario because the workflow won't consume many
+    /// resources).  Then on 2/3s of the GPU machines, we'll call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>
+    /// with the <b>"movie1"</b> task list and the remaining one third with <b>""movie2</b>.
+    /// Then we'll start the rendering workflow for the first movie specifying <b>"movie1"</b>
+    /// as the task list and again for the second movie specifying <b>"movie2"</b>.
+    /// </para>
+    /// <para>
+    /// The two movie workflows will be scheduled on the regular machines and these will each
+    /// start the rendering activities using the <b>"movie1"</b> task list for the first movie
+    /// and <b>"movie2"</b> for the second one and Cadence will then schedule these activities
+    /// on the appropriate GPU servers.
     /// </para>
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
     /// the current process implements specific workflow and activity types.  You'll call
-    /// <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/> for
-    /// workflows and <see cref="StartActivityWorkerAsync{TActivity}(string, string, WorkerOptions, string)"/>
+    /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> for
+    /// workflows and <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
     /// for activities, passing your custom implementations of <see cref="Workflow"/> and <see cref="Activity"/>
     /// as the type parameter.  The <b>Neon.Cadence</b> will then automatically handle the instantiation
     /// of your workflow or activity types and call their <see cref="Workflow.RunAsync(byte[])"/>
@@ -104,7 +163,7 @@ namespace Neon.Cadence
     /// External workflows are started by calling <see cref="StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>,
     /// passing the workflow type string, the target Cadence domain along with optional arguments
     /// (encoded into a byte array) and optional workflow options.  The workflow type string must
-    /// be the same one used when calling <see cref="StartWorkflowWorkerAsync{TWorkflow}(string, string, WorkerOptions, string)"/>.
+    /// be the same one used when calling <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
     /// </para>
     /// <note>
     /// <b>External workflows</b> are top-level workflows that have no workflow parent.
@@ -465,7 +524,6 @@ namespace Neon.Cadence
         // Instance members
 
         private object                          syncLock      = new object();
-        private AsyncMutex                      asyncLock     = new AsyncMutex();
         private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
         private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();

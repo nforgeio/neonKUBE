@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceClient.Emulated.cs
+// FILE:	    CadenceClient.Emulate.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -126,15 +126,15 @@ namespace Neon.Cadence
             public CadenceError Error { get; set; }
         }
 
-        private AsyncMutex                              emulationMutex           = new AsyncMutex();
-        private List<EmulatedCadenceDomain>             emulatedDomains          = new List<EmulatedCadenceDomain>();
-        private Dictionary<long, EmulatedWorker>        emulatedWorkers          = new Dictionary<long, EmulatedWorker>();
-        private Dictionary<long, EmulatedWorkflow>      emulatedWorkflowContexts = new Dictionary<long, EmulatedWorkflow>();
-        private Dictionary<string, EmulatedWorkflow>    emulatedWorkflows        = new Dictionary<string, EmulatedWorkflow>();
-        private Dictionary<long, Operation>             emulatedOperations       = new Dictionary<long, Operation>();
-        private long                                    nextEmulatedWorkerId     = 0;
-        private long                                    nextEmulatedContextId    = 0;
-        private IWebHost                                emulatedHost;
+        private AsyncMutex                                  emulationMutex           = new AsyncMutex();
+        private Dictionary<string, EmulatedCadenceDomain>   emulatedDomains          = new Dictionary<string, EmulatedCadenceDomain>();
+        private Dictionary<long, EmulatedWorker>            emulatedWorkers          = new Dictionary<long, EmulatedWorker>();
+        private Dictionary<long, EmulatedWorkflow>          emulatedWorkflowContexts = new Dictionary<long, EmulatedWorkflow>();
+        private Dictionary<string, EmulatedWorkflow>        emulatedWorkflows        = new Dictionary<string, EmulatedWorkflow>();
+        private Dictionary<long, Operation>                 emulatedOperations       = new Dictionary<long, Operation>();
+        private long                                        nextEmulatedWorkerId     = 0;
+        private long                                        nextEmulatedContextId    = 0;
+        private IWebHost                                    emulatedHost;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Set this to <c>false</c> to emulate an unhealthy
@@ -148,7 +148,6 @@ namespace Neon.Cadence
         /// after the first <see cref="InitializeRequest"/> has been received.
         /// </summary>
         internal HttpClient EmulatedLibraryClient { get; private set; }
-
 
         /// <summary>
         /// Called when an HTTP request is received by the integrated web server 
@@ -530,7 +529,7 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                if (!emulatedDomains.Any(d => d.Name == request.Domain))
+                if (!emulatedDomains.ContainsKey(request.Domain))
                 {
                     await EmulatedLibraryClient.SendReplyAsync(request,
                         new NewWorkerReply()
@@ -571,7 +570,10 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
+                if (!emulatedDomains.TryGetValue(request.Name, out domain))
+                {
+                    domain = null;
+                }
             }
 
             if (domain == null)
@@ -614,7 +616,7 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                if (emulatedDomains.SingleOrDefault(d => d.Name == request.Name) != null)
+                if (emulatedDomains.ContainsKey(request.Name))
                 {
                     reply.Error = new CadenceDomainAlreadyExistsException($"Domain [{request.Name}] already exists.").ToCadenceError();
 
@@ -623,6 +625,7 @@ namespace Neon.Cadence
                 }
 
                 emulatedDomains.Add(
+                    request.Name,
                     new EmulatedCadenceDomain()
                     {
                         Name          = request.Name,
@@ -659,7 +662,10 @@ namespace Neon.Cadence
 
             using (await emulationMutex.AcquireAsync())
             {
-                domain = emulatedDomains.SingleOrDefault(d => d.Name == request.Name);
+                if (!emulatedDomains.TryGetValue(request.Name, out domain))
+                {
+                    domain = null;
+                }
             }
 
             if (domain == null)

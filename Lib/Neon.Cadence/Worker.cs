@@ -38,15 +38,13 @@ namespace Neon.Cadence
         /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
         /// <param name="domain">The Cadence domain where the worker is registered.</param>
         /// <param name="taskList">The Cadence tasklist.</param>
-        /// <param name="typeName">The registered workflow or activity type name.</param>
-        internal Worker(CadenceClient client, bool isWorkflow, long workerId, string domain, string taskList, string typeName)
+        internal Worker(CadenceClient client, bool isWorkflow, long workerId, string domain, string taskList)
         {
             this.Client     = client;
             this.IsWorkflow = isWorkflow;
             this.WorkerId   = workerId;
             this.Domain     = domain;
             this.Tasklist   = taskList;
-            this.TypeName   = typeName;
         }
 
         /// <summary>
@@ -73,10 +71,5 @@ namespace Neon.Cadence
         /// Returns the Cadence tasklist.
         /// </summary>
         internal string Tasklist { get; private set; }
-
-        /// <summary>
-        /// Returns the registered workflow or activity type name.
-        /// </summary>
-        internal string TypeName { get; private set; }
     }
 }
