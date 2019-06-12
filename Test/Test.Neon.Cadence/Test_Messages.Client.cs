@@ -1023,7 +1023,6 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<NewWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.Null(message.Name);
                 Assert.False(message.IsWorkflow);
                 Assert.Null(message.Domain);
                 Assert.Null(message.TaskList);
@@ -1033,8 +1032,6 @@ namespace TestCadence
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.Name = "my-workflow";
-                Assert.Equal("my-workflow", message.Name);
                 message.IsWorkflow = true;
                 Assert.True(message.IsWorkflow);
                 message.Domain = "my-domain";
@@ -1052,7 +1049,6 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<NewWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-workflow", message.Name);
                 Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
@@ -1064,7 +1060,6 @@ namespace TestCadence
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-workflow", message.Name);
                 Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
@@ -1076,7 +1071,6 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-workflow", message.Name);
                 Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
