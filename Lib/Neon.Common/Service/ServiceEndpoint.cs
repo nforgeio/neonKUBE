@@ -56,7 +56,7 @@ namespace Neon.Service
         /// The parent <see cref="ServiceDescription"/>.
         /// </para>
         /// <note>
-        /// This must be initialized berfore attempting to reference the endpoint.
+        /// This must be initialized before attempting to reference the endpoint.
         /// </note>
         /// </summary>
         public ServiceDescription ServiceDescription { get; set; }

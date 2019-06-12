@@ -76,13 +76,14 @@ namespace Neon.Service
         /// <summary>
         /// When set, this overrides <see cref="Name"/>, <see cref="Namespace"/>, and
         /// <see cref="Domain"/> when generating the <see cref="Hostname"/> result.
-        /// This is typically set when testing on a local machine.  This defaults
-        /// to <c>null</c>.
+        /// This is typically set for public service endpoints for public deployments
+        /// or when emulating a cluster on a local machine for testing purposes.  
+        /// This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "address", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public IPAddress Address { get; set; }
+        public string Address { get; set; }
 
         /// <summary>
         /// <para>
@@ -102,9 +103,9 @@ namespace Neon.Service
         {
             get
             {
-                if (Address != null)
+                if (!string.IsNullOrEmpty(Address))
                 {
-                    return Address.ToString();
+                    return Address;
                 }
                 else
                 {

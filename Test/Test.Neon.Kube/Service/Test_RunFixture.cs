@@ -91,7 +91,7 @@ namespace TestKubeService
                 var description = new ServiceDescription()
                 {
                     Name    = "web-service",
-                    Address = IPAddress.Parse("127.0.0.10")
+                    Address = "127.0.0.10"
                 };
 
                 description.Endpoints.Add(
@@ -110,7 +110,7 @@ namespace TestKubeService
                 description = new ServiceDescription()
                 {
                     Name    = "relay-service",
-                    Address = IPAddress.Parse("127.0.0.10")
+                    Address = "127.0.0.10"
                 };
 
                 description.Endpoints.Add(

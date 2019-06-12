@@ -60,7 +60,7 @@ namespace TestKubeService
             var description = new ServiceDescription()
             {
                 Name    = "web-service",
-                Address = IPAddress.Parse("127.0.0.10")
+                Address = "127.0.0.10"
             };
 
             description.Endpoints.Add(
