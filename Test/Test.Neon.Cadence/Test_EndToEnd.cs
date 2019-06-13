@@ -121,10 +121,54 @@ namespace TestCadence
             }
         }
 
+        /// <summary>
+        /// Verifies that only single copies of mutable values are persisted to
+        /// the workflow history.  We're also going to test setting two different 
+        /// values to ensure that works as well.
+        /// </summary>
+        private class MutableValueWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var value1 = await GetValueAsync("value-1", new byte[] { 1 });
+
+                if (value1[0] != 1)
+                {
+                    throw new Exception($"Test-1: value1={value1[0]}");
+                }
+
+                var value2 = await GetValueAsync("value-2", new byte[] { 2 });
+
+                if (value2[0] != 1)
+                {
+                    throw new Exception($"Test-2, value2={value2[0]}");
+                }
+
+                // Verify that we we get the original values back even though
+                // we're passing new values.
+
+                value1 = await GetValueAsync("value-1", new byte[] { 3 });
+
+                if (value1[0] != 0)
+                {
+                    throw new Exception($"Test-3: value1={value1[0]}");
+                }
+
+                value2 = await GetValueAsync("value-2", new byte[] { 4 });
+
+                if (value2[0] != 1)
+                {
+                    throw new Exception($"Test-4, value2={value2[0]}");
+                }
+
+                return await Task.FromResult((byte[])null);
+            }
+        }
+
         //---------------------------------------------------------------------
         // Test implementations:
 
-        CadenceFixture fixture;
+        CadenceFixture      fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
