@@ -137,52 +137,103 @@ func (helper *CadenceClientHelper) SetupServiceConfig() error {
 	return nil
 }
 
-// StartWorkflow is an instance method that is starts a registered cadence workflow
+// ExecuteWorkflow is an instance method to execute a registered cadence workflow
 //
+// param ctx context.Context -> the context to use to execute the workflow
+// param domain string -> the domain to start the workflow on
 // param options client.StartWorkflowOptions -> configuration parameters for starting a workflow execution
 // param workflow interface{} -> a registered cadence workflow
 // param args ...interface{} -> anonymous number of arguments for starting a workflow
 //
+// returns client.WorkflowRun -> the client.WorkflowRun returned by the workflow execution
+// call to the cadence server
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
-func (helper *CadenceClientHelper) StartWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) error {
+func (helper *CadenceClientHelper) ExecuteWorkflow(ctx context.Context, domain string, options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) (client.WorkflowRun, error) {
+
+	// set the domain
+	helper.Builder = helper.Builder.SetDomain(domain)
 
 	// build the actual cadence client.Client
 	workflowClient, err := helper.Builder.BuildCadenceClient()
 	if err != nil {
 
 		// $debug(jack.burns)
-		helper.Logger.Debug("Failed to build cadence client.", zap.Error(err))
-		return err
+		helper.Logger.Error("Failed to build cadence client.", zap.Error(err))
+		return nil, err
 	}
 
 	// start the workflow in the background context and store execution information
-	workflowExecution, err := workflowClient.StartWorkflow(context.Background(), options, workflow, args...)
+	workflowRun, err := workflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
 	if err != nil {
 
 		// $debug(jack.burns)
-		helper.Logger.Debug("Failed to create workflow", zap.Error(err))
-		return err
+		helper.Logger.Error("Failed to create workflow", zap.Error(err))
+		return nil, err
 	}
 
 	// $debug(jack.burns)
 	helper.Logger.Debug("Started Workflow",
-		zap.String("WorkflowID", workflowExecution.ID),
-		zap.String("RunID", workflowExecution.RunID))
+		zap.String("WorkflowID", workflowRun.GetID()),
+		zap.String("RunID", workflowRun.GetRunID()),
+	)
 
-	return nil
+	return workflowRun, nil
 }
 
-// StartWorkers starts a workflow worker and activity worker based on configured options.
-// The worker will listen for workflows registered with the same groupName
+// StartWorker starts a workflow worker and activity worker based on configured options.
+// The worker will listen for workflows registered with the same taskList
 //
 // param domainName string -> name of the cadence doamin for the worker to listen on
-// param groupName string -> the name of the group of cadence workflows for the worker to listen for
+// param taskList string -> the name of the group of cadence workflows for the worker to listen for
 // options worker.Options -> Options used to configure a worker instance
-func (helper *CadenceClientHelper) StartWorkers(domainName, groupName string, options worker.Options) {
-	worker := worker.New(helper.Service, domainName, groupName, options)
+//
+// returns worker.Worker -> the worker.Worker returned by the worker.New()
+// call to the cadence server
+// returns error -> an error if the workflow could not be started, or nil if
+// the workflow was triggered successfully
+func (helper *CadenceClientHelper) StartWorker(domainName, taskList string, options worker.Options) (worker.Worker, error) {
+	worker := worker.New(helper.Service, domainName, taskList, options)
 	err := worker.Start()
 	if err != nil {
-		helper.Logger.Panic("Failed to start workers.", zap.Error(err))
+		helper.Logger.Error("Failed to start workers.", zap.Error(err))
+
+		return nil, err
 	}
+
+	return worker, nil
+}
+
+// GetWorkflow is an instance method to get a WorkflowRun from a started
+// cadence workflow
+//
+// param ctx context.Context -> the context to use to execute the workflow
+// param workflowID string -> the workflowID of the running workflow
+// param runID string -> the runID of the running workflow
+//
+// returns client.WorkflowRun -> the client.WorkflowRun returned by the GetWorkflow
+// call to the cadence server
+// returns error -> an error if the workflow could not be started, or nil if
+// the workflow was triggered successfully
+func (helper *CadenceClientHelper) GetWorkflow(ctx context.Context, workflowID string, runID string) (client.WorkflowRun, error) {
+
+	// build the actual cadence client.Client
+	workflowClient, err := helper.Builder.BuildCadenceClient()
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("Failed to build cadence client.", zap.Error(err))
+		return nil, err
+	}
+
+	// start the workflow in the background context and store execution information
+	workflowRun := workflowClient.GetWorkflow(ctx, workflowID, runID)
+
+	// $debug(jack.burns)
+	helper.Logger.Debug("GetWorkflow Successful",
+		zap.String("WorkflowID", workflowRun.GetID()),
+		zap.String("RunID", workflowRun.GetRunID()),
+	)
+
+	return workflowRun, nil
 }

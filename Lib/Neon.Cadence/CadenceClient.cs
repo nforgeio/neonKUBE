@@ -713,7 +713,7 @@ namespace Neon.Cadence
                         {
                             Endpoints       = sbEndpoints.ToString(),
                             Identity        = settings.ClientIdentity,
-                            ClientTimeout   = TimeSpan.FromSeconds(1)
+                            ClientTimeout   = TimeSpan.FromSeconds(10000)
                 };
 
 

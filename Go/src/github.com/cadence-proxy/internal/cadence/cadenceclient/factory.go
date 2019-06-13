@@ -136,7 +136,8 @@ func (b *WorkflowClientBuilder) build() error {
 
 	ch, err := tchannel.NewChannelTransport(
 		tchannel.ServiceName(_cadenceClientName),
-		tchannel.Logger(b.Logger))
+		tchannel.Logger(b.Logger),
+	)
 
 	if err != nil {
 

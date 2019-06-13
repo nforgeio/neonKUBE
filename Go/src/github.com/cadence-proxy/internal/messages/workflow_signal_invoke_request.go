@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		workflow_signal_received_request.go
+// FILE:		workflow_signal_invoke_request.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //

@@ -131,13 +131,13 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
-                base.StartAsComposed(name, image,
-                    new string[]
-                    {
-                        "--detach",
-                        "-p", "7933-7939:7933-7939"
-                    },
-                    env: env);
+                //base.StartAsComposed(name, image,
+                //    new string[]
+                //    {
+                //        "--detach",
+                //        "-p", "7933-7939:7933-7939"
+                //    },
+                //    env: env);
 
                 Thread.Sleep(warmupDelay);
 

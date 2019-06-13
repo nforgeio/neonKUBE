@@ -442,7 +442,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 		// Start a continue as new instance of the workflow and get the error to send
 		// back to the Neon.Cadence Lib
-		continueError := workflow.NewContinueAsNewError(continueContext, wectx.GetWorkflowFunction(), reply.GetContinueAsNewArgs())
+		continueError := workflow.NewContinueAsNewError(continueContext, wectx.GetWorkflowName(), reply.GetContinueAsNewArgs())
 
 		// create a new custom error and set it in the reply to be handled by the future
 		cadenceError := cadenceerrors.NewCadenceError(continueError.Error())
