@@ -95,6 +95,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 TaskList { get; private set; }                                  = new PropertyNameUtf8("TaskList");
         public static PropertyNameUtf8 TaskToken { get; private set; }                                 = new PropertyNameUtf8("TaskToken");
         public static PropertyNameUtf8 Time { get; private set; }                                      = new PropertyNameUtf8("Time");
+        public static PropertyNameUtf8 Update { get; private set; }                                    = new PropertyNameUtf8("Update");
         public static PropertyNameUtf8 UpdatedInfoDescription { get; private set; }                    = new PropertyNameUtf8("UpdatedInfoDescription");
         public static PropertyNameUtf8 UpdatedInfoOwnerEmail { get; private set; }                     = new PropertyNameUtf8("UpdatedInfoOwnerEmail");
         public static PropertyNameUtf8 WasCancelled { get; private set; }                              = new PropertyNameUtf8("WasCancelled");
