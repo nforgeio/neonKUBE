@@ -84,7 +84,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
-            return await StartWorkflowAsync(domain, typeof(TWorkflow).FullName, args, options);
+            return await StartWorkflowAsync(typeof(TWorkflow).FullName, domain, args, options);
         }
 
         /// <summary>
