@@ -1015,7 +1015,6 @@ namespace Neon.Cadence
                     case InternalMessageTypes.WorkflowInvokeRequest:
                     case InternalMessageTypes.WorkflowSignalInvokeRequest:
                     case InternalMessageTypes.WorkflowQueryInvokeRequest:
-                    case InternalMessageTypes.WorkflowMutableInvokeRequest:
                     case InternalMessageTypes.ActivityInvokeLocalRequest:
 
                         await WorkflowBase.OnProxyRequestAsync(this, request);

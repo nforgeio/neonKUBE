@@ -333,11 +333,6 @@ namespace Neon.Cadence
                     reply = await OnQueryAsync((WorkflowQueryRequest)request);
                     break;
 
-                case InternalMessageTypes.WorkflowMutableInvokeRequest:
-
-                    reply = await OnMutableInvokeAsync((WorkflowMutableInvokeRequest)request);
-                    break;
-
                 case InternalMessageTypes.ActivityInvokeLocalRequest:
 
                     reply = await OnInvokeLocalActivity(client, (ActivityInvokeLocalRequest)request);
@@ -602,56 +597,6 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Handles workflow mutable value lookups.
-        /// </summary>
-        /// <param name="request">The request message.</param>
-        /// <returns>The reply message.</returns>
-        internal static async Task<WorkflowMutableInvokeReply> OnMutableInvokeAsync(WorkflowMutableInvokeRequest request)
-        {
-            Covenant.Requires<ArgumentNullException>(request != null);
-
-            try
-            {
-                var workflow = GetWorkflow(request.ContextId);
-
-                if (workflow != null)
-                {
-                    Func<Task<byte[]>> getter;
-
-                    lock (syncLock)
-                    {
-                        if (!workflow.idToMutableFunc.TryGetValue(request.MutableId, out getter))
-                        {
-                            return new WorkflowMutableInvokeReply()
-                            {
-                                Error = new CadenceEntityNotExistsException($"Workflow mutable function callback does not exist for [mutableId={request.MutableId}].").ToCadenceError()
-                            };
-                        }
-                    }
-
-                    return new WorkflowMutableInvokeReply()
-                    {
-                        Result = await getter()
-                    };
-                }
-                else
-                {
-                    return new WorkflowMutableInvokeReply()
-                    {
-                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
-                    };
-                }
-            }
-            catch (Exception e)
-            {
-                return new WorkflowMutableInvokeReply()
-                {
-                    Error = new CadenceError(e)
-                };
-            }
-        }
-
-        /// <summary>
         /// Handles workflow local activity invocations.
         /// </summary>
         /// <param name="client">The client the request was received from.</param>
@@ -709,12 +654,11 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private long                                    contextId;
-        private WorkflowMethodMap                       methodMap;
-        private Dictionary<string, Func<Task<byte[]>>>  idToMutableFunc;
-        private Dictionary<long, Type>                  idToLocalActivityType;
-        private long                                    nextLocalActivityTypeId;
-        private bool                                    isDisconnected;
+        private long                        contextId;
+        private WorkflowMethodMap           methodMap;
+        private Dictionary<long, Type>      idToLocalActivityType;
+        private long                        nextLocalActivityTypeId;
+        private bool                        isDisconnected;
 
         /// <summary>
         /// Default constructor.
@@ -734,7 +678,6 @@ namespace Neon.Cadence
 
             this.Client                = client;
             this.contextId             = contextId;
-            this.idToMutableFunc       = new Dictionary<string, Func<Task<byte[]>>>();
             this.idToLocalActivityType = new Dictionary<long, Type>();
 
             // Generate the signal/query method map for the workflow type if we
@@ -1070,26 +1013,15 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mutableId));
             Covenant.Requires<ArgumentNullException>(getter != null);
 
-            // We're going to persist the getter function here, keyed
-            // by mutable ID so we'll be able to obtain it when the
-            // cadence-proxy sends us the [WorkflowMutableInvokeRequest].
-
-            lock (syncLock)
-            {
-                idToMutableFunc.Add(mutableId, getter);
-            }
+            var result = await getter();
 
             var reply = (WorkflowMutableReply)await Client.CallProxyAsync(
                 new WorkflowMutableRequest()
                 {
                     ContextId = this.contextId,
-                    MutableId = mutableId
+                    MutableId = mutableId,
+                    Result    = result
                 });
-
-            lock (syncLock)
-            {
-                idToMutableFunc.Remove(mutableId);
-            }
 
             reply.ThrowOnError();
 
