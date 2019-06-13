@@ -545,7 +545,6 @@ namespace Neon.Cadence
         private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
         private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>        workflowTypes = new Dictionary<string, Type>();
         private Dictionary<string, Type>        activityTypes = new Dictionary<string, Type>();
         private long                            nextRequestId = 0;
         private int                             proxyPort;
@@ -557,7 +556,7 @@ namespace Neon.Cadence
         private int                             workflowCacheSize;
         private Thread                          heartbeatThread;
         private Thread                          timeoutThread;
-        private Thread                          emulationThread;
+        private Task                            emulationTask;
 
         /// <summary>
         /// Constructor.
@@ -733,8 +732,7 @@ namespace Neon.Cadence
 
             if (settings.Emulate)
             {
-                emulationThread = new Thread(new ThreadStart(EmulationThread));
-                emulationThread.Start();
+                emulationTask = Task.Run(async () => await EmulationTaskAsync());
             }
         }
 
@@ -817,6 +815,11 @@ namespace Neon.Cadence
             {
                 timeoutThread.Join();
                 timeoutThread = null;
+            }
+
+            if (emulationTask != null)
+            {
+                emulationTask.Wait();
             }
 
             if (emulatedHost != null)
@@ -903,28 +906,6 @@ namespace Neon.Cadence
             // Signal the background threads that they need to exit.
 
             closingConnection = true;
-        }
-
-        /// <summary>
-        /// Returns the .NET type implementing the named Cadence workflow.
-        /// </summary>
-        /// <param name="workflowType">The Cadence workflow type string.</param>
-        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
-        internal Type GetWorkflowType(string workflowType)
-        {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
-
-            lock (syncLock)
-            {
-                if (workflowTypes.TryGetValue(workflowType, out var type))
-                {
-                    return type;
-                }
-                else
-                {
-                    return null;
-                }
-            }
         }
 
         /// <summary>

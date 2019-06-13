@@ -48,19 +48,76 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Workflow and Activity classes.
 
+        /// <summary>
+        /// <para>
+        /// A very simple workflow that accepts an optional UTF-8 encoded argument
+        /// string that controls what the workflow does:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>null</b></term>
+        ///     <description>
+        ///     Returns <b>workflow: Hello World!</b> encoded as UTF-8 directly from the workflow.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>"activity"</b></term>
+        ///     <description>
+        ///     Returns <b>activity: Hello World!</b> encoded as UTF-8 from a child activity.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>"local-activity"</b></term>
+        ///     <description>
+        ///     Returns <b>local-activity: Hello World!</b> encoded as UTF-8 from a <b>local</b> child activity.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>anything else</b></term>
+        ///     <description>
+        ///     Returns the string passed directly from the workflow.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </summary>
         private class HelloWorkflow : WorkflowBase
         {
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
+                string arg = null;
+
+                if (args != null)
+                {
+                    arg = Encoding.UTF8.GetString(args);
+                }
+
+                if (arg == null)
+                {
+                    return await Task.FromResult(Encoding.UTF8.GetBytes("workflow: Hello World!"));
+                }
+                else if (arg == "activity")
+                {
+                    return await CallActivityAsync<HelloActivity>(Encoding.UTF8.GetBytes("activity: Hello World!"));
+                }
+                else if (arg == "local-activity")
+                {
+                    return await CallLocalActivityAsync<HelloActivity>(Encoding.UTF8.GetBytes("local-activity: Hello World!"));
+                }
+                else
+                {
+                    return await Task.FromResult(Encoding.UTF8.GetBytes(arg));
+                }
             }
         }
 
+        /// <summary>
+        /// Test activity that returns the argument passed.
+        /// </summary>
         private class HelloActivity : ActivityBase
         {
-            protected override Task<byte[]> RunAsync(byte[] args)
+            protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                throw new NotImplementedException();
+                return await Task.FromResult(args);
             }
         }
 
@@ -81,8 +138,7 @@ namespace TestCadence
                 ProxyTimeout           = TimeSpan.FromSeconds(1),
                 //DebugHttpTimeout       = TimeSpan.FromSeconds(5),
                 DebugDisableHeartbeats = false,
-                DebugIgnoreTimeouts    = false,
-                Emulate      = false
+                DebugIgnoreTimeouts    = false
             };
 
             fixture.Start(settings);
@@ -227,7 +283,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_HelloWorld()
+        public async Task HelloWorld_Workflow()
         {
             Worker worker = null;
 
@@ -239,17 +295,107 @@ namespace TestCadence
 
                 await client.RegisterWorkflowAsync<HelloWorkflow>();
 
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain");
-                var result = await client.GetWorkflowResultAsync(workflowRun);
+                // Run a workflow passing NULL args.
+
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
-                Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
+                Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
+
+                // Run a workflow passing a string argument.
+
+                var args = Encoding.UTF8.GetBytes("custom args");
+
+                workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: args);
+                result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal(args, result);
             }
             finally
             {
                 if (worker != null)
                 {
                     await client.StopWorkerAsync(worker);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task HelloWorld_Activity()
+        {
+            Worker workflowWorker = null;
+            Worker activityWorker = null;
+
+            try
+            {
+                await client.RegisterDomainAsync("test-domain");
+
+                workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
+                activityWorker = await client.StartActivityWorkerAsync("test-domain");
+
+                await client.RegisterWorkflowAsync<HelloWorkflow>();
+
+                // Run a workflow that invokes an activity.
+
+                var args        = Encoding.UTF8.GetBytes("activity");
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("activity"));
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal(Encoding.UTF8.GetBytes("activity: Hello World!"), result);
+            }
+            finally
+            {
+                if (workflowWorker != null)
+                {
+                    await client.StopWorkerAsync(workflowWorker);
+                }
+
+                if (activityWorker != null)
+                {
+                    await client.StopWorkerAsync(activityWorker);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task HelloWorld_LocalActivity()
+        {
+            Worker workflowWorker = null;
+            Worker activityWorker = null;
+
+            try
+            {
+                await client.RegisterDomainAsync("test-domain");
+
+                workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
+                activityWorker = await client.StartWorkflowWorkerAsync("test-domain");
+
+                await client.RegisterWorkflowAsync<HelloWorkflow>();
+
+                // Run a workflow that invokes an activity.
+
+                var args        = Encoding.UTF8.GetBytes("local-activity");
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("local-activity"));
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal(Encoding.UTF8.GetBytes("local-activity: Hello World!"), result);
+            }
+            finally
+            {
+                if (workflowWorker != null)
+                {
+                    await client.StopWorkerAsync(workflowWorker);
+                }
+
+                if (activityWorker != null)
+                {
+                    await client.StopWorkerAsync(activityWorker);
                 }
             }
         }

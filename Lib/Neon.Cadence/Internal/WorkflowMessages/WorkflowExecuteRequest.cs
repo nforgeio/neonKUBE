@@ -94,10 +94,10 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteRequest)target;
 
-            typedTarget.Args    = this.Args;
-            typedTarget.Domain  = this.Domain;
-            typedTarget.Workflow    = this.Workflow;
-            typedTarget.Options = this.Options;
+            typedTarget.Args     = this.Args;
+            typedTarget.Domain   = this.Domain;
+            typedTarget.Workflow = this.Workflow;
+            typedTarget.Options  = this.Options;
         }
     }
 }

@@ -89,7 +89,7 @@ namespace Neon.Cadence
                 // registrations will happen infrequently (typically just once
                 // per service, when it starts).
 
-                worker = workers.Values.SingleOrDefault(w => w.IsWorkflow && w.Domain == domain && w.Tasklist == tasklist);
+                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == tasklist);
 
                 if (worker != null)
                 {
@@ -165,7 +165,7 @@ namespace Neon.Cadence
                 // registrations will happen infrequently (typically just once
                 // per service, when it starts).
 
-                worker = workers.Values.SingleOrDefault(w => !w.IsWorkflow && w.Domain == domain && w.Tasklist == tasklist);
+                worker = workers.Values.SingleOrDefault(wf => !wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == tasklist);
 
                 if (worker != null)
                 {

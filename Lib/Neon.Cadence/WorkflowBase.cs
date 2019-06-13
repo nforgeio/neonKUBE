@@ -282,6 +282,28 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the .NET type implementing the named Cadence workflow.
+        /// </summary>
+        /// <param name="workflowType">The Cadence workflow type string.</param>
+        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
+        private static Type GetWorkflowType(string workflowType)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowType != null);
+
+            lock (syncLock)
+            {
+                if (nameToWorkflowType.TryGetValue(workflowType, out var type))
+                {
+                    return type;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
         /// Called to handle a workflow related request message received from the cadence-proxy.
         /// </summary>
         /// <param name="client">The client that received the request.</param>
@@ -361,7 +383,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(request != null);
 
             WorkflowBase    workflow;
-            Type        workflowType;
+            Type            workflowType;
 
             var contextId = request.ContextId;
 
@@ -375,7 +397,7 @@ namespace Neon.Cadence
                     };
                 }
 
-                workflowType = client.GetWorkflowType(request.WorkflowType);
+                workflowType = GetWorkflowType(request.WorkflowType);
 
                 if (workflowType == null)
                 {

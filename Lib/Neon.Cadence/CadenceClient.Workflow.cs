@@ -121,7 +121,7 @@ namespace Neon.Cadence
                     Workflow = workflowTypeName,
                     Domain   = domain,
                     Args     = args,
-                    Options  = options.ToInternal()
+                    Options  = options?.ToInternal()
                 });
 
             reply.ThrowOnError();

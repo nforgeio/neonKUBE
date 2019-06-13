@@ -58,13 +58,47 @@ namespace Neon.Cadence
         /// </summary>
         private class EmulatedCadenceDomain
         {
-            public string       Name { get; set; }
-            public string       Description { get; set; }
-            public DomainStatus Status { get; set; }
-            public string       OwnerEmail { get; set; }
-            public string       Uuid { get; set; }
-            public bool         EmitMetrics { get; set; }
-            public int          RetentionDays { get; set; }
+            public string           Name { get; set; }
+            public string           Description { get; set; }
+            public DomainStatus     Status { get; set; }
+            public string           OwnerEmail { get; set; }
+            public string           Uuid { get; set; }
+            public bool             EmitMetrics { get; set; }
+            public int              RetentionDays { get; set; }
+        }
+
+        /// <summary>
+        /// Used to track emulated qworkflow queries.
+        /// </summary>
+        private struct EmulatedQuery
+        {
+            public EmulatedQuery(string queryName, byte[] args)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+
+                this.QueryName = queryName;
+                this.QueryArgs = args;
+            }
+
+            public string QueryName { get; private set; }
+            public byte[] QueryArgs { get; private set; }
+        }
+
+        /// <summary>
+        /// Used to track emulated workflow signals.
+        /// </summary>
+        private struct EmulatedSignal
+        {
+            public EmulatedSignal(string queryName, byte[] args)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+
+                this.SignalName = queryName;
+                this.SignalArgs = args;
+            }
+
+            public string SignalName { get; private set; }
+            public byte[] SignalArgs { get; private set; }
         }
 
         /// <summary>
@@ -93,6 +127,11 @@ namespace Neon.Cadence
             public string Domain { get; set; }
 
             /// <summary>
+            /// Identifies the tasklist hosting the workflow.
+            /// </summary>
+            public string TaskList { get; set; }
+
+            /// <summary>
             /// Identifies the workflow implementation to be started.
             /// </summary>
             public string Name { get; set; }
@@ -108,9 +147,19 @@ namespace Neon.Cadence
             public InternalStartWorkflowOptions Options { get; set; }
 
             /// <summary>
+            /// Identifies global vs. child workflows.
+            /// </summary>
+            public bool IsGlobal { get; set; }
+
+            /// <summary>
             /// Indicates when the workflow as completed execution.
             /// </summary>
             public bool IsComplete { get; set; }
+
+            /// <summary>
+            /// Indicates that the workflow has been canceled.
+            /// </summary>
+            public bool IsCanceled { get; set; }
 
             /// <summary>
             /// The workflow result or <c>null</c>.
@@ -128,16 +177,29 @@ namespace Neon.Cadence
             public Worker Worker { get; set; }
 
             /// <summary>
+            /// Raised when the workflow has completed.
+            /// </summary>
+            public AsyncManualResetEvent CompletedEvent { get; private set; } = new AsyncManualResetEvent();
+
+            /// <summary>
             /// The list of executing child workflows.
             /// </summary>
-            public List<EmulatedWorkflow> ChildWorkflows { get; set; } = new List<EmulatedWorkflow>();
+            public List<EmulatedWorkflow> ChildWorkflows { get; private set; } = new List<EmulatedWorkflow>();
 
             /// <summary>
             /// The list of executing child activities.
             /// </summary>
-            public List<EmulatedActivity> ChildActivities { get; set; } = new List<EmulatedActivity>();
+            public List<EmulatedActivity> ChildActivities { get; private set; } = new List<EmulatedActivity>();
 
-            // $todo(jeff.lill): Add queues for tracking pending signals and queries.
+            /// <summary>
+            /// Pending queries targeting the workflow.
+            /// </summary>
+            public Queue<EmulatedQuery> PendingQueries { get; private set; } = new Queue<EmulatedQuery>();
+
+            /// <summary>
+            /// Pending signals targeting the workflow.
+            /// </summary>
+            public Queue<EmulatedSignal> PendingSignals { get; private set; } = new Queue<EmulatedSignal>();
         }
 
         /// <summary>
@@ -172,22 +234,39 @@ namespace Neon.Cadence
             public long WorkerId { get; set; }
 
             /// <summary>
+            /// Indicates whether the worker handles workflows or activities.
+            /// </summary>
+            public bool IsWorkflow { get; set; }
+
+            /// <summary>
+            /// The worker domain.
+            /// </summary>
+            public string Domain { get; set; }
+
+            /// <summary>
+            /// The worker tasklist.
+            /// </summary>
+            public string TaskList { get; set; }
+
+            /// <summary>
             /// The workflows currently executing on the worker.
             /// </summary>
-            public List<EmulatedWorkflow> Workflows { get; set; } = new List<EmulatedWorkflow>();
+            public List<EmulatedWorkflow> Workflows { get; private set; } = new List<EmulatedWorkflow>();
 
             /// <summary>
             /// The activities currently executing on the worker.
             /// </summary>
-            public List<EmulatedActivity> Activities { get; set; } = new List<EmulatedActivity>();
+            public List<EmulatedActivity> Activities { get; private set; } = new List<EmulatedActivity>();
         }
 
         private AsyncMutex                                  emulationMutex           = new AsyncMutex();
         private Dictionary<string, EmulatedCadenceDomain>   emulatedDomains          = new Dictionary<string, EmulatedCadenceDomain>();
         private Dictionary<long, EmulatedWorker>            emulatedWorkers          = new Dictionary<long, EmulatedWorker>();
         private Dictionary<long, EmulatedWorkflow>          emulatedWorkflowContexts = new Dictionary<long, EmulatedWorkflow>();
+        private Dictionary<long, EmulatedActivity>          emulatedActivityContexts = new Dictionary<long, EmulatedActivity>();
         private Dictionary<string, EmulatedWorkflow>        emulatedWorkflows        = new Dictionary<string, EmulatedWorkflow>();
         private Dictionary<long, Operation>                 emulatedOperations       = new Dictionary<long, Operation>();
+        private List<EmulatedWorkflow>                      emulatedPendingWorkflows = new List<EmulatedWorkflow>();
         private long                                        nextEmulatedWorkerId     = 0;
         private long                                        nextEmulatedContextId    = 0;
         private IWebHost                                    emulatedHost;
@@ -424,6 +503,11 @@ namespace Neon.Cadence
                     await OnEmulatedWorkflowSetCacheSizeRequestAsync((WorkflowSetCacheSizeRequest)proxyMessage);
                     break;
 
+                case InternalMessageTypes.WorkflowGetResultRequest:
+
+                    await OnEmulatedWorkflowGetResultRequestAsync((WorkflowGetResultRequest)proxyMessage);
+                    break;
+
                 //-------------------------------------------------------------
 
                 default:
@@ -581,7 +665,13 @@ namespace Neon.Cadence
         private async Task OnEmulatedNewWorkerRequestAsync(NewWorkerRequest request)
         {
             var workerId = Interlocked.Increment(ref nextEmulatedWorkerId);
-            var worker   = new EmulatedWorker() { WorkerId = workerId };
+            var worker   = new EmulatedWorker()
+            {
+                WorkerId   = workerId,
+                IsWorkflow = request.IsWorkflow,
+                Domain     = request.Domain,
+                TaskList   = request.TaskList
+            };
 
             using (await emulationMutex.AcquireAsync())
             {
@@ -800,18 +890,23 @@ namespace Neon.Cadence
 
             var workflow = new EmulatedWorkflow()
             {
-                Id = request.Options.ID ?? Guid.NewGuid().ToString("D"),
-                ContextId  = contextId,
-                Args       = request.Args,
-                Domain     = request.Domain,
-                Name       = request.Workflow,
-                Options    = request.Options
+                Id        = request.Options?.ID ?? Guid.NewGuid().ToString("D"),
+                RunId     = Guid.NewGuid().ToString("D"),
+                ContextId = contextId,
+                Args      = request.Args,
+                Domain    = request.Domain,
+                TaskList  = request.Options?.TaskList,
+                Name      = request.Workflow,
+                Options   = request.Options,
+                IsGlobal  = true
             };
 
             using (await emulationMutex.AcquireAsync())
             {
-                emulatedWorkflowContexts.Add(contextId, workflow);
-                emulatedWorkflows.Add(workflow.Id, workflow);
+                // Add the workflow to the list of pending workflows so that
+                // the emulation thread can pick them up.
+
+                emulatedPendingWorkflows.Add(workflow);
             }
 
             await EmulatedLibraryClient.SendReplyAsync(request,
@@ -820,35 +915,7 @@ namespace Neon.Cadence
                     Execution = new InternalWorkflowExecution()
                     {
                         ID    = workflow.Id,
-                        RunID = workflow.Id
-                    }
-                });
-
-            // If we wanted to get fancy here, we'd have a queue with pending workflow
-            // executions and have a separate thread pick these up and invoke them
-            // only when a worker is registered for the domain and task list.
-            //
-            // But in keeping with our limited emulation goals, we're just going to
-            // kick off a task here to invoke the workflow.
-
-            _ = Task.Run(
-                async () =>
-                {
-                    var workflowInvokeRequest =
-                        new WorkflowInvokeRequest()
-                        {
-                            Args              = workflow.Args,
-                            Name              = workflow.Name,
-                            ContextId = workflow.ContextId
-                        };
-
-                    var workflowInvokeReply = (WorkflowInvokeReply)await CallClientAsync(workflowInvokeRequest);
-
-                    using (await emulationMutex.AcquireAsync())
-                    {
-                        workflow.Result     = workflowInvokeReply.Result;
-                        workflow.Error      = workflowInvokeReply.Error;
-                        workflow.IsComplete = true;
+                        RunID = workflow.RunId
                     }
                 });
         }
@@ -863,22 +930,91 @@ namespace Neon.Cadence
             await EmulatedLibraryClient.SendReplyAsync(request, new WorkflowSetCacheSizeReply());
         }
 
+        /// <summary>
+        /// Handles emulated <see cref="WorkflowGetResultRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The received message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task OnEmulatedWorkflowGetResultRequestAsync(WorkflowGetResultRequest request)
+        {
+            var workflow = await GetWorkflowAsync(request.RunId);
+
+            if (workflow == null)
+            {
+                await EmulatedLibraryClient.SendReplyAsync(request,
+                    new WorkflowGetResultReply()
+                    {
+                        Error = new CadenceEntityNotExistsException($"Workflow with [RunID={request.RunId}] does not exist.").ToCadenceError()
+                    });
+
+                return;
+            }
+
+            await workflow.CompletedEvent.WaitAsync();
+
+            await EmulatedLibraryClient.SendReplyAsync(request,
+                new WorkflowGetResultReply()
+                {
+                    Error  = workflow.Error,
+                    Result = workflow.Result
+                });
+        }
+
         //---------------------------------------------------------------------
         // Emulation implementation:
 
         /// <summary>
+        /// Fetches an executing or pending workflow by it's RunID.
+        /// </summary>
+        /// <param name="runId">The workflow RunID.</param>
+        /// <returns>The workflow or <c>null</c>.</returns>
+        private async Task<EmulatedWorkflow> GetWorkflowAsync(string runId)
+        {
+            using (await emulationMutex.AcquireAsync())
+            {
+                var workflow = emulatedWorkflows.Values.SingleOrDefault(wf => wf.RunId == runId);
+
+                if (workflow != null)
+                {
+                    return workflow;
+                }
+
+                return emulatedPendingWorkflows.SingleOrDefault(wf => wf.RunId == runId);
+            }
+        }
+
+        /// <summary>
+        /// Searches an emulated workflow worker for specified domain and tasklist.
+        /// </summary>
+        /// <param name="domain">The domain.</param>
+        /// <param name="tasklist">The tasklist.</param>
+        /// <returns>The <see cref="EmulatedWorker"/> or <c>null</c>.</returns>
+        private EmulatedWorker GetWorkflowWorker(string domain, string tasklist)
+        {
+            return emulatedWorkers.Values.SingleOrDefault(worker => worker.IsWorkflow && worker.Domain == domain && worker.TaskList == tasklist);
+        }
+
+        /// <summary>
         /// Handles emulation related background activities.
         /// </summary>
-        private void EmulationThread()
+        private async Task EmulationTaskAsync()
         {
-            var sleepTime = TimeSpan.FromSeconds(1);
+            var pollDelay = TimeSpan.FromMilliseconds(250);
 
             try
             {
                 while (!closingConnection)
                 {
-                    Thread.Sleep(sleepTime);
+                    using (await emulationMutex.AcquireAsync())
+                    {
+                        await Task.Delay(pollDelay);
+                        await ExecutePendingWorkflowsAsync();
+                    }
                 }
+
+                // Cancel all running workflows and activities.
+
+                await CancelRunningWorkflowsAsync();
             }
             catch (Exception e)
             {
@@ -891,6 +1027,117 @@ namespace Neon.Cadence
                     log.LogError(e);
                 }
             }
+        }
+
+        /// <summary>
+        /// Executes any pending workflows that also have a matching worker running.
+        /// </summary>
+        private async Task ExecutePendingWorkflowsAsync()
+        {
+            var startedWorkflows = new List<EmulatedWorkflow>();
+
+            foreach (var workflow in emulatedPendingWorkflows)
+            {
+                var worker = GetWorkflowWorker(workflow.Domain, workflow.TaskList);
+
+                if (worker != null)
+                {
+                    _ = Task.Run(
+                        async () =>
+                        {
+                            var workflowInvokeRequest =
+                                new WorkflowInvokeRequest()
+                                {
+                                    Args      = workflow.Args,
+                                    Name      = workflow.Name,
+                                    ContextId = workflow.ContextId
+                                };
+
+                            var workflowInvokeReply = (WorkflowInvokeReply)await CallClientAsync(workflowInvokeRequest);
+
+                            workflow.Result     = workflowInvokeReply.Result;
+                            workflow.Error      = workflowInvokeReply.Error;
+                            workflow.IsComplete = true;
+
+                            workflow.CompletedEvent.Set();
+                        });
+                }
+            }
+
+            foreach (var workflow in startedWorkflows)
+            {
+                emulatedPendingWorkflows.Remove(workflow);
+            }
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Cancels all running workflows.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CancelRunningWorkflowsAsync()
+        {
+            // Just go ahead and clear these.
+
+            emulatedPendingWorkflows.Clear();
+
+            // Cancel all running global workflows, recursively canceling and child workflows
+            // and activities.
+
+            foreach (var workflow in emulatedWorkflows.Values.Where(wf => wf.IsGlobal && !wf.IsComplete))
+            {
+                await CallClientAsync(
+                    new WorkflowTerminateRequest()
+                    {
+                        RunId      = workflow.RunId,
+                        WorkflowId = workflow.Id
+                    });
+
+                workflow.IsCanceled = true;
+                workflow.IsComplete = true;
+
+                workflow.CompletedEvent.Set();
+            }
+        }
+
+        /// <summary>
+        /// Cancels a workflow along with and decendant workflows and activities.
+        /// </summary>
+        /// <param name="workflow">The workflow being canceled.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CancelWorkflowAsync(EmulatedWorkflow workflow)
+        {
+            foreach (var childWorkflow in workflow.ChildWorkflows)
+            {
+                await CancelWorkflowAsync(childWorkflow);
+            }
+
+            workflow.ChildWorkflows.Clear();
+
+            foreach (var childActivity in workflow.ChildActivities)
+            {
+                await CancelActivityAsync(childActivity);
+            }
+
+            workflow.ChildActivities.Clear();
+        }
+
+        /// <summary>
+        /// Cancels an activity.
+        /// </summary>
+        /// <param name="activity">The activity being canceled.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CancelActivityAsync(EmulatedActivity activity)
+        {
+            await CallClientAsync(
+                new ActivityStoppingRequest()
+                {
+                    ContextId  = activity.ContextId,
+                    ActivityId = activity.Id
+                });
+
+            emulatedActivityContexts.Remove(activity.ContextId);
         }
     }
 }
