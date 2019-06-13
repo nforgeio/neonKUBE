@@ -332,13 +332,8 @@ namespace Neon.Cadence.Internal
         WorkflowSignalInvokeReply = 131,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior. 
-        /// The client will transmit a <see cref="WorkflowMutableInvokeRequest"/> message to the
-        /// proxy with a unique <c>MutableId</c>.  The proxy will call the GOLANG Cadence client's
-        /// <c>workflow.SideEffect()</c> function, passing it a function that when called,
-        /// sends a <see cref="WorkflowMutableInvokeRequest"/> back to the client including the
-        /// <c>MutableId</c> and then waits for a <see cref="WorkflowMutableInvokeReply"/>
-        /// and then returns the result from this reply back to Cadence.
+        /// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior
+        /// by including the mutable result being set.
         /// </summary>
         WorkflowMutableRequest = 132,
 
@@ -348,17 +343,14 @@ namespace Neon.Cadence.Internal
         WorkflowMutableReply = 133,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent by the proxy to the client the first time a mutable
-        /// operation is submitted a workflow instance.  The client will response with the
-        /// side effect value to be persisted in the workflow history and returned back to
-        /// the the .NET workflow application.
+        /// <b>UNUSED:</b> Available message ID.
         /// </summary>
-        WorkflowMutableInvokeRequest = 134,
+        UNUSED_0 = 134,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
+        /// <b>UNUSED:</b> Available message ID.
         /// </summary>
-        WorkflowMutableInvokeReply = 135,
+        UNUSED_1 = 135,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
@@ -473,14 +465,14 @@ namespace Neon.Cadence.Internal
         WorkflowCancelChildReply = 155,
 
         /// <summary>
-        /// Available message ID.
+        /// <b>UNUSED:</b> Available message ID.
         /// </summary>
-        UnusedRequest0 = 156,
+        UNUSED_2 = 156,
 
         /// <summary>
-        /// Available reply ID.
+        /// <b>UNUSED:</b> Available message ID..
         /// </summary>
-        unusedReply0 = 157,
+        UNUSED_3 = 157,
 
         /// <summary>
         /// <b>client --> proxy:</b> Registers a query handler by name.

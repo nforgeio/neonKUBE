@@ -1173,15 +1173,18 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ContextId);
                 Assert.Null(message.MutableId);
+                Assert.Null(message.Result);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.ContextId = 666;
                 message.MutableId = "my-mutable";
+                message.Result = new byte[] { 0, 1, 2, 3, 4 };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1193,6 +1196,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -1202,6 +1206,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1211,6 +1216,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
             }
         }
 
@@ -1251,122 +1257,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableReply>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the associated [cadence-proxy] and verify.
-
-                message = EchoToProxy(message);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowMutableInvokeRequest()
-        {
-            WorkflowMutableInvokeRequest message;
-
-            using (var stream = new MemoryStream())
-            {
-                message = new WorkflowMutableInvokeRequest();
-
-                Assert.Equal(InternalMessageTypes.WorkflowMutableInvokeReply, message.ReplyType);
-
-                // Empty message.
-
-                stream.SetLength(0);
-                stream.Write(message.SerializeAsBytes());
-                stream.Seek(0, SeekOrigin.Begin);
-
-                message = ProxyMessage.Deserialize<WorkflowMutableInvokeRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(0, message.RequestId);
-                Assert.Null(message.MutableId);
-
-                // Round-trip
-
-                message.RequestId = 555;
-                message.MutableId = "my-mutable";
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-mutable", message.MutableId);
-
-                stream.SetLength(0);
-                stream.Write(message.SerializeAsBytes());
-                stream.Seek(0, SeekOrigin.Begin);
-
-                message = ProxyMessage.Deserialize<WorkflowMutableInvokeRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-mutable", message.MutableId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-mutable", message.MutableId);
-
-                // Echo the message via the associated [cadence-proxy] and verify.
-
-                message = EchoToProxy(message);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-mutable", message.MutableId);
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowMutableInvokeReply()
-        {
-            WorkflowMutableInvokeReply message;
-
-            using (var stream = new MemoryStream())
-            {
-                message = new WorkflowMutableInvokeReply();
-
-                // Empty message.
-
-                stream.SetLength(0);
-                stream.Write(message.SerializeAsBytes());
-                stream.Seek(0, SeekOrigin.Begin);
-
-                message = ProxyMessage.Deserialize<WorkflowMutableInvokeReply>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(0, message.RequestId);
-                Assert.Null(message.Error);
-                Assert.Null(message.Result);
-
-                // Round-trip
-
-                message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
-                message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
-                message.Result = new byte[] { 0, 1, 2, 3, 4 };
-
-                stream.SetLength(0);
-                stream.Write(message.SerializeAsBytes());
-                stream.Seek(0, SeekOrigin.Begin);
-
-                message = ProxyMessage.Deserialize<WorkflowMutableInvokeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);

@@ -49,7 +49,7 @@ namespace Neon.Cadence
         /// Specifies the tasklist where this workflow will be scheduled.  This
         /// defaults to <b>"default"</b>.
         /// </summary>
-        public string TaskList { get; set; } = "default";
+        public string TaskList { get; set; } = CadenceClient.DefaultTaskList;
 
         /// <summary>
         /// Specifies the maximum time the workflow may run from start

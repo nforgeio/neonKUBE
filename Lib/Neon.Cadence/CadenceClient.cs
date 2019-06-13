@@ -231,6 +231,11 @@ namespace Neon.Cadence
         /// </summary>
         private const int debugClientPort = 5001;
 
+        /// <summary>
+        /// The default Cadence tasklist.
+        /// </summary>
+        internal const string DefaultTaskList = "default";
+
         //---------------------------------------------------------------------
         // Private types
 
@@ -1010,7 +1015,6 @@ namespace Neon.Cadence
                     case InternalMessageTypes.WorkflowInvokeRequest:
                     case InternalMessageTypes.WorkflowSignalInvokeRequest:
                     case InternalMessageTypes.WorkflowQueryInvokeRequest:
-                    case InternalMessageTypes.WorkflowMutableInvokeRequest:
                     case InternalMessageTypes.ActivityInvokeLocalRequest:
 
                         await WorkflowBase.OnProxyRequestAsync(this, request);

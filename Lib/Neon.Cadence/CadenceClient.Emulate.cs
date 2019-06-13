@@ -895,7 +895,7 @@ namespace Neon.Cadence
                 ContextId = contextId,
                 Args      = request.Args,
                 Domain    = request.Domain,
-                TaskList  = request.Options?.TaskList,
+                TaskList  = request.Options?.TaskList ?? CadenceClient.DefaultTaskList,
                 Name      = request.Workflow,
                 Options   = request.Options,
                 IsGlobal  = true
@@ -1042,6 +1042,8 @@ namespace Neon.Cadence
 
                 if (worker != null)
                 {
+                    startedWorkflows.Add(workflow);
+
                     _ = Task.Run(
                         async () =>
                         {
@@ -1066,6 +1068,7 @@ namespace Neon.Cadence
 
             foreach (var workflow in startedWorkflows)
             {
+                emulatedWorkflows.Add(workflow.RunId, workflow);
                 emulatedPendingWorkflows.Remove(workflow);
             }
 

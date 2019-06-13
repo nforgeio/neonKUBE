@@ -42,12 +42,21 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowMutableReply;
 
         /// <summary>
-        /// Identifies the mutable value to be returned.
+        /// Identifies the mutable value.
         /// </summary>
         public string MutableId
         {
             get => GetStringProperty(PropertyNames.MutableId);
             set => SetStringProperty(PropertyNames.MutableId, value);
+        }
+
+        /// <summary>
+        /// The mutable value to be returned.
+        /// </summary>
+        public byte[] Result
+        {
+            get => GetBytesProperty(PropertyNames.Result);
+            set => SetBytesProperty(PropertyNames.Result, value);
         }
 
         /// <inheritdoc/>
@@ -68,6 +77,7 @@ namespace Neon.Cadence.Internal
             var typedTarget = (WorkflowMutableRequest)target;
 
             typedTarget.MutableId = this.MutableId;
+            typedTarget.Result    = this.Result;
         }
     }
 }
