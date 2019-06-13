@@ -53,16 +53,16 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Specifies the maximum time the workflow may run from start
-        /// to finish.  This is required.
+        /// to finish.  This defaults to 365 days.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; set; }
+        public TimeSpan ExecutionStartToCloseTimeout { get; set; } = TimeSpan.FromDays(365);
 
         /// <summary>
         /// Op[tionally specifies the time out for processing decision task from the time the worker
         /// pulled this task.  If a decision task is lost, it is retried after this timeout.
         /// This defaults to <b>10 seconds</b>.
         /// </summary>
-        public TimeSpan DecisionTaskStartToCloseTimeout { get; set; }
+        public TimeSpan DecisionTaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.

@@ -80,12 +80,12 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        public async Task<WorkflowRun> StartWorkflowAsync<TWorkflow>(string domain, byte[] args = null, WorkflowOptions options = null)
+        public async Task<WorkflowRun> StartWorkflowAsync<TWorkflow>(string domain, WorkflowOptions options, byte[] args = null)
             where TWorkflow : WorkflowBase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
-            return await StartWorkflowAsync(typeof(TWorkflow).FullName, domain, args, options);
+            return await StartWorkflowAsync(typeof(TWorkflow).FullName, domain, options, args);
         }
 
         /// <summary>
@@ -111,9 +111,12 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        public async Task<WorkflowRun> StartWorkflowAsync(string workflowTypeName, string domain, byte[] args = null, WorkflowOptions options = null)
+        public async Task<WorkflowRun> StartWorkflowAsync(string workflowTypeName, string domain, WorkflowOptions options, byte[] args = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(options != null);
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(options.TaskList));
+            Covenant.Requires<ArgumentException>(options.ExecutionStartToCloseTimeout < TimeSpan.Zero);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
@@ -122,11 +125,8 @@ namespace Neon.Cadence
                     Workflow = workflowTypeName,
                     Domain   = domain,
                     Args     = args,
-                    //Options  = options?.ToInternal()
-
-                    // $debug(jack.burns): DELETE THIS!
-                    Options = new InternalStartWorkflowOptions() { TaskList = "default", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("60s").Ticks, DecisionTaskStartToCloseTimeout = GoTimeSpan.Parse("60s").Ticks }
-        });
+                    Options  = options.ToInternal()
+                });
 
             reply.ThrowOnError();
 

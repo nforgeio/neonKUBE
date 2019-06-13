@@ -97,7 +97,7 @@ namespace Neon.Cadence
     ///     code is currently running.  This includes things like environment variables,
     ///     the machine host name or IP address, local files, etc.  You should generally
     ///     use activities for this or obtain this indirectly state via
-    ///     <see cref="GetValueAsync(string, byte[])"/>.  Both of these mechanisms will 
+    ///     <see cref="GetValueAsync(string, byte[], bool)"/>.  Both of these mechanisms will 
     ///     ensure that Cadence can record the state in the workflow history so that it 
     ///     can be replayed if the workflow needs to be rescheduled.
     ///     </item>
@@ -105,7 +105,7 @@ namespace Neon.Cadence
     ///     Workflows should never obtain things like random numbers or UUIDs 
     ///     directly since these operations are implicitly are non-deterministic 
     ///     because they'll return different values every time.  You'll need to
-    ///     use  <see cref="GetValueAsync(string, byte[])"/> with a custom function 
+    ///     use  <see cref="GetValueAsync(string, byte[], bool)"/> with a custom function 
     ///     for these as well or use activities, to ensure that the results are recorded
     ///     in the workflow history.
     ///     </item>
@@ -138,13 +138,13 @@ namespace Neon.Cadence
     /// </item>
     /// <item>
     ///     <para>
-    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/>,
+    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/>,
     ///     passing an optional byte array as workflow arguments as well as optional workflow options.  
     ///     Global workflows have no parent, as opposed to child workflows that run in the context of 
     ///     another workflow (the parent).
     ///     </para>
     ///     <note>
-    ///     <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], WorkflowOptions)"/> returns immediately
+    ///     <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/> returns immediately
     ///     after the new workflow has been submitted to Cadence.  This method does not wait
     ///     for the workflow to finish.
     ///     </note>
@@ -802,7 +802,7 @@ namespace Neon.Cadence
         ///     code is currently running.  This includes things like environment variables,
         ///     the machine host name or IP address, local files, etc.  You should generally
         ///     use activities for this or obtain this indirectly state via
-        ///     <see cref="GetValueAsync(string, byte[])"/>.  Both of these mechanisms will
+        ///     <see cref="GetValueAsync(string, byte[], bool)"/>.  Both of these mechanisms will
         ///     ensure that Cadence can record the state in the workflow history so that it
         ///     can be replayed if the workflow needs to be rescheduled.
         ///     </item>
@@ -810,7 +810,7 @@ namespace Neon.Cadence
         ///     Workflows should never obtain things like random numbers or UUIDs 
         ///     directly since these operations are implicitly are non-deterministic 
         ///     because they'll return different values every time.  You'll need to
-        ///     use  <see cref="GetValueAsync(string, byte[])"/>
+        ///     use  <see cref="GetValueAsync(string, byte[], bool)"/>
         ///     with a custom function for these as well or use activities, to ensure
         ///     that the results are recorded in the workflow history.
         ///     </item>
