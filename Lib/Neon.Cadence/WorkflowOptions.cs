@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 
@@ -44,12 +45,6 @@ namespace Neon.Cadence
         /// to a generated UUID.
         /// </summary>
         public string ID { get; set; } = null;
-
-        /// <summary>
-        /// Specifies the tasklist where this workflow will be scheduled.  This
-        /// defaults to <b>"default"</b>.
-        /// </summary>
-        public string TaskList { get; set; } = CadenceClient.DefaultTaskList;
 
         /// <summary>
         /// Specifies the maximum time the workflow may run from start
@@ -90,18 +85,16 @@ namespace Neon.Cadence
         /// <summary>
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
+        /// <param name="tasklist">The target tasklist.</param>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
-        internal InternalStartWorkflowOptions ToInternal()
+        internal InternalStartWorkflowOptions ToInternal(string tasklist)
         {
-            if (string.IsNullOrEmpty(TaskList))
-            {
-                throw new ArgumentException($"[{nameof(TaskList)}] property is required.");
-            }
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
 
             return new InternalStartWorkflowOptions()
             {
                 ID                              = this.ID,
-                TaskList                        = this.TaskList,
+                TaskList                        = tasklist,
                 DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.DecisionTaskStartToCloseTimeout),
                 ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 RetryPolicy                     = this.RetryPolicy.ToInternal(),

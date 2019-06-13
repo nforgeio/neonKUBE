@@ -138,13 +138,13 @@ namespace Neon.Cadence
     /// </item>
     /// <item>
     ///     <para>
-    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/>,
+    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/>,
     ///     passing an optional byte array as workflow arguments as well as optional workflow options.  
     ///     Global workflows have no parent, as opposed to child workflows that run in the context of 
     ///     another workflow (the parent).
     ///     </para>
     ///     <note>
-    ///     <see cref="CadenceClient.StartWorkflowAsync(string, string, WorkflowOptions, byte[])"/> returns immediately
+    ///     <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/> returns immediately
     ///     after the new workflow has been submitted to Cadence.  This method does not wait
     ///     for the workflow to finish.
     ///     </note>
@@ -209,7 +209,7 @@ namespace Neon.Cadence
     ///     <para>
     ///     Workflow instances can be signalled when external events occur via the 
     ///     <see cref="CadenceClient.SignalWorkflowAsync(string, string, byte[], string)"/> or
-    ///     <see cref="CadenceClient.SignalWorkflowAsync(string, WorkflowOptions, string, byte[], byte[])"/>
+    ///     <see cref="CadenceClient.SignalWorkflowAsync(string, string, byte[], byte[], string, WorkflowOptions)"/>
     ///     methods.  Signals are identified by a string name and may include a byte
     ///     array payload.  Workflows receive signals by implementing a receive method
     ///     accepting a byte array payload parameter and tagging the method with a

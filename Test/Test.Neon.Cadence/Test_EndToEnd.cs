@@ -400,8 +400,7 @@ namespace TestCadence
 
                 // Run a workflow passing NULL args.
 
-                var options     = new WorkflowOptions() { TaskList = "default" };
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", options, args: null);
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -411,7 +410,7 @@ namespace TestCadence
 
                 var args = Encoding.UTF8.GetBytes("custom args");
 
-                workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", options, args: args);
+                workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: args);
                 result = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -444,9 +443,8 @@ namespace TestCadence
 
                 // Run a workflow that invokes an activity.
 
-                var options     = new WorkflowOptions() { TaskList = "default" };
                 var args        = Encoding.UTF8.GetBytes("activity");
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", options, args: Encoding.UTF8.GetBytes("activity"));
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("activity"));
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -484,9 +482,8 @@ namespace TestCadence
 
                 // Run a workflow that invokes an activity.
 
-                var options     = new WorkflowOptions() { TaskList = "default" };
                 var args        = Encoding.UTF8.GetBytes("local-activity");
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", options, args: Encoding.UTF8.GetBytes("local-activity"));
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("local-activity"));
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -523,8 +520,7 @@ namespace TestCadence
                 // Verify that non-mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var options     = new WorkflowOptions() { TaskList = "default" };
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", options, args: null);
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
 
                 await client.GetWorkflowResultAsync(workflowRun);
             }
@@ -554,8 +550,7 @@ namespace TestCadence
                 // Verify that mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var options     = new WorkflowOptions() { TaskList = "default" };
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", options, args: null);
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
 
                 await client.GetWorkflowResultAsync(workflowRun);
             }
