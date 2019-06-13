@@ -207,6 +207,6 @@ namespace Neon.Cadence
         /// HTTP requests made to the <b>cadence-proxy</b>.  This defaults to
         /// <b>5 seconds</b>.
         /// </summary>
-        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(5000);
     }
 }

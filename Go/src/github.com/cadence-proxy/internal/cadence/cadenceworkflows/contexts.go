@@ -52,7 +52,7 @@ type (
 	// and state while registering and executing cadence workflows
 	WorkflowContext struct {
 		ctx           workflow.Context
-		workflowFunc  func(ctx workflow.Context, input []byte) ([]byte, error)
+		workflowName  *string
 		cancelFunc    func()
 		childContexts *childContextsMap
 	}
@@ -112,18 +112,18 @@ func (wectx *WorkflowContext) SetContext(value workflow.Context) {
 	wectx.ctx = value
 }
 
-// GetWorkflowFunction gets a WorkflowContext's workflow function
+// GetWorkflowName gets a WorkflowContext's workflow function name
 //
-// returns func(ctx workflow.Context, input []byte) ([]byte, error) -> a cadence workflow function
-func (wectx *WorkflowContext) GetWorkflowFunction() func(ctx workflow.Context, input []byte) ([]byte, error) {
-	return wectx.workflowFunc
+// returns *string -> a cadence workflow function name
+func (wectx *WorkflowContext) GetWorkflowName() *string {
+	return wectx.workflowName
 }
 
-// SetWorkflowFunction sets a WorkflowContext's workflow function
+// SetWorkflowName sets a WorkflowContext's workflow function name
 //
-// param value func(ctx workflow.Context, input []byte) ([]byte, error) -> a cadence workflow function
-func (wectx *WorkflowContext) SetWorkflowFunction(value func(ctx workflow.Context, input []byte) ([]byte, error)) {
-	wectx.workflowFunc = value
+// param value *string -> a cadence workflow function name
+func (wectx *WorkflowContext) SetWorkflowName(value *string) {
+	wectx.workflowName = value
 }
 
 // GetCancelFunction gets a WorkflowContext's context cancel function

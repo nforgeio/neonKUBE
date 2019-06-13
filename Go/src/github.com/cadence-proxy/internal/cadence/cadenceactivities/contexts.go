@@ -53,7 +53,7 @@ type (
 	ActivityContext struct {
 		ctx          context.Context
 		workflowCtx  workflow.Context
-		activityFunc func(ctx context.Context, input []byte) ([]byte, error)
+		activityName *string
 		cancelFunc   func()
 	}
 )
@@ -139,18 +139,18 @@ func (actx *ActivityContext) SetWorkflowContext(value workflow.Context) {
 	actx.workflowCtx = value
 }
 
-// GetActivityFunction gets a ActivityContext's activity function
+// GetActivityName gets a ActivityContext's activity function name
 //
-// returns func(ctx context.Context, input []byte) ([]byte, error) -> a cadence activity function
-func (actx *ActivityContext) GetActivityFunction() func(ctx context.Context, input []byte) ([]byte, error) {
-	return actx.activityFunc
+// returns *string -> a cadence activity function name
+func (actx *ActivityContext) GetActivityName() *string {
+	return actx.activityName
 }
 
-// SetActivityFunction sets a ActivityContext's activity function
+// SetActivityName sets a ActivityContext's activity function name
 //
-// param value func(ctx context.Context, input []byte) ([]byte, error) -> a cadence activity function
-func (actx *ActivityContext) SetActivityFunction(value func(ctx context.Context, input []byte) ([]byte, error)) {
-	actx.activityFunc = value
+// param value *string -> a cadence activity function name
+func (actx *ActivityContext) SetActivityName(value *string) {
+	actx.activityName = value
 }
 
 // GetCancelFunction gets a ActivityContext's context cancel function

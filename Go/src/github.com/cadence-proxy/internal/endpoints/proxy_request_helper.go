@@ -674,21 +674,20 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 	}
 
 	// create a new worker using a configured CadenceClientHelper instance
-	worker := worker.New(clientHelper.Service,
-		*request.GetDomain(),
+	workerID := cadenceworkers.NextWorkerID()
+	worker, err := clientHelper.StartWorker(*request.GetDomain(),
 		*request.GetTaskList(),
 		*request.GetOptions(),
 	)
 
-	// put the worker and workerID from the new worker to the
-	// Workers map and then run the worker by calling Run() on it
-	workerID := cadenceworkers.Workers.Add(cadenceworkers.NextWorkerID(), worker)
-	err := worker.Start()
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()), workerID)
 
 		return reply
 	}
+
+	// put the worker and workerID from the new worker to the
+	workerID = cadenceworkers.Workers.Add(workerID, worker)
 
 	// build the reply
 	buildReply(reply, nil, workerID)
@@ -769,10 +768,12 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 
 	// create workflow function
 	contextID := cadenceworkflows.NextContextID()
+	workflowName := request.GetName()
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
 
 		// new WorkflowContext
 		wectx := cadenceworkflows.NewWorkflowContext(ctx)
+		wectx.SetWorkflowName(workflowName)
 
 		// set the WorkflowContext in WorkflowContexts
 		contextID = cadenceworkflows.WorkflowContexts.Add(contextID, wectx)
@@ -836,14 +837,10 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	}
 
 	// register the workflow
-	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *request.GetName()})
-
-	// set the workflow function in the WorkflowContexts map
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
-	wectx.SetWorkflowFunction(workflowFunc)
+	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *workflowName})
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Workflow Successfully Registered", zap.String("WorkflowName", *request.GetName()))
+	logger.Debug("Workflow Successfully Registered", zap.String("WorkflowName", *workflowName))
 
 	// build the reply
 	buildReply(reply, nil)
@@ -867,20 +864,13 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 		return reply
 	}
 
-	// build the cadence client using a configured CadenceClientHelper instance
-	client, err := clientHelper.Builder.BuildCadenceClient()
-	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
-
-		return reply
-	}
-
 	// create the context
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
-	workflowRun, err := client.ExecuteWorkflow(ctx,
+	workflowRun, err := clientHelper.ExecuteWorkflow(ctx,
+		*request.GetDomain(),
 		*request.GetOptions(),
 		*request.GetWorkflow(),
 		request.GetArgs(),
@@ -1265,23 +1255,21 @@ func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) 
 		return reply
 	}
 
-	// build the cadence client using a configured CadenceClientHelper instance
-	client, err := clientHelper.Builder.BuildCadenceClient()
-	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
-
-		return reply
-	}
-
 	// create the context to cancel the workflow
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
 	// call GetWorkflow
-	workflowRun := client.GetWorkflow(ctx,
+	workflowRun, err := clientHelper.GetWorkflow(ctx,
 		*request.GetWorkflowID(),
 		*request.GetRunID(),
 	)
+
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
+	}
 
 	// get the result of WorkflowRun
 	var result []byte
@@ -1967,10 +1955,12 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 
 	// define the activity function
 	contextID := cadenceactivities.NextContextID()
+	activityName := request.GetName()
 	activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 
 		// create an activity context entry in the ActivityContexts map
 		actx := cadenceactivities.NewActivityContext(ctx)
+		actx.SetActivityName(activityName)
 
 		// add the context to ActivityContexts
 		contextID = cadenceactivities.ActivityContexts.Add(contextID, actx)
@@ -2055,14 +2045,10 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 	}
 
 	// register the activity
-	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *request.GetName()})
-
-	// set the activity function in the WorkflowContexts map
-	actx := cadenceactivities.ActivityContexts.Get(contextID)
-	actx.SetActivityFunction(activityFunc)
+	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *activityName})
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *request.GetName()))
+	logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *activityName))
 	buildReply(reply, nil)
 
 	return reply
