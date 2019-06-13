@@ -258,7 +258,7 @@ namespace Neon.Cadence
 
         private static object                               syncLock           = new object();
         private static INeonLogger                          log                = LogManager.Default.GetLogger<WorkflowBase>();
-        private static SemanticVersion                      zeroVersion        = new SemanticVersion();
+        private static SemanticVersion                      zeroVersion        = SemanticVersion.Create(0);
         private static Dictionary<string, Type>             nameToWorkflowType = new Dictionary<string, Type>();
         private static Dictionary<long, WorkflowBase>       idToWorkflow       = new Dictionary<long, WorkflowBase>();
         private static Dictionary<Type, WorkflowMethodMap>  typeToMethodMap    = new Dictionary<Type, WorkflowMethodMap>();
