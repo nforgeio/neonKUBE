@@ -798,8 +798,8 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, workflowInvokeRequest)
 		future, settable := workflow.NewFuture(ctx)
+		op := NewOperation(requestID, workflowInvokeRequest)
 		op.SetFuture(future)
 		op.SetSettable(settable)
 		op.SetContextID(contextID)
@@ -1080,8 +1080,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	}
 
 	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1089,53 +1088,8 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	}
 
 	// f function for workflow.MutableSideEffect
-	mutableID := request.GetMutableID()
 	mutableFunc := func(ctx workflow.Context) interface{} {
-
-		// create the workflowMutableRequest
-		requestID := NextRequestID()
-		workflowMutableInvokeRequest := messages.NewWorkflowMutableInvokeRequest()
-		workflowMutableInvokeRequest.SetRequestID(requestID)
-		workflowMutableInvokeRequest.SetContextID(contextID)
-		workflowMutableInvokeRequest.SetMutableID(mutableID)
-
-		// create the Operation for this request and add it to the operations map
-		future, settable := workflow.NewFuture(ctx)
-		op := NewOperation(workflowMutableInvokeRequest.GetRequestID(), workflowMutableInvokeRequest)
-		op.SetFuture(future)
-		op.SetSettable(settable)
-		op.SetContextID(contextID)
-		Operations.Add(requestID, op)
-
-		// create the worklfow Go routine
-		f := func(ctx workflow.Context) {
-
-			// send the request to the Neon.Cadence Lib client
-			// send the WorkflowInvokeRequest
-			resp, err := putToNeonCadenceClient(workflowMutableInvokeRequest)
-			if err != nil {
-				panic(err)
-			}
-			defer func() {
-
-				// $debug(jack.burns): DELETE THIS!
-				err := resp.Body.Close()
-				if err != nil {
-					logger.Error("could not close response body", zap.Error(err))
-				}
-			}()
-		}
-
-		// send the request to the Neon.Cadence client
-		workflow.Go(ctx, f)
-
-		// wait for the future to be unblocked
-		var result []byte
-		if err := future.Get(ctx, &result); err != nil {
-			return err
-		}
-
-		return result
+		return request.GetResult()
 	}
 
 	// the equals function for workflow.MutableSideEffect
@@ -1165,7 +1119,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 	// execute the cadence server SideEffectMutable call
 	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(),
-		*mutableID,
+		*request.GetMutableID(),
 		mutableFunc,
 		equals,
 	)
@@ -1184,14 +1138,14 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 		// check if the result is a cadenceerrors.CadenceError or
 		// a []byte result
-		if v, ok := result.(*cadenceerrors.CadenceError); ok {
-			buildReply(reply, v)
-		} else if v, ok := result.([]byte); ok {
-			buildReply(reply, nil, v)
+		switch s := result.(type) {
+		case *cadenceerrors.CadenceError:
+			buildReply(reply, s)
+		case []byte:
+			buildReply(reply, nil, s)
+		default:
+			buildReply(reply, cadenceerrors.NewCadenceError("no value was returned by the mutable sideffect call"))
 		}
-
-	} else {
-		buildReply(reply, cadenceerrors.NewCadenceError("no value was returned by the mutable sideffect call"))
 	}
 
 	return reply
@@ -2034,13 +1988,16 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 
 		// wait for ActivityInvokeReply
 		result := <-invokeReplyChannel
-		if v, ok := result.(error); ok {
-			return nil, v
-		} else if v, ok := result.([]byte); ok {
-			return v, nil
-		} else {
-			err := fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(result))
-			return nil, err
+
+		// check if the result is an or
+		// a []byte result
+		switch s := result.(type) {
+		case error:
+			return nil, s
+		case []byte:
+			return s, nil
+		default:
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
 		}
 	}
 

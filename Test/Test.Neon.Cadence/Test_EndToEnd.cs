@@ -132,12 +132,12 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DebugPrelaunched       = false,
+                DebugPrelaunched       = true,
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
-                ProxyTimeout           = TimeSpan.FromSeconds(1),
+                ProxyTimeout           = TimeSpan.FromSeconds(100),
                 //DebugHttpTimeout       = TimeSpan.FromSeconds(5),
-                DebugDisableHeartbeats = false,
+                DebugDisableHeartbeats = true,
                 DebugIgnoreTimeouts    = false
             };
 
@@ -303,15 +303,16 @@ namespace TestCadence
                 Assert.NotNull(result);
                 Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
 
-                // Run a workflow passing a string argument.
+                // $debug(jack.burns): DELETE THIS!
+                //// Run a workflow passing a string argument.
 
-                var args = Encoding.UTF8.GetBytes("custom args");
+                //var args = Encoding.UTF8.GetBytes("custom args");
 
-                workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: args);
-                result      = await client.GetWorkflowResultAsync(workflowRun);
+                //workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: args);
+                //result      = await client.GetWorkflowResultAsync(workflowRun);
 
-                Assert.NotNull(result);
-                Assert.Equal(args, result);
+                //Assert.NotNull(result);
+                //Assert.Equal(args, result);
             }
             finally
             {

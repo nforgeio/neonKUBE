@@ -164,12 +164,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowMutableReply(v, cadenceError, value)
 		}
 
-	// WorkflowMutableInvokeReply
-	case messagetypes.WorkflowMutableInvokeReply:
-		if v, ok := reply.(*messages.WorkflowMutableInvokeReply); ok {
-			buildWorkflowMutableInvokeReply(v, cadenceError, value)
-		}
-
 	// WorkflowTerminateReply
 	case messagetypes.WorkflowTerminateReply:
 		if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
@@ -479,16 +473,6 @@ func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *c
 }
 
 func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
-	reply.SetError(cadenceError)
-
-	if len(result) > 0 {
-		if v, ok := result[0].([]byte); ok {
-			reply.SetResult(v)
-		}
-	}
-}
-
-func buildWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
