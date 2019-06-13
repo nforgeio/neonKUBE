@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Time;
 
 namespace Neon.Cadence
 {
@@ -84,7 +85,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
-            return await StartWorkflowAsync(domain, typeof(TWorkflow).FullName, args, options);
+            return await StartWorkflowAsync(typeof(TWorkflow).FullName, domain, args, options);
         }
 
         /// <summary>
@@ -121,8 +122,11 @@ namespace Neon.Cadence
                     Workflow = workflowTypeName,
                     Domain   = domain,
                     Args     = args,
-                    Options  = options?.ToInternal()
-                });
+                    //Options  = options?.ToInternal()
+
+                    // $debug(jack.burns): DELETE THIS!
+                    Options = new InternalStartWorkflowOptions() { TaskList = "default", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("60s").Ticks, DecisionTaskStartToCloseTimeout = GoTimeSpan.Parse("60s").Ticks }
+        });
 
             reply.ThrowOnError();
 

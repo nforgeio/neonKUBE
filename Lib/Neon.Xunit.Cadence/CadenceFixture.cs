@@ -131,6 +131,8 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
+
+                // $debug(jack.burns): DELETE THIS!
                 //base.StartAsComposed(name, image,
                 //    new string[]
                 //    {

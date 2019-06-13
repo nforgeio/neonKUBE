@@ -68,6 +68,23 @@ func (request *WorkflowMutableRequest) SetMutableID(value *string) {
 	request.SetStringProperty("MutableId", value)
 }
 
+// GetResult gets a WorkflowMutableRequest's Result value
+// from its properties map. The result of the mutable value to be set.
+//
+// returns []byte -> the result encoded as a []byte
+// of a WorkflowMutableRequest's Result
+func (request *WorkflowMutableRequest) GetResult() []byte {
+	return request.GetBytesProperty("Result")
+}
+
+// SetResult sets an WorkflowMutableRequest's Result value
+// in its properties map. The result of the mutable value to be set.
+//
+// param value []byte -> the result encoded as a []byte
+func (request *WorkflowMutableRequest) SetResult(value []byte) {
+	request.SetBytesProperty("Result", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -85,5 +102,6 @@ func (request *WorkflowMutableRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowMutableRequest); ok {
 		v.SetMutableID(request.GetMutableID())
+		v.SetResult(request.GetResult())
 	}
 }

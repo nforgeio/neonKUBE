@@ -176,12 +176,6 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleWorkflowMutableReply(v)
 		}
 
-	// WorkflowMutableInvokeReply
-	case messagetypes.WorkflowMutableInvokeReply:
-		if v, ok := reply.(*messages.WorkflowMutableInvokeReply); ok {
-			err = handleWorkflowMutableInvokeReply(v)
-		}
-
 	// WorkflowHasLastResultReply
 	case messagetypes.WorkflowHasLastResultReply:
 		if v, ok := reply.(*messages.WorkflowHasLastResultReply); ok {
@@ -564,36 +558,6 @@ func handleWorkflowMutableReply(reply *messages.WorkflowMutableReply) error {
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Error handling WorkflowMutableReply", zap.Error(err))
 	return err
-}
-
-func handleWorkflowMutableInvokeReply(reply *messages.WorkflowMutableInvokeReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowMutableInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
-	requestID := reply.GetRequestID()
-	defer Operations.Remove(requestID)
-
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return errEntityNotExist
-	}
-
-	// WorkflowContext at the specified WorflowContextID
-	if wectx := cadenceworkflows.WorkflowContexts.Get(op.GetContextID()); wectx == nil {
-		return errEntityNotExist
-	}
-
-	// set the reply
-	err := op.SetReply(reply.GetResult(), reply.GetError())
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func handleWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply) error {
