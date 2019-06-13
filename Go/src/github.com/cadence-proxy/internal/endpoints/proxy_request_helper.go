@@ -1139,8 +1139,6 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		// check if the result is a cadenceerrors.CadenceError or
 		// a []byte result
 		switch s := result.(type) {
-		case *cadenceerrors.CadenceError:
-			buildReply(reply, s)
 		case []byte:
 			buildReply(reply, nil, s)
 		default:

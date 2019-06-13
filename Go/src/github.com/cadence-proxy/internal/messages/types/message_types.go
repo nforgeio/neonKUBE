@@ -324,13 +324,8 @@ const (
 	WorkflowSignalInvokeReply MessageType = 131
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior.
-	/// The client will transmit a <see cref="WorkflowMutableInvokeRequest"/> message to the
-	/// proxy with a unique <c>MutableId</c>.  The proxy will call the GOLANG Cadence client's
-	/// <c>workflow.SideEffect()</c> function passing it a function that when called
-	/// sends a <see cref="WorkflowMutableInvokeRequest"/> back to the client including the
-	/// <c>MutableId</c> and then waits for a <see cref="WorkflowMutableInvokeReply"/>
-	/// and then returns the result from this reply back to Cadence.
+	/// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior
+	/// by including the mutable result being set.
 	/// </summary>
 	WorkflowMutableRequest MessageType = 132
 
@@ -340,17 +335,14 @@ const (
 	WorkflowMutableReply MessageType = 133
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent by the proxy to the client the first time a mutable
-	/// operation is submitted a workflow instance.  The client will response with the
-	/// side effect value to be persisted in the workflow history and returned back to
-	/// the the .NET workflow application.
+	/// <b>UNUSED:</b> Available message ID.
 	/// </summary>
-	WorkflowMutableInvokeRequest MessageType = 134
+	UNUSED_0 MessageType = 134
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowMutableInvokeRequest"/> message.
+	/// <b>UNUSED:</b> Available message ID.
 	/// </summary>
-	WorkflowMutableInvokeReply MessageType = 135
+	UNUSED_1 MessageType = 135
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
@@ -465,14 +457,14 @@ const (
 	WorkflowCancelChildReply MessageType = 155
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Registers a signal handler by name.
+	/// <b>UNUSED:</b> Available message ID.
 	/// </summary>
-	WorkflowSetSignalHandlerRequest MessageType = 156
+	UNUSED_2 MessageType = 156
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowSetSignalHandlerRequest"/> message.
+	/// <b>UNUSED:</b> Available message ID..
 	/// </summary>
-	WorkflowSetSignalHandlerReply MessageType = 157
+	UNUSED_3 MessageType = 157
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Registers a query handler by name.
