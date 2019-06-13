@@ -97,18 +97,17 @@ namespace Neon.Cadence
     ///     code is currently running.  This includes things like environment variables,
     ///     the machine host name or IP address, local files, etc.  You should generally
     ///     use activities for this or obtain this indirectly state via
-    ///     <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>.  Both of
-    ///     these mechanisms will ensure that Cadence can record the state in the
-    ///     workflow history so that it can be replayed if the workflow needs to
-    ///     be rescheduled.
+    ///     <see cref="GetValueAsync(string, byte[])"/>.  Both of these mechanisms will 
+    ///     ensure that Cadence can record the state in the workflow history so that it 
+    ///     can be replayed if the workflow needs to be rescheduled.
     ///     </item>
     ///     <item>
     ///     Workflows should never obtain things like random numbers or UUIDs 
     ///     directly since these operations are implicitly are non-deterministic 
     ///     because they'll return different values every time.  You'll need to
-    ///     use  <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>
-    ///     with a custom function for these as well or use activities, to ensure
-    ///     that the results are recorded in the workflow history.
+    ///     use  <see cref="GetValueAsync(string, byte[])"/> with a custom function 
+    ///     for these as well or use activities, to ensure that the results are recorded
+    ///     in the workflow history.
     ///     </item>
     ///     <item>
     ///     Workflows should never call <see cref="Thread.Sleep(TimeSpan)"/> or 
@@ -422,13 +421,8 @@ namespace Neon.Cadence
             // This will give upgraded workflow implementations a chance to implement 
             // backwards compatibility for workflows already in flight.
 
-            var versionBytes = await workflow.GetMutableValueAsync("neon:original-version",
-                async () =>
-                {
-                    var version = workflow.Version ?? zeroVersion;
-
-                    return await Task.FromResult(Encoding.UTF8.GetBytes(version.ToString()));
-                });
+            var version      = workflow.Version ?? zeroVersion;
+            var versionBytes = await workflow.GetValueAsync("neon:original-version", Encoding.UTF8.GetBytes(version.ToString()));
 
             workflow.OriginalVersion = SemanticVersion.Parse(Encoding.UTF8.GetString(versionBytes));
 
@@ -808,16 +802,15 @@ namespace Neon.Cadence
         ///     code is currently running.  This includes things like environment variables,
         ///     the machine host name or IP address, local files, etc.  You should generally
         ///     use activities for this or obtain this indirectly state via
-        ///     <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>.  Both of
-        ///     these mechanisms will ensure that Cadence can record the state in the
-        ///     workflow history so that it can be replayed if the workflow needs to
-        ///     be rescheduled.
+        ///     <see cref="GetValueAsync(string, byte[])"/>.  Both of these mechanisms will
+        ///     ensure that Cadence can record the state in the workflow history so that it
+        ///     can be replayed if the workflow needs to be rescheduled.
         ///     </item>
         ///     <item>
         ///     Workflows should never obtain things like random numbers or UUIDs 
         ///     directly since these operations are implicitly are non-deterministic 
         ///     because they'll return different values every time.  You'll need to
-        ///     use  <see cref="GetMutableValueAsync(string, Func{Task{byte[]}})"/>
+        ///     use  <see cref="GetValueAsync(string, byte[])"/>
         ///     with a custom function for these as well or use activities, to ensure
         ///     that the results are recorded in the workflow history.
         ///     </item>
@@ -969,15 +962,14 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Use this when your workflow needs to obtain an external value that 
-        /// may change at runtime.  When a workflow executes this for the first
-        /// time, the <paramref name="getter"/> function will be called to
-        /// fetch the value and persist it to the workflow history.  When
-        /// the workflow is being replayed, the value from the history
-        /// will be returned rather than calling the function again.
+        /// Use this when your workflow needs to obtain a value that 
+        /// may change at runtime.  You'll pass a string identifying the
+        /// value along with the current value and the method will return
+        /// the first value set for the value identifier during the workflow
+        /// execution.
         /// </summary>
-        /// <param name="mutableId">Identifies the mutable value.</param>
-        /// <param name="getter">The value retrival function.</param>
+        /// <param name="valueId">Identifies the value.</param>
+        /// <param name="value">The value encoded as a byte array or <c>null</c>.</param>
         /// <returns>The requested value as a byte array or <c>null</c>.</returns>
         /// <remarks>
         /// <para>
@@ -989,38 +981,34 @@ namespace Neon.Cadence
         /// <para>
         /// For example, a workflow step may require a random number
         /// when making a decision.  In this case, the workflow would
-        /// call <see cref="GetMutableValueAsync"/>, passing a function
-        /// that generates a random number.
+        /// call <see cref="GetValueAsync"/>, passing the generated
+        /// random number.
         /// </para>
         /// <para>
-        /// The first time the step is executed, the function will be called,
-        /// a random number would be returned, be persisted to the history,
-        /// and then to the workflow implementation which would use the 
-        /// value when making a decision.  Then, if the workflow needs
-        /// to be replayed, and this step is reached, the random number
-        /// will be returned from the history rather than calling the 
-        /// function again.  This ensures that the original random number
-        /// would be returned resulting in the same decision being made
-        /// during the replay.
+        /// The first time the step is executed, the random value passed will
+        /// be persisted to the workflow history and also returned by
+        /// <see cref="GetValueAsync(string, byte[])"/>.  Then, 
+        /// if the workflow needs to be replayed or this method is called later on
+        /// during workflow execution the random number will be returned from
+        /// the history rather than using the new value passed.  This ensures 
+        /// that the original random number would be returned resulting in the
+        /// same decision being made during the replay.
         /// </para>
         /// </remarks>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> GetMutableValueAsync(string mutableId, Func<Task<byte[]>> getter)
+        protected async Task<byte[]> GetValueAsync(string valueId, byte[] value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mutableId));
-            Covenant.Requires<ArgumentNullException>(getter != null);
-
-            var result = await getter();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(valueId));
 
             var reply = (WorkflowMutableReply)await Client.CallProxyAsync(
                 new WorkflowMutableRequest()
                 {
                     ContextId = this.contextId,
-                    MutableId = mutableId,
-                    Result    = result
+                    MutableId = valueId,
+                    Result    = value
                 });
 
             reply.ThrowOnError();
