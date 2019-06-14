@@ -1187,8 +1187,7 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine($"    //-------------------------------------------------------------------------");
-            writer.WriteLine($"    // From: {dataModel.SourceType.FullName}");
-            writer.WriteLine();
+            writer.WriteLine($"    // From: {dataModel.SourceType.Namespace}.{ResolveTypeReference(dataModel.SourceType)}"); writer.WriteLine();
 
             if (dataModel.IsEnum)
             {
@@ -2241,7 +2240,7 @@ namespace Neon.CodeGen
 
             foreach (var serviceModel in serviceModels)
             {
-                writer.WriteLine($"    // From: {serviceModel.SourceType.FullName}");
+                writer.WriteLine($"    // From: {serviceModel.SourceType.Namespace}.{ResolveTypeReference(serviceModel.SourceType)}");
             }
 
             writer.WriteLine();

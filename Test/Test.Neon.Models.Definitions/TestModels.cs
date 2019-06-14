@@ -342,4 +342,48 @@ namespace Test.Neon.Models.Definitions
         [Route]
         void Hello();
     }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [Target("Default")]
+    [ServiceModel(name: "Composed", group: "User")]
+    [Route("/api/v1/user")]
+    public interface ComposedUserController
+    {
+        [HttpGet]
+        [Route("{id}")]
+        string Get(int id);
+
+        [HttpGet]
+        string[] List();
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [Target("Default")]
+    [ServiceModel(name: "Composed", group: "Delivery")]
+    [Route("/api/v1/delivery")]
+    public interface ComposedDeliveryController
+    {
+        [HttpGet]
+        [Route("{id}")]
+        string Get(int id);
+
+        [HttpGet]
+        string[] List();
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [Target("Default")]
+    [ServiceModel(name: "Composed")]
+    [Route("/api/v1")]
+    public interface ComposedController
+    {
+        [HttpGet]
+        string GetVersion();
+    }
 }
