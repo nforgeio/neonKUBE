@@ -441,6 +441,7 @@ namespace TestCadence
                 activityWorker = await client.StartActivityWorkerAsync("test-domain");
 
                 await client.RegisterWorkflowAsync<HelloWorkflow>();
+                await client.RegisterActivityAsync<HelloActivity>();
 
                 // Run a workflow that invokes an activity.
 

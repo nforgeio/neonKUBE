@@ -798,51 +798,44 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
 		// create the Operation for this request and add it to the operations map
-		future, settable := workflow.NewFuture(ctx)
 		op := NewOperation(requestID, workflowInvokeRequest)
-		op.SetFuture(future)
-		op.SetSettable(settable)
+		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
-		// create the workflow go routine
-		f := func(ctx workflow.Context) {
+		// send the WorkflowInvokeRequest
+		resp, err := putToNeonCadenceClient(workflowInvokeRequest)
+		if err != nil {
+			panic(err)
+		}
+		defer func() {
 
-			// send the WorkflowInvokeRequest
-			resp, err := putToNeonCadenceClient(workflowInvokeRequest)
+			// $debug(jack.burns): DELETE THIS!
+			err := resp.Body.Close()
 			if err != nil {
-				panic(err)
+				logger.Error("could not close response body", zap.Error(err))
 			}
-			defer func() {
+		}()
 
-				// $debug(jack.burns): DELETE THIS!
-				err := resp.Body.Close()
-				if err != nil {
-					logger.Error("could not close response body", zap.Error(err))
-				}
-			}()
+		// check if the result is an or
+		// a []byte result
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+		case error:
+			return nil, s
+		case []byte:
+			return s, nil
+		default:
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
 		}
-
-		// send the request to the Neon.Cadence client
-		// with a workflow go routine
-		workflow.Go(ctx, f)
-
-		// wait for the future to be unblocked
-		var result []byte
-		if err := future.Get(ctx, &result); err != nil {
-			return nil, err
-		}
-
-		return result, nil
 	}
 
 	// register the workflow
 	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *workflowName})
 
+	// build the reply
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Workflow Successfully Registered", zap.String("WorkflowName", *workflowName))
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
@@ -1918,6 +1911,7 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 		activityInvokeRequest.SetRequestID(requestID)
 		activityInvokeRequest.SetArgs(input)
 		activityInvokeRequest.SetContextID(contextID)
+		activityInvokeRequest.SetActivity(request.GetName())
 
 		// create the Operation for this request and add it to the operations map
 		invokeReplyChannel := make(chan interface{})
@@ -1979,10 +1973,7 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 		go f(activityInvokeRequest)
 
 		// wait for ActivityInvokeReply
-		result := <-invokeReplyChannel
-
-		// check if the result is an or
-		// a []byte result
+		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:
 			return nil, s
@@ -2034,11 +2025,8 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), *opts)
 
 	// execute the activity
-	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
-
-	// wait for the future to be unblocked
 	var result []byte
-	if err := future.Get(ctx, &result); err != nil {
+	if err := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs()).Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
