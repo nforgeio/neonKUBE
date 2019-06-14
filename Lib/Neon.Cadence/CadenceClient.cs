@@ -236,6 +236,12 @@ namespace Neon.Cadence
         /// </summary>
         internal const string DefaultTaskList = "default";
 
+        /// <summary>
+        /// The default Cadence timeout used for workflow and activity timeouts that don't
+        /// have Cadence supplied values.
+        /// </summary>
+        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromDays(365);
+
         //---------------------------------------------------------------------
         // Private types
 

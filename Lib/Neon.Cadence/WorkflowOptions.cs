@@ -50,7 +50,7 @@ namespace Neon.Cadence
         /// Specifies the maximum time the workflow may run from start
         /// to finish.  This defaults to 365 days.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; set; } = TimeSpan.FromDays(365);
+        public TimeSpan ExecutionStartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
         /// <summary>
         /// Op[tionally specifies the time out for processing decision task from the time the worker
@@ -97,7 +97,7 @@ namespace Neon.Cadence
                 TaskList                        = tasklist,
                 DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.DecisionTaskStartToCloseTimeout),
                 ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
-                RetryPolicy                     = this.RetryPolicy.ToInternal(),
+                RetryPolicy                     = this.RetryPolicy?.ToInternal(),
                 WorkflowIdReusePolicy           = (int)this.WorkflowIdReusePolicy,
                 CronSchedule                    = this.CronSchedule.ToInternal(),
                 Memo                            = this.Memo

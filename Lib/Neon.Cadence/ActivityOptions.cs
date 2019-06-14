@@ -46,14 +46,15 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Specifies the maximum time the activity be queued, waiting to be scheduled
-        /// on a worker.  This is required.
+        /// on a worker.  This defaults to 365 days.
         /// </summary>
-        public TimeSpan ScheduleToStartTimeout { get; set; }
+        public TimeSpan ScheduleToStartTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
         /// <summary>
-        /// Specifies the maximum time the activity may take to run.  This is is required.
+        /// Specifies the maximum time the activity may take to run.  This defaults
+        /// to 365 days.
         /// </summary>
-        public TimeSpan StartToCloseTimeout { get; set; }
+        public TimeSpan StartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
         /// <summary>
         /// Optionally specifies the maximum time the activity has to send a heartbeat
@@ -100,7 +101,8 @@ namespace Neon.Cadence.Internal
                 ScheduleToStartTimeout = CadenceHelper.ToCadence(this.ScheduleToStartTimeout),
                 StartToCloseTimeout    = CadenceHelper.ToCadence(this.StartToCloseTimeout),
                 HeartbeatTimeout       = CadenceHelper.ToCadence(this.HeartbeatTimeout),
-                WaitForCancellation    = WaitForCancellation
+                WaitForCancellation    = WaitForCancellation,
+                RetryPolicy            = RetryPolicy?.ToInternal()
             };
         }
     }
