@@ -116,7 +116,6 @@ namespace Neon.Cadence
         public async Task<WorkflowRun> StartWorkflowAsync(string workflowTypeName, string domain, byte[] args = null, string tasklist = DefaultTaskList, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(options != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
             options = options ?? new WorkflowOptions();

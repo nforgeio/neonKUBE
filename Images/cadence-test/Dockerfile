@@ -46,7 +46,7 @@ FROM openjdk:8-jdk-stretch
 # CQLSH installation
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gettext-base \
-		gnupg \
+        gnupg \
         wget \
         vim \
         tcpdump \
@@ -61,10 +61,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # CASSANDRA INSTALLATION
 RUN apt-get update \
-	&& echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
-	&& curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
-	&& apt-get update \
-	&& apt-get install cassandra -y
+    && echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
+    && curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
+    && apt-get update \
+    && apt-get install cassandra -y
 
 # Delete bad cassandra config file
 RUN mkdir /cadence \ 

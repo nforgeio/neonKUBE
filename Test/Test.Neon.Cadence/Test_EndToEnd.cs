@@ -33,6 +33,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
 using Neon.IO;
+using Neon.Time;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -238,7 +239,7 @@ namespace TestCadence
                 DebugPrelaunched       = false,
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
-                ProxyTimeout           = TimeSpan.FromSeconds(5),
+                ProxyTimeout           = TimeSpan.FromSeconds(30),
                 //DebugHttpTimeout       = TimeSpan.FromSeconds(5),
                 DebugDisableHeartbeats = false,
                 DebugIgnoreTimeouts    = false
