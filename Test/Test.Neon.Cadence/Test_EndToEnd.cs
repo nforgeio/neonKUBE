@@ -122,41 +122,100 @@ namespace TestCadence
         }
 
         /// <summary>
-        /// Verifies that only single copies of mutable values are persisted to
-        /// the workflow history.  We're also going to test setting two different 
+        /// Verifies that mutable values ARE NOT updated in the workflow history
+        /// when [update=false].  We're also going to test setting two different 
         /// values to ensure that works as well.
         /// </summary>
-        private class MutableValueWorkflow : WorkflowBase
+        private class NonMutableValueWorkflow : WorkflowBase
         {
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                var value1 = await GetValueAsync("value-1", new byte[] { 1 });
+                var value1 = await GetValueAsync("value-1", new byte[] { 1 }, update: false);
 
                 if (value1[0] != 1)
                 {
                     throw new Exception($"Test-1: value1={value1[0]}");
                 }
 
-                var value2 = await GetValueAsync("value-2", new byte[] { 2 });
+                var value2 = await GetValueAsync("value-2", new byte[] { 2 }, update: false);
 
                 if (value2[0] != 1)
                 {
                     throw new Exception($"Test-2, value2={value2[0]}");
                 }
 
-                // Verify that we we get the original values back even though
+                // Verify that we get the original values back even though
                 // we're passing new values.
 
-                value1 = await GetValueAsync("value-1", new byte[] { 3 });
+                value1 = await GetValueAsync("value-1", new byte[] { 3 }, update: false);
 
                 if (value1[0] != 0)
                 {
                     throw new Exception($"Test-3: value1={value1[0]}");
                 }
 
-                value2 = await GetValueAsync("value-2", new byte[] { 4 });
+                value2 = await GetValueAsync("value-2", new byte[] { 4 }, update: false);
 
                 if (value2[0] != 1)
+                {
+                    throw new Exception($"Test-4, value2={value2[0]}");
+                }
+
+                return await Task.FromResult((byte[])null);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that mutable values ARE updated in the workflow history
+        /// when [update=true].  We're also going to test setting two different 
+        /// values to ensure that works as well.
+        /// </summary>
+        private class MutableValueWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var value1 = await GetValueAsync("value-1", new byte[] { 1 }, update: true);
+
+                if (value1[0] != 1)
+                {
+                    throw new Exception($"Test-1: value1={value1[0]}");
+                }
+
+                var value2 = await GetValueAsync("value-2", new byte[] { 2 }, update: true);
+
+                if (value2[0] != 1)
+                {
+                    throw new Exception($"Test-2, value2={value2[0]}");
+                }
+
+                // Verify that we get the new values back.
+
+                value1 = await GetValueAsync("value-1", new byte[] { 3 }, update: true);
+
+                if (value1[0] != 3)
+                {
+                    throw new Exception($"Test-3: value1={value1[0]}");
+                }
+
+                value2 = await GetValueAsync("value-2", new byte[] { 4 }, update: true);
+
+                if (value2[0] != 4)
+                {
+                    throw new Exception($"Test-4, value2={value2[0]}");
+                }
+
+                // Verify that we get the new last values by passing [update=false].
+
+                value1 = await GetValueAsync("value-1", new byte[] { 5 }, update: false);
+
+                if (value1[0] != 3)
+                {
+                    throw new Exception($"Test-3: value1={value1[0]}");
+                }
+
+                value2 = await GetValueAsync("value-2", new byte[] { 6 }, update: false);
+
+                if (value2[0] != 4)
                 {
                     throw new Exception($"Test-4, value2={value2[0]}");
                 }
@@ -168,7 +227,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Test implementations:
 
-        CadenceFixture      fixture;
+        CadenceFixture fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -440,6 +499,66 @@ namespace TestCadence
                 if (activityWorker != null)
                 {
                     await client.StopWorkerAsync(activityWorker);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_NonMutableValue()
+        {
+            Worker workflowWorker = null;
+
+            try
+            {
+                await client.RegisterDomainAsync("test-domain");
+
+                workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
+
+                await client.RegisterWorkflowAsync<NonMutableValueWorkflow>();
+
+                // Verify that non-mutable workflow values work as expected.
+                // The workflow will throw an exception if there's a problem.
+
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+
+                await client.GetWorkflowResultAsync(workflowRun);
+            }
+            finally
+            {
+                if (workflowWorker != null)
+                {
+                    await client.StopWorkerAsync(workflowWorker);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_MutableValue()
+        {
+            Worker workflowWorker = null;
+
+            try
+            {
+                await client.RegisterDomainAsync("test-domain");
+
+                workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
+
+                await client.RegisterWorkflowAsync<MutableValueWorkflow>();
+
+                // Verify that mutable workflow values work as expected.
+                // The workflow will throw an exception if there's a problem.
+
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+
+                await client.GetWorkflowResultAsync(workflowRun);
+            }
+            finally
+            {
+                if (workflowWorker != null)
+                {
+                    await client.StopWorkerAsync(workflowWorker);
                 }
             }
         }

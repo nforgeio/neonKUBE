@@ -46,6 +46,14 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Tasks;
 
+// $todo(jeff.lill):
+//
+// Emulation is only very partially implemented right now.  It would be nice to
+// have a high-fidelity in-memory implementation but this isn't a super high
+// priority.  Here's the tracking issue:
+//
+//      https://github.com/nforgeio/neonKUBE/issues/556
+
 namespace Neon.Cadence
 {
     public partial class CadenceClient
