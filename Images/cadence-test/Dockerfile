@@ -34,18 +34,19 @@ ARG VERSION
 # get and compile cadence-server
 RUN go get -u github.com/golang/dep/cmd/dep \
     && go get -u golang.org/x/lint/golint \
-    && git clone https://github.com/nforgeio/cadence.git /go/src/github.com/nforgeio/cadence \
-    && cd /go/src/github.com/nforgeio/cadence \
+    && git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence \
+    && cd /go/src/github.com/uber/cadence \
     && git checkout $VERSION && make bins_nothrift
 
 # Final Cadence image
 # open-jdk-8 debian9 stretch
-FROM openjdk:8u212-jdk-stretch
+FROM openjdk:8-jdk-stretch
 
 # BASIC COMMON LIBRARY INSTALLATIONS
 # CQLSH installation
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gettext-base \
+		gnupg \
         wget \
         vim \
         tcpdump \
@@ -60,10 +61,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # CASSANDRA INSTALLATION
 RUN apt-get update \
-    && echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
-    && curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
-    && apt-get update \
-    && apt-get install cassandra -y
+	&& echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
+	&& curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
+	&& apt-get update \
+	&& apt-get install cassandra -y
 
 # Delete bad cassandra config file
 RUN mkdir /cadence \ 
@@ -88,10 +89,10 @@ COPY ./cassandra.yaml /etc/cassandra/cassandra_template.yaml
 COPY ./setup.sh $CADENCE_HOME/setup.sh
 
 # copy over necessary cadence files and schemas from the builder
-COPY --from=builder /go/src/github.com/nforgeio/cadence/cadence-cassandra-tool /cadence
-COPY --from=builder /go/src/github.com/nforgeio/cadence/cadence                /cadence
-COPY --from=builder /go/src/github.com/nforgeio/cadence/cadence-server         /cadence
-COPY --from=builder /go/src/github.com/nforgeio/cadence/schema/                /cadence/schema/
+COPY --from=builder /go/src/github.com/uber/cadence/cadence-cassandra-tool /cadence
+COPY --from=builder /go/src/github.com/uber/cadence/cadence                /cadence
+COPY --from=builder /go/src/github.com/uber/cadence/cadence-server         /cadence
+COPY --from=builder /go/src/github.com/uber/cadence/schema/                /cadence/schema/
 
 # change working dir to /cadence
 WORKDIR $CADENCE_HOME

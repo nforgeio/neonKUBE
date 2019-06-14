@@ -92,7 +92,7 @@ var (
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy
-	cadenceClientTimeout time.Duration = time.Second * 30
+	cadenceClientTimeout time.Duration = time.Second * 600
 )
 
 //----------------------------------------------------------------------------

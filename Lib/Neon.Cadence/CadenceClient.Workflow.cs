@@ -122,10 +122,7 @@ namespace Neon.Cadence
                     Workflow = workflowTypeName,
                     Domain   = domain,
                     Args     = args,
-                    //Options  = options?.ToInternal()
-
-                    // $debug(jack.burns): DELETE THIS!
-                    Options = new InternalStartWorkflowOptions() { TaskList = "default", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("150s").Ticks, DecisionTaskStartToCloseTimeout = GoTimeSpan.Parse("150s").Ticks }
+                    Options  = options?.ToInternal()
         });
 
             reply.ThrowOnError();

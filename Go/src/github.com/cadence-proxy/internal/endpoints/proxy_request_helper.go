@@ -767,11 +767,11 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	}
 
 	// create workflow function
-	contextID := cadenceworkflows.NextContextID()
 	workflowName := request.GetName()
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
 
 		// new WorkflowContext
+		contextID := cadenceworkflows.NextContextID()
 		wectx := cadenceworkflows.NewWorkflowContext(ctx)
 		wectx.SetWorkflowName(workflowName)
 
@@ -1125,7 +1125,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	)
 
 	// extract the result
-	var result interface{}
+	var result []byte
 	if sideEffectValue.HasValue() {
 		err := sideEffectValue.Get(&result)
 
@@ -1136,14 +1136,8 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 			return reply
 		}
 
-		// check if the result is a cadenceerrors.CadenceError or
-		// a []byte result
-		switch s := result.(type) {
-		case []byte:
-			buildReply(reply, nil, s)
-		default:
-			buildReply(reply, cadenceerrors.NewCadenceError("no value was returned by the mutable sideffect call"))
-		}
+		// build reply
+		buildReply(reply, nil, result)
 	}
 
 	return reply

@@ -1,4 +1,4 @@
-﻿#------------------------------------------------------------------------------
+﻿ #------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  John C Burns
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
@@ -82,4 +82,4 @@ if ($allVersions)
     Build 0.5.6 -goVersion 1.12.3 -latest
 }
 
-Build 0.5.7 -goVersion 1.12.3 -latest
+Build 0.5.8_release -goVersion 1.12.3 -latest

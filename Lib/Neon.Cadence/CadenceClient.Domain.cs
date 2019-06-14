@@ -54,8 +54,7 @@ namespace Neon.Cadence
 
             var reply = await CallProxyAsync(domainRegisterRequest);
 
-            // $debug(jack.burns): DELETE THIS!
-            //reply.ThrowOnError();
+            reply.ThrowOnError();
         }
 
         /// <summary>
