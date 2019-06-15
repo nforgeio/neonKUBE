@@ -1333,6 +1333,8 @@ namespace Neon.Cadence
         protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null, CancellationToken? cancellationToken = null)
             where TActivity : ActivityBase
         {
+            options = options ?? new LocalActivityOptions();
+
             // We need to register the local activity type with a workflow local ID
             // that we can sent to [cadence-proxy] in the [ActivityExecuteLocalRequest]
             // such that the proxy can send it back to us in the [ActivityInvokeLocalRequest]
