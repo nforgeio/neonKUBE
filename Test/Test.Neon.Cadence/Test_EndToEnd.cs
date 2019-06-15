@@ -228,7 +228,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Test implementations:
 
-        CadenceFixture fixture;
+        CadenceFixture      fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -393,7 +393,7 @@ namespace TestCadence
 
             try
             {
-                await client.RegisterDomainAsync("test-domain");
+                await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
                 worker = await client.StartWorkflowWorkerAsync("test-domain");
 
@@ -435,7 +435,7 @@ namespace TestCadence
 
             try
             {
-                await client.RegisterDomainAsync("test-domain");
+                await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
                 workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
                 activityWorker = await client.StartActivityWorkerAsync("test-domain");
@@ -475,7 +475,7 @@ namespace TestCadence
 
             try
             {
-                await client.RegisterDomainAsync("test-domain");
+                await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
                 workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
                 activityWorker = await client.StartWorkflowWorkerAsync("test-domain");
@@ -513,7 +513,7 @@ namespace TestCadence
 
             try
             {
-                await client.RegisterDomainAsync("test-domain");
+                await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
                 workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
 
@@ -543,7 +543,7 @@ namespace TestCadence
 
             try
             {
-                await client.RegisterDomainAsync("test-domain");
+                await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
                 workflowWorker = await client.StartWorkflowWorkerAsync("test-domain");
 
