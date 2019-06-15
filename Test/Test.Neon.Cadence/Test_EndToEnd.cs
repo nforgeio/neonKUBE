@@ -241,7 +241,7 @@ namespace TestCadence
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(30),
                 //DebugHttpTimeout     = TimeSpan.FromSeconds(5),
-                DebugDisableHeartbeats = false,
+                DebugDisableHeartbeats = true,
                 DebugIgnoreTimeouts    = false
             };
 
