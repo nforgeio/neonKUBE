@@ -681,22 +681,13 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityStoppingReply Recieved", zap.Int("ProccessId", os.Getpid()))
 
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
+	// remove the Operation from the map
 	requestID := reply.GetRequestID()
-	defer func() {
-		_ = cadenceactivities.ActivityContexts.Remove(Operations.Get(requestID).GetContextID())
-		_ = Operations.Remove(requestID)
-	}()
+	defer Operations.Remove(requestID)
 
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
 	if op == nil {
-		return errEntityNotExist
-	}
-
-	// ActivityContext at the specified WorflowContextID
-	if actx := cadenceactivities.ActivityContexts.Get(op.GetContextID()); actx == nil {
 		return errEntityNotExist
 	}
 

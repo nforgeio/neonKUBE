@@ -240,7 +240,7 @@ namespace TestCadence
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeout           = TimeSpan.FromSeconds(30),
-                //DebugHttpTimeout       = TimeSpan.FromSeconds(5),
+                //DebugHttpTimeout     = TimeSpan.FromSeconds(5),
                 DebugDisableHeartbeats = false,
                 DebugIgnoreTimeouts    = false
             };
