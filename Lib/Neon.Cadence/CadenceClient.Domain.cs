@@ -83,9 +83,9 @@ namespace Neon.Cadence
                 await RegisterDomainAsync(
                     new InternalRegisterDomainRequest()
                     {
-                        Name = name,
-                        Description = description,
-                        OwnerEmail = ownerEmail,
+                        Name          = name,
+                        Description   = description,
+                        OwnerEmail    = ownerEmail,
                         RetentionDays = retentionDays
                     });
             }
