@@ -90,7 +90,7 @@ namespace Neon.Cadence
     /// reside in a registered domain, which is essentially just a namespace specified by
     /// a string.  The combination of a domain along with a workflow or activity type name
     /// must be unique within a Cadence cluster.  Once you have a connected <see cref="CadenceClient"/>,
-    /// you can create and manage Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int)"/>,
+    /// you can create and manage Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int, bool)"/>,
     /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>.
     /// Domains can be used provide isolated areas for different teams and/or different environments
     /// (e.g. production, staging, and test).  We discuss task lists in detail further below.
@@ -786,7 +786,7 @@ namespace Neon.Cadence
 
                     foreach (var worker in workerList)
                     {
-                        StopWorkerAsync(worker).Wait();
+                        worker.Dispose();
                     }
 
                     // Signal the proxy that it should exit gracefully and then

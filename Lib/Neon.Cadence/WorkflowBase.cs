@@ -428,13 +428,13 @@ namespace Neon.Cadence
 
             // Initialize the other workflow properties.
 
-            workflow.Client       = client;
-            workflow.contextId    = request.ContextId;
-            workflow.Domain       = request.Domain;
-            workflow.RunId        = request.RunId;
-            workflow.TaskList     = request.TaskList;
-            workflow.WorkflowId   = request.WorkflowId;
-            workflow.WorkflowType = request.WorkflowType;
+            workflow.Client           = client;
+            workflow.contextId        = request.ContextId;
+            workflow.Domain           = request.Domain;
+            workflow.RunId            = request.RunId;
+            workflow.TaskList         = request.TaskList;
+            workflow.WorkflowId       = request.WorkflowId;
+            workflow.WorkflowTypeName = request.WorkflowType;
 
             // Start the workflow by calling its [RunAsync(args)] method.  This method will
             // indicate that it has completed via one of these techniques:
@@ -739,9 +739,9 @@ namespace Neon.Cadence
         public string RunId { get; private set; }
 
         /// <summary>
-        /// Returns the workflow type.
+        /// Returns the workflow type name.
         /// </summary>
-        public string WorkflowType { get; private set; }
+        public string WorkflowTypeName { get; private set; }
 
         /// <summary>
         /// Returns the tasklist where the workflow is executing.
@@ -1039,6 +1039,38 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         protected async Task SleepAsync(TimeSpan duration)
         {
+            var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
+                new WorkflowSleepRequest()
+                {
+                    ContextId = contextId,
+                    Duration  = duration
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Pauses the workflow at least until the specified time UTC.
+        /// </summary>
+        /// <param name="wakeTimeUtc">The time to sleep.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TaskCanceledException">Thrown if the operation was cancelled.</exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        protected async Task SleepUntilUtcAsync(DateTime wakeTimeUtc)
+        {
+            var utcNow   = await UtcNowAsync();
+            var duration = wakeTimeUtc - utcNow;
+
+            if (duration <= TimeSpan.Zero)
+            {
+                // We're already at or past the requested time.
+
+                return;
+            }
+
             var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
                 new WorkflowSleepRequest()
                 {

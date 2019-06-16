@@ -360,13 +360,13 @@ namespace TestCadence
 
             // Stop the workers.
 
-            await client.StopWorkerAsync(workflowWorker);
-            await client.StopWorkerAsync(activityWorker);
+            workflowWorker.Dispose();
+            activityWorker.Dispose();
 
             // Stop the workers again to verify that we don't see any errors.
 
-            await client.StopWorkerAsync(workflowWorker);
-            await client.StopWorkerAsync(activityWorker);
+            workflowWorker.Dispose();
+            activityWorker.Dispose();
         }
 
         [Fact]
