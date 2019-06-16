@@ -112,6 +112,43 @@ namespace TestCadence
         }
 
         /// <summary>
+        /// This workflow does the same thing as <see cref="HelloWorkflow"/> except that it
+        /// executes the child activities by name and not type.
+        /// </summary>
+        private class HelloWorkflowByName : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                string arg = null;
+
+                if (args != null)
+                {
+                    arg = Encoding.UTF8.GetString(args);
+                }
+
+                if (arg == null)
+                {
+                    return await Task.FromResult(Encoding.UTF8.GetBytes("workflow: Hello World!"));
+                }
+                else if (arg == "activity")
+                {
+                    return await CallActivityAsync("hello-activity", Encoding.UTF8.GetBytes("activity: Hello World!"));
+                }
+                else if (arg == "local-activity")
+                {
+                    // NOTE: It's not possible to call local activities by name so we'll
+                    // use the type here instead.
+
+                    return await CallLocalActivityAsync<HelloActivity>(Encoding.UTF8.GetBytes("local-activity: Hello World!"));
+                }
+                else
+                {
+                    return await Task.FromResult(Encoding.UTF8.GetBytes(arg));
+                }
+            }
+        }
+
+        /// <summary>
         /// Test activity that returns the argument passed.
         /// </summary>
         private class HelloActivity : ActivityBase
@@ -398,7 +435,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task HelloWorld_Workflow()
+        public async Task HelloWorld_Workflow_ByType()
         {
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
@@ -428,7 +465,37 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task HelloWorld_Activity()
+        public async Task HelloWorld_Workflow_ByName()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<HelloWorkflow>("hello-workflow-by-name");
+
+                // Run a workflow passing NULL args.
+
+                var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: null);
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
+
+                // Run a workflow passing a string argument.
+
+                var args = Encoding.UTF8.GetBytes("custom args");
+
+                workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: args);
+                result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal(args, result);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task HelloWorld_Activity_ByType()
         {
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
@@ -441,9 +508,9 @@ namespace TestCadence
 
                     // Run a workflow that invokes an activity.
 
-                    var args = Encoding.UTF8.GetBytes("activity");
+                    var args        = Encoding.UTF8.GetBytes("activity");
                     var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("activity"));
-                    var result = await client.GetWorkflowResultAsync(workflowRun);
+                    var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
                     Assert.Equal(Encoding.UTF8.GetBytes("activity: Hello World!"), result);
@@ -453,7 +520,32 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task HelloWorld_LocalActivity()
+        public async Task HelloWorld_Activity_ByName()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
+                {
+                    await client.RegisterWorkflowAsync<HelloWorkflowByName>("hello-workflow-by-name");
+                    await client.RegisterActivityAsync<HelloActivity>("hello-activity");
+
+                    // Run a workflow that invokes an activity.
+
+                    var args        = Encoding.UTF8.GetBytes("activity");
+                    var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: Encoding.UTF8.GetBytes("activity"));
+                    var result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                    Assert.NotNull(result);
+                    Assert.Equal(Encoding.UTF8.GetBytes("activity: Hello World!"), result);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task HelloWorld_LocalActivity_ByType()
         {
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
@@ -477,7 +569,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task HelloWorld_ChildWorkflow()
+        public async Task HelloWorld_ChildWorkflow_ByType()
         {
             using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
             {

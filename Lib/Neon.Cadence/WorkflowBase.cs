@@ -1343,7 +1343,7 @@ namespace Neon.Cadence
         /// Executes a local activity and waits for it to complete.
         /// </summary>
         /// <typeparam name="TActivity">Specifies the local activity implementation type.</typeparam>
-        /// <param name="args">Optionally specifies the activity name.</param>
+        /// <param name="args">Optionally specifies the activity arguments.</param>
         /// <param name="options">Optionally specifies any local activity options.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
