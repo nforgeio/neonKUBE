@@ -184,7 +184,7 @@ namespace TestCadence
 
                 var value2 = await GetValueAsync("value-2", new byte[] { 2 }, update: true);
 
-                if (value2[0] != 1)
+                if (value2[0] != 2)
                 {
                     throw new Exception($"Test-2, value2={value2[0]}");
                 }
@@ -552,7 +552,7 @@ namespace TestCadence
                 // Verify that mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync < MutableValueWorkflow>("test-domain", args: null);
 
                 await client.GetWorkflowResultAsync(workflowRun);
             }

@@ -1110,6 +1110,12 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		return false
 	}
 
+	// TODO: JACK -- UPDATE TO CALL MutableSideEffect
+	// or SideEffect
+	// if request.GetUpdate() {
+
+	// }
+
 	// execute the cadence server SideEffectMutable call
 	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(),
 		*request.GetMutableID(),
