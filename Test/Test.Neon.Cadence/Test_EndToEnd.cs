@@ -47,7 +47,7 @@ namespace TestCadence
     public sealed class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
         //---------------------------------------------------------------------
-        // Workflow and Activity classes.
+        // Common workflow and activity classes.
 
         /// <summary>
         /// <para>
@@ -270,6 +270,45 @@ namespace TestCadence
                 }
 
                 return await Task.FromResult((byte[])null);
+            }
+        }
+
+        /// <summary>
+        /// Runs two child workflows in parallel and returns "Hello World!" as the
+        /// result.
+        /// </summary>
+        private class ParallelChildWorkflows : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var child1  = await StartChildWorkflowAsync<HelloWorkflow>(Encoding.UTF8.GetBytes("Hello"));
+                var child2  = await StartChildWorkflowAsync<HelloWorkflow>(Encoding.UTF8.GetBytes("World!"));
+                var result1 = await WaitForChildWorkflowAsync(child1);
+                var result2 = await WaitForChildWorkflowAsync(child2);
+
+                return Encoding.UTF8.GetBytes($"{Encoding.UTF8.GetString(result1)} {Encoding.UTF8.GetString(result2)}");
+            }
+        }
+
+        /// <summary>
+        /// Returns the workflow properties as an encoded dictionary with the
+        /// property values converted to strings.
+        /// </summary>
+        private class GetPropertiesWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var properties = new Dictionary<string, string>();
+
+                properties.Add(nameof(Version), Version.ToString());
+                properties.Add(nameof(OriginalVersion), OriginalVersion.ToString());
+                properties.Add(nameof(Domain), Domain);
+                properties.Add(nameof(WorkflowId), WorkflowId);
+                properties.Add(nameof(RunId), RunId);
+                properties.Add(nameof(WorkflowTypeName), WorkflowTypeName);
+                properties.Add(nameof(TaskList), TaskList);
+
+                return await Task.FromResult(NeonHelper.JsonSerializeToBytes(properties));
             }
         }
 
@@ -626,6 +665,50 @@ namespace TestCadence
                 var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
 
                 await client.GetWorkflowResultAsync(workflowRun);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ParallelChildWorkflows()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<ParallelChildWorkflows>();
+
+                var workflowRun = await client.StartWorkflowAsync<ParallelChildWorkflows>("test-domain", args: null);
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Properties()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<GetPropertiesWorkflow>();
+
+                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow" });
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
+
+                Assert.Equal("0.0.0", properties["Version"]);
+                Assert.Equal("0.0.0", properties["OriginalVersion"]);
+                Assert.Equal("test-domain", properties["Domain"]);
+                Assert.Equal("my-workflow", properties["WorkflowId"]);
+                Assert.NotNull(properties["RunId"]);
+                Assert.NotEmpty(properties["RunId"]);
+                Assert.NotEqual("my-workflow", properties["RunId"]);
+                Assert.Equal(typeof(GetPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
+                Assert.Equal("default", properties["TaskList"]);
             }
         }
     }

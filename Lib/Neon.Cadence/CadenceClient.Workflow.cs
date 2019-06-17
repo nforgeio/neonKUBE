@@ -70,7 +70,7 @@ namespace Neon.Cadence
         /// <typeparam name="TWorkflow">Identifies the workflow to be exedcuted.</typeparam>
         /// <param name="domain">Specifies the Cadence domain where the workflow will run.</param>
         /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
-        /// <param name="tasklist">Optionally specifies the target task list.  This defaults to <b>"default"</b>.</param>
+        /// <param name="taskList">Optionally specifies the target task list.  This defaults to <b>"default"</b>.</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <returns>A <see cref="WorkflowRun"/> identifying the new running workflow instance.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <typeparamref name="TWorkflow"/>.</exception>
@@ -81,12 +81,12 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        public async Task<WorkflowRun> StartWorkflowAsync<TWorkflow>(string domain, byte[] args = null, string tasklist = DefaultTaskList, WorkflowOptions options = null)
+        public async Task<WorkflowRun> StartWorkflowAsync<TWorkflow>(string domain, byte[] args = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
             where TWorkflow : WorkflowBase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
-            return await StartWorkflowAsync(typeof(TWorkflow).FullName, domain, args, tasklist, options);
+            return await StartWorkflowAsync(typeof(TWorkflow).FullName, domain, args, taskList, options);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="domain">Specifies the Cadence domain where the workflow will run.</param>
         /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
-        /// <param name="tasklist">Optionally specifies the target task list.  This defaults to <b>"default"</b>.</param>
+        /// <param name="taskList">Optionally specifies the target task list.  This defaults to <b>"default"</b>.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <returns>A <see cref="WorkflowRun"/> identifying the new running workflow instance.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
@@ -113,7 +113,7 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        public async Task<WorkflowRun> StartWorkflowAsync(string workflowTypeName, string domain, byte[] args = null, string tasklist = DefaultTaskList, WorkflowOptions options = null)
+        public async Task<WorkflowRun> StartWorkflowAsync(string workflowTypeName, string domain, byte[] args = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
@@ -126,7 +126,7 @@ namespace Neon.Cadence
                     Workflow = workflowTypeName,
                     Domain   = domain,
                     Args     = args,
-                    Options  = options.ToInternal(tasklist)
+                    Options  = options.ToInternal(taskList)
                 });
 
             reply.ThrowOnError();
@@ -287,12 +287,12 @@ namespace Neon.Cadence
         /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
         /// <param name="workflowArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
-        /// <param name="tasklist">Optionally specifies the task list.  This defaults to <b>"default"</b>.</param>
+        /// <param name="taskList">Optionally specifies the task list.  This defaults to <b>"default"</b>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task SignalWorkflowAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string tasklist = DefaultTaskList, WorkflowOptions options = null)
+        public async Task SignalWorkflowAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
@@ -303,7 +303,7 @@ namespace Neon.Cadence
                 new WorkflowSignalWithStartRequest()
                 {
                     WorkflowId   = workflowId,
-                    Options      = options.ToInternal(tasklist),
+                    Options      = options.ToInternal(taskList),
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
                     WorkflowArgs = workflowArgs

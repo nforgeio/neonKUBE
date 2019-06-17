@@ -49,7 +49,7 @@ namespace Neon.Cadence
         /// a specific domain and tasklist.
         /// </summary>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="tasklist">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
+        /// <param name="taskList">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
@@ -71,10 +71,10 @@ namespace Neon.Cadence
         /// for specific domains and task lists.
         /// </para>
         /// </remarks>
-        public async Task<Worker> StartWorkflowWorkerAsync(string domain, string tasklist = "default", WorkerOptions options = null)
+        public async Task<Worker> StartWorkflowWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             Worker worker;
 
@@ -91,7 +91,7 @@ namespace Neon.Cadence
                 // registrations will happen infrequently (typically just once
                 // per service, when it starts).
 
-                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == tasklist);
+                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
 
                 if (worker != null)
                 {
@@ -106,13 +106,13 @@ namespace Neon.Cadence
                 {
                     IsWorkflow = true,
                     Domain     = domain,
-                    TaskList   = tasklist,
+                    TaskList   = taskList,
                     Options    = options.ToInternal()
                 }));
 
             reply.ThrowOnError();
 
-            worker = new Worker(this, true, reply.WorkerId, domain, tasklist);
+            worker = new Worker(this, true, reply.WorkerId, domain, taskList);
 
             lock (syncLock)
             {
@@ -127,7 +127,7 @@ namespace Neon.Cadence
         /// domain and tasklist.
         /// </summary>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="tasklist">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
+        /// <param name="taskList">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
@@ -149,10 +149,10 @@ namespace Neon.Cadence
         /// for specific domains and task lists.
         /// </para>
         /// </remarks>
-        public async Task<Worker> StartActivityWorkerAsync(string domain, string tasklist = "default", WorkerOptions options = null)
+        public async Task<Worker> StartActivityWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             Worker worker;
 
@@ -169,7 +169,7 @@ namespace Neon.Cadence
                 // registrations will happen infrequently (typically just once
                 // per service, when it starts).
 
-                worker = workers.Values.SingleOrDefault(wf => !wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == tasklist);
+                worker = workers.Values.SingleOrDefault(wf => !wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
 
                 if (worker != null)
                 {
@@ -184,13 +184,13 @@ namespace Neon.Cadence
                 {
                     IsWorkflow = false,
                     Domain     = domain,
-                    TaskList   = tasklist,
+                    TaskList   = taskList,
                     Options    = options.ToInternal()
                 }));
 
             reply.ThrowOnError();
 
-            worker = new Worker(this, false, reply.WorkerId, domain, tasklist);
+            worker = new Worker(this, false, reply.WorkerId, domain, taskList);
 
             lock (syncLock)
             {

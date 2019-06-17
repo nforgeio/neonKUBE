@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="args">Optional arguments for the new run.</param>
         /// <param name="domain">Optional domain for the new run.</param>
-        /// <param name="tasklist">Optional tasklist for the new run.</param>
+        /// <param name="taskList">Optional tasklist for the new run.</param>
         /// <param name="executionToStartTimeout">Optional execution to start timeout for the new run.</param>
         /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new run.</param>
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
@@ -47,7 +47,7 @@ namespace Neon.Cadence
         public CadenceWorkflowRestartException(
             byte[]              args                    = null,
             string              domain                  = null,
-            string              tasklist                = null,
+            string              taskList                = null,
             TimeSpan            executionToStartTimeout = default,
             TimeSpan            scheduleToCloseTimeout  = default,
             TimeSpan            scheduleToStartTimeout  = default,
@@ -58,7 +58,7 @@ namespace Neon.Cadence
         {
             this.Args                         = args;
             this.Domain                       = domain;
-            this.TaskList                     = tasklist;
+            this.TaskList                     = taskList;
             this.ExecutionStartToCloseTimeout = executionToStartTimeout;
             this.ScheduleToStartTimeout       = scheduleToStartTimeout;
             this.ScheduleToCloseTimeout       = scheduleToCloseTimeout;

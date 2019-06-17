@@ -995,11 +995,11 @@ namespace Neon.Cadence
         /// Searches an emulated workflow worker for specified domain and tasklist.
         /// </summary>
         /// <param name="domain">The domain.</param>
-        /// <param name="tasklist">The tasklist.</param>
+        /// <param name="taskList">The tasklist.</param>
         /// <returns>The <see cref="EmulatedWorker"/> or <c>null</c>.</returns>
-        private EmulatedWorker GetWorkflowWorker(string domain, string tasklist)
+        private EmulatedWorker GetWorkflowWorker(string domain, string taskList)
         {
-            return emulatedWorkers.Values.SingleOrDefault(worker => worker.IsWorkflow && worker.Domain == domain && worker.TaskList == tasklist);
+            return emulatedWorkers.Values.SingleOrDefault(worker => worker.IsWorkflow && worker.Domain == domain && worker.TaskList == taskList);
         }
 
         /// <summary>
