@@ -49,6 +49,11 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
+            if (client == null)
+            {
+                throw new TaskCanceledException();
+            }
+
             var stream = request.SerializeAsStream();
 
             try

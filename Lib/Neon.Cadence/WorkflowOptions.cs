@@ -44,7 +44,7 @@ namespace Neon.Cadence
         /// Optionally specifies the business ID for a workflow.  This defaults
         /// to a generated UUID.
         /// </summary>
-        public string ID { get; set; } = null;
+        public string WorkflowId { get; set; } = null;
 
         /// <summary>
         /// Specifies the maximum time the workflow may run from start
@@ -85,16 +85,16 @@ namespace Neon.Cadence
         /// <summary>
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
-        /// <param name="tasklist">The target tasklist.</param>
+        /// <param name="taskList">The target tasklist.</param>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
-        internal InternalStartWorkflowOptions ToInternal(string tasklist)
+        internal InternalStartWorkflowOptions ToInternal(string taskList)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             return new InternalStartWorkflowOptions()
             {
-                ID                              = this.ID,
-                TaskList                        = tasklist,
+                ID                              = this.WorkflowId,
+                TaskList                        = taskList,
                 DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.DecisionTaskStartToCloseTimeout),
                 ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 RetryPolicy                     = this.RetryPolicy?.ToInternal(),

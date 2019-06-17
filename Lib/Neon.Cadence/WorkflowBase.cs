@@ -428,13 +428,13 @@ namespace Neon.Cadence
 
             // Initialize the other workflow properties.
 
-            workflow.Client       = client;
-            workflow.contextId    = request.ContextId;
-            workflow.Domain       = request.Domain;
-            workflow.RunId        = request.RunId;
-            workflow.TaskList     = request.TaskList;
-            workflow.WorkflowId   = request.WorkflowId;
-            workflow.WorkflowType = request.WorkflowType;
+            workflow.Client           = client;
+            workflow.contextId        = request.ContextId;
+            workflow.Domain           = request.Domain;
+            workflow.RunId            = request.RunId;
+            workflow.TaskList         = request.TaskList;
+            workflow.WorkflowId       = request.WorkflowId;
+            workflow.WorkflowTypeName = request.WorkflowType;
 
             // Start the workflow by calling its [RunAsync(args)] method.  This method will
             // indicate that it has completed via one of these techniques:
@@ -739,9 +739,9 @@ namespace Neon.Cadence
         public string RunId { get; private set; }
 
         /// <summary>
-        /// Returns the workflow type.
+        /// Returns the workflow type name.
         /// </summary>
-        public string WorkflowType { get; private set; }
+        public string WorkflowTypeName { get; private set; }
 
         /// <summary>
         /// Returns the tasklist where the workflow is executing.
@@ -1050,6 +1050,38 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Pauses the workflow at least until the specified time UTC.
+        /// </summary>
+        /// <param name="wakeTimeUtc">The time to sleep.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TaskCanceledException">Thrown if the operation was cancelled.</exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        protected async Task SleepUntilUtcAsync(DateTime wakeTimeUtc)
+        {
+            var utcNow   = await UtcNowAsync();
+            var duration = wakeTimeUtc - utcNow;
+
+            if (duration <= TimeSpan.Zero)
+            {
+                // We're already at or past the requested time.
+
+                return;
+            }
+
+            var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
+                new WorkflowSleepRequest()
+                {
+                    ContextId = contextId,
+                    Duration  = duration
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
         /// Executes a child workflow and waits for it to complete.
         /// </summary>
         /// <param name="args">Optionally specifies the workflow arguments.</param>
@@ -1073,7 +1105,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Executes a child workflow by workflow type name and waits for it to complete.
         /// </summary>
-        /// <param name="workflowTypeName">The workflow type name name.</param>
+        /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="args">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
@@ -1093,8 +1125,9 @@ namespace Neon.Cadence
             var reply = (WorkflowExecuteChildReply)await Client.CallProxyAsync(
                 new WorkflowExecuteChildRequest()
                 {
-                     Args    = args,
-                     Options = options?.ToInternal()
+                    Workflow = workflowTypeName,
+                    Args     = args,
+                    Options  = options?.ToInternal()
                 },
                 cancellationToken: cancellationToken);
 
@@ -1121,7 +1154,33 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts a child workflow but does not wait for it to complete.
+        /// Starts a child workflow by type but does not wait for it to complete.
+        /// </summary>
+        /// <param name="args">Optionally specifies the workflow arguments.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>
+        /// Returns an opaque <see cref="ChildWorkflow"/> that identifies the new workflow
+        /// and that can be passed to <see cref="WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken?)"/>,
+        /// <see cref="SignalChildWorkflowAsync(ChildWorkflow, string, byte[])"/> and
+        /// <see cref="CancelChildWorkflowAsync(ChildWorkflow)"/>.
+        /// </returns>
+        /// <exception cref="CadenceException">
+        /// An exception derived from <see cref="CadenceException"/> will be be thrown 
+        /// if the child workflow did not complete successfully.
+        /// </exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        protected async Task<ChildWorkflow> StartChildWorkflowAsync<TWorkflow>(byte[] args = null, ChildWorkflowOptions options = null, CancellationToken? cancellationToken = null)
+            where TWorkflow : WorkflowBase
+        {
+            return await StartChildWorkflowAsync(typeof(TWorkflow).FullName, args, options, cancellationToken);
+        }
+
+        /// <summary>
+        /// Starts a child workflow by type name but does not wait for it to complete.
         /// </summary>
         /// <param name="name">The workflow name.</param>
         /// <param name="args">Optionally specifies the workflow arguments.</param>
@@ -1311,7 +1370,7 @@ namespace Neon.Cadence
         /// Executes a local activity and waits for it to complete.
         /// </summary>
         /// <typeparam name="TActivity">Specifies the local activity implementation type.</typeparam>
-        /// <param name="args">Optionally specifies the activity name.</param>
+        /// <param name="args">Optionally specifies the activity arguments.</param>
         /// <param name="options">Optionally specifies any local activity options.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
@@ -1333,6 +1392,8 @@ namespace Neon.Cadence
         protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null, CancellationToken? cancellationToken = null)
             where TActivity : ActivityBase
         {
+            options = options ?? new LocalActivityOptions();
+
             // We need to register the local activity type with a workflow local ID
             // that we can sent to [cadence-proxy] in the [ActivityExecuteLocalRequest]
             // such that the proxy can send it back to us in the [ActivityInvokeLocalRequest]
@@ -1376,7 +1437,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="args">Optional arguments for the new run.</param>
         /// <param name="domain">Optional domain for the new run.</param>
-        /// <param name="tasklist">Optional tasklist for the new run.</param>
+        /// <param name="taskList">Optional tasklist for the new run.</param>
         /// <param name="executionToStartTimeout">Optional execution to start timeout for the new run.</param>
         /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new run.</param>
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
@@ -1390,7 +1451,7 @@ namespace Neon.Cadence
         protected async Task RestartAsync(
             byte[]              args                    = null,
             string              domain                  = null,
-            string              tasklist                = null,
+            string              taskList                = null,
             TimeSpan            executionToStartTimeout = default,
             TimeSpan            scheduleToCloseTimeout  = default,
             TimeSpan            scheduleToStartTimeout  = default,
@@ -1412,7 +1473,7 @@ namespace Neon.Cadence
             throw new CadenceWorkflowRestartException(
                 args:                       args,
                 domain:                     domain,
-                tasklist:                   tasklist,
+                taskList:                   taskList,
                 executionToStartTimeout:    executionToStartTimeout,
                 scheduleToCloseTimeout:     scheduleToCloseTimeout,
                 scheduleToStartTimeout:     scheduleToStartTimeout,

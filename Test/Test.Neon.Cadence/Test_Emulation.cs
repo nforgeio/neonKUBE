@@ -338,12 +338,12 @@ namespace TestCadence
             // other tests on this connection.
 
             var domain   = Guid.NewGuid().ToString("D");
-            var tasklist = Guid.NewGuid().ToString("D");
+            var taskList = Guid.NewGuid().ToString("D");
 
             // Verify parameter checks.
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkflowWorkerAsync(null, tasklist));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync("", tasklist));
+            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkflowWorkerAsync(null, taskList));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync("", taskList));
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync(domain, null));
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync(domain, ""));
 
@@ -355,18 +355,18 @@ namespace TestCadence
 
             await client.RegisterDomainAsync(domain);
 
-            var workflowWorker = await client.StartWorkflowWorkerAsync(domain, tasklist);
-            var activityWorker = await client.StartActivityWorkerAsync(domain, tasklist);
+            var workflowWorker = await client.StartWorkflowWorkerAsync(domain, taskList);
+            var activityWorker = await client.StartActivityWorkerAsync(domain, taskList);
 
             // Stop the workers.
 
-            await client.StopWorkerAsync(workflowWorker);
-            await client.StopWorkerAsync(activityWorker);
+            workflowWorker.Dispose();
+            activityWorker.Dispose();
 
             // Stop the workers again to verify that we don't see any errors.
 
-            await client.StopWorkerAsync(workflowWorker);
-            await client.StopWorkerAsync(activityWorker);
+            workflowWorker.Dispose();
+            activityWorker.Dispose();
         }
 
         [Fact]

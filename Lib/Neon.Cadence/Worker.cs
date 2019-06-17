@@ -28,7 +28,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Identifies a worker registered with Cadence.
     /// </summary>
-    public class Worker
+    public sealed class Worker : IDisposable
     {
         /// <summary>
         /// Internal constructor.
@@ -45,6 +45,18 @@ namespace Neon.Cadence
             this.WorkerId   = workerId;
             this.Domain     = domain;
             this.Tasklist   = taskList;
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            if (Client != null)
+            {
+                Client.StopWorkerAsync(this).Wait();
+                Client = null;
+
+                GC.SuppressFinalize(this);
+            }
         }
 
         /// <summary>

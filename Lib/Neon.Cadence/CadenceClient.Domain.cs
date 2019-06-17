@@ -67,21 +67,35 @@ namespace Neon.Cadence
         /// Optionally specifies the number of days to retain the history for workflows 
         /// completed in this domain.  This defaults to <b>7 days</b>.
         /// </param>
+        /// <param name="ignoreDuplicates">
+        /// Optionally ignore duplicate domain registrations.  This defaults
+        /// to <c>false</c>.
+        /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceDomainAlreadyExistsException">Thrown if the domain already exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7)
+        public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
-            await RegisterDomainAsync(
-                new InternalRegisterDomainRequest()
+            try
+            {
+                await RegisterDomainAsync(
+                    new InternalRegisterDomainRequest()
+                    {
+                        Name          = name,
+                        Description   = description,
+                        OwnerEmail    = ownerEmail,
+                        RetentionDays = retentionDays
+                    });
+            }
+            catch (CadenceDomainAlreadyExistsException)
+            {
+                if (!ignoreDuplicates)
                 {
-                    Name          = name,
-                    Description   = description,
-                    OwnerEmail    = ownerEmail,
-                    RetentionDays = retentionDays
-                });
+                    throw;
+                }
+            }
         }
 
         /// <summary>

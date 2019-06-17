@@ -49,7 +49,7 @@ namespace Neon.Cadence
         /// a specific domain and tasklist.
         /// </summary>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="tasklist">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
+        /// <param name="taskList">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
@@ -64,15 +64,17 @@ namespace Neon.Cadence
         /// to the fully qualified name of the workflow type.
         /// </para>
         /// <para>
-        /// This method returns a <see cref="Worker"/> which may be used by advanced applications
-        /// to explicitly stop the worker by calling <see cref="StopWorkerAsync(Worker)"/>.  Doing
-        /// this is entirely optional.
+        /// This method returns a <see cref="Worker"/> which implements <see cref="IDisposable"/>.
+        /// It's a best practice to call <see cref="Dispose()"/> just before the a worker process
+        /// terminates, but this is optional.  Advanced worker implementation that need to change
+        /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
+        /// for specific domains and task lists.
         /// </para>
         /// </remarks>
-        public async Task<Worker> StartWorkflowWorkerAsync(string domain, string tasklist = "default", WorkerOptions options = null)
+        public async Task<Worker> StartWorkflowWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             Worker worker;
 
@@ -89,7 +91,7 @@ namespace Neon.Cadence
                 // registrations will happen infrequently (typically just once
                 // per service, when it starts).
 
-                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == tasklist);
+                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
 
                 if (worker != null)
                 {
@@ -104,13 +106,13 @@ namespace Neon.Cadence
                 {
                     IsWorkflow = true,
                     Domain     = domain,
-                    TaskList   = tasklist,
+                    TaskList   = taskList,
                     Options    = options.ToInternal()
                 }));
 
             reply.ThrowOnError();
 
-            worker = new Worker(this, true, reply.WorkerId, domain, tasklist);
+            worker = new Worker(this, true, reply.WorkerId, domain, taskList);
 
             lock (syncLock)
             {
@@ -125,7 +127,7 @@ namespace Neon.Cadence
         /// domain and tasklist.
         /// </summary>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="tasklist">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
+        /// <param name="taskList">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
@@ -140,15 +142,17 @@ namespace Neon.Cadence
         /// fully qualified name of the activity type.
         /// </para>
         /// <para>
-        /// This method returns a <see cref="Worker"/> which may be used by advanced applications
-        /// to explicitly stop the worker by calling <see cref="StopWorkerAsync(Worker)"/>.  Doing
-        /// this is entirely optional.
+        /// This method returns a <see cref="Worker"/> which implements <see cref="IDisposable"/>.
+        /// It's a best practice to call <see cref="Dispose()"/> just before the a worker process
+        /// terminates, but this is optional.  Advanced worker implementation that need to change
+        /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
+        /// for specific domains and task lists.
         /// </para>
         /// </remarks>
-        public async Task<Worker> StartActivityWorkerAsync(string domain, string tasklist = "default", WorkerOptions options = null)
+        public async Task<Worker> StartActivityWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(tasklist));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             Worker worker;
 
@@ -165,7 +169,7 @@ namespace Neon.Cadence
                 // registrations will happen infrequently (typically just once
                 // per service, when it starts).
 
-                worker = workers.Values.SingleOrDefault(wf => !wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == tasklist);
+                worker = workers.Values.SingleOrDefault(wf => !wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
 
                 if (worker != null)
                 {
@@ -180,13 +184,13 @@ namespace Neon.Cadence
                 {
                     IsWorkflow = false,
                     Domain     = domain,
-                    TaskList   = tasklist,
+                    TaskList   = taskList,
                     Options    = options.ToInternal()
                 }));
 
             reply.ThrowOnError();
 
-            worker = new Worker(this, false, reply.WorkerId, domain, tasklist);
+            worker = new Worker(this, false, reply.WorkerId, domain, taskList);
 
             lock (syncLock)
             {
@@ -206,7 +210,7 @@ namespace Neon.Cadence
         /// <remarks>
         /// This method does nothing if the worker is already stopped.
         /// </remarks>
-        public async Task StopWorkerAsync(Worker worker)
+        internal async Task StopWorkerAsync(Worker worker)
         {
             Covenant.Requires<ArgumentNullException>(worker != null);
 
