@@ -861,10 +861,24 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
+	// check for options
+	var opts client.StartWorkflowOptions
+	if v := request.GetOptions(); v != nil {
+		opts = *v
+		if opts.DecisionTaskStartToCloseTimeout <= 0 {
+			opts.DecisionTaskStartToCloseTimeout = cadenceClientTimeout
+		}
+	} else {
+		opts = client.StartWorkflowOptions{
+			ExecutionStartToCloseTimeout:    cadenceClientTimeout,
+			DecisionTaskStartToCloseTimeout: cadenceClientTimeout,
+		}
+	}
+
 	// signalwithstart the specified workflow
 	workflowRun, err := clientHelper.ExecuteWorkflow(ctx,
 		*request.GetDomain(),
-		*request.GetOptions(),
+		opts,
 		*request.GetWorkflow(),
 		request.GetArgs(),
 	)
@@ -1570,11 +1584,20 @@ func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildReq
 	}
 
 	// set options on the context
-	// set cancellation on the context
-	ctx := workflow.WithChildOptions(wectx.GetContext(), *request.GetOptions())
-	ctx, cancel := workflow.WithCancel(ctx)
+	var opts workflow.ChildWorkflowOptions
+	if v := request.GetOptions(); v != nil {
+		opts = *v
+	} else {
+		opts = workflow.ChildWorkflowOptions{
+			ExecutionStartToCloseTimeout: cadenceClientTimeout,
+			TaskStartToCloseTimeout:      cadenceClientTimeout,
+		}
+	}
 
+	// set cancellation on the context
 	// execute the child workflow
+	ctx := workflow.WithChildOptions(wectx.GetContext(), opts)
+	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx,
 		*request.GetWorkflow(),
 		request.GetArgs(),
@@ -1623,7 +1646,7 @@ func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildReq
 	}
 
 	// wait on the child workflow
-	var result []byte
+	var result interface{}
 	if err := cctx.GetFuture().GetChildWorkflowExecution().Get(wectx.GetContext(), result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -2236,7 +2259,9 @@ func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalReq
 	}
 
 	// the local activity function
-	localActivityFunc := func(ctx workflow.Context, activityTypeID int64, args []byte) ([]byte, error) {
+	activityTypeID := request.GetActivityTypeID()
+	args := request.GetArgs()
+	localActivityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 
 		// create an activity context entry in the ActivityContexts map
 		actx := cadenceactivities.NewActivityContext(ctx)
@@ -2250,24 +2275,22 @@ func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalReq
 		activityInvokeLocalRequest := messages.NewActivityInvokeLocalRequest()
 		activityInvokeLocalRequest.SetRequestID(requestID)
 		activityInvokeLocalRequest.SetContextID(contextID)
-		activityInvokeLocalRequest.SetArgs(args)
+		activityInvokeLocalRequest.SetArgs(input)
 		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
 		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
 
 		// create the Operation for this request and add it to the operations map
-		future, settable := workflow.NewFuture(ctx)
 		op := NewOperation(requestID, activityInvokeLocalRequest)
-		op.SetFuture(future)
-		op.SetSettable(settable)
+		op.SetChannel(make(chan interface{}))
 		op.SetContextID(activityContextID)
 		Operations.Add(requestID, op)
 
 		// send a request to the
 		// Neon.Cadence Lib
-		f := func(ctx workflow.Context) {
+		f := func(message messages.IProxyRequest) {
 
 			// send the ActivityInvokeRequest
-			resp, err := putToNeonCadenceClient(activityInvokeLocalRequest)
+			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
 				panic(err)
 			}
@@ -2282,31 +2305,39 @@ func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalReq
 		}
 
 		// send the request
-		workflow.Go(ctx, f)
+		go f(activityInvokeLocalRequest)
 
-		// wait for the future to be unblocked
-		var result []byte
-		if err := future.Get(ctx, &result); err != nil {
-			return nil, err
+		// wait for ActivityInvokeReply
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+		case error:
+			return nil, s
+		case []byte:
+			return s, nil
+		default:
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
 		}
-
-		return result, nil
 	}
 
-	// get the activity options, the context,
+	// get the activity options
+	var opts workflow.LocalActivityOptions
+	if v := request.GetOptions(); v == nil {
+		opts = *v
+		if opts.ScheduleToCloseTimeout <= 0 {
+			opts.ScheduleToCloseTimeout = cadenceClientTimeout
+		}
+	} else {
+		opts = workflow.LocalActivityOptions{
+			ScheduleToCloseTimeout: cadenceClientTimeout,
+		}
+	}
+
 	// and set the activity options on the context
-	opts := request.GetOptions()
-	ctx := wectx.GetContext()
-	if opts != nil {
-		ctx = workflow.WithLocalActivityOptions(ctx, *opts)
-	}
-
-	// register the local activity function
-	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, request.GetArgs())
+	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
 
 	// wait for the future to be unblocked
 	var result []byte
-	if err := future.Get(ctx, &result); err != nil {
+	if err := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args).Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 	} else {
 		buildReply(reply, nil, result)

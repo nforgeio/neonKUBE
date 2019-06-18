@@ -699,18 +699,24 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_ChildWorkflow_ByType()
         {
+            // Move register domain up above workers
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
             using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
                 using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
                 {
-                    await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-
                     // Run a workflow that invokes a child workflow.
 
                     await client.RegisterWorkflowAsync<ExecuteChildWorkflow>();
 
+                    // Register the HelloWorkflow workflow
+                    await client.RegisterWorkflowAsync<HelloWorkflow>();
+
                     var args        = Encoding.UTF8.GetBytes("local-activity");
-                    var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+
+                    // TODO: JACK -- Should this be HelloWorkflow or ExecuteChildWorkflow?
+                    var workflowRun = await client.StartWorkflowAsync<ExecuteChildWorkflow>("test-domain", args: null);
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
