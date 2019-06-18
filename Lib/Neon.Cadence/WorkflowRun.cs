@@ -20,6 +20,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
+
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -50,6 +55,9 @@ namespace Neon.Cadence
         /// <summary>
         /// The original ID assigned to the workflow when it was started.
         /// </summary>
+        [JsonProperty(PropertyName = "RunId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "runId", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string RunId { get; private set; }
 
         /// <summary>
@@ -57,11 +65,17 @@ namespace Neon.Cadence
         /// than <see cref="RunId"/> when the workflow has been continued as new
         /// or potentially restarted.
         /// </summary>
+        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Id { get; private set; }
 
         /// <summary>
         /// The domain hosting the workflow.
         /// </summary>
+        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Domain { get; private set; }
     }
 }
