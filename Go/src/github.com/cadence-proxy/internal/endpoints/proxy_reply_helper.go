@@ -725,7 +725,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply) er
 	}
 
 	// set the reply
-	err := op.SetReply(reply.GetResult(), reply.GetError())
+	err := op.SendChannel(reply.GetResult(), reply.GetError())
 	if err != nil {
 		return err
 	}
