@@ -46,6 +46,8 @@ namespace TestCadence
     /// </summary>
     public sealed class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
+        private static readonly TimeSpan allowedVariation = TimeSpan.FromMilliseconds(1000);
+
         //---------------------------------------------------------------------
         // Common workflow and activity classes.
 
@@ -312,10 +314,97 @@ namespace TestCadence
             }
         }
 
+        /// <summary>
+        /// Returns the current time (UTC) as JSON.
+        /// </summary>
+        private class GetUtcNowWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return NeonHelper.JsonSerializeToBytes(await UtcNowAsync());
+            }
+        }
+
+        /// <summary>
+        /// Sleeps for the timespan passed as JSON.  The result is a list of two
+        /// DateTime instances.  The first is the time UTC just before sleeping
+        /// and the second is the time just after sleeping.
+        /// </summary>
+        private class SleepWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var sleepTime  = NeonHelper.JsonDeserialize<TimeSpan>(args);
+                var beforeTime = DateTime.UtcNow;
+
+                await SleepAsync(sleepTime);
+
+                var afterTime = DateTime.UtcNow;
+                var times     = new List<DateTime>() { beforeTime, afterTime };
+                
+                return NeonHelper.JsonSerializeToBytes(times);
+            }
+        }
+
+        /// <summary>
+        /// Sleeps until the time passed as JSON.  The result is a list of two
+        /// DateTime instances.  The first is the time UTC just before sleeping
+        /// and the second is the time just after sleeping.
+        /// </summary>
+        private class SleepUntilWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var wakeTimeUtc = NeonHelper.JsonDeserialize<DateTime>(args);
+                var beforeTime  = DateTime.UtcNow;
+
+                await SleepUntilUtcAsync(wakeTimeUtc);
+
+                var afterTime = DateTime.UtcNow;
+                var times = new List<DateTime>() { beforeTime, afterTime };
+
+                return NeonHelper.JsonSerializeToBytes(times);
+            }
+        }
+
+        /// <summary>
+        /// This workflow is never registered and is used for testing related scenarios.
+        /// </summary>
+        private class UnregisteredWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return await Task.FromResult((byte[])null);
+            }
+        }
+
+        /// <summary>
+        /// This workflow restarts if a non-null argument is passed and also keeps track of
+        /// the number of times the workflow was executed.
+        /// </summary>
+        private class RestartableWorkflow : WorkflowBase
+        {
+            public static int ExecutionCount = 0;
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                ExecutionCount++;
+
+                if (args != null)
+                {
+                    // Pass [args=null] so the next run won't restart.
+
+                    await RestartAsync(null);
+                }
+
+                return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
+            }
+        }
+
         //---------------------------------------------------------------------
         // Test implementations:
 
-        CadenceFixture      fixture;
+        CadenceFixture fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -715,6 +804,159 @@ namespace TestCadence
                 Assert.NotEqual("my-workflow", properties["RunId"]);
                 Assert.Equal(typeof(GetPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
                 Assert.Equal("default", properties["TaskList"]);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_UtcNow()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<GetUtcNowWorkflow>();
+
+                var workflowRun    = await client.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
+                var nowJsonBytes   = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowNowUtc = NeonHelper.JsonDeserialize<DateTime>(nowJsonBytes);
+                var nowUtc         = DateTime.UtcNow;
+
+                Assert.True(nowUtc - workflowNowUtc < allowedVariation);
+                Assert.True(workflowNowUtc - nowUtc < allowedVariation);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Sleep()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<SleepWorkflow>();
+
+                var sleepTime = TimeSpan.FromSeconds(5);
+                var workflowRun = await client.StartWorkflowAsync<SleepWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(sleepTime));
+                var nowJsonBytes = await client.GetWorkflowResultAsync(workflowRun);
+                var times = NeonHelper.JsonDeserialize<List<DateTime>>(nowJsonBytes);
+
+                Assert.True(times[1] > times[0]);
+                Assert.True(times[1] - times[0] - sleepTime < allowedVariation);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_SleepUntil()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<SleepUntilWorkflow>();
+
+                var sleepTime    = TimeSpan.FromSeconds(5);
+                var wakeTime     = DateTime.UtcNow + sleepTime;
+                var workflowRun  = await client.StartWorkflowAsync<SleepUntilWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(sleepTime));
+                var nowJsonBytes = await client.GetWorkflowResultAsync(workflowRun);
+                var times        = NeonHelper.JsonDeserialize<List<DateTime>>(nowJsonBytes);
+
+                Assert.True(times[1] > times[0]);
+                Assert.True(times[1] - times[0] - sleepTime < allowedVariation);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_StartTimeout()
+        {
+            // Verify that we see a [CadenceTimeoutException] when we try to execute 
+            // and unregistered workflow.  This als ensures that the workflow honors
+            // [WorkflowOptions.ExecutionStartToCloseTimeout].
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                // Warm up Cadence by registering an running another workflow.  This will
+                // help make our timeout timing more accurate and repeatable.
+
+                await client.RegisterWorkflowAsync<GetUtcNowWorkflow>();
+                await client.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
+
+                // This is the actual test.
+
+                var executeTimeout = TimeSpan.FromSeconds(5);
+                var startTime      = DateTime.UtcNow;
+
+                try
+                {
+                    await client.StartWorkflowAsync<UnregisteredWorkflow>("test-domain", options: new WorkflowOptions() { ExecutionStartToCloseTimeout = executeTimeout });
+                }
+                catch (CadenceTimeoutException)
+                {
+                    var endTime = DateTime.UtcNow;
+
+                    // Ensure that [ExecutionStartToCloseTimeout] and that we got the exception
+                    // close to 5 seconds after we attempted to execution.
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_GetResult()
+        {
+            // Verify that we can retrieve a workflow result after it has completed execution.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<HelloWorkflow>();
+
+                // Run a workflow passing NULL args and verify.
+
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
+
+                // Now retrieve the result from the completed workflow and verify.
+
+                result = await client.GetWorkflowResultAsync(workflowRun);
+
+                Assert.NotNull(result);
+                Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Restart()
+        {
+            // Verify that we can a workflow can restart itself.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                await client.RegisterWorkflowAsync<RestartableWorkflow>();
+
+                // Clear the execution count, run a restarting workflow, and then
+                // verify that it executed twice.
+
+                RestartableWorkflow.ExecutionCount = 0;
+
+                var workflowRun = await client.StartWorkflowAsync<RestartableWorkflow>("test-domain", args: new byte[] { 1 });
+                var result      = await client.GetWorkflowResultAsync(workflowRun.Id);
+
+                Assert.NotNull(result);
+                Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
+                Assert.Equal(2, RestartableWorkflow.ExecutionCount);
             }
         }
     }
