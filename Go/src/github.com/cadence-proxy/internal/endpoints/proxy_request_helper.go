@@ -861,10 +861,21 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
+	// check for options
+	var opts client.StartWorkflowOptions
+	if v := request.GetOptions(); v != nil {
+		opts = *v
+	} else {
+		opts = client.StartWorkflowOptions{
+			ExecutionStartToCloseTimeout:    cadenceClientTimeout,
+			DecisionTaskStartToCloseTimeout: cadenceClientTimeout,
+		}
+	}
+
 	// signalwithstart the specified workflow
 	workflowRun, err := clientHelper.ExecuteWorkflow(ctx,
 		*request.GetDomain(),
-		*request.GetOptions(),
+		opts,
 		*request.GetWorkflow(),
 		request.GetArgs(),
 	)
@@ -1570,11 +1581,20 @@ func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildReq
 	}
 
 	// set options on the context
-	// set cancellation on the context
-	ctx := workflow.WithChildOptions(wectx.GetContext(), *request.GetOptions())
-	ctx, cancel := workflow.WithCancel(ctx)
+	var opts workflow.ChildWorkflowOptions
+	if v := request.GetOptions(); v != nil {
+		opts = *v
+	} else {
+		opts = workflow.ChildWorkflowOptions{
+			ExecutionStartToCloseTimeout: cadenceClientTimeout,
+			TaskStartToCloseTimeout:      cadenceClientTimeout,
+		}
+	}
 
+	// set cancellation on the context
 	// execute the child workflow
+	ctx := workflow.WithChildOptions(wectx.GetContext(), opts)
+	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx,
 		*request.GetWorkflow(),
 		request.GetArgs(),
@@ -1623,7 +1643,7 @@ func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildReq
 	}
 
 	// wait on the child workflow
-	var result []byte
+	var result interface{}
 	if err := cctx.GetFuture().GetChildWorkflowExecution().Get(wectx.GetContext(), result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
