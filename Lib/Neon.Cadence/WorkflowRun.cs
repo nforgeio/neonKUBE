@@ -39,17 +39,17 @@ namespace Neon.Cadence
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="id">The current ID for the workflow.</param>
+        /// <param name="workflowId">The current ID for the workflow.</param>
         /// <param name="runId">The original ID the workflow.</param>
         /// <param name="domain">Optionally specifies the domain hosting the workflow,</param>
-        public WorkflowRun(string runId, string id, string domain = null)
+        public WorkflowRun(string workflowId, string runId, string domain = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
 
-            this.RunId  = runId;
-            this.Id     = id;
-            this.Domain = domain;
+            this.RunId      = runId;
+            this.WorkflowId = workflowId;
+            this.Domain     = domain;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Neon.Cadence
         [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "id", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Id { get; private set; }
+        public string WorkflowId { get; private set; }
 
         /// <summary>
         /// The domain hosting the workflow.
