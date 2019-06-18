@@ -257,14 +257,14 @@ namespace TestCadence
 
                 // Verify that we get the new last values by passing [update=false].
 
-                value1 = await GetValueAsync("value-1", new byte[] { 5 }, update: false);
+                value1 = await GetValueAsync("value-1", new byte[] { 5 }, update: true);
 
                 if (value1[0] != 3)
                 {
                     throw new Exception($"Test-3: value1={value1[0]}");
                 }
 
-                value2 = await GetValueAsync("value-2", new byte[] { 6 }, update: false);
+                value2 = await GetValueAsync("value-2", new byte[] { 6 }, update: true);
 
                 if (value2[0] != 4)
                 {
@@ -361,7 +361,7 @@ namespace TestCadence
                 await SleepUntilUtcAsync(wakeTimeUtc);
 
                 var afterTime = DateTime.UtcNow;
-                var times = new List<DateTime>() { beforeTime, afterTime };
+                var times     = new List<DateTime>() { beforeTime, afterTime };
 
                 return NeonHelper.JsonSerializeToBytes(times);
             }
@@ -404,7 +404,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Test implementations:
 
-        CadenceFixture fixture;
+        CadenceFixture      fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -751,7 +751,7 @@ namespace TestCadence
                 // Verify that mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var workflowRun = await client.StartWorkflowAsync < MutableValueWorkflow>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync<MutableValueWorkflow>("test-domain", args: null);
 
                 await client.GetWorkflowResultAsync(workflowRun);
             }
@@ -930,6 +930,22 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_GetResultError()
+        {
+            // Verify that an exception is thrown when waiting on a non-existent workflow.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var workflowRun = new WorkflowRun("not-present", "not-here");
+
+                await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await client.GetWorkflowResultAsync(workflowRun));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Restart()
         {
             // Verify that we can a workflow can restart itself.
@@ -946,7 +962,7 @@ namespace TestCadence
                 RestartableWorkflow.ExecutionCount = 0;
 
                 var workflowRun = await client.StartWorkflowAsync<RestartableWorkflow>("test-domain", args: new byte[] { 1 });
-                var result      = await client.GetWorkflowResultAsync(workflowRun.Id);
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
