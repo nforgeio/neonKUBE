@@ -133,7 +133,7 @@ namespace Neon.Cadence
 
             var execution = reply.Execution;
 
-            return new WorkflowRun(execution.RunID, execution.ID, domain);
+            return new WorkflowRun(execution.ID, execution.RunID, domain);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace Neon.Cadence
             var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
                 new WorkflowDescribeExecutionRequest()
                 {
-                    WorkflowId = run.Id,
+                    WorkflowId = run.WorkflowId,
                     RunId      = run.RunId
                 });
 
@@ -176,34 +176,8 @@ namespace Neon.Cadence
             var reply = (WorkflowGetResultReply)await CallProxyAsync(
                 new WorkflowGetResultRequest()
                 {
-                    WorkflowId = run.Id,
+                    WorkflowId = run.WorkflowId,
                     RunId      = run.RunId
-                });
-
-            reply.ThrowOnError();
-
-            return reply.Result;
-        }
-
-        /// <summary>
-        /// Returns the result for a workflow ID and optional run ID, blocking until the workflow
-        /// completes if it is still running.
-        /// </summary>
-        /// <param name="workflowId">Identifies the workflow.</param>
-        /// <param name="runId">The optional workflow run ID.</param>
-        /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task<byte[]> GetWorkflowResultAsync(string workflowId, string runId = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-
-            var reply = (WorkflowGetResultReply)await CallProxyAsync(
-                new WorkflowGetResultRequest()
-                {
-                    WorkflowId = workflowId,
-                    RunId      = runId
                 });
 
             reply.ThrowOnError();
@@ -233,7 +207,7 @@ namespace Neon.Cadence
             var reply = (WorkflowCancelReply)await CallProxyAsync(
                 new WorkflowCancelRequest()
                 {
-                    WorkflowId = run.Id,
+                    WorkflowId = run.WorkflowId,
                     RunId      = run.RunId,
                     Domain     = run.Domain
                 });
@@ -264,7 +238,7 @@ namespace Neon.Cadence
             var reply = (WorkflowTerminateReply)await CallProxyAsync(
                 new WorkflowTerminateRequest()
                 {
-                    WorkflowId = run.Id,
+                    WorkflowId = run.WorkflowId,
                     RunId      = run.RunId,
                     Reason     = reason,
                     Details    = details

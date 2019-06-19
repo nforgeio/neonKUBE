@@ -2264,7 +2264,7 @@ namespace Neon.CodeGen
                 foreach (var clientGroup in nonRootClientGroups)
                 {
                     writer.WriteLine($"        [GeneratedClient(\"{clientGroup.Value.RouteTemplate}\")]");
-                    writer.WriteLine($"        public class __{clientGroup.Key} : IGeneratedServiceClient");
+                    writer.WriteLine($"        public partial class __{clientGroup.Key} : IGeneratedServiceClient");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            private JsonClient client;");
                     writer.WriteLine();
