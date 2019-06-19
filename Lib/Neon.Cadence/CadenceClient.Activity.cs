@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -58,7 +59,54 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            ActivityBase.Register<TActivity>(activityTypeName);
+            ActivityBase.Register(typeof(TActivity), activityTypeName);
+        }
+
+        /// <summary>
+        /// Scans the assembly passed looking for activity implementations derived from
+        /// <see cref="ActivityBase"/> and tagged with <see cref="AutoRegisterAttribute"/>
+        /// and registers them with Cadence.
+        /// </summary>
+        /// <param name="assembly">The target assembly.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TypeLoadException">
+        /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
+        /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
+        /// </exception>
+        public async Task AutoRegisterActivitiesAsync(Assembly assembly)
+        {
+            Covenant.Requires<ArgumentNullException>(assembly != null);
+
+            foreach (var type in assembly.GetTypes())
+            {
+                var autoRegisterAttribute = type.GetCustomAttribute<AutoRegisterAttribute>();
+
+                if (autoRegisterAttribute != null)
+                {
+                    if (type.IsSubclassOf(typeof(WorkflowBase)))
+                    {
+                        // Ignore these here.
+                    }
+                    else if (type.IsSubclassOf(typeof(ActivityBase)))
+                    {
+                        var activityTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
+
+                        var reply = (ActivityRegisterReply)await CallProxyAsync(
+                            new ActivityRegisterRequest()
+                            {
+                                Name = activityTypeName
+                            });
+
+                        reply.ThrowOnError();
+
+                        ActivityBase.Register(type, activityTypeName);
+                    }
+                    else
+                    {
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
+                    }
+                }
+            }
         }
 
         /// <summary>

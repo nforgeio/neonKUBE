@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -59,7 +60,54 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            WorkflowBase.Register<TWorkflow>(workflowTypeName);
+            WorkflowBase.Register(typeof(TWorkflow), workflowTypeName);
+        }
+
+        /// <summary>
+        /// Scans the assembly passed looking for workflow implementations derived from
+        /// <see cref="WorkflowBase"/> and tagged with <see cref="AutoRegisterAttribute"/>
+        /// and registers them with Cadence.
+        /// </summary>
+        /// <param name="assembly">The target assembly.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TypeLoadException">
+        /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
+        /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
+        /// </exception>
+        public async Task AutoRegisterWorkflowsAsync(Assembly assembly)
+        {
+            Covenant.Requires<ArgumentNullException>(assembly != null);
+
+            foreach (var type in assembly.GetTypes())
+            {
+                var autoRegisterAttribute = type.GetCustomAttribute<AutoRegisterAttribute>();
+
+                if (autoRegisterAttribute != null)
+                {
+                    if (type.IsSubclassOf(typeof(WorkflowBase)))
+                    {
+                        var workflowTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
+
+                        var reply = (WorkflowRegisterReply)await CallProxyAsync(
+                            new WorkflowRegisterRequest()
+                            {
+                                Name = workflowTypeName
+                            });
+
+                        reply.ThrowOnError();
+
+                        WorkflowBase.Register(type, workflowTypeName);
+                    }
+                    else if (type.IsSubclassOf(typeof(ActivityBase)))
+                    {
+                        // Ignore these here.
+                    }
+                    else
+                    {
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
+                    }
+                }
+            }
         }
 
         /// <summary>

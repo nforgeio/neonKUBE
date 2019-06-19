@@ -266,17 +266,17 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers a workflow type.
         /// </summary>
-        /// <typeparam name="TWorkflow">The workflow implementation type.</typeparam>
+        /// <param name="workflowType">The workflow type.</param>
         /// <param name="workflowTypeName">The name used to identify the implementation.</param>
-        internal static void Register<TWorkflow>(string workflowTypeName)
-            where TWorkflow : WorkflowBase
+        internal static void Register(Type workflowType, string workflowTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentException>(typeof(TWorkflow) != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
+            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentException>(workflowType.IsSubclassOf(typeof(WorkflowBase)));
+            Covenant.Requires<ArgumentException>(workflowType != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
 
             lock (syncLock)
             {
-                nameToWorkflowType[workflowTypeName] = typeof(TWorkflow);
+                nameToWorkflowType[workflowTypeName] = workflowType;
             }
         }
 

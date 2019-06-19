@@ -164,17 +164,17 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers an activity type.
         /// </summary>
-        /// <typeparam name="TActivity">The activity implementation type.</typeparam>
+        /// <param name="activityType">The activity type.</param>
         /// <param name="activityTypeName">The name used to identify the implementation.</param>
-        internal static void Register<TActivity>(string activityTypeName)
-            where TActivity : ActivityBase
+        internal static void Register(Type activityType, string activityTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
-            Covenant.Requires<ArgumentException>(typeof(TActivity) != typeof(ActivityBase), $"The base [{nameof(ActivityBase)}] class cannot be registered.");
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(WorkflowBase)));
+            Covenant.Requires<ArgumentException>(activityType != typeof(ActivityBase), $"The base [{nameof(ActivityBase)}] class cannot be registered.");
 
             var constructInfo = new ConstructInfo();
 
-            constructInfo.Type        = typeof(TActivity);
+            constructInfo.Type        = activityType;
             constructInfo.Constructor = constructInfo.Type.GetConstructor(noTypeArgs);
 
             if (constructInfo.Constructor == null)

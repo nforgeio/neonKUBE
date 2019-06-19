@@ -809,6 +809,32 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_NonDefaultTasklist()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain", taskList: "non-default"))
+            {
+                await client.RegisterWorkflowAsync<GetPropertiesWorkflow>();
+
+                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow" });
+                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
+
+                Assert.Equal("0.0.0", properties["Version"]);
+                Assert.Equal("0.0.0", properties["OriginalVersion"]);
+                Assert.Equal("test-domain", properties["Domain"]);
+                Assert.Equal("my-workflow", properties["WorkflowId"]);
+                Assert.NotNull(properties["RunId"]);
+                Assert.NotEmpty(properties["RunId"]);
+                Assert.NotEqual("my-workflow", properties["RunId"]);
+                Assert.Equal(typeof(GetPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
+                Assert.Equal("non-default", properties["TaskList"]);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_UtcNow()
         {
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
@@ -1009,7 +1035,6 @@ namespace TestCadence
             Assert.Equal("* * * 4 *", (new CronSchedule() { Month = 4 } ).ToInternal());
             Assert.Equal("* * * * 5", (new CronSchedule() { DayOfWeek = DayOfWeek.Friday } ).ToInternal());
             Assert.Equal("1 2 3 4 5", (new CronSchedule() { Minute = 1, Hour = 2, DayOfMonth = 3, Month = 4, DayOfWeek = DayOfWeek.Friday } ).ToInternal());
-
         }
     }
 }
