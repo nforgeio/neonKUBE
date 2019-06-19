@@ -114,6 +114,32 @@ namespace TestCadence
         }
 
         /// <summary>
+        /// An automatically registerable workflow that calls the 
+        /// <see cref="AutoHelloActivity"/> and returns "Hello World!".
+        /// </summary>
+        [AutoRegister]
+        private class AutoHelloWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return await CallActivityAsync<AutoHelloActivity>();
+            }
+        }
+
+        /// <summary>
+        /// An automatically registerable simple workflow with a custom type name that calls
+        /// the  <see cref="CustomAutoHelloActivity"/> and returns "Hello World!".
+        /// </summary>
+        [AutoRegister("CustomAutoHelloWorkflow")]
+        private class CustomAutoHelloWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return await CallActivityAsync("CustomAutoHelloActivity");
+            }
+        }
+
+        /// <summary>
         /// This workflow does the same thing as <see cref="HelloWorkflow"/> except that it
         /// executes the child activities by name and not type.
         /// </summary>
@@ -154,6 +180,30 @@ namespace TestCadence
         /// Test activity that returns the argument passed.
         /// </summary>
         private class HelloActivity : ActivityBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return await Task.FromResult(args);
+            }
+        }
+
+        /// <summary>
+        /// Automatically registerable test activity that returns the argument passed.
+        /// </summary>
+        [AutoRegister]
+        private class AutoHelloActivity : ActivityBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return await Task.FromResult(args);
+            }
+        }
+
+        /// <summary>
+        /// Automatically registerable test activity withj a custom name that returns the argument passed.
+        /// </summary>
+        [AutoRegister("CustomAutoHelloActivity")]
+        private class CustomAutoHelloActivity : ActivityBase
         {
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
