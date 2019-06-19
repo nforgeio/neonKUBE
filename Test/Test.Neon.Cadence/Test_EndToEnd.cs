@@ -975,5 +975,41 @@ namespace TestCadence
                 Assert.Equal(2, RestartableWorkflow.ExecutionCount);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void CronScheduleClass()
+        {
+            // Verify that the [CronSchedule] class works as expected.
+
+            //---------------------------------------------
+            // Verify that it checks for invalid values.
+
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { DayOfMonth = -1 }).ToInternal());
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { DayOfMonth = 0 }).ToInternal());
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { DayOfMonth = 32 }).ToInternal());
+
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Month = -1 }).ToInternal());
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Month = 0 }).ToInternal());
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Month = 13 }).ToInternal());
+
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Hour = -1 }).ToInternal());
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Hour = 24 }).ToInternal());
+
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Minute = -1 }).ToInternal());
+            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Minute = 60 }).ToInternal());
+
+            //---------------------------------------------
+            // Verify that various schedules render properly.
+
+            Assert.Null((new CronSchedule()).ToInternal());
+            Assert.Equal("1 * * * *", (new CronSchedule() { Minute = 1 } ).ToInternal());
+            Assert.Equal("* 2 * * *", (new CronSchedule() { Hour = 2 } ).ToInternal());
+            Assert.Equal("* * 3 * *", (new CronSchedule() { DayOfMonth = 3 } ).ToInternal());
+            Assert.Equal("* * * 4 *", (new CronSchedule() { Month = 4 } ).ToInternal());
+            Assert.Equal("* * * * 5", (new CronSchedule() { DayOfWeek = DayOfWeek.Friday } ).ToInternal());
+            Assert.Equal("1 2 3 4 5", (new CronSchedule() { Minute = 1, Hour = 2, DayOfMonth = 3, Month = 4, DayOfWeek = DayOfWeek.Friday } ).ToInternal());
+
+        }
     }
 }

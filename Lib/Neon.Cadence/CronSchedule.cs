@@ -30,7 +30,7 @@ namespace Neon.Cadence
     /// </summary>
     /// <remarks>
     /// <para>
-    /// All of the schedule properties are optional and at least one must be non <c>null</c>
+    /// All of the schedule properties are optional but at least one must be non-<c>null</c>
     /// for the workflow to be scheduled as a recurring CRON job.
     /// </para>
     /// <para>
@@ -100,6 +100,12 @@ namespace Neon.Cadence
         /// </summary>
         /// <returns>The schedule string or <c>null</c>.</returns>
         /// <exception cref="ArgumentException">Thrown if any of the schedule properties are invalid.</exception>
+        /// <remarks>
+        /// <note>
+        /// This will return <c>null</c> if all of the properties are <c>null</c>, disabling
+        /// CRON functionality.
+        /// </note>
+        /// </remarks>
         internal string ToInternal()
         {
             if (Minute == null && Hour == null && DayOfMonth == null && Month == null && DayOfWeek == null)
@@ -107,11 +113,11 @@ namespace Neon.Cadence
                 return null;
             }
 
-            var minute     = string.Empty;
-            var hour       = string.Empty;
-            var dayOfMonth = string.Empty;
-            var month      = string.Empty;
-            var dayOfWeek  = string.Empty;
+            var minute     = "*";
+            var hour       = "*";
+            var dayOfMonth = "*";
+            var month      = "*";
+            var dayOfWeek  = "*";
 
             if (Minute != null)
             {
@@ -155,7 +161,7 @@ namespace Neon.Cadence
 
             if (DayOfWeek != null)
             {
-                dayOfMonth = ((int)DayOfWeek).ToString();
+                dayOfWeek = ((int)DayOfWeek).ToString();
             }
 
             return $"{minute} {hour} {dayOfMonth} {month} {dayOfWeek}";
