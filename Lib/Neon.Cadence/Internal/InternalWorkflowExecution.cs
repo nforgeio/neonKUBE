@@ -51,7 +51,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public WorkflowRun ToPublic()
         {
-            return new WorkflowRun(this.RunID, this.ID);
+            return new WorkflowRun(this.ID, this.RunID);
         }
     }
 }

@@ -596,7 +596,7 @@ namespace Neon.Cadence
         /// <param name="client">The client the request was received from.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ActivityExecuteLocalReply> OnInvokeLocalActivity(CadenceClient client, ActivityInvokeLocalRequest request)
+        internal static async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(CadenceClient client, ActivityInvokeLocalRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
@@ -612,7 +612,7 @@ namespace Neon.Cadence
                     {
                         if (!workflow.idToLocalActivityType.TryGetValue(request.ActivityTypeId, out activityType))
                         {
-                            return new ActivityExecuteLocalReply()
+                            return new ActivityInvokeLocalReply()
                             {
                                 Error = new CadenceEntityNotExistsException($"Activity type does not exist for [activityTypeId={request.ActivityTypeId}].").ToCadenceError()
                             };
@@ -623,14 +623,14 @@ namespace Neon.Cadence
                     var activity   = ActivityBase.Create(activityType, client, null);
                     var result     = await activity.OnRunAsync(request.Args);
 
-                    return new ActivityExecuteLocalReply()
+                    return new ActivityInvokeLocalReply()
                     {
                         Result = result
                     };
                 }
                 else
                 {
-                    return new ActivityExecuteLocalReply()
+                    return new ActivityInvokeLocalReply()
                     {
                         Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
                     };
@@ -638,7 +638,7 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
-                return new ActivityExecuteLocalReply()
+                return new ActivityInvokeLocalReply()
                 {
                     Error = new CadenceError(e)
                 };

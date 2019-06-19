@@ -140,6 +140,20 @@ func (wectx *WorkflowContext) SetCancelFunction(value func()) {
 	wectx.cancelFunc = value
 }
 
+// GetChildContexts gets a WorkflowContext's child contexts map
+//
+// returns *childContextsMap -> a cadence workflow child contexts map
+func (wectx *WorkflowContext) GetChildContexts() *childContextsMap {
+	return wectx.childContexts
+}
+
+// SetChildContexts sets a WorkflowContext's cancel function
+//
+// param value *childContextsMap -> a cadence workflow child contexts map
+func (wectx *WorkflowContext) SetChildContexts(value *childContextsMap) {
+	wectx.childContexts = value
+}
+
 // AddChildContext adds a new cadence context and its corresponding ContextId into
 // the WorkflowContext's childContexts map.  This method is thread-safe.
 //

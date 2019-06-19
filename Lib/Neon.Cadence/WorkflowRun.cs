@@ -20,6 +20,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+using YamlDotNet.Serialization;
+
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -34,34 +39,42 @@ namespace Neon.Cadence
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="id">The current ID for the workflow.</param>
-        /// <param name="runId">The original ID the workflow.</param>
+        /// <param name="workflowId">The original ID for the workflow.</param>
+        /// <param name="runId">Optionally specifies the current run ID for the workflow.</param>
         /// <param name="domain">Optionally specifies the domain hosting the workflow,</param>
-        public WorkflowRun(string runId, string id, string domain = null)
+        public WorkflowRun(string workflowId, string runId = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
 
-            this.RunId  = runId;
-            this.Id     = id;
-            this.Domain = domain;
+            this.WorkflowId = workflowId;
+            this.RunId      = runId;
+            this.Domain     = domain;
         }
-
-        /// <summary>
-        /// The original ID assigned to the workflow when it was started.
-        /// </summary>
-        public string RunId { get; private set; }
 
         /// <summary>
         /// Returns the current ID for workflow execution.  This will be different
         /// than <see cref="RunId"/> when the workflow has been continued as new
         /// or potentially restarted.
         /// </summary>
-        public string Id { get; private set; }
+        [JsonProperty(PropertyName = "Id", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "id", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string WorkflowId { get; private set; }
+
+        /// <summary>
+        /// The original ID assigned to the workflow when it was started.
+        /// </summary>
+        [JsonProperty(PropertyName = "RunId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "runId", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string RunId { get; private set; }
 
         /// <summary>
         /// The domain hosting the workflow.
         /// </summary>
+        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
         public string Domain { get; private set; }
     }
 }
