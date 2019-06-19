@@ -520,10 +520,10 @@ namespace TestCadence
 
             var updateDomainRequest = new DomainUpdateArgs();
 
-            updateDomainRequest.Options.EmitMetrics   = true;
-            updateDomainRequest.Options.RetentionDays = 77;
-            updateDomainRequest.DomainInfo.OwnerEmail       = "foo@bar.com";
-            updateDomainRequest.DomainInfo.Description      = "new description";
+            updateDomainRequest.Options.EmitMetrics    = true;
+            updateDomainRequest.Options.RetentionDays  = 77;
+            updateDomainRequest.DomainInfo.OwnerEmail  = "foo@bar.com";
+            updateDomainRequest.DomainInfo.Description = "new description";
 
             await client.UpdateDomainAsync("domain-0", updateDomainRequest);
 

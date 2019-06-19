@@ -292,7 +292,7 @@ func handleCancelReply(reply *messages.CancelReply) error {
 func handleConnectReply(reply *messages.ConnectReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ConnectReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ConnectReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -308,7 +308,7 @@ func handleDomainDescribeReply(reply *messages.DomainDescribeReply) error {
 func handleDomainRegisterReply(reply *messages.DomainRegisterReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("DomainRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("DomainRegisterReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -348,7 +348,7 @@ func handleTerminateReply(reply *messages.TerminateReply) error {
 func handlePingReply(reply *messages.PingReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -356,7 +356,7 @@ func handlePingReply(reply *messages.PingReply) error {
 func handleNewWorkerReply(reply *messages.NewWorkerReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("NewWorkerReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("NewWorkerReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -376,7 +376,7 @@ func handleStopWorkerReply(reply *messages.StopWorkerReply) error {
 func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowRegisterReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -384,7 +384,7 @@ func handleWorkflowExecuteReply(reply *messages.WorkflowExecuteReply) error {
 func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
@@ -455,7 +455,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 func handleWorkflowRegisterReply(reply *messages.WorkflowRegisterReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowRegisterReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -471,7 +471,7 @@ func handleWorkflowCancelReply(reply *messages.WorkflowCancelReply) error {
 func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSignalInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
@@ -501,7 +501,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) 
 func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowQueryInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowQueryInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
@@ -563,7 +563,7 @@ func handleWorkflowMutableReply(reply *messages.WorkflowMutableReply) error {
 func handleWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowHasLastResultReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowHasLastResultReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -571,7 +571,7 @@ func handleWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply
 func handleWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowGetLastResultReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowGetLastResultReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -579,7 +579,7 @@ func handleWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply
 func handleWorkflowDisconnectContextReply(reply *messages.WorkflowDisconnectContextReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowDisconnectContextReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowDisconnectContextReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -587,7 +587,7 @@ func handleWorkflowDisconnectContextReply(reply *messages.WorkflowDisconnectCont
 func handleWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowGetTimeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowGetTimeReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -595,7 +595,7 @@ func handleWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply) error {
 func handleWorkflowSleepReply(reply *messages.WorkflowSleepReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSleepReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSleepReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -606,7 +606,7 @@ func handleWorkflowSleepReply(reply *messages.WorkflowSleepReply) error {
 func handleActivityRegisterReply(reply *messages.ActivityRegisterReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityRegisterReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityRegisterReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -614,7 +614,7 @@ func handleActivityRegisterReply(reply *messages.ActivityRegisterReply) error {
 func handleActivityExecuteReply(reply *messages.ActivityExecuteReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityExecuteReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityExecuteReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -622,7 +622,7 @@ func handleActivityExecuteReply(reply *messages.ActivityExecuteReply) error {
 func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityInvokeReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
@@ -655,7 +655,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 func handleActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeatDetailsReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityHasHeartbeatDetailsReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityHasHeartbeatDetailsReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -663,7 +663,7 @@ func handleActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeat
 func handleActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeatDetailsReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityGetHeartbeatDetailsReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityGetHeartbeatDetailsReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -671,7 +671,7 @@ func handleActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeat
 func handleActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityRecordHeartbeatReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityRecordHeartbeatReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	return nil
 }
@@ -679,7 +679,7 @@ func handleActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatR
 func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityStoppingReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityStoppingReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	// remove the Operation from the map
 	requestID := reply.GetRequestID()
@@ -703,7 +703,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
 func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply) error {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityInvokeLocalReply Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityInvokeLocalReply Received", zap.Int("ProccessId", os.Getpid()))
 
 	// remove the WorkflowContext from the map
 	// and remove the Operation from the map
