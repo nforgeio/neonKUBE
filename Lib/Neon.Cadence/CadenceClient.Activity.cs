@@ -43,6 +43,7 @@ namespace Neon.Cadence
         /// to the fully qualified <typeparamref name="TActivity"/> type name.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
             where TActivity : ActivityBase
         {
@@ -73,6 +74,7 @@ namespace Neon.Cadence
         /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
         /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
         /// </exception>
+        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         public async Task AutoRegisterActivitiesAsync(Assembly assembly)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
@@ -91,6 +93,13 @@ namespace Neon.Cadence
                     {
                         var activityTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
+                        if (ActivityBase.Register(type, activityTypeName))
+                        {
+                            // Already registered.
+
+                            return;
+                        }
+
                         var reply = (ActivityRegisterReply)await CallProxyAsync(
                             new ActivityRegisterRequest()
                             {
@@ -98,8 +107,6 @@ namespace Neon.Cadence
                             });
 
                         reply.ThrowOnError();
-
-                        ActivityBase.Register(type, activityTypeName);
                     }
                     else
                     {

@@ -166,7 +166,9 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityTypeName">The name used to identify the implementation.</param>
-        internal static void Register(Type activityType, string activityTypeName)
+        /// <returns><c>true</c> if the activity was already registered.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
+        internal static bool Register(Type activityType, string activityTypeName)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(ActivityBase)), $"Type [{activityType.FullName}] does not derive from [{nameof(ActivityBase)}].");
@@ -184,7 +186,21 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                nameToConstructInfo[activityTypeName] = constructInfo;
+                if (nameToConstructInfo.TryGetValue(activityTypeName, out var existingEntry))
+                {
+                    if (!object.ReferenceEquals(existingEntry.Type, constructInfo.Type))
+                    {
+                        throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for workflow type name [{activityTypeName}].");
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    nameToConstructInfo[activityTypeName] = constructInfo;
+
+                    return false;
+                }
             }
         }
 

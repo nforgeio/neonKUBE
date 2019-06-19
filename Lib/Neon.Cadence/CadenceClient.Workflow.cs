@@ -44,6 +44,7 @@ namespace Neon.Cadence
         /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if another workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null)
             where TWorkflow : WorkflowBase
         {
@@ -74,6 +75,7 @@ namespace Neon.Cadence
         /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
         /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
         /// </exception>
+        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         public async Task AutoRegisterWorkflowsAsync(Assembly assembly)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
@@ -88,6 +90,13 @@ namespace Neon.Cadence
                     {
                         var workflowTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
+                        if (WorkflowBase.Register(type, workflowTypeName))
+                        {
+                            // Already registered.
+
+                            return;
+                        }
+
                         var reply = (WorkflowRegisterReply)await CallProxyAsync(
                             new WorkflowRegisterRequest()
                             {
@@ -95,8 +104,6 @@ namespace Neon.Cadence
                             });
 
                         reply.ThrowOnError();
-
-                        WorkflowBase.Register(type, workflowTypeName);
                     }
                     else if (type.IsSubclassOf(typeof(ActivityBase)))
                     {
