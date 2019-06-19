@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -195,7 +196,7 @@ namespace TestCadence
         {
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                return await Task.FromResult(args);
+                return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
             }
         }
 
@@ -207,7 +208,7 @@ namespace TestCadence
         {
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                return await Task.FromResult(args);
+                return await Task.FromResult(Encoding.UTF8.GetBytes("Hello World!"));
             }
         }
 
@@ -491,7 +492,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Domain()
         {
-            // Exercise the Cadence global domain operations.
+            // Exercise the Cadence domain operations.
 
             //-----------------------------------------------------------------
             // RegisterDomain:
@@ -1085,6 +1086,54 @@ namespace TestCadence
             Assert.Equal("* * * 4 *", (new CronSchedule() { Month = 4 } ).ToInternal());
             Assert.Equal("* * * * 5", (new CronSchedule() { DayOfWeek = DayOfWeek.Friday } ).ToInternal());
             Assert.Equal("1 2 3 4 5", (new CronSchedule() { Minute = 1, Hour = 2, DayOfMonth = 3, Month = 4, DayOfWeek = DayOfWeek.Friday } ).ToInternal());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task AutoRegister()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            // Auto registers tagged workflows and activities and then executes them
+            // using the default(full) type names.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+
+                await client.AutoRegisterWorkflowsAsync(assembly);
+                await client.AutoRegisterActivitiesAsync(assembly);
+
+                var result = await client.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+
+                Assert.NotNull(result);
+                Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
+            }
+    }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task AutoRegister_CustomTypeName()
+        {
+            // Auto registers tagged workflows and activities and then executes them
+            // using custom type names.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+
+                await client.AutoRegisterWorkflowsAsync(assembly);
+                await client.AutoRegisterActivitiesAsync(assembly);
+
+                var result = await client.CallWorkflowAsync("CustomAutoHelloWorkflow", "test-domain");
+
+                Assert.NotNull(result);
+                Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
+            }
         }
     }
 }

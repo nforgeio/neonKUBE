@@ -46,9 +46,9 @@ namespace Neon.Cadence
         /// </param>
         public AutoRegisterAttribute(string typeName = null)
         {
-            Covenant.Requires<ArgumentException>(typeName.Length > 0, $"[{nameof(typeName)}] cannot be empty.");
+            Covenant.Requires<ArgumentException>(typeName == null || typeName.Length > 0, $"[{nameof(typeName)}] cannot be empty.");
 
-            this.TypeName = TypeName;
+            this.TypeName = typeName;
         }
 
         /// <summary>

@@ -169,7 +169,7 @@ namespace Neon.Cadence
         internal static void Register(Type activityType, string activityTypeName)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(WorkflowBase)));
+            Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(ActivityBase)), $"Type [{activityType.FullName}] does not derive from [{nameof(ActivityBase)}].");
             Covenant.Requires<ArgumentException>(activityType != typeof(ActivityBase), $"The base [{nameof(ActivityBase)}] class cannot be registered.");
 
             var constructInfo = new ConstructInfo();

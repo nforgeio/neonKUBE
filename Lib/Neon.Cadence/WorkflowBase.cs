@@ -138,9 +138,9 @@ namespace Neon.Cadence
     /// </item>
     /// <item>
     ///     <para>
-    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/>,
+    ///     An external workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/>,
     ///     passing an optional byte array as workflow arguments as well as optional workflow options.  
-    ///     Global workflows have no parent, as opposed to child workflows that run in the context of 
+    ///     External workflows have no parent, as opposed to child workflows that run in the context of 
     ///     another workflow (the parent).
     ///     </para>
     ///     <note>
@@ -271,7 +271,7 @@ namespace Neon.Cadence
         internal static void Register(Type workflowType, string workflowTypeName)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null);
-            Covenant.Requires<ArgumentException>(workflowType.IsSubclassOf(typeof(WorkflowBase)));
+            Covenant.Requires<ArgumentException>(workflowType.IsSubclassOf(typeof(WorkflowBase)), $"Type [{workflowType.FullName}] does not derive from [{nameof(WorkflowBase)}]");
             Covenant.Requires<ArgumentException>(workflowType != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
 
             lock (syncLock)
