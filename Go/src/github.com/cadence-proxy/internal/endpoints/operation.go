@@ -21,18 +21,18 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
-
 	"go.uber.org/cadence/workflow"
 
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
 )
 
 var (
+	mu sync.RWMutex
 
-	// Operations is a map of operations used to track pending
-	// cadence-client operations
-	Operations = new(operationsMap)
+	// requestID is incremented (protected by a mutex) every time
+	// a new request message is sent
+	requestID int64
 )
 
 type (
@@ -51,6 +51,27 @@ type (
 		channel     chan interface{}
 	}
 )
+
+//----------------------------------------------------------------------------
+// RequestID thread-safe methods
+
+// NextRequestID increments the package variable
+// requestID by 1 and is protected by a mutex lock
+func NextRequestID() int64 {
+	mu.Lock()
+	requestID = requestID + 1
+	defer mu.Unlock()
+
+	return requestID
+}
+
+// GetRequestID gets the value of the global variable
+// requestID and is protected by a mutex Read lock
+func GetRequestID() int64 {
+	mu.RLock()
+	defer mu.RUnlock()
+	return requestID
+}
 
 // NewOperation is the default constructor for an Operation
 func NewOperation(requestID int64, request messages.IProxyRequest) *Operation {

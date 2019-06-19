@@ -25,9 +25,7 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
-	"github.com/cadence-proxy/internal/cadence/cadenceactivities"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
-	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -390,7 +388,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	// and remove the Operation from the map
 	requestID := reply.GetRequestID()
 	defer func() {
-		_ = cadenceworkflows.WorkflowContexts.Remove(Operations.Get(requestID).GetContextID())
+		_ = WorkflowContexts.Remove(Operations.Get(requestID).GetContextID())
 		_ = Operations.Remove(requestID)
 	}()
 
@@ -400,8 +398,15 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		return errEntityNotExist
 	}
 
+	// debug
+	logger.Debug("Settling Workflow",
+		zap.Int64("ContextId", op.GetContextID()),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
 	// WorkflowContext at the specified WorflowContextID
-	wectx := cadenceworkflows.WorkflowContexts.Get(op.GetContextID())
+	wectx := WorkflowContexts.Get(op.GetContextID())
 	if wectx == nil {
 		return errEntityNotExist
 	}
@@ -485,7 +490,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) 
 	}
 
 	// WorkflowContext at the specified WorflowContextID
-	if wectx := cadenceworkflows.WorkflowContexts.Get(op.GetContextID()); wectx == nil {
+	if wectx := WorkflowContexts.Get(op.GetContextID()); wectx == nil {
 		return errEntityNotExist
 	}
 
@@ -515,7 +520,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) er
 	}
 
 	// WorkflowContext at the specified WorflowContextID
-	if wectx := cadenceworkflows.WorkflowContexts.Get(op.GetContextID()); wectx == nil {
+	if wectx := WorkflowContexts.Get(op.GetContextID()); wectx == nil {
 		return errEntityNotExist
 	}
 
@@ -628,7 +633,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 	// and remove the Operation from the map
 	requestID := reply.GetRequestID()
 	defer func() {
-		_ = cadenceactivities.ActivityContexts.Remove(Operations.Get(requestID).GetContextID())
+		_ = ActivityContexts.Remove(Operations.Get(requestID).GetContextID())
 		_ = Operations.Remove(requestID)
 	}()
 
@@ -639,7 +644,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 	}
 
 	// ActivityContext at the specified WorflowContextID
-	if actx := cadenceactivities.ActivityContexts.Get(op.GetContextID()); actx == nil {
+	if actx := ActivityContexts.Get(op.GetContextID()); actx == nil {
 		return errEntityNotExist
 	}
 
@@ -709,7 +714,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply) er
 	// and remove the Operation from the map
 	requestID := reply.GetRequestID()
 	defer func() {
-		_ = cadenceactivities.ActivityContexts.Remove(Operations.Get(requestID).GetContextID())
+		_ = ActivityContexts.Remove(Operations.Get(requestID).GetContextID())
 		_ = Operations.Remove(requestID)
 	}()
 
@@ -720,7 +725,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply) er
 	}
 
 	// ActivityContext at the specified WorflowContextID
-	if actx := cadenceactivities.ActivityContexts.Get(op.GetContextID()); actx == nil {
+	if actx := ActivityContexts.Get(op.GetContextID()); actx == nil {
 		return errEntityNotExist
 	}
 

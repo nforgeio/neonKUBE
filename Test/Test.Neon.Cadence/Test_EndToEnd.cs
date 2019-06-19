@@ -306,7 +306,7 @@ namespace TestCadence
                     throw new Exception($"Test-4, value2={value2[0]}");
                 }
 
-                // Verify that we get the new last values by passing [update=false].
+                // Verify that we get the new last values by passing [update = false].
 
                 value1 = await GetValueAsync("value-1", new byte[] { 5 }, update: true);
 
@@ -765,9 +765,8 @@ namespace TestCadence
                     await client.RegisterWorkflowAsync<HelloWorkflow>();
 
                     var args        = Encoding.UTF8.GetBytes("local-activity");
-
-                    // TODO: JACK -- Should this be HelloWorkflow or ExecuteChildWorkflow?
                     var workflowRun = await client.StartWorkflowAsync<ExecuteChildWorkflow>("test-domain", args: null);
+
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
@@ -789,7 +788,7 @@ namespace TestCadence
                 // Verify that non-mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync<NonMutableValueWorkflow>("test-domain", args: null);
 
                 await client.GetWorkflowResultAsync(workflowRun);
             }

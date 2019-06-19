@@ -19,6 +19,7 @@ package messages
 
 import (
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	"go.uber.org/cadence/workflow"
 )
 
 type (
@@ -61,6 +62,31 @@ func (reply *WorkflowExecuteChildReply) GetChildID() int64 {
 // WorkflowExecuteChildReply's properties map.
 func (reply *WorkflowExecuteChildReply) SetChildID(value int64) {
 	reply.SetLongProperty("ChildId", value)
+}
+
+// GetExecution gets the workflow execution or nil
+// from a WorkflowExecuteChildReply's properties map.
+//
+// returns *workflow.Execution -> pointer to a cadence workflow execution
+// struct housing the result of a workflow execution
+func (reply *WorkflowExecuteChildReply) GetExecution() *workflow.Execution {
+	exe := new(workflow.Execution)
+	err := reply.GetJSONProperty("Execution", exe)
+	if err != nil {
+		return nil
+	}
+
+	return exe
+}
+
+// SetExecution sets the workflow execution or nil
+// in a WorkflowExecuteChildReply's properties map.
+//
+// param value *workflow.Execution -> pointer to a cadence workflow execution
+// struct housing the result of a workflow execution, to be set in the
+// WorkflowExecuteChildReply's properties map
+func (reply *WorkflowExecuteChildReply) SetExecution(value *workflow.Execution) {
+	reply.SetJSONProperty("Execution", value)
 }
 
 // -------------------------------------------------------------------------
