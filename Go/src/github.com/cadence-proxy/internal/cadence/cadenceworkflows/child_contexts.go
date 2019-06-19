@@ -55,11 +55,10 @@ type (
 // childID by 1 and is protected by a mutex lock
 func NextChildID() int64 {
 	mu.Lock()
-	curr := childID
 	childID = childID + 1
-	mu.Unlock()
+	defer mu.Unlock()
 
-	return curr
+	return childID
 }
 
 // GetChildID gets the value of the global variable

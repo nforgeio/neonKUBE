@@ -540,12 +540,18 @@ func buildWorkflowSleepReply(reply *messages.WorkflowSleepReply, cadenceError *c
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, cadenceError *cadenceerrors.CadenceError, childID ...interface{}) {
+func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, cadenceError *cadenceerrors.CadenceError, childInfo ...interface{}) {
 	reply.SetError(cadenceError)
 
-	if len(childID) > 0 {
-		if v, ok := childID[0].(int64); ok {
-			reply.SetChildID(v)
+	if len(childInfo) > 0 {
+		if v, ok := childInfo[0].([]interface{}); ok {
+			if _v, _ok := v[0].(int64); _ok {
+				reply.SetChildID(_v)
+			}
+
+			if _v, _ok := v[1].(*workflow.Execution); _ok {
+				reply.SetExecution(_v)
+			}
 		}
 	}
 }

@@ -25,11 +25,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"go.uber.org/zap"
 
+	"github.com/cadence-proxy/internal/cadence/cadenceactivities"
+	"github.com/cadence-proxy/internal/cadence/cadenceworkers"
+	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"
 	"github.com/cadence-proxy/internal/server"
 )
@@ -48,11 +50,6 @@ const (
 )
 
 var (
-	mu sync.RWMutex
-
-	// requestID is incremented (protected by a mutex) every time
-	// a new request message is sent
-	requestID int64
 
 	// logger for all endpoints to utilize
 	logger *zap.Logger
@@ -93,29 +90,29 @@ var (
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been recieved by the cadence-proxy
 	cadenceClientTimeout time.Duration = time.Second * 600
+
+	// ActivityContexts maps a int64 ContextId to the cadence
+	// Activity Context passed to the cadence Activity functions.
+	// The cadence-client will use contextIds to refer to specific
+	// activity contexts when perfoming activity actions
+	ActivityContexts = new(cadenceactivities.ActivityContextsMap)
+
+	// Workers maps a int64 WorkerId to the cadence
+	// Worker returned by the Cadence NewWorker() function.
+	// This will be used to stop a worker via the
+	// StopWorkerRequest.
+	Workers = new(cadenceworkers.WorkersMap)
+
+	// WorkflowContexts maps a int64 ContextId to the cadence
+	// Workflow Context passed to the cadence Workflow functions.
+	// The cadence-client will use contextIds to refer to specific
+	// workflow ocntexts when perfoming workflow actions
+	WorkflowContexts = new(cadenceworkflows.WorkflowContextsMap)
+
+	// Operations is a map of operations used to track pending
+	// cadence-client operations
+	Operations = new(operationsMap)
 )
-
-//----------------------------------------------------------------------------
-// RequestID thread-safe methods
-
-// NextRequestID increments the package variable
-// requestID by 1 and is protected by a mutex lock
-func NextRequestID() int64 {
-	mu.Lock()
-	curr := requestID
-	requestID = requestID + 1
-	mu.Unlock()
-
-	return curr
-}
-
-// GetRequestID gets the value of the global variable
-// requestID and is protected by a mutex Read lock
-func GetRequestID() int64 {
-	mu.RLock()
-	defer mu.RUnlock()
-	return requestID
-}
 
 //----------------------------------------------------------------------------
 // ProxyMessage processing helpers

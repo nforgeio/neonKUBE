@@ -27,6 +27,7 @@ import (
 	"reflect"
 	"time"
 
+	"go.uber.org/cadence/encoded"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
@@ -687,7 +688,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 	}
 
 	// put the worker and workerID from the new worker to the
-	workerID = cadenceworkers.Workers.Add(workerID, worker)
+	workerID = Workers.Add(workerID, worker)
 
 	// build the reply
 	buildReply(reply, nil, workerID)
@@ -714,7 +715,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	// get the workerID from the request so that we know
 	// what worker to stop
 	workerID := request.GetWorkerID()
-	worker := cadenceworkers.Workers.Get(workerID)
+	worker := Workers.Get(workerID)
 	if worker == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -722,9 +723,9 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	}
 
 	// stop the worker and
-	// remove it from the cadenceworkers.Workers map
+	// remove it from the Workers map
 	worker.Stop()
-	workerID = cadenceworkers.Workers.Remove(workerID)
+	workerID = Workers.Remove(workerID)
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Worker has been deleted", zap.Int64("WorkerID", workerID))
@@ -769,18 +770,23 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	// create workflow function
 	workflowName := request.GetName()
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
+		contextID := cadenceworkflows.NextContextID()
+		requestID := NextRequestID()
+		logger.Debug("Executing Workflow",
+			zap.Int64("ContextId", contextID),
+			zap.Int64("RequestId", requestID),
+			zap.Int("ProccessId", os.Getpid()),
+		)
 
 		// new WorkflowContext
-		contextID := cadenceworkflows.NextContextID()
 		wectx := cadenceworkflows.NewWorkflowContext(ctx)
 		wectx.SetWorkflowName(workflowName)
 
 		// set the WorkflowContext in WorkflowContexts
-		contextID = cadenceworkflows.WorkflowContexts.Add(contextID, wectx)
+		contextID = WorkflowContexts.Add(contextID, wectx)
 
 		// Send a WorkflowInvokeRequest to the Neon.Cadence Lib
 		// cadence-client
-		requestID := NextRequestID()
 		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
 		workflowInvokeRequest.SetRequestID(requestID)
 		workflowInvokeRequest.SetContextID(contextID)
@@ -844,7 +850,11 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowExecuteRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowExecuteRequest Recieved",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.String("WorkflowName", *request.GetWorkflow()),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// new WorkflowExecuteReply
 	reply := createReplyMessage(request)
@@ -1087,7 +1097,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1124,14 +1134,13 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		return false
 	}
 
-	// TODO: JACK -- UPDATE TO CALL MutableSideEffect
-	// or SideEffect
-	// if request.GetUpdate() {
+	// Choose if we use MutableSideEffect or
+	// SideEffect.  If we want to update the value,
+	// Use SideEffect cadence call
+	var sideEffectValue encoded.Value
 
-	// }
-
-	// execute the cadence server SideEffectMutable call
-	sideEffectValue := workflow.MutableSideEffect(wectx.GetContext(),
+	// execute the cadence server MutableSideEffect call
+	sideEffectValue = workflow.MutableSideEffect(wectx.GetContext(),
 		*request.GetMutableID(),
 		mutableFunc,
 		equals,
@@ -1139,19 +1148,15 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 	// extract the result
 	var result []byte
-	if sideEffectValue.HasValue() {
-		err := sideEffectValue.Get(&result)
+	err := sideEffectValue.Get(&result)
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
-		// check the error of retreiving the value
-		if err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
-
-			return reply
-		}
-
-		// build reply
-		buildReply(reply, nil, result)
+		return reply
 	}
+
+	// build reply
+	buildReply(reply, nil, result)
 
 	return reply
 }
@@ -1263,7 +1268,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 
 	// get the contextID and the corresponding context
 	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1403,7 +1408,7 @@ func handleWorkflowHasLastResultRequest(request *messages.WorkflowHasLastResultR
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1433,7 +1438,7 @@ func handleWorkflowGetLastResultRequest(request *messages.WorkflowGetLastResultR
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1472,7 +1477,7 @@ func handleWorkflowDisconnectContextRequest(request *messages.WorkflowDisconnect
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1508,7 +1513,7 @@ func handleWorkflowGetTimeRequest(request *messages.WorkflowGetTimeRequest) mess
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1538,7 +1543,7 @@ func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1562,7 +1567,12 @@ func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages
 func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowExecuteChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	contextID := request.GetContextID()
+	logger.Debug("WorkflowExecuteChildRequest Recieved",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ContextId", contextID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// new WorkflowExecuteChildReply
 	reply := createReplyMessage(request)
@@ -1576,7 +1586,7 @@ func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildReq
 	}
 
 	// get the contextID and the corresponding context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1613,8 +1623,15 @@ func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildReq
 	// in the WorkflowContexts map
 	childID := wectx.AddChildContext(cadenceworkflows.NextChildID(), cctx)
 
+	// get the child workflow execution
+	childWE := new(workflow.Execution)
+	err := childFuture.GetChildWorkflowExecution().Get(ctx, childWE)
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+	}
+
 	// build the reply
-	buildReply(reply, nil, childID)
+	buildReply(reply, nil, append(make([]interface{}, 0), childID, childWE))
 
 	return reply
 }
@@ -1622,7 +1639,14 @@ func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildReq
 func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowWaitForChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	contextID := request.GetContextID()
+	childID := request.GetChildID()
+	logger.Debug("WorkflowWaitForChildRequest Recieved",
+		zap.Int64("ContextId", contextID),
+		zap.Int64("ChildId", childID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// new WorkflowWaitForChildReply
 	reply := createReplyMessage(request)
@@ -1636,8 +1660,7 @@ func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildReq
 	}
 
 	// get the child context from the parent workflow context
-	childID := request.GetChildID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(contextID)
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
@@ -1646,8 +1669,8 @@ func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildReq
 	}
 
 	// wait on the child workflow
-	var result interface{}
-	if err := cctx.GetFuture().GetChildWorkflowExecution().Get(wectx.GetContext(), result); err != nil {
+	var result []byte
+	if err := cctx.GetFuture().Get(wectx.GetContext(), &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
@@ -1681,7 +1704,7 @@ func handleWorkflowSignalChildRequest(request *messages.WorkflowSignalChildReque
 	}
 
 	// get the child context from the parent workflow context
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	cctx := wectx.GetChildContext(request.GetChildID())
 	if cctx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
@@ -1728,7 +1751,7 @@ func handleWorkflowCancelChildRequest(request *messages.WorkflowCancelChildReque
 
 	// get the child context from the parent workflow context
 	childID := request.GetChildID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(request.GetContextID())
+	wectx := WorkflowContexts.Get(request.GetContextID())
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
@@ -1768,7 +1791,7 @@ func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHand
 
 	// get the contextID and the corresponding context
 	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -1931,7 +1954,7 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 		actx.SetActivityName(activityName)
 
 		// add the context to ActivityContexts
-		contextID = cadenceactivities.ActivityContexts.Add(contextID, actx)
+		contextID = ActivityContexts.Add(contextID, actx)
 
 		// Send a ActivityInvokeRequest to the Neon.Cadence Lib
 		// cadence-client
@@ -2041,7 +2064,7 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 
 	// get the contextID and the corresponding context
 	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -2251,7 +2274,7 @@ func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalReq
 	}
 
 	contextID := request.GetContextID()
-	wectx := cadenceworkflows.WorkflowContexts.Get(contextID)
+	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
 
@@ -2267,7 +2290,7 @@ func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalReq
 		actx := cadenceactivities.NewActivityContext(ctx)
 
 		// add the context to ActivityContexts
-		activityContextID := cadenceactivities.ActivityContexts.Add(cadenceactivities.NextContextID(), actx)
+		activityContextID := ActivityContexts.Add(cadenceactivities.NextContextID(), actx)
 
 		// Send a ActivityInvokeLocalRequest to the Neon.Cadence Lib
 		// cadence-client

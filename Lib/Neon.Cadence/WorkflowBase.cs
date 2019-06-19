@@ -1125,9 +1125,10 @@ namespace Neon.Cadence
             var reply = (WorkflowExecuteChildReply)await Client.CallProxyAsync(
                 new WorkflowExecuteChildRequest()
                 {
-                    Workflow = workflowTypeName,
-                    Args     = args,
-                    Options  = options?.ToInternal()
+                    ContextId   = contextId,
+                    Workflow    = workflowTypeName,
+                    Args        = args,
+                    Options     = options?.ToInternal()
                 },
                 cancellationToken: cancellationToken);
 
@@ -1145,7 +1146,8 @@ namespace Neon.Cadence
             var reply2 = (WorkflowWaitForChildReply)await Client.CallProxyAsync(
                 new WorkflowWaitForChildRequest()
                 {
-                    ChildId = reply.ChildId
+                    ContextId   = contextId,
+                    ChildId     = reply.ChildId
                 });
 
             reply2.ThrowOnError();
@@ -1269,7 +1271,7 @@ namespace Neon.Cadence
             var reply = (WorkflowCancelChildReply)await Client.CallProxyAsync(
                 new WorkflowCancelChildRequest()
                 {
-                    ChildId = childWorkflow.Id
+                    ChildId     = childWorkflow.Id
                 });
 
             reply.ThrowOnError();
@@ -1302,7 +1304,8 @@ namespace Neon.Cadence
             var reply = (WorkflowWaitForChildReply)await Client.CallProxyAsync(
                 new WorkflowWaitForChildRequest()
                 {
-                    ChildId = childWorkflow.Id
+                    ContextId   = contextId,
+                    ChildId     = childWorkflow.Id
                 });
 
             reply.ThrowOnError();
@@ -1356,9 +1359,10 @@ namespace Neon.Cadence
             var reply = (ActivityExecuteReply)await Client.CallProxyAsync(
                 new ActivityExecuteRequest()
                 {
-                    Activity = activityTypeName,
-                    Args     = args,
-                    Options  = options.ToInternal()
+                    ContextId   = contextId,
+                    Activity    = activityTypeName,
+                    Args        = args,
+                    Options     = options.ToInternal()
                 });
 
             reply.ThrowOnError();
@@ -1411,9 +1415,10 @@ namespace Neon.Cadence
                 var reply = (ActivityExecuteLocalReply)await Client.CallProxyAsync(
                     new ActivityExecuteLocalRequest()
                     {
-                        ActivityTypeId = activityTypeId,
-                        Args           = args,
-                        Options        = options.ToInternal()
+                        ContextId       = contextId,
+                        ActivityTypeId  = activityTypeId,
+                        Args            = args,
+                        Options         = options.ToInternal()
                     });
 
                 reply.ThrowOnError();

@@ -29,12 +29,6 @@ var (
 	// workerID is incremented (protected by a mutex) every time
 	// a new cadence Worker is created
 	workerID int64
-
-	// Workers maps a int64 WorkerId to the cadence
-	// Worker returned by the Cadence NewWorker() function.
-	// This will be used to stop a worker via the
-	// StopWorkerRequest.
-	Workers = new(WorkersMap)
 )
 
 type (
@@ -53,11 +47,10 @@ type (
 // workerID by 1 and is protected by a mutex lock
 func NextWorkerID() int64 {
 	mu.Lock()
-	curr := workerID
 	workerID = workerID + 1
-	mu.Unlock()
+	defer mu.Unlock()
 
-	return curr
+	return workerID
 }
 
 // GetWorkerID gets the value of the global variable

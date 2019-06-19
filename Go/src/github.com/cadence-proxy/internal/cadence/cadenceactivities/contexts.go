@@ -30,12 +30,6 @@ var (
 	// contextID is incremented (protected by a mutex) every time
 	// a new cadence context.Context is created
 	contextID int64
-
-	// ActivityContexts maps a int64 ContextId to the cadence
-	// Activity Context passed to the cadence Activity functions.
-	// The cadence-client will use contextIds to refer to specific
-	// activity contexts when perfoming activity actions
-	ActivityContexts = new(ActivityContextsMap)
 )
 
 type (
@@ -65,11 +59,10 @@ type (
 // contextID by 1 and is protected by a mutex lock
 func NextContextID() int64 {
 	mu.Lock()
-	curr := contextID
 	contextID = contextID + 1
-	mu.Unlock()
+	defer mu.Unlock()
 
-	return curr
+	return contextID
 }
 
 // GetContextID gets the value of the global variable
