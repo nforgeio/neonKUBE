@@ -89,6 +89,11 @@ namespace Neon.Xunit.Cadence
         /// endpoint for the Cadence container.  Also, the fixture will connect to the 
         /// <b>test</b> bucket by default (unless another is specified).
         /// </note>
+        /// <note>
+        /// A fresh Cadence client <see cref="Connection"/> will be established every time this
+        /// fixture is started, regardless of whether the fixture has already been started.  This
+        /// ensures that each unit test will start with a client in the default state.
+        /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
             CadenceSettings     settings     = null,
@@ -118,6 +123,13 @@ namespace Neon.Xunit.Cadence
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
         /// because it's probably not going to do what you expect.
         /// </param>
+        /// <remarks>
+        /// <note>
+        /// A fresh Cadence client <see cref="Connection"/> will be established every time this
+        /// fixture is started, regardless of whether the fixture has already been started.  This
+        /// ensures that each unit test will start with a client in the default state.
+        /// </note>
+        /// </remarks>
         public void StartAsComposed(
             CadenceSettings     settings     = null,
             string              image        = "nkubeio/cadence-test:latest",
@@ -153,13 +165,13 @@ namespace Neon.Xunit.Cadence
 
                 this.settings = settings;
 
-                // Create the Cadence connection.
+                // Establish the Cadence connection.
 
                 Connection = CadenceClient.ConnectAsync(settings).Result;
 
                 ConnectionClient = new HttpClient()
                 {
-                     BaseAddress = Connection.ListenUri
+                    BaseAddress = Connection.ListenUri
                 };
             }
         }
@@ -241,6 +253,30 @@ namespace Neon.Xunit.Cadence
             }
 
             base.Reset();
+        }
+
+        /// <summary>
+        /// Called when an already started fixture is being restarted.  This 
+        /// establishes a fresh Cadence connection.
+        /// </summary>
+        public override void OnRestart()
+        {
+            // Close the existing connections.
+
+            Connection.Dispose();
+            Connection = null;
+
+            ConnectionClient.Dispose();
+            ConnectionClient = null;
+
+            // Establish fresh connections.
+
+            Connection = CadenceClient.ConnectAsync(settings).Result;
+
+            ConnectionClient = new HttpClient()
+            {
+                BaseAddress = Connection.ListenUri
+            };
         }
     }
 }

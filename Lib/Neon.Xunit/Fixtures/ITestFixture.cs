@@ -143,5 +143,17 @@ namespace Neon.Xunit
         /// <b>INTERNAL USE ONLY:</b> Resets the fixture state.
         /// </summary>
         void Reset();
+
+        /// <summary>
+        /// <para>
+        /// Called when an already started fixture is being restarted.  This provides the
+        /// fixture an opportunity to do some custom initialization.
+        /// </para>
+        /// <note>
+        /// This method is intended only for use by test fixture implementations.  Unit
+        /// tests or test fixtures should never call this directly.
+        /// </note>
+        /// </summary>
+        void OnRestart();
     }
 }

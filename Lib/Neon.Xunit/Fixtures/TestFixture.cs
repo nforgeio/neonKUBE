@@ -222,6 +222,7 @@ namespace Neon.Xunit
 
             if (IsRunning)
             {
+                OnRestart();
                 return TestFixtureStatus.AlreadyRunning;
             }
 
@@ -274,6 +275,21 @@ namespace Neon.Xunit
 
         /// <inheritdoc/>
         public virtual void Reset()
+        {
+        }
+
+        /// <summary>
+        /// <para>
+        /// Called when an already started fixture is being restarted.  This provides the
+        /// fixture an opportunity to do some custom initialization.  This base method
+        /// does nothing.
+        /// </para>
+        /// <note>
+        /// This method is intended only for use by test fixture implementations.  Unit
+        /// tests or test fixtures should never call this directly.
+        /// </note>
+        /// </summary>
+        public virtual void OnRestart()
         {
         }
     }
