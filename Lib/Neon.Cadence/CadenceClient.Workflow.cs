@@ -53,15 +53,16 @@ namespace Neon.Cadence
                 workflowTypeName = workflowTypeName ?? typeof(TWorkflow).FullName;
             }
 
-            var reply = (WorkflowRegisterReply)await CallProxyAsync(
-                new WorkflowRegisterRequest()
-                {
-                    Name = workflowTypeName
-                });
+            if (!WorkflowBase.Register(typeof(TWorkflow), workflowTypeName))
+            {
+                var reply = (WorkflowRegisterReply)await CallProxyAsync(
+                    new WorkflowRegisterRequest()
+                    {
+                        Name = workflowTypeName
+                    });
 
-            reply.ThrowOnError();
-
-            WorkflowBase.Register(typeof(TWorkflow), workflowTypeName);
+                reply.ThrowOnError();
+            }
         }
 
         /// <summary>
@@ -90,20 +91,16 @@ namespace Neon.Cadence
                     {
                         var workflowTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
-                        if (WorkflowBase.Register(type, workflowTypeName))
+                        if (!WorkflowBase.Register(type, workflowTypeName))
                         {
-                            // Already registered.
+                            var reply = (WorkflowRegisterReply)await CallProxyAsync(
+                                new WorkflowRegisterRequest()
+                                {
+                                    Name = workflowTypeName
+                                });
 
-                            return;
+                            reply.ThrowOnError();
                         }
-
-                        var reply = (WorkflowRegisterReply)await CallProxyAsync(
-                            new WorkflowRegisterRequest()
-                            {
-                                Name = workflowTypeName
-                            });
-
-                        reply.ThrowOnError();
                     }
                     else if (type.IsSubclassOf(typeof(ActivityBase)))
                     {

@@ -1114,7 +1114,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task AutoRegister_CustomTypeName()
+        public async Task AutoRegister_ByName()
         {
             // Auto registers tagged workflows and activities and then executes them
             // using custom type names.

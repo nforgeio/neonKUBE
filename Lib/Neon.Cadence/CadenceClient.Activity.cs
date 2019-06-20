@@ -52,15 +52,16 @@ namespace Neon.Cadence
                 activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
             }
 
-            var reply = (ActivityRegisterReply)await CallProxyAsync(
-                new ActivityRegisterRequest()
-                {
-                    Name = activityTypeName
-                });
+            if (!ActivityBase.Register(typeof(TActivity), activityTypeName))
+            {
+                var reply = (ActivityRegisterReply)await CallProxyAsync(
+                    new ActivityRegisterRequest()
+                    {
+                        Name = activityTypeName
+                    });
 
-            reply.ThrowOnError();
-
-            ActivityBase.Register(typeof(TActivity), activityTypeName);
+                reply.ThrowOnError();
+            }            
         }
 
         /// <summary>
@@ -93,20 +94,16 @@ namespace Neon.Cadence
                     {
                         var activityTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
-                        if (ActivityBase.Register(type, activityTypeName))
+                        if (!ActivityBase.Register(type, activityTypeName))
                         {
-                            // Already registered.
+                            var reply = (ActivityRegisterReply)await CallProxyAsync(
+                                new ActivityRegisterRequest()
+                                {
+                                    Name = activityTypeName
+                                });
 
-                            return;
+                            reply.ThrowOnError();
                         }
-
-                        var reply = (ActivityRegisterReply)await CallProxyAsync(
-                            new ActivityRegisterRequest()
-                            {
-                                Name = activityTypeName
-                            });
-
-                        reply.ThrowOnError();
                     }
                     else
                     {
