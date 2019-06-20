@@ -47,11 +47,6 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", true, "Set to debug mode")
 	flag.Parse()
 
-	// endpoint debugging
-	if debugMode {
-		endpoints.Debug = true
-	}
-
 	// debug prelaunched
 	if debugPrelaunched {
 		endpoints.DebugPrelaunched = true

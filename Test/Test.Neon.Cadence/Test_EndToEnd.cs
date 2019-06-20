@@ -190,7 +190,7 @@ namespace TestCadence
 
                 var value2 = await GetValueAsync("value-2", new byte[] { 2 }, update: false);
 
-                if (value2[0] != 1)
+                if (value2[0] != 2)
                 {
                     throw new Exception($"Test-2, value2={value2[0]}");
                 }
@@ -200,14 +200,14 @@ namespace TestCadence
 
                 value1 = await GetValueAsync("value-1", new byte[] { 3 }, update: false);
 
-                if (value1[0] != 0)
+                if (value1[0] != 1)
                 {
                     throw new Exception($"Test-3: value1={value1[0]}");
                 }
 
                 value2 = await GetValueAsync("value-2", new byte[] { 4 }, update: false);
 
-                if (value2[0] != 1)
+                if (value2[0] != 2)
                 {
                     throw new Exception($"Test-4, value2={value2[0]}");
                 }
@@ -257,14 +257,14 @@ namespace TestCadence
 
                 // Verify that we get the new last values by passing [update = false].
 
-                value1 = await GetValueAsync("value-1", new byte[] { 5 }, update: true);
+                value1 = await GetValueAsync("value-1", new byte[] { 5 }, update: false);
 
                 if (value1[0] != 3)
                 {
                     throw new Exception($"Test-3: value1={value1[0]}");
                 }
 
-                value2 = await GetValueAsync("value-2", new byte[] { 6 }, update: true);
+                value2 = await GetValueAsync("value-2", new byte[] { 6 }, update: false);
 
                 if (value2[0] != 4)
                 {
@@ -420,7 +420,7 @@ namespace TestCadence
                 DebugDisableHeartbeats = true,
                 DebugIgnoreTimeouts    = false
             };
-
+            
             fixture.Start(settings);
 
             this.fixture     = fixture;
@@ -709,8 +709,6 @@ namespace TestCadence
                     // Run a workflow that invokes a child workflow.
 
                     await client.RegisterWorkflowAsync<ExecuteChildWorkflow>();
-
-                    // Register the HelloWorkflow workflow
                     await client.RegisterWorkflowAsync<HelloWorkflow>();
 
                     var args        = Encoding.UTF8.GetBytes("local-activity");
@@ -771,6 +769,7 @@ namespace TestCadence
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
                 await client.RegisterWorkflowAsync<ParallelChildWorkflows>();
+                await client.RegisterWorkflowAsync<HelloWorkflow>();
 
                 var workflowRun = await client.StartWorkflowAsync<ParallelChildWorkflows>("test-domain", args: null);
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
@@ -858,7 +857,7 @@ namespace TestCadence
 
                 var sleepTime    = TimeSpan.FromSeconds(5);
                 var wakeTime     = DateTime.UtcNow + sleepTime;
-                var workflowRun  = await client.StartWorkflowAsync<SleepUntilWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(sleepTime));
+                var workflowRun  = await client.StartWorkflowAsync<SleepUntilWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(wakeTime));
                 var nowJsonBytes = await client.GetWorkflowResultAsync(workflowRun);
                 var times        = NeonHelper.JsonDeserialize<List<DateTime>>(nowJsonBytes);
 
