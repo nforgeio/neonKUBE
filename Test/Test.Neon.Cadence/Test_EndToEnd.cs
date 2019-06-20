@@ -614,6 +614,58 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Worker()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            // Verify that creating workers with the same attributes actually
+            // return the pre-existing instance with an incremented reference
+            // count.
+
+            var activityWorker1 = await client.StartActivityWorkerAsync("test-domain", "tasks1");
+
+            Assert.Equal(1, activityWorker1.RefCount);
+
+            var activityWorker2 = await client.StartActivityWorkerAsync("test-domain", "tasks1");
+
+            Assert.Same(activityWorker1, activityWorker2);
+            Assert.Equal(2, activityWorker2.RefCount);
+
+            var workflowWorker1 = await client.StartWorkflowWorkerAsync("test-domain", "tasks1");
+
+            Assert.Equal(1, workflowWorker1.RefCount);
+
+            var workflowWorker2 = await client.StartWorkflowWorkerAsync("test-domain", "tasks1");
+
+            Assert.Same(workflowWorker1, workflowWorker2);
+            Assert.Equal(2, workflowWorker2.RefCount);
+
+            // Verify the dispose/refcount behavior.
+
+            activityWorker2.Dispose();
+            Assert.False(activityWorker2.IsDisposed);
+            Assert.Equal(1, activityWorker2.RefCount);
+
+            activityWorker2.Dispose();
+            Assert.True(activityWorker2.IsDisposed);
+            Assert.Equal(0, activityWorker2.RefCount);
+
+            workflowWorker2.Dispose();
+            Assert.False(workflowWorker2.IsDisposed);
+            Assert.Equal(1, workflowWorker2.RefCount);
+
+            workflowWorker2.Dispose();
+            Assert.True(workflowWorker2.IsDisposed);
+            Assert.Equal(0, workflowWorker2.RefCount);
+
+            // Verify that we're not allowed to restart workers.
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await client.StartActivityWorkerAsync("test-domain", "tasks1"));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await client.StartWorkflowWorkerAsync("test-domain", "tasks1"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_Workflow_ByType()
         {
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
@@ -750,7 +802,6 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_ChildWorkflow_ByType()
         {
-            // Move register domain up above workers
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
             using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))

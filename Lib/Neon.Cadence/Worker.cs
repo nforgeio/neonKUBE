@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -28,6 +29,12 @@ namespace Neon.Cadence
     /// <summary>
     /// Identifies a worker registered with Cadence.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Cadence doesn't appear to support starting, stopping, and then restarting the same
+    /// worker within an individual Cadence client so this class will prevent this
+    /// </para>
+    /// </remarks>
     public sealed class Worker : IDisposable
     {
         /// <summary>
@@ -37,7 +44,7 @@ namespace Neon.Cadence
         /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
         /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
         /// <param name="domain">The Cadence domain where the worker is registered.</param>
-        /// <param name="taskList">The Cadence tasklist.</param>
+        /// <param name="taskList">The Cadence task list.</param>
         internal Worker(CadenceClient client, bool isWorkflow, long workerId, string domain, string taskList)
         {
             this.Client     = client;
@@ -45,12 +52,18 @@ namespace Neon.Cadence
             this.WorkerId   = workerId;
             this.Domain     = domain;
             this.Tasklist   = taskList;
+            this.RefCount   = 1;
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (Client != null)
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (Interlocked.Decrement(ref RefCount) == 0)
             {
                 Client.StopWorkerAsync(this).Wait();
                 Client = null;
@@ -63,6 +76,11 @@ namespace Neon.Cadence
         /// Returns the parent Cadence client.
         /// </summary>
         internal CadenceClient Client { get; private set; }
+
+        /// <summary>
+        /// Indicates whether the worker has been fully disposed.
+        /// </summary>
+        internal bool IsDisposed => RefCount == 0;
 
         /// <summary>
         /// Used to distinguish between workflow and activity workers.
@@ -80,8 +98,14 @@ namespace Neon.Cadence
         internal string Domain { get; private set; }
 
         /// <summary>
-        /// Returns the Cadence tasklist.
+        /// Returns the Cadence task list.
         /// </summary>
         internal string Tasklist { get; private set; }
+
+        /// <summary>
+        /// Returns the current worker reference count.  This will be set to
+        /// <b>1</b> the first time the worker is registered.
+        /// </summary>
+        internal int RefCount;
     }
 }

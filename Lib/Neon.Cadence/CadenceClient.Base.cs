@@ -20,11 +20,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -32,6 +34,8 @@ namespace Neon.Cadence
     {
         //---------------------------------------------------------------------
         // Cadence basic client related operations.
+
+        private AsyncMutex workerRegistrationMutex = new AsyncMutex();
 
         /// <summary>
         /// Pings the <b>cadence-proxy</b> and waits for the reply.  This is used 
@@ -52,6 +56,10 @@ namespace Neon.Cadence
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when an attempt is made to recreate a worker with the
+        /// same properties on a given client.  See the note in the remarks.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// Your workflow application will need to call this method so that Cadence will know
@@ -70,56 +78,20 @@ namespace Neon.Cadence
         /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
         /// for specific domains and task lists.
         /// </para>
+        /// <note>
+        /// The Cadence GOLANG client does not appear to support starting a worker with a given
+        /// set of parameters, stopping that workflow, and then restarting another worker
+        /// with the same parameters on the same client.  This method detects this situation
+        /// and throws an <see cref="InvalidOperationException"/> when these restart attempts
+        /// are made.
+        /// </note>
         /// </remarks>
         public async Task<Worker> StartWorkflowWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
-            Worker worker;
-
-            options = options ?? new WorkerOptions();
-
-            lock (syncLock)
-            {
-                // Ensure that we haven't already registered a worker for the
-                // specified workflow, domain, and task list.  We'll just ignore
-                // the call if we already have this registration.
-                //
-                // I know that this is a linear search but the number of workflow
-                // registrations per service will generally be very small and 
-                // registrations will happen infrequently (typically just once
-                // per service, when it starts).
-
-                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
-
-                if (worker != null)
-                {
-                    return worker;
-                }
-            }
-
-            options = options ?? new WorkerOptions();
-
-            var reply = (NewWorkerReply)(await CallProxyAsync(
-                new NewWorkerRequest()
-                {
-                    IsWorkflow = true,
-                    Domain     = domain,
-                    TaskList   = taskList,
-                    Options    = options.ToInternal()
-                }));
-
-            reply.ThrowOnError();
-
-            worker = new Worker(this, true, reply.WorkerId, domain, taskList);
-
-            lock (syncLock)
-            {
-                workers.Add(reply.WorkerId, worker);
-            }
-
-            return worker;
+            return await StartWorkerAsync(true, domain, taskList, options);
         }
 
         /// <summary>
@@ -130,6 +102,10 @@ namespace Neon.Cadence
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when an attempt is made to recreate a worker with the
+        /// same properties on a given client.  See the note in the remarks.
+        /// </exception>
         /// <remarks>
         /// <para>
         /// Your workflow application will need to call this method so that Cadence will know
@@ -148,8 +124,63 @@ namespace Neon.Cadence
         /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
         /// for specific domains and task lists.
         /// </para>
+        /// <note>
+        /// The Cadence GOLANG client does not appear to support starting a worker with a given
+        /// set of parameters, stopping that workflow, and then restarting another worker
+        /// with the same parameters on the same client.  This method detects this situation
+        /// and throws an <see cref="InvalidOperationException"/> when these restart attempts
+        /// are made.
+        /// </note>
         /// </remarks>
         public async Task<Worker> StartActivityWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+
+            return await StartWorkerAsync(false, domain, taskList, options);
+        }
+
+
+        /// <summary>
+        /// Signals Cadence that the application is capable of executing activities for a specific
+        /// domain and task list.
+        /// </summary>
+        /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
+        /// <param name="domain">The target Cadence domain.</param>
+        /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
+        /// <param name="options">Optionally specifies additional worker options.</param>
+        /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when an attempt is made to recreate a worker with the
+        /// same properties on a given client.  See the note in the remarks.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Your workflow application will need to call this method so that Cadence will know
+        /// that it can schedule activities to run within the current process.  You'll need
+        /// to specify the target Cadence domain and task list.
+        /// </para>
+        /// <para>
+        /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
+        /// as customize the name used to register the activity, which defaults to the
+        /// fully qualified name of the activity type.
+        /// </para>
+        /// <para>
+        /// This method returns a <see cref="Worker"/> which implements <see cref="IDisposable"/>.
+        /// It's a best practice to call <see cref="Dispose()"/> just before the a worker process
+        /// terminates, but this is optional.  Advanced worker implementation that need to change
+        /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
+        /// for specific domains and task lists.
+        /// </para>
+        /// <note>
+        /// The Cadence GOLANG client does not appear to support starting a worker with a given
+        /// set of parameters, stopping that workflow, and then restarting another worker
+        /// with the same parameters on the same client.  This method detects this situation
+        /// and throws an <see cref="InvalidOperationException"/> when these restart attempts
+        /// are made.
+        /// </note>
+        /// </remarks>
+        private async Task<Worker> StartWorkerAsync(bool isWorkflow, string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
@@ -158,42 +189,51 @@ namespace Neon.Cadence
 
             options = options ?? new WorkerOptions();
 
-            lock (syncLock)
+            using (await workerRegistrationMutex.AcquireAsync())
             {
                 // Ensure that we haven't already registered a worker for the
-                // specified activity, domain, and task list.  We'll just ignore
-                // the call if we already have this registration.
+                // specified activity, domain, and task list.  We'll just increment
+                // the reference count for the existing worker and return it 
+                // in this case.
                 //
                 // I know that this is a linear search but the number of activity
                 // registrations per service will generally be very small and 
                 // registrations will happen infrequently (typically just once
                 // per service, when it starts).
 
-                worker = workers.Values.SingleOrDefault(wf => !wf.IsWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
+                // $note(jeff.lill):
+                //
+                // If the worker exists but its refcount==0, then we're going to
+                // throw an exception because Cadence doesn't support recreating
+                // a worker with the same parameters on the same client.
+
+                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow == isWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
 
                 if (worker != null)
                 {
+                    if (worker.RefCount == 0)
+                    {
+                        throw new InvalidOperationException("A worker with these same parameters has already been started and stopped on this Cadence client.  Cadence does not support recreating workers for a given client instance.");
+                    }
+
+                    Interlocked.Increment(ref worker.RefCount);
                     return worker;
                 }
-            }
 
-            options = options ?? new WorkerOptions();
+                options = options ?? new WorkerOptions();
 
-            var reply = (NewWorkerReply)(await CallProxyAsync(
-                new NewWorkerRequest()
-                {
-                    IsWorkflow = false,
-                    Domain     = domain,
-                    TaskList   = taskList,
-                    Options    = options.ToInternal()
-                }));
+                var reply = (NewWorkerReply)(await CallProxyAsync(
+                    new NewWorkerRequest()
+                    {
+                        IsWorkflow = isWorkflow,
+                        Domain     = domain,
+                        TaskList   = taskList,
+                        Options    = options.ToInternal()
+                    }));
 
-            reply.ThrowOnError();
+                reply.ThrowOnError();
 
-            worker = new Worker(this, false, reply.WorkerId, domain, taskList);
-
-            lock (syncLock)
-            {
+                worker = new Worker(this, isWorkflow, reply.WorkerId, domain, taskList);
                 workers.Add(reply.WorkerId, worker);
             }
 
@@ -214,7 +254,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(worker != null);
 
-            lock (syncLock)
+            using (await workerRegistrationMutex.AcquireAsync())
             {
                 if (!object.ReferenceEquals(worker.Client, this))
                 {
@@ -223,12 +263,17 @@ namespace Neon.Cadence
 
                 if (!workers.ContainsKey(worker.WorkerId))
                 {
-                    // The worker has already been stopped.
+                    // The worker does not exist.  We're going to ignore this.
 
                     return;
                 }
 
-                workers.Remove(worker.WorkerId);
+                // $note(jeff.lill):
+                //
+                // If Cadence was able to restart a given worker, we'd uncomment
+                // this line.
+
+                // workers.Remove(worker.WorkerId);
             }
 
             var reply = (StopWorkerReply)(await CallProxyAsync(new StopWorkerRequest() { WorkerId = worker.WorkerId }));
