@@ -193,6 +193,7 @@ func (helper *CadenceClientHelper) ExecuteWorkflow(ctx context.Context, domain s
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
 func (helper *CadenceClientHelper) StartWorker(domainName, taskList string, options worker.Options) (worker.Worker, error) {
+	options.Logger = zap.L()
 	worker := worker.New(helper.Service, domainName, taskList, options)
 	err := worker.Start()
 	if err != nil {
