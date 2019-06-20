@@ -88,7 +88,7 @@ var (
 	DebugPrelaunched = false
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
-	// a request has been recieved by the cadence-proxy
+	// a request has been received by the cadence-proxy
 	cadenceClientTimeout time.Duration = time.Second * 600
 
 	// ActivityContexts maps a int64 ContextId to the cadence
@@ -120,7 +120,7 @@ var (
 func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 
 	// log when a new request has come in
-	logger.Info("Request Recieved",
+	logger.Info("Request Received",
 		zap.String("Address", fmt.Sprintf("http://%s%s", r.Host, r.URL.String())),
 		zap.String("Method", r.Method),
 		zap.Int("ProccessId", os.Getpid()),

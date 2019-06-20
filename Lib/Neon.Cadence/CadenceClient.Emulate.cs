@@ -1093,7 +1093,7 @@ namespace Neon.Cadence
 
             emulatedPendingWorkflows.Clear();
 
-            // Cancel all running global workflows, recursively canceling and child workflows
+            // Cancel all running external workflows, recursively canceling and child workflows
             // and activities.
 
             foreach (var workflow in emulatedWorkflows.Values.Where(wf => wf.IsGlobal && !wf.IsComplete))

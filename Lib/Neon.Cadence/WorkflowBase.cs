@@ -138,9 +138,9 @@ namespace Neon.Cadence
     /// </item>
     /// <item>
     ///     <para>
-    ///     A global workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/>,
+    ///     An external workflow instance can be started by calling <see cref="CadenceClient.StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/>,
     ///     passing an optional byte array as workflow arguments as well as optional workflow options.  
-    ///     Global workflows have no parent, as opposed to child workflows that run in the context of 
+    ///     External workflows have no parent, as opposed to child workflows that run in the context of 
     ///     another workflow (the parent).
     ///     </para>
     ///     <note>
@@ -266,17 +266,33 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers a workflow type.
         /// </summary>
-        /// <typeparam name="TWorkflow">The workflow implementation type.</typeparam>
+        /// <param name="workflowType">The workflow type.</param>
         /// <param name="workflowTypeName">The name used to identify the implementation.</param>
-        internal static void Register<TWorkflow>(string workflowTypeName)
-            where TWorkflow : WorkflowBase
+        /// <returns><c>true</c> if the workflow was already registered.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if a different workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
+        internal static bool Register(Type workflowType, string workflowTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentException>(typeof(TWorkflow) != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
+            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentException>(workflowType.IsSubclassOf(typeof(WorkflowBase)), $"Type [{workflowType.FullName}] does not derive from [{nameof(WorkflowBase)}]");
+            Covenant.Requires<ArgumentException>(workflowType != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
 
             lock (syncLock)
             {
-                nameToWorkflowType[workflowTypeName] = typeof(TWorkflow);
+                if (nameToWorkflowType.TryGetValue(workflowTypeName, out var existingEntry))
+                {
+                    if (!object.ReferenceEquals(existingEntry, workflowType))
+                    {
+                        throw new InvalidOperationException($"Conflicting workflow type registration: Workflow type [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    nameToWorkflowType[workflowTypeName] = workflowType;
+
+                    return false;
+                }
             }
         }
 

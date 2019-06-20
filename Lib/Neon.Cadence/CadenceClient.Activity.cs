@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -42,6 +43,7 @@ namespace Neon.Cadence
         /// to the fully qualified <typeparamref name="TActivity"/> type name.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
             where TActivity : ActivityBase
         {
@@ -50,15 +52,65 @@ namespace Neon.Cadence
                 activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
             }
 
-            var reply = (ActivityRegisterReply)await CallProxyAsync(
-                new ActivityRegisterRequest()
+            if (!ActivityBase.Register(typeof(TActivity), activityTypeName))
+            {
+                var reply = (ActivityRegisterReply)await CallProxyAsync(
+                    new ActivityRegisterRequest()
+                    {
+                        Name = activityTypeName
+                    });
+
+                reply.ThrowOnError();
+            }            
+        }
+
+        /// <summary>
+        /// Scans the assembly passed looking for activity implementations derived from
+        /// <see cref="ActivityBase"/> and tagged with <see cref="AutoRegisterAttribute"/>
+        /// and registers them with Cadence.
+        /// </summary>
+        /// <param name="assembly">The target assembly.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TypeLoadException">
+        /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
+        /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
+        public async Task AutoRegisterActivitiesAsync(Assembly assembly)
+        {
+            Covenant.Requires<ArgumentNullException>(assembly != null);
+
+            foreach (var type in assembly.GetTypes())
+            {
+                var autoRegisterAttribute = type.GetCustomAttribute<AutoRegisterAttribute>();
+
+                if (autoRegisterAttribute != null)
                 {
-                    Name = activityTypeName
-                });
+                    if (type.IsSubclassOf(typeof(WorkflowBase)))
+                    {
+                        // Ignore these here.
+                    }
+                    else if (type.IsSubclassOf(typeof(ActivityBase)))
+                    {
+                        var activityTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
-            reply.ThrowOnError();
+                        if (!ActivityBase.Register(type, activityTypeName))
+                        {
+                            var reply = (ActivityRegisterReply)await CallProxyAsync(
+                                new ActivityRegisterRequest()
+                                {
+                                    Name = activityTypeName
+                                });
 
-            ActivityBase.Register<TActivity>(activityTypeName);
+                            reply.ThrowOnError();
+                        }
+                    }
+                    else
+                    {
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
+                    }
+                }
+            }
         }
 
         /// <summary>
