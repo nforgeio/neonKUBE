@@ -416,6 +416,7 @@ namespace Neon.Cadence
         private static readonly Assembly    thisAssembly   = Assembly.GetExecutingAssembly();
         private static readonly INeonLogger log            = LogManager.Default.GetLogger<CadenceClient>();
         private static bool                 proxyWritten   = false;
+        private static long                 nextClientId   = 0;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -598,6 +599,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
+            this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
 
             if (settings.Servers == null || settings.Servers.Count == 0)
@@ -741,7 +743,7 @@ namespace Neon.Cadence
                             Endpoints       = sbEndpoints.ToString(),
                             Identity        = settings.ClientIdentity,
                             ClientTimeout   = TimeSpan.FromSeconds(30)
-                };
+                        };
 
 
                     CallProxyAsync(connectRequest).Result.ThrowOnError();
@@ -878,11 +880,19 @@ namespace Neon.Cadence
                 host = null;
             }
 
+            WorkflowBase.UnregisterClient(this);
+            ActivityBase.UnregisterClient(this);
+
             if (disposing)
             {
                 GC.SuppressFinalize(this);
             }
         }
+
+        /// <summary>
+        /// Returns the locally unique ID for the client instance.
+        /// </summary>
+        internal long ClientId { get; private set; }
 
         /// <summary>
         /// Returns the settings used to create the client.

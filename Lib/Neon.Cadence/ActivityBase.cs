@@ -133,6 +133,45 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Private types
 
+        /// <summary>
+        /// Used to map a Cadence client ID and workflow context ID into a
+        /// key that can be used to dereference <see cref="idToActivity"/>.
+        /// </summary>
+        private struct ActivityKey
+        {
+            private long clientId;
+            private long contextId;
+
+            public ActivityKey(CadenceClient client, long contextId)
+            {
+                this.clientId = client.ClientId;
+                this.contextId = contextId;
+            }
+
+            public override int GetHashCode()
+            {
+                return clientId.GetHashCode() ^ contextId.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null || !(obj is ActivityKey))
+                {
+                    return false;
+                }
+
+                var other = (ActivityKey)obj;
+
+                return this.clientId == other.clientId &&
+                       this.contextId == other.contextId;
+            }
+
+            public override string ToString()
+            {
+                return $"clientID={clientId}, contextId={contextId}";
+            }
+        }
+
         private struct ConstructInfo
         {
             /// <summary>
@@ -149,30 +188,55 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                               syncLock            = new object();
-        private static INeonLogger                          log                 = LogManager.Default.GetLogger<ActivityBase>();
-        private static Type[]                               noTypeArgs          = new Type[0];
-        private static object[]                             noArgs              = new object[0];
-        private static Dictionary<long, ActivityBase>       contextIdToActivity = new Dictionary<long, ActivityBase>();
+        private static object                                   syncLock            = new object();
+        private static INeonLogger                              log                 = LogManager.Default.GetLogger<ActivityBase>();
+        private static Type[]                                   noTypeArgs          = new Type[0];
+        private static object[]                                 noArgs              = new object[0];
+        private static Dictionary<ActivityKey, ActivityBase>    idToActivity        = new Dictionary<ActivityKey, ActivityBase>();
+        private static Dictionary<Type, ConstructorInfo>        typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
 
-        // These dictionaries are used to cache reflected activity
-        // constructors for better performance.
+        // This dictionary is used to map activity type names to the target activity
+        // type.  Note that these mappings are scoped to specific cadence client
+        // instances by prefixing the type name with:
+        //
+        //      CLIENT-ID::
+        //
+        // where CLIENT-ID is the locally unique ID of the client.  This is important,
+        // because we'll need to remove the entries for clients when they're disposed.
 
-        private static Dictionary<string, ConstructInfo>    nameToConstructInfo = new Dictionary<string, ConstructInfo>();
-        private static Dictionary<Type, ConstructorInfo>    typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
+        private static Dictionary<string, ConstructInfo>        nameToConstructInfo = new Dictionary<string, ConstructInfo>();
+
+        /// <summary>
+        /// Prepends the Cadence client ID to the workflow type name to generate the
+        /// key used to dereference the <see cref="nameToConstructInfo"/> dicationary.
+        /// </summary>
+        /// <param name="client">The Cadence client.</param>
+        /// <param name="activityTypeName">The activity type name.</param>
+        /// <returns>The prepended type name.</returns>
+        private static string GetActivityTypeKey(CadenceClient client, string activityTypeName)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(activityTypeName != null);
+
+            return $"{client.ClientId}::{activityTypeName}";
+        }
 
         /// <summary>
         /// Registers an activity type.
         /// </summary>
+        /// <param name="client">The associated client.</param>
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityTypeName">The name used to identify the implementation.</param>
         /// <returns><c>true</c> if the activity was already registered.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        internal static bool Register(Type activityType, string activityTypeName)
+        internal static bool Register(CadenceClient client, Type activityType, string activityTypeName)
         {
+            Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(ActivityBase)), $"Type [{activityType.FullName}] does not derive from [{nameof(ActivityBase)}].");
             Covenant.Requires<ArgumentException>(activityType != typeof(ActivityBase), $"The base [{nameof(ActivityBase)}] class cannot be registered.");
+
+            activityTypeName = GetActivityTypeKey(client, activityTypeName);
 
             var constructInfo = new ConstructInfo();
 
@@ -205,13 +269,32 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Removes all type activity type registrations for a Cadence client (when it's being disposed).
+        /// </summary>
+        /// <param name="client">The client being disposed.</param>
+        internal static void UnregisterClient(CadenceClient client)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            var prefix = $"{client.ClientId}::";
+
+            lock (syncLock)
+            {
+                foreach (var key in nameToConstructInfo.Keys.Where(key => key.StartsWith(prefix)).ToList())
+                {
+                    nameToConstructInfo.Remove(key);
+                }
+            }
+        }
+
+        /// <summary>
         /// Constructs an activity instance with the specified type.
         /// </summary>
-        /// <param name="activityType">The activity type.</param>
         /// <param name="client">The associated client.</param>
+        /// <param name="activityType">The activity type.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(Type activityType, CadenceClient client, long? contextId)
+        internal static ActivityBase Create( CadenceClient client, Type activityType,long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
 
@@ -227,6 +310,8 @@ namespace Neon.Cadence
                     {
                         throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
                     }
+
+                    typeToConstructor.Add(activityType, constructor);
                 }
             }
 
@@ -240,11 +325,11 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructs an activity instance with the specified activity type name.
         /// </summary>
-        /// <param name="activityTypeName">The activity type name.</param>
         /// <param name="client">The associated client.</param>
+        /// <param name="activityTypeName">The activity type name.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(string activityTypeName, CadenceClient client, long? contextId)
+        internal static ActivityBase Create(CadenceClient client, string activityTypeName, long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(activityTypeName != null);
             Covenant.Requires<ArgumentNullException>(client != null);
@@ -253,7 +338,7 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                if (!nameToConstructInfo.TryGetValue(activityTypeName, out constructInfo))
+                if (!nameToConstructInfo.TryGetValue(GetActivityTypeKey(client, activityTypeName), out constructInfo))
                 {
                     throw new ArgumentException($"No activty type is registered for [{activityTypeName}].");
                 }
@@ -307,11 +392,11 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(CadenceClient client, ActivityInvokeRequest request)
         {
-            var activity = Create(request.Activity, client, request.ContextId);
+            var activity = Create(client, request.Activity, request.ContextId);
 
             try
             {
-                var result = await activity.OnRunAsync(request.Args);
+                var result = await activity.OnRunAsync(client, request.Args);
 
                 return new ActivityInvokeReply()
                 {
@@ -351,7 +436,7 @@ namespace Neon.Cadence
         {
             lock (syncLock)
             {
-                if (contextIdToActivity.TryGetValue(request.ContextId, out var activity))
+                if (idToActivity.TryGetValue(new ActivityKey(client, request.ContextId), out var activity))
                 {
                     activity.CancellationTokenSource.Cancel();
                 }
@@ -401,8 +486,8 @@ namespace Neon.Cadence
         /// </para>
         /// <para>
         /// Cancelled activities should throw a <see cref="TaskCanceledException"/> from
-        /// their <see cref="OnRunAsync(byte[])"/> method rather than returning a result
-        /// so that Cadence will reschedule the activity if possible.
+        /// their <see cref="OnRunAsync(CadenceClient, byte[])"/> method rather than returning 
+        /// a result so that Cadence will reschedule the activity if possible.
         /// </para>
         /// </remarks>
         public CancellationToken CancellationToken { get; private set; }
@@ -473,29 +558,35 @@ namespace Neon.Cadence
         /// <summary>
         /// Called internally to run the activity.
         /// </summary>
+        /// <param name="client">The Cadence client.</param>
         /// <param name="args">The activity arguments.</param>
         /// <returns>Thye activity results.</returns>
-        internal async Task<byte[]> OnRunAsync(byte[] args)
+        internal async Task<byte[]> OnRunAsync(CadenceClient client, byte[] args)
         {
-            try
-            {
-                if (!IsLocal)
-                {
-                    lock (syncLock)
-                    {
-                        contextIdToActivity[contextId.Value] = this;
-                    }
-                }
+            Covenant.Requires<ArgumentNullException>(client != null);
 
+            if (IsLocal)
+            {
                 return await RunAsync(args);
             }
-            finally
+            else
             {
-                if (!IsLocal)
+                var activityKey = new ActivityKey(client, contextId.Value);
+
+                try
                 {
                     lock (syncLock)
                     {
-                        contextIdToActivity.Remove(contextId.Value);
+                        idToActivity[activityKey] = this;
+                    }
+
+                    return await RunAsync(args);
+                }
+                finally
+                {
+                    lock (syncLock)
+                    {
+                        idToActivity.Remove(activityKey);
                     }
                 }
             }
