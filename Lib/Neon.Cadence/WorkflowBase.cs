@@ -280,7 +280,7 @@ namespace Neon.Cadence
             {
                 if (nameToWorkflowType.TryGetValue(workflowTypeName, out var existingEntry))
                 {
-                    if (existingEntry != workflowType)
+                    if (!object.ReferenceEquals(existingEntry, workflowType))
                     {
                         throw new InvalidOperationException($"Conflicting workflow type registration: Workflow type [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
                     }

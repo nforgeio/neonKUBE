@@ -650,7 +650,7 @@ namespace TestCadence
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                await client.RegisterWorkflowAsync<HelloWorkflow>("hello-workflow-by-name");
+                await client.RegisterWorkflowAsync<HelloWorkflowByName>("hello-workflow-by-name");
 
                 // Run a workflow passing NULL args.
 
