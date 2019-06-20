@@ -189,7 +189,7 @@ namespace Neon.Cadence
     /// Task lists provide an additional way to customize where workflows and activities are executed.
     /// A task list is simply a string used in addition to the domain to indicate which workflows and
     /// activities will be scheduled for execution by workers.  For regular (top-level) workflows,
-    /// the tasklist <b>"default"</b> will be used when not otherwise specified.  Any non-empty custom
+    /// the task list <b>"default"</b> will be used when not otherwise specified.  Any non-empty custom
     /// string is allowed for task lists.  Child workflow and activity task lists will default to
     /// the parent workflow's task list by default.
     /// </para>
@@ -253,7 +253,7 @@ namespace Neon.Cadence
         private const int debugClientPort = 5001;
 
         /// <summary>
-        /// The default Cadence tasklist.
+        /// The default Cadence task list.
         /// </summary>
         internal const string DefaultTaskList = "default";
 

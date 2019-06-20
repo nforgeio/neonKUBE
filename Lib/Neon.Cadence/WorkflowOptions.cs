@@ -85,7 +85,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
-        /// <param name="taskList">The target tasklist.</param>
+        /// <param name="taskList">The target task list.</param>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
         internal InternalStartWorkflowOptions ToInternal(string taskList)
         {

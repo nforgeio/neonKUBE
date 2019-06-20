@@ -760,7 +760,7 @@ namespace Neon.Cadence
         public string WorkflowTypeName { get; private set; }
 
         /// <summary>
-        /// Returns the tasklist where the workflow is executing.
+        /// Returns the task list where the workflow is executing.
         /// </summary>
         public string TaskList { get; private set; }
 
@@ -1458,7 +1458,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="args">Optional arguments for the new run.</param>
         /// <param name="domain">Optional domain for the new run.</param>
-        /// <param name="taskList">Optional tasklist for the new run.</param>
+        /// <param name="taskList">Optional task list for the new run.</param>
         /// <param name="executionToStartTimeout">Optional execution to start timeout for the new run.</param>
         /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new run.</param>
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>

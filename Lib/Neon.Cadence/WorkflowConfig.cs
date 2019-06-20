@@ -31,7 +31,7 @@ namespace Neon.Cadence
     public class WorkflowConfig
     {
         /// <summary>
-        /// Identifies the tasklist where the workflow was scheduled.
+        /// Identifies the task list where the workflow was scheduled.
         /// </summary>
         public string TaskList { get; internal set; }
 

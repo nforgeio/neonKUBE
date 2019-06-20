@@ -32,7 +32,7 @@ namespace Neon.Cadence.Internal
     public class ActivityOptions
     {
         /// <summary>
-        /// Optionally specifies the tasklist where the activity will be scheduled.
+        /// Optionally specifies the task list where the activity will be scheduled.
         /// This defaults to the same task list as the parent workflow.
         /// </summary>
         public string TaskList { get; set; } = null;

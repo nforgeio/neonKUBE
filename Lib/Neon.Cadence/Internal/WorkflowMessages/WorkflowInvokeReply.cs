@@ -109,7 +109,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Optionally overrides the current workflow's tasklist for the restarted
+        /// Optionally overrides the current workflow's task list for the restarted
         /// workflow when this value is not <c>null</c>.
         /// </summary>
         public string ContinueAsNewTaskList

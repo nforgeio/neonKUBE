@@ -33,7 +33,7 @@ namespace Neon.Cadence.Internal
     internal class InternalWorkflowExecutionConfiguration
     {
         /// <summary>
-        /// Identifies the tasklist where the workflow was scheduled.
+        /// Identifies the task list where the workflow was scheduled.
         /// </summary>
         [JsonProperty(PropertyName = "TaskList", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

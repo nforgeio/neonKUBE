@@ -62,7 +62,7 @@ namespace Neon.Cadence
         public string ActivityTypeName { get; internal set; }
 
         /// <summary>
-        /// The activity tasklist.
+        /// The activity task list.
         /// </summary>
         public string TaskList { get; internal set; }
 

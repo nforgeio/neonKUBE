@@ -334,7 +334,7 @@ namespace TestCadence
         {
             // Verify that emulated start/stop worker operations work.
 
-            // Generate unique a domain and tasklist to avoid conflicts with
+            // Generate unique a domain and task list to avoid conflicts with
             // other tests on this connection.
 
             var domain   = Guid.NewGuid().ToString("D");

@@ -50,8 +50,8 @@ namespace Neon.Cadence.Internal
         public string WorkflowID { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the tasklist where the child workflow will be
-        /// scheduled.  This defaults to the parent's tasklist.
+        /// Optionally specifies the task list where the child workflow will be
+        /// scheduled.  This defaults to the parent's task list.
         /// </summary>
         public string TaskList { get; set; } = null;
 

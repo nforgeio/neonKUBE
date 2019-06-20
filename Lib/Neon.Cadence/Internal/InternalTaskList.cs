@@ -32,7 +32,7 @@ namespace Neon.Cadence.Internal
     public class InternalTaskList
     {
         /// <summary>
-        /// Identifies the tasklist.
+        /// Identifies the task list.
         /// </summary>
         [JsonProperty(PropertyName = "Name", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

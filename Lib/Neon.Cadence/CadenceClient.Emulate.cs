@@ -135,7 +135,7 @@ namespace Neon.Cadence
             public string Domain { get; set; }
 
             /// <summary>
-            /// Identifies the tasklist hosting the workflow.
+            /// Identifies the task list hosting the workflow.
             /// </summary>
             public string TaskList { get; set; }
 
@@ -252,7 +252,7 @@ namespace Neon.Cadence
             public string Domain { get; set; }
 
             /// <summary>
-            /// The worker tasklist.
+            /// The worker task list.
             /// </summary>
             public string TaskList { get; set; }
 
@@ -992,10 +992,10 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Searches an emulated workflow worker for specified domain and tasklist.
+        /// Searches an emulated workflow worker for specified domain and task list.
         /// </summary>
         /// <param name="domain">The domain.</param>
-        /// <param name="taskList">The tasklist.</param>
+        /// <param name="taskList">The task list.</param>
         /// <returns>The <see cref="EmulatedWorker"/> or <c>null</c>.</returns>
         private EmulatedWorker GetWorkflowWorker(string domain, string taskList)
         {

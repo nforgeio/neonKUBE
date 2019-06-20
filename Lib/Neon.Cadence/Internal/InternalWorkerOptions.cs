@@ -108,7 +108,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Optional: Sets the rate limiting on number of activities that can be executed per second.
-        /// This is managed by the server and controls activities per second for your entire tasklist
+        /// This is managed by the server and controls activities per second for your entire task list
         /// whereas WorkerActivityTasksPerSecond controls activities only per worker.
         /// Notice that the number is represented in float, so that you can set it to less than
         /// 1 if needed. For example, set the number to 0.1 means you want your activity to be executed

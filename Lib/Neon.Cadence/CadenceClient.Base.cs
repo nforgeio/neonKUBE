@@ -46,17 +46,17 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Signals Cadence that the application is capable of executing workflows for
-        /// a specific domain and tasklist.
+        /// a specific domain and task list.
         /// </summary>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="taskList">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
+        /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
         /// <para>
         /// Your workflow application will need to call this method so that Cadence will know
         /// that it can schedule workflows to run within the current process.  You'll need
-        /// to specify the target Cadence domain and tasklist.
+        /// to specify the target Cadence domain and task list.
         /// </para>
         /// <para>
         /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
@@ -83,7 +83,7 @@ namespace Neon.Cadence
             lock (syncLock)
             {
                 // Ensure that we haven't already registered a worker for the
-                // specified workflow, domain, and tasklist.  We'll just ignore
+                // specified workflow, domain, and task list.  We'll just ignore
                 // the call if we already have this registration.
                 //
                 // I know that this is a linear search but the number of workflow
@@ -124,17 +124,17 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Signals Cadence that the application is capable of executing activities for a specific
-        /// domain and tasklist.
+        /// domain and task list.
         /// </summary>
         /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="taskList">Optionally specifies the target tasklist (defaults to <b>"default"</b>).</param>
+        /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <remarks>
         /// <para>
         /// Your workflow application will need to call this method so that Cadence will know
         /// that it can schedule activities to run within the current process.  You'll need
-        /// to specify the target Cadence domain and tasklist.
+        /// to specify the target Cadence domain and task list.
         /// </para>
         /// <para>
         /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
@@ -161,7 +161,7 @@ namespace Neon.Cadence
             lock (syncLock)
             {
                 // Ensure that we haven't already registered a worker for the
-                // specified activity, domain, and tasklist.  We'll just ignore
+                // specified activity, domain, and task list.  We'll just ignore
                 // the call if we already have this registration.
                 //
                 // I know that this is a linear search but the number of activity

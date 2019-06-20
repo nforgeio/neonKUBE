@@ -96,7 +96,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The tasklist where the workflow is executing.
+        /// The task list where the workflow is executing.
         /// </summary>
         public string TaskList
         {

@@ -81,7 +81,7 @@ namespace Neon.Cadence
         /// <summary>
         /// <para>
         /// Optionally sets the rate limiting on number of activities that can be executed per second.
-        /// This is managed by the server and controls activities per second for your entire tasklist
+        /// This is managed by the server and controls activities per second for your entire task list
         /// whereas WorkerActivityTasksPerSecond controls activities only per worker.
         /// </para>
         /// <note>
