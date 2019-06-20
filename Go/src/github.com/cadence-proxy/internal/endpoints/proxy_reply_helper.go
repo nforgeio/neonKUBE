@@ -397,16 +397,17 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	if op == nil {
 		return errEntityNotExist
 	}
+	contextID := op.GetContextID()
 
-	// debug
+	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Settling Workflow",
-		zap.Int64("ContextId", op.GetContextID()),
+		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProccessId", os.Getpid()),
 	)
 
 	// WorkflowContext at the specified WorflowContextID
-	wectx := WorkflowContexts.Get(op.GetContextID())
+	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		return errEntityNotExist
 	}
@@ -441,10 +442,10 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 		// Start a continue as new instance of the workflow and get the error to send
 		// back to the Neon.Cadence Lib
-		continueError := workflow.NewContinueAsNewError(continueContext, wectx.GetWorkflowName(), reply.GetContinueAsNewArgs())
+		continueError := workflow.NewContinueAsNewError(continueContext, *wectx.GetWorkflowName(), reply.GetContinueAsNewArgs())
 
 		// create a new custom error and set it in the reply to be handled by the future
-		cadenceError := cadenceerrors.NewCadenceError(continueError.Error())
+		cadenceError := cadenceerrors.NewCadenceError(continueError.Error(), cadenceerrors.Generic)
 		reply.SetError(cadenceError)
 	}
 
@@ -642,9 +643,17 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 	if op == nil {
 		return errEntityNotExist
 	}
+	contextID := op.GetContextID()
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Settling Activity",
+		zap.Int64("ActivityContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// ActivityContext at the specified WorflowContextID
-	if actx := ActivityContexts.Get(op.GetContextID()); actx == nil {
+	if actx := ActivityContexts.Get(contextID); actx == nil {
 		return errEntityNotExist
 	}
 

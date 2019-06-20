@@ -43,10 +43,6 @@ func SetupRoutes(router *chi.Mux) {
 		router.Use(middleware.RequestID)
 		router.Use(middleware.Recoverer)
 
-		if Debug {
-			router.Use(middleware.Logger)
-		}
-
 		// cadence-proxy endpoints
 		router.Put("/", MessageHandler)
 		router.Put("/echo", EchoHandler)

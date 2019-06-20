@@ -1225,8 +1225,10 @@ namespace Neon.Cadence
             var reply = (WorkflowExecuteChildReply)await Client.CallProxyAsync(
                 new WorkflowExecuteChildRequest()
                 {
-                    Args    = args,
-                    Options = options?.ToInternal()
+                    Workflow    = name,
+                    ContextId   = contextId,
+                    Args        = args,
+                    Options     = options?.ToInternal()
                 },
                 cancellationToken: cancellationToken);
 

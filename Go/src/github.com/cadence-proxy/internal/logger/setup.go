@@ -19,6 +19,7 @@ package logger
 
 import (
 	"os"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -41,23 +42,15 @@ func SetLogger(logLevel string, debugMode bool) {
 	// new AtomicLevel for dynamic logging level
 	atom := zap.NewAtomicLevel()
 
+	// switch on debug mode
 	switch debugMode {
 	case true:
 
 		// set the log level
 		atom.SetLevel(zap.DebugLevel)
 
-		// create the logger
+		// configure the logger
 		encoderCfg = zap.NewDevelopmentEncoderConfig()
-		encoderCfg.TimeKey = "Time"
-		encoderCfg.LevelKey = "Level"
-		encoderCfg.MessageKey = "Debug Message"
-		logger = zap.New(zapcore.NewCore(
-			zapcore.NewJSONEncoder(encoderCfg),
-			zapcore.Lock(os.Stdout),
-			atom,
-		))
-		defer logger.Sync()
 
 	default:
 
@@ -77,19 +70,39 @@ func SetLogger(logLevel string, debugMode bool) {
 			atom.SetLevel(zap.InfoLevel)
 		}
 
-		// create the logger
+		// configure the logger
 		encoderCfg = zap.NewProductionEncoderConfig()
-		encoderCfg.TimeKey = "Time"
-		encoderCfg.MessageKey = "Message"
-		encoderCfg.LevelKey = "Level"
-		logger = zap.New(zapcore.NewCore(
-			zapcore.NewJSONEncoder(encoderCfg),
-			zapcore.Lock(os.Stdout),
-			atom,
-		))
-		defer logger.Sync()
 	}
+
+	encoderCfg.EncodeTime = syslogTimeEncoder
+	encoderCfg.EncodeCaller = zapcore.ShortCallerEncoder
+	encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	encoderCfg.LineEnding = "\n"
+	encoderCfg.CallerKey = "caller"
+	encoderCfg.TimeKey = "ts"
+	encoderCfg.LevelKey = "lvl"
+	encoderCfg.MessageKey = "msg"
+
+	// create the logger
+	enc := zapcore.NewConsoleEncoder(encoderCfg)
+	logger = zap.New(zapcore.NewCore(
+		enc,
+		zapcore.Lock(os.Stdout),
+		atom,
+	), zap.AddCaller())
+
+	// defer sync
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			logger.Error("Error", zap.Error(err))
+		}
+	}()
 
 	// set the global logger
 	_ = zap.ReplaceGlobals(logger)
+}
+
+func syslogTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("Jan  2 15:04:05"))
 }

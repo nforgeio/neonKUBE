@@ -27,7 +27,6 @@ import (
 	"reflect"
 	"time"
 
-	"go.uber.org/cadence/encoded"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
@@ -676,8 +675,10 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 
 	// create a new worker using a configured CadenceClientHelper instance
 	workerID := cadenceworkers.NextWorkerID()
-	worker, err := clientHelper.StartWorker(*request.GetDomain(),
-		*request.GetTaskList(),
+	domain := *request.GetDomain()
+	taskList := *request.GetTaskList()
+	worker, err := clientHelper.StartWorker(domain,
+		taskList,
 		*request.GetOptions(),
 	)
 
@@ -689,6 +690,14 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 
 	// put the worker and workerID from the new worker to the
 	workerID = Workers.Add(workerID, worker)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("New Worker Created",
+		zap.Int64("ID", workerID),
+		zap.String("Domain", domain),
+		zap.String("TaskList", taskList),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// build the reply
 	buildReply(reply, nil, workerID)
@@ -770,9 +779,12 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	// create workflow function
 	workflowName := request.GetName()
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
+
+		// $debug(jack.burns): DELETE THIS!
 		contextID := cadenceworkflows.NextContextID()
 		requestID := NextRequestID()
 		logger.Debug("Executing Workflow",
+			zap.String("Workflow", *workflowName),
 			zap.Int64("ContextId", contextID),
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProccessId", os.Getpid()),
@@ -828,8 +840,28 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Workflow Failed With Error",
+				zap.String("Workflow", *workflowName),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Error(s),
+				zap.Int("ProccessId", os.Getpid()),
+			)
+
 			return nil, s
 		case []byte:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Workflow Completed Successfully",
+				zap.String("Workflow", *workflowName),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.ByteString("Result", s),
+				zap.Int("ProccessId", os.Getpid()),
+			)
+
 			return s, nil
 		default:
 			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
@@ -850,9 +882,12 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
+	workflowName := *request.GetWorkflow()
+	domain := *request.GetDomain()
 	logger.Debug("WorkflowExecuteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.String("WorkflowName", *request.GetWorkflow()),
+		zap.String("WorkflowName", workflowName),
+		zap.String("Domain", domain),
 		zap.Int("ProccessId", os.Getpid()),
 	)
 
@@ -887,9 +922,9 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 
 	// signalwithstart the specified workflow
 	workflowRun, err := clientHelper.ExecuteWorkflow(ctx,
-		*request.GetDomain(),
+		domain,
 		opts,
-		*request.GetWorkflow(),
+		workflowName,
 		request.GetArgs(),
 	)
 
@@ -906,7 +941,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	}
 
 	// build the reply
-	buildReply(reply, nil, workflowExecution)
+	buildReply(reply, nil, &workflowExecution)
 
 	return reply
 }
@@ -1112,6 +1147,11 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	// the equals function for workflow.MutableSideEffect
 	equals := func(a, b interface{}) bool {
 
+		// do not update if update is false
+		if !request.GetUpdate() {
+			return true
+		}
+
 		// check if the results are *cadencerrors.CadenceError
 		if v, ok := a.(*cadenceerrors.CadenceError); ok {
 			if _v, _ok := b.(*cadenceerrors.CadenceError); _ok {
@@ -1134,13 +1174,19 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 		return false
 	}
 
-	// Choose if we use MutableSideEffect or
-	// SideEffect.  If we want to update the value,
-	// Use SideEffect cadence call
-	var sideEffectValue encoded.Value
+	// TODO: JACK -- CADENCE CLIENT BUG
+	// https://stackoverflow.com/questions/56658582/mutablesideeffect-panics-when-setting-second-value
+	// This is the fix for the bug
+	ctx := wectx.GetContext()
+	err := workflow.Sleep(ctx, time.Second)
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
+	}
 
 	// execute the cadence server MutableSideEffect call
-	sideEffectValue = workflow.MutableSideEffect(wectx.GetContext(),
+	sideEffectValue := workflow.MutableSideEffect(ctx,
 		*request.GetMutableID(),
 		mutableFunc,
 		equals,
@@ -1148,7 +1194,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 	// extract the result
 	var result []byte
-	err := sideEffectValue.Get(&result)
+	err = sideEffectValue.Get(&result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1206,7 +1252,11 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowGetResultRequest Received", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowGetResultRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ContextId", request.GetContextID()),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// new WorkflowGetResultReply
 	reply := createReplyMessage(request)
@@ -1945,9 +1995,18 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 	}
 
 	// define the activity function
-	contextID := cadenceactivities.NextContextID()
 	activityName := request.GetName()
 	activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
+
+		// $debug(jack.burns): DELETE THIS!
+		contextID := cadenceactivities.NextContextID()
+		requestID := NextRequestID()
+		logger.Debug("Executing Activity",
+			zap.String("Activity", *activityName),
+			zap.Int64("ActivityContextId", contextID),
+			zap.Int64("RequestId", requestID),
+			zap.Int("ProccessId", os.Getpid()),
+		)
 
 		// create an activity context entry in the ActivityContexts map
 		actx := cadenceactivities.NewActivityContext(ctx)
@@ -1958,7 +2017,6 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 
 		// Send a ActivityInvokeRequest to the Neon.Cadence Lib
 		// cadence-client
-		requestID := NextRequestID()
 		activityInvokeRequest := messages.NewActivityInvokeRequest()
 		activityInvokeRequest.SetRequestID(requestID)
 		activityInvokeRequest.SetArgs(input)
@@ -2028,8 +2086,28 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Activity Failed With Error",
+				zap.String("Activity", *activityName),
+				zap.Int64("ActivityContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Error(s),
+				zap.Int("ProccessId", os.Getpid()),
+			)
+
 			return nil, s
 		case []byte:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Activity Completed Successfully",
+				zap.String("Activity", *activityName),
+				zap.Int64("ActivityContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.ByteString("Result", s),
+				zap.Int("ProccessId", os.Getpid()),
+			)
+
 			return s, nil
 		default:
 			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
@@ -2049,7 +2127,13 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityExecuteRequest Received", zap.Int("ProccessId", os.Getpid()))
+	contextID := request.GetContextID()
+	logger.Debug("ActivityExecuteRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ContextId", contextID),
+		zap.String("ActivityName", *request.GetActivity()),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// new ActivityExecuteReply
 	reply := createReplyMessage(request)
@@ -2063,7 +2147,6 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 	}
 
 	// get the contextID and the corresponding context
-	contextID := request.GetContextID()
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
@@ -2399,13 +2482,6 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// and disable http request compression
 	req.Header.Set("Content-Type", ContentType)
 	req.Header.Set("Accept-Encoding", "identity")
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Neon.Cadence Library request",
-		zap.String("Request Address", req.URL.String()),
-		zap.String("Request Content-Type", req.Header.Get("Content-Type")),
-		zap.String("Request Method", req.Method),
-	)
 
 	// initialize the http.Client and send the request
 	client := &http.Client{}

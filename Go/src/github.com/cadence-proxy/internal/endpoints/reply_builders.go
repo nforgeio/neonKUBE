@@ -416,8 +416,8 @@ func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceErro
 	reply.SetError(cadenceError)
 
 	if len(execution) > 0 {
-		if v, ok := execution[0].(workflow.Execution); ok {
-			reply.SetExecution(&v)
+		if v, ok := execution[0].(*workflow.Execution); ok {
+			reply.SetExecution(v)
 		}
 	}
 }
