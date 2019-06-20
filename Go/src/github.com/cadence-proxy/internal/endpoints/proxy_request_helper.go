@@ -358,7 +358,7 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 func handleCancelRequest(request *messages.CancelRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("CancelRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("CancelRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
@@ -370,7 +370,7 @@ func handleCancelRequest(request *messages.CancelRequest) messages.IProxyReply {
 func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ConnectRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ConnectRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ConnectReply
 	reply := createReplyMessage(request)
@@ -450,7 +450,7 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("DomainDescribeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("DomainDescribeRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new DomainDescribeReply
 	reply := createReplyMessage(request)
@@ -487,7 +487,7 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messag
 func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("DomainRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("DomainRegisterRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new DomainRegisterReply
 	reply := createReplyMessage(request)
@@ -538,7 +538,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messag
 func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("DomainUpdateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("DomainUpdateRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new DomainUpdateReply
 	reply := createReplyMessage(request)
@@ -596,7 +596,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.I
 func handleHeartbeatRequest(request *messages.HeartbeatRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("HeartbeatRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("HeartbeatRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new HeartbeatReply
 	reply := createReplyMessage(request)
@@ -608,7 +608,7 @@ func handleHeartbeatRequest(request *messages.HeartbeatRequest) messages.IProxyR
 func handleInitializeRequest(request *messages.InitializeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("InitializeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("InitializeRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
@@ -642,7 +642,7 @@ func handleInitializeRequest(request *messages.InitializeRequest) messages.IProx
 func handleTerminateRequest(request *messages.TerminateRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("TerminateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("TerminateRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new TerminateReply
 	reply := createReplyMessage(request)
@@ -660,7 +660,7 @@ func handleTerminateRequest(request *messages.TerminateRequest) messages.IProxyR
 func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("NewWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("NewWorkerRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new NewWorkerReply
 	reply := createReplyMessage(request)
@@ -708,7 +708,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("StopWorkerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("StopWorkerRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new StopWorkerReply
 	reply := createReplyMessage(request)
@@ -748,7 +748,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 func handlePingRequest(request *messages.PingRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("PingRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("PingRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new PingReply
 	reply := createReplyMessage(request)
@@ -763,7 +763,7 @@ func handlePingRequest(request *messages.PingRequest) messages.IProxyReply {
 func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowRegisterRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowRegisterReply
 	reply := createReplyMessage(request)
@@ -884,7 +884,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	// $debug(jack.burns): DELETE THIS!
 	workflowName := *request.GetWorkflow()
 	domain := *request.GetDomain()
-	logger.Debug("WorkflowExecuteRequest Recieved",
+	logger.Debug("WorkflowExecuteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowName", workflowName),
 		zap.String("Domain", domain),
@@ -949,7 +949,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowCancelRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowCancelRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowCancelReply
 	reply := createReplyMessage(request)
@@ -995,7 +995,7 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowTerminateRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowTerminateRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowTerminateReply
 	reply := createReplyMessage(request)
@@ -1043,7 +1043,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithStartRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalWithStartRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSignalWithStartRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowSignalWithStartReply
 	reply := createReplyMessage(request)
@@ -1093,7 +1093,7 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 func handleWorkflowSetCacheSizeRequest(request *messages.WorkflowSetCacheSizeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSetCacheSizeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSetCacheSizeRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowSetCacheSizeReply
 	reply := createReplyMessage(request)
@@ -1118,7 +1118,7 @@ func handleWorkflowSetCacheSizeRequest(request *messages.WorkflowSetCacheSizeReq
 func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowMutableRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowMutableRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowMutableReply
 	reply := createReplyMessage(request)
@@ -1210,7 +1210,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeExecutionRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowDescribeExecutionRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowDescribeExecutionRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowDescribeExecutionReply
 	reply := createReplyMessage(request)
@@ -1252,7 +1252,7 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowGetResultRequest Recieved",
+	logger.Debug("WorkflowGetResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", request.GetContextID()),
 		zap.Int("ProccessId", os.Getpid()),
@@ -1303,7 +1303,7 @@ func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) 
 func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalSubscribeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSignalSubscribeRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowSignalSubscribeReply
 	reply := createReplyMessage(request)
@@ -1396,7 +1396,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSignalRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowSignalReply
 	reply := createReplyMessage(request)
@@ -1444,7 +1444,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 func handleWorkflowHasLastResultRequest(request *messages.WorkflowHasLastResultRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowHasLastResultRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowHasLastResultRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowHasLastResultReply
 	reply := createReplyMessage(request)
@@ -1474,7 +1474,7 @@ func handleWorkflowHasLastResultRequest(request *messages.WorkflowHasLastResultR
 func handleWorkflowGetLastResultRequest(request *messages.WorkflowGetLastResultRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowGetLastResultRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowGetLastResultRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowGetLastResultReply
 	reply := createReplyMessage(request)
@@ -1513,7 +1513,7 @@ func handleWorkflowGetLastResultRequest(request *messages.WorkflowGetLastResultR
 func handleWorkflowDisconnectContextRequest(request *messages.WorkflowDisconnectContextRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowDisconnectContextRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowDisconnectContextRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowDisconnectContextReply
 	reply := createReplyMessage(request)
@@ -1549,7 +1549,7 @@ func handleWorkflowDisconnectContextRequest(request *messages.WorkflowDisconnect
 func handleWorkflowGetTimeRequest(request *messages.WorkflowGetTimeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowGetTimeRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowGetTimeRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowGetTimeReply
 	reply := createReplyMessage(request)
@@ -1579,7 +1579,7 @@ func handleWorkflowGetTimeRequest(request *messages.WorkflowGetTimeRequest) mess
 func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSleepRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSleepRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowSleepReply
 	reply := createReplyMessage(request)
@@ -1618,7 +1618,7 @@ func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildReq
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
-	logger.Debug("WorkflowExecuteChildRequest Recieved",
+	logger.Debug("WorkflowExecuteChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProccessId", os.Getpid()),
@@ -1691,7 +1691,7 @@ func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildReq
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	childID := request.GetChildID()
-	logger.Debug("WorkflowWaitForChildRequest Recieved",
+	logger.Debug("WorkflowWaitForChildRequest Received",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
 		zap.Int64("RequestId", request.GetRequestID()),
@@ -1740,7 +1740,7 @@ func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildReq
 func handleWorkflowSignalChildRequest(request *messages.WorkflowSignalChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSignalChildRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowSignalChildReply
 	reply := createReplyMessage(request)
@@ -1786,7 +1786,7 @@ func handleWorkflowSignalChildRequest(request *messages.WorkflowSignalChildReque
 func handleWorkflowCancelChildRequest(request *messages.WorkflowCancelChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowCancelChildRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowCancelChildRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowCancelChildReply
 	reply := createReplyMessage(request)
@@ -1826,7 +1826,7 @@ func handleWorkflowCancelChildRequest(request *messages.WorkflowCancelChildReque
 func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHandlerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSetQueryHandlerRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowSetQueryHandlerRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowSetQueryHandlerReply
 	reply := createReplyMessage(request)
@@ -1919,7 +1919,7 @@ func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHand
 func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowQueryRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("WorkflowQueryRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new WorkflowQueryReply
 	reply := createReplyMessage(request)
@@ -1981,7 +1981,7 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityRegisterRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityRegisterRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ActivityRegisterReply
 	reply := createReplyMessage(request)
@@ -2128,7 +2128,7 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
-	logger.Debug("ActivityExecuteRequest Recieved",
+	logger.Debug("ActivityExecuteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.String("ActivityName", *request.GetActivity()),
@@ -2176,7 +2176,7 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 func handleActivityHasHeartbeatDetailsRequest(request *messages.ActivityHasHeartbeatDetailsRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityHasHeartbeatDetailsRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityHasHeartbeatDetailsRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ActivityHasHeartbeatDetailsReply
 	reply := createReplyMessage(request)
@@ -2203,7 +2203,7 @@ func handleActivityHasHeartbeatDetailsRequest(request *messages.ActivityHasHeart
 func handleActivityGetHeartbeatDetailsRequest(request *messages.ActivityGetHeartbeatDetailsRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityGetHeartbeatDetailsRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityGetHeartbeatDetailsRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ActivityGetHeartbeatDetailsReply
 	reply := createReplyMessage(request)
@@ -2239,7 +2239,7 @@ func handleActivityGetHeartbeatDetailsRequest(request *messages.ActivityGetHeart
 func handleActivityRecordHeartbeatRequest(request *messages.ActivityRecordHeartbeatRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityRecordHeartbeatRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityRecordHeartbeatRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ActivityRecordHeartbeatReply
 	reply := createReplyMessage(request)
@@ -2270,7 +2270,7 @@ func handleActivityRecordHeartbeatRequest(request *messages.ActivityRecordHeartb
 func handleActivityGetInfoRequest(request *messages.ActivityGetInfoRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityGetInfoRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityGetInfoRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ActivityGetInfoReply
 	reply := createReplyMessage(request)
@@ -2296,7 +2296,7 @@ func handleActivityGetInfoRequest(request *messages.ActivityGetInfoRequest) mess
 func handleActivityCompleteRequest(request *messages.ActivityCompleteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityCompleteRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityCompleteRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ActivityCompleteReply
 	reply := createReplyMessage(request)
@@ -2343,7 +2343,7 @@ func handleActivityCompleteRequest(request *messages.ActivityCompleteRequest) me
 func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityExecuteLocalRequest Recieved", zap.Int("ProccessId", os.Getpid()))
+	logger.Debug("ActivityExecuteLocalRequest Received", zap.Int("ProccessId", os.Getpid()))
 
 	// new ActivityExecuteLocalReply
 	reply := createReplyMessage(request)
