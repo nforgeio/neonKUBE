@@ -67,7 +67,14 @@ func (s *Instance) Start() {
 
 	// defer behaviors
 	defer func() {
+
+		// sync logger before exit
+		// and cancel context
 		close(s.ShutdownChannel)
+		err := s.Logger.Sync()
+		if err != nil {
+			s.Logger.Error("Error", zap.Error(err))
+		}
 	}()
 
 	// set the logger to the global
@@ -88,6 +95,7 @@ func (s *Instance) Start() {
 	// wait for the shutdown signal from a terminate request
 	shutdown := <-s.ShutdownChannel
 	if shutdown {
+
 		// create the context and the cancelFunc to shut down the server instance
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()

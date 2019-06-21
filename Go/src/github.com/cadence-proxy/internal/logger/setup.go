@@ -74,10 +74,12 @@ func SetLogger(logLevel string, debugMode bool) {
 		encoderCfg = zap.NewProductionEncoderConfig()
 	}
 
+	// encodings
 	encoderCfg.EncodeTime = syslogTimeEncoder
 	encoderCfg.EncodeCaller = zapcore.ShortCallerEncoder
 	encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	encoderCfg.LineEnding = "\n"
+
+	// keys
 	encoderCfg.CallerKey = "caller"
 	encoderCfg.TimeKey = "ts"
 	encoderCfg.LevelKey = "lvl"
@@ -90,14 +92,6 @@ func SetLogger(logLevel string, debugMode bool) {
 		zapcore.Lock(os.Stdout),
 		atom,
 	), zap.AddCaller())
-
-	// defer sync
-	defer func() {
-		err := logger.Sync()
-		if err != nil {
-			logger.Error("Error", zap.Error(err))
-		}
-	}()
 
 	// set the global logger
 	_ = zap.ReplaceGlobals(logger)

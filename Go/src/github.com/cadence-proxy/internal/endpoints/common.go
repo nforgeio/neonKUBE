@@ -89,7 +89,7 @@ var (
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been received by the cadence-proxy
-	cadenceClientTimeout time.Duration = time.Second * 600
+	cadenceClientTimeout time.Duration = time.Second * 30
 
 	// ActivityContexts maps a int64 ContextId to the cadence
 	// Activity Context passed to the cadence Activity functions.
