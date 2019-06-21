@@ -1183,6 +1183,8 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	//
 	// This is the workaround.  Here's our tracking bug:
 	// https://github.com/nforgeio/neonKUBE/issues/562
+	//
+	// FYI: This is deprecated and will never be called now.
 	ctx := wectx.GetContext()
 	err := workflow.Sleep(ctx, time.Second)
 	if err != nil {

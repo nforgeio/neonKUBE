@@ -259,7 +259,7 @@ namespace TestCadence
             {
                 // Test-0: Uninitialized variables should return NULL.
 
-                var value = await GetVariableAsync("value-1");
+                var value = await GetVariableAsync("value-0");
 
                 if (value != null)
                 {
@@ -268,58 +268,70 @@ namespace TestCadence
 
                 // Test-1: Set and retrieve a variable.
 
-                await SetVariableAsync("value-1", new byte[] { 1 });
+                await SetVariableAsync("value-0", new byte[] { 1 });
 
-                value = await GetVariableAsync("value-1");
+                value = await GetVariableAsync("value-0");
 
                 if (value[0] != 1)
                 {
                     throw new Exception("Test-1: Unexpected value.");
                 }
 
-                // Test-2: Update the variable.
+                // Test-1: Update an existing variable.
 
-                await SetVariableAsync("value-1", new byte[] { 2 });
+                await SetVariableAsync("value-0", new byte[] { 2 });
 
-                value = await GetVariableAsync("value-2");
+                value = await GetVariableAsync("value-0");
 
-                if (value[0] != 1)
+                if (value[0] != 2)
                 {
-                    throw new Exception("Test-2: Unexpected value.");
+                    throw new Exception("Test-1: Unexpected value.");
                 }
 
                 //-------------------------------------------------------------
                 // Repeat for another variable.
 
-                // Test-3: Uninitialized variables should return NULL.
+                // Test-2: Uninitialized variables should return NULL.
 
                 value = await GetVariableAsync("value-2");
 
                 if (value != null)
                 {
-                    throw new Exception("Test-3: Uninitialized value is not NULL.");
+                    throw new Exception("Test-2: Uninitialized value is not NULL.");
                 }
 
-                // Test-4: Set and retrieve a variable.
+                // Test-3: Set and retrieve a variable.
 
-                await SetVariableAsync("value-2", new byte[] { 1 });
+                await SetVariableAsync("value-2", new byte[] { 20 });
 
                 value = await GetVariableAsync("value-2");
 
-                if (value[0] != 1)
+                if (value[0] != 20)
+                {
+                    throw new Exception("Test-3: Unexpected value.");
+                }
+
+                // Test-4: Update the variable.
+
+                await SetVariableAsync("value-2", new byte[] { 30 });
+
+                value = await GetVariableAsync("value-2");
+
+                if (value[0] != 30)
                 {
                     throw new Exception("Test-4: Unexpected value.");
                 }
 
-                // Test-5: Update the variable.
+                //-------------------------------------------------------------
+                // Test-5: Verify that we can set and get NULL variable values.
 
-                await SetVariableAsync("value-5", new byte[] { 2 });
+                await SetVariableAsync("value-2", null);
 
                 value = await GetVariableAsync("value-2");
 
-                if (value[0] != 1)
+                if (value == null)
                 {
-                    throw new Exception("Test-2: Unexpected value.");
+                    throw new Exception("Test-4: Unexpected value.");
                 }
 
                 return await Task.FromResult((byte[])null);

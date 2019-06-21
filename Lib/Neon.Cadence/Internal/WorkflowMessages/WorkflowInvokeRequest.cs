@@ -27,6 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
+    [Obsolete("This was replaced by a local activity.")]
     [InternalProxyMessage(InternalMessageTypes.WorkflowInvokeRequest)]
     internal class WorkflowInvokeRequest : WorkflowRequest
     {

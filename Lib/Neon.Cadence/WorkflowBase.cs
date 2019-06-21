@@ -296,6 +296,19 @@ namespace Neon.Cadence
             }
         }
 
+        /// <summary>
+        /// Private activity used to set/get variable values.  This activity simply
+        /// returns the arguments passed such that they'll be recorded in the workflow
+        /// history.  This is intended to be executed as a local activity.
+        /// </summary>
+        private class VariableActivity : ActivityBase
+        {
+            protected override Task<byte[]> RunAsync(byte[] args)
+            {
+                return Task.FromResult(args);
+            }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -523,8 +536,8 @@ namespace Neon.Cadence
                 idToWorkflow.Add(workflowKey, workflow);
             }
 
-            // We're going to record the workflow implementation version as a mutable
-            // value and then obtain the value to set the [OriginalVersion] property.
+            // We're going to record the workflow implementation version as a workflow
+            // variable and then obtain the value to set the [OriginalVersion] property.
             // The outcome will be that [OriginalVersion] will end up being set to the 
             // [Version] at the time the workflow instance was first invoked and [Version] 
             // will return the current version.
@@ -778,8 +791,9 @@ namespace Neon.Cadence
 
         private long                        contextId;
         private WorkflowMethodMap           methodMap;
-        private Dictionary<long, Type>      idToLocalActivityType;
         private long                        nextLocalActivityTypeId;
+        private Dictionary<long, Type>      idToLocalActivityType;
+        private Dictionary<string, byte[]>  variables;
         private bool                        isDisconnected;
 
         /// <summary>
@@ -801,6 +815,7 @@ namespace Neon.Cadence
             this.Client                = client;
             this.contextId             = contextId;
             this.idToLocalActivityType = new Dictionary<long, Type>();
+            this.variables             = new Dictionary<string, byte[]>();
 
             // Generate the signal/query method map for the workflow type if we
             // haven't already done that for this workflow type.
@@ -1085,7 +1100,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Sets a workflow variable.
         /// </summary>
-        /// <param name="name">The variable name.</param>
+        /// <param name="name">The variable name (a case insensitive non-empty string).</param>
         /// <param name="value">The value being set encoded as a byte array.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
@@ -1105,16 +1120,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            var reply = (WorkflowMutableReply)await Client.CallProxyAsync(
-                new WorkflowMutableRequest()
-                {
-                    ContextId = this.contextId,
-                    MutableId = name,
-                    Result    = value,
-                    Update    = true
-                });
-
-            reply.ThrowOnError();
+            variables[name] = await CallLocalActivityAsync<VariableActivity>(value);
         }
 
         /// <summary>
@@ -1125,7 +1131,7 @@ namespace Neon.Cadence
         /// Workflow variables that have not been set will return <c>null</c>.
         /// </note>
         /// </summary>
-        /// <param name="name">The variable name.</param>
+        /// <param name="name">The variable name (a case insensitive non-empty string).</param>
         /// <returns>The variable value or <c>null</c> when the variable hasn't been set.</returns>
         /// <remarks>
         /// <para>
@@ -1144,29 +1150,11 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            var reply = (WorkflowMutableReply)await Client.CallProxyAsync(
-                new WorkflowMutableRequest()
-                {
-                    ContextId = this.contextId,
-                    MutableId = name,
-                    Result    = null,
-                    Update    = false
-                });
+            byte[] value = null;
 
-            if (reply.Error?.String == "no data available")
-            {
-                // $hack(jeff.lill):
-                //
-                // [cadence-proxy] returns this error when the variable hasn't been set or
-                // (I believe) when it's value is NULL.  We'll just return NULL.  This is
-                // a bit fragile because it's depending on the error string never changing.
+            variables.TryGetValue(name, out value);
 
-                return null;
-            }
-
-            reply.ThrowOnError();
-
-            return reply.Result;
+            return await Task.FromResult(value);
         }
 
         /// <summary>
