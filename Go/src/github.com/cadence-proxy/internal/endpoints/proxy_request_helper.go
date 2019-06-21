@@ -413,21 +413,24 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 
 	go func() {
 
+		// defer sending error
+		// or nil over connectChan
+		var err error
+		defer func() {
+			connectChan <- err
+		}()
+
 		// build the domain client using a configured CadenceClientHelper instance
 		domainClient, err := clientHelper.Builder.BuildCadenceDomainClient()
 		if err != nil {
-			connectChan <- err
 			return
 		}
 
 		// send a describe domain request to the cadence server
 		_, err = domainClient.Describe(ctx, _cadenceSystemDomain)
 		if err != nil {
-			connectChan <- err
 			return
 		}
-
-		connectChan <- nil
 	}()
 
 	connectResult := <-connectChan
@@ -913,6 +916,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 		if opts.DecisionTaskStartToCloseTimeout <= 0 {
 			opts.DecisionTaskStartToCloseTimeout = cadenceClientTimeout
 		}
+
 	} else {
 		opts = client.StartWorkflowOptions{
 			ExecutionStartToCloseTimeout:    cadenceClientTimeout,
