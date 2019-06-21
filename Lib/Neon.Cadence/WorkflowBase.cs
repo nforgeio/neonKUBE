@@ -93,21 +93,22 @@ namespace Neon.Cadence
     ///     instead.
     ///     </item>
     ///     <item>
-    ///     Workflows should never directly query the environment where the workflow 
-    ///     code is currently running.  This includes things like environment variables,
-    ///     the machine host name or IP address, local files, etc.  You should generally
-    ///     use activities for this or obtain this indirectly state via
-    ///     <see cref="GetValueAsync(string, byte[], bool)"/>.  Both of these mechanisms will 
-    ///     ensure that Cadence can record the state in the workflow history so that it 
-    ///     can be replayed if the workflow needs to be rescheduled.
-    ///     </item>
-    ///     <item>
-    ///     Workflows should never obtain things like random numbers or UUIDs 
-    ///     directly since these operations are implicitly are non-deterministic 
-    ///     because they'll return different values every time.  You'll need to
-    ///     use  <see cref="GetValueAsync(string, byte[], bool)"/> with a custom function 
-    ///     for these as well or use activities, to ensure that the results are recorded
-    ///     in the workflow history.
+    ///     <para>
+    ///     Cadence supports <b>workflow variables</b>.  Variables are identified by
+    ///     non-empty string names and can reference byte array values or <c>null</c>.
+    ///     You'll use <see cref="SetVariableAsync(string, byte[])"/> to set a variable
+    ///     and <see cref="GetVariableAsync(string)"/> to retrieve a variable's value.
+    ///     </para>
+    ///     <note>
+    ///     Uninitialized variables will return <c>null</c>.
+    ///     </note>
+    ///     <para>
+    ///     Workflow variables are recorded in the history such that the consistent values
+    ///     will be returned for each decision task when the workflow is replayed.  You
+    ///     can use variables to hold non-deterministic or external state such as generated
+    ///     UUIDs, random numbers, or the point-in-time state of an external system to
+    ///     ensure that your workflows will make the same decisions when replayed.
+    ///     </para>
     ///     </item>
     ///     <item>
     ///     Workflows should never call <see cref="Thread.Sleep(TimeSpan)"/> or 
@@ -531,10 +532,23 @@ namespace Neon.Cadence
             // This will give upgraded workflow implementations a chance to implement 
             // backwards compatibility for workflows already in flight.
 
-            var version      = workflow.Version ?? zeroVersion;
-            var versionBytes = await workflow.GetValueAsync("neon:original-version", Encoding.UTF8.GetBytes(version.ToString()));
+            // $debug(jeff.lill): Uncomment this.
+#if TODO
+            var versionVariable      = "neon:original-version";
+            var version              = workflow.Version ?? zeroVersion;
+            var originalVersionBytes = await workflow.GetVariableAsync(versionVariable);
 
-            workflow.OriginalVersion = SemanticVersion.Parse(Encoding.UTF8.GetString(versionBytes));
+            if (originalVersionBytes == null)
+            {
+                // This must be the first time the workflow has executed this step.
+
+                workflow.OriginalVersion = version;
+            }
+            else
+            {
+                workflow.OriginalVersion = SemanticVersion.Parse(Encoding.UTF8.GetString(originalVersionBytes));
+            }
+#endif
 
             // Initialize the other workflow properties.
 
@@ -915,23 +929,16 @@ namespace Neon.Cadence
         ///     Workflows should never directly query the environment where the workflow 
         ///     code is currently running.  This includes things like environment variables,
         ///     the machine host name or IP address, local files, etc.  You should generally
-        ///     use activities for this or obtain this indirectly state via
-        ///     <see cref="GetValueAsync(string, byte[], bool)"/>.  Both of these mechanisms will
-        ///     ensure that Cadence can record the state in the workflow history so that it
-        ///     can be replayed if the workflow needs to be rescheduled.
-        ///     </item>
-        ///     <item>
-        ///     Workflows should never obtain things like random numbers or UUIDs 
-        ///     directly since these operations are implicitly are non-deterministic 
-        ///     because they'll return different values every time.  You'll need to
-        ///     use  <see cref="GetValueAsync(string, byte[], bool)"/>
-        ///     with a custom function for these as well or use activities, to ensure
-        ///     that the results are recorded in the workflow history.
+        ///     use activities for this or obtain this indirectly state using workflow
+        ///     variables via <see cref="SetVariableAsync(string, byte[])"/> and 
+        ///     <see cref="GetVariableAsync(string)"/>.  These methods ensure that Cadence 
+        ///     will record the variable state in the workflow history such that the
+        ///     same values will be returned when the workflow is replayed.
         ///     </item>
         ///     <item>
         ///     Workflows should never call <see cref="Thread.Sleep(TimeSpan)"/> or 
         ///     <see cref="Task.Delay(TimeSpan)"/>.  Use <see cref="SleepAsync(TimeSpan)"/>
-        ///     instead.
+        ///     or <see cref="SleepUntilUtcAsync(DateTime)"/> instead.
         ///     </item>
         /// </list>
         /// </note>
@@ -1076,65 +1083,86 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Use this when your workflow needs to obtain a value that 
-        /// may change at runtime.  You'll pass a string identifying the
-        /// value along with the current value and the method will return
-        /// the first value set for the value identifier during the workflow
-        /// execution.
+        /// Sets a workflow variable.
         /// </summary>
-        /// <param name="valueId">Identifies the value.</param>
-        /// <param name="value">The value encoded as a byte array or <c>null</c>.</param>
-        /// <param name="update">
-        /// Optionally indicates that the new value should be persisted to
-        /// the workflow history.  This defaults to <c>false</c>.
-        /// </param>
-        /// <returns>The requested value as a byte array or <c>null</c>.</returns>
+        /// <param name="name">The variable name.</param>
+        /// <param name="value">The value being set encoded as a byte array.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
-        /// <note>
-        /// This combines the functionality of the <b>SideEffect()</b> and
-        /// <b>MutableSideEffect()</b> context functions provided by the GOLANG
-        /// client.
-        /// </note>
         /// <para>
-        /// For example, a workflow step may require a random number
-        /// when making a decision.  In this case, the workflow would
-        /// call <see cref="GetValueAsync"/>, passing the generated
-        /// random number.
+        /// Workflows can set and retrieve values from workflow variables.  Variables
+        /// are identified by a non-empty string name and can hold byte array or
+        /// <c>null</c> values.  Use <see cref="SetVariableAsync(string, byte[])"/>
+        /// to set a variable and <see cref="GetVariableAsync(string)"/> to retrieve
+        /// one.
         /// </para>
         /// <para>
-        /// By default, the first time the method is executed in a workflow, 
-        /// the random value passed will be persisted to the workflow history
-        /// and also returned by <see cref="GetValueAsync(string, byte[], bool)"/>. 
-        /// Then,  if the workflow needs to be replayed or this method is called 
-        /// later on during workflow execution the random number will be returned
-        /// from the history rather than using the new value passed.  This ensures 
-        /// that the original random number would be returned resulting in the
-        /// same decision being made during the replay.  This is equivalant to
-        /// the GOLANG client's <b>SideEffect()</b> function, but using an ID
-        /// to identify the value.
-        /// </para>
-        /// <para>
-        /// You can also persist new values by passing <paramref name="update"/><c>=true</c>.
-        /// This is very close to being equivalent to the GOLANG client's <b>MutableSideEffect()</b>
-        /// function. 
+        /// Cadence ensures that the variable values will be returned from the workflow
+        /// history when the workflow is replayed to maintain workflow determinism.
         /// </para>
         /// </remarks>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> GetValueAsync(string valueId, byte[] value, bool update = false)
+        protected async Task SetVariableAsync(string name, byte[] value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(valueId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
             var reply = (WorkflowMutableReply)await Client.CallProxyAsync(
                 new WorkflowMutableRequest()
                 {
                     ContextId = this.contextId,
-                    MutableId = valueId,
+                    MutableId = name,
                     Result    = value,
-                    Update    = update
+                    Update    = true
                 });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns the value of a workflow variable.
+        /// </para>
+        /// <note>
+        /// Workflow variables that have not been set will return <c>null</c>.
+        /// </note>
+        /// </summary>
+        /// <param name="name">The variable name.</param>
+        /// <returns>The variable value or <c>null</c> when the variable hasn't been set.</returns>
+        /// <remarks>
+        /// <para>
+        /// Workflows can set and retrieve values from workflow variables.  Variables
+        /// are identified by a non-empty string name and can hold byte array or
+        /// <c>null</c> values.  Use <see cref="SetVariableAsync(string, byte[])"/>
+        /// to set a variable and <see cref="GetVariableAsync(string)"/> to retrieve
+        /// one.
+        /// </para>
+        /// <para>
+        /// Cadence ensures that the variable values will be returned from the workflow
+        /// history when the workflow is replayed to maintain workflow determinism.
+        /// </para>
+        /// </remarks>
+        protected async Task<byte[]> GetVariableAsync(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            var reply = (WorkflowMutableReply)await Client.CallProxyAsync(
+                new WorkflowMutableRequest()
+                {
+                    ContextId = this.contextId,
+                    MutableId = name,
+                    Result    = null,
+                    Update    = false
+                });
+
+            if (reply.Error?.String == "no data available")
+            {
+                // $hack(jeff.lill):
+                //
+                // [cadence-proxy] returns this error when the variable hasn't been set or
+                // (I believe) when it's value is NULL.  We'll just return NULL.  This is
+                // a bit fragile because it's depending on the error string never changing.
+
+                return null;
+            }
 
             reply.ThrowOnError();
 

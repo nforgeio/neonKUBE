@@ -505,11 +505,11 @@ namespace Neon.Cadence
 
                 // Return the cached value if there is one otherwise query
                 // Cadence for the info and cache it.
-                
+
                 // $note(jeff.lill):
                 //
                 // I could have used a lock here to prevent an app from
-                // calling this simultaniously on two different threads,
+                // calling this simultaneously on two different threads,
                 // resulting in multiple queries to the [cadence-proxy],
                 // but that's probably very unlikely to happen in the
                 // real world and since the info returned is invariant,
