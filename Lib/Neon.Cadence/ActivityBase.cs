@@ -494,12 +494,15 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the additional information about the activity and the workflow
-        /// that invoked it.
+        /// that invoked it.  Note that this doesn't work for local activities.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         public ActivityInfo Info
         {
             get
             {
+                EnsureNotLocal();
+
                 // Return the cached value if there is one otherwise query
                 // Cadence for the info and cache it.
                 
@@ -507,7 +510,7 @@ namespace Neon.Cadence
                 //
                 // I could have used a lock here to prevent an app from
                 // calling this simultaniously on two different threads,
-                // resulting in multiple queries to the cadence-proxy,
+                // resulting in multiple queries to the [cadence-proxy],
                 // but that's probably very unlikely to happen in the
                 // real world and since the info returned is invariant,
                 // having this happen would be harmless anyway.
@@ -599,7 +602,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         private void EnsureNotLocal()
         {
-            if (!IsLocal)
+            if (IsLocal)
             {
                 throw new InvalidOperationException("This operation is not supported for local activity executions.");
             }

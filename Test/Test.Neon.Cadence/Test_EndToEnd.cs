@@ -213,6 +213,33 @@ namespace TestCadence
         }
 
         /// <summary>
+        /// Returns the activity properties as an encoded dictionary with the
+        /// property values converted to strings.
+        /// </summary>
+        private class GetPropertiesActivity : ActivityBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var properties = new Dictionary<string, string>();
+
+                properties.Add(nameof(Info.TaskToken), Convert.ToBase64String(Info.TaskToken));
+                properties.Add(nameof(Info.WorkflowTypeName), Convert.ToBase64String(Info.TaskToken));
+                properties.Add(nameof(Info.WorkflowDomain), Info.WorkflowDomain);
+                properties.Add(nameof(Info.WorkflowRun), NeonHelper.JsonSerialize(Info.WorkflowRun));
+                properties.Add(nameof(Info.ActivityId), Info.ActivityId);
+                properties.Add(nameof(Info.ActivityTypeName), Info.ActivityTypeName);
+                properties.Add(nameof(Info.TaskList), Info.TaskList);
+                properties.Add(nameof(Info.HeartbeatTimeout), Info.HeartbeatTimeout.ToString());
+                properties.Add(nameof(Info.ScheduledTimeUtc), Info.ScheduledTimeUtc.ToString());
+                properties.Add(nameof(Info.StartedTimeUtc), Info.StartedTimeUtc.ToString());
+                properties.Add(nameof(Info.DeadlineTimeUtc), Info.DeadlineTimeUtc.ToString());
+                properties.Add(nameof(Info.Attempt), Info.Attempt.ToString());
+
+                return await Task.FromResult(NeonHelper.JsonSerializeToBytes(properties));
+            }
+        }
+
+        /// <summary>
         /// Executes <see cref="HelloWorkflow"/> as a child to return "workflow: Hello World!".
         /// </summary>
         private class ExecuteChildWorkflow : WorkflowBase
@@ -362,6 +389,18 @@ namespace TestCadence
                 properties.Add(nameof(TaskList), TaskList);
 
                 return await Task.FromResult(NeonHelper.JsonSerializeToBytes(properties));
+            }
+        }
+
+        /// <summary>
+        /// Calls <see cref="GetActivityPropertiesWorkflow"/> and returns the property
+        /// dictionary returned by that activity.
+        /// </summary>
+        private class GetActivityPropertiesWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                return await CallActivityAsync<GetPropertiesActivity>(null);
             }
         }
 
@@ -883,7 +922,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_Properties()
+        public async Task Workflow_Properties_DefaultTaskList()
         {
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
@@ -891,17 +930,17 @@ namespace TestCadence
             {
                 await client.RegisterWorkflowAsync<GetPropertiesWorkflow>();
 
-                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow" });
+                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-default" });
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
                 Assert.Equal("0.0.0", properties["Version"]);
                 Assert.Equal("0.0.0", properties["OriginalVersion"]);
                 Assert.Equal("test-domain", properties["Domain"]);
-                Assert.Equal("my-workflow", properties["WorkflowId"]);
+                Assert.Equal("my-workflow-default", properties["WorkflowId"]);
                 Assert.NotNull(properties["RunId"]);
                 Assert.NotEmpty(properties["RunId"]);
-                Assert.NotEqual("my-workflow", properties["RunId"]);
+                Assert.NotEqual("my-workflow-default", properties["RunId"]);
                 Assert.Equal(typeof(GetPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
                 Assert.Equal("default", properties["TaskList"]);
             }
@@ -909,7 +948,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_NonDefaultTasklist()
+        public async Task Workflow_Properties_NonDefaultTasklist()
         {
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
@@ -917,19 +956,54 @@ namespace TestCadence
             {
                 await client.RegisterWorkflowAsync<GetPropertiesWorkflow>();
 
-                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow" });
+                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow-nondefault" });
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
                 Assert.Equal("0.0.0", properties["Version"]);
                 Assert.Equal("0.0.0", properties["OriginalVersion"]);
                 Assert.Equal("test-domain", properties["Domain"]);
-                Assert.Equal("my-workflow", properties["WorkflowId"]);
+                Assert.Equal("my-workflow-nondefault", properties["WorkflowId"]);
                 Assert.NotNull(properties["RunId"]);
                 Assert.NotEmpty(properties["RunId"]);
-                Assert.NotEqual("my-workflow", properties["RunId"]);
+                Assert.NotEqual("my-workflow-nondefault", properties["RunId"]);
                 Assert.Equal(typeof(GetPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
                 Assert.Equal("non-default", properties["TaskList"]);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activities_Properties()
+        {
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
+                {
+                    await client.RegisterActivityAsync<GetPropertiesActivity>();
+                    await client.RegisterWorkflowAsync<GetActivityPropertiesWorkflow>();
+
+                    var workflowRun = await client.StartWorkflowAsync<GetActivityPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-default" });
+                    var result      = await client.GetWorkflowResultAsync(workflowRun);
+                    var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
+
+#if TODO
+                    Assert.NotNull(Convert.FromBase64String(properties["TaskToken"]));
+                    Assert.Equal(typeof(GetPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
+                    Assert.Equal("test-domain", properties["WorkflowDomain"]);
+                    Assert.NotNull(NeonHelper.JsonDeserialize<WorkflowRun>(properties["WorkflowRun"]));
+                    Assert.False(string.IsNullOrEmpty(properties["ActivityId"]));
+                    Assert.Equal(typeof(GetPropertiesActivity).FullName, properties["ActivityTypeName"]);
+                    Assert.Equal("default", properties["TaskList"]);
+                    Assert.Equal("", properties["HeartbeatTimeout"]);
+                    Assert.Equal("", properties["ScheduledTimeUtc"]);
+                    Assert.Equal("", properties["StartedTimeUtc"]);
+                    Assert.Equal("", properties["DeadlineTimeUtc"]);
+                    Assert.Equal("", properties["Attempt"]);
+#endif
+                }
             }
         }
 
@@ -1162,7 +1236,7 @@ namespace TestCadence
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
             }
-    }
+        }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
@@ -1184,6 +1258,44 @@ namespace TestCadence
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Multiple_Clients()
+        {
+            // We're going to create a second client and then use both of them to
+            // execute a workflow.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            using (var worker1 = await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+
+                using (var client2 = await CadenceClient.ConnectAsync(client.Settings))
+                {
+                    await client.AutoRegisterWorkflowsAsync(assembly);
+                    await client.AutoRegisterActivitiesAsync(assembly);
+
+                    await client2.AutoRegisterWorkflowsAsync(assembly);
+                    await client2.AutoRegisterActivitiesAsync(assembly);
+
+                    // Client #1 calls
+
+                    var result1 = await client.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+
+                    // Client #2 calls
+
+                    Assert.NotNull(result1);
+                    Assert.Equal("Hello World!", Encoding.UTF8.GetString(result1));
+
+                    var result2 = await client2.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+
+                    Assert.NotNull(result2);
+                    Assert.Equal("Hello World!", Encoding.UTF8.GetString(result1));
+                }
             }
         }
     }
