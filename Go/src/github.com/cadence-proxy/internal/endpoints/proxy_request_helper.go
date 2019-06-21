@@ -2274,7 +2274,12 @@ func handleActivityRecordHeartbeatRequest(request *messages.ActivityRecordHeartb
 func handleActivityGetInfoRequest(request *messages.ActivityGetInfoRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityGetInfoRequest Received", zap.Int("ProccessId", os.Getpid()))
+	contextID := request.GetContextID()
+	logger.Debug("ActivityGetInfoRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ActivityContextId", contextID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
 
 	// new ActivityGetInfoReply
 	reply := createReplyMessage(request)
@@ -2287,12 +2292,18 @@ func handleActivityGetInfoRequest(request *messages.ActivityGetInfoRequest) mess
 		return reply
 	}
 
-	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
-	defer cancel()
+	// get the activity context
+	actx := ActivityContexts.Get(contextID)
+	if actx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
 
+		return reply
+	}
+
+	// get info
 	// build the reply
-	buildReply(reply, nil, activity.GetInfo(ctx))
+	info := activity.GetInfo(actx.GetContext())
+	buildReply(reply, nil, &info)
 
 	return reply
 }
@@ -2374,9 +2385,8 @@ func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalReq
 	localActivityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 
 		// create an activity context entry in the ActivityContexts map
-		actx := cadenceactivities.NewActivityContext(ctx)
-
 		// add the context to ActivityContexts
+		actx := cadenceactivities.NewActivityContext(ctx)
 		activityContextID := ActivityContexts.Add(cadenceactivities.NextContextID(), actx)
 
 		// Send a ActivityInvokeLocalRequest to the Neon.Cadence Lib
