@@ -53,7 +53,7 @@ namespace Neon.Cadence
                 workflowTypeName = workflowTypeName ?? typeof(TWorkflow).FullName;
             }
 
-            if (!WorkflowBase.Register(typeof(TWorkflow), workflowTypeName))
+            if (!WorkflowBase.Register(this, typeof(TWorkflow), workflowTypeName))
             {
                 var reply = (WorkflowRegisterReply)await CallProxyAsync(
                     new WorkflowRegisterRequest()
@@ -91,7 +91,7 @@ namespace Neon.Cadence
                     {
                         var workflowTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
-                        if (!WorkflowBase.Register(type, workflowTypeName))
+                        if (!WorkflowBase.Register(this, type, workflowTypeName))
                         {
                             var reply = (WorkflowRegisterReply)await CallProxyAsync(
                                 new WorkflowRegisterRequest()

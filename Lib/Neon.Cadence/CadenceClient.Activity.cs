@@ -52,7 +52,7 @@ namespace Neon.Cadence
                 activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
             }
 
-            if (!ActivityBase.Register(typeof(TActivity), activityTypeName))
+            if (!ActivityBase.Register(this, typeof(TActivity), activityTypeName))
             {
                 var reply = (ActivityRegisterReply)await CallProxyAsync(
                     new ActivityRegisterRequest()
@@ -94,7 +94,7 @@ namespace Neon.Cadence
                     {
                         var activityTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
-                        if (!ActivityBase.Register(type, activityTypeName))
+                        if (!ActivityBase.Register(this, type, activityTypeName))
                         {
                             var reply = (ActivityRegisterReply)await CallProxyAsync(
                                 new ActivityRegisterRequest()

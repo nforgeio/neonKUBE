@@ -564,7 +564,7 @@ namespace TestCadence
             Console.WriteLine($"Transactions/sec: {tps}");
         }
 
-        [Fact]
+        [Fact(Skip = "Disabled")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void PingAttack()
         {
@@ -1026,7 +1026,9 @@ namespace TestCadence
                     var endTime = DateTime.UtcNow;
 
                     // Ensure that [ExecutionStartToCloseTimeout] and that we got the exception
-                    // close to 5 seconds after we attempted to execution.
+                    // around 5 seconds after we started execution.
+
+                    Assert.True(endTime - startTime <= executeTimeout + TimeSpan.FromSeconds(1));
                 }
             }
         }
@@ -1144,7 +1146,7 @@ namespace TestCadence
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
             // Auto registers tagged workflows and activities and then executes them
-            // using the default(full) type names.
+            // using the default (full) type names.
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
