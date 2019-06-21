@@ -1152,6 +1152,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Obsolete("This was replaced by a local activity.")]
         public void Test_WorkflowMutableRequest()
         {
             WorkflowMutableRequest message;
@@ -1228,6 +1229,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        [Obsolete("This was replaced by a local activity.")]
         public void Test_WorkflowMutableReply()
         {
             WorkflowMutableReply message;
