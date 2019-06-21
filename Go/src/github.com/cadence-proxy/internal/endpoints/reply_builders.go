@@ -641,8 +641,8 @@ func buildActivityGetInfoReply(reply *messages.ActivityGetInfoReply, cadenceErro
 	reply.SetError(cadenceError)
 
 	if len(info) > 0 {
-		if v, ok := info[0].(activity.Info); ok {
-			reply.SetInfo(&v)
+		if v, ok := info[0].(*activity.Info); ok {
+			reply.SetInfo(v)
 		}
 	}
 }
