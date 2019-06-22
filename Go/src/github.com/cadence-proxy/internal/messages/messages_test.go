@@ -36,7 +36,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	domain "github.com/cadence-proxy/internal/cadence/cadencedomains"
+	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/endpoints"
 	"github.com/cadence-proxy/internal/logger"
@@ -440,9 +440,9 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		v.SetDomainInfoDescription(&domainInfoDescriptionStr)
 		s.Equal("my-description", *v.GetDomainInfoDescription())
 
-		domainStatus := domain.Deprecated
+		domainStatus := cadenceclient.Deprecated
 		v.SetDomainInfoStatus(&domainStatus)
-		s.Equal(domain.Deprecated, *v.GetDomainInfoStatus())
+		s.Equal(cadenceclient.Deprecated, *v.GetDomainInfoStatus())
 
 		domainInfoOwnerEmailStr := "joe@bloe.com"
 		v.SetDomainInfoOwnerEmail(&domainInfoOwnerEmailStr)
@@ -462,7 +462,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(domain.Deprecated, *v.GetDomainInfoStatus())
+		s.Equal(cadenceclient.Deprecated, *v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -477,7 +477,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(domain.Deprecated, *v.GetDomainInfoStatus())
+		s.Equal(cadenceclient.Deprecated, *v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())

@@ -114,12 +114,12 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowSignalWithStartRequest)target;
 
-            typedTarget.Workflow = this.Workflow;
-            typedTarget.WorkflowId   = this.WorkflowId;
-            typedTarget.SignalName   = this.SignalName;
-            typedTarget.SignalArgs   = this.SignalArgs;
-            typedTarget.Options      = this.Options;
-            typedTarget.WorkflowArgs = this.WorkflowArgs;
+            typedTarget.Workflow        = this.Workflow;
+            typedTarget.WorkflowId      = this.WorkflowId;
+            typedTarget.SignalName      = this.SignalName;
+            typedTarget.SignalArgs      = this.SignalArgs;
+            typedTarget.Options         = this.Options;
+            typedTarget.WorkflowArgs    = this.WorkflowArgs;
         }
     }
 }

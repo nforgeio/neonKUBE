@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		status.go
+// FILE:		domain_status.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package domain
+package cadenceclient
 
 import "fmt"
 

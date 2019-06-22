@@ -27,7 +27,7 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
-	domain "github.com/cadence-proxy/internal/cadence/cadencedomains"
+	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
@@ -358,7 +358,7 @@ func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError 
 			reply.SetDomainInfoName(v.DomainInfo.Name)
 			reply.SetDomainInfoDescription(v.DomainInfo.Description)
 
-			domainStatus := domain.DomainStatus(int(*v.DomainInfo.Status))
+			domainStatus := cadenceclient.DomainStatus(int(*v.DomainInfo.Status))
 			reply.SetDomainInfoStatus(&domainStatus)
 			reply.SetConfigurationEmitMetrics(*v.Configuration.EmitMetric)
 			reply.SetConfigurationRetentionDays(*v.Configuration.WorkflowExecutionRetentionPeriodInDays)

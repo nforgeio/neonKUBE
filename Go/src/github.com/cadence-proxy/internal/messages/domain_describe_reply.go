@@ -20,7 +20,7 @@ package messages
 import (
 	"errors"
 
-	domain "github.com/cadence-proxy/internal/cadence/cadencedomains"
+	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -85,7 +85,7 @@ func (reply *DomainDescribeReply) SetDomainInfoDescription(value *string) {
 //
 // returns *DomainStatus -> pointer to the DomainStatus of the Domain being described
 // from a DomainDescribeReply's properties map
-func (reply *DomainDescribeReply) GetDomainInfoStatus() *domain.DomainStatus {
+func (reply *DomainDescribeReply) GetDomainInfoStatus() *cadenceclient.DomainStatus {
 	domainInfoStatusPtr := reply.GetStringProperty("DomainInfoStatus")
 	if domainInfoStatusPtr == nil {
 		return nil
@@ -93,14 +93,14 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() *domain.DomainStatus {
 
 	// dereference and switch block on the value
 	domainStatus := *domainInfoStatusPtr
-	var returnStatus domain.DomainStatus
+	var returnStatus cadenceclient.DomainStatus
 	switch domainStatus {
 	case "REGISTERED":
-		returnStatus = domain.Registered
+		returnStatus = cadenceclient.Registered
 	case "DEPRECATED":
-		returnStatus = domain.Deprecated
+		returnStatus = cadenceclient.Deprecated
 	case "DELETED":
-		returnStatus = domain.Deleted
+		returnStatus = cadenceclient.Deleted
 	default:
 		err := errors.New("domainStatus not implemented exception")
 		panic(err)
@@ -114,7 +114,7 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() *domain.DomainStatus {
 //
 // param value *DomainStatus -> DomainStatus value to set
 // as the DomainDescribeReply's DomainInfoStatus in its properties map
-func (reply *DomainDescribeReply) SetDomainInfoStatus(value *domain.DomainStatus) {
+func (reply *DomainDescribeReply) SetDomainInfoStatus(value *cadenceclient.DomainStatus) {
 	if value == nil {
 		reply.SetStringProperty("DomainInfoStatus", nil)
 		return
@@ -123,11 +123,11 @@ func (reply *DomainDescribeReply) SetDomainInfoStatus(value *domain.DomainStatus
 	// switch block on the param value
 	var statusString string
 	switch *value {
-	case domain.Registered:
+	case cadenceclient.Registered:
 		statusString = "REGISTERED"
-	case domain.Deprecated:
+	case cadenceclient.Deprecated:
 		statusString = "DEPRECATED"
-	case domain.Deleted:
+	case cadenceclient.Deleted:
 		statusString = "DELETED"
 	default:
 
