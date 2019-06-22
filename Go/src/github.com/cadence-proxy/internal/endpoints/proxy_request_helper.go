@@ -1174,9 +1174,12 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 
 	// TODO: JACK -- CADENCE CLIENT BUG
 	// https://stackoverflow.com/questions/56658582/mutablesideeffect-panics-when-setting-second-value
+	// https://github.com/uber-go/cadence-client/issues/763
 	//
 	// This is the workaround.  Here's our tracking bug:
 	// https://github.com/nforgeio/neonKUBE/issues/562
+	//
+	// FYI: This is deprecated and will never be called now.
 	ctx := wectx.GetContext()
 	err := workflow.Sleep(ctx, time.Second)
 	if err != nil {
