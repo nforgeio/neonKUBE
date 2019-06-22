@@ -122,7 +122,7 @@ Both the Cadence Proxy and Library will need to agree on how certain common prop
 
 * **floating point:** These will be serialized like 1.2345 with an optional leading "+-" sign. There must be at least one digit before the decimal point. Note that the decimal point must be omitted if there are no fractional digits and that the decimal point must be a period (not a comma or anything else used for other cultures). Invalid numbers will be serialized as "NaN". Scientific notation is also supported.
 
-* **date/time:** We're going to use a varient of RFC 3389 for serializing date/time values. All date/times will be rendered relative to UTC and will be formatted like: "yyyy-MM-ddTHH:mm:ss.fffZ" to provide millisecond precision.
+* **date/time:** We're going to use a varient of RFC 3389 for serializing date/time values. All date/times will be rendered relative to UTC and will be formatted like: "yyyy-MM-ddTHH:mm:ss.ffffffZ" to provide microsecond precision.
 
 * **time span:** We're going to express these as a 64-bit integer number of ticks, where a single tick equals 100 nanoseconds (the .NET standard).
 
