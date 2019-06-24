@@ -742,7 +742,7 @@ namespace Neon.Cadence
                         {
                             Endpoints       = sbEndpoints.ToString(),
                             Identity        = settings.ClientIdentity,
-                            ClientTimeout   = TimeSpan.FromSeconds(30)
+                            ClientTimeout   = TimeSpan.FromSeconds(45)
                         };
 
 

@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		proxy_request_helper.go
+// FILE:		request_handloer.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
