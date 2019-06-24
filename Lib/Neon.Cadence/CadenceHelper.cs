@@ -91,7 +91,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp));
 
-            var dateTimeOffset = DateTimeOffset.ParseExact(timestamp, "yyyy-MM-ddTHH:mm:ss.fffffffzzz", CultureInfo.InvariantCulture);
+            var dateTimeOffset = DateTimeOffset.Parse(timestamp, CultureInfo.InvariantCulture);
 
             return new DateTime(dateTimeOffset.ToUniversalTime().Ticks, DateTimeKind.Utc);
         }

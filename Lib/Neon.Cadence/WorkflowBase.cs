@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +35,6 @@ using Neon.Retry;
 using Neon.Time;
 using Neon.Diagnostics;
 using Neon.Tasks;
-using System.Reflection;
 
 namespace Neon.Cadence
 {
