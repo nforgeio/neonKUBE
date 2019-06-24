@@ -478,7 +478,7 @@ namespace TestCadence
         // Test implementations:
 
         CadenceFixture      fixture;
-        CadenceClient       client;
+        CadenceClient       client1;
         HttpClient          proxyClient;
 
         public Test_EndToEnd(CadenceFixture fixture)
@@ -497,8 +497,8 @@ namespace TestCadence
             fixture.Start(settings);
 
             this.fixture     = fixture;
-            this.client      = fixture.Connection;
-            this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+            this.client1      = fixture.Connection;
+            this.proxyClient = new HttpClient() { BaseAddress = client1.ProxyUri };
         }
 
         public void Dispose()
@@ -519,14 +519,14 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // RegisterDomain:
 
-            await client.RegisterDomainAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
-            await Assert.ThrowsAsync<CadenceDomainAlreadyExistsException>(async () => await client.RegisterDomainAsync(name: "domain-0"));
-            await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await client.RegisterDomainAsync(name: null));
+            await client1.RegisterDomainAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
+            await Assert.ThrowsAsync<CadenceDomainAlreadyExistsException>(async () => await client1.RegisterDomainAsync(name: "domain-0"));
+            await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await client1.RegisterDomainAsync(name: null));
 
             //-----------------------------------------------------------------
             // DescribeDomain:
 
-            var domainDescribeReply = await client.DescribeDomainAsync("domain-0");
+            var domainDescribeReply = await client1.DescribeDomainAsync("domain-0");
 
             Assert.False(domainDescribeReply.Configuration.EmitMetrics);
             Assert.Equal(14, domainDescribeReply.Configuration.RetentionDays);
@@ -535,7 +535,7 @@ namespace TestCadence
             Assert.Equal("jeff@lilltek.com", domainDescribeReply.DomainInfo.OwnerEmail);
             Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
 
-            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.DescribeDomainAsync("does-not-exist"));
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client1.DescribeDomainAsync("does-not-exist"));
 
             //-----------------------------------------------------------------
             // UpdateDomain:
@@ -547,9 +547,9 @@ namespace TestCadence
             updateDomainRequest.DomainInfo.OwnerEmail  = "foo@bar.com";
             updateDomainRequest.DomainInfo.Description = "new description";
 
-            await client.UpdateDomainAsync("domain-0", updateDomainRequest);
+            await client1.UpdateDomainAsync("domain-0", updateDomainRequest);
 
-            domainDescribeReply = await client.DescribeDomainAsync("domain-0");
+            domainDescribeReply = await client1.DescribeDomainAsync("domain-0");
 
             Assert.True(domainDescribeReply.Configuration.EmitMetrics);
             Assert.Equal(77, domainDescribeReply.Configuration.RetentionDays);
@@ -558,7 +558,7 @@ namespace TestCadence
             Assert.Equal("foo@bar.com", domainDescribeReply.DomainInfo.OwnerEmail);
             Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
 
-            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.UpdateDomainAsync("does-not-exist", updateDomainRequest));
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client1.UpdateDomainAsync("does-not-exist", updateDomainRequest));
         }
 
         [Fact]
@@ -567,7 +567,7 @@ namespace TestCadence
         {
             // Verify that Ping works and optionally measure simple transaction throughput.
 
-            await client.PingAsync();
+            await client1.PingAsync();
 
             var stopwatch  = new Stopwatch();
             var iterations = 5000;
@@ -576,7 +576,7 @@ namespace TestCadence
 
             for (int i = 0; i < iterations; i++)
             {
-                await client.PingAsync();
+                await client1.PingAsync();
             }
 
             stopwatch.Stop();
@@ -609,7 +609,7 @@ namespace TestCadence
 
                             for (int j = 0; j < iterations; j++)
                             {
-                                client.PingAsync().Wait();
+                                client1.PingAsync().Wait();
                             }
 
                             stopwatch.Stop();
@@ -638,26 +638,26 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Worker()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
             // Verify that creating workers with the same attributes actually
             // return the pre-existing instance with an incremented reference
             // count.
 
-            var activityWorker1 = await client.StartActivityWorkerAsync("test-domain", "tasks1");
+            var activityWorker1 = await client1.StartActivityWorkerAsync("test-domain", "tasks1");
 
             Assert.Equal(1, activityWorker1.RefCount);
 
-            var activityWorker2 = await client.StartActivityWorkerAsync("test-domain", "tasks1");
+            var activityWorker2 = await client1.StartActivityWorkerAsync("test-domain", "tasks1");
 
             Assert.Same(activityWorker1, activityWorker2);
             Assert.Equal(2, activityWorker2.RefCount);
 
-            var workflowWorker1 = await client.StartWorkflowWorkerAsync("test-domain", "tasks1");
+            var workflowWorker1 = await client1.StartWorkflowWorkerAsync("test-domain", "tasks1");
 
             Assert.Equal(1, workflowWorker1.RefCount);
 
-            var workflowWorker2 = await client.StartWorkflowWorkerAsync("test-domain", "tasks1");
+            var workflowWorker2 = await client1.StartWorkflowWorkerAsync("test-domain", "tasks1");
 
             Assert.Same(workflowWorker1, workflowWorker2);
             Assert.Equal(2, workflowWorker2.RefCount);
@@ -682,23 +682,23 @@ namespace TestCadence
 
             // Verify that we're not allowed to restart workers.
 
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await client.StartActivityWorkerAsync("test-domain", "tasks1"));
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await client.StartWorkflowWorkerAsync("test-domain", "tasks1"));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.StartActivityWorkerAsync("test-domain", "tasks1"));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await client1.StartWorkflowWorkerAsync("test-domain", "tasks1"));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_Workflow_ByType()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<HelloWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<HelloWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 // Run a workflow passing NULL args.
 
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
-                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
@@ -707,8 +707,8 @@ namespace TestCadence
 
                 var args = Encoding.UTF8.GetBytes("custom args");
 
-                workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: args);
-                result      = await client.GetWorkflowResultAsync(workflowRun);
+                workflowRun = await client1.StartWorkflowAsync<HelloWorkflow>("test-domain", args: args);
+                result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal(args, result);
@@ -719,15 +719,15 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_Workflow_ByName()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<HelloWorkflowByName>("hello-workflow-by-name");
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<HelloWorkflowByName>("hello-workflow-by-name");
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 // Run a workflow passing NULL args.
 
-                var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: null);
-                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: null);
+                var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
@@ -736,8 +736,8 @@ namespace TestCadence
 
                 var args = Encoding.UTF8.GetBytes("custom args");
 
-                workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: args);
-                result      = await client.GetWorkflowResultAsync(workflowRun);
+                workflowRun = await client1.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: args);
+                result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal(args, result);
@@ -748,19 +748,19 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_Activity_ByType()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<HelloWorkflow>();
-            await client.RegisterActivityAsync<HelloActivity>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<HelloWorkflow>();
+            await client1.RegisterActivityAsync<HelloActivity>();
 
-            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var workflowWorker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
+                using (var activityWorker = await client1.StartActivityWorkerAsync("test-domain"))
                 {
                     // Run a workflow that invokes an activity.
 
                     var args        = Encoding.UTF8.GetBytes("activity");
-                    var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("activity"));
-                    var result      = await client.GetWorkflowResultAsync(workflowRun);
+                    var workflowRun = await client1.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("activity"));
+                    var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
                     Assert.Equal(Encoding.UTF8.GetBytes("activity: Hello World!"), result);
@@ -772,19 +772,19 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_Activity_ByName()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<HelloWorkflowByName>("hello-workflow-by-name");
-            await client.RegisterActivityAsync<HelloActivity>("hello-activity");
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<HelloWorkflowByName>("hello-workflow-by-name");
+            await client1.RegisterActivityAsync<HelloActivity>("hello-activity");
 
-            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var workflowWorker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
+                using (var activityWorker = await client1.StartActivityWorkerAsync("test-domain"))
                 {
                     // Run a workflow that invokes an activity.
 
                     var args        = Encoding.UTF8.GetBytes("activity");
-                    var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: Encoding.UTF8.GetBytes("activity"));
-                    var result      = await client.GetWorkflowResultAsync(workflowRun);
+                    var workflowRun = await client1.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: Encoding.UTF8.GetBytes("activity"));
+                    var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
                     Assert.Equal(Encoding.UTF8.GetBytes("activity: Hello World!"), result);
@@ -796,18 +796,18 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_LocalActivity_ByType()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<HelloWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<HelloWorkflow>();
 
-            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var workflowWorker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
+                using (var activityWorker = await client1.StartActivityWorkerAsync("test-domain"))
                 {
                     // Run a workflow that invokes an activity.
 
                     var args        = Encoding.UTF8.GetBytes("local-activity");
-                    var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("local-activity"));
-                    var result      = await client.GetWorkflowResultAsync(workflowRun);
+                    var workflowRun = await client1.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("local-activity"));
+                    var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
                     Assert.Equal(Encoding.UTF8.GetBytes("local-activity: Hello World!"), result);
@@ -819,20 +819,20 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task HelloWorld_ChildWorkflow_ByType()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<ExecuteChildWorkflow>();
-            await client.RegisterWorkflowAsync<HelloWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<ExecuteChildWorkflow>();
+            await client1.RegisterWorkflowAsync<HelloWorkflow>();
 
-            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var workflowWorker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
+                using (var activityWorker = await client1.StartActivityWorkerAsync("test-domain"))
                 {
                     // Run a workflow that invokes a child workflow.
 
                     var args        = Encoding.UTF8.GetBytes("local-activity");
-                    var workflowRun = await client.StartWorkflowAsync<ExecuteChildWorkflow>("test-domain", args: null);
+                    var workflowRun = await client1.StartWorkflowAsync<ExecuteChildWorkflow>("test-domain", args: null);
 
-                    var result      = await client.GetWorkflowResultAsync(workflowRun);
+                    var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
                     Assert.Equal(Encoding.UTF8.GetBytes("workflow: Hello World!"), result);
@@ -844,17 +844,17 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_NonMutableValue()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<VariablesWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<VariablesWorkflow>();
 
-            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var workflowWorker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 // Verify that non-mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var workflowRun = await client.StartWorkflowAsync<VariablesWorkflow>("test-domain", args: null);
+                var workflowRun = await client1.StartWorkflowAsync<VariablesWorkflow>("test-domain", args: null);
 
-                await client.GetWorkflowResultAsync(workflowRun);
+                await client1.GetWorkflowResultAsync(workflowRun);
             }
         }
 
@@ -862,17 +862,17 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Variables()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<VariablesWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<VariablesWorkflow>();
 
-            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var workflowWorker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 // Verify that mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var workflowRun = await client.StartWorkflowAsync<VariablesWorkflow>("test-domain", args: null);
+                var workflowRun = await client1.StartWorkflowAsync<VariablesWorkflow>("test-domain", args: null);
 
-                await client.GetWorkflowResultAsync(workflowRun);
+                await client1.GetWorkflowResultAsync(workflowRun);
             }
         }
 
@@ -880,14 +880,14 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ParallelChildWorkflows()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<ParallelChildWorkflows>();
-            await client.RegisterWorkflowAsync<HelloWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<ParallelChildWorkflows>();
+            await client1.RegisterWorkflowAsync<HelloWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                var workflowRun = await client.StartWorkflowAsync<ParallelChildWorkflows>("test-domain", args: null);
-                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync<ParallelChildWorkflows>("test-domain", args: null);
+                var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
@@ -898,13 +898,13 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Properties_DefaultTaskList()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<GetPropertiesWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<GetPropertiesWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-default" });
-                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-default" });
+                var result      = await client1.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
                 Assert.Equal("test-domain", properties["Domain"]);
@@ -921,13 +921,13 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Properties_NonDefaultTasklist()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<GetPropertiesWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<GetPropertiesWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain", taskList: "non-default"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain", taskList: "non-default"))
             {
-                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow-nondefault" });
-                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow-nondefault" });
+                var result      = await client1.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
                 Assert.Equal("test-domain", properties["Domain"]);
@@ -952,16 +952,16 @@ namespace TestCadence
 
             testStartUtc = new DateTime(testStartUtc.Year, testStartUtc.Month, testStartUtc.Day, testStartUtc.Hour, testStartUtc.Minute, testStartUtc.Second, DateTimeKind.Utc);
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterActivityAsync<GetPropertiesActivity>();
-            await client.RegisterWorkflowAsync<GetActivityPropertiesWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterActivityAsync<GetPropertiesActivity>();
+            await client1.RegisterWorkflowAsync<GetActivityPropertiesWorkflow>();
 
-            using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var workflowWorker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
+                using (var activityWorker = await client1.StartActivityWorkerAsync("test-domain"))
                 {
-                    var workflowRun = await client.StartWorkflowAsync<GetActivityPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-activity-properties" });
-                    var result      = await client.GetWorkflowResultAsync(workflowRun);
+                    var workflowRun = await client1.StartWorkflowAsync<GetActivityPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-activity-properties" });
+                    var result      = await client1.GetWorkflowResultAsync(workflowRun);
                     var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
                     Assert.True(!string.IsNullOrEmpty(properties["TaskToken"]));
@@ -1001,13 +1001,13 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_UtcNow()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<GetUtcNowWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<GetUtcNowWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                var workflowRun    = await client.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
-                var nowJsonBytes   = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun    = await client1.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
+                var nowJsonBytes   = await client1.GetWorkflowResultAsync(workflowRun);
                 var workflowNowUtc = NeonHelper.JsonDeserialize<DateTime>(nowJsonBytes);
                 var nowUtc         = DateTime.UtcNow;
 
@@ -1020,14 +1020,14 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Sleep()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<SleepWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<SleepWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 var sleepTime = TimeSpan.FromSeconds(5);
-                var workflowRun = await client.StartWorkflowAsync<SleepWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(sleepTime));
-                var nowJsonBytes = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync<SleepWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(sleepTime));
+                var nowJsonBytes = await client1.GetWorkflowResultAsync(workflowRun);
                 var times = NeonHelper.JsonDeserialize<List<DateTime>>(nowJsonBytes);
 
                 Assert.True(times[1] > times[0]);
@@ -1039,15 +1039,15 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_SleepUntil()
         {
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<SleepUntilWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<SleepUntilWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 var sleepTime    = TimeSpan.FromSeconds(5);
                 var wakeTime     = DateTime.UtcNow + sleepTime;
-                var workflowRun  = await client.StartWorkflowAsync<SleepUntilWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(wakeTime));
-                var nowJsonBytes = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun  = await client1.StartWorkflowAsync<SleepUntilWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(wakeTime));
+                var nowJsonBytes = await client1.GetWorkflowResultAsync(workflowRun);
                 var times        = NeonHelper.JsonDeserialize<List<DateTime>>(nowJsonBytes);
 
                 Assert.True(times[1] > times[0]);
@@ -1063,15 +1063,15 @@ namespace TestCadence
             // and unregistered workflow.  This als ensures that the workflow honors
             // [WorkflowOptions.ExecutionStartToCloseTimeout].
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<GetUtcNowWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<GetUtcNowWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 // Warm up Cadence by registering an running another workflow.  This will
                 // help make our timeout timing more accurate and repeatable.
 
-                await client.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
+                await client1.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
 
                 // This is the actual test.
 
@@ -1080,7 +1080,7 @@ namespace TestCadence
 
                 try
                 {
-                    await client.StartWorkflowAsync<UnregisteredWorkflow>("test-domain", options: new WorkflowOptions() { ExecutionStartToCloseTimeout = executeTimeout });
+                    await client1.StartWorkflowAsync<UnregisteredWorkflow>("test-domain", options: new WorkflowOptions() { ExecutionStartToCloseTimeout = executeTimeout });
                 }
                 catch (CadenceTimeoutException)
                 {
@@ -1100,22 +1100,22 @@ namespace TestCadence
         {
             // Verify that we can retrieve a workflow result after it has completed execution.
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<HelloWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<HelloWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 // Run a workflow passing NULL args and verify.
 
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
-                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
 
                 // Now retrieve the result from the completed workflow and verify.
 
-                result = await client.GetWorkflowResultAsync(workflowRun);
+                result = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal("workflow: Hello World!", Encoding.UTF8.GetString(result));
@@ -1128,13 +1128,13 @@ namespace TestCadence
         {
             // Verify that an exception is thrown when waiting on a non-existent workflow.
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 var workflowRun = new WorkflowRun("not-present", "not-here");
 
-                await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await client.GetWorkflowResultAsync(workflowRun));
+                await Assert.ThrowsAsync<CadenceBadRequestException>(async () => await client1.GetWorkflowResultAsync(workflowRun));
             }
         }
 
@@ -1144,18 +1144,18 @@ namespace TestCadence
         {
             // Verify that we can a workflow can restart itself.
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterWorkflowAsync<RestartableWorkflow>();
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterWorkflowAsync<RestartableWorkflow>();
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 // Clear the execution count, run a restarting workflow, and then
                 // verify that it executed twice.
 
                 RestartableWorkflow.ExecutionCount = 0;
 
-                var workflowRun = await client.StartWorkflowAsync<RestartableWorkflow>("test-domain", args: new byte[] { 1 });
-                var result      = await client.GetWorkflowResultAsync(workflowRun);
+                var workflowRun = await client1.StartWorkflowAsync<RestartableWorkflow>("test-domain", args: new byte[] { 1 });
+                var result      = await client1.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
@@ -1204,18 +1204,18 @@ namespace TestCadence
         {
             var assembly = Assembly.GetExecutingAssembly();
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
             // Auto registers tagged workflows and activities and then executes them
             // using the default (full) type names.
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.AutoRegisterWorkflowsAsync(assembly);
-            await client.AutoRegisterActivitiesAsync(assembly);
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.AutoRegisterWorkflowsAsync(assembly);
+            await client1.AutoRegisterActivitiesAsync(assembly);
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                var result   = await client.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+                var result   = await client1.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
@@ -1231,13 +1231,13 @@ namespace TestCadence
             // Auto registers tagged workflows and activities and then executes them
             // using custom type names.
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.AutoRegisterWorkflowsAsync(assembly);
-            await client.AutoRegisterActivitiesAsync(assembly);
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.AutoRegisterWorkflowsAsync(assembly);
+            await client1.AutoRegisterActivitiesAsync(assembly);
 
-            using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                var result = await client.CallWorkflowAsync("CustomAutoHelloWorkflow", "test-domain");
+                var result = await client1.CallWorkflowAsync("CustomAutoHelloWorkflow", "test-domain");
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
@@ -1253,17 +1253,21 @@ namespace TestCadence
             // We're going to create a second client and then use both of them to
             // execute a workflow.
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.AutoRegisterWorkflowsAsync(assembly);
-            await client.AutoRegisterActivitiesAsync(assembly);
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.AutoRegisterWorkflowsAsync(assembly);
+            await client1.AutoRegisterActivitiesAsync(assembly);
 
-            using (var worker1 = await client.StartWorkflowWorkerAsync("test-domain"))
+            using (var worker1 = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
-                using (var client2 = await CadenceClient.ConnectAsync(client.Settings))
+                using (var client2 = await CadenceClient.ConnectAsync(client1.Settings))
                 {
+                    await client2.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+                    await client2.AutoRegisterWorkflowsAsync(assembly);
+                    await client2.AutoRegisterActivitiesAsync(assembly);
+
                     // Client #1 calls
 
-                    var result1 = await client.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+                    var result1 = await client1.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
 
                     // Client #2 calls
 

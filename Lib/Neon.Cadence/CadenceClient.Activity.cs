@@ -44,12 +44,26 @@ namespace Neon.Cadence
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
+        /// <exception cref="CadenceActivityWorkerStartedException">
+        /// Thrown if an activity worker has already been started for the client.  You must
+        /// register activity implementations before starting workers.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// Be sure to register all of your activity implementations before starting a workflow worker.
+        /// </note>
+        /// </remarks>
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
             where TActivity : ActivityBase
         {
             if (string.IsNullOrEmpty(activityTypeName))
             {
                 activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
+            }
+
+            if (workflowWorkerStarted)
+            {
+                throw new CadenceActivityWorkerStartedException();
             }
 
             if (!ActivityBase.Register(this, typeof(TActivity), activityTypeName))
@@ -76,9 +90,23 @@ namespace Neon.Cadence
         /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
+        /// <exception cref="CadenceActivityWorkerStartedException">
+        /// Thrown if an activity worker has already been started for the client.  You must
+        /// register activity implementations before starting workers.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// Be sure to register all of your activity implementations before starting a workflow worker.
+        /// </note>
+        /// </remarks>
         public async Task AutoRegisterActivitiesAsync(Assembly assembly)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
+
+            if (workflowWorkerStarted)
+            {
+                throw new CadenceActivityWorkerStartedException();
+            }
 
             foreach (var type in assembly.GetTypes())
             {

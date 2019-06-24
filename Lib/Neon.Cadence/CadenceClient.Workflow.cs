@@ -45,12 +45,26 @@ namespace Neon.Cadence
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if another workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
+        /// <exception cref="CadenceWorkflowWorkerStartedException">
+        /// Thrown if a workflow worker has already been started for the client.  You must
+        /// register activity workflow implementations before starting workers.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// Be sure to register all of your workflow implementations before starting a workflow worker.
+        /// </note>
+        /// </remarks>
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null)
             where TWorkflow : WorkflowBase
         {
             if (string.IsNullOrEmpty(workflowTypeName))
             {
                 workflowTypeName = workflowTypeName ?? typeof(TWorkflow).FullName;
+            }
+
+            if (workflowWorkerStarted)
+            {
+                throw new CadenceWorkflowWorkerStartedException();
             }
 
             if (!WorkflowBase.Register(this, typeof(TWorkflow), workflowTypeName))
@@ -77,9 +91,23 @@ namespace Neon.Cadence
         /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
+        /// <exception cref="CadenceWorkflowWorkerStartedException">
+        /// Thrown if a workflow worker has already been started for the client.  You must
+        /// register activity workflow implementations before starting workers.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// Be sure to register all of your workflow implementations before starting a workflow worker.
+        /// </note>
+        /// </remarks>
         public async Task AutoRegisterWorkflowsAsync(Assembly assembly)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
+
+            if (workflowWorkerStarted)
+            {
+                throw new CadenceWorkflowWorkerStartedException();
+            }
 
             foreach (var type in assembly.GetTypes())
             {

@@ -28,35 +28,35 @@ hosting:
      snapshot: true
 network:
   premiseSubnet: 10.100.0.0/16
-  nodesSubnet: 10.100.24.0/22
+  nodesSubnet: 10.100.32.0/22
 nodeOptions:
    upgrade: none
    passwordLength: 20
 nodes:
    master-0:
      role: master
-     privateAddress: 10.100.24.0
+     privateAddress: 10.100.32.0
      vmHost: WRT-00-XEN-00
      vmProcessors: 4
      vmMemory: 4GiB
      vmDisk: 32GiB
    worker-0:
      role: worker
-     privateAddress: 10.100.24.10
+     privateAddress: 10.100.32.10
      vmHost: WRT-00-XEN-01
      vmProcessors: 4
      vmMemory: 4GiB
      vmDisk: 32GiB
    worker-1:
      role: worker
-     privateAddress: 10.100.24.11
+     privateAddress: 10.100.32.11
      vmHost: WRT-00-XEN-03
      vmProcessors: 4
      vmMemory: 4GiB
      vmDisk: 32GiB
    worker-2:
      role: worker
-     privateAddress: 10.100.24.12
+     privateAddress: 10.100.32.12
      vmHost: WRT-00-XEN-04
      vmProcessors: 4
      vmMemory: 4GiB

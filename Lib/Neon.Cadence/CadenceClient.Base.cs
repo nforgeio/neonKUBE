@@ -61,6 +61,9 @@ namespace Neon.Cadence
         /// same properties on a given client.  See the note in the remarks.
         /// </exception>
         /// <remarks>
+        /// <note>
+        /// Be sure to register all of your workflow implementations before starting a workflow worker.
+        /// </note>
         /// <para>
         /// Your workflow application will need to call this method so that Cadence will know
         /// that it can schedule workflows to run within the current process.  You'll need
@@ -91,7 +94,14 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
-            return await StartWorkerAsync(true, domain, taskList, options);
+            try
+            {
+                return await StartWorkerAsync(true, domain, taskList, options);
+            }
+            finally
+            {
+                workflowWorkerStarted = true;
+            }
         }
 
         /// <summary>
@@ -107,6 +117,9 @@ namespace Neon.Cadence
         /// same properties on a given client.  See the note in the remarks.
         /// </exception>
         /// <remarks>
+        /// <note>
+        /// Be sure to register all of your activity implementations before starting an activity worker.
+        /// </note>
         /// <para>
         /// Your workflow application will need to call this method so that Cadence will know
         /// that it can schedule activities to run within the current process.  You'll need
@@ -123,7 +136,7 @@ namespace Neon.Cadence
         /// terminates, but this is optional.  Advanced worker implementation that need to change
         /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
         /// for specific domains and task lists.
-        /// </para>
+        /// </para>C:\src\neonKUBE\Lib\Neon.Cadence\Exceptions\CadenceCancelledException.cs
         /// <note>
         /// The Cadence GOLANG client does not appear to support starting a worker with a given
         /// set of parameters, stopping that workflow, and then restarting another worker
@@ -137,7 +150,14 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
-            return await StartWorkerAsync(false, domain, taskList, options);
+            try
+            {
+                return await StartWorkerAsync(false, domain, taskList, options);
+            }
+            finally
+            {
+                activityWorkerStarted = true;
+            }
         }
 
 
