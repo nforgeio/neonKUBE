@@ -314,7 +314,6 @@ namespace Neon.Cadence
 
         private static object                                   syncLock           = new object();
         private static INeonLogger                              log                = LogManager.Default.GetLogger<WorkflowBase>();
-        private static SemanticVersion                          zeroVersion        = SemanticVersion.Create(0);
         private static Dictionary<WorkflowKey, WorkflowBase>    idToWorkflow       = new Dictionary<WorkflowKey, WorkflowBase>();
         private static Dictionary<Type, WorkflowMethodMap>      typeToMethodMap    = new Dictionary<Type, WorkflowMethodMap>();
 
@@ -536,33 +535,6 @@ namespace Neon.Cadence
                 idToWorkflow.Add(workflowKey, workflow);
             }
 
-            // We're going to record the workflow implementation version as a workflow
-            // variable and then obtain the value to set the [OriginalVersion] property.
-            // The outcome will be that [OriginalVersion] will end up being set to the 
-            // [Version] at the time the workflow instance was first invoked and [Version] 
-            // will return the current version.
-            //
-            // This will give upgraded workflow implementations a chance to implement 
-            // backwards compatibility for workflows already in flight.
-
-            // $debug(jeff.lill): Uncomment this.
-#if TODO
-            var versionVariable      = "neon:original-version";
-            var version              = workflow.Version ?? zeroVersion;
-            var originalVersionBytes = await workflow.GetVariableAsync(versionVariable);
-
-            if (originalVersionBytes == null)
-            {
-                // This must be the first time the workflow has executed this step.
-
-                workflow.OriginalVersion = version;
-            }
-            else
-            {
-                workflow.OriginalVersion = SemanticVersion.Parse(Encoding.UTF8.GetString(originalVersionBytes));
-            }
-#endif
-
             // Initialize the other workflow properties.
 
             workflow.Client           = client;
@@ -762,7 +734,7 @@ namespace Neon.Cadence
 
                     var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
                     var activity   = ActivityBase.Create(client, activityType, null);
-                    var result = await activity.OnRunAsync(client, request.Args);
+                    var result     = await activity.OnRunAsync(client, request.Args);
 
                     return new ActivityInvokeLocalReply()
                     {
@@ -851,20 +823,6 @@ namespace Neon.Cadence
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
         /// </summary>
         public CadenceClient Client { get; private set; }
-
-        /// <summary>
-        /// Returns the version of the workflow implementation that was executed when
-        /// the workflow was first started.  This can be used to to implement workflow
-        /// backwards compatability.
-        /// </summary>
-        public SemanticVersion OriginalVersion { get; private set; }
-
-        /// <summary>
-        /// Workflow implemenations that support version backwards compatability should
-        /// override this to return the version of the implementation.  This returns
-        /// <c>SemanticVersion(0, 0, 0)</c> by default.
-        /// </summary>
-        public virtual SemanticVersion Version => zeroVersion;
 
         /// <summary>
         /// Returns the domain hosting the workflow.

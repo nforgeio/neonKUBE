@@ -223,7 +223,7 @@ namespace TestCadence
                 var properties = new Dictionary<string, string>();
 
                 properties.Add(nameof(Info.TaskToken), Convert.ToBase64String(Info.TaskToken));
-                properties.Add(nameof(Info.WorkflowTypeName), Convert.ToBase64String(Info.TaskToken));
+                properties.Add(nameof(Info.WorkflowTypeName), Info.WorkflowTypeName);
                 properties.Add(nameof(Info.WorkflowDomain), Info.WorkflowDomain);
                 properties.Add(nameof(Info.WorkflowRun), NeonHelper.JsonSerialize(Info.WorkflowRun));
                 properties.Add(nameof(Info.ActivityId), Info.ActivityId);
@@ -365,8 +365,6 @@ namespace TestCadence
             {
                 var properties = new Dictionary<string, string>();
 
-                properties.Add(nameof(Version), Version.ToString());
-                properties.Add(nameof(OriginalVersion), OriginalVersion.ToString());
                 properties.Add(nameof(Domain), Domain);
                 properties.Add(nameof(WorkflowId), WorkflowId);
                 properties.Add(nameof(RunId), RunId);
@@ -919,8 +917,6 @@ namespace TestCadence
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
-                Assert.Equal("0.0.0", properties["Version"]);
-                Assert.Equal("0.0.0", properties["OriginalVersion"]);
                 Assert.Equal("test-domain", properties["Domain"]);
                 Assert.Equal("my-workflow-default", properties["WorkflowId"]);
                 Assert.NotNull(properties["RunId"]);
@@ -945,8 +941,6 @@ namespace TestCadence
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
-                Assert.Equal("0.0.0", properties["Version"]);
-                Assert.Equal("0.0.0", properties["OriginalVersion"]);
                 Assert.Equal("test-domain", properties["Domain"]);
                 Assert.Equal("my-workflow-nondefault", properties["WorkflowId"]);
                 Assert.NotNull(properties["RunId"]);
@@ -961,6 +955,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activities_Properties()
         {
+            var testStartUtc = DateTime.UtcNow;
+
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
             using (var workflowWorker = await client.StartWorkflowWorkerAsync("test-domain"))
@@ -974,20 +970,35 @@ namespace TestCadence
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
                     var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
-#if TODO
+                    Assert.True(!string.IsNullOrEmpty(properties["TaskToken"]));
                     Assert.NotNull(Convert.FromBase64String(properties["TaskToken"]));
-                    Assert.Equal(typeof(GetPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
+                    Assert.Equal(typeof(GetActivityPropertiesWorkflow).FullName, properties["WorkflowTypeName"]);
                     Assert.Equal("test-domain", properties["WorkflowDomain"]);
                     Assert.NotNull(NeonHelper.JsonDeserialize<WorkflowRun>(properties["WorkflowRun"]));
                     Assert.False(string.IsNullOrEmpty(properties["ActivityId"]));
                     Assert.Equal(typeof(GetPropertiesActivity).FullName, properties["ActivityTypeName"]);
                     Assert.Equal("default", properties["TaskList"]);
-                    Assert.Equal("", properties["HeartbeatTimeout"]);
-                    Assert.Equal("", properties["ScheduledTimeUtc"]);
-                    Assert.Equal("", properties["StartedTimeUtc"]);
-                    Assert.Equal("", properties["DeadlineTimeUtc"]);
-                    Assert.Equal("", properties["Attempt"]);
-#endif
+                    Assert.Equal("00:00:00", properties["HeartbeatTimeout"]);
+                    Assert.Equal("0", properties["Attempt"]);
+
+                    // $todo(jeff.lill):
+                    //
+                    // We're just going to ensure that we can parse the time related
+                    // properties and verify that all times make sense.
+
+                    Assert.NotNull(properties["ScheduledTimeUtc"]);
+                    Assert.NotNull(properties["StartedTimeUtc"]);
+                    Assert.NotNull(properties["DeadlineTimeUtc"]);
+
+                    var scheduledTimeUtc = DateTime.Parse(properties["ScheduledTimeUtc"]);
+                    var startedTimeUtc   = DateTime.Parse(properties["StartedTimeUtc"]);
+                    var deadlineTime     = DateTime.Parse(properties["DeadlineTimeUtc"]);
+
+                    Assert.True(testStartUtc <= scheduledTimeUtc);
+                    Assert.True(testStartUtc <= startedTimeUtc);
+                    Assert.True(testStartUtc <= deadlineTime);
+                    Assert.True(scheduledTimeUtc <= startedTimeUtc);
+                    Assert.True(startedTimeUtc <= deadlineTime);
                 }
             }
         }

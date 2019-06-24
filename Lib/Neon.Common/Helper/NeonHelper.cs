@@ -86,16 +86,40 @@ namespace Neon.Common
         public static char[] FileWildcards { get; private set; } = new char[] { '*', '?' };
 
         /// <summary>
-        /// Returns the date format string used for serialize dates to
-        /// strings like: <b>2018-06-05T14:30:13.000Z</b>
+        /// Returns the date format string used for serialize dates with millisecond
+        /// precision to strings like: <b>2018-06-05T14:30:13.000Z</b>
         /// </summary>
         public const string DateFormatTZ = "yyyy-MM-ddTHH:mm:ss.fffZ";
 
         /// <summary>
-        /// Returns the date format string used for serialize dates to
-        /// strings like: <b>2018-06-05T14:30:13.000+00:00</b>
+        /// Returns the date format string used for serialize dates with millisecond
+        /// precision to strings like: <b>2018-06-05T14:30:13.000+00:00</b>
         /// </summary>
         public const string DateFormatTZOffset = "yyyy-MM-ddTHH:mm:ss.fff+00:00";
+
+        /// <summary>
+        /// Returns the date format string used for serialize dates with microsecond
+        /// precision to strings like: <b>2018-06-05T14:30:13.000000Z</b>
+        /// </summary>
+        public const string DateFormatMicroTZ = "yyyy-MM-ddTHH:mm:ss.ffffffZ";
+
+        /// <summary>
+        /// Returns the date format string used for serialize dates with microsecond
+        /// precision to strings like: <b>2018-06-05T14:30:13.000000+00:00</b>
+        /// </summary>
+        public const string DateFormatMicroTZOffset = "yyyy-MM-ddTHH:mm:ss.ffffff+00:00";
+
+        /// <summary>
+        /// Returns the date format string used for serialize dates with 100 nanosecond
+        /// precision to strings like: <b>2018-06-05T14:30:13.000000Z</b>
+        /// </summary>
+        public const string DateFormat100NsTZ = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
+
+        /// <summary>
+        /// Returns the date format string used for serialize dates with 100 nanosecond
+        /// precision to strings like: <b>2018-06-05T14:30:13.000000+00:00</b>
+        /// </summary>
+        public const string DateFormat100NsTZOffset = "yyyy-MM-ddTHH:mm:ss.fffffff+00:00";
 
         /// <summary>
         /// Returns the Unix epoch time: 01-01-1970 (UTC).

@@ -1351,7 +1351,7 @@ namespace Neon.Cadence
                             // run in parallel rather than waiting for them to complete
                             // one-by-one.
 
-                            log.LogWarn(() => $" Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormatTZ)}, timeout={operation.Timeout}].");
+                            log.LogWarn(() => $" Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
 
                             var notAwaitingThis = Task.Run(
                                 async () =>
