@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		request_handloer.go
+// FILE:		request_handler.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -328,7 +328,7 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	// catch any errors that may have occurred
 	// in the switch block or if the message could not
 	// be cast to a specific type
-	if (err != nil) || (reflect.ValueOf(reply).IsNil()) {
+	if err != nil {
 		return err
 	}
 

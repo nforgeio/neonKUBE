@@ -44,7 +44,7 @@ func NewWorkflowSetQueryHandlerRequest() *WorkflowSetQueryHandlerRequest {
 	request := new(WorkflowSetQueryHandlerRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
 	request.SetType(messagetypes.WorkflowSetQueryHandlerRequest)
-	request.SetReplyType(messagetypes.WorkflowQueryReply)
+	request.SetReplyType(messagetypes.WorkflowSetQueryHandlerReply)
 
 	return request
 }

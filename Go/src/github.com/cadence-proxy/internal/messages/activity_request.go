@@ -80,8 +80,8 @@ func (request *ActivityRequest) SetContextID(value int64) {
 
 // Clone inherits docs from ProxyRequest.Clone()
 func (request *ActivityRequest) Clone() IProxyMessage {
-	workflowContextRequest := NewActivityRequest()
-	var messageClone IProxyMessage = workflowContextRequest
+	activityContextRequest := NewActivityRequest()
+	var messageClone IProxyMessage = activityContextRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
