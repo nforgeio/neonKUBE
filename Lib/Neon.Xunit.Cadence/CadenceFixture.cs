@@ -50,6 +50,7 @@ namespace Neon.Xunit.Cadence
     {
         private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Cadence to start.
         private CadenceSettings     settings;
+        private bool                keepConnection;
 
         /// <summary>
         /// Constructs the fixture.
@@ -72,6 +73,10 @@ namespace Neon.Xunit.Cadence
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="keepConnection">
+        /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
+        /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
@@ -96,18 +101,19 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings     = null,
-            string              image        = "nkubeio/cadence-test:latest",
-            string              name         = "cadence-test",
-            string[]            env          = null,
-            bool                emulateProxy = false)
+            CadenceSettings     settings       = null,
+            string              image          = "nkubeio/cadence-test:latest",
+            string              name           = "cadence-test",
+            string[]            env            = null,
+            bool                keepConnection = false,
+            bool                emulateProxy   = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(settings, image, name, env, emulateProxy);
+                    StartAsComposed(settings, image, name, env, keepConnection, emulateProxy);
                 });
         }
 
@@ -118,6 +124,10 @@ namespace Neon.Xunit.Cadence
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="keepConnection">
+        /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
+        /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
@@ -131,11 +141,12 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            CadenceSettings     settings     = null,
-            string              image        = "nkubeio/cadence-test:latest",
-            string              name         = "cadence-test",
-            string[]            env          = null,
-            bool                emulateProxy = false)
+            CadenceSettings     settings       = null,
+            string              image          = "nkubeio/cadence-test:latest",
+            string              name           = "cadence-test",
+            string[]            env            = null,
+            bool                keepConnection = false, 
+            bool                emulateProxy   = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -163,7 +174,8 @@ namespace Neon.Xunit.Cadence
 
                 settings.Emulate = emulateProxy || settings.Emulate;
 
-                this.settings = settings;
+                this.settings       = settings;
+                this.keepConnection = keepConnection;
 
                 // Establish the Cadence connection.
 
@@ -261,6 +273,13 @@ namespace Neon.Xunit.Cadence
         /// </summary>
         public override void OnRestart()
         {
+            if (keepConnection)
+            {
+                // We're going to continue using the same connection.
+
+                return;
+            }
+
             // Close the existing connections.
 
             Connection.Dispose();
