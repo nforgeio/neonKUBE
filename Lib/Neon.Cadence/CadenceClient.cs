@@ -590,6 +590,8 @@ namespace Neon.Cadence
         private Thread                          heartbeatThread;
         private Thread                          timeoutThread;
         private Task                            emulationTask;
+        private bool                            workflowWorkerStarted;
+        private bool                            activityWorkerStarted;
 
         /// <summary>
         /// Constructor.
@@ -740,9 +742,9 @@ namespace Neon.Cadence
                     var connectRequest = 
                         new ConnectRequest()
                         {
-                            Endpoints       = sbEndpoints.ToString(),
-                            Identity        = settings.ClientIdentity,
-                            ClientTimeout   = TimeSpan.FromSeconds(45)
+                            Endpoints     = sbEndpoints.ToString(),
+                            Identity      = settings.ClientIdentity,
+                            ClientTimeout = TimeSpan.FromSeconds(45)
                         };
 
 
