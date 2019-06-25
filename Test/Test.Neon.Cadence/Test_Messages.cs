@@ -76,7 +76,7 @@ namespace TestCadence
                 //--------------------------------
             };
 
-            fixture.Start(settings);
+            fixture.Start(settings, keepConnection: true);
 
             this.fixture     = fixture;
             this.client      = fixture.Connection;

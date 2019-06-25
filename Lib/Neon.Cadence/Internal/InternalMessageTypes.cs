@@ -345,14 +345,14 @@ namespace Neon.Cadence.Internal
         WorkflowMutableReply = 133,
 
         /// <summary>
-        /// <b>UNUSED:</b> Available message ID.
+        /// <b>client --> proxy:</b> Manages workflow versioning.
         /// </summary>
-        UNUSED_0 = 134,
+        WorkflowGetVersionRequest = 134,
 
         /// <summary>
-        /// <b>UNUSED:</b> Available message ID.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetVersionRequest"/> message.
         /// </summary>
-        UNUSED_1 = 135,
+        WorkflowGetVersionReply = 135,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use

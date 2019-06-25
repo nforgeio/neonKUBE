@@ -251,6 +251,163 @@ namespace Neon.Cadence
     ///     </note>
     /// </item>
     /// </list>
+    /// <para><b>Upgrading Workflows</b></para>
+    /// <para>
+    /// It is possible to upgrade workflow implementation with workflows in flight using
+    /// the <see cref="GetVersionAsync(string, int, int)"/> method.  The essential requirement
+    /// is that the new implementation must execute the same logic for the decision steps
+    /// that have already been executed and recorded to the history fo a previous workflow 
+    /// to maintain workflow determinism.  Subsequent unexecuted steps, are free to implement
+    /// different logic.
+    /// </para>
+    /// <note>
+    /// Cadence attempts to detect when replaying workflow performs actions that are different
+    /// from those recorded as history and will fail the workflow when this occurs.
+    /// </note>
+    /// <para>
+    /// Upgraded workflows will use <see cref="GetVersionAsync(string, int, int)"/> to indicate
+    /// where upgraded logic has been inserted into the workflow.  You'll pass a <b>changeId</b>
+    /// string that identifies the change being made.  This can be anything you wish as long as
+    /// it's not empty and is unique for each change made to the workflow.  You'll also pass
+    /// <b>minSupported</b> and <b>maxSupported</b> integers.  <b>minSupported</b> specifies the 
+    /// minimum version of the workflow implementation that will be allowed to continue to
+    /// run.  Workflows start out with their version set to <see cref="DefaultVersion"/>
+    /// or <b>(-1)</b> and this will often be passed as <b>minSupported</b> such that upgraded
+    /// workflow implementations will be able to take over newly scheduled workflows.  
+    /// <b>maxSupported</b> essentially specifies the current version of the workflow 
+    /// implementation. 
+    /// </para>
+    /// <para>
+    /// When <see cref="GetVersionAsync(string, int, int)"/> called and is not being replayed
+    /// from the workflow history, the method will record the <b>changeId</b> and <b>maxSupported</b>
+    /// values to the workflow history.  When this is being replayed, the method will simply
+    /// return the <b>maxSupported</b> value from the history.  Let's go through an example demonstrating
+    /// how this can be used.  Let's say we start out with a simple two step workflow that 
+    /// first calls <b>ActivityA</b> and then calls <b>ActivityB</b>:
+    /// </para>
+    /// <code lang="C#">
+    /// public class MyWorkflow : WorkflowBase
+    /// {
+    ///     protected async Task&lt;byte[]&gt; RunAsync(byte[] args)
+    ///     {
+    ///         await CallActivity&lt;ActivityA&gt;();    
+    ///         await CallActivity&lt;ActivityB&gt;();    
+    /// 
+    ///         return null;
+    ///     }
+    /// }
+    /// </code>
+    /// <para>
+    /// Now, let's assume that we need to replace the call to <b>ActivityA</b> with a call to
+    /// <b>ActivityC</b>.  If there is no chance of any instances of <B>MyWorkflow</B> being
+    /// in flight, you could simply redepoy the recoded workflow:
+    /// </para>
+    /// <code lang="C#">
+    /// public class MyWorkflow : WorkflowBase
+    /// {
+    ///     protected async Task&lt;byte[]&gt; RunAsync(byte[] args)
+    ///     {
+    ///         await CallActivity&lt;ActivityC&gt;();  // <-- change
+    ///         await CallActivity&lt;ActivityB&gt;();
+    /// 
+    ///         return null;
+    ///     }
+    /// }
+    /// </code>
+    /// <para>
+    /// But, if instances of this workflow are in flight you'll need to deploy a backwards
+    /// compatible workflow implementation that handles workflows that have already executed 
+    /// <b>ActivityA</b> but haven't yet executed <b>ActivityB</b>.  You can accomplish this
+    /// via:
+    /// </para>
+    /// <code lang="C#">
+    /// public class MyWorkflow : WorkflowBase
+    /// {
+    ///     protected async Task&lt;byte[]&gt; RunAsync(byte[] args)
+    ///     {
+    ///         var version = await GetVersionAsync("Replace ActivityA", DefaultVersion, 1);    
+    /// 
+    ///         switch (version)
+    ///         {
+    ///             case DefaultVersion:
+    ///             
+    ///                 await CallActivity&lt;ActivityA&gt;();
+    ///                 break;
+    ///                 
+    ///             case 1:
+    ///             
+    ///                 await CallActivity&lt;ActivityC&gt;();  // <-- change
+    ///                 break;
+    ///         }
+    ///         
+    ///         await CallActivity&lt;ActivityB&gt;();
+    /// 
+    ///         return null;
+    ///     }
+    /// }
+    /// </code>
+    /// <para>
+    /// This upgraded workflow calls <see cref="GetVersionAsync(string, int, int)"/> passing
+    /// <b>minSupported=DefaultVersion</b> and <b>maxSupported=1</b>  For workflow instances
+    /// that have already executed <b>ActivityA</b>, <see cref="GetVersionAsync(string, int, int)"/>
+    /// will return <see cref="DefaultVersion"/> and we'll call <b>ActivityA</b>, which will match
+    /// what was recorded in the history.  For workflows that have not yet executed <b>ActivityA</b>,
+    /// <see cref="GetVersionAsync(string, int, int)"/> will return <b>1</b>, which we'll use as
+    /// the indication that we can call <b>ActivityC</b>.
+    /// </para>
+    /// <para>
+    /// Now, lets say we need to upgrade the workflow again and change the call for <b>ActivityB</b>
+    /// to <b>ActivityD</b>, but only for workflows that have also executed <b>ActivityC</b>.  This 
+    /// would look something like:
+    /// </para>
+    /// <code lang="C#">
+    /// public class MyWorkflow : WorkflowBase
+    /// {
+    ///     protected async Task&lt;byte[]&gt; RunAsync(byte[] args)
+    ///     {
+    ///         var version = await GetVersionAsync("Replace ActivityA", DefaultVersion, 1);    
+    /// 
+    ///         switch (version)
+    ///         {
+    ///             case DefaultVersion:
+    ///             
+    ///                 await CallActivity&lt;ActivityA&gt;();
+    ///                 break;
+    ///                 
+    ///             case 1:
+    ///             
+    ///                 await CallActivity&lt;ActivityC&gt;();  // <-- change
+    ///                 break;
+    ///         }
+    ///         
+    ///         version = await GetVersionAsync("Replace ActivityB", 1, 2);    
+    /// 
+    ///         switch (version)
+    ///         {
+    ///             case DefaultVersion:
+    ///             case 1:
+    ///             
+    ///                 await CallActivity&lt;ActivityB&gt;();
+    ///                 break;
+    ///                 
+    ///             case 2:
+    ///             
+    ///                 await CallActivity&lt;ActivityD&gt;();  // <-- change
+    ///                 break;
+    ///         }
+    ///         
+    ///         await CallActivity&lt;ActivityB&gt;();
+    /// 
+    ///         return null;
+    ///     }
+    /// }
+    /// </code>
+    /// <para>
+    /// Notice that the second <see cref="GetVersionAsync(string, int, int)"/> call passed a different
+    /// change ID and also that the version range is now <b>1..2</b>.  The version returned will be
+    /// <see cref="DefaultVersion"/> or <b>1</b> if <b>ActivityA</b> and <b>ActivityB</b> were 
+    /// recorded in the history or <b>2</b> if <b>ActivityC</b> was called.
+    /// </para>
     /// </remarks>
     public abstract class WorkflowBase : INeonLogger
     {
@@ -329,8 +486,14 @@ namespace Neon.Cadence
         private static Dictionary<string, Type>                 nameToWorkflowType = new Dictionary<string, Type>();
 
         /// <summary>
+        /// The default workflow version returned by <see cref="GetVersionAsync(string, int, int)"/> 
+        /// when a version has not been set yet.
+        /// </summary>
+        public int DefaultVersion = -1;
+
+        /// <summary>
         /// Prepends the Cadence client ID to the workflow type name to generate the
-        /// key used to dereference the <see cref="nameToWorkflowType"/> dicationary.
+        /// key used to dereference the <see cref="nameToWorkflowType"/> dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
@@ -952,6 +1115,37 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to implement backwards compatible changes to a workflow implementation.
+        /// </summary>
+        /// <param name="changeId">Identifies the change.</param>
+        /// <param name="minSupported">
+        /// Specifies the minimum supported version.  You may pass <see cref="DefaultVersion"/> <b>(-1)</b>
+        /// which will be set as the version for workflows that haven't been versioned yet.
+        /// </param>
+        /// <param name="maxSupported">Specifies the maximum supported version.</param>
+        /// <returns>The workflow implementation version.</returns>
+        /// <remarks>
+        /// See the <see cref="WorkflowBase"/> remarks for more information about how this works.
+        /// </remarks>
+        protected async Task<int> GetVersionAsync(string changeId, int minSupported, int maxSupported)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId));
+            Covenant.Requires<ArgumentException>(minSupported <= maxSupported);
+
+            var reply = (WorkflowGetVersionReply)await Client.CallProxyAsync(
+                new WorkflowGetVersionRequest()
+                {
+                    ChangeId     = changeId,
+                    MinSupported = minSupported,
+                    MaxSupported = maxSupported
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Version;
         }
 
         /// <summary>

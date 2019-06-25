@@ -43,6 +43,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 ActivityId { get; private set; }                                = new PropertyNameUtf8("ActivityId");
         public static PropertyNameUtf8 ActivityTypeId { get; private set; }                            = new PropertyNameUtf8("ActivityTypeId");
         public static PropertyNameUtf8 Args { get; private set; }                                      = new PropertyNameUtf8("Args");
+        public static PropertyNameUtf8 ChangeId { get; private set; }                                  = new PropertyNameUtf8("ChangeId");
         public static PropertyNameUtf8 ChildId { get; private set; }                                   = new PropertyNameUtf8("ChildId");
         public static PropertyNameUtf8 ClientTimeout { get; private set; }                             = new PropertyNameUtf8("ClientTimeout");
         public static PropertyNameUtf8 ConfigurationEmitMetrics { get; private set; }                  = new PropertyNameUtf8("ConfigurationEmitMetrics");
@@ -77,6 +78,8 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 IsWorkflow { get; private set; }                                = new PropertyNameUtf8("IsWorkflow");
         public static PropertyNameUtf8 LibraryAddress { get; private set; }                            = new PropertyNameUtf8("LibraryAddress");
         public static PropertyNameUtf8 LibraryPort { get; private set; }                               = new PropertyNameUtf8("LibraryPort");
+        public static PropertyNameUtf8 MinSupported { get; private set; }                              = new PropertyNameUtf8("MinSupported");
+        public static PropertyNameUtf8 MaxSupported { get; private set; }                              = new PropertyNameUtf8("MaxSupported");
         public static PropertyNameUtf8 MutableId { get; private set; }                                 = new PropertyNameUtf8("MutableId");
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
@@ -98,6 +101,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Update { get; private set; }                                    = new PropertyNameUtf8("Update");
         public static PropertyNameUtf8 UpdatedInfoDescription { get; private set; }                    = new PropertyNameUtf8("UpdatedInfoDescription");
         public static PropertyNameUtf8 UpdatedInfoOwnerEmail { get; private set; }                     = new PropertyNameUtf8("UpdatedInfoOwnerEmail");
+        public static PropertyNameUtf8 Version { get; private set; }                                   = new PropertyNameUtf8("Version");
         public static PropertyNameUtf8 WasCancelled { get; private set; }                              = new PropertyNameUtf8("WasCancelled");
         public static PropertyNameUtf8 WorkerId { get; private set; }                                  = new PropertyNameUtf8("WorkerId");
         public static PropertyNameUtf8 Workflow { get; private set; }                                  = new PropertyNameUtf8("Workflow");

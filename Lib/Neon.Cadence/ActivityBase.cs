@@ -208,7 +208,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Prepends the Cadence client ID to the workflow type name to generate the
-        /// key used to dereference the <see cref="nameToConstructInfo"/> dicationary.
+        /// key used to dereference the <see cref="nameToConstructInfo"/> dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="activityTypeName">The activity type name.</param>
