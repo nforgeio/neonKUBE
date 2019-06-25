@@ -3158,5 +3158,141 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowGetVersionRequest()
+        {
+            WorkflowGetVersionRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowGetVersionRequest();
+
+                Assert.Equal(InternalMessageTypes.WorkflowGetVersionReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowGetVersionRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ContextId);
+                Assert.Null(message.ChangeId);
+                Assert.Equal(0, message.MaxSupported);
+                Assert.Equal(0, message.MinSupported);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                message.ContextId = 666;
+                message.ChangeId = "my-change";
+                message.MinSupported = 10;
+                message.MaxSupported = 20;
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-change", message.ChangeId);
+                Assert.Equal(10, message.MinSupported);
+                Assert.Equal(20, message.MaxSupported);
+ 
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+                Assert.Equal("my-change", message.ChangeId);
+                Assert.Equal(10, message.MinSupported);
+                Assert.Equal(20, message.MaxSupported);
+
+                message = ProxyMessage.Deserialize<WorkflowGetVersionRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-change", message.ChangeId);
+                Assert.Equal(10, message.MinSupported);
+                Assert.Equal(20, message.MaxSupported);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-change", message.ChangeId);
+                Assert.Equal(10, message.MinSupported);
+                Assert.Equal(20, message.MaxSupported);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal("my-change", message.ChangeId);
+                Assert.Equal(10, message.MinSupported);
+                Assert.Equal(20, message.MaxSupported);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_WorkflowGetVersionReply()
+        {
+            WorkflowGetVersionReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new WorkflowGetVersionReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowGetVersionReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Equal(0, message.Version);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+                message.Error = new CadenceError("MyError");
+                Assert.Equal("MyError", message.Error.String);
+                message.Version = 20;
+                Assert.Equal(20, message.Version);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<WorkflowGetVersionReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(20, message.Version);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(20, message.Version);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(20, message.Version);
+            }
+        }
     }
 }
+
