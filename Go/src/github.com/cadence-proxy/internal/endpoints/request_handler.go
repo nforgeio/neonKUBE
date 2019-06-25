@@ -43,25 +43,10 @@ import (
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
-var (
-
-	// ClientHelper is a global variable that holds this cadence-proxy's instance
-	// of the CadenceClientHelper that will be used to create domain and workflow clients
-	// that communicate with the cadence server
-	clientHelper = cadenceclient.NewCadenceClientHelper()
-)
-
 // -------------------------------------------------------------------------
 // IProxyRequest message type handler entrypoint
 
 func handleIProxyRequest(request messages.IProxyRequest) error {
-
-	// look for IsCancelled
-	if request.GetIsCancellable() {
-		ctx, cancel := context.WithCancel(context.Background())
-		c := NewCancellable(ctx, cancel)
-		_ = Cancellables.Add(request.GetRequestID(), c)
-	}
 
 	// handle the messages individually
 	// based on their message type
