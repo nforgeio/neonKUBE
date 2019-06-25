@@ -43,6 +43,8 @@ type (
 		IProxyMessage
 		GetReplyType() messagetypes.MessageType
 		SetReplyType(value messagetypes.MessageType)
+		GetIsCancellable() bool
+		SetIsCancellable(value bool)
 	}
 )
 
@@ -80,6 +82,25 @@ func (request *ProxyRequest) SetReplyType(value messagetypes.MessageType) {
 	request.ReplyType = value
 }
 
+// GetIsCancellable gets the IsCancellable property from the
+// properties map of a ProxyRequest.  This indicates whether the
+// operation should be cancellable.
+//
+// returns bool -> boolean IsCancellable property.
+func (request *ProxyRequest) GetIsCancellable() bool {
+	return request.GetBoolProperty("IsCancellable")
+}
+
+// SetIsCancellable sets the IsCancellable property in the
+// properties map of a ProxyRequest.  This indicates whether the
+// operation should be cancellable.
+//
+// param bool value -> boolean IsCancellable property to set in
+// the ProxyRequest's properties map.
+func (request *ProxyRequest) SetIsCancellable(value bool) {
+	request.SetBoolProperty("IsCancellable", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -97,5 +118,6 @@ func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	request.ProxyMessage.CopyTo(target)
 	if v, ok := target.(IProxyRequest); ok {
 		v.SetReplyType(request.GetReplyType())
+		v.SetIsCancellable(request.GetIsCancellable())
 	}
 }

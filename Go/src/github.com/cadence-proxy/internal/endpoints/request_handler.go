@@ -56,6 +56,13 @@ var (
 
 func handleIProxyRequest(request messages.IProxyRequest) error {
 
+	// look for IsCancelled
+	if request.GetIsCancellable() {
+		ctx, cancel := context.WithCancel(context.Background())
+		c := NewCancellable(ctx, cancel)
+		_ = Cancellables.Add(request.GetRequestID(), c)
+	}
+
 	// handle the messages individually
 	// based on their message type
 	var err error
