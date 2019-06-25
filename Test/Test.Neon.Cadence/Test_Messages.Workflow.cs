@@ -2529,6 +2529,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Equal(0, message.ChildId);
+                Assert.Null(message.Execution);
 
                 // Round-trip
 
@@ -2539,6 +2540,10 @@ namespace TestCadence
                 message.ChildId = 666;
                 Assert.Equal(666, message.ChildId);
 
+                message.Execution = new InternalWorkflowExecution() { ID = "foo", RunID = "bar" };
+                Assert.Equal("foo", message.Execution.ID);
+                Assert.Equal("bar", message.Execution.RunID);
+
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
@@ -2548,6 +2553,8 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
+                Assert.Equal("foo", message.Execution.ID);
+                Assert.Equal("bar", message.Execution.RunID);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -2556,6 +2563,8 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
+                Assert.Equal("foo", message.Execution.ID);
+                Assert.Equal("bar", message.Execution.RunID);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -2564,6 +2573,8 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
+                Assert.Equal("foo", message.Execution.ID);
+                Assert.Equal("bar", message.Execution.RunID);
             }
         }
 

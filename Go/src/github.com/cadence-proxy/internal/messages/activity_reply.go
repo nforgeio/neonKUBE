@@ -36,8 +36,8 @@ type (
 	// implement.
 	IActivityReply interface {
 		IProxyReply
-		GetContextID() int64
-		SetContextID(value int64)
+		GetActivityContextID() int64
+		SetActivityContextID(value int64)
 	}
 )
 
@@ -57,20 +57,20 @@ func NewActivityReply() *ActivityReply {
 // -------------------------------------------------------------------------
 // IActivityReply interface methods for implementing the IActivityReply interface
 
-// GetContextID gets the ContextId from a ActivityReply's properties
+// GetActivityContextID gets the ActivityContextId from a ActivityReply's properties
 // map.
 //
-// returns int64 -> the long representing a ActivityReply's ContextId
-func (reply *ActivityReply) GetContextID() int64 {
-	return reply.GetLongProperty("ContextId")
+// returns int64 -> the long representing a ActivityReply's ActivityContextId
+func (reply *ActivityReply) GetActivityContextID() int64 {
+	return reply.GetLongProperty("ActivityContextId")
 }
 
-// SetContextID sets the ContextId in a ActivityReply's properties map
+// SetActivityContextID sets the ActivityContextId in a ActivityReply's properties map
 //
-// param value int64 -> int64 value to set as the ActivityReply's ContextId
+// param value int64 -> int64 value to set as the ActivityReply's ActivityContextId
 // in its properties map
-func (reply *ActivityReply) SetContextID(value int64) {
-	reply.SetLongProperty("ContextId", value)
+func (reply *ActivityReply) SetActivityContextID(value int64) {
+	reply.SetLongProperty("ActivityContextId", value)
 }
 
 // -------------------------------------------------------------------------
@@ -78,8 +78,8 @@ func (reply *ActivityReply) SetContextID(value int64) {
 
 // Clone inherits docs from ProxyReply.Clone()
 func (reply *ActivityReply) Clone() IProxyMessage {
-	workflowContextReply := NewActivityReply()
-	var messageClone IProxyMessage = workflowContextReply
+	activityContextReply := NewActivityReply()
+	var messageClone IProxyMessage = activityContextReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
@@ -89,6 +89,6 @@ func (reply *ActivityReply) Clone() IProxyMessage {
 func (reply *ActivityReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(IActivityReply); ok {
-		v.SetContextID(reply.GetContextID())
+		v.SetActivityContextID(reply.GetActivityContextID())
 	}
 }

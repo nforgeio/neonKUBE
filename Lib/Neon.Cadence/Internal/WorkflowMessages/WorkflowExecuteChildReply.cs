@@ -49,6 +49,15 @@ namespace Neon.Cadence.Internal
             set => SetLongProperty(PropertyNames.ChildId, value);
         }
 
+        /// <summary>
+        /// Returns details identifying the child workflow execution.
+        /// </summary>
+        public InternalWorkflowExecution Execution
+        {
+            get => GetJsonProperty<InternalWorkflowExecution>(PropertyNames.Execution);
+            set => SetJsonProperty<InternalWorkflowExecution>(PropertyNames.Execution, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -66,7 +75,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteChildReply)target;
 
-            typedTarget.ChildId = this.ChildId;
+            typedTarget.ChildId     = this.ChildId;
+            typedTarget.Execution   = this.Execution;
         }
     }
 }

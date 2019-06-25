@@ -25,7 +25,6 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -442,11 +441,14 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 
 		// Start a continue as new instance of the workflow and get the error to send
 		// back to the Neon.Cadence Lib
+		// set ContinueAsNewError as the result
 		continueError := workflow.NewContinueAsNewError(continueContext, *wectx.GetWorkflowName(), reply.GetContinueAsNewArgs())
+		err := op.SendChannel(continueError, nil)
+		if err != nil {
+			return err
+		}
 
-		// create a new custom error and set it in the reply to be handled by the future
-		cadenceError := cadenceerrors.NewCadenceError(continueError.Error(), cadenceerrors.Generic)
-		reply.SetError(cadenceError)
+		return nil
 	}
 
 	// set the reply

@@ -174,24 +174,6 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.WorkflowGetResultReply:
 		message = NewWorkflowGetResultReply()
 
-	// WorkflowListOpenExecutions
-	case messagetypes.WorkflowListOpenExecutionsReply:
-		message = NewWorkflowListOpenExecutionsReply()
-	case messagetypes.WorkflowListOpenExecutionsRequest:
-		message = NewWorkflowListOpenExecutionsRequest()
-
-	// WorkflowListClosed
-	case messagetypes.WorkflowListClosedReply:
-		message = NewWorkflowListClosedReply()
-	case messagetypes.WorkflowListClosedRequest:
-		message = NewWorkflowListClosedRequest()
-
-	// WorkflowDescribeTaskList
-	case messagetypes.WorkflowDescribeTaskListReply:
-		message = NewWorkflowDescribeTaskListReply()
-	case messagetypes.WorkflowDescribeTaskListRequest:
-		message = NewWorkflowDescribeTaskListRequest()
-
 	// WorkflowSignalSubscribe
 	case messagetypes.WorkflowSignalSubscribeReply:
 		message = NewWorkflowSignalSubscribeReply()

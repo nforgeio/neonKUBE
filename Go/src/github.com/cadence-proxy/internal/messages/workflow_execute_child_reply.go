@@ -106,5 +106,6 @@ func (reply *WorkflowExecuteChildReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteChildReply); ok {
 		v.SetChildID(reply.GetChildID())
+		v.SetExecution(reply.GetExecution())
 	}
 }
