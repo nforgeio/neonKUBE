@@ -61,7 +61,7 @@ namespace Neon.Cadence
                 activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
             }
 
-            if (workflowWorkerStarted)
+            if (activityWorkerStarted)
             {
                 throw new CadenceActivityWorkerStartedException();
             }
@@ -103,7 +103,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
 
-            if (workflowWorkerStarted)
+            if (activityWorkerStarted)
             {
                 throw new CadenceActivityWorkerStartedException();
             }
