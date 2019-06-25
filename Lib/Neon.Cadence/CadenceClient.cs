@@ -561,7 +561,7 @@ namespace Neon.Cadence
 
             if (settings.ClientTimeout <= TimeSpan.Zero)
             {
-                settings.ClientTimeout = TimeSpan.FromSeconds(30);
+                settings.ClientTimeout = TimeSpan.FromSeconds(45);
             }
 
             var client = new CadenceClient(settings);
