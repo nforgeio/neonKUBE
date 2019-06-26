@@ -248,6 +248,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowSignalSubscribeReply(v, cadenceError)
 		}
 
+	// WorkflowGetVersionReply
+	case messagetypes.WorkflowGetVersionReply:
+		if v, ok := reply.(*messages.WorkflowGetVersionReply); ok {
+			buildWorkflowGetVersionReply(v, cadenceError, value)
+		}
+
 	// -------------------------------------------------------------------------
 	// activity message types
 
@@ -578,6 +584,16 @@ func buildWorkflowSignalChildReply(reply *messages.WorkflowSignalChildReply, cad
 
 func buildWorkflowCancelChildReply(reply *messages.WorkflowCancelChildReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
+}
+
+func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].(workflow.Version); ok {
+			reply.SetVersion(int32(v))
+		}
+	}
 }
 
 // -------------------------------------------------------------------------

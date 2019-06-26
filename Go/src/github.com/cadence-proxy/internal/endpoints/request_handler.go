@@ -258,6 +258,12 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 			reply = handleWorkflowSetQueryHandlerRequest(v)
 		}
 
+	// WorkflowGetVersionRequest
+	case messagetypes.WorkflowGetVersionRequest:
+		if v, ok := request.(*messages.WorkflowGetVersionRequest); ok {
+			reply = handleWorkflowGetVersionRequest(v)
+		}
+
 	// -------------------------------------------------------------------------
 	// Activity message types
 
@@ -2009,6 +2015,48 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 
 	// build reply
 	buildReply(reply, nil, result)
+
+	return reply
+}
+
+func handleWorkflowGetVersionRequest(request *messages.WorkflowGetVersionRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	contextID := request.GetContextID()
+	logger.Debug("WorkflowGetVersionRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ContextId", contextID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
+	// new WorkflowGetVersionReply
+	reply := createReplyMessage(request)
+
+	// check to see if a connection has been made with the
+	// cadence client
+	if clientHelper == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+
+		return reply
+	}
+
+	// get the child context from the parent workflow context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+
+		return reply
+	}
+
+	// get the workflow version
+	version := workflow.GetVersion(wectx.GetContext(),
+		*request.GetChangeID(),
+		workflow.Version(request.GetMinSupported()),
+		workflow.Version(request.GetMaxSupported()),
+	)
+
+	// build the reply
+	buildReply(reply, nil, version)
 
 	return reply
 }
