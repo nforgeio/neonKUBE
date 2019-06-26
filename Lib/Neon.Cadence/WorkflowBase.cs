@@ -307,7 +307,7 @@ namespace Neon.Cadence
     /// {
     ///     protected async Task&lt;byte[]&gt; RunAsync(byte[] args)
     ///     {
-    ///         await CallActivity&lt;ActivityC&gt;();  // <-- change
+    ///         await CallActivity&lt;ActivityC&gt;();  // &lt;-- change
     ///         await CallActivity&lt;ActivityB&gt;();
     /// 
     ///         return null;
@@ -336,7 +336,7 @@ namespace Neon.Cadence
     ///                 
     ///             case 1:
     ///             
-    ///                 await CallActivity&lt;ActivityC&gt;();  // <-- change
+    ///                 await CallActivity&lt;ActivityC&gt;();  // &lt;-- change
     ///                 break;
     ///         }
     ///         
@@ -376,7 +376,7 @@ namespace Neon.Cadence
     ///                 
     ///             case 1:
     ///             
-    ///                 await CallActivity&lt;ActivityC&gt;();  // <-- change
+    ///                 await CallActivity&lt;ActivityC&gt;();  // &lt;-- change
     ///                 break;
     ///         }
     ///         
@@ -392,7 +392,7 @@ namespace Neon.Cadence
     ///                 
     ///             case 2:
     ///             
-    ///                 await CallActivity&lt;ActivityD&gt;();  // <-- change
+    ///                 await CallActivity&lt;ActivityD&gt;();  // &lt;-- change
     ///                 break;
     ///         }
     ///         

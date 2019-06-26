@@ -77,7 +77,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
-        /// operations to complete.  This defaults to <b>30 seconds</b> when not set.
+        /// operations to complete.  This defaults to <b>45 seconds</b> when not set.
         /// </summary>
         [JsonProperty(PropertyName = "ClientTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clientTimeout", ApplyNamingConventions = false)]

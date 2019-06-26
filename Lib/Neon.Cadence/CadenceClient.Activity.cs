@@ -61,7 +61,7 @@ namespace Neon.Cadence
                 activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
             }
 
-            if (workflowWorkerStarted)
+            if (activityWorkerStarted)
             {
                 throw new CadenceActivityWorkerStartedException();
             }
@@ -99,11 +99,11 @@ namespace Neon.Cadence
         /// Be sure to register all of your activity implementations before starting a workflow worker.
         /// </note>
         /// </remarks>
-        public async Task AutoRegisterActivitiesAsync(Assembly assembly)
+        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
 
-            if (workflowWorkerStarted)
+            if (activityWorkerStarted)
             {
                 throw new CadenceActivityWorkerStartedException();
             }
