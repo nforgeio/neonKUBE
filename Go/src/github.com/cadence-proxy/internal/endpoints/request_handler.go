@@ -48,9 +48,18 @@ import (
 
 func handleIProxyRequest(request messages.IProxyRequest) error {
 
+	// create a context for every request
+	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	defer cancel()
+
+	// look for IsCancelled
+	if request.GetIsCancellable() {
+		c := NewCancellable(ctx, cancel)
+		_ = Cancellables.Add(request.GetRequestID(), c)
+	}
+
 	// handle the messages individually
 	// based on their message type
-	var err error
 	var reply messages.IProxyReply
 	switch request.GetType() {
 
@@ -60,67 +69,67 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	// InitializeRequest
 	case messagetypes.InitializeRequest:
 		if v, ok := request.(*messages.InitializeRequest); ok {
-			reply = handleInitializeRequest(v)
+			reply = handleInitializeRequest(ctx, v)
 		}
 
 	// HeartbeatRequest
 	case messagetypes.HeartbeatRequest:
 		if v, ok := request.(*messages.HeartbeatRequest); ok {
-			reply = handleHeartbeatRequest(v)
+			reply = handleHeartbeatRequest(ctx, v)
 		}
 
 	// CancelRequest
 	case messagetypes.CancelRequest:
 		if v, ok := request.(*messages.CancelRequest); ok {
-			reply = handleCancelRequest(v)
+			reply = handleCancelRequest(ctx, v)
 		}
 
 	// ConnectRequest
 	case messagetypes.ConnectRequest:
 		if v, ok := request.(*messages.ConnectRequest); ok {
-			reply = handleConnectRequest(v)
+			reply = handleConnectRequest(ctx, v)
 		}
 
 	// DomainDescribeRequest
 	case messagetypes.DomainDescribeRequest:
 		if v, ok := request.(*messages.DomainDescribeRequest); ok {
-			reply = handleDomainDescribeRequest(v)
+			reply = handleDomainDescribeRequest(ctx, v)
 		}
 
 	// DomainRegisterRequest
 	case messagetypes.DomainRegisterRequest:
 		if v, ok := request.(*messages.DomainRegisterRequest); ok {
-			reply = handleDomainRegisterRequest(v)
+			reply = handleDomainRegisterRequest(ctx, v)
 		}
 
 	// DomainUpdateRequest
 	case messagetypes.DomainUpdateRequest:
 		if v, ok := request.(*messages.DomainUpdateRequest); ok {
-			reply = handleDomainUpdateRequest(v)
+			reply = handleDomainUpdateRequest(ctx, v)
 		}
 
 	// TerminateRequest
 	case messagetypes.TerminateRequest:
 		if v, ok := request.(*messages.TerminateRequest); ok {
-			reply = handleTerminateRequest(v)
+			reply = handleTerminateRequest(ctx, v)
 		}
 
 	// NewWorkerRequest
 	case messagetypes.NewWorkerRequest:
 		if v, ok := request.(*messages.NewWorkerRequest); ok {
-			reply = handleNewWorkerRequest(v)
+			reply = handleNewWorkerRequest(ctx, v)
 		}
 
 	// StopWorkerRequest
 	case messagetypes.StopWorkerRequest:
 		if v, ok := request.(*messages.StopWorkerRequest); ok {
-			reply = handleStopWorkerRequest(v)
+			reply = handleStopWorkerRequest(ctx, v)
 		}
 
 	// PingRequest
 	case messagetypes.PingRequest:
 		if v, ok := request.(*messages.PingRequest); ok {
-			reply = handlePingRequest(v)
+			reply = handlePingRequest(ctx, v)
 		}
 
 	// -------------------------------------------------------------------------
@@ -129,139 +138,139 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	// WorkflowRegisterRequest
 	case messagetypes.WorkflowRegisterRequest:
 		if v, ok := request.(*messages.WorkflowRegisterRequest); ok {
-			reply = handleWorkflowRegisterRequest(v)
+			reply = handleWorkflowRegisterRequest(ctx, v)
 		}
 
 	// WorkflowExecuteRequest
 	case messagetypes.WorkflowExecuteRequest:
 		if v, ok := request.(*messages.WorkflowExecuteRequest); ok {
-			reply = handleWorkflowExecuteRequest(v)
+			reply = handleWorkflowExecuteRequest(ctx, v)
 		}
 
 	// WorkflowCancelRequest
 	case messagetypes.WorkflowCancelRequest:
 		if v, ok := request.(*messages.WorkflowCancelRequest); ok {
-			reply = handleWorkflowCancelRequest(v)
+			reply = handleWorkflowCancelRequest(ctx, v)
 		}
 
 	// WorkflowTerminateRequest
 	case messagetypes.WorkflowTerminateRequest:
 		if v, ok := request.(*messages.WorkflowTerminateRequest); ok {
-			reply = handleWorkflowTerminateRequest(v)
+			reply = handleWorkflowTerminateRequest(ctx, v)
 		}
 
 	// WorkflowSignalWithStartRequest
 	case messagetypes.WorkflowSignalWithStartRequest:
 		if v, ok := request.(*messages.WorkflowSignalWithStartRequest); ok {
-			reply = handleWorkflowSignalWithStartRequest(v)
+			reply = handleWorkflowSignalWithStartRequest(ctx, v)
 		}
 
 	// WorkflowSetCacheSizeRequest
 	case messagetypes.WorkflowSetCacheSizeRequest:
 		if v, ok := request.(*messages.WorkflowSetCacheSizeRequest); ok {
-			reply = handleWorkflowSetCacheSizeRequest(v)
+			reply = handleWorkflowSetCacheSizeRequest(ctx, v)
 		}
 
 	// WorkflowQueryRequest
 	case messagetypes.WorkflowQueryRequest:
 		if v, ok := request.(*messages.WorkflowQueryRequest); ok {
-			reply = handleWorkflowQueryRequest(v)
+			reply = handleWorkflowQueryRequest(ctx, v)
 		}
 
 	// WorkflowMutableRequest
 	case messagetypes.WorkflowMutableRequest:
 		if v, ok := request.(*messages.WorkflowMutableRequest); ok {
-			reply = handleWorkflowMutableRequest(v)
+			reply = handleWorkflowMutableRequest(ctx, v)
 		}
 
 	// WorkflowDescribeExecutionRequest
 	case messagetypes.WorkflowDescribeExecutionRequest:
 		if v, ok := request.(*messages.WorkflowDescribeExecutionRequest); ok {
-			reply = handleWorkflowDescribeExecutionRequest(v)
+			reply = handleWorkflowDescribeExecutionRequest(ctx, v)
 		}
 
 	// WorkflowGetResultRequest
 	case messagetypes.WorkflowGetResultRequest:
 		if v, ok := request.(*messages.WorkflowGetResultRequest); ok {
-			reply = handleWorkflowGetResultRequest(v)
+			reply = handleWorkflowGetResultRequest(ctx, v)
 		}
 
 	// WorkflowSignalSubscribeRequest
 	case messagetypes.WorkflowSignalSubscribeRequest:
 		if v, ok := request.(*messages.WorkflowSignalSubscribeRequest); ok {
-			reply = handleWorkflowSignalSubscribeRequest(v)
+			reply = handleWorkflowSignalSubscribeRequest(ctx, v)
 		}
 
 	// WorkflowSignalRequest
 	case messagetypes.WorkflowSignalRequest:
 		if v, ok := request.(*messages.WorkflowSignalRequest); ok {
-			reply = handleWorkflowSignalRequest(v)
+			reply = handleWorkflowSignalRequest(ctx, v)
 		}
 
 	// WorkflowHasLastResultRequest
 	case messagetypes.WorkflowHasLastResultRequest:
 		if v, ok := request.(*messages.WorkflowHasLastResultRequest); ok {
-			reply = handleWorkflowHasLastResultRequest(v)
+			reply = handleWorkflowHasLastResultRequest(ctx, v)
 		}
 
 	// WorkflowGetLastResultRequest
 	case messagetypes.WorkflowGetLastResultRequest:
 		if v, ok := request.(*messages.WorkflowGetLastResultRequest); ok {
-			reply = handleWorkflowGetLastResultRequest(v)
+			reply = handleWorkflowGetLastResultRequest(ctx, v)
 		}
 
 	// WorkflowDisconnectContextRequest
 	case messagetypes.WorkflowDisconnectContextRequest:
 		if v, ok := request.(*messages.WorkflowDisconnectContextRequest); ok {
-			reply = handleWorkflowDisconnectContextRequest(v)
+			reply = handleWorkflowDisconnectContextRequest(ctx, v)
 		}
 
 	// WorkflowGetTimeRequest
 	case messagetypes.WorkflowGetTimeRequest:
 		if v, ok := request.(*messages.WorkflowGetTimeRequest); ok {
-			reply = handleWorkflowGetTimeRequest(v)
+			reply = handleWorkflowGetTimeRequest(ctx, v)
 		}
 
 	// WorkflowSleepRequest
 	case messagetypes.WorkflowSleepRequest:
 		if v, ok := request.(*messages.WorkflowSleepRequest); ok {
-			reply = handleWorkflowSleepRequest(v)
+			reply = handleWorkflowSleepRequest(ctx, v)
 		}
 
 	// WorkflowExecuteChildRequest
 	case messagetypes.WorkflowExecuteChildRequest:
 		if v, ok := request.(*messages.WorkflowExecuteChildRequest); ok {
-			reply = handleWorkflowExecuteChildRequest(v)
+			reply = handleWorkflowExecuteChildRequest(ctx, v)
 		}
 
 	// WorkflowWaitForChildRequest
 	case messagetypes.WorkflowWaitForChildRequest:
 		if v, ok := request.(*messages.WorkflowWaitForChildRequest); ok {
-			reply = handleWorkflowWaitForChildRequest(v)
+			reply = handleWorkflowWaitForChildRequest(ctx, v)
 		}
 
 	// WorkflowSignalChildRequest
 	case messagetypes.WorkflowSignalChildRequest:
 		if v, ok := request.(*messages.WorkflowSignalChildRequest); ok {
-			reply = handleWorkflowSignalChildRequest(v)
+			reply = handleWorkflowSignalChildRequest(ctx, v)
 		}
 
 	// WorkflowCancelChildRequest
 	case messagetypes.WorkflowCancelChildRequest:
 		if v, ok := request.(*messages.WorkflowCancelChildRequest); ok {
-			reply = handleWorkflowCancelChildRequest(v)
+			reply = handleWorkflowCancelChildRequest(ctx, v)
 		}
 
 	// WorkflowSetQueryHandlerRequest
 	case messagetypes.WorkflowSetQueryHandlerRequest:
 		if v, ok := request.(*messages.WorkflowSetQueryHandlerRequest); ok {
-			reply = handleWorkflowSetQueryHandlerRequest(v)
+			reply = handleWorkflowSetQueryHandlerRequest(ctx, v)
 		}
 
 	// WorkflowGetVersionRequest
 	case messagetypes.WorkflowGetVersionRequest:
 		if v, ok := request.(*messages.WorkflowGetVersionRequest); ok {
-			reply = handleWorkflowGetVersionRequest(v)
+			reply = handleWorkflowGetVersionRequest(ctx, v)
 		}
 
 	// -------------------------------------------------------------------------
@@ -270,63 +279,58 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	// ActivityExecuteRequest
 	case messagetypes.ActivityExecuteRequest:
 		if v, ok := request.(*messages.ActivityExecuteRequest); ok {
-			reply = handleActivityExecuteRequest(v)
+			reply = handleActivityExecuteRequest(ctx, v)
 		}
 
 	// ActivityRegisterRequest
 	case messagetypes.ActivityRegisterRequest:
 		if v, ok := request.(*messages.ActivityRegisterRequest); ok {
-			reply = handleActivityRegisterRequest(v)
+			reply = handleActivityRegisterRequest(ctx, v)
 		}
 
 	// ActivityHasHeartbeatDetailsRequest
 	case messagetypes.ActivityHasHeartbeatDetailsRequest:
 		if v, ok := request.(*messages.ActivityHasHeartbeatDetailsRequest); ok {
-			reply = handleActivityHasHeartbeatDetailsRequest(v)
+			reply = handleActivityHasHeartbeatDetailsRequest(ctx, v)
 		}
 
 	// ActivityGetHeartbeatDetailsRequest
 	case messagetypes.ActivityGetHeartbeatDetailsRequest:
 		if v, ok := request.(*messages.ActivityGetHeartbeatDetailsRequest); ok {
-			reply = handleActivityGetHeartbeatDetailsRequest(v)
+			reply = handleActivityGetHeartbeatDetailsRequest(ctx, v)
 		}
 
 	// ActivityRecordHeartbeatRequest
 	case messagetypes.ActivityRecordHeartbeatRequest:
 		if v, ok := request.(*messages.ActivityRecordHeartbeatRequest); ok {
-			reply = handleActivityRecordHeartbeatRequest(v)
+			reply = handleActivityRecordHeartbeatRequest(ctx, v)
 		}
 
 	// ActivityGetInfoRequest
 	case messagetypes.ActivityGetInfoRequest:
 		if v, ok := request.(*messages.ActivityGetInfoRequest); ok {
-			reply = handleActivityGetInfoRequest(v)
+			reply = handleActivityGetInfoRequest(ctx, v)
 		}
 
 	// ActivityCompleteRequest
 	case messagetypes.ActivityCompleteRequest:
 		if v, ok := request.(*messages.ActivityCompleteRequest); ok {
-			reply = handleActivityCompleteRequest(v)
+			reply = handleActivityCompleteRequest(ctx, v)
 		}
 
 	// ActivityExecuteLocalRequest
 	case messagetypes.ActivityExecuteLocalRequest:
 		if v, ok := request.(*messages.ActivityExecuteLocalRequest); ok {
-			reply = handleActivityExecuteLocalRequest(v)
+			reply = handleActivityExecuteLocalRequest(ctx, v)
 		}
 
 	// Undefined message type
 	default:
 
 		// $debug(jack.burns): DELETE THIS!
-		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
+		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
 		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
-	}
 
-	// catch any errors that may have occurred
-	// in the switch block or if the message could not
-	// be cast to a specific type
-	if err != nil {
 		return err
 	}
 
@@ -351,7 +355,7 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 // -------------------------------------------------------------------------
 // IProxyRequest client message type handler methods
 
-func handleCancelRequest(request *messages.CancelRequest) messages.IProxyReply {
+func handleCancelRequest(requestCtx context.Context, request *messages.CancelRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("CancelRequest Received", zap.Int("ProccessId", os.Getpid()))
@@ -363,7 +367,7 @@ func handleCancelRequest(request *messages.CancelRequest) messages.IProxyReply {
 	return reply
 }
 
-func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply {
+func handleConnectRequest(requestCtx context.Context, request *messages.ConnectRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ConnectRequest Received",
@@ -432,7 +436,7 @@ func handleConnectRequest(request *messages.ConnectRequest) messages.IProxyReply
 	return reply
 }
 
-func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messages.IProxyReply {
+func handleDomainDescribeRequest(requestCtx context.Context, request *messages.DomainDescribeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	domain := *request.GetName()
@@ -471,7 +475,7 @@ func handleDomainDescribeRequest(request *messages.DomainDescribeRequest) messag
 	return reply
 }
 
-func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messages.IProxyReply {
+func handleDomainRegisterRequest(requestCtx context.Context, request *messages.DomainRegisterRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainRegisterRequest Received",
@@ -520,7 +524,7 @@ func handleDomainRegisterRequest(request *messages.DomainRegisterRequest) messag
 	return reply
 }
 
-func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.IProxyReply {
+func handleDomainUpdateRequest(requestCtx context.Context, request *messages.DomainUpdateRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	domain := *request.GetName()
@@ -578,7 +582,7 @@ func handleDomainUpdateRequest(request *messages.DomainUpdateRequest) messages.I
 	return reply
 }
 
-func handleHeartbeatRequest(request *messages.HeartbeatRequest) messages.IProxyReply {
+func handleHeartbeatRequest(requestCtx context.Context, request *messages.HeartbeatRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("HeartbeatRequest Received",
@@ -593,7 +597,7 @@ func handleHeartbeatRequest(request *messages.HeartbeatRequest) messages.IProxyR
 	return reply
 }
 
-func handleInitializeRequest(request *messages.InitializeRequest) messages.IProxyReply {
+func handleInitializeRequest(requestCtx context.Context, request *messages.InitializeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("InitializeRequest Received",
@@ -623,7 +627,7 @@ func handleInitializeRequest(request *messages.InitializeRequest) messages.IProx
 	return reply
 }
 
-func handleTerminateRequest(request *messages.TerminateRequest) messages.IProxyReply {
+func handleTerminateRequest(requestCtx context.Context, request *messages.TerminateRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("TerminateRequest Received",
@@ -644,7 +648,7 @@ func handleTerminateRequest(request *messages.TerminateRequest) messages.IProxyR
 	return reply
 }
 
-func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyReply {
+func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWorkerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("NewWorkerRequest Received",
@@ -689,7 +693,7 @@ func handleNewWorkerRequest(request *messages.NewWorkerRequest) messages.IProxyR
 	return reply
 }
 
-func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProxyReply {
+func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopWorkerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workerID := request.GetWorkerID()
@@ -731,7 +735,7 @@ func handleStopWorkerRequest(request *messages.StopWorkerRequest) messages.IProx
 	return reply
 }
 
-func handlePingRequest(request *messages.PingRequest) messages.IProxyReply {
+func handlePingRequest(requestCtx context.Context, request *messages.PingRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("PingRequest Received",
@@ -749,7 +753,7 @@ func handlePingRequest(request *messages.PingRequest) messages.IProxyReply {
 // -------------------------------------------------------------------------
 // IProxyRequest workflow message type handler methods
 
-func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) messages.IProxyReply {
+func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages.WorkflowRegisterRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflowName := request.GetName()
@@ -874,7 +878,7 @@ func handleWorkflowRegisterRequest(request *messages.WorkflowRegisterRequest) me
 	return reply
 }
 
-func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) messages.IProxyReply {
+func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.WorkflowExecuteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflowName := *request.GetWorkflow()
@@ -941,7 +945,7 @@ func handleWorkflowExecuteRequest(request *messages.WorkflowExecuteRequest) mess
 	return reply
 }
 
-func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messages.IProxyReply {
+func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.WorkflowCancelRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
@@ -985,7 +989,7 @@ func handleWorkflowCancelRequest(request *messages.WorkflowCancelRequest) messag
 	return reply
 }
 
-func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) messages.IProxyReply {
+func handleWorkflowTerminateRequest(requestCtx context.Context, request *messages.WorkflowTerminateRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
@@ -1031,7 +1035,7 @@ func handleWorkflowTerminateRequest(request *messages.WorkflowTerminateRequest) 
 	return reply
 }
 
-func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithStartRequest) messages.IProxyReply {
+func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *messages.WorkflowSignalWithStartRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflow := *request.GetWorkflow()
@@ -1080,7 +1084,7 @@ func handleWorkflowSignalWithStartRequest(request *messages.WorkflowSignalWithSt
 	return reply
 }
 
-func handleWorkflowSetCacheSizeRequest(request *messages.WorkflowSetCacheSizeRequest) messages.IProxyReply {
+func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *messages.WorkflowSetCacheSizeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowSetCacheSizeRequest Received",
@@ -1108,7 +1112,7 @@ func handleWorkflowSetCacheSizeRequest(request *messages.WorkflowSetCacheSizeReq
 	return reply
 }
 
-func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) messages.IProxyReply {
+func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.WorkflowMutableRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowMutableRequest Received",
@@ -1208,7 +1212,7 @@ func handleWorkflowMutableRequest(request *messages.WorkflowMutableRequest) mess
 	return reply
 }
 
-func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeExecutionRequest) messages.IProxyReply {
+func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request *messages.WorkflowDescribeExecutionRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
@@ -1252,7 +1256,7 @@ func handleWorkflowDescribeExecutionRequest(request *messages.WorkflowDescribeEx
 	return reply
 }
 
-func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) messages.IProxyReply {
+func handleWorkflowGetResultRequest(requestCtx context.Context, request *messages.WorkflowGetResultRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowGetResultRequest Received",
@@ -1301,7 +1305,7 @@ func handleWorkflowGetResultRequest(request *messages.WorkflowGetResultRequest) 
 	return reply
 }
 
-func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
+func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1398,7 +1402,7 @@ func handleWorkflowSignalSubscribeRequest(request *messages.WorkflowSignalSubscr
 	return reply
 }
 
-func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messages.IProxyReply {
+func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.WorkflowSignalRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
@@ -1445,7 +1449,7 @@ func handleWorkflowSignalRequest(request *messages.WorkflowSignalRequest) messag
 	return reply
 }
 
-func handleWorkflowHasLastResultRequest(request *messages.WorkflowHasLastResultRequest) messages.IProxyReply {
+func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *messages.WorkflowHasLastResultRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1480,7 +1484,7 @@ func handleWorkflowHasLastResultRequest(request *messages.WorkflowHasLastResultR
 	return reply
 }
 
-func handleWorkflowGetLastResultRequest(request *messages.WorkflowGetLastResultRequest) messages.IProxyReply {
+func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *messages.WorkflowGetLastResultRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1524,7 +1528,7 @@ func handleWorkflowGetLastResultRequest(request *messages.WorkflowGetLastResultR
 	return reply
 }
 
-func handleWorkflowDisconnectContextRequest(request *messages.WorkflowDisconnectContextRequest) messages.IProxyReply {
+func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request *messages.WorkflowDisconnectContextRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1565,7 +1569,7 @@ func handleWorkflowDisconnectContextRequest(request *messages.WorkflowDisconnect
 	return reply
 }
 
-func handleWorkflowGetTimeRequest(request *messages.WorkflowGetTimeRequest) messages.IProxyReply {
+func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.WorkflowGetTimeRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1600,7 +1604,7 @@ func handleWorkflowGetTimeRequest(request *messages.WorkflowGetTimeRequest) mess
 	return reply
 }
 
-func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages.IProxyReply {
+func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.WorkflowSleepRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1643,7 +1647,7 @@ func handleWorkflowSleepRequest(request *messages.WorkflowSleepRequest) messages
 	return reply
 }
 
-func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildRequest) messages.IProxyReply {
+func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *messages.WorkflowExecuteChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1715,7 +1719,7 @@ func handleWorkflowExecuteChildRequest(request *messages.WorkflowExecuteChildReq
 	return reply
 }
 
-func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildRequest) messages.IProxyReply {
+func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *messages.WorkflowWaitForChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1766,7 +1770,7 @@ func handleWorkflowWaitForChildRequest(request *messages.WorkflowWaitForChildReq
 	return reply
 }
 
-func handleWorkflowSignalChildRequest(request *messages.WorkflowSignalChildRequest) messages.IProxyReply {
+func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messages.WorkflowSignalChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1819,7 +1823,7 @@ func handleWorkflowSignalChildRequest(request *messages.WorkflowSignalChildReque
 	return reply
 }
 
-func handleWorkflowCancelChildRequest(request *messages.WorkflowCancelChildRequest) messages.IProxyReply {
+func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messages.WorkflowCancelChildRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1867,7 +1871,7 @@ func handleWorkflowCancelChildRequest(request *messages.WorkflowCancelChildReque
 	return reply
 }
 
-func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHandlerRequest) messages.IProxyReply {
+func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *messages.WorkflowSetQueryHandlerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -1962,7 +1966,7 @@ func handleWorkflowSetQueryHandlerRequest(request *messages.WorkflowSetQueryHand
 	return reply
 }
 
-func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages.IProxyReply {
+func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.WorkflowQueryRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
@@ -2019,7 +2023,7 @@ func handleWorkflowQueryRequest(request *messages.WorkflowQueryRequest) messages
 	return reply
 }
 
-func handleWorkflowGetVersionRequest(request *messages.WorkflowGetVersionRequest) messages.IProxyReply {
+func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messages.WorkflowGetVersionRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -2064,7 +2068,7 @@ func handleWorkflowGetVersionRequest(request *messages.WorkflowGetVersionRequest
 // -------------------------------------------------------------------------
 // IProxyRequest activity message type handler methods
 
-func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) messages.IProxyReply {
+func handleActivityRegisterRequest(requestCtx context.Context, request *messages.ActivityRegisterRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	requestID := NextRequestID()
@@ -2218,7 +2222,7 @@ func handleActivityRegisterRequest(request *messages.ActivityRegisterRequest) me
 	return reply
 }
 
-func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) messages.IProxyReply {
+func handleActivityExecuteRequest(requestCtx context.Context, request *messages.ActivityExecuteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -2267,7 +2271,7 @@ func handleActivityExecuteRequest(request *messages.ActivityExecuteRequest) mess
 	return reply
 }
 
-func handleActivityHasHeartbeatDetailsRequest(request *messages.ActivityHasHeartbeatDetailsRequest) messages.IProxyReply {
+func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, request *messages.ActivityHasHeartbeatDetailsRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityHasHeartbeatDetailsRequest Received",
@@ -2297,7 +2301,7 @@ func handleActivityHasHeartbeatDetailsRequest(request *messages.ActivityHasHeart
 	return reply
 }
 
-func handleActivityGetHeartbeatDetailsRequest(request *messages.ActivityGetHeartbeatDetailsRequest) messages.IProxyReply {
+func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, request *messages.ActivityGetHeartbeatDetailsRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityGetHeartbeatDetailsRequest Received",
@@ -2336,7 +2340,7 @@ func handleActivityGetHeartbeatDetailsRequest(request *messages.ActivityGetHeart
 	return reply
 }
 
-func handleActivityRecordHeartbeatRequest(request *messages.ActivityRecordHeartbeatRequest) messages.IProxyReply {
+func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *messages.ActivityRecordHeartbeatRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityRecordHeartbeatRequest Received",
@@ -2368,7 +2372,7 @@ func handleActivityRecordHeartbeatRequest(request *messages.ActivityRecordHeartb
 	return reply
 }
 
-func handleActivityGetInfoRequest(request *messages.ActivityGetInfoRequest) messages.IProxyReply {
+func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.ActivityGetInfoRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
@@ -2405,7 +2409,7 @@ func handleActivityGetInfoRequest(request *messages.ActivityGetInfoRequest) mess
 	return reply
 }
 
-func handleActivityCompleteRequest(request *messages.ActivityCompleteRequest) messages.IProxyReply {
+func handleActivityCompleteRequest(requestCtx context.Context, request *messages.ActivityCompleteRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityCompleteRequest Received",
@@ -2446,7 +2450,7 @@ func handleActivityCompleteRequest(request *messages.ActivityCompleteRequest) me
 	return reply
 }
 
-func handleActivityExecuteLocalRequest(request *messages.ActivityExecuteLocalRequest) messages.IProxyReply {
+func handleActivityExecuteLocalRequest(requestCtx context.Context, request *messages.ActivityExecuteLocalRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
