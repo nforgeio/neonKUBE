@@ -1210,8 +1210,8 @@ namespace TestCadence
             // using the default (full) type names.
 
             await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client1.AutoRegisterWorkflowsAsync(assembly);
-            await client1.AutoRegisterActivitiesAsync(assembly);
+            await client1.RegisterAssemblyAsync(assembly);
+            await client1.RegisterAssemblyActivitiesAsync(assembly);
 
             using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
@@ -1232,8 +1232,8 @@ namespace TestCadence
             // using custom type names.
 
             await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client1.AutoRegisterWorkflowsAsync(assembly);
-            await client1.AutoRegisterActivitiesAsync(assembly);
+            await client1.RegisterAssemblyAsync(assembly);
+            await client1.RegisterAssemblyActivitiesAsync(assembly);
 
             using (var worker = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
@@ -1254,16 +1254,16 @@ namespace TestCadence
             // execute a workflow.
 
             await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client1.AutoRegisterWorkflowsAsync(assembly);
-            await client1.AutoRegisterActivitiesAsync(assembly);
+            await client1.RegisterAssemblyAsync(assembly);
+            await client1.RegisterAssemblyActivitiesAsync(assembly);
 
             using (var worker1 = await client1.StartWorkflowWorkerAsync("test-domain"))
             {
                 using (var client2 = await CadenceClient.ConnectAsync(client1.Settings))
                 {
                     await client2.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-                    await client2.AutoRegisterWorkflowsAsync(assembly);
-                    await client2.AutoRegisterActivitiesAsync(assembly);
+                    await client2.RegisterAssemblyAsync(assembly);
+                    await client2.RegisterAssemblyActivitiesAsync(assembly);
 
                     // Client #1 calls
 
@@ -1279,6 +1279,24 @@ namespace TestCadence
                     Assert.NotNull(result2);
                     Assert.Equal("Hello World!", Encoding.UTF8.GetString(result1));
                 }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_GetVersion()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // We're going to create a second client and then use both of them to
+            // execute a workflow.
+
+            await client1.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client1.RegisterAssemblyAsync(assembly);
+
+            using (await client1.StartWorkflowWorkerAsync("test-domain"))
+            {
+
             }
         }
     }

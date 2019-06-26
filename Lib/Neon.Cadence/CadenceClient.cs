@@ -120,8 +120,8 @@ namespace Neon.Cadence
     /// combersome to register each implementation class individually (generally because you
     /// forget to register new classes after they've been implemented).  To assist with this,
     /// you can also tag your workflow and activity classes with <see cref="AutoRegisterAttribute"/>
-    /// and then call <see cref="CadenceClient.AutoRegisterWorkflowsAsync(Assembly)"/> and/or
-    /// <see cref="CadenceClient.AutoRegisterActivitiesAsync(Assembly)"/> to scan an assembly and
+    /// and then call <see cref="CadenceClient.RegisterAssemblyAsync(Assembly)"/> and/or
+    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an assembly and
     /// automatically register the tagged implementation classes it finds.
     /// </para>
     /// <para>
