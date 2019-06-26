@@ -13,7 +13,10 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.
+// limitations under the License.Gskip
+
+// Uncomment this to enable full tests.
+#define SKIP_SLOW_TESTS
 
 using System;
 using System.Collections.Generic;
@@ -494,6 +497,60 @@ namespace TestCadence
             }
         }
 
+        private static List<string> cronCalls = new List<string>();
+
+        /// <summary>
+        /// Called by <see cref="CronWorkflow"/>, passing the number of times the workflow has
+        /// been run, encoded as a UTF-8 string.  This value will be added to the static
+        /// <see cref="cronCalls"/> list, which will be verified by the actualy unit test.
+        /// </summary>
+        [AutoRegister]
+        private class CronActivity : ActivityBase
+        {
+            protected override async Task<byte[]> RunAsync(byte[] args)
+            {
+                cronCalls.Add(Encoding.UTF8.GetString(args));
+
+                return await Task.FromResult((byte[])null);
+            }
+        }
+
+        /// <summary>
+        /// This workflow is designed to be deployed as a CRON workflow and will call 
+        /// the <see cref=""/>
+        /// </summary>
+        [AutoRegister]
+        private class CronWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                // We're going to exercise HasPreviousResult() and GetPreviousResult() by recording
+                // and incrementing  the current run number and then passing it a CronActivity which
+                // will add it to the [cronCalls] list which the unit test will verify.
+
+                var callNumber = 0;
+
+                if (await HasPreviousRunResultAsync())
+                {
+                    callNumber = int.Parse(Encoding.UTF8.GetString(await GetPreviousRunResultAsync()));
+                }
+
+                callNumber++;
+
+                var callNumberBytes = (Encoding.UTF8.GetBytes(callNumber.ToString()));
+
+                try
+                {
+                    await CallLocalActivityAsync<CronActivity>(callNumberBytes);
+                }
+                catch (Exception e)
+                {
+                }
+
+                return await Task.FromResult(callNumberBytes);
+            }
+        }
+
         //---------------------------------------------------------------------
         // Test implementations:
 
@@ -606,7 +663,11 @@ namespace TestCadence
             Console.WriteLine($"Transactions/sec: {tps}");
         }
 
-        [Fact(Skip = "Disabled")]
+#if SKIP_SLOW_TESTS
+        [Fact(Skip = "Slow: Enable for full tests")]
+#else
+        [Fact]
+#endif
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void PingAttack()
         {
@@ -1185,41 +1246,6 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void CronScheduleClass()
-        {
-            // Verify that the [CronSchedule] class works as expected.
-
-            //---------------------------------------------
-            // Verify that it checks for invalid values.
-
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { DayOfMonth = -1 }).ToInternal());
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { DayOfMonth = 0 }).ToInternal());
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { DayOfMonth = 32 }).ToInternal());
-
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Month = -1 }).ToInternal());
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Month = 0 }).ToInternal());
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Month = 13 }).ToInternal());
-
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Hour = -1 }).ToInternal());
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Hour = 24 }).ToInternal());
-
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Minute = -1 }).ToInternal());
-            Assert.Throws<ArgumentException>(() => (new CronSchedule() { Minute = 60 }).ToInternal());
-
-            //---------------------------------------------
-            // Verify that various schedules render properly.
-
-            Assert.Null((new CronSchedule()).ToInternal());
-            Assert.Equal("1 * * * *", (new CronSchedule() { Minute = 1 } ).ToInternal());
-            Assert.Equal("* 2 * * *", (new CronSchedule() { Hour = 2 } ).ToInternal());
-            Assert.Equal("* * 3 * *", (new CronSchedule() { DayOfMonth = 3 } ).ToInternal());
-            Assert.Equal("* * * 4 *", (new CronSchedule() { Month = 4 } ).ToInternal());
-            Assert.Equal("* * * * 5", (new CronSchedule() { DayOfWeek = DayOfWeek.Friday } ).ToInternal());
-            Assert.Equal("1 2 3 4 5", (new CronSchedule() { Minute = 1, Hour = 2, DayOfMonth = 3, Month = 4, DayOfWeek = DayOfWeek.Friday } ).ToInternal());
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task AutoRegister()
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -1230,7 +1256,7 @@ namespace TestCadence
             // using the default (full) type names.
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterAssemblyAsync(assembly);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
             await client.RegisterAssemblyActivitiesAsync(assembly);
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
@@ -1252,7 +1278,7 @@ namespace TestCadence
             // using custom type names.
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterAssemblyAsync(assembly);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
             await client.RegisterAssemblyActivitiesAsync(assembly);
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
@@ -1274,7 +1300,7 @@ namespace TestCadence
             // execute a workflow.
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterAssemblyAsync(assembly);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
             await client.RegisterAssemblyActivitiesAsync(assembly);
 
             using (var worker1 = await client.StartWorkflowWorkerAsync("test-domain"))
@@ -1282,7 +1308,7 @@ namespace TestCadence
                 using (var client2 = await CadenceClient.ConnectAsync(client.Settings))
                 {
                     await client2.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-                    await client2.RegisterAssemblyAsync(assembly);
+                    await client2.RegisterAssemblyWorkflowsAsync(assembly);
                     await client2.RegisterAssemblyActivitiesAsync(assembly);
 
                     // Client #1 calls
@@ -1312,13 +1338,62 @@ namespace TestCadence
             // execute a workflow.
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
-            await client.RegisterAssemblyAsync(assembly);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
 
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
                 var result = await client.CallWorkflowAsync<GetVersionWorkflow>("test-domain");
 
                 Assert.Equal("1", Encoding.UTF8.GetString(result));
+            }
+        }
+
+#if SKIP_SLOW_TESTS
+        [Fact(Skip = "Slow: Enable for full tests")]
+#else
+        [Fact]
+#endif
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Cron()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a CRON workflow on a 1 minute interval that updates the [cronCalls] list 
+            // every time the workflow is invoked.  We'll wait for the first invocation and then
+            // wait to verify that we've see at least 3 invocations and that each invocation 
+            // propertly incremented the call number.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+            await client.RegisterAssemblyActivitiesAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                cronCalls.Clear();      // Clear this to reset any old test state.
+
+                var options = new WorkflowOptions()
+                {
+                    WorkflowId   = "cron-workflow",
+                    CronSchedule = "0/1 * * * *"
+                };
+
+                await client.StartWorkflowAsync<CronWorkflow>("test-domain", options: options);
+
+                // Wait for the the first workflow run.  This is a quicker way to fail if the
+                // workflow never runs.
+
+                NeonHelper.WaitFor(() => cronCalls.Count >= 1, timeout: TimeSpan.FromMinutes(1.5));
+
+                // Wait up to 2.5 minutes more for at least two more runs.
+
+                NeonHelper.WaitFor(() => cronCalls.Count >= 3, timeout: TimeSpan.FromMinutes(2.5));
+
+                // Verify that the run numbers look good.
+
+                for ( int i = 1; i <= 3; i++)
+                {
+                    Assert.Equal(cronCalls[i - 1], i.ToString());
+                }
             }
         }
     }

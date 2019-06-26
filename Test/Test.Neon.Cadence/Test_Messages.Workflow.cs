@@ -2457,7 +2457,7 @@ namespace TestCadence
                     TaskList                     = "my-tasklist",
                     Domain                       = "my-domain",
                     ChildPolicy                  = (int)InternalChildTerminationPolicy.REQUEST_CANCEL,
-                    CronSchedule                 = (new CronSchedule() { Hour = 12 }).ToString(),
+                    CronSchedule                 = "* 12 * * *",
                     WorkflowID                   = "my-workflow",
                     WaitForCancellation          = true,
                     ExecutionStartToCloseTimeout = 1000,

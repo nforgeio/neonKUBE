@@ -91,10 +91,65 @@ namespace Neon.Cadence.Internal
         public CadenceRetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies a recurring schedule for the workflow.  See <see cref="CronSchedule"/>
-        /// for more information.
+        /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
+        /// the minute, hour, day of month, month, and day of week scheduling parameters using the standard Linux
+        /// CRON format described here: <a href="https://en.wikipedia.org/wiki/Cron"/>
         /// </summary>
-        public CronSchedule CronSchedule { get; set; }
+        /// <remarks>
+        /// <para>
+        /// Cadence accepts a CRON string formatted as a single line of text with 5 parameters separated by
+        /// spaces.  The parameters specified the minute, hour, day of month, month, and day of week values:
+        /// </para>
+        /// <code>
+        /// ┌───────────── minute (0 - 59)
+        /// │ ┌───────────── hour (0 - 23)
+        /// │ │ ┌───────────── day of the month (1 - 31)
+        /// │ │ │ ┌───────────── month (1 - 12)
+        /// │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+        /// │ │ │ │ │
+        /// │ │ │ │ │
+        /// * * * * * 
+        /// </code>
+        /// <para>
+        /// Each parameter may be set to one of:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>*</b></term>
+        ///     <description>
+        ///     Matches any value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value</b></term>
+        ///     <description>
+        ///     Matches a specific integer value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1-value2</b></term>
+        ///     <description>
+        ///     Matches a range of values to be matched (inclusive).
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>valiue1,value2,...</b></term>
+        ///     <description>
+        ///     Matches a list of values to be matched.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1/value2</b></term>
+        ///     <description>
+        ///     Matches values starting at <b>value1</b> and then those incremented by <b>value2</b>.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// You can use this handy CRON calculator to see how this works: <a href="https://crontab.guru"/>
+        /// </para>
+        /// </remarks>
+        public string CronSchedule { get; set; }
 
         /// <summary>
         /// Optionally specifies workflow metadata as a dictionary of named byte array values.
@@ -118,7 +173,7 @@ namespace Neon.Cadence.Internal
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy?.ToInternal(),
-                CronSchedule                 = this.CronSchedule.ToInternal()
+                CronSchedule                 = this.CronSchedule
             };
         }
     }

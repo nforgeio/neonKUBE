@@ -100,7 +100,7 @@ namespace Neon.Cadence
         /// Be sure to register all of your workflow implementations before starting a workflow worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyAsync(Assembly assembly)
+        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
 
