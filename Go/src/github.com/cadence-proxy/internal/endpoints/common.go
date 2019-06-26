@@ -118,6 +118,11 @@ var (
 	// Operations is a map of operations used to track pending
 	// cadence-client operations
 	Operations = new(operationsMap)
+
+	// Cancellables is a map of golang cancel functions to requestID,
+	// used to track cancellable operations sent from the Neon.Cadence
+	// client
+	Cancellables = new(cancellablesMap)
 )
 
 //----------------------------------------------------------------------------
