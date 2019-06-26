@@ -1138,9 +1138,10 @@ namespace Neon.Cadence
             var reply = (WorkflowGetVersionReply)await Client.CallProxyAsync(
                 new WorkflowGetVersionRequest()
                 {
-                    ChangeId     = changeId,
-                    MinSupported = minSupported,
-                    MaxSupported = maxSupported
+                    ContextId       = this.contextId,
+                    ChangeId        = changeId,
+                    MinSupported    = minSupported,
+                    MaxSupported    = maxSupported
                 });
 
             reply.ThrowOnError();

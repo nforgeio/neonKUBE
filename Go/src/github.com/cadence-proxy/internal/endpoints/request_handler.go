@@ -49,7 +49,7 @@ import (
 func handleIProxyRequest(request messages.IProxyRequest) error {
 
 	// create a context for every request
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// look for IsCancelled
