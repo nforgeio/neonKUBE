@@ -210,7 +210,7 @@ namespace Neon.Cadence
     ///     <para>
     ///     Workflow instances can be signalled when external events occur via the 
     ///     <see cref="CadenceClient.SignalWorkflowAsync(string, string, byte[], string)"/> or
-    ///     <see cref="CadenceClient.SignalWorkflowAsync(string, string, byte[], byte[], string, WorkflowOptions)"/>
+    ///     <see cref="CadenceClient.SignalWorkflowWithStartAsync(string, string, byte[], byte[], string, WorkflowOptions)"/>
     ///     methods.  Signals are identified by a string name and may include a byte
     ///     array payload.  Workflows receive signals by implementing a receive method
     ///     accepting a byte array payload parameter and tagging the method with a

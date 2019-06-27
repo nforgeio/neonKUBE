@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.Gskip
 
-// Uncomment this to enable full tests.
+// Uncomment this to enable all tests.
 #define SKIP_SLOW_TESTS
 
 using System;
@@ -517,7 +517,8 @@ namespace TestCadence
 
         /// <summary>
         /// This workflow is designed to be deployed as a CRON workflow and will call 
-        /// the <see cref=""/>
+        /// the <see cref="CronActivity"/> to record test information about each CRON
+        /// workflow run.
         /// </summary>
         [AutoRegister]
         private class CronWorkflow : WorkflowBase
@@ -525,7 +526,7 @@ namespace TestCadence
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
                 // We're going to exercise HasPreviousResult() and GetPreviousResult() by recording
-                // and incrementing  the current run number and then passing it a CronActivity which
+                // and incrementing the current run number and then passing it a CronActivity which
                 // will add it to the [cronCalls] list which the unit test will verify.
 
                 var callNumber = 0;
@@ -545,6 +546,80 @@ namespace TestCadence
             }
         }
 
+        /// <summary>
+        /// This workflow tests basic signal reception by setting the value
+        /// to be returned by the workflow.  This works by waiting for a period
+        /// of time for a signal to be received and then returning the arguments
+        /// received with the signal.  The maximum wait time is passed as a 
+        /// serialized integer number of seconds.
+        /// </summary>
+        [AutoRegister]
+        private class SimpleSignalWorkflow : WorkflowBase
+        {
+            private byte[] signalArgs;
+
+            [SignalHandler("signal")]
+            public async Task OnSignal(byte[] args)
+            {
+                signalArgs = args;
+
+                await Task.CompletedTask;
+            }
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
+
+                // We're just going to do a simple poll for received signal arguments.
+
+                for (int i = 0; i < maxWaitSeconds; i++)
+                {
+                    if (signalArgs != null)
+                    {
+                        break;
+                    }
+
+                    await SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                if (signalArgs != null)
+                {
+                    throw new CadenceTimeoutException();
+                }
+
+                return await Task.FromResult(signalArgs);
+            }
+        }
+
+
+        /// <summary>
+        /// This workflow tests basic workflow queries by waiting in a sleep loop
+        /// for a specified number of seconds so that the unit test can submit a
+        /// query.  The query simply returns the arguments passed.
+        /// </summary>
+        [AutoRegister]
+        private class SimpleQueryWorkflow : WorkflowBase
+        {
+            [QueryHandler("query")]
+            public async Task<byte[]> OnQuery(byte[] args)
+            {
+                return await Task.FromResult(args);
+            }
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
+
+                // Sleep for a while to give unit tests a chance to send the signal.
+
+                for (int i = 0; i < maxWaitSeconds; i++)
+                {
+                    await SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                return await Task.FromResult((byte[])null);
+            }
+        }
         //---------------------------------------------------------------------
         // Test implementations:
 
@@ -1388,6 +1463,58 @@ namespace TestCadence
                 {
                     Assert.Equal(cronCalls[i - 1], i.ToString());
                 }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Signal_Simple()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a workflow, signal it with some test arguments and then
+            // verify that the workflow received the signal by checking that
+            // it returned the signal arguments passed.
+
+            const int maxWaitSeconds = 5;
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var result = new byte[] { 10 };
+                var run    = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+
+                await client.SignalWorkflowAsync(run, "signal", result);
+
+                Assert.Equal(result, await client.GetWorkflowResultAsync(run));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Query_Simple()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a workflow and then query it.  The query should return the 
+            // arguments passed.
+
+            const int maxWaitSeconds = 5000;
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var args   = new byte[] { 10 };
+                var run    = await client.StartWorkflowAsync<SimpleQueryWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+                var result = await client.QueryWorkflowAsync(run, "query", args);
+
+                Assert.Equal(args, result);
+
+                await client.GetWorkflowResultAsync(run);
             }
         }
     }
