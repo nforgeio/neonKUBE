@@ -134,8 +134,8 @@ namespace Neon.Cadence
     /// of your workflow or activity types and call their <see cref="WorkflowBase.RunAsync(byte[])"/>
     /// </para>
     /// <para>
-    /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/> 
-    /// or <see cref="StartWorkflowAsync{TWorkflow}(string, byte[], string, WorkflowOptions)"/>, passing the workflow 
+    /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> 
+    /// or <see cref="StartWorkflowAsync{TWorkflow}(byte[], string, string, WorkflowOptions)"/>, passing the workflow 
     /// type string, the target Cadence domain along with optional arguments (encoded into a byte array) 
     /// and optional workflow options.  The workflow type string must be the same one used when calling 
     /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
@@ -146,7 +146,7 @@ namespace Neon.Cadence
     /// context of another workflow via <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>.
     /// </note>
     /// <para>
-    /// <see cref="StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/> returns
+    /// <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> returns
     /// immediately after the workflow is submitted to Cadence and the workflow will be scheduled and
     /// executed independently.  This method returns a <see cref="WorkflowRun"/> which you'll use
     /// to identify your running workflow to the methods desribed below.

@@ -539,13 +539,7 @@ namespace TestCadence
 
                 var callNumberBytes = (Encoding.UTF8.GetBytes(callNumber.ToString()));
 
-                try
-                {
-                    await CallLocalActivityAsync<CronActivity>(callNumberBytes);
-                }
-                catch (Exception e)
-                {
-                }
+                await CallLocalActivityAsync<CronActivity>(callNumberBytes);
 
                 return await Task.FromResult(callNumberBytes);
             }
@@ -554,7 +548,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Test implementations:
 
-        CadenceFixture fixture;
+        CadenceFixture      fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
@@ -778,7 +772,7 @@ namespace TestCadence
             {
                 // Run a workflow passing NULL args.
 
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>(args: null, "test-domain");
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -788,7 +782,7 @@ namespace TestCadence
 
                 var args = Encoding.UTF8.GetBytes("custom args");
 
-                workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: args);
+                workflowRun = await client.StartWorkflowAsync<HelloWorkflow>(args: args, "test-domain");
                 result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -807,7 +801,7 @@ namespace TestCadence
             {
                 // Run a workflow passing NULL args.
 
-                var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", args: null, domain: "test-domain");
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -817,7 +811,7 @@ namespace TestCadence
 
                 var args = Encoding.UTF8.GetBytes("custom args");
 
-                workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: args);
+                workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", args: args, domain: "test-domain");
                 result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -840,7 +834,7 @@ namespace TestCadence
                     // Run a workflow that invokes an activity.
 
                     var args        = Encoding.UTF8.GetBytes("activity");
-                    var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("activity"));
+                    var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>(args: Encoding.UTF8.GetBytes("activity"), domain: "test-domain");
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
@@ -864,7 +858,7 @@ namespace TestCadence
                     // Run a workflow that invokes an activity.
 
                     var args        = Encoding.UTF8.GetBytes("activity");
-                    var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", "test-domain", args: Encoding.UTF8.GetBytes("activity"));
+                    var workflowRun = await client.StartWorkflowAsync("hello-workflow-by-name", args: Encoding.UTF8.GetBytes("activity"), domain: "test-domain");
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
@@ -887,7 +881,7 @@ namespace TestCadence
                     // Run a workflow that invokes an activity.
 
                     var args        = Encoding.UTF8.GetBytes("local-activity");
-                    var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: Encoding.UTF8.GetBytes("local-activity"));
+                    var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>(args: Encoding.UTF8.GetBytes("local-activity"), domain: "test-domain");
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                     Assert.NotNull(result);
@@ -911,7 +905,7 @@ namespace TestCadence
                     // Run a workflow that invokes a child workflow.
 
                     var args        = Encoding.UTF8.GetBytes("local-activity");
-                    var workflowRun = await client.StartWorkflowAsync<ExecuteChildWorkflow>("test-domain", args: null);
+                    var workflowRun = await client.StartWorkflowAsync<ExecuteChildWorkflow>(args: null, domain: "test-domain");
 
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
 
@@ -933,7 +927,7 @@ namespace TestCadence
                 // Verify that non-mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var workflowRun = await client.StartWorkflowAsync<VariablesWorkflow>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync<VariablesWorkflow>(args: null, domain: "test-domain");
 
                 await client.GetWorkflowResultAsync(workflowRun);
             }
@@ -951,7 +945,7 @@ namespace TestCadence
                 // Verify that mutable workflow values work as expected.
                 // The workflow will throw an exception if there's a problem.
 
-                var workflowRun = await client.StartWorkflowAsync<VariablesWorkflow>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync<VariablesWorkflow>(args: null, domain: "test-domain");
 
                 await client.GetWorkflowResultAsync(workflowRun);
             }
@@ -967,7 +961,7 @@ namespace TestCadence
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                var workflowRun = await client.StartWorkflowAsync<ParallelChildWorkflows>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync<ParallelChildWorkflows>(args: null, domain: "test-domain");
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -984,7 +978,7 @@ namespace TestCadence
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-default" });
+                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>(args: null, domain: "test-domain", options: new WorkflowOptions() { WorkflowId = "my-workflow-default" });
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
@@ -1007,7 +1001,7 @@ namespace TestCadence
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain", taskList: "non-default"))
             {
-                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>("test-domain", args: null, taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow-nondefault" });
+                var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>(args: null, domain: "test-domain", taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow-nondefault" });
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
                 var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
@@ -1041,7 +1035,7 @@ namespace TestCadence
             {
                 using (var activityWorker = await client.StartActivityWorkerAsync("test-domain"))
                 {
-                    var workflowRun = await client.StartWorkflowAsync<GetActivityPropertiesWorkflow>("test-domain", args: null, options: new WorkflowOptions() { WorkflowId = "my-workflow-activity-properties" });
+                    var workflowRun = await client.StartWorkflowAsync<GetActivityPropertiesWorkflow>(args: null, domain: "test-domain", options: new WorkflowOptions() { WorkflowId = "my-workflow-activity-properties" });
                     var result      = await client.GetWorkflowResultAsync(workflowRun);
                     var properties  = NeonHelper.JsonDeserialize<Dictionary<string, string>>(result);
 
@@ -1087,7 +1081,7 @@ namespace TestCadence
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                var workflowRun    = await client.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
+                var workflowRun    = await client.StartWorkflowAsync<GetUtcNowWorkflow>(args: null, domain: "test-domain");
                 var nowJsonBytes   = await client.GetWorkflowResultAsync(workflowRun);
                 var workflowNowUtc = NeonHelper.JsonDeserialize<DateTime>(nowJsonBytes);
                 var nowUtc         = DateTime.UtcNow;
@@ -1107,7 +1101,7 @@ namespace TestCadence
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
                 var sleepTime = TimeSpan.FromSeconds(5);
-                var workflowRun = await client.StartWorkflowAsync<SleepWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(sleepTime));
+                var workflowRun = await client.StartWorkflowAsync<SleepWorkflow>(args: NeonHelper.JsonSerializeToBytes(sleepTime), domain: "test-domain");
                 var nowJsonBytes = await client.GetWorkflowResultAsync(workflowRun);
                 var times = NeonHelper.JsonDeserialize<List<DateTime>>(nowJsonBytes);
 
@@ -1127,7 +1121,7 @@ namespace TestCadence
             {
                 var sleepTime    = TimeSpan.FromSeconds(5);
                 var wakeTime     = DateTime.UtcNow + sleepTime;
-                var workflowRun  = await client.StartWorkflowAsync<SleepUntilWorkflow>("test-domain", args: NeonHelper.JsonSerializeToBytes(wakeTime));
+                var workflowRun  = await client.StartWorkflowAsync<SleepUntilWorkflow>(args: NeonHelper.JsonSerializeToBytes(wakeTime), domain: "test-domain");
                 var nowJsonBytes = await client.GetWorkflowResultAsync(workflowRun);
                 var times        = NeonHelper.JsonDeserialize<List<DateTime>>(nowJsonBytes);
 
@@ -1152,7 +1146,7 @@ namespace TestCadence
                 // Warm up Cadence by registering an running another workflow.  This will
                 // help make our timeout timing more accurate and repeatable.
 
-                await client.StartWorkflowAsync<GetUtcNowWorkflow>("test-domain", args: null);
+                await client.StartWorkflowAsync<GetUtcNowWorkflow>(args: null, domain: "test-domain");
 
                 // This is the actual test.
 
@@ -1161,7 +1155,7 @@ namespace TestCadence
 
                 try
                 {
-                    await client.StartWorkflowAsync<UnregisteredWorkflow>("test-domain", options: new WorkflowOptions() { ExecutionStartToCloseTimeout = executeTimeout });
+                    await client.StartWorkflowAsync<UnregisteredWorkflow>(domain: "test-domain", options: new WorkflowOptions() { ExecutionStartToCloseTimeout = executeTimeout });
                 }
                 catch (CadenceTimeoutException)
                 {
@@ -1188,7 +1182,7 @@ namespace TestCadence
             {
                 // Run a workflow passing NULL args and verify.
 
-                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>("test-domain", args: null);
+                var workflowRun = await client.StartWorkflowAsync<HelloWorkflow>(args: null, domain: "test-domain");
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -1235,7 +1229,7 @@ namespace TestCadence
 
                 RestartableWorkflow.ExecutionCount = 0;
 
-                var workflowRun = await client.StartWorkflowAsync<RestartableWorkflow>("test-domain", args: new byte[] { 1 });
+                var workflowRun = await client.StartWorkflowAsync<RestartableWorkflow>(args: new byte[] { 1 }, domain: "test-domain");
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
 
                 Assert.NotNull(result);
@@ -1261,7 +1255,7 @@ namespace TestCadence
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                var result   = await client.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+                var result   = await client.CallWorkflowAsync<AutoHelloWorkflow>(domain: "test-domain");
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
@@ -1283,7 +1277,7 @@ namespace TestCadence
 
             using (var worker = await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                var result = await client.CallWorkflowAsync("CustomAutoHelloWorkflow", "test-domain");
+                var result = await client.CallWorkflowAsync("CustomAutoHelloWorkflow", domain: "test-domain");
 
                 Assert.NotNull(result);
                 Assert.Equal("Hello World!", Encoding.UTF8.GetString(result));
@@ -1313,14 +1307,14 @@ namespace TestCadence
 
                     // Client #1 calls
 
-                    var result1 = await client.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+                    var result1 = await client.CallWorkflowAsync<AutoHelloWorkflow>(domain: "test-domain");
 
                     // Client #2 calls
 
                     Assert.NotNull(result1);
                     Assert.Equal("Hello World!", Encoding.UTF8.GetString(result1));
 
-                    var result2 = await client2.CallWorkflowAsync<AutoHelloWorkflow>("test-domain");
+                    var result2 = await client2.CallWorkflowAsync<AutoHelloWorkflow>(domain: "test-domain");
 
                     Assert.NotNull(result2);
                     Assert.Equal("Hello World!", Encoding.UTF8.GetString(result1));
@@ -1342,7 +1336,7 @@ namespace TestCadence
 
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                var result = await client.CallWorkflowAsync<GetVersionWorkflow>("test-domain");
+                var result = await client.CallWorkflowAsync<GetVersionWorkflow>(domain: "test-domain");
 
                 Assert.Equal("1", Encoding.UTF8.GetString(result));
             }
@@ -1377,7 +1371,7 @@ namespace TestCadence
                     CronSchedule = "0/1 * * * *"
                 };
 
-                await client.StartWorkflowAsync<CronWorkflow>("test-domain", options: options);
+                await client.StartWorkflowAsync<CronWorkflow>(domain: "test-domain", options: options);
 
                 // Wait for the the first workflow run.  This is a quicker way to fail if the
                 // workflow never runs.

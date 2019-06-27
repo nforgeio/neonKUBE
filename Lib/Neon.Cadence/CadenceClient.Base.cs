@@ -166,7 +166,7 @@ namespace Neon.Cadence
         /// domain and task list.
         /// </summary>
         /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
-        /// <param name="domain">The target Cadence domain.</param>
+        /// <param name="domain">Optionally specifies the target Cadence domain.  This defaults to the domain configured for the client.</param>
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
