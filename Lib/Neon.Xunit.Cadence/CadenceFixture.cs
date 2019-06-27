@@ -92,7 +92,7 @@ namespace Neon.Xunit.Cadence
         /// Some of the <paramref name="settings"/> properties will be ignored including 
         /// <see cref="CadenceSettings.Servers"/>.  This will be replaced by the local
         /// endpoint for the Cadence container.  Also, the fixture will connect to the 
-        /// <b>test</b> bucket by default (unless another is specified).
+        /// <b>default</b> Cadence domain by default (unless another is specified).
         /// </note>
         /// <note>
         /// A fresh Cadence client <see cref="Connection"/> will be established every time this
@@ -167,7 +167,15 @@ namespace Neon.Xunit.Cadence
 
                 // Initialize the settings.
 
-                settings = settings ?? new CadenceSettings();
+                settings = settings ?? new CadenceSettings()
+                {
+                    CreateDomain  = true
+                };
+
+                if (string.IsNullOrEmpty(settings.DefaultDomain))
+                {
+                    settings.DefaultDomain = "default";
+                }
 
                 settings.Servers.Clear();
                 settings.Servers.Add($"http://localhost:{NetworkPorts.Cadence}");

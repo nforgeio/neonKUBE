@@ -178,17 +178,23 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Endpoints);
                 Assert.Null(message.Identity);
+                Assert.Null(message.Domain);
+                Assert.False(message.CreateDomain);
                 Assert.Equal(TimeSpan.Zero, message.ClientTimeout);
 
                 // Round-trip
 
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Endpoints = "1.1.1.1:555,2.2.2.2:5555";
-                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
                 message.Identity = "my-identity";
-                Assert.Equal("my-identity", message.Identity);
                 message.ClientTimeout = TimeSpan.FromSeconds(30);
+                message.Domain = "my-domain";
+                message.CreateDomain = true;
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                Assert.Equal("my-identity", message.Identity);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.True(message.CreateDomain);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -200,6 +206,8 @@ namespace TestCadence
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.True(message.CreateDomain);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -209,6 +217,8 @@ namespace TestCadence
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.True(message.CreateDomain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -218,6 +228,8 @@ namespace TestCadence
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.True(message.CreateDomain);
             }
         }
 

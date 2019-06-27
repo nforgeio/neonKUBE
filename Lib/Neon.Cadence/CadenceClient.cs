@@ -555,9 +555,15 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
         /// <returns>The connected <see cref="CadenceClient"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// The <see cref="CadenceSettings"/> passed must specify a <see cref="CadenceSettings.DefaultDomain"/>.
+        /// </note>
+        /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
 
             if (settings.ClientTimeout <= TimeSpan.Zero)
             {

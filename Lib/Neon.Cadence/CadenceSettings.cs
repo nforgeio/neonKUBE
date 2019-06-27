@@ -76,6 +76,23 @@ namespace Neon.Cadence
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
+        /// Specifies the default Cadence domain for this client.  This is required.
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string DefaultDomain { get; set; }
+
+        /// <summary>
+        /// Optionally create the <see cref="DefaultDomain"/> if it doesn't already exist.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CreateDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "createDomain", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool CreateDomain { get; set; } = false;
+
+        /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
         /// operations to complete.  This defaults to <b>45 seconds</b> when not set.
         /// </summary>

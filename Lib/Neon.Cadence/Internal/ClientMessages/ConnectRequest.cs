@@ -79,6 +79,25 @@ namespace Neon.Cadence.Internal
             set => SetTimeSpanProperty(PropertyNames.ClientTimeout, value);
         }
 
+        /// <summary>
+        /// The default Cadence domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
+        /// Indicates whether the Cadence domain should be created if it
+        /// doesn't already exist.
+        /// </summary>
+        public bool CreateDomain
+        {
+            get => GetBoolProperty(PropertyNames.CreateDomain);
+            set => SetBoolProperty(PropertyNames.CreateDomain, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -99,6 +118,8 @@ namespace Neon.Cadence.Internal
             typedTarget.Endpoints     = this.Endpoints;
             typedTarget.Identity      = this.Identity;
             typedTarget.ClientTimeout = this.ClientTimeout;
+            typedTarget.Domain        = this.Domain;
+            typedTarget.CreateDomain  = this.CreateDomain;
         }
     }
 }
