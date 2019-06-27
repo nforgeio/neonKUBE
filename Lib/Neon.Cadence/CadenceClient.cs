@@ -606,6 +606,7 @@ namespace Neon.Cadence
         private CadenceClient(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -748,9 +749,11 @@ namespace Neon.Cadence
                     var connectRequest = 
                         new ConnectRequest()
                         {
-                            Endpoints       = sbEndpoints.ToString(),
-                            Identity        = settings.ClientIdentity,
-                            ClientTimeout   = TimeSpan.FromSeconds(45)
+                            Endpoints     = sbEndpoints.ToString(),
+                            Identity      = settings.ClientIdentity,
+                            ClientTimeout = TimeSpan.FromSeconds(45),
+                            Domain        = settings.DefaultDomain,
+                            CreateDomain  = settings.CreateDomain
                         };
 
 
