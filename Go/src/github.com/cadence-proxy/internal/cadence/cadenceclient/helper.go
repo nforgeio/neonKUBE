@@ -450,11 +450,12 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 	// loop should never execute more than once in production)
 	var workflowRun client.WorkflowRun
 	var err error
-	for i := 0; i < 10; i++ {
+	n := 10
+	for i := 0; i < n; i++ {
 		workflowRun, err = helper.WorkflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
 		if err != nil {
 
-			if strings.Contains(err.Error(), "EntityNotExistsError{Message: Domain:") {
+			if (strings.Contains(err.Error(), "EntityNotExistsError{Message: Domain:")) && (i < n-1) {
 				time.Sleep(time.Second)
 				continue
 			}
