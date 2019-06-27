@@ -46,6 +46,9 @@ func (t DomainStatus) String() string {
 	}[t]
 }
 
+// StringToDomainStatus takes a valid domain status
+// as a string and converts it into a domain status
+// if possible
 func StringToDomainStatus(value string) DomainStatus {
 	switch value {
 	case "REGISTERED":

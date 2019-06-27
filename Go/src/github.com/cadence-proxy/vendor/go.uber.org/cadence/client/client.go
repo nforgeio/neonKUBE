@@ -33,9 +33,15 @@ import (
 	"go.uber.org/cadence/workflow"
 )
 
-// QueryTypeStackTrace is the build in query type for Client.QueryWorkflow() call. Use this query type to get the call
-// stack of the workflow. The result will be a string encoded in the encoded.Value.
-const QueryTypeStackTrace string = internal.QueryTypeStackTrace
+const (
+	// QueryTypeStackTrace is the build in query type for Client.QueryWorkflow() call. Use this query type to get the call
+	// stack of the workflow. The result will be a string encoded in the encoded.Value.
+	QueryTypeStackTrace string = internal.QueryTypeStackTrace
+
+	// QueryTypeOpenSessions is the build in query type for Client.QueryWorkflow() call. Use this query type to get all open
+	// sessions in the workflow. The result will be a list of SessionInfo encoded in the encoded.Value.
+	QueryTypeOpenSessions string = internal.QueryTypeOpenSessions
+)
 
 type (
 	// Options are optional parameters for Client creation.
@@ -267,6 +273,11 @@ type (
 		//  - BadRequestError
 		//  - InternalServiceError
 		CountWorkflow(ctx context.Context, request *s.CountWorkflowExecutionsRequest) (*s.CountWorkflowExecutionsResponse, error)
+
+		// GetSearchAttributes returns valid search attributes keys and value types.
+		// The search attributes can be used in query of List/Scan/Count APIs. Adding new search attributes requires cadence server
+		// to update dynamic config ValidSearchAttributes.
+		GetSearchAttributes(ctx context.Context) (*s.GetSearchAttributesResponse, error)
 
 		// QueryWorkflow queries a given workflow's last execution and returns the query result synchronously. Parameter workflowID
 		// and queryType are required, other parameters are optional. The workflowID and runID (optional) identify the

@@ -82,4 +82,4 @@ if ($allVersions)
     Build 0.5.6 -goVersion 1.12.3 -latest
 }
 
-Build 0.5.8_release -goVersion 1.12.3 -latest
+Build 0.5.9_release -goVersion 1.12.6 -latest

@@ -34,6 +34,7 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceactivities"
 	cadenceclient "github.com/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
@@ -383,48 +384,18 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		Identity: *request.GetIdentity(),
 	}
 
-	// configure the CadenceClientHelper
-	clientHelper = cadenceclient.NewCadenceClientHelper()
-	clientHelper.SetHostPort(*request.GetEndpoints())
-	clientHelper.SetClientOptions(&opts)
-	err := clientHelper.SetupServiceConfig()
-	if err != nil {
-		clientHelper = nil
-		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
-
-		return reply
-	}
-
-	// make a channel that waits for a connection to be established
-	// until returning ready
-	connectChan := make(chan error)
+	// configure the ClientHelper
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	defer cancel()
 
-	// defer the cancel of the context and
-	// closing of the connectChan
-	defer func() {
-		cancel()
-		close(connectChan)
-	}()
-
-	go func() {
-
-		// defer sending error
-		// or nil over connectChan
-		var err error
-		defer func() {
-			connectChan <- err
-		}()
-
-		// make a domain describe request on the cadence system domain
-		// to check if it is ready to accept requests
-		_, err = clientHelper.DescribeDomain(ctx, _cadenceSystemDomain)
-	}()
-
-	// block and catch the result
-	if connectResult := <-connectChan; connectResult != nil {
-		clientHelper = nil
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+	// configure the service client and
+	// validate that a connection
+	// has been established
+	clientHelper = cadenceclient.NewClientHelper()
+	clientHelper.SetDomain("test-domain")
+	err := clientHelper.EstablishServerConnection(ctx, *request.GetEndpoints(), &opts)
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
 	}
@@ -452,7 +423,7 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -489,7 +460,7 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -507,7 +478,7 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	}
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// register the domain using the RegisterDomainRequest
@@ -540,7 +511,7 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -609,7 +580,7 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 	reply := createReplyMessage(request)
 
 	// set the reply address
-	if DebugPrelaunched {
+	if globals.DebugPrelaunched {
 		replyAddress = "http://127.0.0.2:5001/"
 	} else {
 		address := *request.GetLibraryAddress()
@@ -662,12 +633,12 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
 
-	// create a new worker using a configured CadenceClientHelper instance
+	// create a new worker using a configured ClientHelper instance
 	workerID := cadenceworkers.NextWorkerID()
 	domain := *request.GetDomain()
 	taskList := *request.GetTaskList()
@@ -709,7 +680,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -718,7 +689,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 	// what worker to stop
 	worker := Workers.Get(workerID)
 	if worker == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -769,7 +740,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -896,7 +867,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -963,7 +934,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1007,7 +978,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1053,7 +1024,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1098,7 +1069,7 @@ func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *mess
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1126,7 +1097,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1134,7 +1105,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1230,7 +1201,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1270,7 +1241,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1321,7 +1292,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1329,7 +1300,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1420,7 +1391,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1465,7 +1436,7 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1473,7 +1444,7 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1500,7 +1471,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1508,7 +1479,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1544,7 +1515,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1552,7 +1523,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1585,7 +1556,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1593,7 +1564,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1620,7 +1591,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1628,7 +1599,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1663,7 +1634,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1671,7 +1642,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1737,7 +1708,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1746,7 +1717,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	wectx := WorkflowContexts.Get(contextID)
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1788,7 +1759,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1797,7 +1768,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	wectx := WorkflowContexts.Get(contextID)
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1841,7 +1812,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1850,7 +1821,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	wectx := WorkflowContexts.Get(contextID)
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1887,7 +1858,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -1895,7 +1866,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	// get the workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -1984,7 +1955,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2039,7 +2010,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2047,7 +2018,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -2085,7 +2056,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2239,7 +2210,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2247,7 +2218,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -2285,7 +2256,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2315,7 +2286,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2354,7 +2325,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2388,7 +2359,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2396,7 +2367,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 	// get the activity context
 	actx := ActivityContexts.Get(contextID)
 	if actx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2423,7 +2394,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -2468,14 +2439,14 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	// check to see if a connection has been made with the
 	// cadence client
 	if clientHelper == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errConnection.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
 
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(errEntityNotExist.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
 
 		return reply
 	}
@@ -2622,7 +2593,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 
 	// set the request header to specified content type
 	// and disable http request compression
-	req.Header.Set("Content-Type", ContentType)
+	req.Header.Set("Content-Type", globals.ContentType)
 	req.Header.Set("Accept-Encoding", "identity")
 
 	// initialize the http.Client and send the request

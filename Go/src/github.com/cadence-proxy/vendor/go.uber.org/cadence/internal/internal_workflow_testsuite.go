@@ -31,6 +31,7 @@ import (
 
 	"github.com/facebookgo/clock"
 	"github.com/golang/mock/gomock"
+	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"github.com/stretchr/testify/mock"
 	"github.com/uber-go/tally"
@@ -120,12 +121,14 @@ type (
 		service      workflowserviceclient.Interface
 		logger       *zap.Logger
 		metricsScope *metrics.TaggedScope
+		ctxProps     []ContextPropagator
 		mockClock    *clock.Mock
 		wallClock    clock.Clock
 		startTime    time.Time
 
 		callbackChannel chan testCallbackHandle
 		testTimeout     time.Duration
+		header          *shared.Header
 
 		counterID        int
 		activities       map[string]*testActivityHandle
@@ -160,6 +163,7 @@ type (
 		workflowInfo   *WorkflowInfo
 		workflowDef    workflowDefinition
 		changeVersions map[string]Version
+		openSessions   map[string]*SessionInfo
 
 		workflowCancelHandler func()
 		signalHandler         func(name string, input []byte)
@@ -175,7 +179,13 @@ type (
 
 		heartbeatDetails []byte
 
-		workerStopChannel chan struct{}
+		workerStopChannel  chan struct{}
+		sessionEnvironment *testSessionEnvironmentImpl
+	}
+
+	testSessionEnvironmentImpl struct {
+		*sessionEnvironmentImpl
+		testWorkflowEnvironment *testWorkflowEnvironmentImpl
 	}
 )
 
@@ -213,6 +223,7 @@ func newTestWorkflowEnvironmentImpl(s *WorkflowTestSuite) *testWorkflowEnvironme
 		},
 
 		changeVersions: make(map[string]Version),
+		openSessions:   make(map[string]*SessionInfo),
 
 		doneChannel:       make(chan struct{}),
 		workerStopChannel: make(chan struct{}),
@@ -231,6 +242,8 @@ func newTestWorkflowEnvironmentImpl(s *WorkflowTestSuite) *testWorkflowEnvironme
 	if env.metricsScope == nil {
 		env.metricsScope = metrics.NewTaggedScope(s.scope)
 	}
+	env.ctxProps = s.ctxProps
+	env.header = s.header
 
 	// setup mock service
 	mockCtrl := gomock.NewController(&testReporter{logger: env.logger})
@@ -282,6 +295,9 @@ func newTestWorkflowEnvironmentImpl(s *WorkflowTestSuite) *testWorkflowEnvironme
 	}
 	if env.workerOptions.DataConverter == nil {
 		env.workerOptions.DataConverter = getDefaultDataConverter()
+	}
+	if len(env.workerOptions.ContextPropagators) == 0 {
+		env.workerOptions.ContextPropagators = env.ctxProps
 	}
 
 	return env
@@ -363,6 +379,16 @@ func (env *testWorkflowEnvironmentImpl) setWorkerOptions(options WorkerOptions) 
 	if options.DataConverter != nil {
 		env.workerOptions.DataConverter = options.DataConverter
 	}
+	// Uncomment when resourceID is exposed to user.
+	// if options.SessionResourceID != "" {
+	// 	env.workerOptions.SessionResourceID = options.SessionResourceID
+	// }
+	if options.MaxConcurrentSessionExecutionSize != 0 {
+		env.workerOptions.MaxConcurrentSessionExecutionSize = options.MaxConcurrentSessionExecutionSize
+	}
+	if len(options.ContextPropagators) > 0 {
+		env.workerOptions.ContextPropagators = options.ContextPropagators
+	}
 }
 
 func (env *testWorkflowEnvironmentImpl) setWorkerStopChannel(c chan struct{}) {
@@ -404,11 +430,12 @@ func (env *testWorkflowEnvironmentImpl) executeWorkflowInternal(delayStart time.
 		panic(err)
 	}
 	env.workflowDef = workflowDefinition
+
 	// env.workflowDef.Execute() method will execute dispatcher. We want the dispatcher to only run in main loop.
 	// In case of child workflow, this executeWorkflowInternal() is run in separate goroutinue, so use postCallback
 	// to make sure workflowDef.Execute() is run in main loop.
 	env.postCallback(func() {
-		env.workflowDef.Execute(env, input)
+		env.workflowDef.Execute(env, env.header, input)
 		// kick off first decision task to start the workflow
 		if delayStart == 0 {
 			env.startDecisionTask()
@@ -463,6 +490,7 @@ func (env *testWorkflowEnvironmentImpl) executeActivity(
 		},
 		ActivityType: *activityType,
 		Input:        input,
+		Header:       env.header,
 	}
 
 	task := newTestActivityTask(
@@ -525,6 +553,7 @@ func (env *testWorkflowEnvironmentImpl) executeLocalActivity(
 		userContext:  env.workerOptions.BackgroundActivityContext,
 		metricsScope: env.metricsScope,
 		logger:       env.logger,
+		tracer:       opentracing.NoopTracer{},
 	}
 
 	result := taskHandler.executeLocalActivityTask(task)
@@ -856,6 +885,10 @@ func (env *testWorkflowEnvironmentImpl) GetDataConverter() encoded.DataConverter
 	return env.workerOptions.DataConverter
 }
 
+func (env *testWorkflowEnvironmentImpl) GetContextPropagators() []ContextPropagator {
+	return env.workerOptions.ContextPropagators
+}
+
 func (env *testWorkflowEnvironmentImpl) ExecuteActivity(parameters executeActivityParams, callback resultHandler) *activityInfo {
 	var activityID string
 	if parameters.ActivityID == nil || *parameters.ActivityID == "" {
@@ -989,7 +1022,7 @@ func getRetryBackoffFromThriftRetryPolicy(tp *shared.RetryPolicy, attempt int32,
 
 func (env *testWorkflowEnvironmentImpl) ExecuteLocalActivity(params executeLocalActivityParams, callback laResultHandler) *localActivityInfo {
 	activityID := getStringID(env.nextID())
-	wOptions := fillWorkerOptionsDefaults(env.workerOptions)
+	wOptions := augmentWorkerOptions(env.workerOptions)
 	ae := &activityExecutor{name: getFunctionName(params.ActivityFn), fn: params.ActivityFn}
 	if at, _, _ := getValidatedActivityFunction(params.ActivityFn, params.InputArgs, wOptions.DataConverter); at != nil {
 		// local activity could be registered, if so use the registered name. This name is only used to find a mock.
@@ -1004,10 +1037,12 @@ func (env *testWorkflowEnvironmentImpl) ExecuteLocalActivity(params executeLocal
 
 	task := newLocalActivityTask(params, callback, activityID)
 	taskHandler := localActivityTaskHandler{
-		userContext:   wOptions.BackgroundActivityContext,
-		metricsScope:  metrics.NewTaggedScope(wOptions.MetricsScope),
-		logger:        wOptions.Logger,
-		dataConverter: wOptions.DataConverter,
+		userContext:        wOptions.BackgroundActivityContext,
+		metricsScope:       metrics.NewTaggedScope(wOptions.MetricsScope),
+		logger:             wOptions.Logger,
+		dataConverter:      wOptions.DataConverter,
+		tracer:             wOptions.Tracer,
+		contextPropagators: wOptions.ContextPropagators,
 	}
 
 	env.localActivities[activityID] = task
@@ -1413,17 +1448,26 @@ func (m *mockWrapper) executeMockWithActualArgs(ctx interface{}, inputArgs []int
 }
 
 func (env *testWorkflowEnvironmentImpl) newTestActivityTaskHandler(taskList string, dataConverter encoded.DataConverter) ActivityTaskHandler {
-	wOptions := fillWorkerOptionsDefaults(env.workerOptions)
+	wOptions := augmentWorkerOptions(env.workerOptions)
 	params := workerExecutionParameters{
-		TaskList:          taskList,
-		Identity:          wOptions.Identity,
-		MetricsScope:      wOptions.MetricsScope,
-		Logger:            wOptions.Logger,
-		UserContext:       wOptions.BackgroundActivityContext,
-		DataConverter:     dataConverter,
-		WorkerStopChannel: env.workerStopChannel,
+		TaskList:           taskList,
+		Identity:           wOptions.Identity,
+		MetricsScope:       wOptions.MetricsScope,
+		Logger:             wOptions.Logger,
+		UserContext:        wOptions.BackgroundActivityContext,
+		DataConverter:      dataConverter,
+		WorkerStopChannel:  env.workerStopChannel,
+		ContextPropagators: wOptions.ContextPropagators,
+		Tracer:             wOptions.Tracer,
 	}
 	ensureRequiredParams(&params)
+	if params.UserContext == nil {
+		params.UserContext = context.Background()
+	}
+	if env.sessionEnvironment == nil {
+		env.sessionEnvironment = newTestSessionEnvironment(env, &params, wOptions.MaxConcurrentSessionExecutionSize)
+	}
+	params.UserContext = context.WithValue(params.UserContext, sessionEnvironmentContextKey, env.sessionEnvironment)
 
 	if len(getHostEnvironment().getRegisteredActivities()) == 0 {
 		panic(fmt.Sprintf("no activity is registered for tasklist '%v'", taskList))
@@ -1470,6 +1514,7 @@ func newTestActivityTask(workflowID, runID, activityID, workflowTypeName, domain
 			Name: common.StringPtr(workflowTypeName),
 		},
 		WorkflowDomain: common.StringPtr(domainName),
+		Header:         params.Header,
 	}
 	return task
 }
@@ -1593,7 +1638,7 @@ func (env *testWorkflowEnvironmentImpl) SignalExternalWorkflow(domainName, workf
 		childEnv := childHandle.env
 		if childEnv.isTestCompleted {
 			// child already completed (NOTE: we have only one failed cause now)
-			err := fmt.Errorf("signal external workflow failed, %v", shared.SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution)
+			err := newUnknownExternalWorkflowExecutionError()
 			callback(nil, err)
 		} else {
 			childEnv.signalHandler(signalName, input)
@@ -1605,7 +1650,7 @@ func (env *testWorkflowEnvironmentImpl) SignalExternalWorkflow(domainName, workf
 
 	// here we signal a child workflow but we cannot find it
 	if childWorkflowOnly {
-		err := fmt.Errorf("signal external workflow failed, %v", shared.SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution)
+		err := newUnknownExternalWorkflowExecutionError()
 		callback(nil, err)
 		return
 	}
@@ -1712,6 +1757,14 @@ func (env *testWorkflowEnvironmentImpl) MutableSideEffect(id string, f func() in
 	return newEncodedValue(env.encodeValue(f()), env.GetDataConverter())
 }
 
+func (env *testWorkflowEnvironmentImpl) AddSession(sessionInfo *SessionInfo) {
+	env.openSessions[sessionInfo.SessionID] = sessionInfo
+}
+
+func (env *testWorkflowEnvironmentImpl) RemoveSession(sessionID string) {
+	delete(env.openSessions, sessionID)
+}
+
 func (env *testWorkflowEnvironmentImpl) encodeValue(value interface{}) []byte {
 	blob, err := env.GetDataConverter().ToData(value)
 	if err != nil {
@@ -1751,14 +1804,14 @@ func (env *testWorkflowEnvironmentImpl) cancelWorkflow(callback resultHandler) {
 	}, true)
 }
 
-func (env *testWorkflowEnvironmentImpl) signalWorkflow(name string, input interface{}) {
+func (env *testWorkflowEnvironmentImpl) signalWorkflow(name string, input interface{}, startDecisionTask bool) {
 	data, err := encodeArg(env.GetDataConverter(), input)
 	if err != nil {
 		panic(err)
 	}
 	env.postCallback(func() {
 		env.signalHandler(name, data)
-	}, true)
+	}, startDecisionTask)
 }
 
 func (env *testWorkflowEnvironmentImpl) signalWorkflowByID(workflowID, signalName string, input interface{}) error {
@@ -1816,6 +1869,27 @@ func (env *testWorkflowEnvironmentImpl) setHeartbeatDetails(details interface{})
 		panic(err)
 	}
 	env.heartbeatDetails = data
+}
+
+func newTestSessionEnvironment(testWorkflowEnvironment *testWorkflowEnvironmentImpl,
+	params *workerExecutionParameters, concurrentSessionExecutionSize int) *testSessionEnvironmentImpl {
+	resourceID := params.SessionResourceID
+	if resourceID == "" {
+		resourceID = "testResourceID"
+	}
+	if concurrentSessionExecutionSize == 0 {
+		concurrentSessionExecutionSize = defaultMaxConcurrentSessionExecutionSize
+	}
+
+	return &testSessionEnvironmentImpl{
+		sessionEnvironmentImpl:  newSessionEnvironment(resourceID, concurrentSessionExecutionSize).(*sessionEnvironmentImpl),
+		testWorkflowEnvironment: testWorkflowEnvironment,
+	}
+}
+
+func (t *testSessionEnvironmentImpl) SignalCreationResponse(ctx context.Context, sessionID string) error {
+	t.testWorkflowEnvironment.signalWorkflow(sessionID, t.sessionEnvironmentImpl.getCreationResponse(), true)
+	return nil
 }
 
 // function signature for mock SignalExternalWorkflow

@@ -19,7 +19,6 @@ package endpoints
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,25 +28,13 @@ import (
 
 	"go.uber.org/zap"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceactivities"
 	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkers"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"
 	"github.com/cadence-proxy/internal/server"
-)
-
-const (
-
-	// ContentType is the content type to be used for HTTP requests
-	// encapsulationg a ProxyMessage
-	ContentType = "application/x-neon-cadence-proxy"
-
-	// _cadenceSystemDomain is the string name of the cadence-system domain that
-	// exists on all cadence servers.  This value is used to check that a connection
-	// has been established to the cadence server instance and that it is ready to
-	// accept requests
-	_cadenceSystemDomain = "cadence-system"
 )
 
 var (
@@ -59,18 +46,6 @@ var (
 	// cadence-proxy is listening on.  This gets set in main.go
 	Instance *server.Instance
 
-	// errConnection is the custom error that is thrown when the cadence-proxy
-	// is not able to establish a connection with the cadence server
-	errConnection = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
-
-	// errEntityNotExist is the custom error that is thrown when a cadence
-	// entity cannot be found in the cadence server
-	errEntityNotExist = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
-
-	// argumentNullError is the custom error that is thrown when trying to access a nil
-	// value
-	errArgumentNil = errors.New("ArgumentNilError{Message: failed to access nil value.}")
-
 	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
 	replyAddress string
@@ -81,21 +56,14 @@ var (
 	// indicates the server continues to run
 	terminate bool
 
-	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
-	// already be running for debugging purposes.  When this is true, the
-	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
-	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
-	// This defaults to false.
-	DebugPrelaunched = false
-
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been received by the cadence-proxy
 	cadenceClientTimeout time.Duration = time.Second * 30
 
 	// ClientHelper is a global variable that holds this cadence-proxy's instance
-	// of the CadenceClientHelper that will be used to create domain and workflow clients
+	// of the ClientHelper that will be used to create domain and workflow clients
 	// that communicate with the cadence server
-	clientHelper = cadenceclient.NewCadenceClientHelper()
+	clientHelper = cadenceclient.NewClientHelper()
 
 	// ActivityContexts maps a int64 ContextId to the cadence
 	// Activity Context passed to the cadence Activity functions.
@@ -138,16 +106,16 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 	)
 
 	// check if the content type is correct
-	if r.Header.Get("Content-Type") != ContentType {
+	if r.Header.Get("Content-Type") != globals.ContentType {
 		err := fmt.Errorf("incorrect Content-Type %s. Content must be %s",
 			r.Header.Get("Content-Type"),
-			ContentType,
+			globals.ContentType,
 		)
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Incorrect Content-Type",
 			zap.String("Content Type", r.Header.Get("Content-Type")),
-			zap.String("Expected Content Type", ContentType),
+			zap.String("Expected Content Type", globals.ContentType),
 			zap.Error(err),
 		)
 
