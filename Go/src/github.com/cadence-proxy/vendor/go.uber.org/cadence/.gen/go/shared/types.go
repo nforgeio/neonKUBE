@@ -13472,6 +13472,196 @@ func (v *FailWorkflowExecutionDecisionAttributes) GetReason() (o string) {
 	return
 }
 
+type GetSearchAttributesResponse struct {
+	Keys map[string]IndexedValueType `json:"keys,omitempty"`
+}
+
+type _Map_String_IndexedValueType_MapItemList map[string]IndexedValueType
+
+func (m _Map_String_IndexedValueType_MapItemList) ForEach(f func(wire.MapItem) error) error {
+	for k, v := range m {
+		kw, err := wire.NewValueString(k), error(nil)
+		if err != nil {
+			return err
+		}
+
+		vw, err := v.ToWire()
+		if err != nil {
+			return err
+		}
+		err = f(wire.MapItem{Key: kw, Value: vw})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (m _Map_String_IndexedValueType_MapItemList) Size() int {
+	return len(m)
+}
+
+func (_Map_String_IndexedValueType_MapItemList) KeyType() wire.Type {
+	return wire.TBinary
+}
+
+func (_Map_String_IndexedValueType_MapItemList) ValueType() wire.Type {
+	return wire.TI32
+}
+
+func (_Map_String_IndexedValueType_MapItemList) Close() {}
+
+// ToWire translates a GetSearchAttributesResponse struct into a Thrift-level intermediate
+// representation. This intermediate representation may be serialized
+// into bytes using a ThriftRW protocol implementation.
+//
+// An error is returned if the struct or any of its fields failed to
+// validate.
+//
+//   x, err := v.ToWire()
+//   if err != nil {
+//     return err
+//   }
+//
+//   if err := binaryProtocol.Encode(x, writer); err != nil {
+//     return err
+//   }
+func (v *GetSearchAttributesResponse) ToWire() (wire.Value, error) {
+	var (
+		fields [1]wire.Field
+		i      int = 0
+		w      wire.Value
+		err    error
+	)
+
+	if v.Keys != nil {
+		w, err = wire.NewValueMap(_Map_String_IndexedValueType_MapItemList(v.Keys)), error(nil)
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 10, Value: w}
+		i++
+	}
+
+	return wire.NewValueStruct(wire.Struct{Fields: fields[:i]}), nil
+}
+
+func _IndexedValueType_Read(w wire.Value) (IndexedValueType, error) {
+	var v IndexedValueType
+	err := v.FromWire(w)
+	return v, err
+}
+
+func _Map_String_IndexedValueType_Read(m wire.MapItemList) (map[string]IndexedValueType, error) {
+	if m.KeyType() != wire.TBinary {
+		return nil, nil
+	}
+
+	if m.ValueType() != wire.TI32 {
+		return nil, nil
+	}
+
+	o := make(map[string]IndexedValueType, m.Size())
+	err := m.ForEach(func(x wire.MapItem) error {
+		k, err := x.Key.GetString(), error(nil)
+		if err != nil {
+			return err
+		}
+
+		v, err := _IndexedValueType_Read(x.Value)
+		if err != nil {
+			return err
+		}
+
+		o[k] = v
+		return nil
+	})
+	m.Close()
+	return o, err
+}
+
+// FromWire deserializes a GetSearchAttributesResponse struct from its Thrift-level
+// representation. The Thrift-level representation may be obtained
+// from a ThriftRW protocol implementation.
+//
+// An error is returned if we were unable to build a GetSearchAttributesResponse struct
+// from the provided intermediate representation.
+//
+//   x, err := binaryProtocol.Decode(reader, wire.TStruct)
+//   if err != nil {
+//     return nil, err
+//   }
+//
+//   var v GetSearchAttributesResponse
+//   if err := v.FromWire(x); err != nil {
+//     return nil, err
+//   }
+//   return &v, nil
+func (v *GetSearchAttributesResponse) FromWire(w wire.Value) error {
+	var err error
+
+	for _, field := range w.GetStruct().Fields {
+		switch field.ID {
+		case 10:
+			if field.Value.Type() == wire.TMap {
+				v.Keys, err = _Map_String_IndexedValueType_Read(field.Value.GetMap())
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+	}
+
+	return nil
+}
+
+// String returns a readable string representation of a GetSearchAttributesResponse
+// struct.
+func (v *GetSearchAttributesResponse) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+
+	var fields [1]string
+	i := 0
+	if v.Keys != nil {
+		fields[i] = fmt.Sprintf("Keys: %v", v.Keys)
+		i++
+	}
+
+	return fmt.Sprintf("GetSearchAttributesResponse{%v}", strings.Join(fields[:i], ", "))
+}
+
+func _Map_String_IndexedValueType_Equals(lhs, rhs map[string]IndexedValueType) bool {
+	if len(lhs) != len(rhs) {
+		return false
+	}
+
+	for lk, lv := range lhs {
+		rv, ok := rhs[lk]
+		if !ok {
+			return false
+		}
+		if !lv.Equals(rv) {
+			return false
+		}
+	}
+	return true
+}
+
+// Equals returns true if all the fields of this GetSearchAttributesResponse match the
+// provided GetSearchAttributesResponse.
+//
+// This function performs a deep comparison.
+func (v *GetSearchAttributesResponse) Equals(rhs *GetSearchAttributesResponse) bool {
+	if !((v.Keys == nil && rhs.Keys == nil) || (v.Keys != nil && rhs.Keys != nil && _Map_String_IndexedValueType_Equals(v.Keys, rhs.Keys))) {
+		return false
+	}
+
+	return true
+}
+
 type GetWorkflowExecutionHistoryRequest struct {
 	Domain                 *string                 `json:"domain,omitempty"`
 	Execution              *WorkflowExecution      `json:"execution,omitempty"`
@@ -16359,6 +16549,177 @@ func (v *HistoryEventFilterType) UnmarshalJSON(text []byte) error {
 		return v.UnmarshalText([]byte(w))
 	default:
 		return fmt.Errorf("invalid JSON value %q (%T) to unmarshal into %q", t, t, "HistoryEventFilterType")
+	}
+}
+
+type IndexedValueType int32
+
+const (
+	IndexedValueTypeString   IndexedValueType = 0
+	IndexedValueTypeKeyword  IndexedValueType = 1
+	IndexedValueTypeInt      IndexedValueType = 2
+	IndexedValueTypeDouble   IndexedValueType = 3
+	IndexedValueTypeBool     IndexedValueType = 4
+	IndexedValueTypeDatetime IndexedValueType = 5
+)
+
+// IndexedValueType_Values returns all recognized values of IndexedValueType.
+func IndexedValueType_Values() []IndexedValueType {
+	return []IndexedValueType{
+		IndexedValueTypeString,
+		IndexedValueTypeKeyword,
+		IndexedValueTypeInt,
+		IndexedValueTypeDouble,
+		IndexedValueTypeBool,
+		IndexedValueTypeDatetime,
+	}
+}
+
+// UnmarshalText tries to decode IndexedValueType from a byte slice
+// containing its name.
+//
+//   var v IndexedValueType
+//   err := v.UnmarshalText([]byte("STRING"))
+func (v *IndexedValueType) UnmarshalText(value []byte) error {
+	switch string(value) {
+	case "STRING":
+		*v = IndexedValueTypeString
+		return nil
+	case "KEYWORD":
+		*v = IndexedValueTypeKeyword
+		return nil
+	case "INT":
+		*v = IndexedValueTypeInt
+		return nil
+	case "DOUBLE":
+		*v = IndexedValueTypeDouble
+		return nil
+	case "BOOL":
+		*v = IndexedValueTypeBool
+		return nil
+	case "DATETIME":
+		*v = IndexedValueTypeDatetime
+		return nil
+	default:
+		return fmt.Errorf("unknown enum value %q for %q", value, "IndexedValueType")
+	}
+}
+
+// Ptr returns a pointer to this enum value.
+func (v IndexedValueType) Ptr() *IndexedValueType {
+	return &v
+}
+
+// ToWire translates IndexedValueType into a Thrift-level intermediate
+// representation. This intermediate representation may be serialized
+// into bytes using a ThriftRW protocol implementation.
+//
+// Enums are represented as 32-bit integers over the wire.
+func (v IndexedValueType) ToWire() (wire.Value, error) {
+	return wire.NewValueI32(int32(v)), nil
+}
+
+// FromWire deserializes IndexedValueType from its Thrift-level
+// representation.
+//
+//   x, err := binaryProtocol.Decode(reader, wire.TI32)
+//   if err != nil {
+//     return IndexedValueType(0), err
+//   }
+//
+//   var v IndexedValueType
+//   if err := v.FromWire(x); err != nil {
+//     return IndexedValueType(0), err
+//   }
+//   return v, nil
+func (v *IndexedValueType) FromWire(w wire.Value) error {
+	*v = (IndexedValueType)(w.GetI32())
+	return nil
+}
+
+// String returns a readable string representation of IndexedValueType.
+func (v IndexedValueType) String() string {
+	w := int32(v)
+	switch w {
+	case 0:
+		return "STRING"
+	case 1:
+		return "KEYWORD"
+	case 2:
+		return "INT"
+	case 3:
+		return "DOUBLE"
+	case 4:
+		return "BOOL"
+	case 5:
+		return "DATETIME"
+	}
+	return fmt.Sprintf("IndexedValueType(%d)", w)
+}
+
+// Equals returns true if this IndexedValueType value matches the provided
+// value.
+func (v IndexedValueType) Equals(rhs IndexedValueType) bool {
+	return v == rhs
+}
+
+// MarshalJSON serializes IndexedValueType into JSON.
+//
+// If the enum value is recognized, its name is returned. Otherwise,
+// its integer value is returned.
+//
+// This implements json.Marshaler.
+func (v IndexedValueType) MarshalJSON() ([]byte, error) {
+	switch int32(v) {
+	case 0:
+		return ([]byte)("\"STRING\""), nil
+	case 1:
+		return ([]byte)("\"KEYWORD\""), nil
+	case 2:
+		return ([]byte)("\"INT\""), nil
+	case 3:
+		return ([]byte)("\"DOUBLE\""), nil
+	case 4:
+		return ([]byte)("\"BOOL\""), nil
+	case 5:
+		return ([]byte)("\"DATETIME\""), nil
+	}
+	return ([]byte)(strconv.FormatInt(int64(v), 10)), nil
+}
+
+// UnmarshalJSON attempts to decode IndexedValueType from its JSON
+// representation.
+//
+// This implementation supports both, numeric and string inputs. If a
+// string is provided, it must be a known enum name.
+//
+// This implements json.Unmarshaler.
+func (v *IndexedValueType) UnmarshalJSON(text []byte) error {
+	d := json.NewDecoder(bytes.NewReader(text))
+	d.UseNumber()
+	t, err := d.Token()
+	if err != nil {
+		return err
+	}
+
+	switch w := t.(type) {
+	case json.Number:
+		x, err := w.Int64()
+		if err != nil {
+			return err
+		}
+		if x > math.MaxInt32 {
+			return fmt.Errorf("enum overflow from JSON %q for %q", text, "IndexedValueType")
+		}
+		if x < math.MinInt32 {
+			return fmt.Errorf("enum underflow from JSON %q for %q", text, "IndexedValueType")
+		}
+		*v = (IndexedValueType)(x)
+		return nil
+	case string:
+		return v.UnmarshalText([]byte(w))
+	default:
+		return fmt.Errorf("invalid JSON value %q (%T) to unmarshal into %q", t, t, "IndexedValueType")
 	}
 }
 
@@ -20024,6 +20385,8 @@ type PollForDecisionTaskResponse struct {
 	NextPageToken             []byte             `json:"nextPageToken,omitempty"`
 	Query                     *WorkflowQuery     `json:"query,omitempty"`
 	WorkflowExecutionTaskList *TaskList          `json:"WorkflowExecutionTaskList,omitempty"`
+	ScheduledTimestamp        *int64             `json:"scheduledTimestamp,omitempty"`
+	StartedTimestamp          *int64             `json:"startedTimestamp,omitempty"`
 }
 
 // ToWire translates a PollForDecisionTaskResponse struct into a Thrift-level intermediate
@@ -20043,7 +20406,7 @@ type PollForDecisionTaskResponse struct {
 //   }
 func (v *PollForDecisionTaskResponse) ToWire() (wire.Value, error) {
 	var (
-		fields [11]wire.Field
+		fields [13]wire.Field
 		i      int = 0
 		w      wire.Value
 		err    error
@@ -20135,6 +20498,22 @@ func (v *PollForDecisionTaskResponse) ToWire() (wire.Value, error) {
 			return w, err
 		}
 		fields[i] = wire.Field{ID: 90, Value: w}
+		i++
+	}
+	if v.ScheduledTimestamp != nil {
+		w, err = wire.NewValueI64(*(v.ScheduledTimestamp)), error(nil)
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 100, Value: w}
+		i++
+	}
+	if v.StartedTimestamp != nil {
+		w, err = wire.NewValueI64(*(v.StartedTimestamp)), error(nil)
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 110, Value: w}
 		i++
 	}
 
@@ -20265,6 +20644,26 @@ func (v *PollForDecisionTaskResponse) FromWire(w wire.Value) error {
 				}
 
 			}
+		case 100:
+			if field.Value.Type() == wire.TI64 {
+				var x int64
+				x, err = field.Value.GetI64(), error(nil)
+				v.ScheduledTimestamp = &x
+				if err != nil {
+					return err
+				}
+
+			}
+		case 110:
+			if field.Value.Type() == wire.TI64 {
+				var x int64
+				x, err = field.Value.GetI64(), error(nil)
+				v.StartedTimestamp = &x
+				if err != nil {
+					return err
+				}
+
+			}
 		}
 	}
 
@@ -20278,7 +20677,7 @@ func (v *PollForDecisionTaskResponse) String() string {
 		return "<nil>"
 	}
 
-	var fields [11]string
+	var fields [13]string
 	i := 0
 	if v.TaskToken != nil {
 		fields[i] = fmt.Sprintf("TaskToken: %v", v.TaskToken)
@@ -20324,6 +20723,14 @@ func (v *PollForDecisionTaskResponse) String() string {
 		fields[i] = fmt.Sprintf("WorkflowExecutionTaskList: %v", v.WorkflowExecutionTaskList)
 		i++
 	}
+	if v.ScheduledTimestamp != nil {
+		fields[i] = fmt.Sprintf("ScheduledTimestamp: %v", *(v.ScheduledTimestamp))
+		i++
+	}
+	if v.StartedTimestamp != nil {
+		fields[i] = fmt.Sprintf("StartedTimestamp: %v", *(v.StartedTimestamp))
+		i++
+	}
 
 	return fmt.Sprintf("PollForDecisionTaskResponse{%v}", strings.Join(fields[:i], ", "))
 }
@@ -20366,6 +20773,12 @@ func (v *PollForDecisionTaskResponse) Equals(rhs *PollForDecisionTaskResponse) b
 	if !((v.WorkflowExecutionTaskList == nil && rhs.WorkflowExecutionTaskList == nil) || (v.WorkflowExecutionTaskList != nil && rhs.WorkflowExecutionTaskList != nil && v.WorkflowExecutionTaskList.Equals(rhs.WorkflowExecutionTaskList))) {
 		return false
 	}
+	if !_I64_EqualsPtr(v.ScheduledTimestamp, rhs.ScheduledTimestamp) {
+		return false
+	}
+	if !_I64_EqualsPtr(v.StartedTimestamp, rhs.StartedTimestamp) {
+		return false
+	}
 
 	return true
 }
@@ -20405,6 +20818,26 @@ func (v *PollForDecisionTaskResponse) GetAttempt() (o int64) {
 func (v *PollForDecisionTaskResponse) GetBacklogCountHint() (o int64) {
 	if v.BacklogCountHint != nil {
 		return *v.BacklogCountHint
+	}
+
+	return
+}
+
+// GetScheduledTimestamp returns the value of ScheduledTimestamp if it is set or its
+// zero value if it is unset.
+func (v *PollForDecisionTaskResponse) GetScheduledTimestamp() (o int64) {
+	if v.ScheduledTimestamp != nil {
+		return *v.ScheduledTimestamp
+	}
+
+	return
+}
+
+// GetStartedTimestamp returns the value of StartedTimestamp if it is set or its
+// zero value if it is unset.
+func (v *PollForDecisionTaskResponse) GetStartedTimestamp() (o int64) {
+	if v.StartedTimestamp != nil {
+		return *v.StartedTimestamp
 	}
 
 	return
@@ -21861,6 +22294,7 @@ type RegisterDomainRequest struct {
 	SecurityToken                          *string                            `json:"securityToken,omitempty"`
 	ArchivalStatus                         *ArchivalStatus                    `json:"archivalStatus,omitempty"`
 	ArchivalBucketName                     *string                            `json:"archivalBucketName,omitempty"`
+	IsGlobalDomain                         *bool                              `json:"isGlobalDomain,omitempty"`
 }
 
 // ToWire translates a RegisterDomainRequest struct into a Thrift-level intermediate
@@ -21880,7 +22314,7 @@ type RegisterDomainRequest struct {
 //   }
 func (v *RegisterDomainRequest) ToWire() (wire.Value, error) {
 	var (
-		fields [11]wire.Field
+		fields [12]wire.Field
 		i      int = 0
 		w      wire.Value
 		err    error
@@ -21972,6 +22406,14 @@ func (v *RegisterDomainRequest) ToWire() (wire.Value, error) {
 			return w, err
 		}
 		fields[i] = wire.Field{ID: 110, Value: w}
+		i++
+	}
+	if v.IsGlobalDomain != nil {
+		w, err = wire.NewValueBool(*(v.IsGlobalDomain)), error(nil)
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 120, Value: w}
 		i++
 	}
 
@@ -22106,6 +22548,16 @@ func (v *RegisterDomainRequest) FromWire(w wire.Value) error {
 				}
 
 			}
+		case 120:
+			if field.Value.Type() == wire.TBool {
+				var x bool
+				x, err = field.Value.GetBool(), error(nil)
+				v.IsGlobalDomain = &x
+				if err != nil {
+					return err
+				}
+
+			}
 		}
 	}
 
@@ -22119,7 +22571,7 @@ func (v *RegisterDomainRequest) String() string {
 		return "<nil>"
 	}
 
-	var fields [11]string
+	var fields [12]string
 	i := 0
 	if v.Name != nil {
 		fields[i] = fmt.Sprintf("Name: %v", *(v.Name))
@@ -22165,6 +22617,10 @@ func (v *RegisterDomainRequest) String() string {
 		fields[i] = fmt.Sprintf("ArchivalBucketName: %v", *(v.ArchivalBucketName))
 		i++
 	}
+	if v.IsGlobalDomain != nil {
+		fields[i] = fmt.Sprintf("IsGlobalDomain: %v", *(v.IsGlobalDomain))
+		i++
+	}
 
 	return fmt.Sprintf("RegisterDomainRequest{%v}", strings.Join(fields[:i], ", "))
 }
@@ -22205,6 +22661,9 @@ func (v *RegisterDomainRequest) Equals(rhs *RegisterDomainRequest) bool {
 		return false
 	}
 	if !_String_EqualsPtr(v.ArchivalBucketName, rhs.ArchivalBucketName) {
+		return false
+	}
+	if !_Bool_EqualsPtr(v.IsGlobalDomain, rhs.IsGlobalDomain) {
 		return false
 	}
 
@@ -22296,6 +22755,16 @@ func (v *RegisterDomainRequest) GetArchivalStatus() (o ArchivalStatus) {
 func (v *RegisterDomainRequest) GetArchivalBucketName() (o string) {
 	if v.ArchivalBucketName != nil {
 		return *v.ArchivalBucketName
+	}
+
+	return
+}
+
+// GetIsGlobalDomain returns the value of IsGlobalDomain if it is set or its
+// zero value if it is unset.
+func (v *RegisterDomainRequest) GetIsGlobalDomain() (o bool) {
+	if v.IsGlobalDomain != nil {
+		return *v.IsGlobalDomain
 	}
 
 	return
@@ -28138,6 +28607,110 @@ func (v *ScheduleActivityTaskDecisionAttributes) GetHeartbeatTimeoutSeconds() (o
 	return
 }
 
+type SearchAttributes struct {
+	IndexedFields map[string][]byte `json:"indexedFields,omitempty"`
+}
+
+// ToWire translates a SearchAttributes struct into a Thrift-level intermediate
+// representation. This intermediate representation may be serialized
+// into bytes using a ThriftRW protocol implementation.
+//
+// An error is returned if the struct or any of its fields failed to
+// validate.
+//
+//   x, err := v.ToWire()
+//   if err != nil {
+//     return err
+//   }
+//
+//   if err := binaryProtocol.Encode(x, writer); err != nil {
+//     return err
+//   }
+func (v *SearchAttributes) ToWire() (wire.Value, error) {
+	var (
+		fields [1]wire.Field
+		i      int = 0
+		w      wire.Value
+		err    error
+	)
+
+	if v.IndexedFields != nil {
+		w, err = wire.NewValueMap(_Map_String_Binary_MapItemList(v.IndexedFields)), error(nil)
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 10, Value: w}
+		i++
+	}
+
+	return wire.NewValueStruct(wire.Struct{Fields: fields[:i]}), nil
+}
+
+// FromWire deserializes a SearchAttributes struct from its Thrift-level
+// representation. The Thrift-level representation may be obtained
+// from a ThriftRW protocol implementation.
+//
+// An error is returned if we were unable to build a SearchAttributes struct
+// from the provided intermediate representation.
+//
+//   x, err := binaryProtocol.Decode(reader, wire.TStruct)
+//   if err != nil {
+//     return nil, err
+//   }
+//
+//   var v SearchAttributes
+//   if err := v.FromWire(x); err != nil {
+//     return nil, err
+//   }
+//   return &v, nil
+func (v *SearchAttributes) FromWire(w wire.Value) error {
+	var err error
+
+	for _, field := range w.GetStruct().Fields {
+		switch field.ID {
+		case 10:
+			if field.Value.Type() == wire.TMap {
+				v.IndexedFields, err = _Map_String_Binary_Read(field.Value.GetMap())
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+	}
+
+	return nil
+}
+
+// String returns a readable string representation of a SearchAttributes
+// struct.
+func (v *SearchAttributes) String() string {
+	if v == nil {
+		return "<nil>"
+	}
+
+	var fields [1]string
+	i := 0
+	if v.IndexedFields != nil {
+		fields[i] = fmt.Sprintf("IndexedFields: %v", v.IndexedFields)
+		i++
+	}
+
+	return fmt.Sprintf("SearchAttributes{%v}", strings.Join(fields[:i], ", "))
+}
+
+// Equals returns true if all the fields of this SearchAttributes match the
+// provided SearchAttributes.
+//
+// This function performs a deep comparison.
+func (v *SearchAttributes) Equals(rhs *SearchAttributes) bool {
+	if !((v.IndexedFields == nil && rhs.IndexedFields == nil) || (v.IndexedFields != nil && rhs.IndexedFields != nil && _Map_String_Binary_Equals(v.IndexedFields, rhs.IndexedFields))) {
+		return false
+	}
+
+	return true
+}
+
 type ServiceBusyError struct {
 	Message string `json:"message,required"`
 }
@@ -29235,6 +29808,8 @@ type SignalWithStartWorkflowExecutionRequest struct {
 	RetryPolicy                         *RetryPolicy           `json:"retryPolicy,omitempty"`
 	CronSchedule                        *string                `json:"cronSchedule,omitempty"`
 	Memo                                *Memo                  `json:"memo,omitempty"`
+	SearchAttributes                    *SearchAttributes      `json:"searchAttributes,omitempty"`
+	Header                              *Header                `json:"header,omitempty"`
 }
 
 // ToWire translates a SignalWithStartWorkflowExecutionRequest struct into a Thrift-level intermediate
@@ -29254,7 +29829,7 @@ type SignalWithStartWorkflowExecutionRequest struct {
 //   }
 func (v *SignalWithStartWorkflowExecutionRequest) ToWire() (wire.Value, error) {
 	var (
-		fields [16]wire.Field
+		fields [18]wire.Field
 		i      int = 0
 		w      wire.Value
 		err    error
@@ -29388,6 +29963,22 @@ func (v *SignalWithStartWorkflowExecutionRequest) ToWire() (wire.Value, error) {
 		fields[i] = wire.Field{ID: 160, Value: w}
 		i++
 	}
+	if v.SearchAttributes != nil {
+		w, err = v.SearchAttributes.ToWire()
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 161, Value: w}
+		i++
+	}
+	if v.Header != nil {
+		w, err = v.Header.ToWire()
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 170, Value: w}
+		i++
+	}
 
 	return wire.NewValueStruct(wire.Struct{Fields: fields[:i]}), nil
 }
@@ -29400,6 +29991,12 @@ func _WorkflowIdReusePolicy_Read(w wire.Value) (WorkflowIdReusePolicy, error) {
 
 func _Memo_Read(w wire.Value) (*Memo, error) {
 	var v Memo
+	err := v.FromWire(w)
+	return &v, err
+}
+
+func _SearchAttributes_Read(w wire.Value) (*SearchAttributes, error) {
+	var v SearchAttributes
 	err := v.FromWire(w)
 	return &v, err
 }
@@ -29572,6 +30169,22 @@ func (v *SignalWithStartWorkflowExecutionRequest) FromWire(w wire.Value) error {
 				}
 
 			}
+		case 161:
+			if field.Value.Type() == wire.TStruct {
+				v.SearchAttributes, err = _SearchAttributes_Read(field.Value)
+				if err != nil {
+					return err
+				}
+
+			}
+		case 170:
+			if field.Value.Type() == wire.TStruct {
+				v.Header, err = _Header_Read(field.Value)
+				if err != nil {
+					return err
+				}
+
+			}
 		}
 	}
 
@@ -29585,7 +30198,7 @@ func (v *SignalWithStartWorkflowExecutionRequest) String() string {
 		return "<nil>"
 	}
 
-	var fields [16]string
+	var fields [18]string
 	i := 0
 	if v.Domain != nil {
 		fields[i] = fmt.Sprintf("Domain: %v", *(v.Domain))
@@ -29649,6 +30262,14 @@ func (v *SignalWithStartWorkflowExecutionRequest) String() string {
 	}
 	if v.Memo != nil {
 		fields[i] = fmt.Sprintf("Memo: %v", v.Memo)
+		i++
+	}
+	if v.SearchAttributes != nil {
+		fields[i] = fmt.Sprintf("SearchAttributes: %v", v.SearchAttributes)
+		i++
+	}
+	if v.Header != nil {
+		fields[i] = fmt.Sprintf("Header: %v", v.Header)
 		i++
 	}
 
@@ -29716,6 +30337,12 @@ func (v *SignalWithStartWorkflowExecutionRequest) Equals(rhs *SignalWithStartWor
 		return false
 	}
 	if !((v.Memo == nil && rhs.Memo == nil) || (v.Memo != nil && rhs.Memo != nil && v.Memo.Equals(rhs.Memo))) {
+		return false
+	}
+	if !((v.SearchAttributes == nil && rhs.SearchAttributes == nil) || (v.SearchAttributes != nil && rhs.SearchAttributes != nil && v.SearchAttributes.Equals(rhs.SearchAttributes))) {
+		return false
+	}
+	if !((v.Header == nil && rhs.Header == nil) || (v.Header != nil && rhs.Header != nil && v.Header.Equals(rhs.Header))) {
 		return false
 	}
 
@@ -31755,6 +32382,7 @@ type StartWorkflowExecutionRequest struct {
 	RetryPolicy                         *RetryPolicy           `json:"retryPolicy,omitempty"`
 	CronSchedule                        *string                `json:"cronSchedule,omitempty"`
 	Memo                                *Memo                  `json:"memo,omitempty"`
+	SearchAttributes                    *SearchAttributes      `json:"searchAttributes,omitempty"`
 	Header                              *Header                `json:"header,omitempty"`
 }
 
@@ -31775,7 +32403,7 @@ type StartWorkflowExecutionRequest struct {
 //   }
 func (v *StartWorkflowExecutionRequest) ToWire() (wire.Value, error) {
 	var (
-		fields [15]wire.Field
+		fields [16]wire.Field
 		i      int = 0
 		w      wire.Value
 		err    error
@@ -31891,6 +32519,14 @@ func (v *StartWorkflowExecutionRequest) ToWire() (wire.Value, error) {
 			return w, err
 		}
 		fields[i] = wire.Field{ID: 140, Value: w}
+		i++
+	}
+	if v.SearchAttributes != nil {
+		w, err = v.SearchAttributes.ToWire()
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 141, Value: w}
 		i++
 	}
 	if v.Header != nil {
@@ -32057,6 +32693,14 @@ func (v *StartWorkflowExecutionRequest) FromWire(w wire.Value) error {
 				}
 
 			}
+		case 141:
+			if field.Value.Type() == wire.TStruct {
+				v.SearchAttributes, err = _SearchAttributes_Read(field.Value)
+				if err != nil {
+					return err
+				}
+
+			}
 		case 150:
 			if field.Value.Type() == wire.TStruct {
 				v.Header, err = _Header_Read(field.Value)
@@ -32078,7 +32722,7 @@ func (v *StartWorkflowExecutionRequest) String() string {
 		return "<nil>"
 	}
 
-	var fields [15]string
+	var fields [16]string
 	i := 0
 	if v.Domain != nil {
 		fields[i] = fmt.Sprintf("Domain: %v", *(v.Domain))
@@ -32136,6 +32780,10 @@ func (v *StartWorkflowExecutionRequest) String() string {
 		fields[i] = fmt.Sprintf("Memo: %v", v.Memo)
 		i++
 	}
+	if v.SearchAttributes != nil {
+		fields[i] = fmt.Sprintf("SearchAttributes: %v", v.SearchAttributes)
+		i++
+	}
 	if v.Header != nil {
 		fields[i] = fmt.Sprintf("Header: %v", v.Header)
 		i++
@@ -32189,6 +32837,9 @@ func (v *StartWorkflowExecutionRequest) Equals(rhs *StartWorkflowExecutionReques
 		return false
 	}
 	if !((v.Memo == nil && rhs.Memo == nil) || (v.Memo != nil && rhs.Memo != nil && v.Memo.Equals(rhs.Memo))) {
+		return false
+	}
+	if !((v.SearchAttributes == nil && rhs.SearchAttributes == nil) || (v.SearchAttributes != nil && rhs.SearchAttributes != nil && v.SearchAttributes.Equals(rhs.SearchAttributes))) {
 		return false
 	}
 	if !((v.Header == nil && rhs.Header == nil) || (v.Header != nil && rhs.Header != nil && v.Header.Equals(rhs.Header))) {
@@ -37239,16 +37890,18 @@ func (v *WorkflowExecutionFilter) GetWorkflowId() (o string) {
 }
 
 type WorkflowExecutionInfo struct {
-	Execution       *WorkflowExecution            `json:"execution,omitempty"`
-	Type            *WorkflowType                 `json:"type,omitempty"`
-	StartTime       *int64                        `json:"startTime,omitempty"`
-	CloseTime       *int64                        `json:"closeTime,omitempty"`
-	CloseStatus     *WorkflowExecutionCloseStatus `json:"closeStatus,omitempty"`
-	HistoryLength   *int64                        `json:"historyLength,omitempty"`
-	ParentDomainId  *string                       `json:"parentDomainId,omitempty"`
-	ParentExecution *WorkflowExecution            `json:"parentExecution,omitempty"`
-	ExecutionTime   *int64                        `json:"executionTime,omitempty"`
-	Memo            *Memo                         `json:"memo,omitempty"`
+	Execution        *WorkflowExecution            `json:"execution,omitempty"`
+	Type             *WorkflowType                 `json:"type,omitempty"`
+	StartTime        *int64                        `json:"startTime,omitempty"`
+	CloseTime        *int64                        `json:"closeTime,omitempty"`
+	CloseStatus      *WorkflowExecutionCloseStatus `json:"closeStatus,omitempty"`
+	HistoryLength    *int64                        `json:"historyLength,omitempty"`
+	ParentDomainId   *string                       `json:"parentDomainId,omitempty"`
+	ParentExecution  *WorkflowExecution            `json:"parentExecution,omitempty"`
+	ExecutionTime    *int64                        `json:"executionTime,omitempty"`
+	Memo             *Memo                         `json:"memo,omitempty"`
+	SearchAttributes *SearchAttributes             `json:"searchAttributes,omitempty"`
+	AutoResetPoints  *ResetPoints                  `json:"autoResetPoints,omitempty"`
 }
 
 // ToWire translates a WorkflowExecutionInfo struct into a Thrift-level intermediate
@@ -37268,7 +37921,7 @@ type WorkflowExecutionInfo struct {
 //   }
 func (v *WorkflowExecutionInfo) ToWire() (wire.Value, error) {
 	var (
-		fields [10]wire.Field
+		fields [12]wire.Field
 		i      int = 0
 		w      wire.Value
 		err    error
@@ -37354,8 +38007,30 @@ func (v *WorkflowExecutionInfo) ToWire() (wire.Value, error) {
 		fields[i] = wire.Field{ID: 100, Value: w}
 		i++
 	}
+	if v.SearchAttributes != nil {
+		w, err = v.SearchAttributes.ToWire()
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 101, Value: w}
+		i++
+	}
+	if v.AutoResetPoints != nil {
+		w, err = v.AutoResetPoints.ToWire()
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 110, Value: w}
+		i++
+	}
 
 	return wire.NewValueStruct(wire.Struct{Fields: fields[:i]}), nil
+}
+
+func _ResetPoints_Read(w wire.Value) (*ResetPoints, error) {
+	var v ResetPoints
+	err := v.FromWire(w)
+	return &v, err
 }
 
 // FromWire deserializes a WorkflowExecutionInfo struct from its Thrift-level
@@ -37472,6 +38147,22 @@ func (v *WorkflowExecutionInfo) FromWire(w wire.Value) error {
 				}
 
 			}
+		case 101:
+			if field.Value.Type() == wire.TStruct {
+				v.SearchAttributes, err = _SearchAttributes_Read(field.Value)
+				if err != nil {
+					return err
+				}
+
+			}
+		case 110:
+			if field.Value.Type() == wire.TStruct {
+				v.AutoResetPoints, err = _ResetPoints_Read(field.Value)
+				if err != nil {
+					return err
+				}
+
+			}
 		}
 	}
 
@@ -37485,7 +38176,7 @@ func (v *WorkflowExecutionInfo) String() string {
 		return "<nil>"
 	}
 
-	var fields [10]string
+	var fields [12]string
 	i := 0
 	if v.Execution != nil {
 		fields[i] = fmt.Sprintf("Execution: %v", v.Execution)
@@ -37527,6 +38218,14 @@ func (v *WorkflowExecutionInfo) String() string {
 		fields[i] = fmt.Sprintf("Memo: %v", v.Memo)
 		i++
 	}
+	if v.SearchAttributes != nil {
+		fields[i] = fmt.Sprintf("SearchAttributes: %v", v.SearchAttributes)
+		i++
+	}
+	if v.AutoResetPoints != nil {
+		fields[i] = fmt.Sprintf("AutoResetPoints: %v", v.AutoResetPoints)
+		i++
+	}
 
 	return fmt.Sprintf("WorkflowExecutionInfo{%v}", strings.Join(fields[:i], ", "))
 }
@@ -37564,6 +38263,12 @@ func (v *WorkflowExecutionInfo) Equals(rhs *WorkflowExecutionInfo) bool {
 		return false
 	}
 	if !((v.Memo == nil && rhs.Memo == nil) || (v.Memo != nil && rhs.Memo != nil && v.Memo.Equals(rhs.Memo))) {
+		return false
+	}
+	if !((v.SearchAttributes == nil && rhs.SearchAttributes == nil) || (v.SearchAttributes != nil && rhs.SearchAttributes != nil && v.SearchAttributes.Equals(rhs.SearchAttributes))) {
+		return false
+	}
+	if !((v.AutoResetPoints == nil && rhs.AutoResetPoints == nil) || (v.AutoResetPoints != nil && rhs.AutoResetPoints != nil && v.AutoResetPoints.Equals(rhs.AutoResetPoints))) {
 		return false
 	}
 
@@ -37821,13 +38526,16 @@ type WorkflowExecutionStartedEventAttributes struct {
 	ContinuedFailureReason              *string                 `json:"continuedFailureReason,omitempty"`
 	ContinuedFailureDetails             []byte                  `json:"continuedFailureDetails,omitempty"`
 	LastCompletionResult                []byte                  `json:"lastCompletionResult,omitempty"`
+	OriginalExecutionRunId              *string                 `json:"originalExecutionRunId,omitempty"`
 	Identity                            *string                 `json:"identity,omitempty"`
+	FirstExecutionRunId                 *string                 `json:"firstExecutionRunId,omitempty"`
 	RetryPolicy                         *RetryPolicy            `json:"retryPolicy,omitempty"`
 	Attempt                             *int32                  `json:"attempt,omitempty"`
 	ExpirationTimestamp                 *int64                  `json:"expirationTimestamp,omitempty"`
 	CronSchedule                        *string                 `json:"cronSchedule,omitempty"`
 	FirstDecisionTaskBackoffSeconds     *int32                  `json:"firstDecisionTaskBackoffSeconds,omitempty"`
 	Memo                                *Memo                   `json:"memo,omitempty"`
+	SearchAttributes                    *SearchAttributes       `json:"searchAttributes,omitempty"`
 	PrevAutoResetPoints                 *ResetPoints            `json:"prevAutoResetPoints,omitempty"`
 	Header                              *Header                 `json:"header,omitempty"`
 }
@@ -37849,7 +38557,7 @@ type WorkflowExecutionStartedEventAttributes struct {
 //   }
 func (v *WorkflowExecutionStartedEventAttributes) ToWire() (wire.Value, error) {
 	var (
-		fields [23]wire.Field
+		fields [26]wire.Field
 		i      int = 0
 		w      wire.Value
 		err    error
@@ -37967,12 +38675,28 @@ func (v *WorkflowExecutionStartedEventAttributes) ToWire() (wire.Value, error) {
 		fields[i] = wire.Field{ID: 58, Value: w}
 		i++
 	}
+	if v.OriginalExecutionRunId != nil {
+		w, err = wire.NewValueString(*(v.OriginalExecutionRunId)), error(nil)
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 59, Value: w}
+		i++
+	}
 	if v.Identity != nil {
 		w, err = wire.NewValueString(*(v.Identity)), error(nil)
 		if err != nil {
 			return w, err
 		}
 		fields[i] = wire.Field{ID: 60, Value: w}
+		i++
+	}
+	if v.FirstExecutionRunId != nil {
+		w, err = wire.NewValueString(*(v.FirstExecutionRunId)), error(nil)
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 61, Value: w}
 		i++
 	}
 	if v.RetryPolicy != nil {
@@ -38023,6 +38747,14 @@ func (v *WorkflowExecutionStartedEventAttributes) ToWire() (wire.Value, error) {
 		fields[i] = wire.Field{ID: 120, Value: w}
 		i++
 	}
+	if v.SearchAttributes != nil {
+		w, err = v.SearchAttributes.ToWire()
+		if err != nil {
+			return w, err
+		}
+		fields[i] = wire.Field{ID: 121, Value: w}
+		i++
+	}
 	if v.PrevAutoResetPoints != nil {
 		w, err = v.PrevAutoResetPoints.ToWire()
 		if err != nil {
@@ -38041,12 +38773,6 @@ func (v *WorkflowExecutionStartedEventAttributes) ToWire() (wire.Value, error) {
 	}
 
 	return wire.NewValueStruct(wire.Struct{Fields: fields[:i]}), nil
-}
-
-func _ResetPoints_Read(w wire.Value) (*ResetPoints, error) {
-	var v ResetPoints
-	err := v.FromWire(w)
-	return &v, err
 }
 
 // FromWire deserializes a WorkflowExecutionStartedEventAttributes struct from its Thrift-level
@@ -38199,11 +38925,31 @@ func (v *WorkflowExecutionStartedEventAttributes) FromWire(w wire.Value) error {
 				}
 
 			}
+		case 59:
+			if field.Value.Type() == wire.TBinary {
+				var x string
+				x, err = field.Value.GetString(), error(nil)
+				v.OriginalExecutionRunId = &x
+				if err != nil {
+					return err
+				}
+
+			}
 		case 60:
 			if field.Value.Type() == wire.TBinary {
 				var x string
 				x, err = field.Value.GetString(), error(nil)
 				v.Identity = &x
+				if err != nil {
+					return err
+				}
+
+			}
+		case 61:
+			if field.Value.Type() == wire.TBinary {
+				var x string
+				x, err = field.Value.GetString(), error(nil)
+				v.FirstExecutionRunId = &x
 				if err != nil {
 					return err
 				}
@@ -38265,6 +39011,14 @@ func (v *WorkflowExecutionStartedEventAttributes) FromWire(w wire.Value) error {
 				}
 
 			}
+		case 121:
+			if field.Value.Type() == wire.TStruct {
+				v.SearchAttributes, err = _SearchAttributes_Read(field.Value)
+				if err != nil {
+					return err
+				}
+
+			}
 		case 130:
 			if field.Value.Type() == wire.TStruct {
 				v.PrevAutoResetPoints, err = _ResetPoints_Read(field.Value)
@@ -38294,7 +39048,7 @@ func (v *WorkflowExecutionStartedEventAttributes) String() string {
 		return "<nil>"
 	}
 
-	var fields [23]string
+	var fields [26]string
 	i := 0
 	if v.WorkflowType != nil {
 		fields[i] = fmt.Sprintf("WorkflowType: %v", v.WorkflowType)
@@ -38352,8 +39106,16 @@ func (v *WorkflowExecutionStartedEventAttributes) String() string {
 		fields[i] = fmt.Sprintf("LastCompletionResult: %v", v.LastCompletionResult)
 		i++
 	}
+	if v.OriginalExecutionRunId != nil {
+		fields[i] = fmt.Sprintf("OriginalExecutionRunId: %v", *(v.OriginalExecutionRunId))
+		i++
+	}
 	if v.Identity != nil {
 		fields[i] = fmt.Sprintf("Identity: %v", *(v.Identity))
+		i++
+	}
+	if v.FirstExecutionRunId != nil {
+		fields[i] = fmt.Sprintf("FirstExecutionRunId: %v", *(v.FirstExecutionRunId))
 		i++
 	}
 	if v.RetryPolicy != nil {
@@ -38378,6 +39140,10 @@ func (v *WorkflowExecutionStartedEventAttributes) String() string {
 	}
 	if v.Memo != nil {
 		fields[i] = fmt.Sprintf("Memo: %v", v.Memo)
+		i++
+	}
+	if v.SearchAttributes != nil {
+		fields[i] = fmt.Sprintf("SearchAttributes: %v", v.SearchAttributes)
 		i++
 	}
 	if v.PrevAutoResetPoints != nil {
@@ -38439,7 +39205,13 @@ func (v *WorkflowExecutionStartedEventAttributes) Equals(rhs *WorkflowExecutionS
 	if !((v.LastCompletionResult == nil && rhs.LastCompletionResult == nil) || (v.LastCompletionResult != nil && rhs.LastCompletionResult != nil && bytes.Equal(v.LastCompletionResult, rhs.LastCompletionResult))) {
 		return false
 	}
+	if !_String_EqualsPtr(v.OriginalExecutionRunId, rhs.OriginalExecutionRunId) {
+		return false
+	}
 	if !_String_EqualsPtr(v.Identity, rhs.Identity) {
+		return false
+	}
+	if !_String_EqualsPtr(v.FirstExecutionRunId, rhs.FirstExecutionRunId) {
 		return false
 	}
 	if !((v.RetryPolicy == nil && rhs.RetryPolicy == nil) || (v.RetryPolicy != nil && rhs.RetryPolicy != nil && v.RetryPolicy.Equals(rhs.RetryPolicy))) {
@@ -38458,6 +39230,9 @@ func (v *WorkflowExecutionStartedEventAttributes) Equals(rhs *WorkflowExecutionS
 		return false
 	}
 	if !((v.Memo == nil && rhs.Memo == nil) || (v.Memo != nil && rhs.Memo != nil && v.Memo.Equals(rhs.Memo))) {
+		return false
+	}
+	if !((v.SearchAttributes == nil && rhs.SearchAttributes == nil) || (v.SearchAttributes != nil && rhs.SearchAttributes != nil && v.SearchAttributes.Equals(rhs.SearchAttributes))) {
 		return false
 	}
 	if !((v.PrevAutoResetPoints == nil && rhs.PrevAutoResetPoints == nil) || (v.PrevAutoResetPoints != nil && rhs.PrevAutoResetPoints != nil && v.PrevAutoResetPoints.Equals(rhs.PrevAutoResetPoints))) {
@@ -38550,11 +39325,31 @@ func (v *WorkflowExecutionStartedEventAttributes) GetContinuedFailureReason() (o
 	return
 }
 
+// GetOriginalExecutionRunId returns the value of OriginalExecutionRunId if it is set or its
+// zero value if it is unset.
+func (v *WorkflowExecutionStartedEventAttributes) GetOriginalExecutionRunId() (o string) {
+	if v.OriginalExecutionRunId != nil {
+		return *v.OriginalExecutionRunId
+	}
+
+	return
+}
+
 // GetIdentity returns the value of Identity if it is set or its
 // zero value if it is unset.
 func (v *WorkflowExecutionStartedEventAttributes) GetIdentity() (o string) {
 	if v.Identity != nil {
 		return *v.Identity
+	}
+
+	return
+}
+
+// GetFirstExecutionRunId returns the value of FirstExecutionRunId if it is set or its
+// zero value if it is unset.
+func (v *WorkflowExecutionStartedEventAttributes) GetFirstExecutionRunId() (o string) {
+	if v.FirstExecutionRunId != nil {
+		return *v.FirstExecutionRunId
 	}
 
 	return

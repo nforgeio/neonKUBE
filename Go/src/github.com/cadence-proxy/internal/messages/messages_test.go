@@ -27,17 +27,19 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/cadence/activity"
-
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
 	"go.uber.org/cadence/worker"
 	"go.uber.org/cadence/workflow"
+	goleak "go.uber.org/goleak"
 	"go.uber.org/zap"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
+
 	"github.com/stretchr/testify/suite"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/endpoints"
@@ -77,6 +79,9 @@ func TestUnitTestSuite(t *testing.T) {
 	// to exit until the server shuts down gracefully
 	s.instance.ShutdownChannel <- true
 	time.Sleep(time.Second * 1)
+
+	// check for goroutine leaks
+	goleak.VerifyNoLeaks(t)
 }
 
 func (s *UnitTestSuite) setupTestSuiteServer() {
@@ -111,7 +116,7 @@ func (s *UnitTestSuite) echoToConnection(message messages.IProxyMessage) (messag
 	}
 
 	// set the request header to specified content type
-	req.Header.Set("Content-Type", endpoints.ContentType)
+	req.Header.Set("Content-Type", globals.ContentType)
 
 	// initialize the http.Client and send the request
 	client := &http.Client{}

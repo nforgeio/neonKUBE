@@ -48,11 +48,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gettext-base \
         gnupg \
         wget \
-        vim \
         tcpdump \
         netcat \
         python-pip \
-        mysql-client \
         curl \
         python-setuptools \
     && rm -rf /var/lib/apt/lists/* \

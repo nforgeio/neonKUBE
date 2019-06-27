@@ -40,6 +40,8 @@ import (
 	"time"
 
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pborman/uuid"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/.gen/go/shared"
@@ -69,6 +71,8 @@ const (
 
 	defaultPollerRate = 1000
 
+	defaultMaxConcurrentSessionExecutionSize = 1000 // Large concurrent session execution size (1k)
+
 	testTagsContextKey = "cadence-testTags"
 )
 
@@ -87,6 +91,7 @@ type (
 		worker              *baseWorker
 		localActivityWorker *baseWorker
 		identity            string
+		stopC               chan struct{}
 	}
 
 	// ActivityWorker wraps the code for hosting activity types.
@@ -98,6 +103,15 @@ type (
 		poller              taskPoller
 		worker              *baseWorker
 		identity            string
+		stopC               chan struct{}
+	}
+
+	// sessionWorker wraps the code for hosting session creation, completion and
+	// activities within a session. The creationWorker polls from a global tasklist,
+	// while the activityWorker polls from a resource specific tasklist.
+	sessionWorker struct {
+		creationWorker Worker
+		activityWorker Worker
 	}
 
 	// Worker overrides.
@@ -168,6 +182,13 @@ type (
 
 		// WorkerStopChannel is a read only channel listen on worker close. The worker will close the channel before exit.
 		WorkerStopChannel <-chan struct{}
+
+		// SessionResourceID is a unique identifier of the resource the session will consume
+		SessionResourceID string
+
+		ContextPropagators []ContextPropagator
+
+		Tracer opentracing.Tracer
 	}
 
 	// defaultDataConverter uses thrift encoder/decoder when possible, for everything else use json.
@@ -249,6 +270,8 @@ func newWorkflowWorkerInternal(
 	overrides *workerOverrides,
 	hostEnv *hostEnvImpl,
 ) Worker {
+	workerStopChannel := make(chan struct{})
+	params.WorkerStopChannel = getReadOnlyChannel(workerStopChannel)
 	// Get a workflow task handler.
 	ensureRequiredParams(&params)
 	var taskHandler WorkflowTaskHandler
@@ -257,7 +280,7 @@ func newWorkflowWorkerInternal(
 	} else {
 		taskHandler = newWorkflowTaskHandler(domain, params, ppMgr, hostEnv)
 	}
-	return newWorkflowTaskWorkerInternal(taskHandler, service, domain, params)
+	return newWorkflowTaskWorkerInternal(taskHandler, service, domain, params, workerStopChannel)
 }
 
 func newWorkflowTaskWorkerInternal(
@@ -265,6 +288,7 @@ func newWorkflowTaskWorkerInternal(
 	service workflowserviceclient.Interface,
 	domain string,
 	params workerExecutionParameters,
+	stopC chan struct{},
 ) Worker {
 	ensureRequiredParams(&params)
 	poller := newWorkflowTaskPoller(
@@ -324,6 +348,7 @@ func newWorkflowTaskWorkerInternal(
 		localActivityWorker: localActivityWorker,
 		identity:            params.Identity,
 		domain:              domain,
+		stopC:               stopC,
 	}
 }
 
@@ -350,8 +375,68 @@ func (ww *workflowWorker) Run() error {
 
 // Shutdown the worker.
 func (ww *workflowWorker) Stop() {
+	close(ww.stopC)
+	// TODO: remove the stop methods in favor of the workerStopChannel
 	ww.localActivityWorker.Stop()
 	ww.worker.Stop()
+}
+
+func newSessionWorker(service workflowserviceclient.Interface,
+	domain string,
+	params workerExecutionParameters,
+	overrides *workerOverrides,
+	env *hostEnvImpl,
+	maxConcurrentSessionExecutionSize int,
+) Worker {
+	if params.Identity == "" {
+		params.Identity = getWorkerIdentity(params.TaskList)
+	}
+	// For now resourceID is hiden from user so we will always create a unique one for each worker.
+	if params.SessionResourceID == "" {
+		params.SessionResourceID = uuid.New()
+	}
+	sessionEnvironment := newSessionEnvironment(params.SessionResourceID, maxConcurrentSessionExecutionSize)
+
+	creationTasklist := getCreationTasklist(params.TaskList)
+	params.UserContext = context.WithValue(params.UserContext, sessionEnvironmentContextKey, sessionEnvironment)
+	params.TaskList = sessionEnvironment.GetResourceSpecificTasklist()
+	activityWorker := newActivityWorker(service, domain, params, overrides, env, nil)
+
+	params.ConcurrentPollRoutineSize = 1
+	params.TaskList = creationTasklist
+	creationWorker := newActivityWorker(service, domain, params, overrides, env, sessionEnvironment.GetTokenBucket())
+
+	return &sessionWorker{
+		creationWorker: creationWorker,
+		activityWorker: activityWorker,
+	}
+}
+
+func (sw *sessionWorker) Start() error {
+	err := sw.creationWorker.Start()
+	if err != nil {
+		return err
+	}
+
+	err = sw.activityWorker.Start()
+	if err != nil {
+		sw.creationWorker.Stop()
+		return err
+	}
+	return nil
+}
+
+func (sw *sessionWorker) Run() error {
+	err := sw.creationWorker.Start()
+	if err != nil {
+		return err
+	}
+	return sw.activityWorker.Run()
+}
+
+func (sw *sessionWorker) Stop() {
+	sw.creationWorker.Stop()
+	sw.activityWorker.Stop()
 }
 
 func newActivityWorker(
@@ -360,9 +445,12 @@ func newActivityWorker(
 	params workerExecutionParameters,
 	overrides *workerOverrides,
 	env *hostEnvImpl,
-	activityShutdownCh chan struct{},
+	sessionTokenBucket *sessionTokenBucket,
 ) Worker {
+	workerStopChannel := make(chan struct{}, 1)
+	params.WorkerStopChannel = getReadOnlyChannel(workerStopChannel)
 	ensureRequiredParams(&params)
+
 	// Get a activity task handler.
 	var taskHandler ActivityTaskHandler
 	if overrides != nil && overrides.activityTaskHandler != nil {
@@ -370,7 +458,7 @@ func newActivityWorker(
 	} else {
 		taskHandler = newActivityTaskHandler(service, params, env)
 	}
-	return newActivityTaskWorker(taskHandler, service, domain, params, activityShutdownCh)
+	return newActivityTaskWorker(taskHandler, service, domain, params, sessionTokenBucket, workerStopChannel)
 }
 
 func newActivityTaskWorker(
@@ -378,7 +466,8 @@ func newActivityTaskWorker(
 	service workflowserviceclient.Interface,
 	domain string,
 	workerParams workerExecutionParameters,
-	workerStopCh chan struct{},
+	sessionTokenBucket *sessionTokenBucket,
+	stopC chan struct{},
 ) (worker Worker) {
 	ensureRequiredParams(&workerParams)
 
@@ -402,7 +491,7 @@ func newActivityTaskWorker(
 			userContextCancel: workerParams.UserContextCancel},
 		workerParams.Logger,
 		workerParams.MetricsScope,
-		workerStopCh,
+		sessionTokenBucket,
 	)
 
 	return &activityWorker{
@@ -412,6 +501,7 @@ func newActivityTaskWorker(
 		poller:              poller,
 		identity:            workerParams.Identity,
 		domain:              domain,
+		stopC:               stopC,
 	}
 }
 
@@ -437,6 +527,7 @@ func (aw *activityWorker) Run() error {
 
 // Shutdown the worker.
 func (aw *activityWorker) Stop() {
+	close(aw.stopC)
 	aw.worker.Stop()
 }
 
@@ -894,6 +985,7 @@ func getDataConverterFromActivityCtx(ctx context.Context) encoded.DataConverter 
 type aggregatedWorker struct {
 	workflowWorker Worker
 	activityWorker Worker
+	sessionWorker  Worker
 	logger         *zap.Logger
 	hostEnv        *hostEnvImpl
 }
@@ -927,6 +1019,20 @@ func (aw *aggregatedWorker) Start() error {
 			return err
 		}
 	}
+
+	if !isInterfaceNil(aw.sessionWorker) {
+		if err := aw.sessionWorker.Start(); err != nil {
+			// stop workflow worker and activity worker.
+			if !isInterfaceNil(aw.workflowWorker) {
+				aw.workflowWorker.Stop()
+			}
+			if !isInterfaceNil(aw.activityWorker) {
+				aw.activityWorker.Stop()
+			}
+			return err
+		}
+	}
+
 	aw.logger.Info("Started Worker")
 	return nil
 }
@@ -989,6 +1095,9 @@ func (aw *aggregatedWorker) Stop() {
 	if !isInterfaceNil(aw.activityWorker) {
 		aw.activityWorker.Stop()
 	}
+	if !isInterfaceNil(aw.sessionWorker) {
+		aw.sessionWorker.Stop()
+	}
 	aw.logger.Info("Stopped Worker")
 }
 
@@ -1001,9 +1110,7 @@ func newAggregatedWorker(
 	taskList string,
 	options WorkerOptions,
 ) (worker Worker) {
-	wOptions := fillWorkerOptionsDefaults(options)
-	workerStopChannel := make(chan struct{}, 1)
-	readOnlyWorkerStopCh := getReadOnlyChannel(workerStopChannel)
+	wOptions := augmentWorkerOptions(options)
 	ctx := wOptions.BackgroundActivityContext
 	if ctx == nil {
 		ctx = context.Background()
@@ -1031,7 +1138,8 @@ func newAggregatedWorker(
 		NonDeterministicWorkflowPolicy:       wOptions.NonDeterministicWorkflowPolicy,
 		DataConverter:                        wOptions.DataConverter,
 		WorkerStopTimeout:                    wOptions.WorkerStopTimeout,
-		WorkerStopChannel:                    readOnlyWorkerStopCh,
+		ContextPropagators:                   wOptions.ContextPropagators,
+		Tracer:                               wOptions.Tracer,
 	}
 
 	ensureRequiredParams(&workerParams)
@@ -1080,12 +1188,26 @@ func newAggregatedWorker(
 			workerParams,
 			nil,
 			hostEnv,
-			workerStopChannel,
+			nil,
 		)
 	}
+
+	var sessionWorker Worker
+	if wOptions.EnableSessionWorker {
+		sessionWorker = newSessionWorker(
+			service,
+			domain,
+			workerParams,
+			nil,
+			hostEnv,
+			wOptions.MaxConcurrentSessionExecutionSize,
+		)
+	}
+
 	return &aggregatedWorker{
 		workflowWorker: workflowWorker,
 		activityWorker: activityWorker,
+		sessionWorker:  sessionWorker,
 		logger:         logger,
 		hostEnv:        hostEnv,
 	}
@@ -1243,7 +1365,7 @@ func (g thriftEncoding) Unmarshal(data []byte, objs []interface{}) error {
 	return nil
 }
 
-func fillWorkerOptionsDefaults(options WorkerOptions) WorkerOptions {
+func augmentWorkerOptions(options WorkerOptions) WorkerOptions {
 	if options.MaxConcurrentActivityExecutionSize == 0 {
 		options.MaxConcurrentActivityExecutionSize = defaultMaxConcurrentActivityExecutionSize
 	}
@@ -1270,6 +1392,16 @@ func fillWorkerOptionsDefaults(options WorkerOptions) WorkerOptions {
 	}
 	if options.DataConverter == nil {
 		options.DataConverter = getDefaultDataConverter()
+	}
+	if options.MaxConcurrentSessionExecutionSize == 0 {
+		options.MaxConcurrentSessionExecutionSize = defaultMaxConcurrentSessionExecutionSize
+	}
+
+	// if the user passes in a tracer then add a tracing context propagator
+	if options.Tracer != nil {
+		options.ContextPropagators = append(options.ContextPropagators, NewTracingContextPropagator(options.Logger, options.Tracer))
+	} else {
+		options.Tracer = opentracing.NoopTracer{}
 	}
 	return options
 }

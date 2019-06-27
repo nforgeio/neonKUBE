@@ -25,6 +25,7 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -394,7 +395,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
 	if op == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 	contextID := op.GetContextID()
 
@@ -408,7 +409,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	// WorkflowContext at the specified WorflowContextID
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// check for ContinueAsNew
@@ -489,12 +490,12 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) 
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
 	if op == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := WorkflowContexts.Get(op.GetContextID()); wectx == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// set the reply
@@ -519,12 +520,12 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) er
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
 	if op == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := WorkflowContexts.Get(op.GetContextID()); wectx == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// set the reply
@@ -643,7 +644,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
 	if op == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 	contextID := op.GetContextID()
 
@@ -656,7 +657,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := ActivityContexts.Get(contextID); actx == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// set the reply
@@ -704,7 +705,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
 	if op == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// set the reply
@@ -732,12 +733,12 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply) er
 	// get the Operation corresponding the the reply
 	op := Operations.Get(requestID)
 	if op == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := ActivityContexts.Get(op.GetContextID()); actx == nil {
-		return errEntityNotExist
+		return globals.ErrEntityNotExist
 	}
 
 	// set the reply
