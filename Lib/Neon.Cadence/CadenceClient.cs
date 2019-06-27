@@ -1055,16 +1055,6 @@ namespace Neon.Cadence
             {
                 // [cadence-proxy] has sent us a request.
 
-                //-------------------------------
-                // $debug(jeff.lill): DELETE THIS
-                if (request.Type == InternalMessageTypes.WorkflowSignalInvokeRequest)
-                {
-                }
-                if (request.Type == InternalMessageTypes.WorkflowQueryInvokeRequest)
-                {
-                }
-                //-------------------------------
-
                 switch (request.Type)
                 {
                     case InternalMessageTypes.WorkflowInvokeRequest:
