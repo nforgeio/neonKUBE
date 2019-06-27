@@ -102,7 +102,9 @@ namespace Neon.Xunit.Cadence
         /// </remarks>
         public TestFixtureStatus Start(
             CadenceSettings     settings       = null,
-            string              image          = "nkubeio/cadence-test:latest",
+            // $DEBUG: JACK -- Change back to cadence-test:latest
+            //string image = "nkubeio/cadence-test:latest",
+            string              image          = "nkubeio/cadence-test:cadence-latest",
             string              name           = "cadence-test",
             string[]            env            = null,
             bool                keepConnection = false,
@@ -142,7 +144,9 @@ namespace Neon.Xunit.Cadence
         /// </remarks>
         public void StartAsComposed(
             CadenceSettings     settings       = null,
-            string              image          = "nkubeio/cadence-test:latest",
+            // $DEBUG: JACK -- Change back to cadence-test:latest
+            //string image = "nkubeio/cadence-test:latest",
+            string image          = "nkubeio/cadence-test:cadence-latest",
             string              name           = "cadence-test",
             string[]            env            = null,
             bool                keepConnection = false, 
