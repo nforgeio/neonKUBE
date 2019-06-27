@@ -27,9 +27,9 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message">The message.</param>
+        /// <param name="message">Optionally specifies message.</param>
         /// <param name="innerException">Optional inner exception.</param>
-        public CadenceBadRequestException(string message, Exception innerException = null)
+        public CadenceBadRequestException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
