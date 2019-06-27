@@ -69,7 +69,7 @@ namespace Neon.Cadence
 
                 if (signalHandlerAttribute != null)
                 {
-                    if (method.ReturnType != typeof(void))
+                    if (method.ReturnType != typeof(Task))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't return [void].  It will be ignored.");
                         continue;
@@ -77,7 +77,7 @@ namespace Neon.Cadence
 
                     var parameters = method.GetParameters();
 
-                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(Task))
+                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
                         continue;
@@ -94,7 +94,7 @@ namespace Neon.Cadence
 
                 if (queryHandlerAttribute != null)
                 {
-                    if (method.ReturnType != typeof(byte[]))
+                    if (method.ReturnType != typeof(Task<byte[]>))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't return a byte array.  It will be ignored.");
                         continue;
@@ -102,7 +102,7 @@ namespace Neon.Cadence
 
                     var parameters = method.GetParameters();
 
-                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(Task<byte[]>))
+                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
                         continue;

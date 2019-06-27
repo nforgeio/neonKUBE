@@ -30,7 +30,7 @@ namespace Neon.Cadence
     /// Used to tag a <see cref="WorkflowBase"/> method that will be called to handle an
     /// external query.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Method)]
     public class QueryHandlerAttribute : Attribute
     {
         /// <summary>

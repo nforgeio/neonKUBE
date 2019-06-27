@@ -37,9 +37,9 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message">The message.</param>
+        /// <param name="message">Optionally specifies message.</param>
         /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceActivityWorkerStartedException(string message, Exception innerException = null)
+        public CadenceActivityWorkerStartedException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }

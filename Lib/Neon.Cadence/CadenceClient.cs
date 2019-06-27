@@ -167,7 +167,7 @@ namespace Neon.Cadence
     /// </note>
     /// <para>
     /// Workflows can be signalled via <see cref="SignalWorkflowAsync(string, string, byte[], string)"/> or
-    /// <see cref="SignalWorkflowAsync(string, string, byte[], byte[], string, WorkflowOptions)"/> that starts the
+    /// <see cref="SignalWorkflowWithStartAsync(string, string, byte[], byte[], string, WorkflowOptions)"/> that starts the
     /// workflow if its not already running.  You can query running workflows via 
     /// <see cref="QueryWorkflowAsync(string, string, byte[], string)"/>.
     /// </para>

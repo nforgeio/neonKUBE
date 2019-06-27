@@ -430,6 +430,31 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Transmits a signal to a running workflow.
+        /// </summary>
+        /// <param name="workflowRun">The <see cref="WorkflowRun"/>.</param>
+        /// <param name="signalName">Identifies the signal.</param>
+        /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        public async Task SignalWorkflowAsync(WorkflowRun workflowRun, string signalName, byte[] signalArgs = null)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowRun != null);
+
+            var reply = (WorkflowSignalReply)await CallProxyAsync(
+                new WorkflowSignalequest()
+                {
+                    WorkflowId = workflowRun.WorkflowId,
+                    SignalName = signalName,
+                    SignalArgs = signalArgs,
+                    RunId      = workflowRun.RunId
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
         /// Transmits a signal to a workflow, starting the workflow if it's not currently running.
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
@@ -442,7 +467,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        public async Task SignalWorkflowAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
+        public async Task SignalWorkflowWithStartAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
@@ -489,6 +514,34 @@ namespace Neon.Cadence
                     QueryName  = queryName,
                     QueryArgs  = queryArgs,
                     RunId      = runId
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
+        }
+
+        /// <summary>
+        /// Queries a workflow.
+        /// </summary>
+        /// <param name="workflowRun">The <see cref="WorkflowRun"/>.</param>
+        /// <param name="queryName">Identifies the signal.</param>
+        /// <param name="queryArgs">Optionally specifies query arguments encoded as a byte array.</param>
+        /// <returns>The query result encoded as a byte array.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        public async Task<byte[]> QueryWorkflowAsync(WorkflowRun workflowRun, string queryName, byte[] queryArgs = null)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowRun != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+
+            var reply = (WorkflowQueryReply)await CallProxyAsync(
+                new WorkflowQueryRequest()
+                {
+                    WorkflowId = workflowRun.WorkflowId,
+                    QueryName  = queryName,
+                    QueryArgs  = queryArgs,
+                    RunId      = workflowRun.RunId
                 });
 
             reply.ThrowOnError();
