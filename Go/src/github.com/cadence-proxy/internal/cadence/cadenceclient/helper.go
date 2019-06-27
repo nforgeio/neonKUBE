@@ -20,6 +20,11 @@ package cadenceclient
 import (
 	"context"
 	"os"
+	"reflect"
+	"strings"
+	"time"
+
+	globals "github.com/cadence-proxy/internal"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
@@ -30,91 +35,129 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+
+	// _cadenceSystemDomain is the string name of the cadence-system domain that
+	// exists on all cadence servers.  This value is used to check that a connection
+	// has been established to the cadence server instance and that it is ready to
+	// accept requests
+	_cadenceSystemDomain = "cadence-system"
+)
+
 type (
 
-	// CadenceClientHelper holds configuration details for building
+	// ClientHelper holds configuration details for building
 	// the cadence domain client and the cadence workflow client
 	// This is used for creating, update, and registering cadence domains
 	// and stoping/starting cadence workflows workers
 	//
 	// Holds:
 	// Workflowserviceclient.Interface -> Interface is a client for the WorkflowService service
+	//
 	// CadenceClientConfiguration -> configuration information for building the cadence workflow and domain clients
+	//
 	// *zap.Logger -> reference to a zap.Logger to log cadence client output to the console
+	//
 	// *WorkflowClientBuilder -> reference to a WorkflowClientBuilder used to build the cadence
 	// domain and workflow clients
+	//
 	// *RegisterDomainRequest -> reference to a RegisterDomainRequest that contains configuration details
 	// for registering a cadence domain
-	CadenceClientHelper struct {
-		Service workflowserviceclient.Interface
-		Config  cadenceClientConfiguration
-		Logger  *zap.Logger
-		Builder *WorkflowClientBuilder
+	//
+	// client.DomainClient
+	//
+	// client.Client
+	ClientHelper struct {
+		Service        workflowserviceclient.Interface
+		Config         clientConfiguration
+		Logger         *zap.Logger
+		Builder        *WorkflowClientBuilder
+		DomainClient   client.DomainClient
+		WorkflowClient client.Client
 	}
 
-	// CadenceClientConfiguration contains configuration details for
+	// clientConfiguration contains configuration details for
 	// building the cadence workflow and domain clients as well as
 	// configuration options for building rpc channels
-	cadenceClientConfiguration struct {
+	clientConfiguration struct {
 		hostPort      string
+		domain        string
 		clientOptions *client.Options
 	}
 )
 
-// domainCreated is a flag that prevents a CadenceClientHelper from
+// domainCreated is a flag that prevents a ClientHelper from
 // creating a new domain client and registering an existing domain
 // var domainCreated bool
 
-// NewCadenceClientHelper is the default constructor
-// for a new CadenceClientHelper
+// NewClientHelper is the default constructor
+// for a new ClientHelper
 //
-// returns *CadenceClientHelper -> pointer to a newly created
-// CadenceClientHelper in memory
-func NewCadenceClientHelper() *CadenceClientHelper {
-	return new(CadenceClientHelper)
+// returns *ClientHelper -> pointer to a newly created
+// ClientHelper in memory
+func NewClientHelper() *ClientHelper {
+	return new(ClientHelper)
 }
 
 //----------------------------------------------------------------------------------
-// CadenceClientHelper instance methods
+// ClientHelper instance methods
 
-// GetHostPort gets the hostPort from a CadenceClientHelper.Config
+// GetHostPort gets the hostPort from a ClientHelper.Config
 //
-// returns string -> the hostPort string from a CadenceClientHelper.Config
-func (helper *CadenceClientHelper) GetHostPort() string {
+// returns string -> the hostPort string from a ClientHelper.Config
+func (helper *ClientHelper) GetHostPort() string {
 	return helper.Config.hostPort
 }
 
-// SetHostPort sets the hostPort in a CadenceClientHelper.Config
+// SetHostPort sets the hostPort in a ClientHelper.Config
 //
 // param value string -> the string value to set as the hostPort in
-// a CadenceClientHelper.Config
-func (helper *CadenceClientHelper) SetHostPort(value string) {
+// a ClientHelper.Config
+func (helper *ClientHelper) SetHostPort(value string) {
 	helper.Config.hostPort = value
 }
 
-// GetClientOptions gets the client.Options from a CadenceClientHelper.Config
+// GetDomain gets the domain from a ClientHelper.Config
+//
+// returns string -> the domain string from a ClientHelper.Config
+func (helper *ClientHelper) GetDomain() string {
+	return helper.Config.domain
+}
+
+// SetDomain sets the domain in a ClientHelper.Config
+//
+// param value string -> the string value to set as the domain in
+// a ClientHelper.Config
+func (helper *ClientHelper) SetDomain(value string) {
+	helper.Config.domain = value
+}
+
+// GetClientOptions gets the client.Options from a ClientHelper.Config
 //
 // returns *client.ClientOptions -> a pointer to a client.Options instance
-// in a CadenceClientHelper.Config
-func (helper *CadenceClientHelper) GetClientOptions() *client.Options {
+// in a ClientHelper.Config
+func (helper *ClientHelper) GetClientOptions() *client.Options {
 	return helper.Config.clientOptions
 }
 
-// SetClientOptions sets the client.Options in a CadenceClientHelper.Config
+// SetClientOptions sets the client.Options in a ClientHelper.Config
 //
 // param value *client.Options -> client.Options pointer in memory to set
-// in CadenceClientHelper.Config
-func (helper *CadenceClientHelper) SetClientOptions(value *client.Options) {
+// in ClientHelper.Config
+func (helper *ClientHelper) SetClientOptions(value *client.Options) {
 	helper.Config.clientOptions = value
 }
 
-// SetupServiceConfig configures a CadenceClientHelper's workflowserviceclient.Interface
+// SetupServiceConfig configures a ClientHelper's workflowserviceclient.Interface
 // Service.  It also sets the Logger, the WorkflowClientBuilder, and acts as a helper for
 // creating new cadence workflow and domain clients
 //
+// param ctx context.Context -> go context to use to verify a connection
+// has been established to the cadence server
+//
 // returns error -> error if there were any problems configuring
 // or building the service client
-func (helper *CadenceClientHelper) SetupServiceConfig() error {
+func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 
 	// exit if the service has already been setup
 	if helper.Service != nil {
@@ -124,18 +167,86 @@ func (helper *CadenceClientHelper) SetupServiceConfig() error {
 	// set the logger to global logger
 	helper.Logger = zap.L()
 
-	// Configure the CadenceClientHelper.Builder
+	// Configure the ClientHelper.Builder
 	helper.Builder = NewBuilder(helper.Logger).
 		SetHostPort(helper.Config.hostPort).
-		SetClientOptions(helper.Config.clientOptions)
+		SetClientOptions(helper.Config.clientOptions).
+		SetDomain(helper.Config.domain)
 
-	// Configure the CadenceClientHelper.Service from the
-	// CadenceClientHelper.Builder
+	// build the service client
 	service, err := helper.Builder.BuildServiceClient()
 	if err != nil {
 		return err
 	}
 	helper.Service = service
+
+	// build the domain client
+	domainClient, err := helper.Builder.BuildCadenceDomainClient()
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
+
+		return err
+	}
+	helper.DomainClient = domainClient
+
+	// validate that a connection has been established
+	// make a channel that waits for a connection to be established
+	// until returning ready
+	connectChan := make(chan error)
+	defer close(connectChan)
+
+	// validate the connection
+	err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
+	if err != nil {
+		defer func() {
+			helper = nil
+		}()
+
+		return err
+	}
+
+	// build the workflow client
+	workflowClient, err := helper.Builder.BuildCadenceClient()
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
+
+		return nil
+	}
+	helper.WorkflowClient = workflowClient
+
+	return nil
+}
+
+// EstablishServerConnection establishes a connection to a running cadence server
+// instance.
+//
+// param ctx context.Context -> the context used to poll the server to see if a
+// connection has been established
+//
+// param endpoints string -> the endpoints to be set as the cadence service cleint
+// HostPort
+//
+// param opts *client.Options -> the client options for connection the the cadence
+// server instance
+//
+// returns error -> error if any errors are thrown while trying to establish a
+// connection, or nil upon success
+func (helper *ClientHelper) EstablishServerConnection(ctx context.Context, endpoints string, opts *client.Options) error {
+
+	// setup service config
+	helper.SetHostPort(endpoints)
+	helper.SetClientOptions(opts)
+	if err := helper.SetupServiceConfig(ctx); err != nil {
+		defer func() {
+			helper = nil
+		}()
+
+		return err
+	}
 
 	return nil
 }
@@ -157,7 +268,12 @@ func (helper *CadenceClientHelper) SetupServiceConfig() error {
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
-func (helper *CadenceClientHelper) StartWorker(domain, taskList string, options worker.Options) (worker.Worker, error) {
+func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.Options) (worker.Worker, error) {
+
+	// check for nil service
+	if helper.Service == nil {
+		return nil, globals.ErrConnection
+	}
 
 	// set the worker logger
 	// create and start the worker
@@ -183,7 +299,7 @@ func (helper *CadenceClientHelper) StartWorker(domain, taskList string, options 
 // StopWorker stops a worker at the given workerID
 //
 // param worker.Worker -> the worker to be stopped
-func (helper *CadenceClientHelper) StopWorker(worker worker.Worker) {
+func (helper *ClientHelper) StopWorker(worker worker.Worker) {
 	worker.Stop()
 }
 
@@ -199,25 +315,26 @@ func (helper *CadenceClientHelper) StopWorker(worker worker.Worker) {
 // request
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
-func (helper *CadenceClientHelper) DescribeDomain(ctx context.Context, domain string) (*cadenceshared.DescribeDomainResponse, error) {
+func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (*cadenceshared.DescribeDomainResponse, error) {
 
-	// build domain client
-	domainClient, err := helper.Builder.BuildCadenceDomainClient()
-	if err != nil {
+	// check the domain client for
+	if reflect.ValueOf(helper.DomainClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
-
-		return nil, err
+		helper.Logger.Error("Domain Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return nil, globals.ErrEntityNotExist
 	}
 
 	// domain describe call to cadence
-	response, err := domainClient.Describe(ctx, domain)
+	resp, err := helper.DomainClient.Describe(ctx, domain)
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	// $debug(jack.burns)
+	helper.Logger.Debug("Domain Describe Response", zap.Any("Domain Info", *resp.DomainInfo))
+
+	return resp, nil
 }
 
 // RegisterDomain creates a cadence domain client instance and calls .Register()
@@ -230,21 +347,19 @@ func (helper *CadenceClientHelper) DescribeDomain(ctx context.Context, domain st
 // used to register the cadence domain
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
-func (helper *CadenceClientHelper) RegisterDomain(ctx context.Context, registerDomainRequest *cadenceshared.RegisterDomainRequest) error {
+func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRequest *cadenceshared.RegisterDomainRequest) error {
 
-	// build domain client
-	domain := registerDomainRequest.GetName()
-	domainClient, err := helper.Builder.BuildCadenceDomainClient()
-	if err != nil {
+	// check the domain client for
+	if reflect.ValueOf(helper.DomainClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
-
-		return err
+		helper.Logger.Error("Domain Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return globals.ErrEntityNotExist
 	}
 
 	// domain Register call to cadence
-	err = domainClient.Register(ctx, registerDomainRequest)
+	domain := registerDomainRequest.GetName()
+	err := helper.DomainClient.Register(ctx, registerDomainRequest)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
@@ -272,21 +387,19 @@ func (helper *CadenceClientHelper) RegisterDomain(ctx context.Context, registerD
 // used to Update the cadence domain
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
-func (helper *CadenceClientHelper) UpdateDomain(ctx context.Context, updateDomainRequest *cadenceshared.UpdateDomainRequest) error {
+func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainRequest *cadenceshared.UpdateDomainRequest) error {
 
-	// build domain client
-	domain := updateDomainRequest.GetName()
-	domainClient, err := helper.Builder.BuildCadenceDomainClient()
-	if err != nil {
+	// check the domain client for
+	if reflect.ValueOf(helper.DomainClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
-
-		return err
+		helper.Logger.Error("Domain Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return globals.ErrEntityNotExist
 	}
 
 	// domain Update call to cadence
-	err = domainClient.Update(ctx, updateDomainRequest)
+	domain := updateDomainRequest.GetName()
+	err := helper.DomainClient.Update(ctx, updateDomainRequest)
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
@@ -321,26 +434,37 @@ func (helper *CadenceClientHelper) UpdateDomain(ctx context.Context, updateDomai
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
-func (helper *CadenceClientHelper) ExecuteWorkflow(ctx context.Context, domain string, options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) (client.WorkflowRun, error) {
+func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) (client.WorkflowRun, error) {
 
-	// set the domain
-	// build the actual cadence client.Client
-	helper.Builder = helper.Builder.SetDomain(domain)
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return nil, err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return nil, globals.ErrEntityNotExist
 	}
 
-	// start the workflow
-	workflowRun, err := workflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
-	if err != nil {
+	// start the workflow, but put in a loop
+	// to check if the domain has been detected yet
+	// by cadence server (primarily for unit testing,
+	// loop should never execute more than once in production)
+	var workflowRun client.WorkflowRun
+	var err error
+	for i := 0; i < 10; i++ {
+		workflowRun, err = helper.WorkflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
+		if err != nil {
 
-		// $debug(jack.burns)
-		helper.Logger.Error("failed to create workflow", zap.Error(err))
-		return nil, err
+			if strings.Contains(err.Error(), "EntityNotExistsError{Message: Domain:") {
+				time.Sleep(time.Second)
+				continue
+			}
+
+			// $debug(jack.burns)
+			helper.Logger.Error("failed to create workflow", zap.Error(err))
+			return nil, err
+		}
+
+		break
 	}
 
 	// $debug(jack.burns)
@@ -366,19 +490,18 @@ func (helper *CadenceClientHelper) ExecuteWorkflow(ctx context.Context, domain s
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
-func (helper *CadenceClientHelper) GetWorkflow(ctx context.Context, workflowID, runID string) (client.WorkflowRun, error) {
+func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID string) (client.WorkflowRun, error) {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return nil, err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return nil, globals.ErrEntityNotExist
 	}
 
 	// get the workflow execution
-	workflowRun := workflowClient.GetWorkflow(ctx, workflowID, runID)
+	workflowRun := helper.WorkflowClient.GetWorkflow(ctx, workflowID, runID)
 
 	// $debug(jack.burns)
 	helper.Logger.Debug("GetWorkflow Successful",
@@ -400,19 +523,18 @@ func (helper *CadenceClientHelper) GetWorkflow(ctx context.Context, workflowID, 
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was cancelled successfully
-func (helper *CadenceClientHelper) CancelWorkflow(ctx context.Context, workflowID, runID string) error {
+func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runID string) error {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return globals.ErrEntityNotExist
 	}
 
 	// cancel the workflow
-	err = workflowClient.CancelWorkflow(ctx, workflowID, runID)
+	err := helper.WorkflowClient.CancelWorkflow(ctx, workflowID, runID)
 	if err != nil {
 
 		// $debug(jack.burns)
@@ -449,19 +571,18 @@ func (helper *CadenceClientHelper) CancelWorkflow(ctx context.Context, workflowI
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was terminated successfully
-func (helper *CadenceClientHelper) TerminateWorkflow(ctx context.Context, workflowID, runID, reason string, details []byte) error {
+func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, runID, reason string, details []byte) error {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return globals.ErrEntityNotExist
 	}
 
 	// terminate the workflow
-	err = workflowClient.TerminateWorkflow(ctx,
+	err := helper.WorkflowClient.TerminateWorkflow(ctx,
 		workflowID,
 		runID,
 		reason,
@@ -509,19 +630,18 @@ func (helper *CadenceClientHelper) TerminateWorkflow(ctx context.Context, workfl
 // starting the workflow
 //
 // returns error -> error upon failure and nil upon success
-func (helper *CadenceClientHelper) SignalWithStartWorkflow(ctx context.Context, workflowID, signalName string, signalArg []byte, opts client.StartWorkflowOptions, workflow string, args ...interface{}) (*workflow.Execution, error) {
+func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflowID, signalName string, signalArg []byte, opts client.StartWorkflowOptions, workflow string, args ...interface{}) (*workflow.Execution, error) {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return nil, err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return nil, globals.ErrEntityNotExist
 	}
 
 	// signal the workflow to start
-	workflowExecution, err := workflowClient.SignalWithStartWorkflow(ctx, workflowID, signalName, signalArg, opts, workflow, args...)
+	workflowExecution, err := helper.WorkflowClient.SignalWithStartWorkflow(ctx, workflowID, signalName, signalArg, opts, workflow, args...)
 	if err != nil {
 
 		// $debug(jack.burns)
@@ -552,19 +672,18 @@ func (helper *CadenceClientHelper) SignalWithStartWorkflow(ctx context.Context, 
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was cancelled successfully
-func (helper *CadenceClientHelper) DescribeWorkflowExecution(ctx context.Context, workflowID, runID string) (*cadenceshared.DescribeWorkflowExecutionResponse, error) {
+func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workflowID, runID string) (*cadenceshared.DescribeWorkflowExecutionResponse, error) {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return nil, err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return nil, globals.ErrEntityNotExist
 	}
 
 	// descibe the workflow execution
-	response, err := workflowClient.DescribeWorkflowExecution(ctx, workflowID, runID)
+	response, err := helper.WorkflowClient.DescribeWorkflowExecution(ctx, workflowID, runID)
 	if err != nil {
 
 		// $debug(jack.burns)
@@ -599,19 +718,18 @@ func (helper *CadenceClientHelper) DescribeWorkflowExecution(ctx context.Context
 // param arg interface{} -> the signaling arguments
 //
 // returns error -> error upon failure and nil upon success
-func (helper *CadenceClientHelper) SignalWorkflow(ctx context.Context, workflowID, runID, signalName string, arg interface{}) error {
+func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runID, signalName string, arg interface{}) error {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return globals.ErrEntityNotExist
 	}
 
 	// signal the workflow
-	err = workflowClient.SignalWorkflow(ctx, workflowID, runID, signalName, arg)
+	err := helper.WorkflowClient.SignalWorkflow(ctx, workflowID, runID, signalName, arg)
 	if err != nil {
 
 		// $debug(jack.burns)
@@ -643,19 +761,18 @@ func (helper *CadenceClientHelper) SignalWorkflow(ctx context.Context, workflowI
 // returns encoded.Value -> the encoded result value of querying a workflow
 //
 // returns error -> error upon failure and nil upon success
-func (helper *CadenceClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID, queryType string, args ...interface{}) (encoded.Value, error) {
+func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID, queryType string, args ...interface{}) (encoded.Value, error) {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return nil, err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return nil, globals.ErrEntityNotExist
 	}
 
 	// query the workflow
-	value, err := workflowClient.QueryWorkflow(ctx, workflowID, runID, queryType, args...)
+	value, err := helper.WorkflowClient.QueryWorkflow(ctx, workflowID, runID, queryType, args...)
 	if err != nil {
 
 		// $debug(jack.burns)
@@ -684,19 +801,18 @@ func (helper *CadenceClientHelper) QueryWorkflow(ctx context.Context, workflowID
 // pararm err error -> error to complete the activity with
 //
 // returns error -> error upon failure to complete the activity, nil upon success
-func (helper *CadenceClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, result interface{}, e error) error {
+func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, result interface{}, e error) error {
 
-	// build the actual cadence client.Client
-	workflowClient, err := helper.Builder.BuildCadenceClient()
-	if err != nil {
+	// check that the workflow client exists
+	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
 
 		// $debug(jack.burns)
-		helper.Logger.Error("failed to build cadence client.", zap.Error(err))
-		return err
+		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
+		return globals.ErrEntityNotExist
 	}
 
 	// query the workflow
-	err = workflowClient.CompleteActivity(ctx, taskToken, result, e)
+	err := helper.WorkflowClient.CompleteActivity(ctx, taskToken, result, e)
 	if err != nil {
 
 		// $debug(jack.burns)
@@ -709,6 +825,42 @@ func (helper *CadenceClientHelper) CompleteActivity(ctx context.Context, taskTok
 		zap.Any("Result", result),
 		zap.Any("Error", e),
 	)
+
+	return nil
+}
+
+// pollDomain polls the cadence server to check and see if a connection
+// has been established by the service client by polling a domain
+//
+// param ctx context.Context -> context to execute the domain describe call on
+// param channel chan error -> channel to send error over upon a connection
+// failure or nil if a connection was verified
+//
+// param domain string -> the domain to query for a connection
+//
+// returns error -> error if establishing a connection failed and nil
+// upon success
+func (helper *ClientHelper) pollDomain(ctx context.Context, channel chan error, domain string) error {
+
+	// check the connection
+	go func() {
+
+		// defer sending error
+		// or nil over channel
+		var err error
+		defer func() {
+			channel <- err
+		}()
+
+		// make a domain describe request on the cadence system domain
+		// to check if it is ready to accept requests
+		_, err = helper.DescribeDomain(ctx, domain)
+	}()
+
+	// block and catch the result
+	if err := <-channel; err != nil {
+		return err
+	}
 
 	return nil
 }

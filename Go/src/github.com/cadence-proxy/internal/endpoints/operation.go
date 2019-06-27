@@ -23,6 +23,7 @@ import (
 
 	"go.uber.org/cadence/workflow"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
 )
@@ -160,7 +161,7 @@ func (op *Operation) SetSettable(value workflow.Settable) {
 // has been received
 func (op *Operation) SetReply(result interface{}, cadenceError *cadenceerrors.CadenceError) error {
 	if op.future == nil {
-		return errArgumentNil
+		return globals.ErrArgumentNil
 	}
 
 	settable := op.GetSettable()
@@ -177,7 +178,7 @@ func (op *Operation) SetReply(result interface{}, cadenceError *cadenceerrors.Ca
 // error
 func (op *Operation) SetError(value *cadenceerrors.CadenceError) error {
 	if op.future == nil {
-		return errArgumentNil
+		return globals.ErrArgumentNil
 	}
 
 	settable := op.GetSettable()
@@ -207,7 +208,7 @@ func (op *Operation) SetChannel(value chan interface{}) {
 func (op *Operation) SendChannel(result interface{}, cadenceError *cadenceerrors.CadenceError) error {
 	defer close(op.channel)
 	if op.channel == nil {
-		return errArgumentNil
+		return globals.ErrArgumentNil
 	}
 
 	if cadenceError != nil {

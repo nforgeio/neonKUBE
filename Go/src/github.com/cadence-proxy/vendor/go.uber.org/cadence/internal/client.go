@@ -25,17 +25,24 @@ import (
 	"fmt"
 	"time"
 
-	"go.uber.org/cadence/encoded"
-
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	s "go.uber.org/cadence/.gen/go/shared"
+	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/internal/common/metrics"
+	"go.uber.org/zap"
 )
 
-// QueryTypeStackTrace is the build in query type for Client.QueryWorkflow() call. Use this query type to get the call
-// stack of the workflow. The result will be a string encoded in the EncodedValue.
-const QueryTypeStackTrace string = "__stack_trace"
+const (
+	// QueryTypeStackTrace is the build in query type for Client.QueryWorkflow() call. Use this query type to get the call
+	// stack of the workflow. The result will be a string encoded in the EncodedValue.
+	QueryTypeStackTrace string = "__stack_trace"
+
+	// QueryTypeOpenSessions is the build in query type for Client.QueryWorkflow() call. Use this query type to get all open
+	// sessions in the workflow. The result will be a list of SessionInfo encoded in the EncodedValue.
+	QueryTypeOpenSessions string = "__open_sessions"
+)
 
 type (
 	// Client is the client for starting and getting information about a workflow executions as well as
@@ -251,6 +258,11 @@ type (
 		//  - InternalServiceError
 		CountWorkflow(ctx context.Context, request *s.CountWorkflowExecutionsRequest) (*s.CountWorkflowExecutionsResponse, error)
 
+		// GetSearchAttributes returns valid search attributes keys and value types.
+		// The search attributes can be used in query of List/Scan/Count APIs. Adding new search attributes requires cadence server
+		// to update dynamic config ValidSearchAttributes.
+		GetSearchAttributes(ctx context.Context) (*s.GetSearchAttributesResponse, error)
+
 		// QueryWorkflow queries a given workflow execution and returns the query result synchronously. Parameter workflowID
 		// and queryType are required, other parameters are optional. The workflowID and runID (optional) identify the
 		// target workflow execution that this query will be send to. If runID is not specified (empty string), server will
@@ -289,9 +301,11 @@ type (
 
 	// ClientOptions are optional parameters for Client creation.
 	ClientOptions struct {
-		MetricsScope  tally.Scope
-		Identity      string
-		DataConverter encoded.DataConverter
+		MetricsScope       tally.Scope
+		Identity           string
+		DataConverter      encoded.DataConverter
+		Tracer             opentracing.Tracer
+		ContextPropagators []ContextPropagator
 	}
 
 	// StartWorkflowOptions configuration parameters for starting a workflow execution.
@@ -345,11 +359,21 @@ type (
 		// * * * * *
 		CronSchedule string
 
-		// Memo - Optional info that will be showed in list workflow.
+		// Memo - Optional non-indexed info that will be showed in list workflow.
 		Memo map[string]interface{}
+
+		// SearchAttributes - Optional indexed info that can be used in query of List/Scan/Count workflow APIs (only
+		// supported when using ElasticSearch). The key and value type must be registered on cadence server side.
+		// Use GetSearchAttributes API to get valid key and corresponding value type.
+		SearchAttributes map[string]interface{}
 	}
 
-	// RetryPolicy defines the retry policy
+	// RetryPolicy defines the retry policy.
+	// Note that the history of activity with retry policy will be different: the started event will be written down into
+	// history only when the activity completes or "finally" timeouts/fails. And the started event only records the last
+	// started time. Because of that, to check an activity has started or not, you cannot rely on history events. Instead,
+	// you can use CLI to describe the workflow to see the status of the activity:
+	//     cadence --do <domain> wf desc -w <wf-id>
 	RetryPolicy struct {
 		// Backoff interval for the first retry. If coefficient is 1.0 then it is used for all retries.
 		// Required, no default value.
@@ -447,12 +471,25 @@ func NewClient(service workflowserviceclient.Interface, domain string, options *
 	} else {
 		dataConverter = getDefaultDataConverter()
 	}
+	var contextPropagators []ContextPropagator
+	if options != nil {
+		contextPropagators = options.ContextPropagators
+	}
+	var tracer opentracing.Tracer
+	if options != nil && options.Tracer != nil {
+		tracer = options.Tracer
+		contextPropagators = append(contextPropagators, NewTracingContextPropagator(zap.NewNop(), tracer))
+	} else {
+		tracer = opentracing.NoopTracer{}
+	}
 	return &workflowClient{
-		workflowService: metrics.NewWorkflowServiceWrapper(service, metricScope),
-		domain:          domain,
-		metricsScope:    metrics.NewTaggedScope(metricScope),
-		identity:        identity,
-		dataConverter:   dataConverter,
+		workflowService:    metrics.NewWorkflowServiceWrapper(service, metricScope),
+		domain:             domain,
+		metricsScope:       metrics.NewTaggedScope(metricScope),
+		identity:           identity,
+		dataConverter:      dataConverter,
+		contextPropagators: contextPropagators,
+		tracer:             tracer,
 	}
 }
 

@@ -33,6 +33,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	s "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/encoded"
@@ -118,21 +119,25 @@ type (
 		laTunnel                       *localActivityTunnel
 		nonDeterministicWorkflowPolicy NonDeterministicWorkflowPolicy
 		dataConverter                  encoded.DataConverter
+		contextPropagators             []ContextPropagator
+		tracer                         opentracing.Tracer
 	}
 
 	activityProvider func(name string) activity
 	// activityTaskHandlerImpl is the implementation of ActivityTaskHandler
 	activityTaskHandlerImpl struct {
-		taskListName     string
-		identity         string
-		service          workflowserviceclient.Interface
-		metricsScope     *metrics.TaggedScope
-		logger           *zap.Logger
-		userContext      context.Context
-		hostEnv          *hostEnvImpl
-		activityProvider activityProvider
-		dataConverter    encoded.DataConverter
-		workerStopCh     <-chan struct{}
+		taskListName       string
+		identity           string
+		service            workflowserviceclient.Interface
+		metricsScope       *metrics.TaggedScope
+		logger             *zap.Logger
+		userContext        context.Context
+		hostEnv            *hostEnvImpl
+		activityProvider   activityProvider
+		dataConverter      encoded.DataConverter
+		workerStopCh       <-chan struct{}
+		contextPropagators []ContextPropagator
+		tracer             opentracing.Tracer
 	}
 
 	// history wrapper method to help information about events.
@@ -142,6 +147,10 @@ type (
 		loadedEvents  []*s.HistoryEvent
 		currentIndex  int
 		next          []*s.HistoryEvent
+	}
+
+	decisionHeartbeatError struct {
+		Message string
 	}
 )
 
@@ -154,6 +163,10 @@ func newHistory(task *workflowTask, eventsHandler *workflowExecutionEventHandler
 	}
 
 	return result
+}
+
+func (e decisionHeartbeatError) Error() string {
+	return e.Message
 }
 
 // Get workflow start event.
@@ -320,6 +333,8 @@ func newWorkflowTaskHandler(
 		hostEnv:                        hostEnv,
 		nonDeterministicWorkflowPolicy: params.NonDeterministicWorkflowPolicy,
 		dataConverter:                  params.DataConverter,
+		contextPropagators:             params.ContextPropagators,
+		tracer:                         params.Tracer,
 	}
 }
 
@@ -389,7 +404,12 @@ func (w *workflowExecutionContextImpl) Unlock(err error) {
 		// TODO: in case of closed, it asumes the close decision always succeed. need server side change to return
 		// error to indicate the close failure case. This should be rear case. For now, always remove the cache, and
 		// if the close decision failed, the next decision will have to rebuild the state.
-		removeWorkflowContext(w.workflowInfo.WorkflowExecution.RunID)
+		if getWorkflowCache().Exist(w.workflowInfo.WorkflowExecution.RunID) {
+			removeWorkflowContext(w.workflowInfo.WorkflowExecution.RunID)
+		} else {
+			// sticky is disabled, manually clear the workflow state.
+			w.clearState()
+		}
 	}
 
 	w.mutex.Unlock()
@@ -454,6 +474,8 @@ func (w *workflowExecutionContextImpl) clearState() {
 	w.previousStartedEventID = 0
 	w.newDecisions = nil
 	if w.eventHandler != nil {
+		// Set isReplay to true to prevent user code in defer guarded by !isReplaying() from running
+		w.eventHandler.isReplay = true
 		w.eventHandler.Close()
 		w.eventHandler = nil
 	}
@@ -468,7 +490,10 @@ func (w *workflowExecutionContextImpl) createEventHandler() {
 		w.wth.enableLoggingInReplay,
 		w.wth.metricsScope,
 		w.wth.hostEnv,
-		w.wth.dataConverter).(*workflowExecutionEventHandlerImpl)
+		w.wth.dataConverter,
+		w.wth.contextPropagators,
+		w.wth.tracer,
+	).(*workflowExecutionEventHandlerImpl)
 }
 
 func resetHistory(task *s.PollForDecisionTaskResponse, historyIterator HistoryIterator) (*s.History, error) {
@@ -528,8 +553,10 @@ func (wth *workflowTaskHandlerImpl) createWorkflowContext(task *s.PollForDecisio
 	return workflowContext, nil
 }
 
-func (wth *workflowTaskHandlerImpl) getOrCreateWorkflowContext(task *s.PollForDecisionTaskResponse,
-	historyIterator HistoryIterator) (workflowContext *workflowExecutionContextImpl, err error) {
+func (wth *workflowTaskHandlerImpl) getOrCreateWorkflowContext(
+	task *s.PollForDecisionTaskResponse,
+	historyIterator HistoryIterator,
+) (workflowContext *workflowExecutionContextImpl, err error) {
 	metricsScope := wth.metricsScope.GetTaggedScope(tagWorkflowType, task.WorkflowType.GetName())
 	defer func() {
 		if err == nil && workflowContext != nil && workflowContext.laTunnel == nil {
@@ -581,6 +608,9 @@ func (wth *workflowTaskHandlerImpl) getOrCreateWorkflowContext(task *s.PollForDe
 	}
 
 	err = workflowContext.resetStateIfDestroyed(task, historyIterator)
+	if err != nil {
+		workflowContext.Unlock(err)
+	}
 
 	return
 }
@@ -611,9 +641,10 @@ func (w *workflowExecutionContextImpl) resetStateIfDestroyed(task *s.PollForDeci
 // ProcessWorkflowTask processes all the events of the workflow task.
 func (wth *workflowTaskHandlerImpl) ProcessWorkflowTask(
 	workflowTask *workflowTask,
-) (completeRequest interface{}, context WorkflowExecutionContext, errRet error) {
+	heartbeatFunc decisionHeartbeatFunc,
+) (completeRequest interface{}, errRet error) {
 	if workflowTask == nil || workflowTask.task == nil {
-		return nil, nil, errors.New("nil workflow task provided")
+		return nil, errors.New("nil workflow task provided")
 	}
 	task := workflowTask.task
 	if task.History == nil || len(task.History.Events) == 0 {
@@ -622,7 +653,7 @@ func (wth *workflowTaskHandlerImpl) ProcessWorkflowTask(
 		}
 	}
 	if task.Query == nil && len(task.History.Events) == 0 {
-		return nil, nil, errors.New("nil or empty history")
+		return nil, errors.New("nil or empty history")
 	}
 
 	runID := task.WorkflowExecution.GetRunId()
@@ -637,15 +668,53 @@ func (wth *workflowTaskHandlerImpl) ProcessWorkflowTask(
 
 	workflowContext, err := wth.getOrCreateWorkflowContext(task, workflowTask.historyIterator)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	defer func() {
 		workflowContext.Unlock(errRet)
 	}()
 
-	response, err := workflowContext.ProcessWorkflowTask(workflowTask)
-	return response, workflowContext, err
+	var response interface{}
+process_Workflow_Loop:
+	for {
+		startTime := time.Now()
+		response, err = workflowContext.ProcessWorkflowTask(workflowTask)
+		if err == nil && response == nil {
+		wait_LocalActivity_Loop:
+			for {
+				deadlineToTrigger := time.Duration(float32(ratioToForceCompleteDecisionTaskComplete) * float32(workflowContext.GetDecisionTimeout()))
+				delayDuration := startTime.Add(deadlineToTrigger).Sub(time.Now())
+				select {
+				case <-time.After(delayDuration):
+					// force complete, call the decision heartbeat function
+					workflowTask, err = heartbeatFunc(
+						workflowContext.CompleteDecisionTask(workflowTask, false),
+						startTime,
+					)
+					if err != nil {
+						return nil, &decisionHeartbeatError{Message: fmt.Sprintf("error sending decision heartbeat %v", err)}
+					}
+					if workflowTask == nil {
+						return nil, nil
+					}
+					continue process_Workflow_Loop
+
+				case lar := <-workflowTask.laResultCh:
+					// local activity result ready
+					response, err = workflowContext.ProcessLocalActivityResult(workflowTask, lar)
+					if err == nil && response == nil {
+						// decision task is not done yet, still waiting for more local activities
+						continue wait_LocalActivity_Loop
+					}
+					break process_Workflow_Loop
+				}
+			}
+		} else {
+			break process_Workflow_Loop
+		}
+	}
+	return response, err
 }
 
 func (w *workflowExecutionContextImpl) ProcessWorkflowTask(workflowTask *workflowTask) (interface{}, error) {
@@ -936,10 +1005,6 @@ func (w *workflowExecutionContextImpl) skipReplayCheck() bool {
 	return w.currentDecisionTask.Query != nil || !isFullHistory(w.currentDecisionTask.History)
 }
 
-func (w *workflowExecutionContextImpl) GetCurrentDecisionTask() *s.PollForDecisionTaskResponse {
-	return w.currentDecisionTask
-}
-
 func (w *workflowExecutionContextImpl) SetCurrentTask(task *s.PollForDecisionTaskResponse) {
 	w.currentDecisionTask = task
 	// do not update the previousStartedEventID for query task
@@ -971,13 +1036,6 @@ func (w *workflowExecutionContextImpl) ResetIfStale(task *s.PollForDecisionTaskR
 
 func (w *workflowExecutionContextImpl) GetDecisionTimeout() time.Duration {
 	return time.Second * time.Duration(w.workflowInfo.TaskStartToCloseTimeoutSeconds)
-}
-
-func (w *workflowExecutionContextImpl) StackTrace() string {
-	if w.eventHandler == nil {
-		return "eventHandler is closed"
-	}
-	return w.eventHandler.StackTrace()
 }
 
 func skipDeterministicCheckForDecision(d *s.Decision) bool {
@@ -1164,7 +1222,7 @@ func isDecisionMatchEvent(d *s.Decision, e *s.HistoryEvent, strictMode bool) boo
 		}
 		eventAttributes := e.RequestCancelExternalWorkflowExecutionInitiatedEventAttributes
 		decisionAttributes := d.RequestCancelExternalWorkflowExecutionDecisionAttributes
-		if eventAttributes.GetDomain() != decisionAttributes.GetDomain() ||
+		if checkIfDecisionDomainMatchEventDomain(eventAttributes.GetDomain(), decisionAttributes.GetDomain()) ||
 			eventAttributes.WorkflowExecution.GetWorkflowId() != decisionAttributes.GetWorkflowId() {
 			return false
 		}
@@ -1177,7 +1235,7 @@ func isDecisionMatchEvent(d *s.Decision, e *s.HistoryEvent, strictMode bool) boo
 		}
 		eventAttributes := e.SignalExternalWorkflowExecutionInitiatedEventAttributes
 		decisionAttributes := d.SignalExternalWorkflowExecutionDecisionAttributes
-		if eventAttributes.GetDomain() != decisionAttributes.GetDomain() ||
+		if checkIfDecisionDomainMatchEventDomain(eventAttributes.GetDomain(), decisionAttributes.GetDomain()) ||
 			eventAttributes.GetSignalName() != decisionAttributes.GetSignalName() ||
 			eventAttributes.WorkflowExecution.GetWorkflowId() != decisionAttributes.Execution.GetWorkflowId() {
 			return false
@@ -1212,7 +1270,7 @@ func isDecisionMatchEvent(d *s.Decision, e *s.HistoryEvent, strictMode bool) boo
 		eventAttributes := e.StartChildWorkflowExecutionInitiatedEventAttributes
 		decisionAttributes := d.StartChildWorkflowExecutionDecisionAttributes
 		if lastPartOfName(eventAttributes.WorkflowType.GetName()) != lastPartOfName(decisionAttributes.WorkflowType.GetName()) ||
-			(strictMode && eventAttributes.GetDomain() != decisionAttributes.GetDomain()) ||
+			(strictMode && checkIfDecisionDomainMatchEventDomain(eventAttributes.GetDomain(), decisionAttributes.GetDomain())) ||
 			(strictMode && eventAttributes.TaskList.GetName() != decisionAttributes.TaskList.GetName()) {
 			return false
 		}
@@ -1221,6 +1279,13 @@ func isDecisionMatchEvent(d *s.Decision, e *s.HistoryEvent, strictMode bool) boo
 	}
 
 	return false
+}
+
+func checkIfDecisionDomainMatchEventDomain(eventDomainName, decisionDomainName string) bool {
+	if decisionDomainName == "" || IsReplayDomain(decisionDomainName) {
+		return true
+	}
+	return eventDomainName == decisionDomainName
 }
 
 func (wth *workflowTaskHandlerImpl) completeWorkflow(
@@ -1284,6 +1349,7 @@ func (wth *workflowTaskHandlerImpl) completeWorkflow(
 			TaskList:                            common.TaskListPtr(s.TaskList{Name: contErr.params.taskListName}),
 			ExecutionStartToCloseTimeoutSeconds: contErr.params.executionStartToCloseTimeoutSeconds,
 			TaskStartToCloseTimeoutSeconds:      contErr.params.taskStartToCloseTimeoutSeconds,
+			Header:                              contErr.params.header,
 		}
 	} else if workflowContext.err != nil {
 		// Workflow failures
@@ -1362,16 +1428,18 @@ func newActivityTaskHandlerWithCustomProvider(
 	activityProvider activityProvider,
 ) ActivityTaskHandler {
 	return &activityTaskHandlerImpl{
-		taskListName:     params.TaskList,
-		identity:         params.Identity,
-		service:          service,
-		logger:           params.Logger,
-		metricsScope:     metrics.NewTaggedScope(params.MetricsScope),
-		userContext:      params.UserContext,
-		hostEnv:          env,
-		activityProvider: activityProvider,
-		dataConverter:    params.DataConverter,
-		workerStopCh:     params.WorkerStopChannel,
+		taskListName:       params.TaskList,
+		identity:           params.Identity,
+		service:            service,
+		logger:             params.Logger,
+		metricsScope:       metrics.NewTaggedScope(params.MetricsScope),
+		userContext:        params.UserContext,
+		hostEnv:            env,
+		activityProvider:   activityProvider,
+		dataConverter:      params.DataConverter,
+		workerStopCh:       params.WorkerStopChannel,
+		contextPropagators: params.ContextPropagators,
+		tracer:             params.Tracer,
 	}
 }
 
@@ -1488,6 +1556,10 @@ func (i *cadenceInvoker) Close(flushBufferedHeartbeat bool) {
 	}
 }
 
+func (i *cadenceInvoker) GetClient(domain string, options *ClientOptions) Client {
+	return NewClient(i.service, domain, options)
+}
+
 func newServiceInvoker(
 	taskToken []byte,
 	identity string,
@@ -1531,7 +1603,7 @@ func (ath *activityTaskHandlerImpl) Execute(taskList string, t *s.PollForActivit
 	workflowType := t.WorkflowType.GetName()
 	activityType := t.ActivityType.GetName()
 	metricsScope := getMetricsScopeForActivity(ath.metricsScope, workflowType, activityType)
-	ctx := WithActivityTask(canCtx, t, taskList, invoker, ath.logger, metricsScope, ath.dataConverter, ath.workerStopCh)
+	ctx := WithActivityTask(canCtx, t, taskList, invoker, ath.logger, metricsScope, ath.dataConverter, ath.workerStopCh, ath.contextPropagators, ath.tracer)
 
 	activityImplementation := ath.getActivity(activityType)
 	if activityImplementation == nil {
@@ -1556,9 +1628,20 @@ func (ath *activityTaskHandlerImpl) Execute(taskList string, t *s.PollForActivit
 			result, err = convertActivityResultToRespondRequest(ath.identity, t.TaskToken, nil, panicErr, ath.dataConverter), nil
 		}
 	}()
+
+	// propagate context information into the activity context from the headers
+	for _, ctxProp := range ath.contextPropagators {
+		var err error
+		if ctx, err = ctxProp.Extract(ctx, NewHeaderReader(t.Header)); err != nil {
+			return nil, fmt.Errorf("unable to propagate context %v", err)
+		}
+	}
+
 	info := ctx.Value(activityEnvContextKey).(*activityEnvironment)
 	ctx, dlCancelFunc := context.WithDeadline(ctx, info.deadline)
 
+	ctx, span := createOpenTracingActivitySpan(ctx, ath.tracer, time.Now(), activityType, t.WorkflowExecution.GetWorkflowId(), t.WorkflowExecution.GetRunId())
+	defer span.Finish()
 	output, err := activityImplementation.Execute(ctx, t.Input)
 
 	dlCancelFunc()

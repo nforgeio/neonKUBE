@@ -28,6 +28,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	s "go.uber.org/cadence/.gen/go/shared"
@@ -55,8 +56,14 @@ type (
 		ProcessTask(interface{}) error
 	}
 
+	// basePoller is the base class for all poller implementations
+	basePoller struct {
+		shutdownC <-chan struct{}
+	}
+
 	// workflowTaskPoller implements polling/processing a workflow task
 	workflowTaskPoller struct {
+		basePoller
 		domain       string
 		taskListName string
 		identity     string
@@ -76,6 +83,7 @@ type (
 
 	// activityTaskPoller implements polling/processing a workflow task
 	activityTaskPoller struct {
+		basePoller
 		domain              string
 		taskListName        string
 		identity            string
@@ -97,6 +105,7 @@ type (
 	}
 
 	localActivityTaskPoller struct {
+		basePoller
 		handler      *localActivityTaskHandler
 		metricsScope tally.Scope
 		logger       *zap.Logger
@@ -104,10 +113,12 @@ type (
 	}
 
 	localActivityTaskHandler struct {
-		userContext   context.Context
-		metricsScope  *metrics.TaggedScope
-		logger        *zap.Logger
-		dataConverter encoded.DataConverter
+		userContext        context.Context
+		metricsScope       *metrics.TaggedScope
+		logger             *zap.Logger
+		dataConverter      encoded.DataConverter
+		contextPropagators []ContextPropagator
+		tracer             opentracing.Tracer
 	}
 
 	localActivityResult struct {
@@ -123,8 +134,13 @@ type (
 	}
 )
 
-func (lat *localActivityTunnel) getTask() *localActivityTask {
-	return <-lat.taskCh
+func (lat *localActivityTunnel) getTask(stopC <-chan struct{}) *localActivityTask {
+	select {
+	case task := <-lat.taskCh:
+		return task
+	case <-stopC:
+		return nil
+	}
 }
 
 func (lat *localActivityTunnel) sendTask(task *localActivityTask) {
@@ -140,17 +156,58 @@ func isClientSideError(err error) bool {
 	return false
 }
 
-func newWorkflowTaskPoller(taskHandler WorkflowTaskHandler, service workflowserviceclient.Interface,
-	domain string, params workerExecutionParameters) *workflowTaskPoller {
-	return &workflowTaskPoller{
-		service:      service,
-		domain:       domain,
-		taskListName: params.TaskList,
-		identity:     params.Identity,
-		taskHandler:  taskHandler,
-		metricsScope: params.MetricsScope,
-		logger:       params.Logger,
+// shuttingDown returns true if worker is shutting down right now
+func (bp *basePoller) shuttingDown() bool {
+	select {
+	case <-bp.shutdownC:
+		return true
+	default:
+		return false
+	}
+}
 
+// doPoll runs the given pollFunc in a separate go routine. Returns when either of the conditions are met:
+// - poll succeeds, poll fails or worker is shutting down
+func (bp *basePoller) doPoll(pollFunc func(ctx context.Context) (interface{}, error)) (interface{}, error) {
+	if bp.shuttingDown() {
+		return nil, errShutdown
+	}
+
+	var err error
+	var result interface{}
+
+	doneC := make(chan struct{})
+	ctx, cancel, _ := newChannelContext(context.Background(), chanTimeout(pollTaskServiceTimeOut))
+
+	go func() {
+		result, err = pollFunc(ctx)
+		cancel()
+		close(doneC)
+	}()
+
+	select {
+	case <-doneC:
+		return result, err
+	case <-bp.shutdownC:
+		cancel()
+		return nil, errShutdown
+	}
+}
+
+func newWorkflowTaskPoller(
+	taskHandler WorkflowTaskHandler,
+	service workflowserviceclient.Interface,
+	domain string,
+	params workerExecutionParameters) *workflowTaskPoller {
+	return &workflowTaskPoller{
+		basePoller:                   basePoller{shutdownC: params.WorkerStopChannel},
+		service:                      service,
+		domain:                       domain,
+		taskListName:                 params.TaskList,
+		identity:                     params.Identity,
+		taskHandler:                  taskHandler,
+		metricsScope:                 params.MetricsScope,
+		logger:                       params.Logger,
 		disableStickyExecution:       params.DisableStickyExecution,
 		StickyScheduleToStartTimeout: params.StickyScheduleToStartTimeout,
 	}
@@ -159,7 +216,7 @@ func newWorkflowTaskPoller(taskHandler WorkflowTaskHandler, service workflowserv
 // PollTask polls a new task
 func (wtp *workflowTaskPoller) PollTask() (interface{}, error) {
 	// Get the task.
-	workflowTask, err := wtp.poll()
+	workflowTask, err := wtp.doPoll(wtp.poll)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +226,10 @@ func (wtp *workflowTaskPoller) PollTask() (interface{}, error) {
 
 // ProcessTask processes a task which could be workflow task or local activity result
 func (wtp *workflowTaskPoller) ProcessTask(task interface{}) error {
+	if wtp.shuttingDown() {
+		return errShutdown
+	}
+
 	switch task.(type) {
 	case *workflowTask:
 		return wtp.processWorkflowTask(task.(*workflowTask))
@@ -177,11 +238,10 @@ func (wtp *workflowTaskPoller) ProcessTask(task interface{}) error {
 	default:
 		panic("unknown task type.")
 	}
-	return nil
 }
 
-func (wtp *workflowTaskPoller) processWorkflowTask(workflowTask *workflowTask) error {
-	if workflowTask.task == nil {
+func (wtp *workflowTaskPoller) processWorkflowTask(task *workflowTask) error {
+	if task.task == nil {
 		// We didn't have task, poll might have time out.
 		traceLog(func() {
 			wtp.logger.Debug("Workflow task unavailable")
@@ -194,76 +254,47 @@ func (wtp *workflowTaskPoller) processWorkflowTask(workflowTask *workflowTask) e
 	// close doneCh so local activity worker won't get blocked forever when trying to send back result to laResultCh.
 	defer close(doneCh)
 
-process_WorkflowTask_Loop:
 	for {
+		var response *s.RespondDecisionTaskCompletedResponse
 		startTime := time.Now()
-		workflowTask.doneCh = doneCh
-		workflowTask.laResultCh = laResultCh
-		completedRequest, wc, err := wtp.taskHandler.ProcessWorkflowTask(workflowTask)
-		if err == nil && completedRequest == nil {
-			// decision task cannot complete because it is waiting for local activity to finish
-			// we need a timer to force complete it to avoid the decision task timeout on server.
-		wait_LocalActivity_Loop:
-			for {
-				deadlineToTrigger := time.Duration(float32(ratioToForceCompleteDecisionTaskComplete) * float32(wc.GetDecisionTimeout()))
-				delayDuration := startTime.Add(deadlineToTrigger).Sub(time.Now())
-				select {
-				case <-time.After(delayDuration):
-					// force complete
-					response, err := wtp.forceRespondDecisionTaskCompleted(wc, workflowTask, startTime)
-					if err != nil {
-						return err
-					}
-					if response == nil || response.DecisionTask == nil {
-						return nil
-					}
-
-					// we are getting new decision task, so reset the workflowTask and continue process the new one
-					workflowTask = wtp.toWorkflowTask(response.DecisionTask)
-					continue process_WorkflowTask_Loop
-
-				case lar := <-laResultCh:
-					// local activity result ready
-					completedRequest, err := wtp.processLocalActivityResult(lar.task.workflowTask, lar)
-
-					if _, ok := err.(*workflowContextAlreadyDestroyedError); ok {
-						return nil
-					}
-
-					if err == nil && completedRequest == nil {
-						// decision task is not done yet, still waiting for more local activities
-						continue wait_LocalActivity_Loop
-					}
-
-					response, err := wtp.RespondTaskCompletedWithMetrics(completedRequest, err, workflowTask.task, startTime)
-					if err != nil {
-						return err
-					}
-					if response == nil || response.DecisionTask == nil {
-						return nil
-					}
-
-					// we are getting new decision task, so reset the workflowTask and continue process the new one
-					workflowTask = wtp.toWorkflowTask(response.DecisionTask)
-					continue process_WorkflowTask_Loop
+		task.doneCh = doneCh
+		task.laResultCh = laResultCh
+		completedRequest, err := wtp.taskHandler.ProcessWorkflowTask(
+			task,
+			func(response interface{}, startTime time.Time) (*workflowTask, error) {
+				wtp.logger.Debug("Force RespondDecisionTaskCompleted.", zap.Int64("TaskStartedEventID", task.task.GetStartedEventId()))
+				wtp.metricsScope.Counter(metrics.DecisionTaskForceCompleted).Inc(1)
+				heartbeatResponse, err := wtp.RespondTaskCompletedWithMetrics(response, nil, task.task, startTime)
+				if err != nil {
+					return nil, err
 				}
-			}
+				if heartbeatResponse == nil || heartbeatResponse.DecisionTask == nil {
+					return nil, nil
+				}
+				task := wtp.toWorkflowTask(heartbeatResponse.DecisionTask)
+				task.doneCh = doneCh
+				task.laResultCh = laResultCh
+				return task, nil
+			},
+		)
+		if completedRequest == nil && err == nil {
+			return nil
 		}
-
-		response, err := wtp.RespondTaskCompletedWithMetrics(completedRequest, err, workflowTask.task, startTime)
+		if _, ok := err.(decisionHeartbeatError); ok {
+			return err
+		}
+		response, err = wtp.RespondTaskCompletedWithMetrics(completedRequest, err, task.task, startTime)
 		if err != nil {
 			return err
 		}
+
 		if response == nil || response.DecisionTask == nil {
 			return nil
 		}
 
 		// we are getting new decision task, so reset the workflowTask and continue process the new one
-		workflowTask = wtp.toWorkflowTask(response.DecisionTask)
-		continue process_WorkflowTask_Loop
+		task = wtp.toWorkflowTask(response.DecisionTask)
 	}
-
-	return nil
 }
 
 func (wtp *workflowTaskPoller) processResetStickinessTask(rst *resetStickinessTask) error {
@@ -279,59 +310,6 @@ func (wtp *workflowTaskPoller) processResetStickinessTask(rst *resetStickinessTa
 	}
 
 	return nil
-}
-
-func (wtp *workflowTaskPoller) forceRespondDecisionTaskCompleted(wc WorkflowExecutionContext, workflowTask *workflowTask, startTime time.Time) (response *s.RespondDecisionTaskCompletedResponse, err error) {
-	wc.Lock()
-	defer wc.Unlock(nil)
-
-	if wc.IsDestroyed() {
-		return nil, &workflowContextAlreadyDestroyedError{Message: "workflow context already destroyed"}
-	}
-
-	currentTask := wc.GetCurrentDecisionTask()
-	if currentTask == nil || currentTask != workflowTask.task {
-		// decision task already completed
-		var currentTaskStartedEventID int64
-		if currentTask != nil {
-			currentTaskStartedEventID = currentTask.GetStartedEventId()
-		}
-		wtp.logger.Debug("DecisionTask already completed when force responding timer fires.",
-			zap.String(tagWorkflowID, workflowTask.task.WorkflowExecution.GetWorkflowId()),
-			zap.String(tagRunID, workflowTask.task.WorkflowExecution.GetRunId()),
-			zap.Int64("TaskStartedEventID", workflowTask.task.GetStartedEventId()),
-			zap.Int64("CurrentStartedEventID", currentTaskStartedEventID))
-		return nil, nil
-	}
-
-	completeRequest := wc.CompleteDecisionTask(workflowTask, false)
-	wtp.logger.Debug("Force RespondDecisionTaskCompleted.",
-		zap.Int64("TaskStartedEventID", workflowTask.task.GetStartedEventId()))
-	wtp.metricsScope.Counter(metrics.DecisionTaskForceCompleted).Inc(1)
-
-	return wtp.RespondTaskCompletedWithMetrics(completeRequest, nil, workflowTask.task, startTime)
-}
-
-type workflowContextAlreadyDestroyedError struct {
-	Message string
-}
-
-func (e *workflowContextAlreadyDestroyedError) Error() string {
-	return e.Message
-}
-
-func (wtp *workflowTaskPoller) processLocalActivityResult(workflowTask *workflowTask, lar *localActivityResult) (interface{}, error) {
-	w := lar.task.wc
-	w.Lock()
-
-	defer w.Unlock(nil)
-
-	if w.IsDestroyed() {
-		// by the time local activity returns, the workflow context is already destroyed
-		return nil, &workflowContextAlreadyDestroyedError{Message: "workflow context already destroyed"}
-	}
-
-	return w.ProcessLocalActivityResult(workflowTask, lar)
 }
 
 func (wtp *workflowTaskPoller) RespondTaskCompletedWithMetrics(completedRequest interface{}, taskErr error, task *s.PollForDecisionTaskResponse, startTime time.Time) (response *s.RespondDecisionTaskCompletedResponse, err error) {
@@ -414,12 +392,15 @@ func (wtp *workflowTaskPoller) RespondTaskCompleted(completedRequest interface{}
 
 func newLocalActivityPoller(params workerExecutionParameters, laTunnel *localActivityTunnel) *localActivityTaskPoller {
 	handler := &localActivityTaskHandler{
-		userContext:   params.UserContext,
-		metricsScope:  metrics.NewTaggedScope(params.MetricsScope),
-		logger:        params.Logger,
-		dataConverter: params.DataConverter,
+		userContext:        params.UserContext,
+		metricsScope:       metrics.NewTaggedScope(params.MetricsScope),
+		logger:             params.Logger,
+		dataConverter:      params.DataConverter,
+		contextPropagators: params.ContextPropagators,
+		tracer:             params.Tracer,
 	}
 	return &localActivityTaskPoller{
+		basePoller:   basePoller{shutdownC: params.WorkerStopChannel},
 		handler:      handler,
 		metricsScope: params.MetricsScope,
 		logger:       params.Logger,
@@ -428,10 +409,14 @@ func newLocalActivityPoller(params workerExecutionParameters, laTunnel *localAct
 }
 
 func (latp *localActivityTaskPoller) PollTask() (interface{}, error) {
-	return latp.laTunnel.getTask(), nil
+	return latp.laTunnel.getTask(latp.shutdownC), nil
 }
 
 func (latp *localActivityTaskPoller) ProcessTask(task interface{}) error {
+	if latp.shuttingDown() {
+		return errShutdown
+	}
+
 	result := latp.handler.executeLocalActivityTask(task.(*localActivityTask))
 	// We need to send back the local activity result to unblock workflowTaskPoller.processWorkflowTask() which is
 	// synchronously listening on the laResultCh. We also want to make sure we don't block here forever in case
@@ -444,7 +429,6 @@ func (latp *localActivityTaskPoller) ProcessTask(task interface{}) error {
 		// processWorkflowTask() already returns, just drop this local activity result.
 		return nil
 	}
-	return nil
 }
 
 func (lath *localActivityTaskHandler) executeLocalActivityTask(task *localActivityTask) (result *localActivityResult) {
@@ -516,6 +500,8 @@ func (lath *localActivityTaskHandler) executeLocalActivityTask(task *localActivi
 	doneCh := make(chan struct{})
 	go func(ch chan struct{}) {
 		laStartTime := time.Now()
+		ctx, span := createOpenTracingActivitySpan(ctx, lath.tracer, time.Now(), task.params.ActivityType, task.params.WorkflowInfo.WorkflowExecution.ID, task.params.WorkflowInfo.WorkflowExecution.RunID)
+		defer span.Finish()
 		laResult, err = ae.ExecuteWithActualArgs(ctx, task.params.InputArgs)
 		executionLatency := time.Now().Sub(laStartTime)
 		close(ch)
@@ -618,7 +604,7 @@ func (wtp *workflowTaskPoller) getNextPollRequest() (request *s.PollForDecisionT
 }
 
 // Poll for a single workflow task from the service
-func (wtp *workflowTaskPoller) poll() (*workflowTask, error) {
+func (wtp *workflowTaskPoller) poll(ctx context.Context) (interface{}, error) {
 	startTime := time.Now()
 	wtp.metricsScope.Counter(metrics.DecisionPollCounter).Inc(1)
 
@@ -626,13 +612,10 @@ func (wtp *workflowTaskPoller) poll() (*workflowTask, error) {
 		wtp.logger.Debug("workflowTaskPoller::Poll")
 	})
 
-	tchCtx, cancel, opt := newChannelContext(context.Background(), chanTimeout(pollTaskServiceTimeOut))
-	defer cancel()
-
 	request := wtp.getNextPollRequest()
 	defer wtp.release(request.TaskList.GetKind())
 
-	response, err := wtp.service.PollForDecisionTask(tchCtx, request, opt...)
+	response, err := wtp.service.PollForDecisionTask(ctx, request, yarpcCallOptions...)
 	if err != nil {
 		if isServiceTransientError(err) {
 			wtp.metricsScope.Counter(metrics.DecisionPollTransientFailedCounter).Inc(1)
@@ -666,6 +649,9 @@ func (wtp *workflowTaskPoller) poll() (*workflowTask, error) {
 
 	wtp.metricsScope.Counter(metrics.DecisionPollSucceedCounter).Inc(1)
 	wtp.metricsScope.Timer(metrics.DecisionPollLatency).Record(time.Now().Sub(startTime))
+
+	scheduledTime := time.Unix(0, response.GetScheduledTimestamp())
+	wtp.metricsScope.Timer(metrics.DecisionScheduledToStartLatency).Record(time.Now().Sub(scheduledTime))
 	return task, nil
 }
 
@@ -763,6 +749,7 @@ func newGetHistoryPageFunc(
 func newActivityTaskPoller(taskHandler ActivityTaskHandler, service workflowserviceclient.Interface,
 	domain string, params workerExecutionParameters) *activityTaskPoller {
 	return &activityTaskPoller{
+		basePoller:          basePoller{shutdownC: params.WorkerStopChannel},
 		taskHandler:         taskHandler,
 		service:             service,
 		domain:              domain,
@@ -775,7 +762,7 @@ func newActivityTaskPoller(taskHandler ActivityTaskHandler, service workflowserv
 }
 
 // Poll for a single activity task from the service
-func (atp *activityTaskPoller) poll() (*activityTask, error) {
+func (atp *activityTaskPoller) poll(ctx context.Context) (interface{}, error) {
 	startTime := time.Now()
 
 	atp.metricsScope.Counter(metrics.ActivityPollCounter).Inc(1)
@@ -790,10 +777,7 @@ func (atp *activityTaskPoller) poll() (*activityTask, error) {
 		TaskListMetadata: &s.TaskListMetadata{MaxTasksPerSecond: &atp.activitiesPerSecond},
 	}
 
-	tchCtx, cancel, opt := newChannelContext(context.Background(), chanTimeout(pollTaskServiceTimeOut))
-	defer cancel()
-
-	response, err := atp.service.PollForActivityTask(tchCtx, request, opt...)
+	response, err := atp.service.PollForActivityTask(ctx, request, yarpcCallOptions...)
 	if err != nil {
 		if isServiceTransientError(err) {
 			atp.metricsScope.Counter(metrics.ActivityPollTransientFailedCounter).Inc(1)
@@ -819,7 +803,7 @@ func (atp *activityTaskPoller) poll() (*activityTask, error) {
 // PollTask polls a new task
 func (atp *activityTaskPoller) PollTask() (interface{}, error) {
 	// Get the task.
-	activityTask, err := atp.poll()
+	activityTask, err := atp.doPoll(atp.poll)
 	if err != nil {
 		return nil, err
 	}
@@ -828,6 +812,10 @@ func (atp *activityTaskPoller) PollTask() (interface{}, error) {
 
 // ProcessTask processes a new task
 func (atp *activityTaskPoller) ProcessTask(task interface{}) error {
+	if atp.shuttingDown() {
+		return errShutdown
+	}
+
 	activityTask := task.(*activityTask)
 	if activityTask.task == nil {
 		// We didn't have task, poll might have time out.
@@ -841,10 +829,6 @@ func (atp *activityTaskPoller) ProcessTask(task interface{}) error {
 	activityType := activityTask.task.ActivityType.GetName()
 	metricsScope := getMetricsScopeForActivity(atp.metricsScope, workflowType, activityType)
 
-	// record tasklist queue latency
-	queueLatency := time.Duration(activityTask.task.GetStartedTimestamp() - activityTask.task.GetScheduledTimestamp())
-	metricsScope.Timer(metrics.TaskListQueueLatency).Record(queueLatency)
-
 	executionStartTime := time.Now()
 	// Process the activity task.
 	request, err := atp.taskHandler.Execute(atp.taskListName, activityTask.task)
@@ -856,6 +840,11 @@ func (atp *activityTaskPoller) ProcessTask(task interface{}) error {
 
 	if request == ErrActivityResultPending {
 		return nil
+	}
+
+	// if worker is shutting down, don't bother reporting activity completion
+	if atp.shuttingDown() {
+		return errShutdown
 	}
 
 	responseStartTime := time.Now()
@@ -1034,6 +1023,4 @@ func convertActivityResultToRespondRequestByID(identity, domain, workflowID, run
 		Reason:     common.StringPtr(reason),
 		Details:    details,
 		Identity:   common.StringPtr(identity)}
-
-	return nil
 }
