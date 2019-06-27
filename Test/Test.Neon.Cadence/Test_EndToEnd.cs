@@ -620,6 +620,7 @@ namespace TestCadence
                 return await Task.FromResult((byte[])null);
             }
         }
+
         //---------------------------------------------------------------------
         // Test implementations:
 
