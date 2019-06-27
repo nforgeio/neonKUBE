@@ -748,9 +748,9 @@ namespace Neon.Cadence
                     var connectRequest = 
                         new ConnectRequest()
                         {
-                            Endpoints     = sbEndpoints.ToString(),
-                            Identity      = settings.ClientIdentity,
-                            ClientTimeout = TimeSpan.FromSeconds(45)
+                            Endpoints       = sbEndpoints.ToString(),
+                            Identity        = settings.ClientIdentity,
+                            ClientTimeout   = TimeSpan.FromSeconds(45)
                         };
 
 
