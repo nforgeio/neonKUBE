@@ -20,11 +20,8 @@ package cadenceclient
 import (
 	"context"
 	"os"
-	"reflect"
 	"strings"
 	"time"
-
-	globals "github.com/cadence-proxy/internal"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
@@ -221,8 +218,8 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 	return nil
 }
 
-// EstablishServerConnection establishes a connection to a running cadence server
-// instance.
+// SetupCadenceClients establishes a connection to a running cadence server
+// instance and configures domain and workflow clients
 //
 // param ctx context.Context -> the context used to poll the server to see if a
 // connection has been established
@@ -230,16 +227,19 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 // param endpoints string -> the endpoints to be set as the cadence service cleint
 // HostPort
 //
+// param domain string -> the default domain to configure the workflow client with
+//
 // param opts *client.Options -> the client options for connection the the cadence
 // server instance
 //
 // returns error -> error if any errors are thrown while trying to establish a
 // connection, or nil upon success
-func (helper *ClientHelper) EstablishServerConnection(ctx context.Context, endpoints string, opts *client.Options) error {
+func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, domain string, opts *client.Options) error {
 
 	// setup service config
 	helper.SetHostPort(endpoints)
 	helper.SetClientOptions(opts)
+	helper.SetDomain(domain)
 	if err := helper.SetupServiceConfig(ctx); err != nil {
 		defer func() {
 			helper = nil
@@ -269,11 +269,6 @@ func (helper *ClientHelper) EstablishServerConnection(ctx context.Context, endpo
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
 func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.Options) (worker.Worker, error) {
-
-	// check for nil service
-	if helper.Service == nil {
-		return nil, globals.ErrConnection
-	}
 
 	// set the worker logger
 	// create and start the worker
@@ -317,14 +312,6 @@ func (helper *ClientHelper) StopWorker(worker worker.Worker) {
 // returns error -> error if one is thrown, nil if the method executed with no errors
 func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (*cadenceshared.DescribeDomainResponse, error) {
 
-	// check the domain client for
-	if reflect.ValueOf(helper.DomainClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Domain Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return nil, globals.ErrEntityNotExist
-	}
-
 	// domain describe call to cadence
 	resp, err := helper.DomainClient.Describe(ctx, domain)
 	if err != nil {
@@ -348,14 +335,6 @@ func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
 func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRequest *cadenceshared.RegisterDomainRequest) error {
-
-	// check the domain client for
-	if reflect.ValueOf(helper.DomainClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Domain Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return globals.ErrEntityNotExist
-	}
 
 	// domain Register call to cadence
 	domain := registerDomainRequest.GetName()
@@ -388,14 +367,6 @@ func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRe
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
 func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainRequest *cadenceshared.UpdateDomainRequest) error {
-
-	// check the domain client for
-	if reflect.ValueOf(helper.DomainClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Domain Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return globals.ErrEntityNotExist
-	}
 
 	// domain Update call to cadence
 	domain := updateDomainRequest.GetName()
@@ -436,25 +407,18 @@ func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainReques
 // the workflow was triggered successfully
 func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) (client.WorkflowRun, error) {
 
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return nil, globals.ErrEntityNotExist
-	}
-
 	// start the workflow, but put in a loop
 	// to check if the domain has been detected yet
 	// by cadence server (primarily for unit testing,
 	// loop should never execute more than once in production)
 	var workflowRun client.WorkflowRun
 	var err error
-	for i := 0; i < 10; i++ {
+	n := 10
+	for i := 0; i < n; i++ {
 		workflowRun, err = helper.WorkflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
 		if err != nil {
 
-			if strings.Contains(err.Error(), "EntityNotExistsError{Message: Domain:") {
+			if (strings.Contains(err.Error(), "EntityNotExistsError{Message: Domain:")) && (i < n-1) {
 				time.Sleep(time.Second)
 				continue
 			}
@@ -492,14 +456,6 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 // the workflow was triggered successfully
 func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID string) (client.WorkflowRun, error) {
 
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return nil, globals.ErrEntityNotExist
-	}
-
 	// get the workflow execution
 	workflowRun := helper.WorkflowClient.GetWorkflow(ctx, workflowID, runID)
 
@@ -524,14 +480,6 @@ func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID s
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was cancelled successfully
 func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runID string) error {
-
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return globals.ErrEntityNotExist
-	}
 
 	// cancel the workflow
 	err := helper.WorkflowClient.CancelWorkflow(ctx, workflowID, runID)
@@ -572,14 +520,6 @@ func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runI
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was terminated successfully
 func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, runID, reason string, details []byte) error {
-
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return globals.ErrEntityNotExist
-	}
 
 	// terminate the workflow
 	err := helper.WorkflowClient.TerminateWorkflow(ctx,
@@ -632,14 +572,6 @@ func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, r
 // returns error -> error upon failure and nil upon success
 func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflowID, signalName string, signalArg []byte, opts client.StartWorkflowOptions, workflow string, args ...interface{}) (*workflow.Execution, error) {
 
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return nil, globals.ErrEntityNotExist
-	}
-
 	// signal the workflow to start
 	workflowExecution, err := helper.WorkflowClient.SignalWithStartWorkflow(ctx, workflowID, signalName, signalArg, opts, workflow, args...)
 	if err != nil {
@@ -673,14 +605,6 @@ func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflo
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was cancelled successfully
 func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workflowID, runID string) (*cadenceshared.DescribeWorkflowExecutionResponse, error) {
-
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return nil, globals.ErrEntityNotExist
-	}
 
 	// descibe the workflow execution
 	response, err := helper.WorkflowClient.DescribeWorkflowExecution(ctx, workflowID, runID)
@@ -720,14 +644,6 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 // returns error -> error upon failure and nil upon success
 func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runID, signalName string, arg interface{}) error {
 
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return globals.ErrEntityNotExist
-	}
-
 	// signal the workflow
 	err := helper.WorkflowClient.SignalWorkflow(ctx, workflowID, runID, signalName, arg)
 	if err != nil {
@@ -763,14 +679,6 @@ func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runI
 // returns error -> error upon failure and nil upon success
 func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID, queryType string, args ...interface{}) (encoded.Value, error) {
 
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return nil, globals.ErrEntityNotExist
-	}
-
 	// query the workflow
 	value, err := helper.WorkflowClient.QueryWorkflow(ctx, workflowID, runID, queryType, args...)
 	if err != nil {
@@ -802,14 +710,6 @@ func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID
 //
 // returns error -> error upon failure to complete the activity, nil upon success
 func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, result interface{}, e error) error {
-
-	// check that the workflow client exists
-	if reflect.ValueOf(helper.WorkflowClient).IsNil() {
-
-		// $debug(jack.burns)
-		helper.Logger.Error("Workflow Client Not Configured", zap.Error(globals.ErrEntityNotExist))
-		return globals.ErrEntityNotExist
-	}
 
 	// query the workflow
 	err := helper.WorkflowClient.CompleteActivity(ctx, taskToken, result, e)

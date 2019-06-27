@@ -379,21 +379,20 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	// new ConnectReply
 	reply := createReplyMessage(request)
 
-	// client options
+	// get default domain and client options
+	defaultDomain := *request.GetDomain()
 	opts := client.Options{
 		Identity: *request.GetIdentity(),
 	}
 
-	// configure the ClientHelper
+	// create context to configure clientHelper with
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
-	// configure the service client and
-	// validate that a connection
-	// has been established
+	// configure the ClientHelper
+	// setup the domain, service, and workflow clients
 	clientHelper = cadenceclient.NewClientHelper()
-	clientHelper.SetDomain("test-domain")
-	err := clientHelper.EstablishServerConnection(ctx, *request.GetEndpoints(), &opts)
+	err := clientHelper.SetupCadenceClients(ctx, *request.GetEndpoints(), defaultDomain, &opts)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -402,6 +401,24 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 	// set the timeout
 	cadenceClientTimeout = request.GetClientTimeout()
+
+	// reset the deadline on ctx with new timeout
+	// and check if we need to register the default
+	// domain
+	if request.GetCreateDomain() {
+		ctx, cancel = context.WithTimeout(ctx, cadenceClientTimeout)
+		defer cancel()
+
+		// register the domain
+		err = clientHelper.RegisterDomain(ctx, &cadenceshared.RegisterDomainRequest{Name: &defaultDomain})
+		if err != nil {
+			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+			return reply
+		}
+	}
+
+	// build reply
 	buildReply(reply, nil)
 
 	return reply

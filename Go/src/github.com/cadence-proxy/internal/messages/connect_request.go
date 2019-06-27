@@ -102,6 +102,44 @@ func (request *ConnectRequest) SetClientTimeout(value time.Duration) {
 	request.SetTimeSpanProperty("ClientTimeout", value)
 }
 
+// GetDomain gets a ConnectRequest's domain value from
+// its nested properties map. The default Cadence domain.
+//
+// returns *string -> a pointer to a string in memory holding the value
+// of a ConnectRequest's domain
+func (request *ConnectRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a ConnectionRequest's domain in
+// its nested properties map. The default Cadence domain.
+//
+// param value *string -> a pointer to a string in memory
+// that holds the value to be set in the properties map
+func (request *ConnectRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
+// GetCreateDomain gets a ConnectRequest's CreateDomain value from
+// its nested properties map. Indicates whether the Cadence
+// domain should be created if it doesn't already exist.
+//
+// returns bool -> bool indicating that the default domain should
+// be created if it does not already exist
+func (request *ConnectRequest) GetCreateDomain() bool {
+	return request.GetBoolProperty("CreateDomain")
+}
+
+// SetCreateDomain sets a ConnectionRequest's CreateDomain in
+// its nested properties map. Indicates whether the Cadence
+// domain should be created if it doesn't already exist.
+//
+// param value bool -> bool indicating that the default domain should
+// be created if it does not already exist
+func (request *ConnectRequest) SetCreateDomain(value bool) {
+	request.SetBoolProperty("CreateDomain", value)
+}
+
 // -------------------------------------------------------------------------
 // ProxyMessage interface methods for implementing the ProxyMessage interface
 
@@ -121,5 +159,7 @@ func (request *ConnectRequest) CopyTo(target IProxyMessage) {
 		v.SetEndpoints(request.GetEndpoints())
 		v.SetIdentity(request.GetIdentity())
 		v.SetClientTimeout(request.GetClientTimeout())
+		v.SetDomain(request.GetDomain())
+		v.SetCreateDomain(request.GetCreateDomain())
 	}
 }

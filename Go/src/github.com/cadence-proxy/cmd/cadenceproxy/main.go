@@ -37,7 +37,7 @@ var (
 	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
 	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
-	debugPrelaunched = false
+	debugPrelaunched = true
 )
 
 func main() {

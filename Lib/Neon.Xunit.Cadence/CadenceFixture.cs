@@ -101,14 +101,12 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings       = null,
-            // $DEBUG: JACK -- Change back to cadence-test:latest
-            //string image = "nkubeio/cadence-test:latest",
-            string              image          = "nkubeio/cadence-test:cadence-latest",
-            string              name           = "cadence-test",
-            string[]            env            = null,
-            bool                keepConnection = false,
-            bool                emulateProxy   = false)
+            CadenceSettings     settings        = null,
+            string              image           = "nkubeio/cadence-test:latest",
+            string              name            = "cadence-test",
+            string[]            env             = null,
+            bool                keepConnection  = false,
+            bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -143,14 +141,12 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            CadenceSettings     settings       = null,
-            // $DEBUG: JACK -- Change back to cadence-test:latest
-            //string image = "nkubeio/cadence-test:latest",
-            string image          = "nkubeio/cadence-test:cadence-latest",
-            string              name           = "cadence-test",
-            string[]            env            = null,
-            bool                keepConnection = false, 
-            bool                emulateProxy   = false)
+            CadenceSettings     settings        = null,
+            string              image           = "nkubeio/cadence-test:latest",
+            string              name            = "cadence-test",
+            string[]            env             = null,
+            bool                keepConnection  = false, 
+            bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 

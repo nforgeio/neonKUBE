@@ -260,6 +260,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Nil(v.GetEndpoints())
 		s.Nil(v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
+		s.False(v.GetCreateDomain())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -276,6 +278,13 @@ func (s *UnitTestSuite) TestConnectRequest() {
 
 		v.SetClientTimeout(time.Second * 30)
 		s.Equal(time.Second*30, v.GetClientTimeout())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
+
+		v.SetCreateDomain(true)
+		s.True(v.GetCreateDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -291,6 +300,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
+		s.Equal("my-domain", *v.GetDomain())
+		s.True(v.GetCreateDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -302,6 +313,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
+		s.Equal("my-domain", *v.GetDomain())
+		s.True(v.GetCreateDomain())
 	}
 }
 
