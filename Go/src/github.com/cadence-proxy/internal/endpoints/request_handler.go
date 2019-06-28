@@ -809,18 +809,23 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		Operations.Add(requestID, op)
 
 		// send the WorkflowInvokeRequest
-		resp, err := putToNeonCadenceClient(workflowInvokeRequest)
-		if err != nil {
-			panic(err)
-		}
-		defer func() {
-
-			// $debug(jack.burns): DELETE THIS!
-			err := resp.Body.Close()
+		f := func(message messages.IProxyRequest) {
+			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
-				logger.Error("could not close response body", zap.Error(err))
+				panic(err)
 			}
-		}()
+			defer func() {
+
+				// $debug(jack.burns): DELETE THIS!
+				err := resp.Body.Close()
+				if err != nil {
+					logger.Error("could not close response body", zap.Error(err))
+				}
+			}()
+		}
+
+		// send workflowInvokeRequest
+		go f(workflowInvokeRequest)
 
 		// block and get result
 		result := <-op.GetChannel()
@@ -1359,8 +1364,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		// send a request to the
 		// Neon.Cadence Lib
 		f := func(message messages.IProxyRequest) {
-
-			// send the ActivityInvokeRequest
 			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
 				panic(err)
@@ -1938,8 +1941,6 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		// send a request to the
 		// Neon.Cadence Lib
 		f := func(message messages.IProxyRequest) {
-
-			// send the ActivityInvokeRequest
 			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
 				panic(err)
@@ -2171,8 +2172,6 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		// send a request to the
 		// Neon.Cadence Lib
 		f := func(message messages.IProxyRequest) {
-
-			// send the ActivityInvokeRequest
 			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
 				panic(err)
@@ -2551,8 +2550,6 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		// send a request to the
 		// Neon.Cadence Lib
 		f := func(message messages.IProxyRequest) {
-
-			// send the ActivityInvokeRequest
 			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
 				panic(err)
