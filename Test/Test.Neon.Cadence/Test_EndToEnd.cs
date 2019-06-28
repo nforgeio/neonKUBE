@@ -1482,6 +1482,9 @@ namespace TestCadence
             // Start a workflow, signal it with some test arguments and then
             // verify that the workflow received the signal by checking that
             // it returned the signal arguments passed.
+            //
+            // This version of the test waits for the workflow to indicate that 
+            // it's running before sending the signal.
 
             const int maxWaitSeconds = 5;
 
@@ -1500,6 +1503,38 @@ namespace TestCadence
                 var run    = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
 
                 NeonHelper.WaitFor(() => SimpleSignalWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                await client.SignalWorkflowAsync(run, "signal", result);
+
+                Assert.Equal(result, await client.GetWorkflowResultAsync(run));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Signal_NoWait()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a workflow, signal it with some test arguments and then
+            // verify that the workflow received the signal by checking that
+            // it returned the signal arguments passed.
+            //
+            // This version of the test doesn't wait for the workflow to indicate 
+            // that it's running before sending the signal to ensure that the
+            // [cadence-proxy] buffers signals between the time the workflow
+            // starts on its side and the .NET client has a chance to begin
+            // executing the workflow.
+
+            const int maxWaitSeconds = 5;
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var result = new byte[] { 10 };
+                var run = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
 
                 await client.SignalWorkflowAsync(run, "signal", result);
 
