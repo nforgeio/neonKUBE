@@ -18,6 +18,6 @@ if [ ! $? ] ; then
     LOG_INDEX=0
 fi
 
-let LOG_INDEX=$LOG_INDEX+1
+LOG_INDEX=$(( LOG_INDEX + 1 ))
 
 echo $LOG_INDEX > /dev/shm/log-index
