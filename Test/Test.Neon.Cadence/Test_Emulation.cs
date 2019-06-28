@@ -59,7 +59,7 @@ namespace TestCadence
                 ProxyTimeoutSeconds    = 1.0,
                 Emulate                = true,
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
-                DebugDisableHeartbeats = false,      // $debug(jeff.lill): COMMENT THIS!
+                DebugDisableHeartbeats = false,      // $debug(jeff.lill): COMMENT THIS OUT!
                 //DebugIgnoreTimeouts    = true
             };
 
