@@ -6,13 +6,14 @@
 
 . ./log-info.sh "Container started."
 
-envoy_end=$((SECONDS+300))
+START=`date +%s`
+ENVOY_END=$((START+300))
 
 if [ -z "${DEV_WORKSTATION+x}" ]; then
   . ./log-info.sh "Running in Kubernetes with Istio enabled."
   until wget -q --spider 127.0.0.1:15000
   do
-    if [ $SECONDS -gt $envoy_end ]; then
+    if [ $((`date +%s`)) -gt $ENVOY_END ]; then
       . ./log-error.sh "Envoy Sidecar not available, exiting."
       exit 1
     fi
