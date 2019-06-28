@@ -413,7 +413,7 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 	// loop should never execute more than once in production)
 	var workflowRun client.WorkflowRun
 	var err error
-	n := 10
+	n := 30
 	for i := 0; i < n; i++ {
 		workflowRun, err = helper.WorkflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
 		if err != nil {

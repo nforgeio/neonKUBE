@@ -174,7 +174,7 @@ namespace Neon.Xunit.Cadence
 
                 if (string.IsNullOrEmpty(settings.DefaultDomain))
                 {
-                    settings.DefaultDomain = "default";
+                    settings.DefaultDomain = "test-domain";
                 }
 
                 settings.Servers.Clear();

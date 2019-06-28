@@ -493,13 +493,21 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) 
 		return globals.ErrEntityNotExist
 	}
 
+	// $debug(jack.burns): DELETE THIS!
+	contextID := op.GetContextID()
+	logger.Debug("Settling Signal",
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
 	// WorkflowContext at the specified WorflowContextID
-	if wectx := WorkflowContexts.Get(op.GetContextID()); wectx == nil {
+	if wectx := WorkflowContexts.Get(contextID); wectx == nil {
 		return globals.ErrEntityNotExist
 	}
 
 	// set the reply
-	err := op.SetReply(true, reply.GetError())
+	err := op.SendChannel(true, reply.GetError())
 	if err != nil {
 		return err
 	}
@@ -523,13 +531,21 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) er
 		return globals.ErrEntityNotExist
 	}
 
+	// $debug(jack.burns): DELETE THIS!
+	contextID := op.GetContextID()
+	logger.Debug("Settling Query",
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
 	// WorkflowContext at the specified WorflowContextID
-	if wectx := WorkflowContexts.Get(op.GetContextID()); wectx == nil {
+	if wectx := WorkflowContexts.Get(contextID); wectx == nil {
 		return globals.ErrEntityNotExist
 	}
 
 	// set the reply
-	err := op.SetReply(reply.GetResult(), reply.GetError())
+	err := op.SendChannel(reply.GetResult(), reply.GetError())
 	if err != nil {
 		return err
 	}

@@ -410,7 +410,11 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		defer cancel()
 
 		// register the domain
-		err = clientHelper.RegisterDomain(ctx, &cadenceshared.RegisterDomainRequest{Name: &defaultDomain})
+
+		// $debug(jack.burns): DELETE THIS!
+		// THIS IS A PATCH, NEED TO COME BACK AND LOOK AT THIS
+		retention := int32(1)
+		err = clientHelper.RegisterDomain(ctx, &cadenceshared.RegisterDomainRequest{Name: &defaultDomain, WorkflowExecutionRetentionPeriodInDays: &retention})
 		if err != nil {
 			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1336,29 +1340,28 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Received signal!", zap.String("signal", *signalName),
-			zap.Binary("args", signalArgs))
+			zap.ByteString("args", signalArgs))
 
 		// create the WorkflowSignalInvokeRequest
+		requestID := NextRequestID()
 		workflowSignalInvokeRequest := messages.NewWorkflowSignalInvokeRequest()
+		workflowSignalInvokeRequest.SetRequestID(requestID)
+		workflowSignalInvokeRequest.SetContextID(contextID)
 		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
 		workflowSignalInvokeRequest.SetSignalName(signalName)
-		workflowSignalInvokeRequest.SetContextID(contextID)
 
 		// create the Operation for this request and add it to the operations map
-		requestID := NextRequestID()
-		future, settable := workflow.NewFuture(ctx)
 		op := NewOperation(requestID, workflowSignalInvokeRequest)
-		op.SetFuture(future)
-		op.SetSettable(settable)
+		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
 		// send a request to the
 		// Neon.Cadence Lib
-		f := func(ctx workflow.Context) {
+		f := func(message messages.IProxyRequest) {
 
 			// send the ActivityInvokeRequest
-			resp, err := putToNeonCadenceClient(workflowSignalInvokeRequest)
+			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
 				panic(err)
 			}
@@ -1373,19 +1376,44 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		}
 
 		// send the request
-		workflow.Go(ctx, f)
+		go f(workflowSignalInvokeRequest)
 
 		// wait for the future to be unblocked
-		var result interface{}
-		if err := future.Get(ctx, &result); err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
-		} else {
-			buildReply(reply, nil)
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+		case error:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Error("signal failed with error",
+				zap.String("Signal", *signalName),
+				zap.Int64("RequestId", requestID),
+				zap.Int64("ContextId", contextID),
+				zap.Error(s),
+			)
+
+		case bool:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("signal completed without error",
+				zap.String("Signal", *signalName),
+				zap.Int64("RequestId", requestID),
+				zap.Int64("ContextId", contextID),
+				zap.Bool("Success", s),
+			)
+
+		default:
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("signal result unexpected",
+				zap.String("Signal", *signalName),
+				zap.Int64("RequestId", requestID),
+				zap.Int64("ContextId", contextID),
+				zap.Any("Result", s),
+			)
 		}
 	})
 
 	// wait on the channel
-	selector.Select(ctx)
+	workflow.Go(ctx, selector.Select)
 
 	return reply
 }
@@ -1894,26 +1922,25 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	queryHandler := func(queryArgs []byte) ([]byte, error) {
 
 		// create the WorkflowSignalInvokeRequest
+		requestID := NextRequestID()
 		workflowQueryInvokeRequest := messages.NewWorkflowQueryInvokeRequest()
+		workflowQueryInvokeRequest.SetRequestID(requestID)
+		workflowQueryInvokeRequest.SetContextID(contextID)
 		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
 		workflowQueryInvokeRequest.SetQueryName(queryName)
-		workflowQueryInvokeRequest.SetContextID(contextID)
 
 		// create the Operation for this request and add it to the operations map
-		requestID := NextRequestID()
-		future, settable := workflow.NewFuture(ctx)
 		op := NewOperation(requestID, workflowQueryInvokeRequest)
-		op.SetFuture(future)
-		op.SetSettable(settable)
 		op.SetContextID(contextID)
+		op.SetChannel(make(chan interface{}))
 		Operations.Add(requestID, op)
 
 		// send a request to the
 		// Neon.Cadence Lib
-		f := func(ctx workflow.Context) {
+		f := func(message messages.IProxyRequest) {
 
 			// send the ActivityInvokeRequest
-			resp, err := putToNeonCadenceClient(workflowQueryInvokeRequest)
+			resp, err := putToNeonCadenceClient(message)
 			if err != nil {
 				panic(err)
 			}
@@ -1928,15 +1955,44 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		}
 
 		// send the request
-		workflow.Go(ctx, f)
+		go f(workflowQueryInvokeRequest)
 
-		// wait for the future to be unblocked
-		var result []byte
-		if err := future.Get(ctx, &result); err != nil {
-			return nil, err
+		// wait for ActivityInvokeReply
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+
+		// failure
+		case error:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Query Failed With Error",
+				zap.String("Query", *queryName),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Error(s),
+				zap.Int("ProccessId", os.Getpid()),
+			)
+
+			return nil, s
+
+		// success
+		case []byte:
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Debug("Query Completed Successfully",
+				zap.String("Query", *queryName),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.ByteString("Result", s),
+				zap.Int("ProccessId", os.Getpid()),
+			)
+
+			return s, nil
+
+		// unexpected result
+		default:
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
 		}
-
-		return result, nil
 	}
 
 	// Set the query handler with the
@@ -2104,9 +2160,8 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		activityInvokeRequest.SetActivity(request.GetName())
 
 		// create the Operation for this request and add it to the operations map
-		invokeReplyChannel := make(chan interface{})
 		op := NewOperation(requestID, activityInvokeRequest)
-		op.SetChannel(invokeReplyChannel)
+		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 

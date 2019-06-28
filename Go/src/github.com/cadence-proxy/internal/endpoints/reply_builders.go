@@ -152,6 +152,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowQueryReply(v, cadenceError, value)
 		}
 
+	// WorkflowSetQueryHandlerReply
+	case messagetypes.WorkflowSetQueryHandlerReply:
+		if v, ok := reply.(*messages.WorkflowSetQueryHandlerReply); ok {
+			buildWorkflowSetQueryHandlerReply(v, cadenceError)
+		}
+
 	// WorkflowSetCacheSizeReply
 	case messagetypes.WorkflowSetCacheSizeReply:
 		if v, ok := reply.(*messages.WorkflowSetCacheSizeReply); ok {
@@ -594,6 +600,10 @@ func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, caden
 			reply.SetVersion(int32(v))
 		}
 	}
+}
+
+func buildWorkflowSetQueryHandlerReply(reply *messages.WorkflowSetQueryHandlerReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
 }
 
 // -------------------------------------------------------------------------

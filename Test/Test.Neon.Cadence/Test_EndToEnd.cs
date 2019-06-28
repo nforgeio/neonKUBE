@@ -1486,7 +1486,6 @@ namespace TestCadence
             {
                 var result = new byte[] { 10 };
                 var run    = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
-
                 await client.SignalWorkflowAsync(run, "signal", result);
 
                 Assert.Equal(result, await client.GetWorkflowResultAsync(run));
@@ -1502,14 +1501,14 @@ namespace TestCadence
             // Start a workflow and then query it.  The query should return the 
             // arguments passed.
 
-            const int maxWaitSeconds = 5000;
+            const int maxWaitSeconds = 5;
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterAssemblyWorkflowsAsync(assembly);
 
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                var args   = new byte[] { 10 };
+                var args   = new byte[] { 100 };
                 var run    = await client.StartWorkflowAsync<SimpleQueryWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
                 var result = await client.QueryWorkflowAsync(run, "query", args);
 
