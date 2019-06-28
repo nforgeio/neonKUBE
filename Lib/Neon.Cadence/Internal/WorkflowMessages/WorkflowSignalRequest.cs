@@ -28,12 +28,12 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Sends a signal to a running workflow.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.WorkflowSignalRequest)]
-    internal class WorkflowSignalequest : WorkflowRequest
+    internal class WorkflowSignalRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalequest()
+        public WorkflowSignalRequest()
         {
             Type = InternalMessageTypes.WorkflowSignalRequest;
         }
@@ -81,7 +81,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalequest();
+            var clone = new WorkflowSignalRequest();
 
             CopyTo(clone);
 
@@ -93,7 +93,7 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalequest)target;
+            var typedTarget = (WorkflowSignalRequest)target;
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;

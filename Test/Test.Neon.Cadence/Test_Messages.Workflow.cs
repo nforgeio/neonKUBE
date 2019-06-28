@@ -747,11 +747,11 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_WorkflowSignalRequest()
         {
-            WorkflowSignalequest message;
+            WorkflowSignalRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowSignalequest();
+                message = new WorkflowSignalRequest();
 
                 Assert.Equal(InternalMessageTypes.WorkflowSignalReply, message.ReplyType);
 
@@ -761,7 +761,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
@@ -786,7 +786,7 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);

@@ -418,7 +418,7 @@ namespace Neon.Cadence
             runId = runId ?? string.Empty;
 
             var reply = (WorkflowSignalReply)await CallProxyAsync(
-                new WorkflowSignalequest()
+                new WorkflowSignalRequest()
                 {
                     WorkflowId = workflowId,
                     SignalName = signalName,
@@ -443,7 +443,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(workflowRun != null);
 
             var reply = (WorkflowSignalReply)await CallProxyAsync(
-                new WorkflowSignalequest()
+                new WorkflowSignalRequest()
                 {
                     WorkflowId = workflowRun.WorkflowId,
                     SignalName = signalName,
