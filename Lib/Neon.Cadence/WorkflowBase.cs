@@ -797,10 +797,11 @@ namespace Neon.Cadence
                 }
                 else
                 {
-                    return new WorkflowSignalInvokeReply()
-                    {
-                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
-                    };
+                    // It's possible that we'll land here if the workflow has been scheduled
+                    // and/or started but execution has not actually started.  Since signals
+                    // are fire-and-forget, we're just going to ignore these here.
+
+                    return new WorkflowSignalInvokeReply();
                 }
             }
             catch (Exception e)

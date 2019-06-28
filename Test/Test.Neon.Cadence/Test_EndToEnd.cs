@@ -556,6 +556,13 @@ namespace TestCadence
         [AutoRegister]
         private class SimpleSignalWorkflow : WorkflowBase
         {
+            // $hack(jeff.lill):
+            //
+            // This will be set to TRUE when the workflow is running.  The unit test
+            // will wait for this before sending the signal.
+
+            public static bool IsRunning { get; set; } = false;
+
             private byte[] signalArgs;
 
             [SignalHandler("signal")]
@@ -568,29 +575,37 @@ namespace TestCadence
 
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
-
-                // We're just going to do a simple poll for received signal arguments.
-
-                for (int i = 0; i < maxWaitSeconds; i++)
+                try
                 {
-                    if (signalArgs != null)
+                    IsRunning = true;
+
+                    var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
+
+                    // We're just going to do a simple poll for received signal arguments.
+
+                    for (int i = 0; i < maxWaitSeconds; i++)
                     {
-                        break;
+                        if (signalArgs != null)
+                        {
+                            break;
+                        }
+
+                        await SleepAsync(TimeSpan.FromSeconds(1));
                     }
 
-                    await SleepAsync(TimeSpan.FromSeconds(1));
-                }
+                    if (signalArgs != null)
+                    {
+                        throw new CadenceTimeoutException();
+                    }
 
-                if (signalArgs != null)
+                    return await Task.FromResult(signalArgs);
+                }
+                finally
                 {
-                    throw new CadenceTimeoutException();
+                    IsRunning = false;
                 }
-
-                return await Task.FromResult(signalArgs);
             }
         }
-
 
         /// <summary>
         /// This workflow tests basic workflow queries by waiting in a sleep loop
@@ -1484,8 +1499,17 @@ namespace TestCadence
 
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
+                // $hack(jeff.lill):
+                //
+                // Ensure this is FALSE before starting the workflow.
+
+                SimpleSignalWorkflow.IsRunning = false;
+
                 var result = new byte[] { 10 };
                 var run    = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+
+                NeonHelper.WaitFor(() => SimpleSignalWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+
                 await client.SignalWorkflowAsync(run, "signal", result);
 
                 Assert.Equal(result, await client.GetWorkflowResultAsync(run));
