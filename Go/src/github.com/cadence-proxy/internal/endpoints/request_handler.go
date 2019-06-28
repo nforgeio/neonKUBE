@@ -1394,7 +1394,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		case bool:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("signal completed without error",
+			logger.Debug("signal completed successfully",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
