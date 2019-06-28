@@ -554,7 +554,7 @@ namespace TestCadence
         /// serialized integer number of seconds.
         /// </summary>
         [AutoRegister]
-        private class SimpleSignalWorkflow : WorkflowBase
+        private class SignalOnceWorkflow : WorkflowBase
         {
             // $hack(jeff.lill):
             //
@@ -593,10 +593,64 @@ namespace TestCadence
 
                 if (signalArgs == null)
                 {
-                    throw new CadenceTimeoutException();
+                    throw new CadenceTimeoutException("Timeout waiting for signal.");
                 }
 
                 return await Task.FromResult(signalArgs);
+            }
+        }
+
+        /// <summary>
+        /// This workflow tests basic signal reception by waiting for two signals
+        /// to be received and serializing the received arguments as a list.
+        /// This works by waiting for a period of time for a signals to be received
+        /// and then returning the arguments received with the signal.  The maximum
+        /// wait time is passed as a serialized integer number of seconds.
+        /// </summary>
+        [AutoRegister]
+        private class SignalTwiceWorkflow : WorkflowBase
+        {
+            // $hack(jeff.lill):
+            //
+            // This will be set to TRUE when the workflow is running.  The unit test
+            // will wait for this before sending the signal.
+
+            public static bool IsRunning { get; set; } = false;
+
+            private List<byte[]> signalArgs = new List<byte[]>();
+
+            [SignalHandler("signal")]
+            public async Task OnSignal(byte[] args)
+            {
+                signalArgs.Add(args);
+
+                await Task.CompletedTask;
+            }
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                IsRunning = true;
+
+                var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
+
+                // We're just going to do a simple poll for two received signals.
+
+                for (int i = 0; i < maxWaitSeconds; i++)
+                {
+                    if (signalArgs.Count >= 2)
+                    {
+                        break;
+                    }
+
+                    await SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                if (signalArgs.Count < 2)
+                {
+                    throw new CadenceTimeoutException("Timeout waiting for signals.");
+                }
+
+                return await Task.FromResult(NeonHelper.JsonSerializeToBytes(signalArgs));
             }
         }
 
@@ -1499,12 +1553,12 @@ namespace TestCadence
                 //
                 // Ensure this is FALSE before starting the workflow.
 
-                SimpleSignalWorkflow.IsRunning = false;
+                SignalOnceWorkflow.IsRunning = false;
 
                 var result = new byte[] { 10 };
-                var run    = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+                var run    = await client.StartWorkflowAsync<SignalOnceWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
 
-                NeonHelper.WaitFor(() => SimpleSignalWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+                NeonHelper.WaitFor(() => SignalOnceWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
 
                 await client.SignalWorkflowAsync(run, "signal", result);
 
@@ -1536,11 +1590,49 @@ namespace TestCadence
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
                 var result = new byte[] { 10 };
-                var run = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+                var run = await client.StartWorkflowAsync<SignalOnceWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
 
                 await client.SignalWorkflowAsync(run, "signal", result);
 
                 Assert.Equal(result, await client.GetWorkflowResultAsync(run));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Signal_Twice()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a workflow, signal it twice and then verify that the workflow
+            // received both signals.
+
+            const int maxWaitSeconds = 5;
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                // $hack(jeff.lill):
+                //
+                // Ensure this is FALSE before starting the workflow.
+
+                SignalTwiceWorkflow.IsRunning = false;
+
+                var signal1 = new byte[] { 10 };
+                var signal2 = new byte[] { 20 };
+                var run     = await client.StartWorkflowAsync<SignalTwiceWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+
+                NeonHelper.WaitFor(() => SignalTwiceWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                await client.SignalWorkflowAsync(run, "signal", signal1);
+                await client.SignalWorkflowAsync(run, "signal", signal2);
+
+                var result  = await client.GetWorkflowResultAsync(run);
+                var signals = NeonHelper.JsonDeserialize<List<byte[]>>(result);
+
+                Assert.Equal(new List<byte[]>() { signal1, signal2 }, signals);
             }
         }
 
