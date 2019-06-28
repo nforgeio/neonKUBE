@@ -575,35 +575,26 @@ namespace TestCadence
 
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                try
+                var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
+
+                // We're just going to do a simple poll for received signal arguments.
+
+                for (int i = 0; i < maxWaitSeconds; i++)
                 {
-                    IsRunning = true;
-
-                    var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
-
-                    // We're just going to do a simple poll for received signal arguments.
-
-                    for (int i = 0; i < maxWaitSeconds; i++)
-                    {
-                        if (signalArgs != null)
-                        {
-                            break;
-                        }
-
-                        await SleepAsync(TimeSpan.FromSeconds(1));
-                    }
-
                     if (signalArgs != null)
                     {
-                        throw new CadenceTimeoutException();
+                        break;
                     }
 
-                    return await Task.FromResult(signalArgs);
+                    await SleepAsync(TimeSpan.FromSeconds(1));
                 }
-                finally
+
+                if (signalArgs != null)
                 {
-                    IsRunning = false;
+                    throw new CadenceTimeoutException();
                 }
+
+                return await Task.FromResult(signalArgs);
             }
         }
 
@@ -1507,6 +1498,64 @@ namespace TestCadence
 
                 var result = new byte[] { 10 };
                 var run    = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+
+                NeonHelper.WaitFor(() => SimpleSignalWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                await client.SignalWorkflowAsync(run, "signal", result);
+
+                Assert.Equal(result, await client.GetWorkflowResultAsync(run));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Signal_Discard()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a workflow, signal it without waiting to ensure that it's
+            // actually started executing and then wait for it to start and send
+            // it a second signal with different arguments.  Then, verify that
+            // the workflow received and returned the second signal args.
+            //
+            // This is a somewhat fragile (race-condition) test to ensure that
+            // the .NET client safely discards signals received for workflows
+            // before they have started.
+            //
+            // We'll probably need to address this on the [cadence-proxy] side
+            // as well.
+
+            const int maxWaitSeconds = 5;
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                // $hack(jeff.lill):
+                //
+                // Ensure this is FALSE before starting the workflow.
+
+                SimpleSignalWorkflow.IsRunning = false;
+
+                var result = new byte[] { 10 };
+                var run = await client.StartWorkflowAsync<SimpleSignalWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+
+                // Send the first signal if the workflow hasn't started yet.
+
+                if (!SimpleSignalWorkflow.IsRunning)
+                {
+                    await client.SignalWorkflowAsync(run, "signal", new byte[] { 0 });
+
+                    if (SimpleSignalWorkflow.IsRunning)
+                    {
+                        // Abort the test because it's possible that the workflow started
+                        // execution between the time we saw that it wasn't running and
+                        // just before we sent the signal.
+
+                        return;
+                    }
+                }
 
                 NeonHelper.WaitFor(() => SimpleSignalWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
 
