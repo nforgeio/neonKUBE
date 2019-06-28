@@ -5,7 +5,7 @@ This page describes how to get started with neonKUBE development.
 ## Workstation Requirements
 
 * Windows 10 Professional (64-bit) with at least 16GB RAM
-* Virtualization cpapable workstation
+* Virtualization capable workstation
 * Visual Studio 2019 Community Edition (or better)
 * Visual Studio Code
 
