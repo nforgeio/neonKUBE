@@ -31,12 +31,12 @@ case "${LOG_LEVEL}" in
         LOG=false
         ;;
     *)
-        LOG=true
+        LOG=false
         ;;
 esac
 
 . /log-index.sh
 
-if [ "${LOG}" == "true" ] ; then
+if [ "${LOG}" = "true" ] ; then
     echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [WARN] [index:${LOG_INDEX}] $1"
 fi
