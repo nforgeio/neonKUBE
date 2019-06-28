@@ -407,7 +407,7 @@ namespace Neon.HyperV
             try
             {
                 var machines = new List<VirtualMachine>();
-                var table    = powershell.ExecuteJson("Get-VM");
+                var table    = powershell.ExecuteJson($"{hyperVNamespace}Get-VM");
 
                 foreach (dynamic rawMachine in table)
                 {
@@ -436,7 +436,7 @@ namespace Neon.HyperV
             try
             {
                 var machines = new List<VirtualMachine>();
-                var table    = powershell.ExecuteJson($"Get-VM -Name \"{machineName}\"");
+                var table    = powershell.ExecuteJson($"{hyperVNamespace}Get-VM -Name \"{machineName}\"");
 
                 Covenant.Assert(table.Count == 1);
 
@@ -510,11 +510,11 @@ namespace Neon.HyperV
             try
             {
                 var drives    = new List<string>();
-                var rawDrives = powershell.ExecuteJson($"Get-VMHardDiskDrive -VMName \"{machineName}\"");
+                var rawDrives = powershell.ExecuteJson($"{hyperVNamespace}Get-VMHardDiskDrive -VMName \"{machineName}\"");
 
                 foreach (dynamic rawDrive in rawDrives)
                 {
-                    drives.Add(rawDrive.Path);
+                    drives.Add(rawDrive.Path.ToString());
                 }
 
                 return drives;
@@ -535,7 +535,7 @@ namespace Neon.HyperV
             try
             {
                 var switches    = new List<VirtualSwitch>();
-                var rawSwitches = powershell.ExecuteJson($"Get-VMSwitch");
+                var rawSwitches = powershell.ExecuteJson($"{hyperVNamespace}Get-VMSwitch");
 
                 foreach (dynamic rawSwitch in rawSwitches)
                 {
@@ -639,7 +639,7 @@ namespace Neon.HyperV
 
             try
             {
-                var adapters      = powershell.ExecuteJson($"Get-NetAdapter");
+                var adapters      = powershell.ExecuteJson($"{hyperVNamespace}Get-NetAdapter");
                 var targetAdapter = (string)null;
 
                 foreach (dynamic adapter in adapters)
@@ -679,7 +679,7 @@ namespace Neon.HyperV
                 while (true)
                 {
                     var adapters    = new List<VirtualNetworkAdapter>();
-                    var rawAdapters = powershell.ExecuteJson($"Get-VMNetworkAdapter -VMName \"{machineName}\"");
+                    var rawAdapters = powershell.ExecuteJson($"{hyperVNamespace}Get-VMNetworkAdapter -VMName \"{machineName}\"");
 
                     adapters.Clear();
 
