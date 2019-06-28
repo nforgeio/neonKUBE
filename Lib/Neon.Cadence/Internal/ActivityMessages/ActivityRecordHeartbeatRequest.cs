@@ -42,6 +42,16 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityRecordHeartbeatReply;
 
         /// <summary>
+        /// Overrides the <see cref="ActivityRequest.ContextId"/> message property when
+        /// non-null, indicating that the activity heartbeat is being sent externally.
+        /// </summary>
+        public byte[] TaskToken
+        {
+            get => GetBytesProperty(PropertyNames.TaskToken);
+            set => SetBytesProperty(PropertyNames.TaskToken, value);
+        }
+
+        /// <summary>
         /// The activity heartbeat details encoded as a byte array.
         /// </summary>
         public byte[] Details
@@ -67,7 +77,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityRecordHeartbeatRequest)target;
 
-            typedTarget.Details = this.Details;
+            typedTarget.TaskToken = this.TaskToken;
+            typedTarget.Details   = this.Details;
         }
     }
 }

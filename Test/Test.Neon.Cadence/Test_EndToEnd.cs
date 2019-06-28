@@ -683,6 +683,90 @@ namespace TestCadence
             }
         }
 
+        /// <summary>
+        /// Test details passed to <see cref="ActivityHeartbeatWorkflow"/>.
+        /// </summary>
+        private class ActivityTestArgs
+        {
+            public string Command { get; set; }
+            public ActivityOptions Options { get; set; }
+        }
+
+        /// <summary>
+        /// Exercises activity heartbeat functionality by executing a
+        /// <see cref="HeartbeatActivity"/>.  The arguments will be a serialized
+        /// <see cref="ActivityTestArgs"/> instance.
+        /// </summary>
+        [AutoRegister]
+        private class ActivityHeartbeatWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var testArgs = NeonHelper.JsonDeserialize<ActivityTestArgs>(args);
+
+                return await CallActivityAsync<HeartbeatActivity>(args: Encoding.UTF8.GetBytes(testArgs.Command), options: testArgs.Options);
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Exercises activity heartbeat functionality.  The argument specifies the operation
+        /// to be perform as a UTF-8 encoded string:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>record-only</b></term>
+        ///     <description>
+        ///     Simply records a heartbeat and then exits normally.  This simply
+        ///     verifies that recording a heartbeat doesn't fail.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        [AutoRegister]
+        private class HeartbeatActivity : ActivityBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                var command = Encoding.UTF8.GetString(args);
+
+                switch (command)
+                {
+                    case "record-only":
+
+                        try
+                        {
+                            await base.SendHeartbeatAsync(new byte[] { 1 });
+                        }
+                        catch (Exception e)
+                        {
+                        }
+                        break;
+
+                    default:
+
+                        throw new InvalidOperationException($"Unsupported command: {command}");
+                }
+
+                return null;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Test implementations:
 
@@ -1638,7 +1722,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_Query_Simple()
+        public async Task Workflow_Query_Once()
         {
             var assembly = Assembly.GetExecutingAssembly();
 
@@ -1659,6 +1743,56 @@ namespace TestCadence
                 Assert.Equal(args, result);
 
                 await client.GetWorkflowResultAsync(run);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Query_Twice()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a workflow and then query it.  The query should return the 
+            // arguments passed.
+
+            const int maxWaitSeconds = 5;
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var run = await client.StartWorkflowAsync<SimpleQueryWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+
+                Assert.Equal(new byte[] { 1 }, await client.QueryWorkflowAsync(run, "query", new byte[] { 1 }));
+                Assert.Equal(new byte[] { 2 }, await client.QueryWorkflowAsync(run, "query", new byte[] { 2 }));
+
+                await client.GetWorkflowResultAsync(run);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Heartbeat_Single()
+        {
+            // Verify that running an activity that records a single heartbeat
+            // doesn't barf.
+            
+            var assembly = Assembly.GetExecutingAssembly();
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+            await client.RegisterAssemblyActivitiesAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                using (await client.StartActivityWorkerAsync("test-domain"))
+                {
+                    var args = new ActivityTestArgs() { Command = "record-only" };
+                    var run  = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: NeonHelper.JsonSerializeToBytes(args));
+
+                    await client.GetWorkflowResultAsync(run);
+                }
             }
         }
     }
