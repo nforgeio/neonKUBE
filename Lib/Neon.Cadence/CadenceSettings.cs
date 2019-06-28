@@ -98,8 +98,13 @@ namespace Neon.Cadence
         /// </summary>
         [JsonProperty(PropertyName = "ClientTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clientTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public TimeSpan ClientTimeout { get; set; }
+        [DefaultValue(45.0)]
+        public double ClientTimeoutSeconds { get; set; } = 45.0;
+
+        /// <summary>
+        /// Returns <see cref="ClientTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ClientTimeout => TimeSpan.FromSeconds(ClientTimeoutSeconds);
 
         /// <summary>
         /// Optionally identifies the client application establishing the connection so that
@@ -118,19 +123,29 @@ namespace Neon.Cadence
         /// </summary>
         [JsonProperty(PropertyName = "ProxyTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "proxyTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public TimeSpan ProxyTimeout { get; set; } = default;
+        [DefaultValue(5.0)]
+        public double ProxyTimeoutSeconds { get; set; } = 5.0;
+
+        /// <summary>
+        /// Returns <see cref="ProxyTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ProxyTimeout => TimeSpan.FromSeconds(ProxyTimeoutSeconds);
 
         /// <summary>
         /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
         /// to gracefully close its Cadence cluster connection and terminate.  The proxy
         /// will be forceably killed when this time is exceeded.  This defaults to
-        /// <b>30 seconds</b>.
+        /// <b>10 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TerminateTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "terminateTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public TimeSpan TerminateTimeout { get; set; } = default;
+        [DefaultValue(00.0)]
+        public double TerminateTimeoutSeconds { get; set; } = 10.0;
+
+        /// <summary>
+        /// Returns <see cref="TerminateTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan TerminateTimeout => TimeSpan.FromSeconds(TerminateTimeoutSeconds);
 
         /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 

@@ -575,6 +575,8 @@ namespace TestCadence
 
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
+                IsRunning = true;
+
                 var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
 
                 // We're just going to do a simple poll for received signal arguments.
@@ -641,7 +643,7 @@ namespace TestCadence
                 DebugPrelaunched        = false,
                 Mode                    = ConnectionMode.ListenOnly,
                 Debug                   = true,
-                ProxyTimeout            = TimeSpan.FromSeconds(30),
+                ProxyTimeoutSeconds     = 30.0,
                 //DebugHttpTimeout      = TimeSpan.FromSeconds(5),
                 DebugDisableHeartbeats  = true,
                 DebugIgnoreTimeouts     = false

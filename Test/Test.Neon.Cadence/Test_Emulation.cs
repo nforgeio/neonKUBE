@@ -56,7 +56,7 @@ namespace TestCadence
             {
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
-                ProxyTimeout           = TimeSpan.FromSeconds(1),
+                ProxyTimeoutSeconds    = 1.0,
                 Emulate                = true,
                 DebugHttpTimeout       = TimeSpan.FromSeconds(1),
                 DebugDisableHeartbeats = false,      // $debug(jeff.lill): COMMENT THIS!

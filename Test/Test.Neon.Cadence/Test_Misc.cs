@@ -52,26 +52,14 @@ namespace TestCadence
 
             var original = new CadenceSettings();
 
-            original.BinaryFolder   = "C:\\temp";
-            original.ClientIdentity = "foobar";
-            original.ClientTimeout  = TimeSpan.FromSeconds(60);
+            original.BinaryFolder          = "C:\\temp";
+            original.ClientIdentity        = "foobar";
+            original.ClientTimeoutSeconds  = 60.0;
             original.Servers.Add("http://foo.com");
             original.Servers.Add("http://bar.com");
 
             var json   = NeonHelper.JsonSerialize(original, Formatting.Indented);
             var parsed = NeonHelper.JsonDeserialize<CadenceSettings>(json);
-
-            Assert.Equal(original.BinaryFolder, parsed.BinaryFolder);
-            Assert.Equal(original.ClientIdentity, parsed.ClientIdentity);
-            Assert.Equal(original.ClientTimeout, parsed.ClientTimeout);
-            Assert.Equal(original.ClientTimeout, parsed.ClientTimeout);
-
-            // Ensure that the default [ClientTimeout] works too.
-
-            original.ClientTimeout = TimeSpan.Zero;
-
-            json   = NeonHelper.JsonSerialize(original, Formatting.Indented);
-            parsed = NeonHelper.JsonDeserialize<CadenceSettings>(json);
 
             Assert.Equal(original.BinaryFolder, parsed.BinaryFolder);
             Assert.Equal(original.ClientIdentity, parsed.ClientIdentity);
@@ -87,26 +75,14 @@ namespace TestCadence
 
             var original = new CadenceSettings();
 
-            original.BinaryFolder = "C:\\temp";
-            original.ClientIdentity = "foobar";
-            original.ClientTimeout = TimeSpan.FromSeconds(60);
+            original.BinaryFolder         = "C:\\temp";
+            original.ClientIdentity       = "foobar";
+            original.ClientTimeoutSeconds = 60.0;
             original.Servers.Add("http://foo.com");
             original.Servers.Add("http://bar.com");
 
             var yaml   = NeonHelper.YamlSerialize(original);
             var parsed = NeonHelper.YamlDeserialize<CadenceSettings>(yaml);
-
-            Assert.Equal(original.BinaryFolder, parsed.BinaryFolder);
-            Assert.Equal(original.ClientIdentity, parsed.ClientIdentity);
-            Assert.Equal(original.ClientTimeout, parsed.ClientTimeout);
-            Assert.Equal(original.ClientTimeout, parsed.ClientTimeout);
-
-            // Ensure that the default [ClientTimeout] works too.
-
-            original.ClientTimeout = TimeSpan.Zero;
-
-            yaml   = NeonHelper.YamlSerialize(original);
-            parsed = NeonHelper.YamlDeserialize<CadenceSettings>(yaml);
 
             Assert.Equal(original.BinaryFolder, parsed.BinaryFolder);
             Assert.Equal(original.ClientIdentity, parsed.ClientIdentity);

@@ -708,6 +708,10 @@ namespace Neon.Cadence
             workflow.WorkflowId       = request.WorkflowId;
             workflow.WorkflowTypeName = request.WorkflowType;
 
+            // Register any workflow query or signal handlers.
+
+            workflow.RegisterHandlers(client, contextId);
+
             // Start the workflow by calling its [RunAsync(args)] method.  This method will
             // indicate that it has completed via one of these techniques:
             //
@@ -944,7 +948,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="contextId">The workflow's context ID.</param>
-        internal void Initialize(CadenceClient client, long contextId)
+        private void Initialize(CadenceClient client, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -967,7 +971,15 @@ namespace Neon.Cadence
                     typeToMethodMap.Add(workflowType, methodMap);
                 }
             }
+        }
 
+        /// <summary>
+        /// Called internally to register any workflow query and signal handlers.
+        /// </summary>
+        /// <param name="client">The associated client.</param>
+        /// <param name="contextId">The workflow's context ID.</param>
+        private void RegisterHandlers(CadenceClient client, long contextId)
+        {
             // Register the query handlers with Cadence.
 
             foreach (var queryName in methodMap.GetQueryNames())

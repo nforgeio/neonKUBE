@@ -565,11 +565,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(settings != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
 
-            if (settings.ClientTimeout <= TimeSpan.Zero)
-            {
-                settings.ClientTimeout = TimeSpan.FromSeconds(45);
-            }
-
             var client = new CadenceClient(settings);
 
             await client.SetWorkflowCacheSizeAsync(10000);
@@ -639,8 +634,8 @@ namespace Neon.Cadence
                 //
                 // This should never happen for production.
 
-                Settings.ProxyTimeout     =
-                Settings.DebugHttpTimeout = TimeSpan.FromHours(48);
+                Settings.DebugHttpTimeout    = TimeSpan.FromHours(48);
+                Settings.ProxyTimeoutSeconds = Settings.DebugHttpTimeout.TotalSeconds;
             }
 
             // Start the web server that will listen for requests from the associated 
