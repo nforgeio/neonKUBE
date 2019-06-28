@@ -282,7 +282,7 @@ func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.
 	}
 
 	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Debug("New Worker Created",
+	helper.Logger.Info("New Worker Created",
 		zap.String("Domain", domain),
 		zap.String("TaskList", taskList),
 		zap.Int("ProccessId", os.Getpid()),
@@ -351,7 +351,7 @@ func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRe
 	}
 
 	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Debug("domain successfully registered", zap.String("Domain Name", domain))
+	helper.Logger.Info("domain successfully registered", zap.String("Domain Name", domain))
 
 	return nil
 }
@@ -383,7 +383,7 @@ func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainReques
 	}
 
 	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Debug("domain successfully updated", zap.String("Domain Name", domain))
+	helper.Logger.Info("domain successfully updated", zap.String("Domain Name", domain))
 
 	return nil
 }
@@ -432,7 +432,7 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 	}
 
 	// $debug(jack.burns)
-	helper.Logger.Debug("Started Workflow",
+	helper.Logger.Info("Started Workflow",
 		zap.String("WorkflowID", workflowRun.GetID()),
 		zap.String("RunID", workflowRun.GetRunID()),
 	)
@@ -460,7 +460,7 @@ func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID s
 	workflowRun := helper.WorkflowClient.GetWorkflow(ctx, workflowID, runID)
 
 	// $debug(jack.burns)
-	helper.Logger.Debug("GetWorkflow Successful",
+	helper.Logger.Info("Get Workflow",
 		zap.String("WorkflowID", workflowRun.GetID()),
 		zap.String("RunID", workflowRun.GetRunID()),
 	)
@@ -496,7 +496,7 @@ func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runI
 	}
 
 	// $debug(jack.burns)
-	helper.Logger.Debug("Workflow Cancelled",
+	helper.Logger.Info("Workflow Cancelled",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
 	)
@@ -541,7 +541,7 @@ func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, r
 	}
 
 	// $debug(jack.burns)
-	helper.Logger.Debug("Workflow Terminated",
+	helper.Logger.Info("Workflow Terminated",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
 	)
@@ -582,7 +582,7 @@ func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflo
 	}
 
 	// $debug(jack.burns)
-	helper.Logger.Debug("Started Workflow",
+	helper.Logger.Info("Started Workflow",
 		zap.String("WorkflowID", workflowExecution.ID),
 		zap.String("RunID", workflowExecution.RunID),
 	)

@@ -319,7 +319,7 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:e69399cc917943cc1b9987e132051ba592d7a3b8cc1f32702b98a940c674d599"
+  digest = "1:b243bc103343111fa2dd2bef900727d573c157ed8de28fa496923b79f6d11b08"
   name = "go.uber.org/cadence"
   packages = [
     ".gen/go/cadence",
@@ -339,8 +339,8 @@
     "workflow",
   ]
   pruneopts = "UT"
-  revision = "c99ffab5dd93276c81488138e7441f168501ba2e"
-  version = "0.8.7"
+  revision = "61fd87b39425af39bcb2d189921b0fce37a96ecf"
+  version = "v0.8.8"
 
 [[projects]]
   digest = "1:9a1bb99a85e2ccddbc593aa0af084cdf6ea18ed081469eb90e7f6d0d303af6cd"
@@ -418,7 +418,7 @@
   revision = "2cfd321de3ee5d5f8a5fda2521d1703478334d98"
 
 [[projects]]
-  digest = "1:9e7d2b3bb099cd32c8bce51662a2d948d3d6a08a3537f48fe079859382a10e55"
+  digest = "1:01bdbd0288a01fef8f9d9179795334c0145e634ec836186a24beb4d95716b73a"
   name = "go.uber.org/yarpc"
   packages = [
     ".",
@@ -456,8 +456,8 @@
     "yarpcerrors",
   ]
   pruneopts = "UT"
-  revision = "515ae026b5555b1fa00a77ffa650ab4dc32c72ed"
-  version = "v1.38.0"
+  revision = "32f8a122a940ef0bd42bef358ea46c7d91b14f4c"
+  version = "v1.39.0"
 
 [[projects]]
   digest = "1:676160e6a4722b08e0e26b11521d575c2cb2b6f0c679e1ee6178c5d8dee51e5e"
@@ -502,14 +502,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:77499c6b3771d12291f289b1f6a5877abc5946d0e85f5930d562d6dcc417137c"
+  digest = "1:afb5346f71acefc3da7ad800f952cb2bcdb762194b05304bbf54d7f9490e31c5"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "e07cf5db2756114766d998ec31e7135ff8c427ed"
+  revision = "04f50cda93cbb67f2afa353c52f342100e80e625"
 
 [[projects]]
   branch = "master"
@@ -521,7 +521,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:313148dd6b5700dab76e07a7e881ac6988e929d679350d79e837c7e3a1db723d"
+  digest = "1:dc08174979089ae587a64e15a87efb95b17b3039884231c10b21b7f7d8e72e96"
   name = "golang.org/x/tools"
   packages = [
     "cmd/stringer",
@@ -540,7 +540,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "252024b8295926254bbc18903b9b7d4f0389df2f"
+  revision = "6cfa55603c286bef3d2de051f6603e4140181f6d"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -551,7 +551,7 @@
   version = "v2.2.2"
 
 [[projects]]
-  digest = "1:914ce7f5d6945854a79fe7995cd68fc1ef7debfcf91d9e6ad8fd4913abbca629"
+  digest = "1:ee40aa4815184179259955b29767faf844f5e42a434b11507853fb248f3b9ff5"
   name = "honnef.co/go/tools"
   packages = [
     "arg",
@@ -581,8 +581,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "6c4852bd92a8ec927b5c5876e93d3d157d03a666"
-  version = "2019.2"
+  revision = "3aba101524286653237b74f4cb73eff8d5852a31"
+  version = "2019.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
