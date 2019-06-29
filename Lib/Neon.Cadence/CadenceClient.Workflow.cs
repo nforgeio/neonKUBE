@@ -164,8 +164,6 @@ namespace Neon.Cadence
         public async Task<WorkflowRun> StartWorkflowAsync<TWorkflow>(byte[] args = null, string domain = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
             where TWorkflow : WorkflowBase
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-
             return await StartWorkflowAsync(typeof(TWorkflow).FullName, args, domain, taskList, options);
         }
 
@@ -194,7 +192,6 @@ namespace Neon.Cadence
         public async Task<WorkflowRun> StartWorkflowAsync(string workflowTypeName, byte[] args = null, string domain = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
             options = options ?? new WorkflowOptions();
 
@@ -346,8 +343,6 @@ namespace Neon.Cadence
         public async Task<byte[]> CallWorkflowAsync<TWorkflow>(byte[] args = null, string domain = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
             where TWorkflow : WorkflowBase
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-
             return await CallWorkflowAsync(typeof(TWorkflow).FullName, args, domain ?? Settings.DefaultDomain, taskList, options);
         }
 
@@ -376,7 +371,6 @@ namespace Neon.Cadence
         public async Task<byte[]> CallWorkflowAsync(string workflowTypeName, byte[] args = null, string domain = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
             options = options ?? new WorkflowOptions();
 

@@ -749,13 +749,7 @@ namespace TestCadence
                 {
                     case "record-only":
 
-                        try
-                        {
-                            await base.SendHeartbeatAsync(new byte[] { 1 });
-                        }
-                        catch (Exception e)
-                        {
-                        }
+                        await base.SendHeartbeatAsync(new byte[] { 1 });
                         break;
 
                     default:
@@ -764,6 +758,97 @@ namespace TestCadence
                 }
 
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Arguments for the <see cref="ChildOperationsWorkflow"/>.
+        /// </summary>
+        /// <remarks>
+        /// <list type="table">
+        /// <para>
+        /// This class holds test commands and arguments, as described below:
+        /// </para>
+        /// <item>
+        ///     <term><b>signal-child</b></term>
+        ///     <description>
+        ///     Create a child workflow, signal it and verify that the signal
+        ///     was received.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b></b></term>
+        ///     <description>
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// The workflow returns a JSON encoded boolean that will be true if
+        /// the test passed, false if it failed.
+        /// </para>
+        /// </remarks>
+        private class ChildOperationsWorkflowArgs
+        {
+            public string Command { get; set; }
+        }
+
+        [AutoRegister]
+        private class ChildOperationsWorkflow : WorkflowBase
+        {
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                const int maxWaitSeconds = 5;
+
+                var command = NeonHelper.JsonDeserialize<ChildOperationsWorkflowArgs>(args);
+                var success = false;
+
+                byte[]          result;
+                byte[]          signalBytes;
+                ChildWorkflow   child;
+
+                switch (command.Command)
+                {
+                    case "signal-child":
+
+                        SignalOnceWorkflow.IsRunning = false;
+
+                        signalBytes = new byte[] { 10 };
+                        child       = await StartChildWorkflowAsync<SignalOnceWorkflow>(args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+
+                        NeonHelper.WaitFor(() => SignalOnceWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                        await SignalChildWorkflowAsync(child, "signal", signalBytes);
+
+                        result  = await this.WaitForChildWorkflowAsync(child);
+                        success = NeonHelper.ArrayEquals(signalBytes, result);
+                        break;
+
+                    default:
+
+                        throw new InvalidOperationException($"Unsupported command: {command}");
+                }
+
+                return NeonHelper.JsonSerializeToBytes(success);
             }
         }
 
@@ -1717,6 +1802,30 @@ namespace TestCadence
                 var signals = NeonHelper.JsonDeserialize<List<byte[]>>(result);
 
                 Assert.Equal(new List<byte[]>() { signal1, signal2 }, signals);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Signal_Child()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Have a workflow create a child workflow and signal it.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var args = new ChildOperationsWorkflowArgs()
+                {
+                    Command = "signal-child"
+                };
+
+                var result = await client.CallWorkflowAsync<ChildOperationsWorkflow>(NeonHelper.JsonSerializeToBytes(args));
+
+                Assert.True(NeonHelper.JsonDeserialize<bool>(result));
             }
         }
 
