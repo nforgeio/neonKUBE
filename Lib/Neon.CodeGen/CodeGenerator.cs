@@ -1233,7 +1233,7 @@ namespace Neon.CodeGen
                     }
                 }
 
-                if (genPersistence && dataModel.IsPersistable)
+                if (dataModel.IsPersistable)
                 {
                     baseTypeRef += $", IPersistableType<{dataModel.SourceType.Name}>";
                 }
@@ -1292,7 +1292,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Static members:");
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        public const string PersistedType = \"{dataModel.PersistedType}\";");
@@ -1446,7 +1446,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"            return CreateFrom(response.JsonText);");
                     writer.WriteLine($"        }}");
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
@@ -1468,9 +1468,9 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        }}");
                     }
 
-                    // For data models tagged with [Persistable], we need to generate the static GetKey(...) method.
+                    // For data models tagged with [Persistable], we need to generate the static CreateKey(...) method.
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
@@ -1532,7 +1532,7 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        //---------------------------------------------------------------------");
                     writer.WriteLine($"        // Instance members:");
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        private string cachedT;");
@@ -1772,7 +1772,7 @@ namespace Neon.CodeGen
 
                     // For persistable types, load and verify the [__T] property when this is not a derived class.
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"            if (!isDerived)");
@@ -1878,7 +1878,7 @@ namespace Neon.CodeGen
                         }
                     }
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         // Serialize the [__T] property
 
@@ -2054,7 +2054,7 @@ namespace Neon.CodeGen
 
                     writer.WriteLine($"        }}");
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         //---------------------------------------------------------
                         // Generate the persisted type property.
@@ -2089,7 +2089,7 @@ namespace Neon.CodeGen
                     //---------------------------------------------------------
                     // Generate any persistance related members.
 
-                    if (genPersistence && dataModel.IsPersistable)
+                    if (dataModel.IsPersistable)
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
