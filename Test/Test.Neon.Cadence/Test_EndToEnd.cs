@@ -53,6 +53,7 @@ namespace TestCadence
         const int maxWaitSeconds = 5;
 
         private static readonly TimeSpan allowedVariation = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
 
         //---------------------------------------------------------------------
         // Common workflow and activity classes.
@@ -558,13 +559,6 @@ namespace TestCadence
         [AutoRegister]
         private class SignalOnceWorkflow : WorkflowBase
         {
-            // $hack(jeff.lill):
-            //
-            // This will be set to TRUE when the workflow is running.  The unit test
-            // will wait for this before sending the signal.
-
-            public static bool IsRunning { get; set; } = false;
-
             private byte[] signalArgs;
 
             [SignalHandler("signal")]
@@ -577,8 +571,6 @@ namespace TestCadence
 
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                IsRunning = true;
-
                 var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
 
                 // We're just going to do a simple poll for received signal arguments.
@@ -612,13 +604,6 @@ namespace TestCadence
         [AutoRegister]
         private class SignalTwiceWorkflow : WorkflowBase
         {
-            // $hack(jeff.lill):
-            //
-            // This will be set to TRUE when the workflow is running.  The unit test
-            // will wait for this before sending the signal.
-
-            public static bool IsRunning { get; set; } = false;
-
             private List<byte[]> signalArgs = new List<byte[]>();
 
             [SignalHandler("signal")]
@@ -631,8 +616,6 @@ namespace TestCadence
 
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                IsRunning = true;
-
                 var maxWaitSeconds = int.Parse(Encoding.UTF8.GetString(args));
 
                 // We're just going to do a simple poll for two received signals.
@@ -830,12 +813,8 @@ namespace TestCadence
                 {
                     case "signal-child":
 
-                        SignalOnceWorkflow.IsRunning = false;
-
                         signalBytes = new byte[] { 10 };
                         child       = await StartChildWorkflowAsync<SignalOnceWorkflow>(args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
-
-                        NeonHelper.WaitFor(() => SignalOnceWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
 
                         await SignalChildWorkflowAsync(child, "signal", signalBytes);
 
@@ -854,19 +833,22 @@ namespace TestCadence
 
         /// <summary>
         /// This workflow is used to test workflow cancellation and termination.  The workflow
-        /// sets <see cref="IsRunning"/> when is starts execution and then sleeps for 30 seconds,
-        /// giving the unit test a chance to perform the operation.
+        /// starts execution and then sleeps for 30 seconds, giving the unit test a chance to
+        /// perform the operation.
         /// </summary>
         [AutoRegister]
         private class DelayWorkflow : WorkflowBase
         {
-            public static bool IsRunning;
-
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                IsRunning = true;
-
-                await SleepAsync(TimeSpan.FromSeconds(30));
+                try
+                {
+                    await SleepAsync(TimeSpan.FromSeconds(30));
+                }
+                catch (Exception e)
+                {
+                    // I believe we should be seeing a Cadence cancelled error here.
+                }
 
                 return null;
             }
@@ -1736,17 +1718,10 @@ namespace TestCadence
 
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                // $hack(jeff.lill):
-                //
-                // Ensure this is FALSE before starting the workflow.
-
-                SignalOnceWorkflow.IsRunning = false;
-
                 var result = new byte[] { 10 };
                 var run    = await client.StartWorkflowAsync<SignalOnceWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
 
-                NeonHelper.WaitFor(() => SignalOnceWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
-
+                await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.HasStarted, TimeSpan.FromSeconds(maxWaitSeconds));
                 await client.SignalWorkflowAsync(run, "signal", result);
 
                 Assert.Equal(result, await client.GetWorkflowResultAsync(run));
@@ -1797,17 +1772,11 @@ namespace TestCadence
 
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                // $hack(jeff.lill):
-                //
-                // Ensure this is FALSE before starting the workflow.
-
-                SignalTwiceWorkflow.IsRunning = false;
-
                 var signal1 = new byte[] { 10 };
                 var signal2 = new byte[] { 20 };
                 var run     = await client.StartWorkflowAsync<SignalTwiceWorkflow>(domain: "test-domain", args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
 
-                NeonHelper.WaitFor(() => SignalTwiceWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+                await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.HasStarted, TimeSpan.FromSeconds(maxWaitSeconds));
 
                 await client.SignalWorkflowAsync(run, "signal", signal1);
                 await client.SignalWorkflowAsync(run, "signal", signal2);
@@ -1910,6 +1879,7 @@ namespace TestCadence
                     var args = new ActivityTestArgs() { Command = "record-only" };
                     var run  = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: NeonHelper.JsonSerializeToBytes(args));
 
+                    await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, workflowTimeout, TimeSpan.FromSeconds(1));
                     await client.GetWorkflowResultAsync(run);
                 }
             }
@@ -1923,25 +1893,46 @@ namespace TestCadence
 
             var assembly = Assembly.GetExecutingAssembly();
 
-            
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterAssemblyWorkflowsAsync(assembly);
 
             using (await client.StartWorkflowWorkerAsync("test-domain"))
             {
-                DelayWorkflow.IsRunning = false;
-
                 var run = await client.StartWorkflowAsync<DelayWorkflow>(domain: "test-domain");
 
-                NeonHelper.WaitFor(() => DelayWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
-
+                await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.HasStarted, TimeSpan.FromSeconds(maxWaitSeconds));
                 await client.TerminateWorkflowAsync(run, reason: "terminated", details: new byte[] { 0, 1, 2, 3, 4 });
-
                 await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, TimeSpan.FromSeconds(maxWaitSeconds), TimeSpan.FromSeconds(1));
 
                 var state = await client.GetWorkflowStateAsync(run);
 
                 Assert.Equal(WorkflowCloseStatus.Terminated, state.Execution.WorkflowCloseStatus);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, await client.GetWorkflowResultAsync(run));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Cancel()
+        {
+            // Verify that a workflow can be cancelled.
+
+            var assembly = Assembly.GetExecutingAssembly();
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var run = await client.StartWorkflowAsync<DelayWorkflow>(domain: "test-domain");
+
+                await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.HasStarted, TimeSpan.FromSeconds(maxWaitSeconds));
+                await client.CancelWorkflowAsync(run);
+                await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, TimeSpan.FromSeconds(maxWaitSeconds), TimeSpan.FromSeconds(1));
+
+                var state = await client.GetWorkflowStateAsync(run);
+
+                Assert.Equal(WorkflowCloseStatus.Cancelled, state.Execution.WorkflowCloseStatus);
             }
         }
     }
