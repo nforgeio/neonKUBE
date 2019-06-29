@@ -65,9 +65,12 @@ namespace Neon.Cadence.Internal
 
             details.Activities = new List<DescribedActivityInfo>();
 
-            foreach (var activity in this.PendingActivities)
+            if (this.PendingActivities != null)
             {
-                details.Activities.Add(activity.ToPublic());
+                foreach (var activity in this.PendingActivities)
+                {
+                    details.Activities.Add(activity.ToPublic());
+                }
             }
 
             return details;

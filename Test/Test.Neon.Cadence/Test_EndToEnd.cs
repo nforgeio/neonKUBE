@@ -50,6 +50,8 @@ namespace TestCadence
     /// </summary>
     public sealed class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
+        const int maxWaitSeconds = 5;
+
         private static readonly TimeSpan allowedVariation = TimeSpan.FromMilliseconds(1000);
 
         //---------------------------------------------------------------------
@@ -817,8 +819,6 @@ namespace TestCadence
         {
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                const int maxWaitSeconds = 5;
-
                 var command = NeonHelper.JsonDeserialize<ChildOperationsWorkflowArgs>(args);
                 var success = false;
 
@@ -849,6 +849,26 @@ namespace TestCadence
                 }
 
                 return NeonHelper.JsonSerializeToBytes(success);
+            }
+        }
+
+        /// <summary>
+        /// This workflow is used to test workflow cancellation and termination.  The workflow
+        /// sets <see cref="IsRunning"/> when is starts execution and then sleeps for 30 seconds,
+        /// giving the unit test a chance to perform the operation.
+        /// </summary>
+        [AutoRegister]
+        private class DelayWorkflow : WorkflowBase
+        {
+            public static bool IsRunning;
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                IsRunning = true;
+
+                await SleepAsync(TimeSpan.FromSeconds(30));
+
+                return null;
             }
         }
 
@@ -1711,8 +1731,6 @@ namespace TestCadence
             // This version of the test waits for the workflow to indicate that 
             // it's running before sending the signal.
 
-            const int maxWaitSeconds = 5;
-
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterAssemblyWorkflowsAsync(assembly);
 
@@ -1751,8 +1769,6 @@ namespace TestCadence
             // starts on its side and the .NET client has a chance to begin
             // executing the workflow.
 
-            const int maxWaitSeconds = 5;
-
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterAssemblyWorkflowsAsync(assembly);
 
@@ -1775,8 +1791,6 @@ namespace TestCadence
 
             // Start a workflow, signal it twice and then verify that the workflow
             // received both signals.
-
-            const int maxWaitSeconds = 5;
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterAssemblyWorkflowsAsync(assembly);
@@ -1838,8 +1852,6 @@ namespace TestCadence
             // Start a workflow and then query it.  The query should return the 
             // arguments passed.
 
-            const int maxWaitSeconds = 5;
-
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterAssemblyWorkflowsAsync(assembly);
 
@@ -1863,8 +1875,6 @@ namespace TestCadence
 
             // Start a workflow and then query it.  The query should return the 
             // arguments passed.
-
-            const int maxWaitSeconds = 5;
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterAssemblyWorkflowsAsync(assembly);
@@ -1902,6 +1912,36 @@ namespace TestCadence
 
                     await client.GetWorkflowResultAsync(run);
                 }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Terminate()
+        {
+            // Verify that a workflow can be terminated.
+
+            var assembly = Assembly.GetExecutingAssembly();
+
+            
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                DelayWorkflow.IsRunning = false;
+
+                var run = await client.StartWorkflowAsync<DelayWorkflow>(domain: "test-domain");
+
+                NeonHelper.WaitFor(() => DelayWorkflow.IsRunning, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                await client.TerminateWorkflowAsync(run, reason: "terminated", details: new byte[] { 0, 1, 2, 3, 4 });
+
+                await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, TimeSpan.FromSeconds(maxWaitSeconds), TimeSpan.FromSeconds(1));
+
+                var state = await client.GetWorkflowStateAsync(run);
+
+                Assert.Equal(WorkflowCloseStatus.Terminated, state.Execution.WorkflowCloseStatus);
             }
         }
     }
