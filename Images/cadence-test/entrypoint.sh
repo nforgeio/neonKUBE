@@ -22,6 +22,7 @@
 # THE SOFTWARE.
 
 CADENCE_HOME=$1
+UI_HOME=$2
 SERVICES="history,matching,frontend,worker"
 
 start_cassandra() {
@@ -29,8 +30,8 @@ start_cassandra() {
 }
 
 wait_for_cassandra() {
-    export CASSANDRA_SEEDS=`hostname --ip-address`
-    server=`echo $CASSANDRA_SEEDS | awk -F ',' '{print $1}'`
+    export HOST_IP=`hostname --ip-address`
+    server=`echo $HOST_IP | awk -F ',' '{print $1}'`
     until cqlsh --cqlversion=3.4.4 $server < /dev/null; do
         echo 'waiting for cassandra to start up'
         sleep 1
@@ -43,5 +44,6 @@ wait_for_cassandra() {
 start_cassandra
 wait_for_cassandra
 
-# START THE SERVER!
-./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES
+# start the frontend
+export CADENCE_TCHANNEL_PEERS=$HOST_IP:7933
+./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES & node $UI_HOME/server.js
