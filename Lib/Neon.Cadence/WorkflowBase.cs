@@ -251,6 +251,27 @@ namespace Neon.Cadence
     ///     </note>
     /// </item>
     /// </list>
+    /// <para><b>Restarting Workflows</b></para>
+    /// <para>
+    /// Long running workflows that are essentially a high-level loop can result in the recording
+    /// of an excessive number of events to its history.  This can result in poor performance
+    /// due to having to replay this history when the workflow has to be rehydrated.  
+    /// </para>
+    /// <para>
+    /// You can avoid this by removing the workflow loop and calling <see cref="RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// at the end of your workflow logic.  This causes Cadence to reschedule the workflow
+    /// with a clean history, somewhat similar to what happens for CRON workflows (which are
+    /// rescheduled automatically).  <see cref="RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// works by throwing a <see cref="CadenceWorkflowRestartException"/> which will exit
+    /// the workflow method and be caught by the calling <see cref="CadenceClient"/> which
+    /// which then informs Cadence.
+    /// </para>
+    /// <remarks>
+    /// <note>
+    /// Workflow entry points must allow the <see cref="CadenceWorkflowRestartException"/> to be caught by the
+    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// will work properly.
+    /// </note>
     /// <para><b>Upgrading Workflows</b></para>
     /// <para>
     /// It is possible to upgrade workflow implementation with workflows in flight using

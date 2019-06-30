@@ -85,6 +85,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
         public static PropertyNameUtf8 OwnerEmail { get; private set; }                                = new PropertyNameUtf8("OwnerEmail");
+        public static PropertyNameUtf8 Pending { get; private set; }                                   = new PropertyNameUtf8("Pending");
         public static PropertyNameUtf8 QueryArgs { get; private set; }                                 = new PropertyNameUtf8("QueryArgs");
         public static PropertyNameUtf8 QueryName { get; private set; }                                 = new PropertyNameUtf8("QueryName");
         public static PropertyNameUtf8 Reason { get; private set; }                                    = new PropertyNameUtf8("Reason");

@@ -107,26 +107,29 @@ namespace Neon.Cadence
     /// <see cref="TaskCanceledException"/> from their <see cref="RunAsync(byte[])"/>
     /// method.
     /// </para>
+    /// <para><b>External Activity Completion</b></para>
     /// <para>
-    /// It is often necessary for an activity to be considered complete after an
-    /// external event occurs.  For example, an order processing system may may have
-    /// an activity that records a potential order in a database and then notifies
-    /// an actual person to review and then manually confirm the order.
+    /// Normally, activities are self-contained and will finish whatever they're doing and then
+    /// simply return.  It's often useful though to be able to have an activity kickoff operations
+    /// on an external system, exit the activity indicating that it's still pending, and then
+    /// have the external system manage the activity heartbeats and report the activity completion.
     /// </para>
     /// <para>
-    /// The activity could potentially poll the database for the confirmation but this
-    /// is messy and probably won't scale well.  Cadence supports an alternative 
-    /// mechanism where the activity gives its <b>task token</b> (an opaque byte array
-    /// from <see cref="Info"/>.<see cref="ActivityInfo.TaskToken"/>) to the external 
-    /// system and then calls <see cref="CompleteExternallyAsync()"/> which exits
-    /// <see cref="RunAsync(byte[])"/> and tells Cadence to wait for an external
-    /// completion.
+    /// To take advantage of this, you'll need to obtain the opaque activity identifier from
+    /// <see cref="ActivityBase.Info"/> via its <see cref="ActivityInfo.TaskToken"/> property.
+    /// This is a byte array including enough information for Cadence to identify the specific
+    /// activity.  Your activity should start the external action, passing the task token and
+    /// then call <see cref="ActivityBase.CompleteExternallyAsync()"/> which will thrown a
+    /// <see cref="CadenceActivityExternalCompletionException"/> that will exit the activity 
+    /// and then be handled internally by informing Cadence that the activity will continue
+    /// running.
     /// </para>
-    /// <para>
-    /// Then the external system can complete the activity by connecting a <see cref="CadenceClient"/>
-    /// to the cluster and calling <see cref="CadenceClient.CompleteActivityAsync(byte[], byte[], Exception)"/>
-    /// passing a result or exception.
-    /// </para>
+    /// <note>
+    /// You should not depend on the structure or contents of the task token since this
+    /// may change for future Cadence releases and you must allow the <see cref="CadenceActivityExternalCompletionException"/>
+    /// to be caught by the calling <see cref="CadenceClient"/> so <see cref="ActivityBase.CompleteExternallyAsync()"/>
+    /// will work properly.
+    /// </note>
     /// </remarks>
     public abstract class ActivityBase : INeonLogger
     {
@@ -417,6 +420,13 @@ namespace Neon.Cadence
                     Error = new CadenceCancelledException(e.Message).ToCadenceError()
                 };
             }
+            catch (CadenceActivityExternalCompletionException)
+            {
+                return new ActivityInvokeReply()
+                {
+                    Pending = true
+                };
+            }
             catch (Exception e)
             {
                 return new ActivityInvokeReply()
@@ -616,7 +626,7 @@ namespace Neon.Cadence
         /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
         /// </note>
         /// </summary>
-        /// <param name="details">The optional heartbeart details.</param>
+        /// <param name="details">Optional heartbeart details.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         /// <remarks>

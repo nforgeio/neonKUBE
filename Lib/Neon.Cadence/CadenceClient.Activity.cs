@@ -142,6 +142,26 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Used to send an activity heartbeat externally.
+        /// </summary>
+        /// <param name="taskToken">The opaque activity task token.</param>
+        /// <param name="details">Optional heartbeart details.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task SendActivityHeartbeatAsync(byte[] taskToken, byte[] details = null)
+        {
+            Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+
+            var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
+                new ActivityRecordHeartbeatRequest()
+                {
+                    TaskToken = taskToken,
+                    Details   = details
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
         /// Used to complete an activity externally.
         /// </summary>
         /// <param name="taskToken">The opaque activity task token.</param>

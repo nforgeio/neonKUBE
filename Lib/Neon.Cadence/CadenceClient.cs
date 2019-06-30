@@ -47,8 +47,7 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements a client that can be used to create and manage
-    /// workflows.
+    /// Implements a client that can be used to create and manage workflows.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -175,6 +174,50 @@ namespace Neon.Cadence
     /// Workflows can be expicitly closed using <see cref="CancelWorkflowAsync(WorkflowRun)"/>,
     /// <see cref="TerminateWorkflowAsync(WorkflowRun, string, byte[])"/>.
     /// </para>
+    /// <para><b>Restarting Workflows</b></para>
+    /// <para>
+    /// Long running workflows that are essentially a high-level loop can result in the recording
+    /// of an excessive number of events to its history.  This can result in poor performance
+    /// due to having to replay this history when the workflow has to be rehydrated.  
+    /// </para>
+    /// <para>
+    /// You can avoid this by removing the workflow loop and calling <see cref="RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// at the end of your workflow logic.  This causes Cadence to reschedule the workflow
+    /// with a clean history, somewhat similar to what happens for CRON workflows (which are
+    /// rescheduled automatically).  <see cref="RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// works by throwing a <see cref="CadenceWorkflowRestartException"/> which will exit
+    /// the workflow method and be caught by the calling <see cref="CadenceClient"/> which
+    /// which then informs Cadence.
+    /// </para>
+    /// <remarks>
+    /// <note>
+    /// Workflow entry points must allow the <see cref="CadenceWorkflowRestartException"/> to be caught by the
+    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// will work properly.
+    /// </note>
+    /// <para><b>External Activity Completion</b></para>
+    /// <para>
+    /// Normally, activities are self-contained and will finish whatever they're doing and then
+    /// simply return.  It's often useful though to be able to have an activity kickoff operations
+    /// on an external system, exit the activity indicating that it's still pending, and then
+    /// have the external system manage the activity heartbeats and report the activity completion.
+    /// </para>
+    /// <para>
+    /// To take advantage of this, you'll need to obtain the opaque activity identifier from
+    /// <see cref="ActivityBase.Info"/> via its <see cref="ActivityInfo.TaskToken"/> property.
+    /// This is a byte array including enough information for Cadence to identify the specific
+    /// activity.  Your activity should start the external action, passing the task token and
+    /// then call <see cref="ActivityBase.CompleteExternallyAsync()"/> which will thrown a
+    /// <see cref="CadenceActivityExternalCompletionException"/> that will exit the activity 
+    /// and then be handled internally by informing Cadence that the activity will continue
+    /// running.
+    /// </para>
+    /// <note>
+    /// You should not depend on the structure or contents of the task token since this
+    /// may change for future Cadence releases and you must allow the <see cref="CadenceActivityExternalCompletionException"/>
+    /// to be caught by the calling <see cref="CadenceClient"/> so <see cref="ActivityBase.CompleteExternallyAsync()"/>
+    /// will work properly.
+    /// </note>
     /// <para><b>Arguments and Results</b></para>
     /// <para>
     /// The <b>Neon.Cadence</b> library standardizes on having workflow and activity arguments

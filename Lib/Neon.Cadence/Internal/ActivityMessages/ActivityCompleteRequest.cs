@@ -25,8 +25,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
-    /// a workflow activity.
+    /// <b>client --> proxy:</b> Sent to complete an activity externally.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.ActivityCompleteRequest)]
     internal class ActivityCompleteRequest : ActivityRequest

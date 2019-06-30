@@ -695,33 +695,39 @@ namespace TestCadence
 
         /// <summary>
         /// <para>
-        /// Exercises activity heartbeat functionality.  The argument specifies the operation
-        /// to be perform as a UTF-8 encoded string:
+        /// Exercises activity heartbeat and external heartbeat/completion functionality. 
+        /// The argument specifies the operation to be perform as a UTF-8 encoded string:
         /// </para>
         /// <list type="table">
         /// <item>
-        ///     <term><b>record-only</b></term>
+        ///     <term><b>single-heartbeat</b></term>
         ///     <description>
-        ///     Simply records a heartbeat and then exits normally.  This simply
+        ///     Simply records a heartbeat and then exits normally.  This just
         ///     verifies that recording a heartbeat doesn't fail.
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b></b></term>
+        ///     <term><b>multi-heartbeat</b></term>
         ///     <description>
+        ///     Records multiple heartbeats over a period longer than the heartbeat
+        ///     timeout to ensure that the heartbeats are actually making it to
+        ///     Cadence.
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b></b></term>
+        ///     <term><b>complete-externally</b></term>
         ///     <description>
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b></b></term>
-        ///     <description>
+        ///     Starts a new task that will heartbeat and complete the activity
+        ///     externally and then the activity returns, indicating that it will
+        ///     be completed externally.  The new task will run for longer than
+        ///     the activity heartbeat timeout and record a few heartbeats to
+        ///     indicate that the activity is still alive.
         ///     </description>
         /// </item>
         /// </list>
+        /// <para>
+        /// The activity returns the arguments passed for verification.
+        /// </para>
         /// </summary>
         [AutoRegister]
         private class HeartbeatActivity : ActivityBase
@@ -732,9 +738,52 @@ namespace TestCadence
 
                 switch (command)
                 {
-                    case "record-only":
+                    case "single-heartbeat":
 
                         await base.SendHeartbeatAsync(new byte[] { 1 });
+                        break;
+
+                    case "multi-heartbeat":
+
+                        {
+                            var heartbeatTimeout  = Info.HeartbeatTimeout;
+                            var heartbeatInterval = TimeSpan.FromTicks(heartbeatTimeout.Ticks / 2);
+
+                            for (int i = 0; i < 4; i++)
+                            {
+                                await Task.Delay(heartbeatInterval);
+
+                                // Note that we're going to alternate between sending null
+                                // and non-null details to exercise the method.
+
+                                await SendHeartbeatAsync(NeonHelper.IsOdd(i) ? new byte[] { 0, 1, 2, 3, 4 } : null);
+                            }
+                        }
+                        break;
+
+                    case "record-externally":
+
+                        _ = Task.Run(
+                            async () =>
+                            {
+                                var client            = Client;
+                                var taskToken         = Info.TaskToken;
+                                var heartbeatTimeout  = Info.HeartbeatTimeout;
+                                var heartbeatInterval = TimeSpan.FromTicks(heartbeatTimeout.Ticks / 2);
+
+                                for (int i = 0; i < 4; i++)
+                                {
+                                    await Task.Delay(heartbeatInterval);
+
+                                    // Note that we're going to alternate between sending null
+                                    // and non-null details to exercise the method.
+
+                                    await client.SendActivityHeartbeatAsync(taskToken, NeonHelper.IsOdd(i) ? new byte[] { 0, 1, 2, 3, 4 } : null);
+                                }
+
+                                await client.CompleteActivityAsync(args);
+                            });
+
                         break;
 
                     default:
@@ -742,7 +791,7 @@ namespace TestCadence
                         throw new InvalidOperationException($"Unsupported command: {command}");
                 }
 
-                return null;
+                return args;
             }
         }
 
@@ -1876,11 +1925,75 @@ namespace TestCadence
             {
                 using (await client.StartActivityWorkerAsync("test-domain"))
                 {
-                    var args = new ActivityTestArgs() { Command = "record-only" };
-                    var run  = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: NeonHelper.JsonSerializeToBytes(args));
+                    var args     = new ActivityTestArgs() { Command = "single-heartbeat" };
+                    var argBytes = NeonHelper.JsonSerializeToBytes(args);
+                    var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
 
                     await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, workflowTimeout, TimeSpan.FromSeconds(1));
-                    await client.GetWorkflowResultAsync(run);
+
+                    var result = await client.GetWorkflowResultAsync(run);
+
+                    Assert.Equal(argBytes, result);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Heartbeat_Multiple()
+        {
+            // Verify that running an activity that runs longer than the heartbeat
+            // interval but records heartbeats indicating that it's still alive
+            // completes properly.
+            
+            var assembly = Assembly.GetExecutingAssembly();
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+            await client.RegisterAssemblyActivitiesAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                using (await client.StartActivityWorkerAsync("test-domain"))
+                {
+                    var args     = new ActivityTestArgs() { Command = "single-multi" };
+                    var argBytes = NeonHelper.JsonSerializeToBytes(args);
+                    var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
+
+                    await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, workflowTimeout, TimeSpan.FromSeconds(1));
+
+                    var result = await client.GetWorkflowResultAsync(run);
+
+                    Assert.Equal(argBytes, result);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_External()
+        {
+            // Verify that we can heartbeat and complete an activity externally.
+            
+            var assembly = Assembly.GetExecutingAssembly();
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+            await client.RegisterAssemblyActivitiesAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                using (await client.StartActivityWorkerAsync("test-domain"))
+                {
+                    var args     = new ActivityTestArgs() { Command = "complete-externally" };
+                    var argBytes = NeonHelper.JsonSerializeToBytes(args);
+                    var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
+
+                    await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, workflowTimeout, TimeSpan.FromSeconds(1));
+
+                    var result = await client.GetWorkflowResultAsync(run);
+
+                    Assert.Equal(argBytes, result);
                 }
             }
         }

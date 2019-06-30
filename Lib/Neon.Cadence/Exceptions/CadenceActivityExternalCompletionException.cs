@@ -34,7 +34,15 @@ namespace Neon.Cadence
     /// the <see cref="ActivityBase"/> base class and used to signal Cadence that the activity
     /// will be completed externally via a call to <see cref="CadenceClient.CompleteActivityAsync(byte[], byte[], Exception)"/>.
     /// </summary>
-    internal class CadenceActivityExternalCompletionException : Exception
+    /// <remarks>
+    /// <remarks>
+    /// <note>
+    /// Activity entry points must allow this exception to be caught by the
+    /// calling <see cref="CadenceClient"/> so that <see cref="ActivityBase.CompleteExternallyAsync"/>
+    /// will work properly.
+    /// </note>
+    /// </remarks>
+    public class CadenceActivityExternalCompletionException : Exception
     {
         /// <summary>
         /// Constructor.

@@ -31,7 +31,14 @@ namespace Neon.Cadence
     /// to be handled internally by <see cref="WorkflowBase"/> as one of the special case 
     /// mechanisms for completing a workflow.
     /// </summary>
-    internal class CadenceWorkflowRestartException : Exception
+    /// <remarks>
+    /// <note>
+    /// Workflow entry points must allow this exception to be caught by the
+    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// will work properly.
+    /// </note>
+    /// </remarks>
+    public class CadenceWorkflowRestartException : Exception
     {
         /// <summary>
         /// Constructor.
