@@ -19,7 +19,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Image is Debian:jessie image
+# Image is openjdk:8-jdk-stretch image
+# base debain9 stretch
 #
 # ARGUMENTS:
 #
@@ -72,7 +73,7 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install cassandra -y
 
-# Delete bad cassandra config file
+# Delete default cassandra config file
 RUN mkdir /cadence \ 
     && mv /usr/sbin/cassandra /cadence \
     && rm -f /etc/cassandra/cassandra.yaml 
