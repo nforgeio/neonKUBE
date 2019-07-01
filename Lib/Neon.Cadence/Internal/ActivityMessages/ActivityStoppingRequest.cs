@@ -25,8 +25,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Sent to a worker, instructing it to begin executing
-    /// a workflow activity.
+    /// <b>proxy --> client:</b> Indicates that a worker is being stopped.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.ActivityStoppingRequest)]
     internal class ActivityStoppingRequest : ActivityRequest

@@ -811,28 +811,17 @@ namespace TestCadence
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b></b></term>
+        ///     <term><b>cancel-child-workflow</b></term>
         ///     <description>
+        ///     Create a child workflow that will sleep for a while and then
+        ///     cancel the child, verifying that it was cancelled.
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b></b></term>
+        ///     <term><b>cancel-activity</b></term>
         ///     <description>
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b></b></term>
-        ///     <description>
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b></b></term>
-        ///     <description>
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b></b></term>
-        ///     <description>
+        ///     Create a child activity that will sleep for a while and then
+        ///     cancel the activity, verifying that is was cancelled.
         ///     </description>
         /// </item>
         /// </list>
@@ -846,6 +835,9 @@ namespace TestCadence
             public string Command { get; set; }
         }
 
+        /// <summary>
+        /// Used to test various workflow activity and child workflow operations.
+        /// </summary>
         [AutoRegister]
         private class ChildOperationsWorkflow : WorkflowBase
         {
@@ -854,21 +846,40 @@ namespace TestCadence
                 var command = NeonHelper.JsonDeserialize<ChildOperationsWorkflowArgs>(args);
                 var success = false;
 
-                byte[]          result;
-                byte[]          signalBytes;
-                ChildWorkflow   child;
+                byte[]                      result;
+                byte[]                      signalBytes;
+                ChildWorkflow               child;
+                CancellationTokenSource     cancellationTokenSource = new CancellationTokenSource();
 
                 switch (command.Command)
                 {
                     case "signal-child":
 
                         signalBytes = new byte[] { 10 };
-                        child       = await StartChildWorkflowAsync<SignalOnceWorkflow>(args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
+                        child = await StartChildWorkflowAsync<SignalOnceWorkflow>(args: Encoding.UTF8.GetBytes(maxWaitSeconds.ToString()));
 
                         await SignalChildWorkflowAsync(child, "signal", signalBytes);
 
                         result  = await this.WaitForChildWorkflowAsync(child);
                         success = NeonHelper.ArrayEquals(signalBytes, result);
+                        break;
+
+                    case "cancel-child-workflow":
+
+                        child = await StartChildWorkflowAsync<SignalOnceWorkflow>(args: Encoding.UTF8.GetBytes(30.ToString()), cancellationToken: cancellationTokenSource.Token);
+
+                        await CancelChildWorkflowAsync(child);
+
+                        result = await this.WaitForChildWorkflowAsync(child);
+                        break;
+
+                    case "cancel-activity":
+
+                        var activityTask = CallActivityAsync<AutoHelloActivity>(new byte[] { 0, 1, 2, 3, 4 }, cancellationToken: cancellationTokenSource.Token);
+
+                        cancellationTokenSource.Cancel();
+
+                        result = await activityTask;
                         break;
 
                     default:
@@ -877,6 +888,34 @@ namespace TestCadence
                 }
 
                 return NeonHelper.JsonSerializeToBytes(success);
+            }
+        }
+
+        /// <summary>
+        /// Used to test activity cancellation.
+        /// </summary>
+        [AutoRegister]
+        private class CancellableActivity : ActivityBase
+        {
+            public static bool HasStarted = false;
+
+            protected async override Task<byte[]> RunAsync(byte[] args)
+            {
+                // Set [HasStarted=true] so that the parent workflow can wait for the
+                // activity to be started and monitor the cancellation token to verify
+                // that the activity is actually cancelled.  The activity result will
+                // be a JSON encoded boolean indicating whether the activity was cancelled
+                // (TRUE) or whether it was run to completion (FALSE).
+
+                var cancelled = false;
+
+                CancellationToken.Register(() => cancelled = true);
+
+                HasStarted = true;
+
+                await Task.Delay(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                return await Task.FromResult(NeonHelper.JsonSerializeToBytes(cancelled));
             }
         }
 
@@ -1858,6 +1897,59 @@ namespace TestCadence
                 var result = await client.CallWorkflowAsync<ChildOperationsWorkflow>(NeonHelper.JsonSerializeToBytes(args));
 
                 Assert.True(NeonHelper.JsonDeserialize<bool>(result));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Cancel_Child()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Have a workflow create a child workflow and then cancel it.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var args = new ChildOperationsWorkflowArgs()
+                {
+                    Command = "cancel-child-workflow"
+                };
+
+                var result = await client.CallWorkflowAsync<ChildOperationsWorkflow>(NeonHelper.JsonSerializeToBytes(args));
+
+                Assert.True(NeonHelper.JsonDeserialize<bool>(result));
+            }
+        }
+
+        [Fact(Skip = "We need to think more about cancellation.")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Cancel_Activity()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Have a workflow create a child workflow and then cancel it.
+
+            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterAssemblyWorkflowsAsync(assembly);
+            await client.RegisterAssemblyActivitiesAsync(assembly);
+
+            using (await client.StartWorkflowWorkerAsync("test-domain"))
+            {
+                var args = new ChildOperationsWorkflowArgs()
+                {
+                    Command = "cancel-activity"
+                };
+
+                CancellableActivity.HasStarted = false;
+
+                var workflowTask = client.CallWorkflowAsync<ChildOperationsWorkflow>(NeonHelper.JsonSerializeToBytes(args));
+
+                NeonHelper.WaitFor(() => CancellableActivity.HasStarted, TimeSpan.FromSeconds(30));
+
+                Assert.True(NeonHelper.JsonDeserialize<bool>(await workflowTask));
             }
         }
 
