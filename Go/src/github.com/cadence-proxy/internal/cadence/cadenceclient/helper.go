@@ -48,7 +48,8 @@ type (
 	// This is used for creating, update, and registering cadence domains
 	// and stoping/starting cadence workflows workers
 	//
-	// Holds:
+	// Contains:
+	//
 	// Workflowserviceclient.Interface -> Interface is a client for the WorkflowService service
 	//
 	// CadenceClientConfiguration -> configuration information for building the cadence workflow and domain clients
@@ -61,9 +62,9 @@ type (
 	// *RegisterDomainRequest -> reference to a RegisterDomainRequest that contains configuration details
 	// for registering a cadence domain
 	//
-	// client.DomainClient
+	// client.DomainClient -> cadence domain client instance
 	//
-	// client.Client
+	// client.Client -> cadence workflow client instance
 	ClientHelper struct {
 		Service        workflowserviceclient.Interface
 		Config         clientConfiguration
@@ -725,6 +726,33 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 		zap.Any("Result", result),
 		zap.Any("Error", e),
 	)
+
+	return nil
+}
+
+// RecordActivityHeartbeat is an instance method that records heartbeat for an activity.
+//
+// param ctx context.Context -> the go context used to record a heartbeat for an activity
+//
+// param taskToken []byte -> a task token used to record a heartbeat for an activity
+// a []byte
+//
+// param details ...interface{} -> optional activity heartbeat details
+//
+// returns error -> error upon failure to record activity heartbeat, nil upon success
+func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskToken []byte, details ...interface{}) error {
+
+	// query the workflow
+	err := helper.WorkflowClient.RecordActivityHeartbeat(ctx, taskToken, details)
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("failed to record activity heartbeat", zap.Error(err))
+		return err
+	}
+
+	// $debug(jack.burns)
+	helper.Logger.Debug("Successfully Recorded Activity Heartbeat")
 
 	return nil
 }

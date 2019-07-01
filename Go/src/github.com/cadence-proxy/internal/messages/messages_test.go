@@ -5151,6 +5151,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 		s.Equal(messagetypes.ActivityRecordHeartbeatReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetDetails())
+		s.Nil(v.GetTaskToken())
 
 		// Round-trip
 
@@ -5159,6 +5160,9 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 
 		v.SetDetails([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+
+		v.SetTaskToken([]byte{5, 6, 7, 8, 9})
+		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5172,6 +5176,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 	if v, ok := message.(*messages.ActivityRecordHeartbeatRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5181,6 +5186,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 	if v, ok := message.(*messages.ActivityRecordHeartbeatRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
 	}
 }
 
