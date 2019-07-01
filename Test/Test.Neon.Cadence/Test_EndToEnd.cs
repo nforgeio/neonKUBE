@@ -914,13 +914,13 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DebugPrelaunched        = false,
-                Mode                    = ConnectionMode.ListenOnly,
-                Debug                   = true,
-                ProxyTimeoutSeconds     = 30.0,
-                //DebugHttpTimeout      = TimeSpan.FromSeconds(5),
-                DebugDisableHeartbeats  = true,
-                DebugIgnoreTimeouts     = false
+                DebugPrelaunched       = false,
+                Mode                   = ConnectionMode.ListenOnly,
+                Debug                  = true,
+                ProxyTimeoutSeconds    = 30.0,
+                //DebugHttpTimeout     = TimeSpan.FromSeconds(5),
+                DebugDisableHeartbeats = true,
+                DebugIgnoreTimeouts    = false
             };
             
             fixture.Start(settings);

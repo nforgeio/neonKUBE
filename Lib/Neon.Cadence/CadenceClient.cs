@@ -142,7 +142,7 @@ namespace Neon.Cadence
     /// <note>
     /// <b>External workflows</b> are top-level workflows that have no workflow parent.
     /// This is distinugished from <b>child workflows</b> that are executed within the
-    /// context of another workflow via <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>.
+    /// context of another workflow via <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
     /// </note>
     /// <para>
     /// <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> returns
@@ -157,11 +157,11 @@ namespace Neon.Cadence
     /// </para>
     /// <note>
     /// Child workflows and activities are started from within a <see cref="WorkflowBase"/> implementation
-    /// via the <see cref="WorkflowBase.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken?)"/>,
-    /// <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
-    /// <see cref="WorkflowBase.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken?)"/>
-    /// <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>, and
-    /// <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
+    /// via the <see cref="WorkflowBase.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    /// <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    /// <see cref="WorkflowBase.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken)"/>
+    /// <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>, and
+    /// <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>
     /// methods.
     /// </note>
     /// <para>
@@ -181,15 +181,14 @@ namespace Neon.Cadence
     /// due to having to replay this history when the workflow has to be rehydrated.  
     /// </para>
     /// <para>
-    /// You can avoid this by removing the workflow loop and calling <see cref="RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// You can avoid this by removing the workflow loop and calling <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// at the end of your workflow logic.  This causes Cadence to reschedule the workflow
     /// with a clean history, somewhat similar to what happens for CRON workflows (which are
-    /// rescheduled automatically).  <see cref="RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// rescheduled automatically).  <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// works by throwing a <see cref="CadenceWorkflowRestartException"/> which will exit
     /// the workflow method and be caught by the calling <see cref="CadenceClient"/> which
     /// which then informs Cadence.
     /// </para>
-    /// <remarks>
     /// <note>
     /// Workflow entry points must allow the <see cref="CadenceWorkflowRestartException"/> to be caught by the
     /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
@@ -1172,7 +1171,7 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The reply message.</returns>
-        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken? cancellationToken = null)
+        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -1184,11 +1183,11 @@ namespace Neon.Cadence
                     operations.Add(requestId, operation);
                 }
 
-                if (cancellationToken != null)
+                if (cancellationToken != default)
                 {
                     request.IsCancellable = true;
 
-                    cancellationToken.Value.Register(
+                    cancellationToken.Register(
                         () =>
                         {
                             CallProxyAsync(new CancelRequest() { RequestId = requestId }).Wait();

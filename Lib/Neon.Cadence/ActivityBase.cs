@@ -84,13 +84,13 @@ namespace Neon.Cadence
     /// Cadence supports two kinds of activities: <b>normal</b> and <b>local</b>.
     /// <b>normal</b> activities are registered via <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string)"/>
     /// and are scheduled by the Cadence cluster to be executed on workers.  Workflows
-    /// invoke theses using <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>.
+    /// invoke theses using <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>.
     /// </para>
     /// <para>
     /// <b>local</b> activities simply run on the local worker without needing to
     /// be registered or scheduled by the Cadence cluster.  These are very low overhead
     /// and intended for for simple short running activities (a few seconds).
-    /// Workflows invoke local activities using <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>.
+    /// Workflows invoke local activities using <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>.
     /// <b>Local activities do not support heartbeats.</b>
     /// </para>
     /// <note>

@@ -160,9 +160,9 @@ namespace Neon.Cadence
     /// <item>
     ///     <para>
     ///     The custom <see cref="WorkflowBase.RunAsync(byte[])"/> method implements the workflow by
-    ///     calling activities via <see cref="CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/> or 
-    ///     <see cref="CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions,  CancellationToken?)"/> 
-    ///     and child workflows via <see cref="CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
+    ///     calling activities via <see cref="CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/> or 
+    ///     <see cref="CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions,  CancellationToken)"/> 
+    ///     and child workflows via <see cref="CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
     ///     making decisions based on their results to call other activities and child workflows, 
     ///     and ultimately return a result or throwing an exception to indicate that the workflow
     ///     failed.
@@ -184,7 +184,7 @@ namespace Neon.Cadence
     ///     will execute quickly, on the order of a few seconds.
     ///     </para>
     ///     <para>
-    ///     You'll use the <see cref="CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>,
+    ///     You'll use the <see cref="CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>,
     ///     specifying your custom <see cref="ActivityBase"/> implementation.
     ///     </para>
     ///     <note>
@@ -251,6 +251,18 @@ namespace Neon.Cadence
     ///     </note>
     /// </item>
     /// </list>
+    /// <para><b>Child Workflows and Activities</b></para>
+    /// <para>
+    /// Workflows can run child workflows and activities.  Child workflows are started using
+    /// <see cref="CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    /// <see cref="CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    ///  <see cref="StartChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    ///  or <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
+    /// </para>
+    /// <para>
+    /// Activities are started via <see cref="CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken)"/>,
+    /// or <see cref="CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>.
+    /// </para>
     /// <para><b>Restarting Workflows</b></para>
     /// <para>
     /// Long running workflows that are essentially a high-level loop can result in the recording
@@ -266,7 +278,6 @@ namespace Neon.Cadence
     /// the workflow method and be caught by the calling <see cref="CadenceClient"/> which
     /// which then informs Cadence.
     /// </para>
-    /// <remarks>
     /// <note>
     /// Workflow entry points must allow the <see cref="CadenceWorkflowRestartException"/> to be caught by the
     /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
@@ -1174,10 +1185,10 @@ namespace Neon.Cadence
             var reply = (WorkflowGetVersionReply)await Client.CallProxyAsync(
                 new WorkflowGetVersionRequest()
                 {
-                    ContextId       = this.contextId,
-                    ChangeId        = changeId,
-                    MinSupported    = minSupported,
-                    MaxSupported    = maxSupported
+                    ContextId    = this.contextId,
+                    ChangeId     = changeId,
+                    MinSupported = minSupported,
+                    MaxSupported = maxSupported
                 });
 
             reply.ThrowOnError();
@@ -1415,7 +1426,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> CallChildWorkflowAsync<TWorkflow>(byte[] args = null, ChildWorkflowOptions options = null, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> CallChildWorkflowAsync<TWorkflow>(byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
             where TWorkflow : WorkflowBase
         {
             return await CallChildWorkflowAsync(typeof(TWorkflow).FullName, args, options, cancellationToken);
@@ -1437,25 +1448,25 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> CallChildWorkflowAsync(string workflowTypeName, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> CallChildWorkflowAsync(string workflowTypeName, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
 
             var reply = (WorkflowExecuteChildReply)await Client.CallProxyAsync(
                 new WorkflowExecuteChildRequest()
                 {
-                    ContextId   = contextId,
-                    Workflow    = workflowTypeName,
-                    Args        = args,
-                    Options     = options?.ToInternal()
+                    ContextId = contextId,
+                    Workflow  = workflowTypeName,
+                    Args      = args,
+                    Options   = options?.ToInternal()
                 },
                 cancellationToken: cancellationToken);
 
             reply.ThrowOnError();
 
-            if (cancellationToken != null)
+            if (cancellationToken != default)
             {
-                cancellationToken.Value.Register(
+                cancellationToken.Register(
                     () =>
                     {
                         Client.CallProxyAsync(new WorkflowCancelChildRequest() { ChildId = reply.ChildId }).Wait();
@@ -1465,8 +1476,8 @@ namespace Neon.Cadence
             var reply2 = (WorkflowWaitForChildReply)await Client.CallProxyAsync(
                 new WorkflowWaitForChildRequest()
                 {
-                    ContextId   = contextId,
-                    ChildId     = reply.ChildId
+                    ContextId = contextId,
+                    ChildId  = reply.ChildId
                 });
 
             reply2.ThrowOnError();
@@ -1482,7 +1493,7 @@ namespace Neon.Cadence
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>
         /// Returns an opaque <see cref="ChildWorkflow"/> that identifies the new workflow
-        /// and that can be passed to <see cref="WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken?)"/>,
+        /// and that can be passed to <see cref="WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken)"/>,
         /// <see cref="SignalChildWorkflowAsync(ChildWorkflow, string, byte[])"/> and
         /// <see cref="CancelChildWorkflowAsync(ChildWorkflow)"/>.
         /// </returns>
@@ -1494,7 +1505,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<ChildWorkflow> StartChildWorkflowAsync<TWorkflow>(byte[] args = null, ChildWorkflowOptions options = null, CancellationToken? cancellationToken = null)
+        protected async Task<ChildWorkflow> StartChildWorkflowAsync<TWorkflow>(byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
             where TWorkflow : WorkflowBase
         {
             return await StartChildWorkflowAsync(typeof(TWorkflow).FullName, args, options, cancellationToken);
@@ -1509,7 +1520,7 @@ namespace Neon.Cadence
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>
         /// Returns an opaque <see cref="ChildWorkflow"/> that identifies the new workflow
-        /// and that can be passed to <see cref="WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken?)"/>,
+        /// and that can be passed to <see cref="WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken)"/>,
         /// <see cref="SignalChildWorkflowAsync(ChildWorkflow, string, byte[])"/> and
         /// <see cref="CancelChildWorkflowAsync(ChildWorkflow)"/>.
         /// </returns>
@@ -1521,17 +1532,17 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<ChildWorkflow> StartChildWorkflowAsync(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken? cancellationToken = null)
+        protected async Task<ChildWorkflow> StartChildWorkflowAsync(string name, byte[] args = null, ChildWorkflowOptions options = null, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
             var reply = (WorkflowExecuteChildReply)await Client.CallProxyAsync(
                 new WorkflowExecuteChildRequest()
                 {
-                    Workflow    = name,
-                    ContextId   = contextId,
-                    Args        = args,
-                    Options     = options?.ToInternal()
+                    Workflow  = name,
+                    ContextId = contextId,
+                    Args      = args,
+                    Options   = options?.ToInternal()
                 },
                 cancellationToken: cancellationToken);
 
@@ -1551,7 +1562,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="childWorkflow">
         /// Identifies the child workflow (this is returned by 
-        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>).
+        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
         /// </param>
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Optionally specifies the signal arguments.</param>
@@ -1580,7 +1591,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="childWorkflow">
         /// Identifies the child workflow (this is returned by 
-        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>).
+        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
@@ -1592,7 +1603,7 @@ namespace Neon.Cadence
             var reply = (WorkflowCancelChildReply)await Client.CallProxyAsync(
                 new WorkflowCancelChildRequest()
                 {
-                    ChildId     = childWorkflow.Id
+                    ChildId = childWorkflow.Id
                 });
 
             reply.ThrowOnError();
@@ -1603,7 +1614,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="childWorkflow">
         /// Identifies the child workflow (this is returned by 
-        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>).
+        /// <see cref="StartChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>).
         /// </param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The workflow results.</returns>
@@ -1611,11 +1622,11 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> WaitForChildWorkflowAsync(ChildWorkflow childWorkflow, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> WaitForChildWorkflowAsync(ChildWorkflow childWorkflow, CancellationToken cancellationToken = default)
         {
-            if (cancellationToken != null)
+            if (cancellationToken != default)
             {
-                cancellationToken.Value.Register(
+                cancellationToken.Register(
                     () =>
                     {
                         CancelChildWorkflowAsync(childWorkflow).Wait();
@@ -1625,8 +1636,8 @@ namespace Neon.Cadence
             var reply = (WorkflowWaitForChildReply)await Client.CallProxyAsync(
                 new WorkflowWaitForChildRequest()
                 {
-                    ContextId   = contextId,
-                    ChildId     = childWorkflow.Id
+                    ContextId = contextId,
+                    ChildId   = childWorkflow.Id
                 });
 
             reply.ThrowOnError();
@@ -1649,7 +1660,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> CallActivityAsync<TActivity>(byte[] args = null, ActivityOptions options = null, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> CallActivityAsync<TActivity>(byte[] args = null, ActivityOptions options = null, CancellationToken cancellationToken = default)
             where TActivity : ActivityBase
         {
             return await CallActivityAsync(typeof(TActivity).FullName, args, options, cancellationToken);
@@ -1671,7 +1682,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> CallActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> CallActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
@@ -1714,7 +1725,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null, CancellationToken? cancellationToken = null)
+        protected async Task<byte[]> CallLocalActivityAsync<TActivity>(byte[] args = null, LocalActivityOptions options = null, CancellationToken cancellationToken = default)
             where TActivity : ActivityBase
         {
             options = options ?? new LocalActivityOptions();

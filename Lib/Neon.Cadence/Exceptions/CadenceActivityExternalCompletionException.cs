@@ -35,7 +35,6 @@ namespace Neon.Cadence
     /// will be completed externally via a call to <see cref="CadenceClient.CompleteActivityAsync(byte[], byte[], Exception)"/>.
     /// </summary>
     /// <remarks>
-    /// <remarks>
     /// <note>
     /// Activity entry points must allow this exception to be caught by the
     /// calling <see cref="CadenceClient"/> so that <see cref="ActivityBase.CompleteExternallyAsync"/>
