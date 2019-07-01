@@ -159,7 +159,8 @@ namespace Neon.Xunit.Cadence
                     new string[]
                     {
                         "--detach",
-                        "-p", "7933-7939:7933-7939"
+                        "-p", "7933-7939:7933-7939",
+                        "-p", "8088:8088"
                     },
                     env: env);
 
