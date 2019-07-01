@@ -65,7 +65,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -76,6 +76,9 @@ namespace Neon.Xunit.Cadence
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// </param>
+        /// <param name="keepOpen">
+        /// Optionally indicates that the container should continue to run after the fixture is disposed.
         /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
@@ -106,6 +109,7 @@ namespace Neon.Xunit.Cadence
             string              name            = "cadence-test",
             string[]            env             = null,
             bool                keepConnection  = false,
+            bool                keepOpen        = false,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -113,7 +117,7 @@ namespace Neon.Xunit.Cadence
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(settings, image, name, env, keepConnection, emulateProxy);
+                    StartAsComposed(settings, image, name, env, keepConnection, keepOpen, emulateProxy);
                 });
         }
 
@@ -127,6 +131,9 @@ namespace Neon.Xunit.Cadence
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// </param>
+        /// <param name="keepOpen">
+        /// Optionally indicates that the container should continue to run after the fixture is disposed.
         /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
@@ -146,6 +153,7 @@ namespace Neon.Xunit.Cadence
             string              name            = "cadence-test",
             string[]            env             = null,
             bool                keepConnection  = false, 
+            bool                keepOpen        = false,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -161,7 +169,8 @@ namespace Neon.Xunit.Cadence
                         "--detach",
                         "-p", "7933-7939:7933-7939"
                     },
-                    env: env);
+                    env: env,
+                    keepOpen: keepOpen);
 
                 Thread.Sleep(warmupDelay);
 

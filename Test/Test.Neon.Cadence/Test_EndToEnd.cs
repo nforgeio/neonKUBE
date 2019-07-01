@@ -962,7 +962,7 @@ namespace TestCadence
                 DebugIgnoreTimeouts    = false
             };
             
-            fixture.Start(settings);
+            fixture.Start(settings, keepOpen: true);
 
             this.fixture     = fixture;
             this.client      = fixture.Connection;
