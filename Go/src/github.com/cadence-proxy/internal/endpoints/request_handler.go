@@ -1415,8 +1415,29 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		}
 	})
 
-	// wait on the channel
-	workflow.Go(ctx, selector.Select)
+	// Subscribe to named signal
+	workflow.Go(ctx, func(ctx workflow.Context) {
+		var err error
+		var done bool
+		selector = selector.AddReceive(ctx.Done(), func(c workflow.Channel, more bool) {
+			err = ctx.Err()
+			done = true
+		})
+
+		// keep select spinning,
+		// looking for requests
+		for {
+			selector.Select(ctx)
+			if err != nil {
+				logger.Error("Error In Workflow Context", zap.Error(err))
+				panic(err)
+			}
+
+			if done {
+				return
+			}
+		}
+	})
 
 	return reply
 }
@@ -2401,12 +2422,24 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		return reply
 	}
 
-	// create the new context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
-	defer cancel()
+	// check to see if external or internal
+	// record heartbeat
+	if request.GetTaskToken() == nil {
+		activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), request.GetDetails())
+	} else {
 
-	// record the heartbeat details
-	activity.RecordHeartbeat(ctx, request.GetDetails())
+		// create the new context
+		ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+		defer cancel()
+
+		// record the heartbeat details
+		err := clientHelper.RecordActivityHeartbeat(ctx, request.GetTaskToken(), request.GetDetails())
+		if err != nil {
+			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+			return reply
+		}
+	}
 
 	// build the reply
 	buildReply(reply, nil)

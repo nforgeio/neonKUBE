@@ -22,6 +22,8 @@ import (
 	"os"
 	"time"
 
+	"go.uber.org/cadence/activity"
+
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
@@ -676,8 +678,17 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 		return globals.ErrEntityNotExist
 	}
 
+	// check if the activity is to be
+	// completed externally
+	var result interface{}
+	if reply.GetPending() {
+		result = activity.ErrResultPending
+	} else {
+		result = reply.GetResult()
+	}
+
 	// set the reply
-	err := op.SendChannel(reply.GetResult(), reply.GetError())
+	err := op.SendChannel(result, reply.GetError())
 	if err != nil {
 		return err
 	}

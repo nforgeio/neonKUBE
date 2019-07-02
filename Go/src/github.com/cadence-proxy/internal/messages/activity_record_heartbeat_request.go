@@ -49,6 +49,22 @@ func NewActivityRecordHeartbeatRequest() *ActivityRecordHeartbeatRequest {
 	return request
 }
 
+// GetTaskToken gets a ActivityRecordHeartbeatRequest's TaskToken field
+// from its properties map. TaskToken is a []byte opaque activity task token.
+//
+// returns []byte -> []byte representing the opaque activity task token.
+func (request *ActivityRecordHeartbeatRequest) GetTaskToken() []byte {
+	return request.GetBytesProperty("TaskToken")
+}
+
+// SetTaskToken sets an ActivityRecordHeartbeatRequest's TaskToken field
+// from its properties map.  TaskToken is a []byte opaque activity task token.
+//
+// param value []byte -> []byte representing the opaque activity task token.
+func (request *ActivityRecordHeartbeatRequest) SetTaskToken(value []byte) {
+	request.SetBytesProperty("TaskToken", value)
+}
+
 // GetDetails gets the Activity heartbeat Details or nil
 // from a ActivityRecordHeartbeatRequest's properties map.
 // Returns the activity heartbeat details encoded as a byte array.
@@ -84,6 +100,7 @@ func (request *ActivityRecordHeartbeatRequest) Clone() IProxyMessage {
 func (request *ActivityRecordHeartbeatRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityRecordHeartbeatRequest); ok {
+		v.SetTaskToken(request.GetTaskToken())
 		v.SetDetails(request.GetDetails())
 	}
 }

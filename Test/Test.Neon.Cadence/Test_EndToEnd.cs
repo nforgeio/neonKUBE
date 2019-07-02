@@ -1999,7 +1999,8 @@ namespace TestCadence
             {
                 using (await client.StartActivityWorkerAsync("test-domain"))
                 {
-                    var args     = new ActivityTestArgs() { Command = "single-heartbeat" };
+                    var command  = "single-heartbeat";
+                    var args     = new ActivityTestArgs() { Command = command };
                     var argBytes = NeonHelper.JsonSerializeToBytes(args);
                     var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
 
@@ -2007,7 +2008,7 @@ namespace TestCadence
 
                     var result = await client.GetWorkflowResultAsync(run);
 
-                    Assert.Equal(argBytes, result);
+                    Assert.Equal(Encoding.UTF8.GetBytes(command), result);
                 }
             }
         }
@@ -2030,7 +2031,8 @@ namespace TestCadence
             {
                 using (await client.StartActivityWorkerAsync("test-domain"))
                 {
-                    var args     = new ActivityTestArgs() { Command = "single-multi" };
+                    var command  = "multi-heartbeat";
+                    var args     = new ActivityTestArgs() { Command = command };
                     var argBytes = NeonHelper.JsonSerializeToBytes(args);
                     var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
 
@@ -2038,7 +2040,7 @@ namespace TestCadence
 
                     var result = await client.GetWorkflowResultAsync(run);
 
-                    Assert.Equal(argBytes, result);
+                    Assert.Equal(Encoding.UTF8.GetBytes(command), result);
                 }
             }
         }
@@ -2079,7 +2081,7 @@ namespace TestCadence
 
                     var result = await client.GetWorkflowResultAsync(run);
 
-                    Assert.Equal(argBytes, result);
+                    Assert.Equal(Encoding.UTF8.GetBytes(command), result);
                 }
             }
         }
