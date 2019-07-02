@@ -2063,7 +2063,8 @@ namespace TestCadence
                 {
                     HeartbeatActivity.TaskToken = null;
 
-                    var args     = new ActivityTestArgs() { Command = "complete-externally" };
+                    var command  = "complete-externally";
+                    var args     = new ActivityTestArgs() { Command = command };
                     var argBytes = NeonHelper.JsonSerializeToBytes(args);
                     var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
 
@@ -2075,7 +2076,7 @@ namespace TestCadence
                     await Task.Delay(TimeSpan.FromSeconds(0.25));
                     await client.SendActivityHeartbeatAsync(HeartbeatActivity.TaskToken, new byte[] { 0, 1, 2, 3, 4 });
                     await Task.Delay(TimeSpan.FromSeconds(0.25));
-                    await client.CompleteActivityAsync(argBytes);
+                    await client.CompleteActivityAsync(HeartbeatActivity.TaskToken, argBytes);
 
                     // Wait for the workflow result.
 

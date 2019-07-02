@@ -150,7 +150,7 @@ namespace Neon.Cadence
         public async Task SendActivityHeartbeatAsync(byte[] taskToken, byte[] details = null)
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
-
+            
             var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {

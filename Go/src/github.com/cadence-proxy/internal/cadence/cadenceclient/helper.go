@@ -19,9 +19,12 @@ package cadenceclient
 
 import (
 	"context"
+	"errors"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
@@ -625,6 +628,7 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 	helper.Logger.Debug("Workflow Describe Execution Successful",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
+		zap.Any("Execution Info", *response.WorkflowExecutionInfo),
 	)
 
 	return response, nil
@@ -707,10 +711,15 @@ func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID
 //
 // param result interface{} -> the result to complete the activity with
 //
-// pararm err error -> error to complete the activity with
+// pararm cadenceError *cadenceerrors.CadenceError -> error to complete the activity with
 //
 // returns error -> error upon failure to complete the activity, nil upon success
-func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, result interface{}, e error) error {
+func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, result interface{}, cadenceError *cadenceerrors.CadenceError) error {
+
+	var e error
+	if cadenceError != nil {
+		e = errors.New(cadenceError.ToString())
+	}
 
 	// query the workflow
 	err := helper.WorkflowClient.CompleteActivity(ctx, taskToken, result, e)

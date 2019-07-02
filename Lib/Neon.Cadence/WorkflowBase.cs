@@ -1578,9 +1578,10 @@ namespace Neon.Cadence
             var reply = (WorkflowSignalChildReply)await Client.CallProxyAsync(
                 new WorkflowSignalChildRequest()
                 {
-                    ChildId    = childWorkflow.Id,
-                    SignalName = signalName,
-                    SignalArgs = signalArgs
+                    ContextId   = contextId,
+                    ChildId     = childWorkflow.Id,
+                    SignalName  = signalName,
+                    SignalArgs  = signalArgs
                 }); ;
 
             reply.ThrowOnError();
@@ -1603,7 +1604,8 @@ namespace Neon.Cadence
             var reply = (WorkflowCancelChildReply)await Client.CallProxyAsync(
                 new WorkflowCancelChildRequest()
                 {
-                    ChildId = childWorkflow.Id
+                    ContextId   = contextId,
+                    ChildId     = childWorkflow.Id
                 });
 
             reply.ThrowOnError();

@@ -20,7 +20,6 @@ package endpoints
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -1835,6 +1834,12 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
+
+		return reply
+	}
+
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
@@ -1851,7 +1856,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 
 	// wait on the future
 	var result []byte
-	if err := future.Get(ctx, result); err != nil {
+	if err := future.Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
 		return reply
@@ -2511,7 +2516,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	err := clientHelper.CompleteActivity(ctx,
 		request.GetTaskToken(),
 		request.GetResult(),
-		errors.New(request.GetError().ToString()),
+		request.GetError(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
