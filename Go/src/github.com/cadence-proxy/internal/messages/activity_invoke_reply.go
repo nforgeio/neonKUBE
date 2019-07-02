@@ -63,6 +63,26 @@ func (reply *ActivityInvokeReply) SetResult(value []byte) {
 	reply.SetBytesProperty("Result", value)
 }
 
+// GetPending gets the ActivityInvokeReply's Pending property
+// from its properties map.
+// Indicates that the activity will be completed externally.
+//
+// returns bool -> bool indiciation if the activity will
+// be completed externally
+func (reply *ActivityInvokeReply) GetPending() bool {
+	return reply.GetBoolProperty("Pending")
+}
+
+// SetPending sets the the ActivityInvokeReply's Pending property
+// in its properties map.
+// Indicates that the activity will be completed externally.
+//
+// param value bool -> bool indiciation if the activity will
+// be completed externally
+func (reply *ActivityInvokeReply) SetPending(value bool) {
+	reply.SetBoolProperty("Pending", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -80,5 +100,6 @@ func (reply *ActivityInvokeReply) CopyTo(target IProxyMessage) {
 	reply.ActivityReply.CopyTo(target)
 	if v, ok := target.(*ActivityInvokeReply); ok {
 		v.SetResult(reply.GetResult())
+		v.SetPending(reply.GetPending())
 	}
 }

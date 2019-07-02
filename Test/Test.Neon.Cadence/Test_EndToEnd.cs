@@ -2079,7 +2079,8 @@ namespace TestCadence
             {
                 using (await client.StartActivityWorkerAsync("test-domain"))
                 {
-                    var args     = new ActivityTestArgs() { Command = "complete-externally" };
+                    var command = "complete-externally";
+                    var args     = new ActivityTestArgs() { Command = command };
                     var argBytes = NeonHelper.JsonSerializeToBytes(args);
                     var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
 
@@ -2087,7 +2088,7 @@ namespace TestCadence
 
                     var result = await client.GetWorkflowResultAsync(run);
 
-                    Assert.Equal(argBytes, result);
+                    Assert.Equal(Encoding.UTF8.GetBytes(command), result);
                 }
             }
         }
