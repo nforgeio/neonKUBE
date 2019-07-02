@@ -711,16 +711,24 @@ namespace Neon.Cadence
 
         /// <summary>
         /// This method may be called within <see cref="RunAsync(byte[])"/> to indicate that the
-        /// activity will be completed externally.  
+        /// activity will be completed externally.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         /// <remarks>
+        /// <para>
         /// This method works by throwing an <see cref="CadenceActivityExternalCompletionException"/> which
         /// will be caught and handled by the base <see cref="ActivityBase"/> class.  You'll need to allow
         /// this exception to exit your <see cref="RunAsync(byte[])"/> method for this to work.
+        /// </para>
+        /// <note>
+        /// This method doesn't work for local activities.
+        /// </note>
         /// </remarks>
         public async Task CompleteExternallyAsync()
         {
+            EnsureNotLocal();
+
             await Task.CompletedTask;
             throw new CadenceActivityExternalCompletionException();
         }
