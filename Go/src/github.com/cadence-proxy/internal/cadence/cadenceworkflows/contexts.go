@@ -182,13 +182,7 @@ func (wectx *WorkflowContext) RemoveChildContext(id int64) int64 {
 //
 // returns *WorkflowContext -> pointer to ChildContext with the specified id
 func (wectx *WorkflowContext) GetChildContext(id int64) *ChildContext {
-	if v, ok := wectx.childContexts.Load(id); ok {
-		if _v, _ok := v.(*ChildContext); _ok {
-			return _v
-		}
-	}
-
-	return nil
+	return wectx.childContexts.Get(id)
 }
 
 //----------------------------------------------------------------------------

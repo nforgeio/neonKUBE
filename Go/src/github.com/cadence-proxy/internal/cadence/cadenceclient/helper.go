@@ -625,6 +625,7 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 	helper.Logger.Debug("Workflow Describe Execution Successful",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
+		zap.Any("Execution Info", *response.WorkflowExecutionInfo),
 	)
 
 	return response, nil
