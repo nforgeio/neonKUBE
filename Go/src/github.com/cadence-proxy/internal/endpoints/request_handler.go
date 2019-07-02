@@ -20,7 +20,6 @@ package endpoints
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -2517,7 +2516,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	err := clientHelper.CompleteActivity(ctx,
 		request.GetTaskToken(),
 		request.GetResult(),
-		errors.New(request.GetError().ToString()),
+		request.GetError(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
