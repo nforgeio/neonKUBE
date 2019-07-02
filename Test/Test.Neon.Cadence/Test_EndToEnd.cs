@@ -718,10 +718,9 @@ namespace TestCadence
         ///     <term><b>complete-externally</b></term>
         ///     <description>
         ///     Starts a new task that will heartbeat and complete the activity
-        ///     externally and then the activity returns, indicating that it will
-        ///     be completed externally.  The new task will run for longer than
-        ///     the activity heartbeat timeout and record a few heartbeats to
-        ///     indicate that the activity is still alive.
+        ///     externally.  The <see cref="TaskToken"/> static will be set to
+        ///     the task token so that the external test can send external heartbeats
+        ///     as well as the result.
         ///     </description>
         /// </item>
         /// </list>
@@ -732,6 +731,8 @@ namespace TestCadence
         [AutoRegister]
         private class HeartbeatActivity : ActivityBase
         {
+            public static byte[] TaskToken = null;
+
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
                 var command = Encoding.UTF8.GetString(args);
@@ -761,29 +762,10 @@ namespace TestCadence
                         }
                         break;
 
-                    case "record-externally":
+                    case "complete-externally":
 
-                        _ = Task.Run(
-                            async () =>
-                            {
-                                var client            = Client;
-                                var taskToken         = Info.TaskToken;
-                                var heartbeatTimeout  = Info.HeartbeatTimeout;
-                                var heartbeatInterval = TimeSpan.FromTicks(heartbeatTimeout.Ticks / 2);
-
-                                for (int i = 0; i < 4; i++)
-                                {
-                                    await Task.Delay(heartbeatInterval);
-
-                                    // Note that we're going to alternate between sending null
-                                    // and non-null details to exercise the method.
-
-                                    await client.SendActivityHeartbeatAsync(taskToken, NeonHelper.IsOdd(i) ? new byte[] { 0, 1, 2, 3, 4 } : null);
-                                }
-
-                                await client.CompleteActivityAsync(args);
-                            });
-
+                        TaskToken = Info.TaskToken;
+                        await base.CompleteExternallyAsync();
                         break;
 
                     default:
@@ -2077,11 +2059,23 @@ namespace TestCadence
             {
                 using (await client.StartActivityWorkerAsync("test-domain"))
                 {
+                    HeartbeatActivity.TaskToken = null;
+
                     var args     = new ActivityTestArgs() { Command = "complete-externally" };
                     var argBytes = NeonHelper.JsonSerializeToBytes(args);
                     var run      = await client.StartWorkflowAsync<ActivityHeartbeatWorkflow>(domain: "test-domain", args: argBytes);
 
-                    await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, workflowTimeout, TimeSpan.FromSeconds(1));
+                    NeonHelper.WaitFor(() => HeartbeatActivity.TaskToken != null, workflowTimeout);
+
+                    // Record a couple heartbeats and then complete the activity.
+
+                    await client.SendActivityHeartbeatAsync(HeartbeatActivity.TaskToken, null);
+                    await Task.Delay(TimeSpan.FromSeconds(0.25));
+                    await client.SendActivityHeartbeatAsync(HeartbeatActivity.TaskToken, new byte[] { 0, 1, 2, 3, 4 });
+                    await Task.Delay(TimeSpan.FromSeconds(0.25));
+                    await client.CompleteActivityAsync(argBytes);
+
+                    // Wait for the workflow result.
 
                     var result = await client.GetWorkflowResultAsync(run);
 
