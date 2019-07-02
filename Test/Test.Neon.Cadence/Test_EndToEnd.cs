@@ -2081,7 +2081,7 @@ namespace TestCadence
 
                     var result = await client.GetWorkflowResultAsync(run);
 
-                    Assert.Equal(Encoding.UTF8.GetBytes(command), result);
+                    Assert.Equal(argBytes, result);
                 }
             }
         }
