@@ -61,17 +61,11 @@ Follow the steps below to configure a development or test workstation:
 
   `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-7. Install **Visual Studio 2019 Community** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
+7. Install **Visual Studio 2019 Community Preview** from [here](https://visualstudio.microsoft.com/vs/preview/)
 
   * Select **all workloads** on the first panel
-  * Select **individual components** and enable these:
-    * **.NET:** All SDKs, Targeting Packs, and Advanced ASP.NET Features
-    * **Code Tools:**
-    * Git for Windows
-    * GitHub extensions for Visual Studio
-    * Help Viewer
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK 3.0.100-preview3-010431** from [here](https://dotnet.microsoft.com/download/thank-you/dotnet-sdk-3.0.100-preview3-windows-x64-installer)
+  * Install **.NET Core SDK SDK 3.0.100-preview6-012264 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   

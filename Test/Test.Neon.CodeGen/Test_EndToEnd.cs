@@ -262,17 +262,18 @@ namespace TestCodeGen.AspNet
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(
-                options =>
-                {
-                    options.EnableEndpointRouting = true;
-                })
+            services
+                .AddControllers()
                 .AddNeon();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseMvc();
+            app.UseRouting();
+            app.UseEndpoints(routes =>
+            {
+                routes.MapControllers();
+            });
         }
     }
 
