@@ -46,4 +46,4 @@ wait_for_cassandra
 
 # start the frontend
 export CADENCE_TCHANNEL_PEERS=$HOST_IP:7933
-./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES & node $UI_HOME/server.js
+node $UI_HOME/server.js & ./cadence-server --root $CADENCE_HOME --env docker start --services=$SERVICES

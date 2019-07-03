@@ -20,6 +20,7 @@ package endpoints
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"go.uber.org/cadence/activity"
@@ -452,6 +453,19 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		}
 
 		return nil
+	}
+
+	// special errors
+	if e := reply.GetError(); e != nil {
+		errStr := e.ToString()
+		if strings.Contains(errStr, "CanceledError") {
+			err := op.SendChannel(workflow.ErrCanceled, nil)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
 	}
 
 	// set the reply

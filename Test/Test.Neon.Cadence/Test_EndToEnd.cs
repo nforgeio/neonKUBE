@@ -911,14 +911,7 @@ namespace TestCadence
         {
             protected async override Task<byte[]> RunAsync(byte[] args)
             {
-                try
-                {
-                    await SleepAsync(TimeSpan.FromSeconds(30));
-                }
-                catch (Exception e)
-                {
-                    // I believe we should be seeing a Cadence cancelled error here.
-                }
+                await SleepAsync(TimeSpan.FromSeconds(30));
 
                 return null;
             }
@@ -935,7 +928,7 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DebugPrelaunched       = false,
+                DebugPrelaunched       = true,
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeoutSeconds    = 30.0,
@@ -2131,6 +2124,7 @@ namespace TestCadence
                 await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.HasStarted, TimeSpan.FromSeconds(maxWaitSeconds));
                 await client.CancelWorkflowAsync(run);
                 await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.IsClosed, TimeSpan.FromSeconds(maxWaitSeconds), TimeSpan.FromSeconds(1));
+                await NeonHelper.WaitForAsync(async () => (await client.GetWorkflowStateAsync(run)).Execution.WorkflowCloseStatus == WorkflowCloseStatus.Cancelled, TimeSpan.FromSeconds(maxWaitSeconds), TimeSpan.FromSeconds(1));
 
                 var state = await client.GetWorkflowStateAsync(run);
 

@@ -206,11 +206,11 @@ func (op *Operation) SetChannel(value chan interface{}) {
 // SendChannel sends an interface{} value over the
 // Operation's channel
 func (op *Operation) SendChannel(result interface{}, cadenceError *cadenceerrors.CadenceError) error {
-	defer close(op.channel)
 	if op.channel == nil {
 		return globals.ErrArgumentNil
 	}
 
+	defer close(op.channel)
 	if cadenceError != nil {
 		op.channel <- errors.New(cadenceError.ToString())
 	} else {
