@@ -145,7 +145,7 @@ Follow the steps below to configure a development or test workstation:
   
     ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-23. Install **OpenVPN**
+23. *Optional*: Install **OpenVPN**
 
    * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
    * Run this command as administrator in a CMD window to install a second TAP interface:
