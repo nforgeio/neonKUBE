@@ -26,8 +26,6 @@ import (
 	"reflect"
 	"time"
 
-	"go.uber.org/cadence"
-
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
@@ -1794,13 +1792,14 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	// wait on the child workflow
 	var result []byte
 	if err := cctx.GetFuture().Get(wectx.GetContext(), &result); err != nil {
-		var result *string
-		if cadence.IsCanceledError(err) {
-			*result = "cancelled"
-			buildReply(reply, nil, result)
+		var cadenceError *cadenceerrors.CadenceError
+		if isCanceledErr(err) {
+			cadenceError = cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Cancelled)
 		} else {
-			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+			cadenceError = cadenceerrors.NewCadenceError(err.Error())
 		}
+
+		buildReply(reply, cadenceError)
 
 		return reply
 	}
@@ -1911,11 +1910,6 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	// call the cancel function
 	cancel := cctx.GetCancelFunction()
 	go cancel()
-
-	// remove the child context
-	defer func() {
-		//_ = wectx.RemoveChildContext(childID)
-	}()
 
 	// build the reply
 	buildReply(reply, nil)

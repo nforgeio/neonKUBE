@@ -852,7 +852,15 @@ namespace TestCadence
 
                         await CancelChildWorkflowAsync(child);
 
-                        result = await this.WaitForChildWorkflowAsync(child);
+                        try
+                        {
+                            result = await this.WaitForChildWorkflowAsync(child);
+                        }
+                        catch (CadenceCancelledException)
+                        {
+                            success = true;
+                        }
+                        
                         break;
 
                     case "cancel-activity":
@@ -928,7 +936,7 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DebugPrelaunched       = true,
+                DebugPrelaunched       = false,
                 Mode                   = ConnectionMode.ListenOnly,
                 Debug                  = true,
                 ProxyTimeoutSeconds    = 30.0,
@@ -1899,7 +1907,7 @@ namespace TestCadence
             }
         }
 
-        [Fact(Skip = "We need to think more about cancellation.")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Cancel_Activity()
         {

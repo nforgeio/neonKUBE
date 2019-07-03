@@ -20,15 +20,14 @@ package endpoints
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"go.uber.org/cadence/activity"
-
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
 	globals "github.com/cadence-proxy/internal"
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -456,20 +455,17 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	}
 
 	// special errors
-	if e := reply.GetError(); e != nil {
-		errStr := e.ToString()
-		if strings.Contains(errStr, "CanceledError") {
-			err := op.SendChannel(workflow.ErrCanceled, nil)
-			if err != nil {
-				return err
-			}
-
-			return nil
+	var result interface{} = reply.GetResult()
+	var cadenceError *cadenceerrors.CadenceError = reply.GetError()
+	if cadenceError != nil {
+		if isCanceledErr(cadenceError) {
+			result = workflow.ErrCanceled
+			cadenceError = nil
 		}
 	}
 
 	// set the reply
-	err := op.SendChannel(reply.GetResult(), reply.GetError())
+	err := op.SendChannel(result, cadenceError)
 	if err != nil {
 		return err
 	}

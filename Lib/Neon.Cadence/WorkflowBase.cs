@@ -1642,7 +1642,7 @@ namespace Neon.Cadence
                     ChildId   = childWorkflow.Id
                 });
 
-            //reply.ThrowOnError();
+            reply.ThrowOnError();
 
             return reply.Result;
         }

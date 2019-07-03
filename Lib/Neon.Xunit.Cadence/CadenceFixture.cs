@@ -162,16 +162,16 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
-                //// Start the fixture
-                //base.StartAsComposed(name, image,
-                //    new string[]
-                //    {
-                //        "--detach",
-                //        "-p", "7933-7939:7933-7939",
-                //        "-p", "8088:8088"
-                //    },
-                //    env: env,
-                //    keepOpen: keepOpen);
+                // Start the fixture
+                base.StartAsComposed(name, image,
+                    new string[]
+                    {
+                        "--detach",
+                        "-p", "7933-7939:7933-7939",
+                        "-p", "8088:8088"
+                    },
+                    env: env,
+                    keepOpen: keepOpen);
 
                 Thread.Sleep(warmupDelay);
 
