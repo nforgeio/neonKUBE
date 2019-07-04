@@ -2755,5 +2755,17 @@ namespace Couchbase
         {
             return bucket.UpsertAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
+
+        /// <inheritdoc/>
+        public string ExportDeferredAnalyticsQueryHandle<T>(IAnalyticsDeferredResultHandle<T> handle)
+        {
+            return bucket.ExportDeferredAnalyticsQueryHandle<T>(handle);
+        }
+
+        /// <inheritdoc/>
+        public IAnalyticsDeferredResultHandle<T> ImportDeferredAnalyticsQueryHandle<T>(string encodedHandle)
+        {
+            return bucket.ImportDeferredAnalyticsQueryHandle<T>(encodedHandle);
+        }
     }
 }
