@@ -1340,10 +1340,6 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
-            // $todo(jeff.lill):
-            //
-            // Not so sure about setting [uint.MaxValue] as the expiration here.
-
             var result = await bucket.UpsertAsync<T>(key, value, cas, uint.MaxValue, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
