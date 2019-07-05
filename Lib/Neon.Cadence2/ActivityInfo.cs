@@ -49,7 +49,7 @@ namespace Neon.Cadence
         /// <summary>
         /// The parent workflow execution details.
         /// </summary>
-        public WorkflowRun WorkflowRun { get; internal set; }
+        public WorkflowExecution WorkflowExecution { get; internal set; }
 
         /// <summary>
         /// The activity ID.

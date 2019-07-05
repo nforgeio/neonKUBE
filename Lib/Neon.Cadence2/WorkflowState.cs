@@ -32,9 +32,9 @@ namespace Neon.Cadence
     public class WorkflowState
     {
         /// <summary>
-        /// Describes the workflow run.
+        /// Describes the workflow execution.
         /// </summary>
-        public WorkflowRun Run { get; internal set; }
+        public WorkflowExecution Run { get; internal set; }
 
         /// <summary>
         /// Identifies the workflow implementation.
@@ -85,7 +85,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Identfies the parent workflow.
         /// </summary>
-        public WorkflowRun ParentExecution { get; internal set; }
+        public WorkflowExecution ParentExecution { get; internal set; }
 
         /// <summary>
         /// The workflow execution time.

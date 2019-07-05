@@ -42,15 +42,6 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowExecuteReply;
 
         /// <summary>
-        /// Identifies the Cadence domain hosting the workflow.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
-        }
-
-        /// <summary>
         /// Identifies the workflow implementation to be started.
         /// </summary>
         public string Workflow
@@ -77,6 +68,15 @@ namespace Neon.Cadence.Internal
             set => SetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options, value);
         }
 
+        /// <summary>
+        /// Specifies the Cadence domain where the workflow will run.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -95,7 +95,6 @@ namespace Neon.Cadence.Internal
             var typedTarget = (WorkflowExecuteRequest)target;
 
             typedTarget.Args     = this.Args;
-            typedTarget.Domain   = this.Domain;
             typedTarget.Workflow = this.Workflow;
             typedTarget.Options  = this.Options;
         }

@@ -142,12 +142,12 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to send an activity heartbeat externally.
+        /// Used to send record activity heartbeat externally by task token.
         /// </summary>
         /// <param name="taskToken">The opaque activity task token.</param>
         /// <param name="details">Optional heartbeart details.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task SendActivityHeartbeatAsync(byte[] taskToken, byte[] details = null)
+        public async Task RecordActivityHeartbeatAsync(byte[] taskToken, byte[] details = null)
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
             
@@ -162,14 +162,42 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to complete an activity externally.
+        /// Used to send record activity heartbeat externally by activity ID.
+        /// </summary>
+        /// <param name="domain">The Cadence domain.</param>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <param name="details">Optional heartbeart details.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task RecordActivityHeartbeatByIdAsync(string domain, string workflowId, string runId, string activityId, byte[] details = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+
+            var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
+                new ActivityRecordHeartbeatRequest()
+                {
+                    Domain     = domain,
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Details    = details
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally complete an activity identified by task token.
         /// </summary>
         /// <param name="taskToken">The opaque activity task token.</param>
         /// <param name="result">Passed as the activity result for activity success.</param>
-        /// <param name="e">Passed as an exception when the activity failed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task CompleteActivityAsync(byte[] taskToken, byte[] result = null, Exception e = null)
+        public async Task RespondActivityCompletedAsync(byte[] taskToken, byte[] result = null)
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
 
@@ -177,8 +205,139 @@ namespace Neon.Cadence
                 new ActivityCompleteRequest()
                 {
                     TaskToken = taskToken,
-                    Result    = result,
-                    Error     = e != null ? new CadenceError(e) : null
+                    Result    = result
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally complete an activity identified by activity ID.
+        /// </summary>
+        /// <param name="domain">The Cadence domain.</param>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <param name="result">Passed as the activity result for activity success.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityCompletedByIdAsync(string domain, string workflowId, string runId, string activityId, byte[] result = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    Domain     = domain,
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Result     = result
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally cancel an activity identified by task token.
+        /// </summary>
+        /// <param name="taskToken">The opaque activity task token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityCancelAsync(byte[] taskToken)
+        {
+            Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    TaskToken = taskToken,
+                    Error     = new CadenceError(new CadenceCancelledException("Cancelled"))
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally cancel an activity identified by activity ID.
+        /// </summary>
+        /// <param name="domain">The Cadence domain.</param>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityCancelByIdAsync(string domain, string workflowId, string runId, string activityId)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    Domain     = domain,
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Error      = new CadenceError(new CadenceCancelledException("Cancelled"))
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally fail an activity by task token.
+        /// </summary>
+        /// <param name="taskToken">The opaque activity task token.</param>
+        /// <param name="error">Specifies the activity error.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityFailAsync(byte[] taskToken, Exception error)
+        {
+            Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+            Covenant.Requires<ArgumentNullException>(error != null);
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    TaskToken = taskToken,
+                    Error     = new CadenceError(error)
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally fail an activity by task token.
+        /// </summary>
+        /// <param name="domain">The Cadence domain.</param>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <param name="error">Specifies the activity error.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityFailByIdAsync(string domain, string workflowId, string runId, string activityId, Exception error)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+            Covenant.Requires<ArgumentNullException>(error != null);
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    Domain     = domain,
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Error      = new CadenceError(error)
                 });
 
             reply.ThrowOnError();

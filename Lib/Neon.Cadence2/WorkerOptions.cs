@@ -141,15 +141,11 @@ namespace Neon.Cadence
         public bool DisableActivityWorker { get; set; } = false;
 
         /// <summary>
-        /// Optionally dfisables sticky execution.  This defaults to <c>false</c>.
+        /// Optionally disables sticky execution.  This defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
-        /// Sticky Execution is to run the decision tasks for one workflow execution on same worker host. This is an
-        /// optimization for workflow execution. When sticky execution is enabled, worker keeps the workflow state in
-        /// memory. New decision task contains the new history events will be dispatched to the same worker. If this
-        /// worker crashes, the sticky decision task will timeout after StickyScheduleToStartTimeout, and cadence server
-        /// will clear the stickiness for that workflow execution and automatically reschedule a new decision task that
-        /// is available for any worker to pick up and resume the progress.
+        /// This is an optimization for workflow execution. When sticky execution is enabled, the worker can maintain
+        /// workflow state and history making workflow replaying faster.
         /// </remarks>
         public bool DisableStickyExecution { get; set; }
 

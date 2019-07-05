@@ -148,12 +148,12 @@ namespace Neon.Cadence
     /// <para>
     /// <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> returns
     /// immediately after the workflow is submitted to Cadence and the workflow will be scheduled and
-    /// executed independently.  This method returns a <see cref="WorkflowRun"/> which you'll use
+    /// executed independently.  This method returns a <see cref="WorkflowExecution"/> which you'll use
     /// to identify your running workflow to the methods desribed below.
     /// </para>
     /// <para>
-    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowStateAsync(WorkflowRun)"/>
-    /// or obtain a workflow result via <see cref="GetWorkflowResultAsync(WorkflowRun)"/>, which blocks until the 
+    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowStateAsync(WorkflowExecution)"/>
+    /// or obtain a workflow result via <see cref="GetWorkflowResultAsync(WorkflowExecution)"/>, which blocks until the 
     /// workflow completes.
     /// </para>
     /// <note>
@@ -172,8 +172,8 @@ namespace Neon.Cadence
     /// <see cref="QueryWorkflowAsync(string, string, byte[], string)"/>.
     /// </para>
     /// <para>
-    /// Workflows can be expicitly closed using <see cref="CancelWorkflowAsync(WorkflowRun)"/>,
-    /// <see cref="TerminateWorkflowAsync(WorkflowRun, string, byte[])"/>.
+    /// Workflows can be expicitly closed using <see cref="RequestCancelWorkflowExecution(WorkflowExecution)"/>,
+    /// <see cref="TerminateWorkflowAsync(WorkflowExecution, string, byte[])"/>.
     /// </para>
     /// <para><b>Restarting Workflows</b></para>
     /// <para>

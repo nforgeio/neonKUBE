@@ -51,6 +51,42 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// The target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
+        /// The target workflow ID.
+        /// </summary>
+        public string WorkflowId
+        {
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
+        }
+
+        /// <summary>
+        /// The target run ID.
+        /// </summary>
+        public string RunId
+        {
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// The target activity ID.
+        /// </summary>
+        public string ActivityId
+        {
+            get => GetStringProperty(PropertyNames.ActivityId);
+            set => SetStringProperty(PropertyNames.ActivityId, value);
+        }
+
+        /// <summary>
         /// The activity result.
         /// </summary>
         public byte[] Result
@@ -85,9 +121,13 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityCompleteRequest)target;
 
-            typedTarget.TaskToken = this.TaskToken;
-            typedTarget.Result    = this.Result;
-            typedTarget.Error     = this.Error;
+            typedTarget.TaskToken  = this.TaskToken;
+            typedTarget.Domain     = this.Domain;
+            typedTarget.WorkflowId = this.WorkflowId;
+            typedTarget.RunId      = this.RunId;
+            typedTarget.ActivityId = this.ActivityId;
+            typedTarget.Result     = this.Result;
+            typedTarget.Error      = this.Error;
         }
     }
 }

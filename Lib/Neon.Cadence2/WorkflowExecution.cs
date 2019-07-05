@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowRun.cs
+// FILE:	    WorkflowExecution.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,21 +34,19 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes the state of an executed workflow.
     /// </summary>
-    public class WorkflowRun
+    public class WorkflowExecution
     {
         /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="workflowId">The original ID for the workflow.</param>
         /// <param name="runId">Optionally specifies the current run ID for the workflow.</param>
-        /// <param name="domain">Optionally specifies the domain hosting the workflow,</param>
-        public WorkflowRun(string workflowId, string runId = null, string domain = null)
+        public WorkflowExecution(string workflowId, string runId = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
 
             this.WorkflowId = workflowId;
             this.RunId      = runId;
-            this.Domain     = domain;
         }
 
         /// <summary>
@@ -68,13 +66,5 @@ namespace Neon.Cadence
         [YamlMember(Alias = "runId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string RunId { get; private set; }
-
-        /// <summary>
-        /// The domain hosting the workflow.
-        /// </summary>
-        [JsonProperty(PropertyName = "Domain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "domain", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string Domain { get; private set; }
     }
 }

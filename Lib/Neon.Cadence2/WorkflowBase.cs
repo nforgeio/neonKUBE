@@ -1199,8 +1199,8 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns <c>true</c> if there is a completion result from previous runs of
         /// this workflow.  This is useful for CRON workflows that would like to pass
-        /// ending state from from one workflow run to the next.  This property
-        /// indicates whether the last run (if any) returned any state.
+        /// ending state from from one workflow execution to the next.  This property
+        /// indicates whether the last execution (if any) returned any state.
         /// </summary>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
@@ -1220,9 +1220,9 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the result from the last workflow run or <c>null</c>.  This is useful 
+        /// Returns the result from the last workflow execution or <c>null</c>.  This is useful 
         /// for CRON workflows that would like to pass information from from one workflow
-        /// run to the next.
+        /// execution to the next.
         /// </summary>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
@@ -1735,7 +1735,7 @@ namespace Neon.Cadence
             // We need to register the local activity type with a workflow local ID
             // that we can sent to [cadence-proxy] in the [ActivityExecuteLocalRequest]
             // such that the proxy can send it back to us in the [ActivityInvokeLocalRequest]
-            // so we'll know which activity type to instantate and run.
+            // so we'll know which activity type to instantate and execute.
 
             var activityTypeId = Interlocked.Increment(ref nextLocalActivityTypeId);
 
@@ -1774,14 +1774,14 @@ namespace Neon.Cadence
         /// Exits and completes the current running workflow and then restarts it, passing the
         /// optional workflow arguments.
         /// </summary>
-        /// <param name="args">Optional arguments for the new run.</param>
-        /// <param name="domain">Optional domain for the new run.</param>
-        /// <param name="taskList">Optional task list for the new run.</param>
-        /// <param name="executionToStartTimeout">Optional execution to start timeout for the new run.</param>
-        /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new run.</param>
-        /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
-        /// <param name="startToCloseTimeout">Optional start to close timeout for the new run.</param>
-        /// <param name="retryPolicy">Optional retry policy for the new run.</param>
+        /// <param name="args">Optional arguments for the new execution.</param>
+        /// <param name="domain">Optional domain for the new execution.</param>
+        /// <param name="taskList">Optional task list for the new execution.</param>
+        /// <param name="executionToStartTimeout">Optional execution to start timeout for the new execution.</param>
+        /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new execution.</param>
+        /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
+        /// <param name="startToCloseTimeout">Optional start to close timeout for the new execution.</param>
+        /// <param name="retryPolicy">Optional retry policy for the new execution.</param>
         /// <remarks>
         /// This works by throwing a <see cref="CadenceWorkflowRestartException"/> that will be
         /// caught and handled by the base <see cref="WorkflowBase"/> class.    You'll need to allow
