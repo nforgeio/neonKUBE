@@ -240,6 +240,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.SSH.NET", "Lib\Neon.SSH.NET\Neon.SSH.NET.csproj", "{123530FE-5F4C-4129-97A8-2246DF8B583E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cadence2", "Lib\Neon.Cadence2\Neon.Cadence2.csproj", "{521AF682-7F5D-4043-A2D4-A063A2DA8C47}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {C2071335-AFDF-4643-93A2-EAC482E90E73}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cadence2", "Test\Test.Neon.Cadence2\Test.Neon.Cadence2.csproj", "{3142BF8F-8A1A-4D4B-9527-6C496A9671F5}"
 EndProject
