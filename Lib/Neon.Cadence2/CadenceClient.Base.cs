@@ -96,7 +96,7 @@ namespace Neon.Cadence
 
             try
             {
-                return await StartWorkerAsync(true, domain, taskList, options);
+                return await StartWorkerAsync(WorkerMode.Workflow, domain, taskList, options);
             }
             finally
             {
@@ -152,7 +152,7 @@ namespace Neon.Cadence
 
             try
             {
-                return await StartWorkerAsync(false, domain, taskList, options);
+                return await StartWorkerAsync(WorkerMode.Activity, domain, taskList, options);
             }
             finally
             {
@@ -160,12 +160,11 @@ namespace Neon.Cadence
             }
         }
 
-
         /// <summary>
         /// Signals Cadence that the application is capable of executing activities for a specific
         /// domain and task list.
         /// </summary>
-        /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
+        /// <param name="mode">Identifies whether the worker will process activities, workflows, or both.</param>
         /// <param name="domain">Optionally specifies the target Cadence domain.  This defaults to the domain configured for the client.</param>
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
@@ -200,7 +199,7 @@ namespace Neon.Cadence
         /// are made.
         /// </note>
         /// </remarks>
-        private async Task<Worker> StartWorkerAsync(bool isWorkflow, string domain, string taskList = "default", WorkerOptions options = null)
+        private async Task<Worker> StartWorkerAsync(WorkerMode mode, string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
@@ -227,7 +226,7 @@ namespace Neon.Cadence
                 // throw an exception because Cadence doesn't support recreating
                 // a worker with the same parameters on the same client.
 
-                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow == isWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
+                worker = workers.Values.SingleOrDefault(wf => wf.Mode == mode && wf.Domain == domain && wf.Tasklist == taskList);
 
                 if (worker != null)
                 {
@@ -245,7 +244,7 @@ namespace Neon.Cadence
                 var reply = (NewWorkerReply)(await CallProxyAsync(
                     new NewWorkerRequest()
                     {
-                        IsWorkflow = isWorkflow,
+                        IsWorkflow = mode == WorkerMode.Workflow || mode == WorkerMode.Both,
                         Domain     = domain,
                         TaskList   = taskList,
                         Options    = options.ToInternal()
@@ -253,7 +252,7 @@ namespace Neon.Cadence
 
                 reply.ThrowOnError();
 
-                worker = new Worker(this, isWorkflow, reply.WorkerId, domain, taskList);
+                worker = new Worker(this, mode, reply.WorkerId, domain, taskList);
                 workers.Add(reply.WorkerId, worker);
             }
 

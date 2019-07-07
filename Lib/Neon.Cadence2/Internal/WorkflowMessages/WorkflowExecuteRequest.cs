@@ -97,6 +97,7 @@ namespace Neon.Cadence.Internal
             typedTarget.Args     = this.Args;
             typedTarget.Workflow = this.Workflow;
             typedTarget.Options  = this.Options;
+            typedTarget.Domain   = this.Domain;
         }
     }
 }

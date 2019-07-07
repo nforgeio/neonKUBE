@@ -32,7 +32,7 @@ namespace Neon.Cadence
     /// <remarks>
     /// <para>
     /// Cadence doesn't appear to support starting, stopping, and then restarting the same
-    /// worker within an individual Cadence client so this class will prevent this
+    /// worker within an individual Cadence client so this class will prevent this.
     /// </para>
     /// </remarks>
     public sealed class Worker : IDisposable
@@ -41,14 +41,14 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="client">The parent client.</param>
-        /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
+        /// <param name="mode">Identifies whether the worker will process activities, workflows, or both.</param>
         /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
         /// <param name="domain">The Cadence domain where the worker is registered.</param>
         /// <param name="taskList">The Cadence task list.</param>
-        internal Worker(CadenceClient client, bool isWorkflow, long workerId, string domain, string taskList)
+        internal Worker(CadenceClient client, WorkerMode mode, long workerId, string domain, string taskList)
         {
             this.Client     = client;
-            this.IsWorkflow = isWorkflow;
+            this.Mode       = mode;
             this.WorkerId   = workerId;
             this.Domain     = domain;
             this.Tasklist   = taskList;
@@ -83,9 +83,9 @@ namespace Neon.Cadence
         internal bool IsDisposed => RefCount == 0;
 
         /// <summary>
-        /// Used to distinguish between workflow and activity workers.
+        /// Identifies whether the worker will process activities, workflows, or both.
         /// </summary>
-        internal bool IsWorkflow { get; private set;}
+        internal WorkerMode Mode { get; private set;}
 
         /// <summary>
         /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.
