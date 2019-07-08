@@ -834,7 +834,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		case error:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Workflow Failed With Error",
+			logger.Error("Workflow Failed With Error",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -1429,7 +1429,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			selector.Select(ctx)
 			if err != nil {
 				logger.Error("Error In Workflow Context", zap.Error(err))
-				panic(err)
 			}
 
 			if done {
@@ -1675,7 +1674,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	// pause the current workflow for the specified duration
 	err := workflow.Sleep(wectx.GetContext(), request.GetDuration())
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Cancelled))
 
 		return reply
 	}
@@ -1793,7 +1792,14 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	// wait on the child workflow
 	var result []byte
 	if err := cctx.GetFuture().Get(wectx.GetContext(), &result); err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+		var cadenceError *cadenceerrors.CadenceError
+		if isCanceledErr(err) {
+			cadenceError = cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Cancelled)
+		} else {
+			cadenceError = cadenceerrors.NewCadenceError(err.Error())
+		}
+
+		buildReply(reply, cadenceError)
 
 		return reply
 	}
@@ -1904,11 +1910,6 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	// call the cancel function
 	cancel := cctx.GetCancelFunction()
 	go cancel()
-
-	// remove the child context
-	defer func() {
-		_ = wectx.RemoveChildContext(childID)
-	}()
 
 	// build the reply
 	buildReply(reply, nil)

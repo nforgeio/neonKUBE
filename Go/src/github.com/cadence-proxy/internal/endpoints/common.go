@@ -24,7 +24,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 
 	"go.uber.org/zap"
 
@@ -164,4 +167,17 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	}
 
 	return message, nil
+}
+
+func isCanceledErr(err interface{}) bool {
+	var errStr string
+	if v, ok := err.(*cadenceerrors.CadenceError); ok {
+		errStr = v.ToString()
+	}
+
+	if v, ok := err.(error); ok {
+		errStr = v.Error()
+	}
+
+	return strings.Contains(errStr, "CanceledError")
 }

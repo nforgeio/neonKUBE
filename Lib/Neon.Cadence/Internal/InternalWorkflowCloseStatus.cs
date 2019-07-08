@@ -46,7 +46,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The workflow was cancelled.
         /// </summary>
-        CANCELLED = 2,
+        CANCELED = 2,
 
         /// <summary>
         /// The workflow was terminated.
