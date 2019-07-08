@@ -127,12 +127,13 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the current state of a running workflow.
         /// </summary>
+        /// <param name="domain">Identifes the Cadence domain.</param>
         /// <param name="workflowExecution">Identifies the workflow run.</param>
-        /// <returns>A <see cref="WorkflowDetails"/>.</returns>
+        /// <returns>The <see cref="WorkflowDescription"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        Task<WorkflowDetails> GetWorkflowStateAsync(WorkflowExecution workflowExecution);
+        Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string domain, WorkflowExecution workflowExecution);
 
         /// <summary>
         /// Returns the result from a workflow execution, blocking until the workflow
@@ -155,12 +156,13 @@ namespace Neon.Cadence
         /// happen due to an error.
         /// </note>
         /// </summary>
+        /// <param name="domain">The Cadence domain.</param>
         /// <param name="workflowExecution">Identifies the running workflow.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        Task RequestCancelWorkflowExecution(WorkflowExecution workflowExecution);
+        Task CancelWorkflowExecution(string domain, WorkflowExecution workflowExecution);
 
         /// <summary>
         /// <para>
@@ -171,6 +173,7 @@ namespace Neon.Cadence
         /// opposed to cancellation which is usually considered as a normal activity.
         /// </note>
         /// </summary>
+        /// <param name="domain">The Cadence domain.</param>
         /// <param name="workflowExecution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
         /// <param name="details">Optionally specifies additional details as a byte array.</param>
@@ -178,7 +181,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        Task TerminateWorkflowAsync(WorkflowExecution workflowExecution, string reason = null, byte[] details = null);
+        Task TerminateWorkflowAsync(string domain, WorkflowExecution workflowExecution, string reason = null, byte[] details = null);
 
         /// <summary>
         /// Calls an external workflow using the fully qualified type name for <typeparamref name="TWorkflow"/> 
@@ -269,6 +272,7 @@ namespace Neon.Cadence
         /// method is relatively low-level because you'll need to manually encode the signal and workflow
         /// arguments.
         /// </summary>
+        /// <param name="domain">The Cadence domain.</param>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="signalName">Identifies the signal.</param>
         /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
@@ -279,34 +283,19 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        Task SignalWorkflowWithStartAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = CadenceClient.DefaultTaskList, WorkflowOptions options = null);
-
-        /// <summary>
-        /// Performs a low-level query on a workflow.  This method is relatively low-level because 
-        /// you'll need to manually handle encoding for the query arguments and result.
-        /// </summary>
-        /// <param name="workflowId">The workflow ID.</param>
-        /// <param name="queryName">Identifies the signal.</param>
-        /// <param name="runId">
-        /// Optionally specifies the workflow's current run ID.  When <c>null</c> or empty
-        /// Cadence will automatically query the lastest workflow execution.
-        /// </param>
-        /// <param name="queryArgs">Optionally specifies query arguments encoded as a byte array.</param>
-        /// <returns>The query result encoded as a byte array.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        Task<byte[]> QueryWorkflowAsync(string workflowId, string queryName, byte[] queryArgs = null, string runId = null);
+        Task SignalWorkflowWithStartAsync(string domain, string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = CadenceClient.DefaultTaskList, WorkflowOptions options = null);
 
         /// <summary>
         /// Queries a workflow.
         /// </summary>
+        /// <param name="domain">The workflow domain.</param>
         /// <param name="workflowExecution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="queryName">Identifies the signal.</param>
         /// <param name="queryArgs">Optionally specifies query arguments encoded as a byte array.</param>
         /// <returns>The query result encoded as a byte array.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        Task<byte[]> QueryWorkflowAsync(WorkflowExecution workflowExecution, string queryName, byte[] queryArgs = null);
+        Task<byte[]> QueryWorkflowAsync(string domain, WorkflowExecution workflowExecution, string queryName, byte[] queryArgs = null);
 
         /// <summary>
         /// <para>

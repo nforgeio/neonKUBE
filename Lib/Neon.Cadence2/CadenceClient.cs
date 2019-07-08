@@ -172,7 +172,7 @@ namespace Neon.Cadence
     /// <see cref="QueryWorkflowAsync(string, string, byte[], string)"/>.
     /// </para>
     /// <para>
-    /// Workflows can be expicitly closed using <see cref="RequestCancelWorkflowExecution(WorkflowExecution)"/>,
+    /// Workflows can be expicitly closed using <see cref="CancelWorkflowExecution(WorkflowExecution)"/>,
     /// <see cref="TerminateWorkflowAsync(WorkflowExecution, string, byte[])"/>.
     /// </para>
     /// <para><b>Restarting Workflows</b></para>

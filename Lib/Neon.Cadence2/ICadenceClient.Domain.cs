@@ -70,7 +70,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="name">Identifies the target domain.</param>
         /// <param name="request">The updated domain information.</param>
+        /// <param name="securityToken">Optionally specifies the security token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task UpdateDomainAsync(string name, DomainUpdateArgs request);
+        Task UpdateDomainAsync(string name, DomainUpdateArgs request, string securityToken = null);
     }
 }

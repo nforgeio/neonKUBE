@@ -32,15 +32,7 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Cadence domain related operations.
 
-        /// <summary>
-        /// Registers a Cadence domain using the <see cref="InternalRegisterDomainRequest"/> information passed.
-        /// </summary>
-        /// <param name="request">The domain properties.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceDomainAlreadyExistsException">Thrown if the domain already exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <inheritdoc/>
         private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
             var domainRegisterRequest =
@@ -58,26 +50,7 @@ namespace Neon.Cadence
             reply.ThrowOnError();
         }
 
-        /// <summary>
-        /// Registers a Cadence domain using the specified parameters.
-        /// </summary>
-        /// <param name="name">The domain name.</param>
-        /// <param name="description">Optionally specifies a description.</param>
-        /// <param name="ownerEmail">Optionally specifies the owner's email address.</param>
-        /// <param name="retentionDays">
-        /// Optionally specifies the number of days to retain the history for workflows 
-        /// completed in this domain.  This defaults to <b>7 days</b>.
-        /// </param>
-        /// <param name="securityToken">Optional security token.</param>
-        /// <param name="ignoreDuplicates">
-        /// Optionally ignore duplicate domain registrations.  This defaults
-        /// to <c>false</c>.
-        /// </param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceDomainAlreadyExistsException">Thrown if the domain already exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <inheritdoc/>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, string securityToken = null, bool ignoreDuplicates = false)
         {
             try
@@ -101,15 +74,7 @@ namespace Neon.Cadence
             }
         }
 
-        /// <summary>
-        /// Describes the named Cadence domain.
-        /// </summary>
-        /// <param name="name">The domain name.</param>
-        /// <returns>Tyhe domain description.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <inheritdoc/>
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
             var domainDescribeRequest =
@@ -140,13 +105,8 @@ namespace Neon.Cadence
             };
         }
 
-        /// <summary>
-        /// Updates the named Cadence domain.
-        /// </summary>
-        /// <param name="name">Identifies the target domain.</param>
-        /// <param name="request">The updated domain information.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task UpdateDomainAsync(string name, DomainUpdateArgs request)
+        /// <inheritdoc/>
+        public async Task UpdateDomainAsync(string name, DomainUpdateArgs request, string securityToken = null)
         {
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentNullException>(request.Options != null);

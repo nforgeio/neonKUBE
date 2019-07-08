@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowDetails.cs
+// FILE:	    WorkflowDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,9 +26,9 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Describes a workflow execution in detail.
+    /// Describes a workflow execution.
     /// </summary>
-    public class WorkflowDetails
+    public class WorkflowDescription
     {
         /// <summary>
         /// Describes the workflow's configuration.
