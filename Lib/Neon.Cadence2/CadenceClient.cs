@@ -91,7 +91,7 @@ namespace Neon.Cadence
     /// a string.  The combination of a domain along with a workflow or activity type name
     /// must be unique within a Cadence cluster.  Once you have a connected <see cref="CadenceClient"/>,
     /// you can create and manage Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int, bool)"/>,
-    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>.
+    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, UpdateDomainRequest)"/>.
     /// Domains can be used provide isolated areas for different teams and/or different environments
     /// (e.g. production, staging, and test).  We discuss task lists in detail further below.
     /// </para>
@@ -1019,6 +1019,30 @@ namespace Neon.Cadence
                     return null;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the Cadence domain to be referenced for an operation.  If <paramref name="domain"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise the default domain
+        /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
+        /// be non-empty.
+        /// </summary>
+        /// <param name="domain">The specific domain to use or null/empty.</param>
+        /// <returns>The domain to be referenced.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domains are both null or empty.</exception>
+        internal string GetDomain(string domain)
+        {
+            if (!string.IsNullOrEmpty(domain))
+            {
+                return domain;
+            }
+
+            if (!string.IsNullOrEmpty(Settings.DefaultDomain))
+            {
+                return Settings.DefaultDomain;
+            }
+
+            throw new ArgumentNullException($"One of [{nameof(domain)}] or the client's default domain must be non-empty.");
         }
 
         /// <summary>

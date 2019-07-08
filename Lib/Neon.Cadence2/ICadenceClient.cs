@@ -91,7 +91,7 @@ namespace Neon.Cadence
     /// a string.  The combination of a domain along with a workflow or activity type name
     /// must be unique within a Cadence cluster.  Once you have a connected <see cref="CadenceClient"/>,
     /// you can create and manage Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int, bool)"/>,
-    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>.
+    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, UpdateDomainRequest)"/>.
     /// Domains can be used provide isolated areas for different teams and/or different environments
     /// (e.g. production, staging, and test).  We discuss task lists in detail further below.
     /// </para>

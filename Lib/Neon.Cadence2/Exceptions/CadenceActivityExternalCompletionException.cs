@@ -32,7 +32,7 @@ namespace Neon.Cadence
     /// within their <see cref="ActivityBase.RunAsync(byte[])"/> methods which will throw this
     /// internal exception, exiting the run method.  This exception will be caught by
     /// the <see cref="ActivityBase"/> base class and used to signal Cadence that the activity
-    /// will be completed externally via a call to <see cref="CadenceClient.RespondActivityFailAsync(byte[], byte[], Exception)"/>.
+    /// will be completed externally via a call to <see cref="CadenceClient.RespondActivityFailAsync(byte[], Exception)"/>.
     /// </summary>
     /// <remarks>
     /// <note>

@@ -162,7 +162,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        Task CancelWorkflowExecution(string domain, WorkflowExecution workflowExecution);
+        Task RequestCancelWorkflowExecution(string domain, WorkflowExecution workflowExecution);
 
         /// <summary>
         /// <para>

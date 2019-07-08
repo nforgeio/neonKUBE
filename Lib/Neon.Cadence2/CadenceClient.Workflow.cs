@@ -167,7 +167,7 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public async Task CancelWorkflowExecution(string domain, WorkflowExecution workflowExecution)
+        public async Task RequestCancelWorkflowExecution(string domain, WorkflowExecution workflowExecution)
         {
             Covenant.Requires<ArgumentNullException>(workflowExecution != null);
 

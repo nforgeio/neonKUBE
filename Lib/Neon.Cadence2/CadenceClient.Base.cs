@@ -52,9 +52,9 @@ namespace Neon.Cadence
         /// Signals Cadence that the application is capable of executing workflows for
         /// a specific domain and task list.
         /// </summary>
-        /// <param name="domain">The target Cadence domain.</param>
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when an attempt is made to recreate a worker with the
@@ -89,14 +89,13 @@ namespace Neon.Cadence
         /// are made.
         /// </note>
         /// </remarks>
-        public async Task<Worker> StartWorkflowWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
+        public async Task<Worker> StartWorkflowWorkerAsync(string taskList = "default", WorkerOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             try
             {
-                return await StartWorkerAsync(WorkerMode.Workflow, domain, taskList, options);
+                return await StartWorkerAsync(WorkerMode.Workflow, taskList, options, domain);
             }
             finally
             {
@@ -108,9 +107,9 @@ namespace Neon.Cadence
         /// Signals Cadence that the application is capable of executing activities for a specific
         /// domain and task list.
         /// </summary>
-        /// <param name="domain">The target Cadence domain.</param>
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when an attempt is made to recreate a worker with the
@@ -145,14 +144,13 @@ namespace Neon.Cadence
         /// are made.
         /// </note>
         /// </remarks>
-        public async Task<Worker> StartActivityWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
+        public async Task<Worker> StartActivityWorkerAsync(string taskList = "default", WorkerOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             try
             {
-                return await StartWorkerAsync(WorkerMode.Activity, domain, taskList, options);
+                return await StartWorkerAsync(WorkerMode.Activity, taskList, options, domain);
             }
             finally
             {
@@ -165,9 +163,9 @@ namespace Neon.Cadence
         /// domain and task list.
         /// </summary>
         /// <param name="mode">Identifies whether the worker will process activities, workflows, or both.</param>
-        /// <param name="domain">Optionally specifies the target Cadence domain.  This defaults to the domain configured for the client.</param>
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when an attempt is made to recreate a worker with the
@@ -199,9 +197,8 @@ namespace Neon.Cadence
         /// are made.
         /// </note>
         /// </remarks>
-        private async Task<Worker> StartWorkerAsync(WorkerMode mode, string domain, string taskList = "default", WorkerOptions options = null)
+        private async Task<Worker> StartWorkerAsync(WorkerMode mode, string taskList = "default", WorkerOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
 
             Worker worker;
@@ -245,7 +242,7 @@ namespace Neon.Cadence
                     new NewWorkerRequest()
                     {
                         IsWorkflow = mode == WorkerMode.Workflow || mode == WorkerMode.Both,
-                        Domain     = domain,
+                        Domain     = GetDomain(domain),
                         TaskList   = taskList,
                         Options    = options.ToInternal()
                     }));

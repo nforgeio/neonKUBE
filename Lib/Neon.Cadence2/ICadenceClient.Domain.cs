@@ -42,7 +42,6 @@ namespace Neon.Cadence
         /// Optionally specifies the number of days to retain the history for workflows 
         /// completed in this domain.  This defaults to <b>7 days</b>.
         /// </param>
-        /// <param name="securityToken">Optional security token.</param>
         /// <param name="ignoreDuplicates">
         /// Optionally ignore duplicate domain registrations.  This defaults
         /// to <c>false</c>.
@@ -52,7 +51,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, string securityToken = null, bool ignoreDuplicates = false);
+        Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false);
 
         /// <summary>
         /// Describes the named Cadence domain.
@@ -70,8 +69,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="name">Identifies the target domain.</param>
         /// <param name="request">The updated domain information.</param>
-        /// <param name="securityToken">Optionally specifies the security token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task UpdateDomainAsync(string name, DomainUpdateArgs request, string securityToken = null);
+        Task UpdateDomainAsync(string name, UpdateDomainRequest request);
     }
 }

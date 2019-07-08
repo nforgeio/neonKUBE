@@ -51,8 +51,11 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, string securityToken = null, bool ignoreDuplicates = false)
+        public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentException>(retentionDays > 0);
+
             try
             {
                 await RegisterDomainAsync(
@@ -62,7 +65,7 @@ namespace Neon.Cadence
                         Description   = description,
                         OwnerEmail    = ownerEmail,
                         RetentionDays = retentionDays,
-                        SecurityToken = securityToken
+                        SecurityToken = Settings.SecurityToken
                     });
             }
             catch (CadenceDomainAlreadyExistsException)
@@ -77,6 +80,8 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
             var domainDescribeRequest =
                 new DomainDescribeRequest()
                 {
@@ -106,8 +111,42 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public async Task UpdateDomainAsync(string name, DomainUpdateArgs request, string securityToken = null)
+        public async Task<DomainDescription> DescribeDomainByIdAsync(string uuid)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid));
+
+            var domainDescribeRequest =
+                new DomainDescribeRequest()
+                {
+                    Uuid = uuid,
+                };
+
+            var reply = (DomainDescribeReply)await CallProxyAsync(domainDescribeRequest);
+
+            reply.ThrowOnError();
+
+            return new DomainDescription()
+            {
+                DomainInfo = new DomainInfo()
+                {
+                    Description = reply.DomainInfoDescription,
+                    Name        = reply.DomainInfoName,
+                    OwnerEmail  = reply.DomainInfoOwnerEmail,
+                    Status      = reply.DomainInfoStatus
+                },
+
+                Configuration = new DomainOptions()
+                {
+                    EmitMetrics   = reply.ConfigurationEmitMetrics,
+                    RetentionDays = reply.ConfigurationRetentionDays
+                },
+            };
+        }
+
+        /// <inheritdoc/>
+        public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentNullException>(request.Options != null);
             Covenant.Requires<ArgumentNullException>(request.DomainInfo != null);
@@ -119,7 +158,8 @@ namespace Neon.Cadence
                     UpdatedInfoDescription     = request.DomainInfo.Description,
                     UpdatedInfoOwnerEmail      = request.DomainInfo.OwnerEmail,
                     ConfigurationEmitMetrics   = request.Options.EmitMetrics,
-                    ConfigurationRetentionDays = request.Options.RetentionDays
+                    ConfigurationRetentionDays = request.Options.RetentionDays,
+                    SecurityToken              = Settings.SecurityToken
                 };
 
             var reply = await CallProxyAsync(domainUpdateRequest);

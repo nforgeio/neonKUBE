@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainUpdateArgs.cs
+// FILE:	    UpdateDomainRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,7 +28,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Holds the changes to be made to a Cadence domain.
     /// </summary>
-    public class DomainUpdateArgs
+    public class UpdateDomainRequest
     {
         /// <summary>
         /// The domain name.
@@ -41,7 +41,7 @@ namespace Neon.Cadence
         public DomainUpdateInfo DomainInfo { get; set; } = new DomainUpdateInfo();
 
         /// <summary>
-        /// The updated domain optiona.
+        /// The updated domain options.
         /// </summary>
         public DomainOptions Options { get; set; } = new DomainOptions();
     }

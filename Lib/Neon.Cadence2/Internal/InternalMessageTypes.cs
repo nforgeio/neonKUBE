@@ -160,6 +160,16 @@ namespace Neon.Cadence.Internal
         /// </summary>
         PingReply = 22,
 
+        /// <summary>
+        /// <b>client --> proxy:</b> Requests that the proxy deprecate a Cadence domain.
+        /// </summary>
+        DomainDeprecateRequest = 23,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDeprecateRequest"/> message.
+        /// </summary>
+        DomainDeprecateReply = 24,
+
         //---------------------------------------------------------------------
         // Workflow messages
         //
