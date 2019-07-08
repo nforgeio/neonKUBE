@@ -229,11 +229,12 @@ namespace Neon.Xunit.Couchbase
                 Username = username;
                 Password = password;
 
-                jsonClient = new JsonClient();
+                jsonClient             = new JsonClient();
                 jsonClient.BaseAddress = new Uri("http://localhost:8094");
-                jsonClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                                                                                            "Basic",
-                                                                                            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{username}:{password}")));
+                jsonClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue(
+                        "Basic",
+                        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{username}:{password}")));
             }
 
             ConnectBucket();
@@ -397,7 +398,19 @@ namespace Neon.Xunit.Couchbase
         {
             CheckDisposed();
 
-            // Drop all bucket indexes except for the primary index (if present).
+            // Remove any full-text indexes.
+
+            var fullTextIndexes = jsonClient.GetAsync<dynamic>("/api/index").Result.indexDefs;
+
+            if (fullTextIndexes != null)
+            {
+                foreach (var _index in fullTextIndexes.indexDefs)
+                {
+                    jsonClient.DeleteAsync($"/api/index/{_index.Name}").Wait();
+                }
+            }
+
+            // Remove all bucket indexes except for the primary index (if present).
 
             var existingIndexes = Bucket.ListIndexesAsync().Result;
 
@@ -417,17 +430,6 @@ namespace Neon.Xunit.Couchbase
                         await Bucket.WaitUntilReadyAsync();
 
                     }).Wait();
-            }
-
-            // clear fts indexes 
-            var ftsIndexes = jsonClient.GetAsync<dynamic>("/api/index").Result.indexDefs;
-
-            if (ftsIndexes != null)
-            {
-                foreach (var _index in ftsIndexes.indexDefs)
-                {
-                    jsonClient.DeleteAsync($"/api/index/{_index.Name}").Wait();
-                }
             }
 
             // Wait until all of the indexes are actually deleted as well
