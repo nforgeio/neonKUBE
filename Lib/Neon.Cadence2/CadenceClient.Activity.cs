@@ -179,7 +179,7 @@ namespace Neon.Cadence
             var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {
-                    Domain     = GetDomain(domain),
+                    Domain     = ResolveDomain(domain),
                     WorkflowId = workflowId,
                     RunId      = runId,
                     ActivityId = activityId,
@@ -229,7 +229,7 @@ namespace Neon.Cadence
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain     = GetDomain(domain),
+                    Domain     = ResolveDomain(domain),
                     WorkflowId = workflowId,
                     RunId      = runId,
                     ActivityId = activityId,
@@ -277,7 +277,7 @@ namespace Neon.Cadence
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain     = GetDomain(domain),
+                    Domain     = ResolveDomain(domain),
                     WorkflowId = workflowId,
                     RunId      = runId,
                     ActivityId = activityId,
@@ -329,7 +329,7 @@ namespace Neon.Cadence
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain     = GetDomain(domain),
+                    Domain     = ResolveDomain(domain),
                     WorkflowId = workflowId,
                     RunId      = runId,
                     ActivityId = activityId,

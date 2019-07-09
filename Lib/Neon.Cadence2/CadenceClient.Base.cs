@@ -242,7 +242,7 @@ namespace Neon.Cadence
                     new NewWorkerRequest()
                     {
                         IsWorkflow = mode == WorkerMode.Workflow || mode == WorkerMode.Both,
-                        Domain     = GetDomain(domain),
+                        Domain     = ResolveDomain(domain),
                         TaskList   = taskList,
                         Options    = options.ToInternal()
                     }));

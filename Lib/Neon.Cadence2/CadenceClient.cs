@@ -182,17 +182,17 @@ namespace Neon.Cadence
     /// due to having to replay this history when the workflow has to be rehydrated.  
     /// </para>
     /// <para>
-    /// You can avoid this by removing the workflow loop and calling <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// You can avoid this by removing the workflow loop and calling <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// at the end of your workflow logic.  This causes Cadence to reschedule the workflow
     /// with a clean history, somewhat similar to what happens for CRON workflows (which are
-    /// rescheduled automatically).  <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// rescheduled automatically).  <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// works by throwing a <see cref="CadenceWorkflowRestartException"/> which will exit
     /// the workflow method and be caught by the calling <see cref="CadenceClient"/> which
     /// which then informs Cadence.
     /// </para>
     /// <note>
     /// Workflow entry points must allow the <see cref="CadenceWorkflowRestartException"/> to be caught by the
-    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// will work properly.
     /// </note>
     /// <para><b>External Activity Completion</b></para>
@@ -281,7 +281,7 @@ namespace Neon.Cadence
     /// to manage where workflows and activities execute.
     /// </para>
     /// </remarks>
-    public partial class CadenceClient : ICadenceClient
+    public partial class CadenceClient
     {
         /// <summary>
         /// The <b>cadence-proxy</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
@@ -1030,7 +1030,7 @@ namespace Neon.Cadence
         /// <param name="domain">The specific domain to use or null/empty.</param>
         /// <returns>The domain to be referenced.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domains are both null or empty.</exception>
-        internal string GetDomain(string domain)
+        internal string ResolveDomain(string domain)
         {
             if (!string.IsNullOrEmpty(domain))
             {
