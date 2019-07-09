@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainDescribeRequest.cs
+// FILE:	    DomainDeprecateRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,32 +22,32 @@ using System.ComponentModel;
 using Neon.Cadence;
 using Neon.Common;
 
+// $todo(jeff.lill):
+//
+// There are several more parameters we could specify but these
+// don't seem critical at this point.
+
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Requests the details for a named domain.
+    /// <b>client --> proxy:</b> Requests that the proxy register a Cadence domain.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainDescribeRequest)]
-    internal class DomainDescribeRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.DomainDeprecateRequest)]
+    internal class DomainDeprecateRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainDescribeRequest()
+        public DomainDeprecateRequest()
         {
-            Type = InternalMessageTypes.DomainDescribeRequest;
+            Type = InternalMessageTypes.DomainDeprecateRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDescribeReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDeprecateReply;
 
         /// <summary>
-        /// <para>
-        /// The target Cadence domain name. (or <c>null</c>).
-        /// </para>
-        /// <note>
-        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
-        /// </note>
+        /// Name of the domain to be depreciated.
         /// </summary>
         public string Name
         {
@@ -56,23 +56,18 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// <para>
-        /// The target Cadence domain UUID (or <c>null</c>).
-        /// </para>
-        /// <note>
-        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
-        /// </note>
+        /// Optional security token.
         /// </summary>
-        public string Uuid
+        public string SecurityToken
         {
-            get => GetStringProperty(PropertyNames.Uuid);
-            set => SetStringProperty(PropertyNames.Uuid, value);
+            get => GetStringProperty(PropertyNames.SecurityToken);
+            set => SetStringProperty(PropertyNames.SecurityToken, value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainDescribeRequest();
+            var clone = new DomainDeprecateRequest();
 
             CopyTo(clone);
 
@@ -84,10 +79,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainDescribeRequest)target;
+            var typedTarget = (DomainDeprecateRequest)target;
 
-            typedTarget.Name = this.Name;
-            typedTarget.Uuid = this.Uuid;
+            typedTarget.Name          = this.Name;
+            typedTarget.SecurityToken = this.SecurityToken;
         }
     }
 }

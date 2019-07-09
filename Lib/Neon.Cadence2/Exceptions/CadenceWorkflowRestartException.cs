@@ -27,14 +27,14 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown by <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// Thrown by <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// to be handled internally by <see cref="WorkflowBase"/> as one of the special case 
     /// mechanisms for completing a workflow.
     /// </summary>
     /// <remarks>
     /// <note>
     /// Workflow entry points must allow this exception to be caught by the
-    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
+    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
     /// will work properly.
     /// </note>
     /// </remarks>

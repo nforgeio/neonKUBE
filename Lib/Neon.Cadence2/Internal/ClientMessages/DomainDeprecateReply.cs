@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainUpdateArgs.cs
+// FILE:	    DomainDeprecateReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,29 +20,38 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain.
+    /// <b>proxy --> client:</b> Answers a <see cref="DomainDeprecateRequest"/>.
     /// </summary>
-    public class DomainUpdateArgs
+    [InternalProxyMessage(InternalMessageTypes.DomainDeprecateReply)]
+    internal class DomainDeprecateReply : ProxyReply
     {
         /// <summary>
-        /// The domain name.
+        /// Default constructor.
         /// </summary>
-        public string Name { get; set; }
+        public DomainDeprecateReply()
+        {
+            Type = InternalMessageTypes.DomainDeprecateReply;
+        }
 
-        /// <summary>
-        /// The updated basic domain properties.
-        /// </summary>
-        public DomainUpdateInfo DomainInfo { get; set; } = new DomainUpdateInfo();
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new DomainDeprecateReply();
 
-        /// <summary>
-        /// The updated domain optiona.
-        /// </summary>
-        public DomainOptions Options { get; set; } = new DomainOptions();
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }

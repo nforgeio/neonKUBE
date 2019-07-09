@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ICadenceClient.Base.cs
+// FILE:	    UpdateDomainRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,29 +18,31 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Tasks;
 
 namespace Neon.Cadence
 {
-    public partial interface ICadenceClient
+    /// <summary>
+    /// Holds the changes to be made to a Cadence domain.
+    /// </summary>
+    public class UpdateDomainRequest
     {
-        //---------------------------------------------------------------------
-        // Cadence basic client related operations.
+        /// <summary>
+        /// The domain name.
+        /// </summary>
+        public string Name { get; set; }
 
         /// <summary>
-        /// Pings the <b>cadence-proxy</b> and waits for the reply.  This is used 
-        /// mainly for low-level performance and load testing but can also be used
-        /// to explicitly verify that the <b>cadence-proxy</b> is still alive.
+        /// The updated basic domain properties.
         /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task PingAsync();
+        public DomainUpdateInfo DomainInfo { get; set; } = new DomainUpdateInfo();
+
+        /// <summary>
+        /// The updated domain options.
+        /// </summary>
+        public DomainOptions Options { get; set; } = new DomainOptions();
     }
 }

@@ -76,8 +76,19 @@ namespace Neon.Cadence
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
-        /// Specifies the default Cadence domain for this client.  This is required.
+        /// Specifies the default Cadence domain for this client.  This defaults to <c>null</c>.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Specifying a default domain can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single domain (which is pretty common).
+        /// </para>
+        /// <para>
+        /// The default domain can be overridden for individual method calls by passing a value as the optional <b>domain</b>
+        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
+        /// the <b>domain</b> parameters.
+        /// </para>
+        /// </remarks>
         [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
         [DefaultValue(null)]
@@ -114,6 +125,20 @@ namespace Neon.Cadence
         [YamlMember(Alias = "clientIdentity", ApplyNamingConventions = false)]
         [DefaultValue("unknown")]
         public string ClientIdentity { get; set; } = "unknown";
+
+        /// <summary>
+        /// <para>
+        /// The Cadence cluster security token.  This defaults to <c>null</c>.
+        /// </para>
+        /// <note>
+        /// This is not currently supported by the .NET Cadence client and should be
+        /// left alone for now.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "SecurityToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "securityToken", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SecurityToken { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>

@@ -104,6 +104,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Update { get; private set; }                                    = new PropertyNameUtf8("Update");
         public static PropertyNameUtf8 UpdatedInfoDescription { get; private set; }                    = new PropertyNameUtf8("UpdatedInfoDescription");
         public static PropertyNameUtf8 UpdatedInfoOwnerEmail { get; private set; }                     = new PropertyNameUtf8("UpdatedInfoOwnerEmail");
+        public static PropertyNameUtf8 Uuid { get; private set; }                                      = new PropertyNameUtf8("Uuid");
         public static PropertyNameUtf8 Version { get; private set; }                                   = new PropertyNameUtf8("Version");
         public static PropertyNameUtf8 WasCancelled { get; private set; }                              = new PropertyNameUtf8("WasCancelled");
         public static PropertyNameUtf8 WorkerId { get; private set; }                                  = new PropertyNameUtf8("WorkerId");

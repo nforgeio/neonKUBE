@@ -513,35 +513,7 @@ namespace Neon.Cadence
             {
                 EnsureNotLocal();
 
-                // Return the cached value if there is one otherwise query
-                // Cadence for the info and cache it.
-
-                // $note(jeff.lill):
-                //
-                // I could have used a lock here to prevent an app from
-                // calling this simultaneously on two different threads,
-                // resulting in multiple queries to the [cadence-proxy],
-                // but that's probably very unlikely to happen in the
-                // real world and since the info returned is invariant,
-                // having this happen would be harmless anyway.
-                // 
-                // So, that wasn't worth the trouble.
-
-                if (cachedInfo != null)
-                {
-                    return cachedInfo;
-                }
-
-                var reply = (ActivityGetInfoReply)Client.CallProxyAsync(
-                    new ActivityGetInfoRequest()
-                    {
-                        ContextId = this.contextId.Value,
-
-                    }).Result;
-
-                reply.ThrowOnError();
-
-                return this.cachedInfo = reply.Info.ToPublic();
+                return this.cachedInfo;
             }
         }
 
@@ -584,6 +556,20 @@ namespace Neon.Cadence
             }
             else
             {
+                // Capture the activity information.
+
+                var reply = (ActivityGetInfoReply)(await Client.CallProxyAsync(
+                    new ActivityGetInfoRequest()
+                    {
+                        ContextId = this.contextId.Value,
+                    }));
+
+                reply.ThrowOnError();
+
+                cachedInfo = reply.Info.ToPublic();
+
+                // Track the activity.
+
                 var activityKey = new ActivityKey(client, contextId.Value);
 
                 try
