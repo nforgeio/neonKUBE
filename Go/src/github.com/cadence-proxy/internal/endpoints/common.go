@@ -94,6 +94,10 @@ var (
 	// used to track cancellable operations sent from the Neon.Cadence
 	// client
 	Cancellables = new(cancellablesMap)
+
+	// httpClient is the HTTP client used to send requests
+	// to the Neon.Cadence client
+	httpClient = http.Client{}
 )
 
 //----------------------------------------------------------------------------
