@@ -244,7 +244,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetHistoryRequest"/> message.
         /// </summary>
-        WorkflowGetWorkflowHistoryReply = 113,
+        WorkflowGetHistoryReply = 113,
 
         /// <summary>
         /// <b>client --> proxy:</b> Requests the list of closed workflows.

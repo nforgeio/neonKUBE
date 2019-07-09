@@ -2678,8 +2678,15 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
 
-	// serialize the message
+	// $debug(jack.burns): DELETE THIS!
 	proxyMessage := message.GetProxyMessage()
+	logger.Info("Sending request to Neon.Cadence client",
+		zap.String("Address", replyAddress),
+		zap.String("MessageType", proxyMessage.Type.String()),
+		zap.Int("ProcessId", os.Getpid()),
+	)
+
+	// serialize the message
 	content, err := proxyMessage.Serialize(false)
 	if err != nil {
 
