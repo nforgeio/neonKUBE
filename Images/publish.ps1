@@ -132,6 +132,7 @@ if ($dotnetBase)
 
 if ($other)
 {
+	Publish "$image_root\\golang"
     Publish "$image_root\\nats"
     Publish "$image_root\\nats-streaming"
 	Publish "$image_root\\cadence-test"
