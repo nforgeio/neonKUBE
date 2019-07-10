@@ -80,6 +80,7 @@ func SetLogger(logLevel string, debugMode bool) {
 	encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 
 	// keys
+	encoderCfg.StacktraceKey = "st"
 	encoderCfg.CallerKey = "caller"
 	encoderCfg.TimeKey = "ts"
 	encoderCfg.LevelKey = "lvl"

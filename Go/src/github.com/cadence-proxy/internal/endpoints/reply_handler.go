@@ -23,11 +23,11 @@ import (
 	"time"
 
 	"go.uber.org/cadence/activity"
-
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
 	globals "github.com/cadence-proxy/internal"
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -454,8 +454,18 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		return nil
 	}
 
+	// special errors
+	var result interface{} = reply.GetResult()
+	var cadenceError *cadenceerrors.CadenceError = reply.GetError()
+	if cadenceError != nil {
+		if isCanceledErr(cadenceError) {
+			result = workflow.ErrCanceled
+			cadenceError = nil
+		}
+	}
+
 	// set the reply
-	err := op.SendChannel(reply.GetResult(), reply.GetError())
+	err := op.SendChannel(result, cadenceError)
 	if err != nil {
 		return err
 	}

@@ -24,9 +24,15 @@ namespace Test.RestApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+#if UPGRADE_NETCORE_PREVIEW_6
             services
                 .AddControllers()
                 .AddNewtonsoftJson();
+#else
+            services
+                .AddMvc()
+                .AddNewtonsoftJson();
+#endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,11 +43,18 @@ namespace Test.RestApi
                 app.UseDeveloperExceptionPage();
             }
 
+#if UPGRADE_NETCORE_PREVIEW_6
             app.UseRouting();
             app.UseEndpoints(routes =>
             {
                 routes.MapControllers();
             });
+#else
+            app.UseRouting(routes =>
+            {
+                routes.MapControllers();
+            });
+#endif
 
             app.UseAuthorization();
         }

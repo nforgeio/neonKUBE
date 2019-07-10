@@ -21,10 +21,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>C:\src\neonKUBE\Lib\Neon.CodeGen\bin\Debug\Neon.CodeGen.xml</DocumentationFile>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>C:\src\neonKUBE\Lib\Neon.CodeGen\bin\Release\Neon.CodeGen.xml</DocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,8 +39,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.2.0-beta3-final" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.2.0-beta3-final" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
