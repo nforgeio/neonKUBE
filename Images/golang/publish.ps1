@@ -104,4 +104,4 @@ if ($allVersions)
     Build 1.12.6
 }
     
-Build Build 1.12.7 -latest
+Build 1.12.7 -latest
