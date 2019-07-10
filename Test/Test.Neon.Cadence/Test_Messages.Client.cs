@@ -181,6 +181,8 @@ namespace TestCadence
                 Assert.Null(message.Domain);
                 Assert.False(message.CreateDomain);
                 Assert.Equal(TimeSpan.Zero, message.ClientTimeout);
+                Assert.Equal(0, message.Retries);
+                Assert.Equal(TimeSpan.Zero, message.RetryDelay);
 
                 // Round-trip
 
@@ -190,11 +192,15 @@ namespace TestCadence
                 message.ClientTimeout = TimeSpan.FromSeconds(30);
                 message.Domain = "my-domain";
                 message.CreateDomain = true;
+                message.Retries = 3;
+                message.RetryDelay = TimeSpan.FromSeconds(2);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.True(message.CreateDomain);
+                Assert.Equal(3, message.Retries);
+                Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -208,6 +214,8 @@ namespace TestCadence
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.True(message.CreateDomain);
+                Assert.Equal(3, message.Retries);
+                Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -219,6 +227,8 @@ namespace TestCadence
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.True(message.CreateDomain);
+                Assert.Equal(3, message.Retries);
+                Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -230,6 +240,8 @@ namespace TestCadence
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.True(message.CreateDomain);
+                Assert.Equal(3, message.Retries);
+                Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
             }
         }
 

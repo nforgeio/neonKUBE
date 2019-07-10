@@ -139,13 +139,36 @@ namespace Neon.Cadence
         /// </summary>
         [JsonProperty(PropertyName = "TerminateTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "terminateTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(00.0)]
+        [DefaultValue(0.0)]
         public double TerminateTimeoutSeconds { get; set; } = 10.0;
 
         /// <summary>
         /// Returns <see cref="TerminateTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan TerminateTimeout => TimeSpan.FromSeconds(TerminateTimeoutSeconds);
+        internal TimeSpan TerminateTimeout => TimeSpan.FromSeconds(Math.Max(TerminateTimeoutSeconds, 0));
+
+        /// <summary>
+        /// Specifies the number of times to retry connecting to the Cadence cluster.  This defaults
+        /// to <b>3</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ConnectRetries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "connectRetries", ApplyNamingConventions = false)]
+        [DefaultValue(3)]
+        public int ConnectRetries { get; set; } = 3;
+
+        /// <summary>
+        /// Specifies the number of seconds to delay between cluster connection attempts.
+        /// This defaults to <b>5.0 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ConnectRetryDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "connectRetryDelaySeconds", ApplyNamingConventions = false)]
+        [DefaultValue(5.0)]
+        public double ConnectRetryDelaySeconds { get; set; } = 5.0;
+
+        /// <summary>
+        /// Returns <see cref="ConnectRetryDelaySeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ConnectRetryDelay => TimeSpan.FromSeconds(Math.Max(ConnectRetryDelaySeconds, 0));
 
         /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
