@@ -49,7 +49,7 @@ Follow the steps below to configure a development or test workstation:
 
   b. Press the Windows key and enter: **windows features** and press ENTER.
 
-  c. Ensure that the check boxes highligvhted in red below are checked:
+  c. Ensure that the check boxes highlighted in red below are checked:
 
    ![Hyper-V Features](Images/DEVELOPER/hyper-v.png?raw=true) 
 
