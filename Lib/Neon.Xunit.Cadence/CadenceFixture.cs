@@ -298,13 +298,19 @@ namespace Neon.Xunit.Cadence
                 return;
             }
 
-            // Close the existing connections.
+            // Close any existing connection related objects.
 
-            Connection.Dispose();
-            Connection = null;
+            if (Connection != null)
+            {
+                Connection.Dispose();
+                Connection = null;
+            }
 
-            ConnectionClient.Dispose();
-            ConnectionClient = null;
+            if (ConnectionClient != null)
+            {
+                ConnectionClient.Dispose();
+                ConnectionClient = null;
+            }
 
             // Establish fresh connections.
 
