@@ -385,7 +385,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	}
 
 	// create context to configure clientHelper with
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// configure the ClientHelper

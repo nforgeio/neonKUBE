@@ -218,11 +218,12 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	defer close(connectChan)
 
 	// validate the connection
+
 	for i := 0; i <= n; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), retryDelay)
+		pollCtx, cancel := context.WithTimeout(ctx, retryDelay)
 		defer cancel()
 
-		err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
+		err = helper.pollDomain(pollCtx, connectChan, _cadenceSystemDomain)
 		if err != nil {
 			continue
 		}
