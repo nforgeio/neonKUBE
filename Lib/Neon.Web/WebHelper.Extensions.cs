@@ -132,7 +132,6 @@ namespace Neon.Web
         /// </summary>
         /// <param name="builder">The MVC builder.</param>
         /// <param name="disableRoundTripFormatters">Optionally disable adding the round-trip formatters.</param>
-        /// <param name="disableNewtonsoftFormatters">Optionally disable the Newtonsoft JSON formatters.</param>
         /// <param name="allowRoundtripFormatter">
         /// Optional lamda function that can be used to customize which types allowed
         /// to be handled by the custom round-trip formatters.  When this is <c>null</c>, 
@@ -152,18 +151,8 @@ namespace Neon.Web
         public static IMvcBuilder AddNeon(
             this IMvcBuilder    builder, 
             bool                disableRoundTripFormatters  = false, 
-            bool                disableNewtonsoftFormatters = false,
             Func<Type, bool>    allowRoundtripFormatter     = null)
         {
-            // Add any Newtonsodt formatters first so we can insert the round-trip
-            // formatters before them below so the round-trip formatters will take
-            // precedence.
-
-            if (!disableNewtonsoftFormatters)
-            {
-                builder.AddNewtonsoftJson();
-            }
-
             if (!disableRoundTripFormatters)
             {
                 builder.AddMvcOptions(
