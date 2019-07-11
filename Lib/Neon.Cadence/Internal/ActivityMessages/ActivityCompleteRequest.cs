@@ -42,12 +42,43 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityCompleteReply;
 
         /// <summary>
-        /// The opaque activity task token.
+        /// Optionally specifies the opaque activity task token.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
         /// </summary>
         public byte[] TaskToken
         {
             get => GetBytesProperty(PropertyNames.TaskToken);
             set => SetBytesProperty(PropertyNames.TaskToken, value);
+        }
+
+        /// <summary>
+        /// Optionally specifies the opaque activity task token.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
+        /// </summary>
+        public string RunId
+        {
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// Optionally specifies the activity domain.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
+        /// Optionally specifies the activity ID.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
+        /// </summary>
+        public string ActivityId
+        {
+            get => GetStringProperty(PropertyNames.ActivityId);
+            set => SetStringProperty(PropertyNames.ActivityId, value);
         }
 
         /// <summary>
@@ -85,9 +116,13 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityCompleteRequest)target;
 
-            typedTarget.TaskToken = this.TaskToken;
-            typedTarget.Result    = this.Result;
-            typedTarget.Error     = this.Error;
+            typedTarget.TaskToken  = this.TaskToken;
+            typedTarget.Result     = this.Result;
+            typedTarget.Error      = this.Error;
+            typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
+            typedTarget.ActivityId = this.ActivityId;
+            typedTarget.Result     = this.Result;
         }
     }
 }
