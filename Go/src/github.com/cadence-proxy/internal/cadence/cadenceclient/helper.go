@@ -217,18 +217,8 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	connectChan := make(chan error)
 	defer close(connectChan)
 
-	// validate the connection
-
-	for i := 0; i <= n; i++ {
-		pollCtx, cancel := context.WithTimeout(ctx, retryDelay)
-		defer cancel()
-
-		err = helper.pollDomain(pollCtx, connectChan, _cadenceSystemDomain)
-		if err != nil {
-			continue
-		}
-		break
-	}
+	// poll on system domain
+	err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
 	if err != nil {
 		defer func() {
 			helper = nil
@@ -878,6 +868,7 @@ func (helper *ClientHelper) RecordActivityHeartbeatByID(ctx context.Context, dom
 // has been established by the service client by polling a domain
 //
 // param ctx context.Context -> context to execute the domain describe call on
+//
 // param channel chan error -> channel to send error over upon a connection
 // failure or nil if a connection was verified
 //
