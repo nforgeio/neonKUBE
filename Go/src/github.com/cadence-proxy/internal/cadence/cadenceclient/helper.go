@@ -156,9 +156,15 @@ func (helper *ClientHelper) SetClientOptions(value *client.Options) {
 // param ctx context.Context -> go context to use to verify a connection
 // has been established to the cadence server
 //
+// param retries int32 -> number of time to retry establishing connection with
+// cadence server
+//
+// param retryDelay time.Duration -> the amount of time to wait between each
+// connection retry
+//
 // returns error -> error if there were any problems configuring
 // or building the service client
-func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
+func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int32, retryDelay time.Duration) error {
 
 	// exit if the service has already been setup
 	if helper.Service != nil {
@@ -175,8 +181,21 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 		SetDomain(helper.Config.domain)
 
 	// build the service client
-	service, err := helper.Builder.BuildServiceClient()
+	n := int(retries)
+	var err error
+	var service workflowserviceclient.Interface
+	for i := 0; i <= n; i++ {
+		service, err = helper.Builder.BuildServiceClient()
+		if err != nil {
+			time.Sleep(retryDelay)
+			continue
+		}
+		break
+	}
 	if err != nil {
+		defer func() {
+			helper = nil
+		}()
 		return err
 	}
 	helper.Service = service
@@ -198,13 +217,12 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 	connectChan := make(chan error)
 	defer close(connectChan)
 
-	// validate the connection
+	// poll on system domain
 	err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
 	if err != nil {
 		defer func() {
 			helper = nil
 		}()
-
 		return err
 	}
 
@@ -233,18 +251,24 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 //
 // param domain string -> the default domain to configure the workflow client with
 //
+// param retries int32 -> number of time to retry establishing connection with
+// cadence server
+//
+// param retryDelay time.Duration -> the amount of time to wait between each
+// connection retry
+//
 // param opts *client.Options -> the client options for connection the the cadence
 // server instance
 //
 // returns error -> error if any errors are thrown while trying to establish a
 // connection, or nil upon success
-func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, domain string, opts *client.Options) error {
+func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, domain string, retries int32, retryDelay time.Duration, opts *client.Options) error {
 
 	// setup service config
 	helper.SetHostPort(endpoints)
 	helper.SetClientOptions(opts)
 	helper.SetDomain(domain)
-	if err := helper.SetupServiceConfig(ctx); err != nil {
+	if err := helper.SetupServiceConfig(ctx, retries, retryDelay); err != nil {
 		defer func() {
 			helper = nil
 		}()
@@ -739,6 +763,48 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 	return nil
 }
 
+// CompleteActivityByID is an instance method that completes the execution of an activity
+//
+// param ctx context.Context -> the go context used to execute the complete activity call
+//
+// param domain string -> the domain the activity to complete is running on
+//
+// param workflowID string -> the workflowID of the running workflow
+//
+// param runID string -> the runID of the running cadence workflow
+//
+// param activityID string -> the activityID of the executing activity to complete
+//
+// param result interface{} -> the result to complete the activity with
+//
+// pararm cadenceError *cadenceerrors.CadenceError -> error to complete the activity with
+//
+// returns error -> error upon failure to complete the activity, nil upon success
+func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, workflowID, runID, activityID string, result interface{}, cadenceError *cadenceerrors.CadenceError) error {
+
+	var e error
+	if cadenceError != nil {
+		e = errors.New(cadenceError.ToString())
+	}
+
+	// query the workflow
+	err := helper.WorkflowClient.CompleteActivityByID(ctx, domain, workflowID, runID, activityID, result, e)
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("failed to complete activity", zap.Error(err))
+		return err
+	}
+
+	// $debug(jack.burns)
+	helper.Logger.Debug("Successfully Completed Activity",
+		zap.Any("Result", result),
+		zap.Any("Error", e),
+	)
+
+	return nil
+}
+
 // RecordActivityHeartbeat is an instance method that records heartbeat for an activity.
 //
 // param ctx context.Context -> the go context used to record a heartbeat for an activity
@@ -766,10 +832,43 @@ func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskTok
 	return nil
 }
 
+// RecordActivityHeartbeatByID is an instance method that records heartbeat for an activity.
+//
+// param ctx context.Context -> the go context used to record a heartbeat for an activity
+//
+// param domain string -> the domain the activity to is running in
+//
+// param workflowID string -> the workflowID of the running workflow
+//
+// param runID string -> the runID of the running cadence workflow
+//
+// param activityID string -> the activityID of the executing activity
+//
+// param details ...interface{} -> optional activity heartbeat details
+//
+// returns error -> error upon failure to record activity heartbeat, nil upon success
+func (helper *ClientHelper) RecordActivityHeartbeatByID(ctx context.Context, domain, workflowID, runID, activityID string, details ...interface{}) error {
+
+	// query the workflow
+	err := helper.WorkflowClient.RecordActivityHeartbeatByID(ctx, domain, workflowID, runID, activityID, details)
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("failed to record activity heartbeat", zap.Error(err))
+		return err
+	}
+
+	// $debug(jack.burns)
+	helper.Logger.Debug("Successfully Recorded Activity Heartbeat")
+
+	return nil
+}
+
 // pollDomain polls the cadence server to check and see if a connection
 // has been established by the service client by polling a domain
 //
 // param ctx context.Context -> context to execute the domain describe call on
+//
 // param channel chan error -> channel to send error over upon a connection
 // failure or nil if a connection was verified
 //

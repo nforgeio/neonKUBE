@@ -134,6 +134,24 @@ func (request *DomainRegisterRequest) SetRetentionDays(value int32) {
 	request.SetIntProperty("RetentionDays", value)
 }
 
+// GetSecurityToken gets a DomainRegisterRequest's SecurityToken value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a DomainRegisterRequest's SecurityToken
+func (request *DomainRegisterRequest) GetSecurityToken() *string {
+	return request.GetStringProperty("SecurityToken")
+}
+
+// SetSecurityToken sets a DomainRegisterRequest's SecurityToken value
+// in its properties map
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *DomainRegisterRequest) SetSecurityToken(value *string) {
+	request.SetStringProperty("SecurityToken", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -155,5 +173,6 @@ func (request *DomainRegisterRequest) CopyTo(target IProxyMessage) {
 		v.SetOwnerEmail(request.GetOwnerEmail())
 		v.SetEmitMetrics(request.GetEmitMetrics())
 		v.SetRetentionDays(request.GetRetentionDays())
+		v.SetSecurityToken(request.GetSecurityToken())
 	}
 }

@@ -77,7 +77,7 @@ func (request *ActivityCompleteRequest) GetResult() []byte {
 }
 
 // SetResult sets an ActivityCompleteRequest's Result field
-// from its properties map.  Result is the []byte result to set in the activity
+// in its properties map.  Result is the []byte result to set in the activity
 // complete call.
 //
 // param value []byte -> []byte value of the result to set in activity complete
@@ -109,6 +109,86 @@ func (request *ActivityCompleteRequest) SetError(value *cadenceerrors.CadenceErr
 	request.SetJSONProperty("Error", value)
 }
 
+// GetDomain gets a ActivityCompleteRequest's Domain field
+// from its properties map. Domain is the name of the cadence
+// domain the activity is executing on.
+//
+// returns *string -> pointer to the string in memory
+// of the cadence domain the activity is executing in.
+func (request *ActivityCompleteRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets an ActivityCompleteRequest's Domain field
+// in its properties map.  Domain is the name of the cadence
+// domain the activity is executing on.
+//
+// param value *string -> pointer to the string in memory
+// of the cadence domain the activity is executing in.
+func (request *ActivityCompleteRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
+// GetWorkflowID gets a ActivityCompleteRequest's WorkflowID field
+// from its properties map. WorkflowID is the ID of the cadence
+// workflow executing the activity.
+//
+// returns *string -> pointer to the string in memory
+// of the id of the workflow executing the activity.
+func (request *ActivityCompleteRequest) GetWorkflowID() *string {
+	return request.GetStringProperty("WorkflowId")
+}
+
+// SetWorkflowID sets an ActivityCompleteRequest's WorkflowID field
+// from its properties map.  WorkflowID is the ID of the cadence
+// workflow executing the activity.
+//
+// param value *string -> pointer to the string in memory
+// of the id of the workflow executing the activity.
+func (request *ActivityCompleteRequest) SetWorkflowID(value *string) {
+	request.SetStringProperty("WorkflowId", value)
+}
+
+// GetRunID gets a ActivityCompleteRequest's RunID field
+// from its properties map. RunID is the ID of the cadence
+// workflow executing the activity.
+//
+// returns *string -> pointer to the string in memory
+// of the run id of the workflow executing the activity.
+func (request *ActivityCompleteRequest) GetRunID() *string {
+	return request.GetStringProperty("RunId")
+}
+
+// SetRunID sets an ActivityCompleteRequest's RunID field
+// from its properties map.  RunID is the ID of the cadence
+// workflow executing the activity.
+//
+// param value *string -> pointer to the string in memory
+// of the run id of the workflow executing the activity.
+func (request *ActivityCompleteRequest) SetRunID(value *string) {
+	request.SetStringProperty("RunId", value)
+}
+
+// GetActivityID gets a ActivityCompleteRequest's ActivityID field
+// from its properties map. ActivityID is the ID of the executing
+// cadence activity.
+//
+// returns *string -> pointer to the string in memory
+// of the id of the executing activity.
+func (request *ActivityCompleteRequest) GetActivityID() *string {
+	return request.GetStringProperty("ActivityId")
+}
+
+// SetActivityID sets an ActivityCompleteRequest's ActivityID field
+// from its properties map.  ActivityID is the ID of the executing
+// cadence activity.
+//
+// param value *string -> pointer to the string in memory
+// of the id of the executing activity.
+func (request *ActivityCompleteRequest) SetActivityID(value *string) {
+	request.SetStringProperty("ActivityId", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -128,5 +208,9 @@ func (request *ActivityCompleteRequest) CopyTo(target IProxyMessage) {
 		v.SetTaskToken(request.GetTaskToken())
 		v.SetResult(request.GetResult())
 		v.SetError(request.GetError())
+		v.SetDomain(request.GetDomain())
+		v.SetWorkflowID(request.GetWorkflowID())
+		v.SetRunID(request.GetRunID())
+		v.SetActivityID(request.GetActivityID())
 	}
 }

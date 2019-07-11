@@ -92,7 +92,10 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 RequestId { get; private set; }                                 = new PropertyNameUtf8("RequestId");
         public static PropertyNameUtf8 Result { get; private set; }                                    = new PropertyNameUtf8("Result");
         public static PropertyNameUtf8 RetentionDays { get; private set; }                             = new PropertyNameUtf8("RetentionDays");
+        public static PropertyNameUtf8 RetryAttempts { get; private set; }                             = new PropertyNameUtf8("RetryAttempts");
+        public static PropertyNameUtf8 RetryDelay { get; private set; }                                = new PropertyNameUtf8("RetryDelay");
         public static PropertyNameUtf8 RunId { get; private set; }                                     = new PropertyNameUtf8("RunId");
+        public static PropertyNameUtf8 SecurityToken { get; private set; }                             = new PropertyNameUtf8("SecurityToken");
         public static PropertyNameUtf8 SignalArgs { get; private set; }                                = new PropertyNameUtf8("SignalArgs");
         public static PropertyNameUtf8 SignalName { get; private set; }                                = new PropertyNameUtf8("SignalName");
         public static PropertyNameUtf8 Size { get; private set; }                                      = new PropertyNameUtf8("Size");
@@ -111,7 +114,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 WorkflowId { get; private set; }                                = new PropertyNameUtf8("WorkflowId");
         public static PropertyNameUtf8 WorkflowType { get; private set; }                              = new PropertyNameUtf8("WorkflowType");
 
-        // These properties are use for unit testing:
+        // These properties are used for unit testing:
 
         public static PropertyNameUtf8 TestOne { get; private set; }                                   = new PropertyNameUtf8("TestOne");
         public static PropertyNameUtf8 TestTwo { get; private set; }                                   = new PropertyNameUtf8("TestTwo");

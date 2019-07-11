@@ -90,7 +90,7 @@ func (request *ConnectRequest) SetIdentity(value *string) {
 //
 // returns time.Duration -> the duration for a ConnectRequest's timeout from its properties map
 func (request *ConnectRequest) GetClientTimeout() time.Duration {
-	return request.GetTimeSpanProperty("ClientTimeout", time.Second*30)
+	return request.GetTimeSpanProperty("ClientTimeout")
 }
 
 // SetClientTimeout sets the ClientTimeout property in a ConnectRequest's properties map
@@ -140,6 +140,42 @@ func (request *ConnectRequest) SetCreateDomain(value bool) {
 	request.SetBoolProperty("CreateDomain", value)
 }
 
+// GetRetries gets a ConnectRequest's RetryAttempts value from
+// its nested properties map. Specifies the number of time
+// the client will attempt to connect to the Cadence cluster.
+//
+// returns int32 -> int32 number of retries to connect
+func (request *ConnectRequest) GetRetries() int32 {
+	return request.GetIntProperty("RetryAttempts")
+}
+
+// SetRetries sets a ConnectionRequest's RetryAttempts in
+// its nested properties map. Specifies the number of time
+// the client will attempt to connect to the Cadence cluster.
+//
+// param value int32 -> int32 number of retries to connect
+func (request *ConnectRequest) SetRetries(value int32) {
+	request.SetIntProperty("RetryAttempts", value)
+}
+
+// GetRetryDelay gets the RetryDelay property from a ConnectRequest's properties map.
+// RetryDelay is a timespan property that specifies the time to
+// delay before retrying to connect to the cluster.
+//
+// returns time.Duration -> the retry delay for a ConnectRequest
+func (request *ConnectRequest) GetRetryDelay() time.Duration {
+	return request.GetTimeSpanProperty("RetryDelay")
+}
+
+// SetRetryDelay sets the RetryDelay property in a ConnectRequest's properties map.
+// RetryDelay is a timespan property that specifies the time to
+// delay before retrying to connect to the cluster.
+//
+// param value time.Duration -> the retry delay for a ConnectRequest
+func (request *ConnectRequest) SetRetryDelay(value time.Duration) {
+	request.SetTimeSpanProperty("RetryDelay", value)
+}
+
 // -------------------------------------------------------------------------
 // ProxyMessage interface methods for implementing the ProxyMessage interface
 
@@ -161,5 +197,7 @@ func (request *ConnectRequest) CopyTo(target IProxyMessage) {
 		v.SetClientTimeout(request.GetClientTimeout())
 		v.SetDomain(request.GetDomain())
 		v.SetCreateDomain(request.GetCreateDomain())
+		v.SetRetries(request.GetRetries())
+		v.SetRetryDelay(request.GetRetryDelay())
 	}
 }

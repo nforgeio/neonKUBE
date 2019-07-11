@@ -385,15 +385,21 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	}
 
 	// create context to configure clientHelper with
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// configure the ClientHelper
 	// setup the domain, service, and workflow clients
 	clientHelper = cadenceclient.NewClientHelper()
-	err := clientHelper.SetupCadenceClients(ctx, *request.GetEndpoints(), defaultDomain, &opts)
+	err := clientHelper.SetupCadenceClients(ctx,
+		*request.GetEndpoints(),
+		defaultDomain,
+		request.GetRetries(),
+		request.GetRetryDelay(),
+		&opts,
+	)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -412,7 +418,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 		// $debug(jack.burns): DELETE THIS!
 		// THIS IS A PATCH, NEED TO COME BACK AND LOOK AT THIS
-		retention := int32(1)
+		retention := int32(365)
 		err = clientHelper.RegisterDomain(ctx, &cadenceshared.RegisterDomainRequest{Name: &defaultDomain, WorkflowExecutionRetentionPeriodInDays: &retention})
 		if err != nil {
 			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -537,22 +543,24 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	}
 
 	// DomainUpdateRequest.Configuration
-	configuration := new(cadenceshared.DomainConfiguration)
 	configurationEmitMetrics := request.GetConfigurationEmitMetrics()
 	configurationRetentionDays := request.GetConfigurationRetentionDays()
-	configuration.EmitMetric = &configurationEmitMetrics
-	configuration.WorkflowExecutionRetentionPeriodInDays = &configurationRetentionDays
+	configuration := cadenceshared.DomainConfiguration{
+		EmitMetric:                             &configurationEmitMetrics,
+		WorkflowExecutionRetentionPeriodInDays: &configurationRetentionDays,
+	}
 
 	// DomainUpdateRequest.UpdatedInfo
-	updatedInfo := new(cadenceshared.UpdateDomainInfo)
-	updatedInfo.Description = request.GetUpdatedInfoDescription()
-	updatedInfo.OwnerEmail = request.GetUpdatedInfoOwnerEmail()
+	updatedInfo := cadenceshared.UpdateDomainInfo{
+		Description: request.GetUpdatedInfoDescription(),
+		OwnerEmail:  request.GetUpdatedInfoOwnerEmail(),
+	}
 
 	// DomainUpdateRequest
 	domainUpdateRequest := cadenceshared.UpdateDomainRequest{
 		Name:          &domain,
-		Configuration: configuration,
-		UpdatedInfo:   updatedInfo,
+		Configuration: &configuration,
+		UpdatedInfo:   &updatedInfo,
 	}
 
 	// create context with timeout
@@ -642,8 +650,12 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWorkerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
+	domain := *request.GetDomain()
+	taskList := *request.GetTaskList()
 	logger.Debug("NewWorkerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
+		zap.String("Domain", domain),
+		zap.String("TaskList", taskList),
 		zap.Int("ProccessId", os.Getpid()),
 	)
 
@@ -660,8 +672,6 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	// create a new worker using a configured ClientHelper instance
 	workerID := cadenceworkers.NextWorkerID()
-	domain := *request.GetDomain()
-	taskList := *request.GetTaskList()
 	worker, err := clientHelper.StartWorker(domain,
 		taskList,
 		*request.GetOptions(),
@@ -674,9 +684,6 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	// put the worker and workerID from the new worker to the
 	workerID = Workers.Add(workerID, worker)
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Worker has been added to Workers", zap.Int64("WorkerID", workerID))
 
 	// build the reply
 	buildReply(reply, nil, workerID)
@@ -1236,7 +1243,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	defer cancel()
 
 	// DescribeWorkflow call to cadence client
-	describeWorkflowExecutionResponse, err := clientHelper.DescribeWorkflowExecution(ctx,
+	dwer, err := clientHelper.DescribeWorkflowExecution(ctx,
 		workflowID,
 		runID,
 	)
@@ -1247,7 +1254,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	}
 
 	// build reply
-	buildReply(reply, nil, describeWorkflowExecutionResponse)
+	buildReply(reply, nil, dwer)
 
 	return reply
 }
@@ -2430,8 +2437,25 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 
 	// check to see if external or internal
 	// record heartbeat
+	var err error
+	details := request.GetDetails()
 	if request.GetTaskToken() == nil {
-		activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), request.GetDetails())
+		activityID := request.GetActivityID()
+		if activityID == nil {
+			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
+		} else {
+			ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+			defer cancel()
+
+			err = clientHelper.RecordActivityHeartbeatByID(ctx,
+				*request.GetDomain(),
+				*request.GetWorkflowID(),
+				*request.GetRunID(),
+				*activityID,
+				details,
+			)
+		}
+
 	} else {
 
 		// create the new context
@@ -2439,12 +2463,16 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		defer cancel()
 
 		// record the heartbeat details
-		err := clientHelper.RecordActivityHeartbeat(ctx, request.GetTaskToken(), request.GetDetails())
-		if err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+		err = clientHelper.RecordActivityHeartbeat(ctx,
+			request.GetTaskToken(),
+			details,
+		)
+	}
 
-			return reply
-		}
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
 	}
 
 	// build the reply
@@ -2513,12 +2541,28 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
-	// complete the activity
-	err := clientHelper.CompleteActivity(ctx,
-		request.GetTaskToken(),
-		request.GetResult(),
-		request.GetError(),
-	)
+	// check the task token
+	// and complete activity
+	var err error
+	taskToken := request.GetTaskToken()
+	if taskToken == nil {
+		err = clientHelper.CompleteActivityByID(ctx,
+			*request.GetDomain(),
+			*request.GetWorkflowID(),
+			*request.GetRunID(),
+			*request.GetActivityID(),
+			request.GetResult(),
+			request.GetError(),
+		)
+
+	} else {
+		err = clientHelper.CompleteActivity(ctx,
+			taskToken,
+			request.GetResult(),
+			request.GetError(),
+		)
+	}
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -2653,6 +2697,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		if opts.ScheduleToCloseTimeout <= 0 {
 			opts.ScheduleToCloseTimeout = cadenceClientTimeout
 		}
+
 	} else {
 		opts = workflow.LocalActivityOptions{
 			ScheduleToCloseTimeout: cadenceClientTimeout,
@@ -2666,9 +2711,12 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	var result []byte
 	if err := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args).Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
-	} else {
-		buildReply(reply, nil, result)
+
+		return reply
 	}
+
+	// build reply
+	buildReply(reply, nil, result)
 
 	return reply
 }

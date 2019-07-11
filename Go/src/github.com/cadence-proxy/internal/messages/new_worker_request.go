@@ -67,26 +67,6 @@ func (request *NewWorkerRequest) SetDomain(value *string) {
 	request.SetStringProperty("Domain", value)
 }
 
-// GetIsWorkflow gets a NewWorkerRequest's IsWorkflow value
-// from its properties map. Indicates whether we're starting a workflow
-// or an activity worker.
-//
-// returns bool -> bool holding the value
-// of a NewWorkerRequest's IsWorkflow
-func (request *NewWorkerRequest) GetIsWorkflow() bool {
-	return request.GetBoolProperty("IsWorkflow")
-}
-
-// SetIsWorkflow sets a NewWorkerRequest's IsWorkflow value
-// in its properties map. Indicates whether we're starting a workflow
-// or an activity worker.
-//
-// param value bool -> bool that holds the value
-// to be set in the properties map
-func (request *NewWorkerRequest) SetIsWorkflow(value bool) {
-	request.SetBoolProperty("IsWorkflow", value)
-}
-
 // GetTaskList gets a NewWorkerRequest's TaskList value
 // from its properties map
 //
@@ -147,7 +127,6 @@ func (request *NewWorkerRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*NewWorkerRequest); ok {
 		v.SetDomain(request.GetDomain())
-		v.SetIsWorkflow(request.GetIsWorkflow())
 		v.SetTaskList(request.GetTaskList())
 		v.SetOptions(request.GetOptions())
 	}

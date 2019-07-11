@@ -790,7 +790,9 @@ namespace Neon.Cadence
                             Identity      = settings.ClientIdentity,
                             ClientTimeout = TimeSpan.FromSeconds(60),
                             Domain        = settings.DefaultDomain,
-                            CreateDomain  = settings.CreateDomain
+                            CreateDomain  = settings.CreateDomain,
+                            Retries       = Math.Max(settings.ConnectRetries, 0),
+                            RetryDelay    = settings.ConnectRetryDelay
                         };
 
 

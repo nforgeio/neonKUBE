@@ -111,13 +111,21 @@ namespace Neon.Service
         }
 
         /// <summary>
-        /// This specifies the network port to be used for URIs accessing this service.  This defaults to <b>0</b>
-        /// (which is not a valid port).
+        /// <para>
+        /// This specifies the network port to be used for URIs accessing this service.  This defaults to <b>-1</b>
+        /// which indicates that HTTP and HTTPS based endpoints will be initialized to their default ports <b>80</b>
+        /// and <b>443</b> so you don't need to specify and explicit ports for these.  You will need to set this to
+        /// a valid port for TCP and UDP protocols.
+        /// </para>
+        /// <note>
+        /// <b>CAUTION:</b> It's best not to rely on this value when setting up your service network endpoints and
+        /// reference the port from <see cref="Uri"/> instead because that will always be a valid TCP port number.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Port", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "port", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int Port { get; set; } = 0;
+        public int Port { get; set; } = -1;
 
         // $todo(jeff.lill): 
         //
@@ -143,13 +151,13 @@ namespace Neon.Service
         /// just the port.  The path prefix is ignored for TCP and UDP.
         /// </para>
         /// <para>
-        /// When <see cref="Port"/> is zero for HTTP or HTTPS endpoints, the URL returned 
+        /// When <see cref="Port"/> is <b>-1</b> for HTTP or HTTPS endpoints, the URL returned 
         /// will use the default port for thbe protocol (80/443).  For TCP and UDP protocols,
-        /// the port must be a valid non-zero network port.
+        /// the port must be a valid (non-negative) network port.
         /// </para>
         /// <note>
         /// For production, this property returns the partially qualified hostname for
-        /// the host, omitting the cluster domain (e.g. <b>cluster.local</b>.  Use 
+        /// the host, omitting the cluster domain (e.g. <b>cluster.local</b>).  Use 
         /// <see cref="FullUri"/> if you need the fully qualified URI.
         /// </note>
         /// </summary>
@@ -160,7 +168,7 @@ namespace Neon.Service
         {
             get
             {
-                if (Port != 0 && !NetHelper.IsValidPort(Port))
+                if (Port != -1 && !NetHelper.IsValidPort(Port))
                 {
                     throw new ArgumentException($"Invalid network port [{Port}].");
                 }
@@ -174,7 +182,7 @@ namespace Neon.Service
                 {
                     case ServiceEndpointProtocol.Http:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             return new Uri($"http://{ServiceDescription.Hostname}/{PathPrefix}");
                         }
@@ -185,7 +193,7 @@ namespace Neon.Service
 
                     case ServiceEndpointProtocol.Https:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             return new Uri($"https://{ServiceDescription.Hostname}/{PathPrefix}");
                         }
@@ -196,7 +204,7 @@ namespace Neon.Service
 
                     case ServiceEndpointProtocol.Tcp:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             throw new ArgumentException("TCP endpoints require a non-zero port.");
                         }
@@ -205,7 +213,7 @@ namespace Neon.Service
 
                     case ServiceEndpointProtocol.Udp:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             throw new ArgumentException("UDP endpoints require a non-zero port.");
                         }
@@ -245,7 +253,7 @@ namespace Neon.Service
         {
             get
             {
-                if (Port != 0 && !NetHelper.IsValidPort(Port))
+                if (Port != -1 && !NetHelper.IsValidPort(Port))
                 {
                     throw new ArgumentException($"Invalid network port [{Port}].");
                 }
@@ -259,7 +267,7 @@ namespace Neon.Service
                 {
                     case ServiceEndpointProtocol.Http:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             return new Uri($"http://{ServiceDescription.Hostname}/{PathPrefix}");
                         }
@@ -270,7 +278,7 @@ namespace Neon.Service
 
                     case ServiceEndpointProtocol.Https:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             return new Uri($"https://{ServiceDescription.Hostname}/{PathPrefix}");
                         }
@@ -281,7 +289,7 @@ namespace Neon.Service
 
                     case ServiceEndpointProtocol.Tcp:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             throw new ArgumentException("TCP endpoints require a non-zero port.");
                         }
@@ -290,7 +298,7 @@ namespace Neon.Service
 
                     case ServiceEndpointProtocol.Udp:
 
-                        if (Port == 0)
+                        if (Port == -1)
                         {
                             throw new ArgumentException("UDP endpoints require a non-zero port.");
                         }

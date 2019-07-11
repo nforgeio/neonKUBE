@@ -154,6 +154,16 @@ const (
 	/// </summary>
 	PingReply MessageType = 22
 
+	/// <summary>
+	/// <b>client --> proxy:</b> Requests that the proxy deprecate a Cadence domain.
+	/// </summary>
+	DomainDeprecateRequest MessageType = 23
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDeprecateRequest"/> message.
+	/// </summary>
+	DomainDeprecateReply MessageType = 24
+
 	//---------------------------------------------------------------------
 	// Workflow messages
 	//
@@ -373,7 +383,7 @@ const (
 	/// <summary>
 	///  <b>client --> proxy:</b> Determines whether the last execution of the workflow has
 	///  a completion result.  This can be used by CRON workflows to determine whether the
-	///  last run returned a result.
+	///  last execution returned a result.
 	/// </summary>
 	WorkflowHasLastResultRequest MessageType = 140
 
@@ -384,7 +394,7 @@ const (
 
 	/// <summary>
 	///  <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
-	///  This can be used by CRON workflows to retrieve state from the last workflow run.
+	///  This can be used by CRON workflows to retrieve state from the last workflow execution.
 	/// </summary>
 	WorkflowGetLastResultRequest MessageType = 142
 
@@ -510,7 +520,7 @@ const (
 	ActivityInvokeReply MessageType = 203
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity run.
+	/// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity execution.
 	/// </summary>
 	ActivityGetHeartbeatDetailsRequest MessageType = 204
 
@@ -632,6 +642,10 @@ func (m MessageType) String() string {
 		return "DomainRegisterRequest"
 	case DomainRegisterReply:
 		return "DomainRegisterReply"
+	case DomainDeprecateRequest:
+		return "DomainDeprecateRequest"
+	case DomainDeprecateReply:
+		return "DomainDeprecateReply"
 	case DomainDescribeRequest:
 		return "DomainDescribeRequest"
 	case DomainDescribeReply:

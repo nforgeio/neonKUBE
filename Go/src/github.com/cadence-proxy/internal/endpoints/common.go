@@ -61,7 +61,7 @@ var (
 
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been received by the cadence-proxy
-	cadenceClientTimeout time.Duration = time.Second * 30
+	cadenceClientTimeout time.Duration = time.Minute
 
 	// ClientHelper is a global variable that holds this cadence-proxy's instance
 	// of the ClientHelper that will be used to create domain and workflow clients

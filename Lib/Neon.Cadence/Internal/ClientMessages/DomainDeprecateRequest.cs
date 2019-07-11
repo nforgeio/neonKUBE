@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainRegisterRequest.cs
+// FILE:	    DomainDeprecateRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,63 +32,27 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests that the proxy register a Cadence domain.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainRegisterRequest)]
-    internal class DomainRegisterRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.DomainDeprecateRequest)]
+    internal class DomainDeprecateRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainRegisterRequest()
+        public DomainDeprecateRequest()
         {
-            Type = InternalMessageTypes.DomainRegisterRequest;
+            Type = InternalMessageTypes.DomainDeprecateRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainRegisterReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDeprecateReply;
 
         /// <summary>
-        /// Name for the new domain.
+        /// Name of the domain to be depreciated.
         /// </summary>
         public string Name
         {
             get => GetStringProperty(PropertyNames.Name);
             set => SetStringProperty(PropertyNames.Name, value);
-        }
-
-        /// <summary>
-        /// Human readable description for the domain.
-        /// </summary>
-        public string Description
-        {
-            get => GetStringProperty(PropertyNames.Description);
-            set => SetStringProperty(PropertyNames.Description, value);
-        }
-
-        /// <summary>
-        /// Owner email address.
-        /// </summary>
-        public string OwnerEmail
-        {
-            get => GetStringProperty(PropertyNames.OwnerEmail);
-            set => SetStringProperty(PropertyNames.OwnerEmail, value);
-        }
-
-        /// <summary>
-        /// Enable metrics.
-        /// </summary>
-        public bool EmitMetrics
-        {
-            get => GetBoolProperty(PropertyNames.EmitMetrics);
-            set => SetBoolProperty(PropertyNames.EmitMetrics, value);
-        }
-
-        /// <summary>
-        /// The complete workflow history retention period in days.
-        /// </summary>
-        public int RetentionDays
-        {
-            get => GetIntProperty(PropertyNames.RetentionDays);
-            set => SetIntProperty(PropertyNames.RetentionDays, value);
         }
 
         /// <summary>
@@ -103,7 +67,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainRegisterRequest();
+            var clone = new DomainDeprecateRequest();
 
             CopyTo(clone);
 
@@ -115,13 +79,9 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainRegisterRequest)target;
+            var typedTarget = (DomainDeprecateRequest)target;
 
             typedTarget.Name          = this.Name;
-            typedTarget.Description   = this.Description;
-            typedTarget.OwnerEmail    = this.OwnerEmail;
-            typedTarget.EmitMetrics   = this.EmitMetrics;
-            typedTarget.RetentionDays = this.RetentionDays;
             typedTarget.SecurityToken = this.SecurityToken;
         }
     }

@@ -33,8 +33,8 @@ NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
 MESSAGES_TEST_DIR=./internal/messages
 TEST_DIRS := $(MESSAGES_TEST_DIR)
 
-# Gather all source code		
-ALL_SRC := $(shell find ./cmd/cadenceproxy -name "*.go")
+# Gather source code		
+SRC := $(APP_DIR)/main.go
 
 # programs in the /cmd dir to build
 PROGS = cadenceproxy
@@ -50,7 +50,7 @@ dep-ensured:
 	dep ensure
 
 cadence-proxy-windows: dep-ensured $(ALL_SRC)
-	env GOOS=windows GOARCH=amd64 CGO_ENABLED=1 go build -i -ldflags="-w -s" -race -v -o bin/$(WIN) $(APP_DIR)/*.go
+	env GOOS=windows GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(WIN) $(APP_DIR)/*.go
 
 cadence-proxy-linux: dep-ensured $(ALL_SRC)
 	env GOOS=linux GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(LINUX) $(APP_DIR)/*.go
