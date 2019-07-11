@@ -337,26 +337,26 @@ namespace TestCadence
             // Generate unique a domain and task list to avoid conflicts with
             // other tests on this connection.
 
-            var domain   = Guid.NewGuid().ToString("D");
+            var domain = Guid.NewGuid().ToString("D");
             var taskList = Guid.NewGuid().ToString("D");
 
             // Verify parameter checks.
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async() => await client.StartWorkflowWorkerAsync(null, taskList));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync("", taskList));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync(domain, null));
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkflowWorkerAsync(domain, ""));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync(null, taskList));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync("", taskList));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync(domain, null));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.StartWorkerAsync(domain, ""));
 
             // This operation should fail because the domain has not yet been registered.
 
-            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.StartWorkflowWorkerAsync(domain, "test"));
+            await Assert.ThrowsAsync<CadenceEntityNotExistsException>(async () => await client.StartWorkerAsync(domain, "test"));
 
             // Register the domain and then start workflow and activity workers.
 
             await client.RegisterDomainAsync(domain);
 
-            var workflowWorker = await client.StartWorkflowWorkerAsync(domain, taskList);
-            var activityWorker = await client.StartActivityWorkerAsync(domain, taskList);
+            var workflowWorker = await client.StartWorkerAsync(domain, taskList, new WorkerOptions() { DisableActivityWorker = true });
+            var activityWorker = await client.StartWorkerAsync(domain, taskList, new WorkerOptions() { DisableWorkflowWorker = true });
 
             // Stop the workers.
 

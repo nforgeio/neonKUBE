@@ -49,123 +49,9 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Signals Cadence that the application is capable of executing workflows for
-        /// a specific domain and task list.
-        /// </summary>
-        /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
-        /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when an attempt is made to recreate a worker with the
-        /// same properties on a given client.  See the note in the remarks.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all of your workflow implementations before starting a workflow worker.
-        /// </note>
-        /// <para>
-        /// Your workflow application will need to call this method so that Cadence will know
-        /// that it can schedule workflows to run within the current process.  You'll need
-        /// to specify the target Cadence domain and task list.
-        /// </para>
-        /// <para>
-        /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
-        /// as customize the workflow typ name used to register the workflow, which defaults 
-        /// to the fully qualified name of the workflow type.
-        /// </para>
-        /// <para>
-        /// This method returns a <see cref="Worker"/> which implements <see cref="IDisposable"/>.
-        /// It's a best practice to call <see cref="Dispose()"/> just before the a worker process
-        /// terminates, but this is optional.  Advanced worker implementation that need to change
-        /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
-        /// for specific domains and task lists.
-        /// </para>
-        /// <note>
-        /// The Cadence GOLANG client does not appear to support starting a worker with a given
-        /// set of parameters, stopping that workflow, and then restarting another worker
-        /// with the same parameters on the same client.  This method detects this situation
-        /// and throws an <see cref="InvalidOperationException"/> when these restart attempts
-        /// are made.
-        /// </note>
-        /// </remarks>
-        public async Task<Worker> StartWorkflowWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
-
-            try
-            {
-                return await StartWorkerAsync(true, domain, taskList, options);
-            }
-            finally
-            {
-                workflowWorkerStarted = true;
-            }
-        }
-
-        /// <summary>
         /// Signals Cadence that the application is capable of executing activities for a specific
         /// domain and task list.
         /// </summary>
-        /// <param name="domain">The target Cadence domain.</param>
-        /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
-        /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when an attempt is made to recreate a worker with the
-        /// same properties on a given client.  See the note in the remarks.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all of your activity implementations before starting an activity worker.
-        /// </note>
-        /// <para>
-        /// Your workflow application will need to call this method so that Cadence will know
-        /// that it can schedule activities to run within the current process.  You'll need
-        /// to specify the target Cadence domain and task list.
-        /// </para>
-        /// <para>
-        /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
-        /// as customize the name used to register the activity, which defaults to the
-        /// fully qualified name of the activity type.
-        /// </para>
-        /// <para>
-        /// This method returns a <see cref="Worker"/> which implements <see cref="IDisposable"/>.
-        /// It's a best practice to call <see cref="Dispose()"/> just before the a worker process
-        /// terminates, but this is optional.  Advanced worker implementation that need to change
-        /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
-        /// for specific domains and task lists.
-        /// </para>C:\src\neonKUBE\Lib\Neon.Cadence\Exceptions\CadenceCancelledException.cs
-        /// <note>
-        /// The Cadence GOLANG client does not appear to support starting a worker with a given
-        /// set of parameters, stopping that workflow, and then restarting another worker
-        /// with the same parameters on the same client.  This method detects this situation
-        /// and throws an <see cref="InvalidOperationException"/> when these restart attempts
-        /// are made.
-        /// </note>
-        /// </remarks>
-        public async Task<Worker> StartActivityWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
-
-            try
-            {
-                return await StartWorkerAsync(false, domain, taskList, options);
-            }
-            finally
-            {
-                activityWorkerStarted = true;
-            }
-        }
-
-
-        /// <summary>
-        /// Signals Cadence that the application is capable of executing activities for a specific
-        /// domain and task list.
-        /// </summary>
-        /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
         /// <param name="domain">Optionally specifies the target Cadence domain.  This defaults to the domain configured for the client.</param>
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
@@ -200,7 +86,7 @@ namespace Neon.Cadence
         /// are made.
         /// </note>
         /// </remarks>
-        private async Task<Worker> StartWorkerAsync(bool isWorkflow, string domain, string taskList = "default", WorkerOptions options = null)
+        public async Task<Worker> StartWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
@@ -223,11 +109,14 @@ namespace Neon.Cadence
 
                 // $note(jeff.lill):
                 //
-                // If the worker exists but its refcount==0, then we're going to
+                // If the worker exists but its [refcount==0], then we're going to
                 // throw an exception because Cadence doesn't support recreating
                 // a worker with the same parameters on the same client.
 
-                worker = workers.Values.SingleOrDefault(wf => wf.IsWorkflow == isWorkflow && wf.Domain == domain && wf.Tasklist == taskList);
+                worker = workers.Values.SingleOrDefault(wf => 
+                    wf.Options.DisableActivityWorker == options.DisableActivityWorker && 
+                    wf.Options.DisableWorkflowWorker == options.DisableWorkflowWorker && 
+                    wf.Domain == domain && wf.Tasklist == taskList);
 
                 if (worker != null)
                 {
@@ -245,16 +134,18 @@ namespace Neon.Cadence
                 var reply = (NewWorkerReply)(await CallProxyAsync(
                     new NewWorkerRequest()
                     {
-                        IsWorkflow = isWorkflow,
-                        Domain     = domain,
-                        TaskList   = taskList,
-                        Options    = options.ToInternal()
+                        Domain   = domain,
+                        TaskList = taskList,
+                        Options  = options.ToInternal()
                     }));
 
                 reply.ThrowOnError();
 
-                worker = new Worker(this, isWorkflow, reply.WorkerId, domain, taskList);
+                worker = new Worker(this, reply.WorkerId, domain, taskList, options);
                 workers.Add(reply.WorkerId, worker);
+
+                activityWorkerStarted = !options.DisableActivityWorker || activityWorkerStarted;
+                workflowWorkerStarted = !options.DisableWorkflowWorker || workflowWorkerStarted;
             }
 
             return worker;
