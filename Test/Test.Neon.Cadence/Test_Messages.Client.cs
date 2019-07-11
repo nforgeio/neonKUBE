@@ -1054,12 +1054,12 @@ namespace TestCadence
                 // Round-trip
 
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Domain = "my-domain";
-                Assert.Equal("my-domain", message.Domain);
                 message.TaskList = "my-tasks";
-                Assert.Equal("my-tasks", message.TaskList);
                 message.Options = new InternalWorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 

@@ -41,18 +41,18 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="client">The parent client.</param>
-        /// <param name="isWorkflow">Used to distinguish between workflow and activity workers.</param>
         /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
         /// <param name="domain">The Cadence domain where the worker is registered.</param>
         /// <param name="taskList">The Cadence task list.</param>
-        internal Worker(CadenceClient client, bool isWorkflow, long workerId, string domain, string taskList)
+        /// <param name="options">The worker options.</param>
+        internal Worker(CadenceClient client, long workerId, string domain, string taskList, WorkerOptions options)
         {
-            this.Client     = client;
-            this.IsWorkflow = isWorkflow;
-            this.WorkerId   = workerId;
-            this.Domain     = domain;
-            this.Tasklist   = taskList;
-            this.RefCount   = 1;
+            this.Client   = client;
+            this.WorkerId = workerId;
+            this.Domain   = domain;
+            this.Tasklist = taskList;
+            this.Options  = options;
+            this.RefCount = 1;
         }
 
         /// <inheritdoc/>
@@ -83,11 +83,6 @@ namespace Neon.Cadence
         internal bool IsDisposed => RefCount == 0;
 
         /// <summary>
-        /// Used to distinguish between workflow and activity workers.
-        /// </summary>
-        internal bool IsWorkflow { get; private set;}
-
-        /// <summary>
         /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.
         /// </summary>
         internal long WorkerId { get; private set; }
@@ -101,6 +96,11 @@ namespace Neon.Cadence
         /// Returns the Cadence task list.
         /// </summary>
         internal string Tasklist { get; private set; }
+
+        /// <summary>
+        /// Returns the worker options.
+        /// </summary>
+        internal WorkerOptions Options { get; private set; }
 
         /// <summary>
         /// Returns the current worker reference count.  This will be set to
