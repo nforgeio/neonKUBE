@@ -642,8 +642,12 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWorkerRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
+	domain := *request.GetDomain()
+	taskList := *request.GetTaskList()
 	logger.Debug("NewWorkerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
+		zap.String("Domain", domain),
+		zap.String("TaskList", taskList),
 		zap.Int("ProccessId", os.Getpid()),
 	)
 
@@ -660,8 +664,6 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	// create a new worker using a configured ClientHelper instance
 	workerID := cadenceworkers.NextWorkerID()
-	domain := *request.GetDomain()
-	taskList := *request.GetTaskList()
 	worker, err := clientHelper.StartWorker(domain,
 		taskList,
 		*request.GetOptions(),
@@ -674,9 +676,6 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	// put the worker and workerID from the new worker to the
 	workerID = Workers.Add(workerID, worker)
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Worker has been added to Workers", zap.Int64("WorkerID", workerID))
 
 	// build the reply
 	buildReply(reply, nil, workerID)
@@ -2430,8 +2429,25 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 
 	// check to see if external or internal
 	// record heartbeat
+	var err error
+	details := request.GetDetails()
 	if request.GetTaskToken() == nil {
-		activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), request.GetDetails())
+		activityID := request.GetActivityID()
+		if activityID == nil {
+			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
+		} else {
+			ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+			defer cancel()
+
+			err = clientHelper.RecordActivityHeartbeatByID(ctx,
+				*request.GetDomain(),
+				*request.GetWorkflowID(),
+				*request.GetRunID(),
+				*activityID,
+				details,
+			)
+		}
+
 	} else {
 
 		// create the new context
@@ -2439,12 +2455,16 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		defer cancel()
 
 		// record the heartbeat details
-		err := clientHelper.RecordActivityHeartbeat(ctx, request.GetTaskToken(), request.GetDetails())
-		if err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+		err = clientHelper.RecordActivityHeartbeat(ctx,
+			request.GetTaskToken(),
+			details,
+		)
+	}
 
-			return reply
-		}
+	if err != nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+
+		return reply
 	}
 
 	// build the reply
@@ -2513,12 +2533,28 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
 	defer cancel()
 
-	// complete the activity
-	err := clientHelper.CompleteActivity(ctx,
-		request.GetTaskToken(),
-		request.GetResult(),
-		request.GetError(),
-	)
+	// check the task token
+	// and complete activity
+	var err error
+	taskToken := request.GetTaskToken()
+	if taskToken == nil {
+		err = clientHelper.CompleteActivityByID(ctx,
+			*request.GetDomain(),
+			*request.GetWorkflowID(),
+			*request.GetRunID(),
+			*request.GetActivityID(),
+			request.GetResult(),
+			request.GetError(),
+		)
+
+	} else {
+		err = clientHelper.CompleteActivity(ctx,
+			taskToken,
+			request.GetResult(),
+			request.GetError(),
+		)
+	}
+
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 

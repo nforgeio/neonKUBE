@@ -739,6 +739,48 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 	return nil
 }
 
+// CompleteActivityByID is an instance method that completes the execution of an activity
+//
+// param ctx context.Context -> the go context used to execute the complete activity call
+//
+// param domain string -> the domain the activity to complete is running on
+//
+// param workflowID string -> the workflowID of the running workflow
+//
+// param runID string -> the runID of the running cadence workflow
+//
+// param activityID string -> the activityID of the executing activity to complete
+//
+// param result interface{} -> the result to complete the activity with
+//
+// pararm cadenceError *cadenceerrors.CadenceError -> error to complete the activity with
+//
+// returns error -> error upon failure to complete the activity, nil upon success
+func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, workflowID, runID, activityID string, result interface{}, cadenceError *cadenceerrors.CadenceError) error {
+
+	var e error
+	if cadenceError != nil {
+		e = errors.New(cadenceError.ToString())
+	}
+
+	// query the workflow
+	err := helper.WorkflowClient.CompleteActivityByID(ctx, domain, workflowID, runID, activityID, result, e)
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("failed to complete activity", zap.Error(err))
+		return err
+	}
+
+	// $debug(jack.burns)
+	helper.Logger.Debug("Successfully Completed Activity",
+		zap.Any("Result", result),
+		zap.Any("Error", e),
+	)
+
+	return nil
+}
+
 // RecordActivityHeartbeat is an instance method that records heartbeat for an activity.
 //
 // param ctx context.Context -> the go context used to record a heartbeat for an activity
@@ -753,6 +795,38 @@ func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskTok
 
 	// query the workflow
 	err := helper.WorkflowClient.RecordActivityHeartbeat(ctx, taskToken, details)
+	if err != nil {
+
+		// $debug(jack.burns)
+		helper.Logger.Error("failed to record activity heartbeat", zap.Error(err))
+		return err
+	}
+
+	// $debug(jack.burns)
+	helper.Logger.Debug("Successfully Recorded Activity Heartbeat")
+
+	return nil
+}
+
+// RecordActivityHeartbeatByID is an instance method that records heartbeat for an activity.
+//
+// param ctx context.Context -> the go context used to record a heartbeat for an activity
+//
+// param domain string -> the domain the activity to is running in
+//
+// param workflowID string -> the workflowID of the running workflow
+//
+// param runID string -> the runID of the running cadence workflow
+//
+// param activityID string -> the activityID of the executing activity
+//
+// param details ...interface{} -> optional activity heartbeat details
+//
+// returns error -> error upon failure to record activity heartbeat, nil upon success
+func (helper *ClientHelper) RecordActivityHeartbeatByID(ctx context.Context, domain, workflowID, runID, activityID string, details ...interface{}) error {
+
+	// query the workflow
+	err := helper.WorkflowClient.RecordActivityHeartbeatByID(ctx, domain, workflowID, runID, activityID, details)
 	if err != nil {
 
 		// $debug(jack.burns)
