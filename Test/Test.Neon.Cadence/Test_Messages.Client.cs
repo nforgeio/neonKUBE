@@ -1047,7 +1047,6 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<NewWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
-                Assert.False(message.IsWorkflow);
                 Assert.Null(message.Domain);
                 Assert.Null(message.TaskList);
                 Assert.Null(message.Options);
@@ -1056,8 +1055,6 @@ namespace TestCadence
 
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
-                message.IsWorkflow = true;
-                Assert.True(message.IsWorkflow);
                 message.Domain = "my-domain";
                 Assert.Equal("my-domain", message.Domain);
                 message.TaskList = "my-tasks";
@@ -1073,7 +1070,6 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<NewWorkerRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
@@ -1084,7 +1080,6 @@ namespace TestCadence
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
@@ -1095,7 +1090,6 @@ namespace TestCadence
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.True(message.IsWorkflow);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);

@@ -57,7 +57,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug(fmt.Sprintf("Echo message type %d", int(message.GetProxyMessage().Type)))
+	logger.Debug(fmt.Sprintf("Echo message type %s", message.GetProxyMessage().Type.String()))
 
 	// serialize the message
 	serializedMessageCopy, err := cloneForEcho(message)

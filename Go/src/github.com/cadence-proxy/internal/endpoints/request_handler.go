@@ -391,9 +391,15 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	// configure the ClientHelper
 	// setup the domain, service, and workflow clients
 	clientHelper = cadenceclient.NewClientHelper()
-	err := clientHelper.SetupCadenceClients(ctx, *request.GetEndpoints(), defaultDomain, &opts)
+	err := clientHelper.SetupCadenceClients(ctx,
+		*request.GetEndpoints(),
+		defaultDomain,
+		request.GetRetries(),
+		request.GetRetryDelay(),
+		&opts,
+	)
 	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection.Error()))
 
 		return reply
 	}
@@ -412,7 +418,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 		// $debug(jack.burns): DELETE THIS!
 		// THIS IS A PATCH, NEED TO COME BACK AND LOOK AT THIS
-		retention := int32(1)
+		retention := int32(365)
 		err = clientHelper.RegisterDomain(ctx, &cadenceshared.RegisterDomainRequest{Name: &defaultDomain, WorkflowExecutionRetentionPeriodInDays: &retention})
 		if err != nil {
 			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))

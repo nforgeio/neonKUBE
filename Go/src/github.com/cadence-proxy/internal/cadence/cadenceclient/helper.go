@@ -156,9 +156,15 @@ func (helper *ClientHelper) SetClientOptions(value *client.Options) {
 // param ctx context.Context -> go context to use to verify a connection
 // has been established to the cadence server
 //
+// param retries int32 -> number of time to retry establishing connection with
+// cadence server
+//
+// param retryDelay time.Duration -> the amount of time to wait between each
+// connection retry
+//
 // returns error -> error if there were any problems configuring
 // or building the service client
-func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
+func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int32, retryDelay time.Duration) error {
 
 	// exit if the service has already been setup
 	if helper.Service != nil {
@@ -175,8 +181,21 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 		SetDomain(helper.Config.domain)
 
 	// build the service client
-	service, err := helper.Builder.BuildServiceClient()
+	n := int(retries)
+	var err error
+	var service workflowserviceclient.Interface
+	for i := 0; i <= n; i++ {
+		service, err = helper.Builder.BuildServiceClient()
+		if err != nil {
+			time.Sleep(retryDelay)
+			continue
+		}
+		break
+	}
 	if err != nil {
+		defer func() {
+			helper = nil
+		}()
 		return err
 	}
 	helper.Service = service
@@ -199,12 +218,20 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 	defer close(connectChan)
 
 	// validate the connection
-	err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
+	for i := 0; i <= n; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retryDelay)
+		defer cancel()
+
+		err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
+		if err != nil {
+			continue
+		}
+		break
+	}
 	if err != nil {
 		defer func() {
 			helper = nil
 		}()
-
 		return err
 	}
 
@@ -233,18 +260,24 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 //
 // param domain string -> the default domain to configure the workflow client with
 //
+// param retries int32 -> number of time to retry establishing connection with
+// cadence server
+//
+// param retryDelay time.Duration -> the amount of time to wait between each
+// connection retry
+//
 // param opts *client.Options -> the client options for connection the the cadence
 // server instance
 //
 // returns error -> error if any errors are thrown while trying to establish a
 // connection, or nil upon success
-func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, domain string, opts *client.Options) error {
+func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, domain string, retries int32, retryDelay time.Duration, opts *client.Options) error {
 
 	// setup service config
 	helper.SetHostPort(endpoints)
 	helper.SetClientOptions(opts)
 	helper.SetDomain(domain)
-	if err := helper.SetupServiceConfig(ctx); err != nil {
+	if err := helper.SetupServiceConfig(ctx, retries, retryDelay); err != nil {
 		defer func() {
 			helper = nil
 		}()

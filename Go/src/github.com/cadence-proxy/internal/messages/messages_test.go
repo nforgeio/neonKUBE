@@ -259,9 +259,11 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetEndpoints())
 		s.Nil(v.GetIdentity())
-		s.Equal(time.Second*30, v.GetClientTimeout())
+		s.Equal(time.Duration(0), v.GetClientTimeout())
 		s.False(v.GetCreateDomain())
 		s.Nil(v.GetDomain())
+		s.Equal(time.Duration(0), v.GetRetryDelay())
+		s.Equal(int32(0), v.GetRetries())
 
 		// Round-trip
 
@@ -285,6 +287,12 @@ func (s *UnitTestSuite) TestConnectRequest() {
 
 		v.SetCreateDomain(true)
 		s.True(v.GetCreateDomain())
+
+		v.SetRetries(int32(3))
+		s.Equal(int32(3), v.GetRetries())
+
+		v.SetRetryDelay(time.Second * 30)
+		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -302,6 +310,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal(time.Second*30, v.GetClientTimeout())
 		s.Equal("my-domain", *v.GetDomain())
 		s.True(v.GetCreateDomain())
+		s.Equal(int32(3), v.GetRetries())
+		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -315,6 +325,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal(time.Second*30, v.GetClientTimeout())
 		s.Equal("my-domain", *v.GetDomain())
 		s.True(v.GetCreateDomain())
+		s.Equal(int32(3), v.GetRetries())
+		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
 }
 

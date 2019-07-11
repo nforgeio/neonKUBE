@@ -91,6 +91,15 @@ namespace Neon.Cadence.Internal
             set => SetIntProperty(PropertyNames.RetentionDays, value);
         }
 
+        /// <summary>
+        /// Optional security token.
+        /// </summary>
+        public string SecurityToken
+        {
+            get => GetStringProperty(PropertyNames.SecurityToken);
+            set => SetStringProperty(PropertyNames.SecurityToken, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -113,6 +122,7 @@ namespace Neon.Cadence.Internal
             typedTarget.OwnerEmail    = this.OwnerEmail;
             typedTarget.EmitMetrics   = this.EmitMetrics;
             typedTarget.RetentionDays = this.RetentionDays;
+            typedTarget.SecurityToken = this.SecurityToken;
         }
     }
 }
