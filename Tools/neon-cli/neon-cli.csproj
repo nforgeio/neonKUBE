@@ -48,11 +48,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="3.0.0-preview6.19303.8" />
+    <PackageReference Include="Microsoft.Windows.Compatibility" Version="2.1.1" />
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageReference Include="System.Security.Principal.Windows" Version="4.6.0-preview6.19303.8" />
+    <PackageReference Include="System.Security.Principal.Windows" Version="4.6.0-preview3.19128.7" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="YamlDotNet" Version="6.1.1" />
   </ItemGroup>
