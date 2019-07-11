@@ -82,20 +82,16 @@ namespace Neon.Web
 
         /// <summary>
         /// Adds the services from an <see cref="IServiceContainer"/> to the <see cref="IServiceCollection"/>.
-        /// This is commonly used when configuring services for an ASP.NET application pipeline.  This also
-        /// calls <c>IMvcBuilder.AddNewtonsoftJson()</c> by default to enable JSON serialization using the
-        /// same settings as returned by <see cref="NeonHelper.JsonRelaxedSerializerSettings"/>.  The method
+        /// This is commonly used when configuring services for an ASP.NET application pipeline.  The method
         /// also enables response compression by default.
         /// </summary>
         /// <param name="builder">The target <see cref="IMvcBuilder"/>.</param>
         /// <param name="source">The service source container or <c>null</c> to copy from <see cref="NeonHelper.ServiceContainer"/>.</param>
-        /// <param name="disableNewtonsoft">Optionally disable adding Newtonsoft JSON support.</param>
         /// <param name="disableResponseCompression">Optionally disable response compression.</param>
         /// <returns>The <paramref name="builder"/>.</returns>
         public static IMvcBuilder AddNeon(
             IMvcBuilder         builder, 
             IServiceContainer   source = null,
-            bool                disableNewtonsoft = false, 
             bool                disableResponseCompression = false)
         {
             Covenant.Requires<ArgumentNullException>(builder != null);
@@ -105,11 +101,6 @@ namespace Neon.Web
             foreach (var service in source)
             {
                 builder.Services.Add(service);
-            }
-
-            if (!disableNewtonsoft)
-            {
-                builder.AddNewtonsoftJson(options => NeonHelper.JsonRelaxedSerializerSettings.Value.CopyTo(options.SerializerSettings));
             }
 
             if (!disableResponseCompression)

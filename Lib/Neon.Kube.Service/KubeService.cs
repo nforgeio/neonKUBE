@@ -426,7 +426,7 @@ namespace Neon.Kube.Service
         /// </para>
         /// <note>
         /// This will throw a <see cref="InvalidOperationException"/> if the service
-        /// defines no endpoints or multiple endpoints.
+        /// defines no endpoints or has multiple endpoints.
         /// </note>
         /// </summary>
         /// <exception cref="InvalidOperationException">

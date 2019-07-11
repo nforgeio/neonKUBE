@@ -25,13 +25,9 @@ namespace Test.RestApi
         public void ConfigureServices(IServiceCollection services)
         {
 #if UPGRADE_NETCORE_PREVIEW_6
-            services
-                .AddControllers()
-                .AddNewtonsoftJson();
+            services.AddControllers();
 #else
-            services
-                .AddMvc()
-                .AddNewtonsoftJson();
+            services.AddMvc();
 #endif
         }
 
