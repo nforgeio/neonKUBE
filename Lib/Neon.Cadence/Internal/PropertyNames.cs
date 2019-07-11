@@ -99,7 +99,6 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 SignalArgs { get; private set; }                                = new PropertyNameUtf8("SignalArgs");
         public static PropertyNameUtf8 SignalName { get; private set; }                                = new PropertyNameUtf8("SignalName");
         public static PropertyNameUtf8 Size { get; private set; }                                      = new PropertyNameUtf8("Size");
-        public static PropertyNameUtf8 SecurityToken { get; private set; }                             = new PropertyNameUtf8("SecurityToken");
         public static PropertyNameUtf8 TargetRequestId { get; private set; }                           = new PropertyNameUtf8("TargetRequestId");
         public static PropertyNameUtf8 TaskList { get; private set; }                                  = new PropertyNameUtf8("TaskList");
         public static PropertyNameUtf8 TaskToken { get; private set; }                                 = new PropertyNameUtf8("TaskToken");
@@ -115,7 +114,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 WorkflowId { get; private set; }                                = new PropertyNameUtf8("WorkflowId");
         public static PropertyNameUtf8 WorkflowType { get; private set; }                              = new PropertyNameUtf8("WorkflowType");
 
-        // These properties are use for unit testing:
+        // These properties are used for unit testing:
 
         public static PropertyNameUtf8 TestOne { get; private set; }                                   = new PropertyNameUtf8("TestOne");
         public static PropertyNameUtf8 TestTwo { get; private set; }                                   = new PropertyNameUtf8("TestTwo");
