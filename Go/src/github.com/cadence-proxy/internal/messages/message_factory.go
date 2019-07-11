@@ -63,6 +63,12 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.DomainUpdateRequest:
 		message = NewDomainUpdateRequest()
 
+	// DomainDeprecate
+	case messagetypes.DomainDeprecateReply:
+		message = NewDomainDeprecateReply()
+	case messagetypes.DomainDeprecateRequest:
+		message = NewDomainDeprecateRequest()
+
 	// Heartbeat
 	case messagetypes.HeartbeatReply:
 		message = NewHeartbeatReply()
