@@ -543,22 +543,24 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	}
 
 	// DomainUpdateRequest.Configuration
-	configuration := new(cadenceshared.DomainConfiguration)
 	configurationEmitMetrics := request.GetConfigurationEmitMetrics()
 	configurationRetentionDays := request.GetConfigurationRetentionDays()
-	configuration.EmitMetric = &configurationEmitMetrics
-	configuration.WorkflowExecutionRetentionPeriodInDays = &configurationRetentionDays
+	configuration := cadenceshared.DomainConfiguration{
+		EmitMetric:                             &configurationEmitMetrics,
+		WorkflowExecutionRetentionPeriodInDays: &configurationRetentionDays,
+	}
 
 	// DomainUpdateRequest.UpdatedInfo
-	updatedInfo := new(cadenceshared.UpdateDomainInfo)
-	updatedInfo.Description = request.GetUpdatedInfoDescription()
-	updatedInfo.OwnerEmail = request.GetUpdatedInfoOwnerEmail()
+	updatedInfo := cadenceshared.UpdateDomainInfo{
+		Description: request.GetUpdatedInfoDescription(),
+		OwnerEmail:  request.GetUpdatedInfoOwnerEmail(),
+	}
 
 	// DomainUpdateRequest
 	domainUpdateRequest := cadenceshared.UpdateDomainRequest{
 		Name:          &domain,
-		Configuration: configuration,
-		UpdatedInfo:   updatedInfo,
+		Configuration: &configuration,
+		UpdatedInfo:   &updatedInfo,
 	}
 
 	// create context with timeout
@@ -1241,7 +1243,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	defer cancel()
 
 	// DescribeWorkflow call to cadence client
-	describeWorkflowExecutionResponse, err := clientHelper.DescribeWorkflowExecution(ctx,
+	dwer, err := clientHelper.DescribeWorkflowExecution(ctx,
 		workflowID,
 		runID,
 	)
@@ -1252,7 +1254,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	}
 
 	// build reply
-	buildReply(reply, nil, describeWorkflowExecutionResponse)
+	buildReply(reply, nil, dwer)
 
 	return reply
 }
@@ -2695,6 +2697,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		if opts.ScheduleToCloseTimeout <= 0 {
 			opts.ScheduleToCloseTimeout = cadenceClientTimeout
 		}
+
 	} else {
 		opts = workflow.LocalActivityOptions{
 			ScheduleToCloseTimeout: cadenceClientTimeout,
@@ -2708,9 +2711,12 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	var result []byte
 	if err := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args).Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
-	} else {
-		buildReply(reply, nil, result)
+
+		return reply
 	}
+
+	// build reply
+	buildReply(reply, nil, result)
 
 	return reply
 }

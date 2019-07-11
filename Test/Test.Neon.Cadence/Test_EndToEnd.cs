@@ -1367,7 +1367,7 @@ namespace TestCadence
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
             await client.RegisterWorkflowAsync<GetPropertiesWorkflow>();
 
-            using (await client.StartWorkerAsync("test-domain"))
+            using (await client.StartWorkerAsync("test-domain", "non-default"))
             {
                 var workflowRun = await client.StartWorkflowAsync<GetPropertiesWorkflow>(args: null, domain: "test-domain", taskList: "non-default", options: new WorkflowOptions() { WorkflowId = "my-workflow-nondefault" });
                 var result      = await client.GetWorkflowResultAsync(workflowRun);
