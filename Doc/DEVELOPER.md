@@ -156,26 +156,24 @@ Follow the steps below to configure a development or test workstation:
 
 24. *Optional*: Install **GitHib Extension for Visual Studio from: [here](https://visualstudio.github.com/)
 
-25. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+25. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-26. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-27. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
-
-28. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
+27. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
 
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Confgure this to run as administrator.
   * Run Cmdr and configure settings.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-29. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-30. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
+29. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
 
-31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
 ## Git Branches
 
