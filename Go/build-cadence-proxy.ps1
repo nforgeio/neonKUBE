@@ -88,7 +88,7 @@ neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\c
 #---------------------------------------------------------------------
 # $todo(jeff.lill): Remove this after we complete the Java-style port:
 
-$neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence2\Resources"
+$neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence3\Resources"
 neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"
 neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"
 neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz"

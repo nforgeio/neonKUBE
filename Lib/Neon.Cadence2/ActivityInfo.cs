@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds informaation about an executing activity.
+    /// Holds information about an executing activity.
     /// </summary>
     public class ActivityInfo
     {

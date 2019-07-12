@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds informaation about an executing activity.  This maps directly to the
+    /// Holds information about an executing activity.  This maps directly to the
     /// GOLANG client's <b>ActivityInfo</b> structure.
     /// </summary>
     internal class InternalActivityInfo

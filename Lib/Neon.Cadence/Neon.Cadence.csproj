@@ -5,8 +5,8 @@
     <RootNamespace>Neon.Cadence</RootNamespace>
     <Version>0.5.4-alpha</Version>
     <Company>neonFORGE, LLC</Company>
-    <Authors>Jeff Lill</Authors>
-    <Description>neonKUBE client for Uber Cadence.</Description>
+    <Authors>Jeff Lill, John C Burns</Authors>
+    <Description>.NET client for Uber Cadence.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
