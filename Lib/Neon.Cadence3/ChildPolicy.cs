@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConfig.cs
+// FILE:	    ChildPolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,34 +26,38 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Describes a workflow's configuration.
+    /// Enumerates the possible child workflow behaviors when the parent
+    /// workflow is terminated.
     /// </summary>
-    public class WorkflowConfig
+    public enum ChildPolicy
     {
-        /// <summary>
-        /// Identifies the task list where the workflow was scheduled.
-        /// </summary>
-        public string TaskList { get; internal set; }
+        // WARNING: These definitions must match those defined for [InternalChildPolicy].
 
         /// <summary>
-        /// 
+        /// <para>
+        /// All open child workflows will be terminated when parent workflow is terminated.
+        /// </para>
+        /// <note>
+        /// This policy is not implemented.
+        /// </note>
         /// </summary>
-        public TaskListKind TaskListKind { get; internal set; }
+        Terminate = 0,
 
         /// <summary>
-        /// Maximum time the entire workflow may take to complete end-to-end.
+        /// <para>
+        /// Cancel requests will be sent to all open child workflows to all open child 
+        /// workflows when parent workflow is terminated.
+        /// </para>
+        /// <note>
+        /// This policy is not implemented.
+        /// </note>
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
+        RequestCancel = 1,
 
         /// <summary>
-        /// Maximum time a workflow task/decision may take to complete.
+        /// Child workflow execution will continue unaffected when parent workflow is
+        /// terminated.  This is the default policy.
         /// </summary>
-        public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
-
-        /// <summary>
-        /// The termination policy to apply to the child workflow when
-        /// the parent workflow is terminated.
-        /// </summary>
-        public ChildPolicy ChildPolicy { get; internal set; }
+        Abandon = 2
     }
 }

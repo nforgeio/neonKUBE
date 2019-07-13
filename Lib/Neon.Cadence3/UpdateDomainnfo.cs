@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConfig.cs
+// FILE:	    UpdateDomainInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,34 +26,18 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Describes a workflow's configuration.
+    /// Holds the changes to be made to a Cadence domain's basic properties.
     /// </summary>
-    public class WorkflowConfig
+    public class UpdateDomainInfo
     {
         /// <summary>
-        /// Identifies the task list where the workflow was scheduled.
+        /// The updated domain description.
         /// </summary>
-        public string TaskList { get; internal set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// 
+        /// The updated domain owner's email address.
         /// </summary>
-        public TaskListKind TaskListKind { get; internal set; }
-
-        /// <summary>
-        /// Maximum time the entire workflow may take to complete end-to-end.
-        /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
-
-        /// <summary>
-        /// Maximum time a workflow task/decision may take to complete.
-        /// </summary>
-        public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
-
-        /// <summary>
-        /// The termination policy to apply to the child workflow when
-        /// the parent workflow is terminated.
-        /// </summary>
-        public ChildPolicy ChildPolicy { get; internal set; }
+        public string OwnerEmail { get; set; }
     }
 }

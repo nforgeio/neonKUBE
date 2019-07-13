@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalChildTerminationPolicy.cs
+// FILE:	    UpdateDomainRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,41 +23,26 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Enumerates the possible child workflow behaviors 
-    /// when the parent workflow is terminated.
+    /// Holds the changes to be made to a Cadence domain.
     /// </summary>
-    public enum InternalChildTerminationPolicy
+    public class UpdateDomainRequest
     {
-        // WARNING: These definitions must match those defined for [ChildTerminationPolicy].
+        /// <summary>
+        /// The domain name.
+        /// </summary>
+        public string Name { get; set; }
 
         /// <summary>
-        /// <para>
-        /// All open child workflows will be terminated when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// The updated basic domain properties.
         /// </summary>
-        TERMINATE = 0,
+        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
 
         /// <summary>
-        /// <para>
-        /// Cancel requests will be sent to all open child workflows to all open child 
-        /// workflows when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// The updated domain options.
         /// </summary>
-        REQUEST_CANCEL = 1,
-
-        /// <summary>
-        /// Child workflow execution will continue unaffected when parent workflow is
-        /// terminated.  This is the default policy.
-        /// </summary>
-        ABANDON = 2
+        public DomainOptions Options { get; set; } = new DomainOptions();
     }
 }

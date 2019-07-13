@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ChildTerminationPolicy.cs
+// FILE:	    DomainDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,38 +26,18 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the possible child workflow behaviors when the parent
-    /// workflow is terminated.
+    /// Information returned by <see cref="CadenceClient.DescribeDomainAsync(string)"/>.
     /// </summary>
-    public enum ChildTerminationPolicy
+    public class DomainDescription
     {
-        // WARNING: These definitions must match those defined for [InternalChildTerminationPolicy].
+        /// <summary>
+        /// The domain information.
+        /// </summary>
+        public DomainInfo DomainInfo { get; set; }
 
         /// <summary>
-        /// <para>
-        /// All open child workflows will be terminated when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// The domain configuration.
         /// </summary>
-        Terminate = 0,
-
-        /// <summary>
-        /// <para>
-        /// Cancel requests will be sent to all open child workflows to all open child 
-        /// workflows when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
-        /// </summary>
-        RequestCancel = 1,
-
-        /// <summary>
-        /// Child workflow execution will continue unaffected when parent workflow is
-        /// terminated.  This is the default policy.
-        /// </summary>
-        Abandon = 2
+        public DomainOptions Configuration { get; set; }
     }
 }
