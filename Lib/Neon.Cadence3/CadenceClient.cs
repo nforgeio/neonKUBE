@@ -98,10 +98,8 @@ namespace Neon.Cadence
     /// <para>
     /// Cadence workers are started to indicate that the current process can execute workflows
     /// and activities from a Cadence domain, and optionally a task list (discussed further below).
-    /// You'll call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> to start
-    /// a workflow worker and  <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
-    /// for an activity worker.  These calls indicate to Cadence that it can begin scheduling
-    /// workflow and activity executions from the current client.
+    /// You'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> to indicate
+    /// that Cadence can begin scheduling workflow and activity executions from the current client.
     /// </para>
     /// <para>
     /// Worflows are implemented by deriving a class from <see cref="WorkflowBase"/> and activities
@@ -117,7 +115,7 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// For situations where you have a lot of workflow and activity classes, it can become
-    /// combersome to register each implementation class individually (generally because you
+    /// cumbersome to register each implementation class individually (generally because you
     /// forget to register new classes after they've been implemented).  To assist with this,
     /// you can also tag your workflow and activity classes with <see cref="AutoRegisterAttribute"/>
     /// and then call <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
@@ -127,11 +125,9 @@ namespace Neon.Cadence
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
     /// the current process implements specific workflow and activity types.  You'll call
-    /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> for
-    /// workflows and <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
-    /// for activities, passing your custom implementations of <see cref="WorkflowBase"/> and <see cref="ActivityBase"/>
-    /// as the type parameter.  The <b>Neon.Cadence</b> will then automatically handle the instantiation
-    /// of your workflow or activity types and call their <see cref="WorkflowBase.RunAsync(byte[])"/>
+    /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
+    /// Cadence domain and tasklist the worker will listen on as well as whether activities,
+    /// workflows, or both are to be processed.
     /// </para>
     /// <para>
     /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> 
@@ -204,7 +200,7 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// To take advantage of this, you'll need to obtain the opaque activity identifier from
-    /// <see cref="ActivityBase.Info"/> via its <see cref="ActivityInfo.TaskToken"/> property.
+    /// <see cref="ActivityBase.ActivityTask"/> via its <see cref="ActivityInfo.TaskToken"/> property.
     /// This is a byte array including enough information for Cadence to identify the specific
     /// activity.  Your activity should start the external action, passing the task token and
     /// then call <see cref="ActivityBase.CompleteExternallyAsync()"/> which will thrown a
@@ -247,12 +243,12 @@ namespace Neon.Cadence
     /// (because there's no point in wasting any expensive GPU machine resources on the workflow).
     /// </para>
     /// <para>
-    /// This scenario can addressed by having the applications running on the regular machines
-    /// call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> and those
-    /// running on the GPU servers call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
+    /// This scenario can addressed by having the application running on the regular machines
+    /// call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
+    /// and the application running on the GPU servers call this with with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c>.
     /// Both could specify the domain as <b>"render"</b> and leave task list as <b>"default"</b>.
     /// With this setup, workflows will be scheduled on the regular machines and activities
-    /// on the GPU machines, accomplishing our simple goal.
+    /// on the GPU machines.
     /// </para>
     /// <para>
     /// Now imagine a more complex scenario where we need to render two movies on the cluster at 
@@ -261,14 +257,14 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// We'd start by defining a task list for each movie: <b>"movie1"</b> and <b>movie2</b> and
-    /// then call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> twice on
-    /// the regular machines, once for each task list.  This will schedule workflows for each movie
+    /// then call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
+    /// twice on the regular machines, once for each task list.  This will schedule workflows for each movie
     /// on these machines (this is OK for this scenario because the workflow won't consume many
-    /// resources).  Then on 2/3s of the GPU machines, we'll call <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
-    /// with the <b>"movie1"</b> task list and the remaining one third of the GPU machines with
-    /// <b>""movie2</b> as the task list.  Then we'll start the rendering workflow for the first
-    /// movie specifying <b>"movie1"</b> as the task list and again for the second movie specifying 
-    /// <b>"movie2"</b>.
+    /// resources).  Then on 2/3s of the GPU machines, we'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> 
+    /// with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c> with the <b>"movie1"</b>
+    /// task list and the remaining one third of the GPU machines <b>""movie2</b> as the task list. 
+    /// Then we'll start the rendering workflow for the first movie specifying <b>"movie1"</b> as the
+    /// task list and again for the second movie specifying <b>"movie2"</b>.
     /// </para>
     /// <para>
     /// The two movie workflows will be scheduled on the regular machines and these will each
@@ -277,8 +273,8 @@ namespace Neon.Cadence
     /// on the appropriate GPU servers.
     /// </para>
     /// <para>
-    /// This was just one example.  Domains and task lists can be combined in different ways
-    /// to manage where workflows and activities execute.
+    /// These are just a couple examples.  Domains, task lists, and worker options can be combined
+    /// in different ways to manage where workflows and activities will be scheduled for execution.
     /// </para>
     /// </remarks>
     public partial class CadenceClient

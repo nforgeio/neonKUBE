@@ -20,6 +20,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Runtime.Serialization;
+using System.Text;
+
+using Newtonsoft.Json.Linq;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -50,7 +53,7 @@ namespace Neon.Cadence
 
             if (type.Implements<IRoundtripData>())
             {
-                return 
+                return (T)RoundtripDataFactory.CreateFrom(type, content);
             }
             else
             {
@@ -65,13 +68,52 @@ namespace Neon.Cadence
             Contract.Requires<ArgumentNullException>(content.Length > 0);
             Contract.Requires<ArgumentNullException>(valueTypes != null);
 
-            throw new NotImplementedException();
+            var jToken = JToken.Parse(Encoding.UTF8.GetString(content));
+
+            if (jToken.Type != JTokenType.Array)
+            {
+                throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].");
+            }
+
+            var jArray = (JArray)jToken;
+
+            if (jArray.Count != valueTypes.Length)
+            {
+                throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{valueTypes.Length}].");
+            }
+
+            var output = new object[valueTypes.Length];
+
+            for (int i = 0; i < valueTypes.Length; i++)
+            {
+                var type = valueTypes[i];
+
+                if (type.Implements<IRoundtripData>())
+                {
+                    output[i] = RoundtripDataFactory.CreateFrom(type, content);
+                }
+                else
+                {
+                    output[i] = NeonHelper.JsonDeserialize(type, content, strict: false);
+                }
+            }
+
+            return output;
         }
 
         /// <inheritdoc/>
         public byte[] ToData(object value)
         {
-            return NeonHelper.JsonSerializeToBytes(value);
+            var roundtripData = value as IRoundtripData;
+
+            if (roundtripData != null)
+            {
+                return roundtripData.ToBytes();
+            }
+            else
+            {
+                return NeonHelper.JsonSerializeToBytes(value);
+            }
         }
     }
 }

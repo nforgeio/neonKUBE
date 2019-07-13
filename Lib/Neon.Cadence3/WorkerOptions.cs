@@ -125,14 +125,42 @@ namespace Neon.Cadence
         public bool EnableLoggingInReplay { get; set; } = false;
 
         /// <summary>
-        /// Optionally disable running workflow workers.  This defaults to <c>false</c>.
+        /// Optionally disable workflow processing on the worker.  This defaults to <c>false</c>.
         /// </summary>
         public bool DisableWorkflowWorker { get; set; } = false;
 
         /// <summary>
-        /// Optionally disable running activity workers.  This defaults to <c>false</c>.
+        /// Optionally disable activity processing on the worker.  This defaults to <c>false</c>.
         /// </summary>
         public bool DisableActivityWorker { get; set; } = false;
+
+        /// <summary>
+        /// Returns the worker mode.
+        /// </summary>
+        internal WorkerMode Mode
+        {
+            get
+            {
+                if (DisableActivityWorker && DisableWorkflowWorker)
+                {
+                    throw new InvalidOperationException("A Cadence worker cannot disable both activity and workflow processing.");
+                }
+                else if (!DisableActivityWorker && !DisableWorkflowWorker)
+                {
+                    return WorkerMode.Both;
+                }
+                else if (!DisableActivityWorker)
+                {
+                    return WorkerMode.Activity;
+                }
+                else if (!DisableWorkflowWorker)
+                {
+                    return WorkerMode.Workflow;
+                }
+
+                throw new NotImplementedException();
+            }
+        }
 
         /// <summary>
         /// Optionally disables sticky execution.  This defaults to <c>false</c>.
