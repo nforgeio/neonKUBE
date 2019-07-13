@@ -47,7 +47,7 @@ namespace Neon.Data
         private static bool                             persistablesInitialzed;
 
         /// <summary>
-        /// Error message used when <see cref="object.GetHashCode()"/> is called on
+        /// The error message used when <see cref="object.GetHashCode()"/> is called on
         /// a generated data model that has bo properties tagged with [HashSource].
         /// </summary>
         public const string NoHashPropertiesError = "At least one data model property must be tagged by [HashSourceAttribute].";

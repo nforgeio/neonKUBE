@@ -169,7 +169,7 @@ namespace Neon.Cadence.Internal
                 TaskList                     = this.TaskList,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
-                ChildPolicy                  = (int)this.ChildTerminationPolicy,
+                ChildPolicy                  = (int)this.ChildPolicy,
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy?.ToInternal(),
