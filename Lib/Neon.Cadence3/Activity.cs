@@ -131,7 +131,7 @@ namespace Neon.Cadence
     /// will work properly.
     /// </note>
     /// </remarks>
-    public abstract class Activity : INeonLogger
+    public abstract class Activity : IActivity, INeonLogger
     {
         //---------------------------------------------------------------------
         // Private types

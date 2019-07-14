@@ -214,7 +214,7 @@ namespace Neon.Cadence
     ///     methods.  Signals are identified by a string name and may include a byte
     ///     array payload.  Workflows receive signals by implementing a receive method
     ///     accepting a byte array payload parameter and tagging the method with a
-    ///     <see cref="SignalHandlerAttribute"/> specifying the signal name, like:
+    ///     <see cref="SignalMethodAttribute"/> specifying the signal name, like:
     ///     </para>
     ///     <code language="c#">
     ///     [SignalHandler("my-signal")]
@@ -235,7 +235,7 @@ namespace Neon.Cadence
     ///     as a byte array and return a result encoded as a byte array or <c>null</c>.
     ///     Workflows receive queries by implementing a receive method accepting the
     ///     query arguments as a byte array that returns the byte array result.  You'll
-    ///     need to tag this with a <see cref="QueryHandlerAttribute"/> specifying the
+    ///     need to tag this with a <see cref="QueryMethodAttribute"/> specifying the
     ///     query name, like:
     ///     </para>
     ///     <code language="c#">
@@ -441,7 +441,7 @@ namespace Neon.Cadence
     /// recorded in the history or <b>2</b> if <b>ActivityC</b> was called.
     /// </para>
     /// </remarks>
-    public abstract class Workflow : INeonLogger
+    public abstract class Workflow : IWorkflow, INeonLogger
     {
         //---------------------------------------------------------------------
         // Private types

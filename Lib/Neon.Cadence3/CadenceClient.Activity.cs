@@ -87,7 +87,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
-        /// derived from <see cref="Workflow"/> or <see cref="Activity"/>.
+        /// derived from <see cref="Activity"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceActivityWorkerStartedException">
