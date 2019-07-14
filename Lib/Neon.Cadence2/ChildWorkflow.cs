@@ -27,9 +27,10 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Returned by <see cref="WorkflowBase.StartChildWorkflowAsync(string, byte[], Internal.ChildWorkflowOptions, CancellationToken)"/>
-    /// to identify the new child workflow.  This valie can then be used to perform
-    /// operations on the workflow like: <see cref="WorkflowBase.SignalChildWorkflowAsync(ChildWorkflow, string, byte[])"/>,
-    /// <see cref="WorkflowBase.CancelChildWorkflowAsync(ChildWorkflow)"/> and <see cref="WorkflowBase.WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken)"/>.
+    /// to identify the new child workflow.  This can then be used to perform operations on the
+    /// workflow like: <see cref="WorkflowBase.SignalChildWorkflowAsync(ChildWorkflow, string, byte[])"/>,
+    /// <see cref="WorkflowBase.CancelChildWorkflowAsync(ChildWorkflow)"/> and 
+    /// <see cref="WorkflowBase.WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken)"/>.
     /// </summary>
     public struct ChildWorkflow
     {

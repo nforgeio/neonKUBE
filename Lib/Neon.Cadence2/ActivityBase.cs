@@ -297,7 +297,7 @@ namespace Neon.Cadence
         /// <param name="activityType">The activity type.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create( CadenceClient client, Type activityType,long? contextId)
+        internal static ActivityBase Create(CadenceClient client, Type activityType,long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
 

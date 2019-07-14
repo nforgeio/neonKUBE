@@ -37,7 +37,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers a workflow implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived type implementing the workflow.</typeparam>
+        /// <typeparam name="TWorkflow">The <see cref="Workflow"/> derived type implementing the workflow.</typeparam>
         /// <param name="workflowTypeName">
         /// Optionally specifies a custom workflow type name that will be used 
         /// for identifying the workflow implementation in Cadence.  This defaults
@@ -55,7 +55,7 @@ namespace Neon.Cadence
         /// </note>
         /// </remarks>
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null)
-            where TWorkflow : WorkflowBase
+            where TWorkflow : Workflow
         {
             if (string.IsNullOrEmpty(workflowTypeName))
             {
@@ -67,7 +67,7 @@ namespace Neon.Cadence
                 throw new CadenceWorkflowWorkerStartedException();
             }
 
-            if (!WorkflowBase.Register(this, typeof(TWorkflow), workflowTypeName))
+            if (!Workflow.Register(this, typeof(TWorkflow), workflowTypeName))
             {
                 var reply = (WorkflowRegisterReply)await CallProxyAsync(
                     new WorkflowRegisterRequest()
@@ -81,14 +81,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="WorkflowBase"/> and tagged with <see cref="AutoRegisterAttribute"/>
+        /// <see cref="Workflow"/> and tagged with <see cref="AutoRegisterAttribute"/>
         /// and registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
-        /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
+        /// derived from <see cref="Workflow"/> or <see cref="Activity"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceWorkflowWorkerStartedException">
@@ -115,11 +115,11 @@ namespace Neon.Cadence
 
                 if (autoRegisterAttribute != null)
                 {
-                    if (type.IsSubclassOf(typeof(WorkflowBase)))
+                    if (type.IsSubclassOf(typeof(Workflow)))
                     {
                         var workflowTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
 
-                        if (!WorkflowBase.Register(this, type, workflowTypeName))
+                        if (!Workflow.Register(this, type, workflowTypeName))
                         {
                             var reply = (WorkflowRegisterReply)await CallProxyAsync(
                                 new WorkflowRegisterRequest()
@@ -130,13 +130,13 @@ namespace Neon.Cadence
                             reply.ThrowOnError();
                         }
                     }
-                    else if (type.IsSubclassOf(typeof(ActivityBase)))
+                    else if (type.IsSubclassOf(typeof(Activity)))
                     {
                         // Ignore these here.
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(Workflow)}].");
                     }
                 }
             }
@@ -161,7 +161,7 @@ namespace Neon.Cadence
         /// complete.
         /// </remarks>
         public async Task<WorkflowExecution> StartWorkflowAsync<TWorkflow>(byte[] args = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
-            where TWorkflow : WorkflowBase
+            where TWorkflow : Workflow
         {
             return await StartWorkflowAsync(typeof(TWorkflow).FullName, args, taskList, options);
         }
@@ -340,7 +340,7 @@ namespace Neon.Cadence
         /// complete.
         /// </remarks>
         public async Task<byte[]> CallWorkflowAsync<TWorkflow>(byte[] args = null, string domain = null, string taskList = DefaultTaskList, WorkflowOptions options = null)
-            where TWorkflow : WorkflowBase
+            where TWorkflow : Workflow
         {
             return await CallWorkflowAsync(typeof(TWorkflow).FullName, args, domain ?? Settings.DefaultDomain, taskList, options);
         }

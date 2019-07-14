@@ -127,21 +127,21 @@ namespace Neon.Cadence.Internal
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>value1-value2</b></term>
+        ///     <term><b>first-last</b></term>
         ///     <description>
-        ///     Matches a range of values to be matched (inclusive).
+        ///     Matches a range of integer values (inclusive).
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>value1,value2,...</b></term>
         ///     <description>
-        ///     Matches a list of values to be matched.
+        ///     Matches a list of integer values.
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>value1/value2</b></term>
+        ///     <term><b>first/step</b></term>
         ///     <description>
-        ///     Matches values starting at <b>value1</b> and then those incremented by <b>value2</b>.
+        ///     Matches values starting at <b>first</b> and then succeeding incremented by <b>step</b>.
         ///     </description>
         /// </item>
         /// </list>

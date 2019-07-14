@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityBase.cs
+// FILE:	    Activity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -51,7 +51,7 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// Activities are very easy to implement, simply derive your custom
-    /// activity type from <see cref="ActivityBase"/> and then implement a
+    /// activity type from <see cref="Activity"/> and then implement a
     /// <see cref="RunAsync(byte[])"/> method with your custom code.
     /// This accepts a byte array with your custom activity arguments 
     /// as a parameter and returns a byte array as your activity result.
@@ -60,8 +60,8 @@ namespace Neon.Cadence
     /// methods.
     /// </para>
     /// <para>
-    /// Unlike the <see cref="WorkflowBase.RunAsync(byte[])"/> method, the 
-    /// <see cref="ActivityBase.RunAsync(byte[])"/> method implementations has
+    /// Unlike the <see cref="Workflow.RunAsync(byte[])"/> method, the 
+    /// <see cref="Activity.RunAsync(byte[])"/> method implementations has
     /// few limitations.  This method can use threads, can reference global
     /// state like time, environment variables and perform non-itempotent 
     /// operations like generating random numbers, UUIDs, etc.
@@ -84,13 +84,13 @@ namespace Neon.Cadence
     /// Cadence supports two kinds of activities: <b>normal</b> and <b>local</b>.
     /// <b>normal</b> activities are registered via <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string)"/>
     /// and are scheduled by the Cadence cluster to be executed on workers.  Workflows
-    /// invoke theses using <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>.
+    /// invoke theses using <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>.
     /// </para>
     /// <para>
     /// <b>local</b> activities simply run on the local worker without needing to
     /// be registered or scheduled by the Cadence cluster.  These are very low overhead
     /// and intended for for simple short running activities (a few seconds).
-    /// Workflows invoke local activities using <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>.
+    /// Workflows invoke local activities using <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>.
     /// <b>Local activities do not support heartbeats.</b>
     /// </para>
     /// <note>
@@ -116,10 +116,10 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// To take advantage of this, you'll need to obtain the opaque activity identifier from
-    /// <see cref="ActivityBase.ActivityTask"/> via its <see cref="ActivityTask.TaskToken"/> property.
+    /// <see cref="Activity.ActivityTask"/> via its <see cref="ActivityTask.TaskToken"/> property.
     /// This is a byte array including enough information for Cadence to identify the specific
     /// activity.  Your activity should start the external action, passing the task token and
-    /// then call <see cref="ActivityBase.CompleteExternallyAsync()"/> which will thrown a
+    /// then call <see cref="Activity.CompleteExternallyAsync()"/> which will thrown a
     /// <see cref="CadenceActivityExternalCompletionException"/> that will exit the activity 
     /// and then be handled internally by informing Cadence that the activity will continue
     /// running.
@@ -127,11 +127,11 @@ namespace Neon.Cadence
     /// <note>
     /// You should not depend on the structure or contents of the task token since this
     /// may change for future Cadence releases and you must allow the <see cref="CadenceActivityExternalCompletionException"/>
-    /// to be caught by the calling <see cref="CadenceClient"/> so <see cref="ActivityBase.CompleteExternallyAsync()"/>
+    /// to be caught by the calling <see cref="CadenceClient"/> so <see cref="Activity.CompleteExternallyAsync()"/>
     /// will work properly.
     /// </note>
     /// </remarks>
-    public abstract class ActivityBase : INeonLogger
+    public abstract class Activity : INeonLogger
     {
         //---------------------------------------------------------------------
         // Private types
@@ -191,12 +191,12 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                   syncLock            = new object();
-        private static INeonLogger                              log                 = LogManager.Default.GetLogger<ActivityBase>();
-        private static Type[]                                   noTypeArgs          = new Type[0];
-        private static object[]                                 noArgs              = new object[0];
-        private static Dictionary<ActivityKey, ActivityBase>    idToActivity        = new Dictionary<ActivityKey, ActivityBase>();
-        private static Dictionary<Type, ConstructorInfo>        typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
+        private static object                               syncLock            = new object();
+        private static INeonLogger                          log                 = LogManager.Default.GetLogger<Activity>();
+        private static Type[]                               noTypeArgs          = new Type[0];
+        private static object[]                             noArgs              = new object[0];
+        private static Dictionary<ActivityKey, Activity>    idToActivity        = new Dictionary<ActivityKey, Activity>();
+        private static Dictionary<Type, ConstructorInfo>    typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
 
         // This dictionary is used to map activity type names to the target activity
         // type.  Note that these mappings are scoped to specific cadence client
@@ -236,8 +236,8 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(ActivityBase)), $"Type [{activityType.FullName}] does not derive from [{nameof(ActivityBase)}].");
-            Covenant.Requires<ArgumentException>(activityType != typeof(ActivityBase), $"The base [{nameof(ActivityBase)}] class cannot be registered.");
+            Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(Activity)), $"Type [{activityType.FullName}] does not derive from [{nameof(Activity)}].");
+            Covenant.Requires<ArgumentException>(activityType != typeof(Activity), $"The base [{nameof(Activity)}] class cannot be registered.");
 
             activityTypeName = GetActivityTypeKey(client, activityTypeName);
 
@@ -297,7 +297,7 @@ namespace Neon.Cadence
         /// <param name="activityType">The activity type.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create( CadenceClient client, Type activityType,long? contextId)
+        internal static Activity Create( CadenceClient client, Type activityType,long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
 
@@ -318,7 +318,7 @@ namespace Neon.Cadence
                 }
             }
 
-            var activity = (ActivityBase)constructor.Invoke(noArgs);
+            var activity = (Activity)constructor.Invoke(noArgs);
 
             activity.Initialize(client, contextId);
 
@@ -332,7 +332,7 @@ namespace Neon.Cadence
         /// <param name="activityTypeName">The activity type name.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(CadenceClient client, string activityTypeName, long? contextId)
+        internal static Activity Create(CadenceClient client, string activityTypeName, long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(activityTypeName != null);
             Covenant.Requires<ArgumentNullException>(client != null);
@@ -347,7 +347,7 @@ namespace Neon.Cadence
                 }
             }
 
-            var activity = (ActivityBase)constructInfo.Constructor.Invoke(noArgs);
+            var activity = (Activity)constructInfo.Constructor.Invoke(noArgs);
 
             activity.Initialize(client, contextId);
 
@@ -464,7 +464,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityBase()
+        public Activity()
         {
         }
 
@@ -704,7 +704,7 @@ namespace Neon.Cadence
         /// <remarks>
         /// <para>
         /// This method works by throwing an <see cref="CadenceActivityExternalCompletionException"/> which
-        /// will be caught and handled by the base <see cref="ActivityBase"/> class.  You'll need to allow
+        /// will be caught and handled by the base <see cref="Activity"/> class.  You'll need to allow
         /// this exception to exit your <see cref="RunAsync(byte[])"/> method for this to work.
         /// </para>
         /// <note>
