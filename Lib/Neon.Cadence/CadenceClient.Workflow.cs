@@ -573,7 +573,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the current maximum maximum number of bytes of history that 
+        /// Returns the current maximum number of bytes of history that 
         /// will be retained for sticky workflows for workflow workers created 
         /// by this client as a performance optimization.
         /// </summary>

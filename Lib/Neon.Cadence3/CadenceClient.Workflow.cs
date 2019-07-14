@@ -144,14 +144,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Sets the maximum number of workflows for which of history will be 
-        /// retained for sticky workflows for workflow workers created by this client
-        /// as a performance optimization.  When this is exceeded, Cadence will
-        /// may need to retrieve the entire workflow history from the Cadence cluster
-        /// when a workflow is scheduled on the client's workers.
+        /// Sets the maximum number of sticky workflows for which of history will be 
+        /// retained for workflow workers created by this client as a performance 
+        /// optimization.  When this is exceeded, Cadence will may need to retrieve 
+        /// the entire workflow history from the Cadence cluster when a workflow is 
+        /// scheduled on the client's workers.
         /// </para>
         /// <para>
-        /// This defaults to <b>10K</b> workflows.
+        /// This defaults to <b>10K</b> sticky workflows.
         /// </para>
         /// </summary>
         /// <param name="maxCacheSize">The maximum number of workflows to be cached.</param>
@@ -172,8 +172,8 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the current maximum maximum number of workflows for which history
-        /// will be retained for sticky workflows as a performance optimization.
+        /// Returns the current maximum number of sticky workflows for which history
+        /// will be retained as a performance optimization.
         /// </summary>
         /// <returns>The maximum number of cached workflows.</returns>
         public async Task<int> GetStickyWorkflowCacheSizeAsync()
