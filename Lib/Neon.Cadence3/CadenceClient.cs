@@ -606,7 +606,7 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            await client.SetWorkflowCacheSizeAsync(10000);
+            await client.SetStickyWorkflowCacheSizeAsync(10000);
 
             return client;
         }
