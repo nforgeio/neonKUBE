@@ -80,7 +80,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for activity implementations derived from
-        /// <see cref="Activity"/> and tagged with <see cref="AutoRegisterAttribute"/>
+        /// <see cref="Activity"/> and tagged by <see cref="AutoRegisterAttribute"/>
         /// and registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>

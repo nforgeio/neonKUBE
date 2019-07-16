@@ -75,6 +75,12 @@ namespace Neon.Cadence
     /// for registering workflows and activities types as well as the workers that
     /// indicate that workflows and activities can be executed in the current process.
     /// </para>
+    /// <note>
+    /// <b>IMPORTANT:</b> The current .NET Cadence client release supports having one
+    /// client open at a time.  A <see cref="NotSupportedException"/> will be thrown
+    /// when attempting to connect a second client.  This restriction may be relaxed
+    /// for future releases.
+    /// </note>
     /// <para>
     /// You'll implement your workflows and activities by implementing classes that
     /// derive from <see cref="Workflow"/> and <see cref="Activity"/> and then
@@ -451,11 +457,12 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly object      staticSyncLock = new object();
-        private static readonly Assembly    thisAssembly   = Assembly.GetExecutingAssembly();
-        private static readonly INeonLogger log            = LogManager.Default.GetLogger<CadenceClient>();
-        private static bool                 proxyWritten   = false;
-        private static long                 nextClientId   = 0;
+        private static readonly object      staticSyncLock  = new object();
+        private static readonly Assembly    thisAssembly    = Assembly.GetExecutingAssembly();
+        private static readonly INeonLogger log             = LogManager.Default.GetLogger<CadenceClient>();
+        private static bool                 proxyWritten    = false;
+        private static long                 nextClientId    = 0;
+        private static bool                 clientConnected = false;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -598,17 +605,45 @@ namespace Neon.Cadence
         /// <note>
         /// The <see cref="CadenceSettings"/> passed must specify a <see cref="CadenceSettings.DefaultDomain"/>.
         /// </note>
+        /// <note>
+        /// <b>IMPORTANT:</b> The current .NET Cadence client release supports having one
+        /// client open at a time.  A <see cref="NotSupportedException"/> will be thrown
+        /// when attempting to connect a second client.  This restriction may be relaxed
+        /// for future releases.
+        /// </note>
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
 
-            var client = new CadenceClient(settings);
+            lock (staticSyncLock)
+            {
+                if (clientConnected)
+                {
+                    throw new NotSupportedException($"Only a single [{nameof(CadenceClient)}] may be connected at a time for the current release.");
+                }
 
-            await client.SetStickyWorkflowCacheSizeAsync(10000);
+                clientConnected = true;
+            }
 
-            return client;
+            try
+            {
+                var client = new CadenceClient(settings);
+
+                await client.SetStickyWorkflowCacheSizeAsync(10000);
+
+                return client;
+            }
+            catch
+            {
+                lock (staticSyncLock)
+                {
+                    clientConnected = false;
+                }
+
+                throw;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -860,7 +895,7 @@ namespace Neon.Cadence
                     // Signal the proxy that it should exit gracefully and then
                     // allow it [Settings.TerminateTimeout] to actually exit
                     // before killing it.
-       
+
                     try
                     {
                         CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
@@ -881,6 +916,13 @@ namespace Neon.Cadence
                 catch
                 {
                     // Ignoring this.
+                }
+                finally
+                {
+                    lock (staticSyncLock)
+                    {
+                        clientConnected = false;
+                    }
                 }
             }
 

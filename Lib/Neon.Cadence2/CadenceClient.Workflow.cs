@@ -83,7 +83,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="Workflow"/> and tagged with <see cref="AutoRegisterAttribute"/>
+        /// <see cref="Workflow"/> and tagged by <see cref="AutoRegisterAttribute"/>
         /// and registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
