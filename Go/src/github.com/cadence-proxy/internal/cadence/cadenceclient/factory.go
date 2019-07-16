@@ -24,6 +24,7 @@ import (
 	"github.com/uber-go/tally"
 
 	"github.com/google/uuid"
+
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/client"
 	"go.uber.org/yarpc"
