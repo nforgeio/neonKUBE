@@ -52,15 +52,6 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Indicates whether we're starting a workflow or an activity worker.
-        /// </summary>
-        public bool IsWorkflow
-        {
-            get => GetBoolProperty(PropertyNames.IsWorkflow);
-            set => SetBoolProperty(PropertyNames.IsWorkflow, value);
-        }
-
-        /// <summary>
         /// The domain hosting the Cadence workflow.
         /// </summary>
         public string Domain
@@ -104,11 +95,10 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (NewWorkerRequest)target;
 
-            typedTarget.Name       = this.Name;
-            typedTarget.IsWorkflow = this.IsWorkflow;
-            typedTarget.Domain     = this.Domain;
-            typedTarget.TaskList   = this.TaskList;
-            typedTarget.Options    = this.Options;
+            typedTarget.Name     = this.Name;
+            typedTarget.Domain   = this.Domain;
+            typedTarget.TaskList = this.TaskList;
+            typedTarget.Options  = this.Options;
         }
     }
 }

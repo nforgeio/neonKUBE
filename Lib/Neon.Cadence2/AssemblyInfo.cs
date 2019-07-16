@@ -20,4 +20,4 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Neon.Xunit.Cadence")]
-[assembly: InternalsVisibleTo("Test.Neon.Cadence")]
+[assembly: InternalsVisibleTo("Test.Neon.Cadence2")]

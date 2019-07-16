@@ -32,6 +32,11 @@ namespace Neon.Cadence
     internal enum WorkerMode
     {
         /// <summary>
+        /// THe worker mode has not been specified.
+        /// </summary>
+        Unspecified = 0,
+
+        /// <summary>
         /// The worker processes activities.
         /// </summary>
         Activity,

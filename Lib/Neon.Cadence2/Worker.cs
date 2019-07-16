@@ -85,7 +85,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Identifies whether the worker will process activities, workflows, or both.
         /// </summary>
-        internal WorkerMode Mode { get; private set;}
+        internal WorkerMode Mode { get; private set; }
 
         /// <summary>
         /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.

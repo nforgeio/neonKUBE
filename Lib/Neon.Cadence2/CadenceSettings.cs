@@ -43,15 +43,6 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Specifies the connection mode.  User applications should use
-        /// the default: <see cref="ConnectionMode.Normal"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "mode", ApplyNamingConventions = false)]
-        [DefaultValue(ConnectionMode.Normal)]
-        public ConnectionMode Mode { get; set; } = ConnectionMode.Normal;
-
-        /// <summary>
         /// One or more Couchbase server URIs.
         /// </summary>
         /// <remarks>

@@ -278,7 +278,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowContextRequest()
+        public void Test_WorkflowRequest()
         {
             // Ensures that we can serialize and deserialize workflow request messages.
 
@@ -319,7 +319,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Test_WorkflowContextReply()
+        public void Test_WorkflowReply()
         {
             // Ensures that we can serialize and deserialize workflow reply messages.
 
@@ -340,15 +340,18 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Equal(0, message.ContextId);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.ContextId = 666;
+                message.ReplayStatus = InternalReplayStatus.Replaying;
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ContextId);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes(ignoreTypeCode: true));
@@ -359,6 +362,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ContextId);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
     }

@@ -109,12 +109,6 @@ namespace Neon.Cadence
         public double WorkerDecisionTasksPerSecond { get; set; } = 1000;
 
         /// <summary>
-        /// Optionally indicates that the activities need auto heart beating
-        /// by the framework.  This defaults to <c>false</c>.
-        /// </summary>
-        public bool AutoHeartBeat { get; set; } = false;
-
-        /// <summary>
         /// Optionally sets an identify that can be used to track this host for debugging.
         /// This defaults to include the hostname, groupName and process ID.
         /// </summary>
@@ -131,14 +125,42 @@ namespace Neon.Cadence
         public bool EnableLoggingInReplay { get; set; } = false;
 
         /// <summary>
-        /// Optionally disable running workflow workers.  This defaults to <c>false</c>.
+        /// Optionally disable workflow processing on the worker.  This defaults to <c>false</c>.
         /// </summary>
         public bool DisableWorkflowWorker { get; set; } = false;
 
         /// <summary>
-        /// Optionally disable running activity workers.  This defaults to <c>false</c>.
+        /// Optionally disable activity processing on the worker.  This defaults to <c>false</c>.
         /// </summary>
         public bool DisableActivityWorker { get; set; } = false;
+
+        /// <summary>
+        /// Returns the worker mode.
+        /// </summary>
+        internal WorkerMode Mode
+        {
+            get
+            {
+                if (DisableActivityWorker && DisableWorkflowWorker)
+                {
+                    throw new InvalidOperationException("A Cadence worker cannot disable both activity and workflow processing.");
+                }
+                else if (!DisableActivityWorker && !DisableWorkflowWorker)
+                {
+                    return WorkerMode.Both;
+                }
+                else if (!DisableActivityWorker)
+                {
+                    return WorkerMode.Activity;
+                }
+                else if (!DisableWorkflowWorker)
+                {
+                    return WorkerMode.Workflow;
+                }
+
+                throw new NotImplementedException();
+            }
+        }
 
         /// <summary>
         /// Optionally disables sticky execution.  This defaults to <c>false</c>.
@@ -168,6 +190,14 @@ namespace Neon.Cadence
         public TimeSpan WorkerStopTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
+        /// Optionally sets the <see cref="IDataConverter"/> implementation used to manage
+        /// serialization of paramaters and results for workflow and activity methods so they
+        /// can be persisted to the Cadence cluster database.  This defaults to a <see cref="JsonConverter"/>
+        /// instance which will serialize data as UTF-8 encoded JSON text.
+        /// </summary>
+        public IDataConverter DataConverter { get; set; } = new JsonConverter();
+
+        /// <summary>
         /// Converts the instance into an <see cref="InternalWorkerOptions"/>.
         /// </summary>
         /// <returns>The converted instance.</returns>
@@ -182,7 +212,7 @@ namespace Neon.Cadence
                 TaskListActivitiesPerSecond              = this.TaskListActivitiesPerSecond,
                 MaxConcurrentDecisionTaskExecutionSize   = this.MaxConcurrentDecisionTaskExecutionSize,
                 WorkerDecisionTasksPerSecond             = this.WorkerDecisionTasksPerSecond,
-                AutoHeartBeat                            = this.AutoHeartBeat,
+                AutoHeartBeat                            = false,
                 Identity                                 = this.Identity,
                 EnableLoggingInReplay                    = this.EnableLoggingInReplay,
                 DisableWorkflowWorker                    = this.DisableWorkflowWorker,

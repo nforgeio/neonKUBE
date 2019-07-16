@@ -59,6 +59,15 @@ namespace Neon.Cadence.Internal
             set => SetBytesProperty(PropertyNames.SignalArgs, value);
         }
 
+        /// <summary>
+        /// Indicates the current workflow replay state.
+        /// </summary>
+        public InternalReplayStatus ReplayStatus
+        {
+            get => GetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus);
+            set => SetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -76,8 +85,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowSignalInvokeRequest)target;
 
-            typedTarget.SignalName = this.SignalName;
-            typedTarget.SignalArgs = this.SignalArgs;
+            typedTarget.SignalName   = this.SignalName;
+            typedTarget.SignalArgs   = this.SignalArgs;
+            typedTarget.ReplayStatus = this.ReplayStatus;
         }
     }
 }

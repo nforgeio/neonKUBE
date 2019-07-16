@@ -70,7 +70,7 @@ namespace Neon.Cadence
         /// <summary>
         /// The status for a closed workflow.
         /// </summary>
-        public WorkflowCloseStatus WorkflowCloseStatus { get; internal set; }
+        public WorkflowExecutionCloseStatus WorkflowCloseStatus { get; internal set; }
 
         /// <summary>
         /// Workflow history length.
@@ -96,16 +96,5 @@ namespace Neon.Cadence
         /// Optional workflow metadata.
         /// </summary>
         public Dictionary<string, byte[]> Memo { get; internal set; }
-
-        /// <summary>
-        /// <para>
-        /// Not sure what is for.
-        /// </para>
-        /// <note>
-        /// I'm making this <c>internal</c> for now until we decide it makes sense
-        /// to expose this to .NET workflow applications.
-        /// </note>
-        /// </summary>
-        internal List<WorkflowResetPoint> AutoResetPoints { get; set; }
     }
 }

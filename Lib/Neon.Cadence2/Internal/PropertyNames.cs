@@ -94,6 +94,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 RetentionDays { get; private set; }                             = new PropertyNameUtf8("RetentionDays");
         public static PropertyNameUtf8 RetryAttempts { get; private set; }                             = new PropertyNameUtf8("RetryAttempts");
         public static PropertyNameUtf8 RetryDelay { get; private set; }                                = new PropertyNameUtf8("RetryDelay");
+        public static PropertyNameUtf8 ReplayStatus { get; private set; }                              = new PropertyNameUtf8("ReplayStatus");
         public static PropertyNameUtf8 RunId { get; private set; }                                     = new PropertyNameUtf8("RunId");
         public static PropertyNameUtf8 SecurityToken { get; private set; }                             = new PropertyNameUtf8("SecurityToken");
         public static PropertyNameUtf8 SignalArgs { get; private set; }                                = new PropertyNameUtf8("SignalArgs");

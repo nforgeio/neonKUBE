@@ -64,7 +64,6 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Mode  = ConnectionMode.ListenOnly,
                 Debug = true,
 
                 //--------------------------------
