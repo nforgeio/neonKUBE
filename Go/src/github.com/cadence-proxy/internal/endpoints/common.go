@@ -27,13 +27,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
-
 	"go.uber.org/zap"
 
 	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceactivities"
 	"github.com/cadence-proxy/internal/cadence/cadenceclient"
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkers"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"

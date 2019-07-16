@@ -43,7 +43,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	statusCode, err := checkRequestValidity(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
-		panic(err)
+		return
 	}
 
 	// read and deserialize the body
@@ -52,6 +52,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// make channel for writing a response to the sender
@@ -68,6 +69,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// write the response header to 200 OK
