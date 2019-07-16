@@ -52,7 +52,6 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		panic(err)
 	}
 
 	// make channel for writing a response to the sender
@@ -69,7 +68,6 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 
 		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		panic(err)
 	}
 
 	// write the response header to 200 OK
@@ -131,6 +129,5 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Error Handling ProxyMessage", zap.Error(err))
-		panic(err)
 	}
 }

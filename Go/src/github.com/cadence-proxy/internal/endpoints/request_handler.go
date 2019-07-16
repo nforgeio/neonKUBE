@@ -49,8 +49,28 @@ import (
 func handleIProxyRequest(request messages.IProxyRequest) error {
 
 	// create a context for every request
+	// defer panic recovery
+	var err error
+	var reply messages.IProxyReply
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	defer func() {
+		defer cancel()
+		if r := recover(); r != nil {
+			reply = createReplyMessage(request)
+			buildReply(reply, cadenceerrors.NewCadenceError(
+				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d", request.GetType().String(), request.GetRequestID()),
+				cadenceerrors.Panic),
+			)
+
+			// send the reply
+			var resp *http.Response
+			resp, err = putToNeonCadenceClient(reply)
+			err = resp.Body.Close()
+			if err != nil {
+				logger.Error("could not close response body", zap.Error(err))
+			}
+		}
+	}()
 
 	// look for IsCancelled
 	if request.GetIsCancellable() {
@@ -60,7 +80,6 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 
 	// handle the messages individually
 	// based on their message type
-	var reply messages.IProxyReply
 	switch request.GetType() {
 
 	// -------------------------------------------------------------------------
@@ -330,26 +349,27 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 		// $debug(jack.burns): DELETE THIS!
 		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
 		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
-
-		return err
+		reply = messages.NewProxyReply()
+		reply.SetRequestID(request.GetRequestID())
+		reply.SetError(cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Custom))
 	}
 
-	// send the reply as an http.Request back to the
-	// Neon.Cadence Library via http.PUT
-	resp, err := putToNeonCadenceClient(reply)
-	if err != nil {
-		return err
-	}
-	defer func() {
+	// // send the reply as an http.Request back to the
+	// // Neon.Cadence Library via http.PUT
+	// resp, err := putToNeonCadenceClient(reply)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer func() {
 
-		// $debug(jack.burns): DELETE THIS!
-		err := resp.Body.Close()
-		if err != nil {
-			logger.Error("could not close response body", zap.Error(err))
-		}
-	}()
+	// 	// $debug(jack.burns): DELETE THIS!
+	// 	err = resp.Body.Close()
+	// 	if err != nil {
+	// 		logger.Error("could not close response body", zap.Error(err))
+	// 	}
+	// }()
 
-	return nil
+	return err
 }
 
 // -------------------------------------------------------------------------
@@ -358,11 +378,30 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 func handleCancelRequest(requestCtx context.Context, request *messages.CancelRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("CancelRequest Received", zap.Int("ProccessId", os.Getpid()))
+	targetID := request.GetTargetRequestID()
+	logger.Debug("CancelRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("TargetId", targetID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
+	// try and cancel the operation
+	var wasCancelled bool
+	var err *cadenceerrors.CadenceError
+	if cancellable := Cancellables.Get(targetID); cancellable != nil {
+		cancel := cancellable.GetCancelFunction()
+		cancel()
+		wasCancelled = true
+	} else {
+		err = cadenceerrors.NewCadenceError(
+			fmt.Sprintf("could not cancel target operation with RequestID %d", targetID),
+			cadenceerrors.Custom,
+		)
+	}
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
-	buildReply(reply, nil, true)
+	buildReply(reply, err, wasCancelled)
 
 	return reply
 }
@@ -384,14 +423,10 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		Identity: *request.GetIdentity(),
 	}
 
-	// create context to configure clientHelper with
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	// configure the ClientHelper
 	// setup the domain, service, and workflow clients
 	clientHelper = cadenceclient.NewClientHelper()
-	err := clientHelper.SetupCadenceClients(ctx,
+	err := clientHelper.SetupCadenceClients(requestCtx,
 		*request.GetEndpoints(),
 		defaultDomain,
 		request.GetRetries(),
@@ -411,7 +446,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	// and check if we need to register the default
 	// domain
 	if request.GetCreateDomain() {
-		ctx, cancel = context.WithTimeout(ctx, cadenceClientTimeout)
+		ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 		defer cancel()
 
 		// register the domain
@@ -455,7 +490,7 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 	}
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// send a describe domain request to the cadence server
@@ -564,7 +599,7 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	}
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// Update the domain using the UpdateDomainRequest
@@ -905,7 +940,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// check for options
@@ -972,13 +1007,14 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 	}
 
 	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// cancel the specified workflow
 	err := clientHelper.CancelWorkflow(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -1016,13 +1052,14 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 	}
 
 	// create the context to terminate the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// terminate the specified workflow
 	err := clientHelper.TerminateWorkflow(ctx,
 		*request.GetWorkflowID(),
 		*request.GetRunID(),
+		*request.GetDomain(),
 		*request.GetReason(),
 		request.GetDetails(),
 	)
@@ -1062,12 +1099,13 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
 	workflowExecution, err := clientHelper.SignalWithStartWorkflow(ctx,
 		workflowID,
+		*request.GetDomain(),
 		*request.GetSignalName(),
 		request.GetSignalArgs(),
 		*request.GetOptions(),
@@ -1238,14 +1276,15 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 		return reply
 	}
 
-	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	// create the context
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// DescribeWorkflow call to cadence client
 	dwer, err := clientHelper.DescribeWorkflowExecution(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -1278,14 +1317,15 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
-	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	// create the context
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// call GetWorkflow
 	workflowRun, err := clientHelper.GetWorkflow(ctx,
 		*request.GetWorkflowID(),
 		*request.GetRunID(),
+		*request.GetDomain(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -1471,13 +1511,14 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 	}
 
 	// create the context to signal the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// signal the specified workflow
 	err := clientHelper.SignalWorkflow(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 		*request.GetSignalName(),
 		request.GetSignalArgs(),
 	)
@@ -2069,13 +2110,14 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// query the workflow via the cadence client
 	value, err := clientHelper.QueryWorkflow(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 		*request.GetQueryName(),
 		request.GetQueryArgs(),
 	)
@@ -2368,7 +2410,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 
 	// create the new context and a []byte to
 	// drop the heartbeat details into
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// build the reply
@@ -2399,7 +2441,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	// create the new context and a []byte to
 	// drop the heartbeat details into
 	var details []byte
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// get the activity heartbeat details
@@ -2444,7 +2486,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		if activityID == nil {
 			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
 		} else {
-			ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+			ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 			defer cancel()
 
 			err = clientHelper.RecordActivityHeartbeatByID(ctx,
@@ -2459,12 +2501,13 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	} else {
 
 		// create the new context
-		ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+		ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 		defer cancel()
 
 		// record the heartbeat details
 		err = clientHelper.RecordActivityHeartbeat(ctx,
 			request.GetTaskToken(),
+			*request.GetDomain(),
 			details,
 		)
 	}
@@ -2538,7 +2581,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// check the task token
@@ -2558,6 +2601,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	} else {
 		err = clientHelper.CompleteActivity(ctx,
 			taskToken,
+			*request.GetDomain(),
 			request.GetResult(),
 			request.GetError(),
 		)

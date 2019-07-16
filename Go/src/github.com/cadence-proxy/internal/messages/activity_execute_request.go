@@ -116,6 +116,24 @@ func (request *ActivityExecuteRequest) SetOptions(value *workflow.ActivityOption
 	request.SetJSONProperty("Options", value)
 }
 
+// GetDomain gets a ActivityExecuteRequest's Domain value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a ActivityExecuteRequest's Domain
+func (request *ActivityExecuteRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a ActivityExecuteRequest's Domain value
+// in its properties map.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *ActivityExecuteRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -135,5 +153,6 @@ func (request *ActivityExecuteRequest) CopyTo(target IProxyMessage) {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
 		v.SetActivity(request.GetActivity())
+		v.SetDomain(request.GetDomain())
 	}
 }

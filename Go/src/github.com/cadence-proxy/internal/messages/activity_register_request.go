@@ -69,6 +69,24 @@ func (request *ActivityRegisterRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
+// GetDomain gets a ActivityRegisterRequest's Domain value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a ActivityRegisterRequest's Domain
+func (request *ActivityRegisterRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a ActivityRegisterRequest's Domain value
+// in its properties map.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *ActivityRegisterRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -86,5 +104,6 @@ func (request *ActivityRegisterRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityRegisterRequest); ok {
 		v.SetName(request.GetName())
+		v.SetDomain(request.GetDomain())
 	}
 }
