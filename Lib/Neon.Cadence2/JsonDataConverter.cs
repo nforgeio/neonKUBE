@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    JsonConverter.cs
+// FILE:	    JsonDataConverter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,13 +41,13 @@ namespace Neon.Cadence
     /// it easier to manage data schema changes. 
     /// </note>
     /// </summary>
-    public class JsonConverter : IDataConverter
+    public class JsonDataConverter : IDataConverter
     {
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)
         {
-            Contract.Requires<ArgumentNullException>(content != null);
-            Contract.Requires<ArgumentNullException>(content.Length > 0);
+            Covenant.Requires<ArgumentNullException>(content != null);
+            Covenant.Requires<ArgumentNullException>(content.Length > 0);
 
             var type = typeof(T);
 
@@ -64,9 +64,9 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public object[] FromDataArray(byte[] content, params Type[] valueTypes)
         {
-            Contract.Requires<ArgumentNullException>(content != null);
-            Contract.Requires<ArgumentNullException>(content.Length > 0);
-            Contract.Requires<ArgumentNullException>(valueTypes != null);
+            Covenant.Requires<ArgumentNullException>(content != null);
+            Covenant.Requires<ArgumentNullException>(content.Length > 0);
+            Covenant.Requires<ArgumentNullException>(valueTypes != null);
 
             var jToken = JToken.Parse(Encoding.UTF8.GetString(content));
 
@@ -87,14 +87,41 @@ namespace Neon.Cadence
             for (int i = 0; i < valueTypes.Length; i++)
             {
                 var type = valueTypes[i];
+                var item = jArray[i];
 
                 if (type.Implements<IRoundtripData>())
                 {
-                    output[i] = RoundtripDataFactory.CreateFrom(type, content);
+                    switch (item.Type)
+                    {
+                        case JTokenType.Null:
+
+                            output[i] = null;
+                            break;
+
+                        case JTokenType.Object:
+
+                            output[i] = RoundtripDataFactory.CreateFrom(type, (JObject)item);
+                            break;
+
+                        default:
+
+                            throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.");
+                    }
                 }
                 else
                 {
-                    output[i] = NeonHelper.JsonDeserialize(type, content, strict: false);
+                    // $todo(jeff.lill):
+                    //
+                    // We're reserializing and then reparsing each data item here after
+                    // we just deserialized them above because [NeonHelper] doesn't
+                    // currently have a way to deserialize from a [JToken] while 
+                    // respecting the current [JsonSerializerSettings].
+                    //
+                    // This will add substantial overhead (more than double) for this
+                    // operation.  We should come back in the future and try to optimize
+                    // this.
+
+                    output[i] = NeonHelper.JsonDeserialize(type, item.ToString(Newtonsoft.Json.Formatting.None), strict: false);
                 }
             }
 

@@ -192,10 +192,10 @@ namespace Neon.Cadence
         /// <summary>
         /// Optionally sets the <see cref="IDataConverter"/> implementation used to manage
         /// serialization of paramaters and results for workflow and activity methods so they
-        /// can be persisted to the Cadence cluster database.  This defaults to a <see cref="JsonConverter"/>
+        /// can be persisted to the Cadence cluster database.  This defaults to a <see cref="JsonDataConverter"/>
         /// instance which will serialize data as UTF-8 encoded JSON text.
         /// </summary>
-        public IDataConverter DataConverter { get; set; } = new JsonConverter();
+        public IDataConverter DataConverter { get; set; } = new JsonDataConverter();
 
         /// <summary>
         /// Converts the instance into an <see cref="InternalWorkerOptions"/>.
