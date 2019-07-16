@@ -49,8 +49,33 @@ import (
 func handleIProxyRequest(request messages.IProxyRequest) error {
 
 	// create a context for every request
+	// defer panic recovery
+	var err error
+	var reply messages.IProxyReply
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	defer func() {
+		cancel()
+
+		// recover from panic
+		if r := recover(); r != nil {
+			reply = createReplyMessage(request)
+			buildReply(reply, cadenceerrors.NewCadenceError(
+				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d", request.GetType().String(), request.GetRequestID()),
+				cadenceerrors.Panic),
+			)
+		}
+
+		// send the reply
+		var resp *http.Response
+		resp, err = putToNeonCadenceClient(reply)
+		if err != nil {
+			return
+		}
+		err = resp.Body.Close()
+		if err != nil {
+			logger.Error("could not close response body", zap.Error(err))
+		}
+	}()
 
 	// look for IsCancelled
 	if request.GetIsCancellable() {
@@ -60,7 +85,6 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 
 	// handle the messages individually
 	// based on their message type
-	var reply messages.IProxyReply
 	switch request.GetType() {
 
 	// -------------------------------------------------------------------------
