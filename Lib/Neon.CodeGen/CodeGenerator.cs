@@ -1546,7 +1546,7 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// The backing <see cref=\"JObject\"/> used to hold the serialized data.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        protected JObject __JObject {{ get; set; }}");
+                        writer.WriteLine($"        public JObject __JObject {{ get; set; }}");
                     }
                 }
 
