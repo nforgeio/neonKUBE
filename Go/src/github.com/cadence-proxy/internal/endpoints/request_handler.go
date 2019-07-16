@@ -408,14 +408,10 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		Identity: *request.GetIdentity(),
 	}
 
-	// create context to configure clientHelper with
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	// configure the ClientHelper
 	// setup the domain, service, and workflow clients
 	clientHelper = cadenceclient.NewClientHelper()
-	err := clientHelper.SetupCadenceClients(ctx,
+	err := clientHelper.SetupCadenceClients(requestCtx,
 		*request.GetEndpoints(),
 		defaultDomain,
 		request.GetRetries(),
@@ -435,7 +431,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	// and check if we need to register the default
 	// domain
 	if request.GetCreateDomain() {
-		ctx, cancel = context.WithTimeout(ctx, cadenceClientTimeout)
+		ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 		defer cancel()
 
 		// register the domain
@@ -479,7 +475,7 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 	}
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// send a describe domain request to the cadence server
@@ -588,7 +584,7 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	}
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// Update the domain using the UpdateDomainRequest
@@ -929,7 +925,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// check for options
@@ -996,7 +992,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 	}
 
 	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// cancel the specified workflow
@@ -1040,7 +1036,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 	}
 
 	// create the context to terminate the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// terminate the specified workflow
@@ -1086,7 +1082,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// signalwithstart the specified workflow
@@ -1263,7 +1259,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	}
 
 	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// DescribeWorkflow call to cadence client
@@ -1303,7 +1299,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	}
 
 	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// call GetWorkflow
@@ -1495,7 +1491,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 	}
 
 	// create the context to signal the workflow
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// signal the specified workflow
@@ -2093,7 +2089,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// query the workflow via the cadence client
@@ -2392,7 +2388,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 
 	// create the new context and a []byte to
 	// drop the heartbeat details into
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// build the reply
@@ -2423,7 +2419,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	// create the new context and a []byte to
 	// drop the heartbeat details into
 	var details []byte
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// get the activity heartbeat details
@@ -2468,7 +2464,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		if activityID == nil {
 			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
 		} else {
-			ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+			ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 			defer cancel()
 
 			err = clientHelper.RecordActivityHeartbeatByID(ctx,
@@ -2483,7 +2479,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	} else {
 
 		// create the new context
-		ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+		ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 		defer cancel()
 
 		// record the heartbeat details
@@ -2562,7 +2558,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	}
 
 	// create the context
-	ctx, cancel := context.WithTimeout(context.Background(), cadenceClientTimeout)
+	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
 	// check the task token
