@@ -675,10 +675,9 @@ namespace Neon.Cadence
             var workerId = Interlocked.Increment(ref nextEmulatedWorkerId);
             var worker   = new EmulatedWorker()
             {
-                WorkerId   = workerId,
-                IsWorkflow = request.IsWorkflow,
-                Domain     = request.Domain,
-                TaskList   = request.TaskList
+                WorkerId = workerId,
+                Domain   = request.Domain,
+                TaskList = request.TaskList
             };
 
             using (await emulationMutex.AcquireAsync())

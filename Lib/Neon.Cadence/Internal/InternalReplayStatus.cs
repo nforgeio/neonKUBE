@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HeartbeatReply.cs
+// FILE:	    InternalReplayStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,6 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+
+using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -25,33 +28,28 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="HeartbeatRequest"/>.
+    /// Indicates a workflow's current replay status.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.HeartbeatReply)]
-    internal class HeartbeatReply : ProxyReply
+    internal enum InternalReplayStatus
     {
         /// <summary>
-        /// Default constructor.
+        /// Indicates that the corresponding operation cannot determine the replay
+        /// status (e.g. because the it didn't relate to an executing workflow).
+        /// This is the default value.
         /// </summary>
-        public HeartbeatReply()
-        {
-            Type = InternalMessageTypes.HeartbeatReply;
-        }
+        [EnumMember(Value = "Unspecified")]
+        Unspecified = 0,
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new HeartbeatReply();
+        /// <summary>
+        /// The related workflow is not replaying.
+        /// </summary>
+        [EnumMember(Value = "NotReplaying")]
+        NotReplaying,
 
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-        }
+        /// <summary>
+        /// The related workflow is replaying.
+        /// </summary>
+        [EnumMember(Value = "Replaying")]
+        Replaying
     }
 }

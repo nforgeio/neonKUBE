@@ -6,7 +6,7 @@
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>TestCadence2</RootNamespace>
-    <AssemblyName>Test.Neon.Cadence</AssemblyName>
+    <AssemblyName>Test.Neon.Cadence2</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

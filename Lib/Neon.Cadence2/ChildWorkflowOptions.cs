@@ -69,9 +69,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ChildTerminationPolicy.Abandon"/>.
+        /// This defaults to <see cref="ChildPolicy.Abandon"/>.
         /// </summary>
-        public ChildTerminationPolicy ChildTerminationPolicy { get; set; } = ChildTerminationPolicy.Abandon;
+        public ChildPolicy ChildPolicy { get; set; } = ChildPolicy.Abandon;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any
@@ -86,9 +86,9 @@ namespace Neon.Cadence.Internal
         public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
 
         /// <summary>
-        /// Optionally specifies a retry policy.
+        /// Optionally specifies retry options.
         /// </summary>
-        public CadenceRetryPolicy RetryPolicy { get; set; } = null;
+        public RetryOptions RetryPolicy { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
@@ -127,21 +127,21 @@ namespace Neon.Cadence.Internal
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>value1-value2</b></term>
+        ///     <term><b>first-last</b></term>
         ///     <description>
-        ///     Matches a range of values to be matched (inclusive).
+        ///     Matches a range of integer values (inclusive).
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>valiue1,value2,...</b></term>
+        ///     <term><b>value1,value2,...</b></term>
         ///     <description>
-        ///     Matches a list of values to be matched.
+        ///     Matches a list of integer values.
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>value1/value2</b></term>
+        ///     <term><b>first/step</b></term>
         ///     <description>
-        ///     Matches values starting at <b>value1</b> and then those incremented by <b>value2</b>.
+        ///     Matches values starting at <b>first</b> and then succeeding incremented by <b>step</b>.
         ///     </description>
         /// </item>
         /// </list>
@@ -169,7 +169,7 @@ namespace Neon.Cadence.Internal
                 TaskList                     = this.TaskList,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
-                ChildPolicy                  = (int)this.ChildTerminationPolicy,
+                ChildPolicy                  = (int)this.ChildPolicy,
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy?.ToInternal(),

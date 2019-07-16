@@ -326,6 +326,7 @@ namespace TestCadence
                 Assert.Null(message.WorkflowType);
                 Assert.Null(message.TaskList);
                 Assert.Equal(TimeSpan.Zero, message.ExecutionStartToCloseTimeout);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
@@ -338,6 +339,7 @@ namespace TestCadence
                 message.RunId = "my-runid";
                 message.WorkflowType = "my-workflowtype";
                 message.ExecutionStartToCloseTimeout = TimeSpan.FromDays(1);
+                message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("Foo", message.Name);
@@ -346,6 +348,7 @@ namespace TestCadence
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
                 Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -362,6 +365,7 @@ namespace TestCadence
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
                 Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -376,6 +380,7 @@ namespace TestCadence
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
                 Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -390,6 +395,7 @@ namespace TestCadence
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
                 Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
 
@@ -1780,15 +1786,18 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.SignalName);
                 Assert.Null(message.SignalArgs);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
+                message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1800,6 +1809,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -1809,6 +1819,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1818,6 +1829,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
 
@@ -3058,6 +3070,7 @@ namespace TestCadence
                 Assert.Equal(0, message.ContextId);
                 Assert.Null(message.QueryName);
                 Assert.Null(message.QueryArgs);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
@@ -3065,10 +3078,12 @@ namespace TestCadence
                 message.ContextId = 666;
                 message.QueryName = "my-query";
                 message.QueryArgs = new byte[] { 0, 1, 2, 3, 4 };
+                message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -3080,6 +3095,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -3089,6 +3105,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -3098,6 +3115,7 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
 

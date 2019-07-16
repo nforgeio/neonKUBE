@@ -1364,7 +1364,7 @@ namespace TestCadence
                     TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (InternalTaskListKind)TaskListKind.Sticky },
                     ExecutionStartToCloseTimeout   = 1000,
                     TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = InternalChildTerminationPolicy.REQUEST_CANCEL
+                    ChildPolicy                    = InternalChildPolicy.REQUEST_CANCEL
                 },
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
@@ -2456,7 +2456,7 @@ namespace TestCadence
                 {
                     TaskList                     = "my-tasklist",
                     Domain                       = "my-domain",
-                    ChildPolicy                  = (int)InternalChildTerminationPolicy.REQUEST_CANCEL,
+                    ChildPolicy                  = (int)InternalChildPolicy.REQUEST_CANCEL,
                     CronSchedule                 = "* 12 * * *",
                     WorkflowID                   = "my-workflow",
                     WaitForCancellation          = true,

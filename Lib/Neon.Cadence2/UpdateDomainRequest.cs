@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// <summary>
         /// The updated basic domain properties.
         /// </summary>
-        public DomainUpdateInfo DomainInfo { get; set; } = new DomainUpdateInfo();
+        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
 
         /// <summary>
         /// The updated domain options.

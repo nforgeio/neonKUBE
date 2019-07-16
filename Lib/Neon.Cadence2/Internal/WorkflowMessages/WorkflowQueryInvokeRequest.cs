@@ -59,6 +59,15 @@ namespace Neon.Cadence.Internal
             set => SetBytesProperty(PropertyNames.QueryArgs, value);
         }
 
+        /// <summary>
+        /// Indicates the current workflow replay state.
+        /// </summary>
+        public InternalReplayStatus ReplayStatus
+        {
+            get => GetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus);
+            set => SetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -76,8 +85,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowQueryInvokeRequest)target;
 
-            typedTarget.QueryName = this.QueryName;
-            typedTarget.QueryArgs = this.QueryArgs;
+            typedTarget.QueryName    = this.QueryName;
+            typedTarget.QueryArgs    = this.QueryArgs;
+            typedTarget.ReplayStatus = this.ReplayStatus;
         }
     }
 }

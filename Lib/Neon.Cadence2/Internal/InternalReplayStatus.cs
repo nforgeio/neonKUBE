@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ChildWorkflow.cs
+// FILE:	    InternalReplayStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,34 +18,38 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
+using System.Runtime.Serialization;
+
+using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Returned by <see cref="WorkflowBase.StartChildWorkflowAsync(string, byte[], Internal.ChildWorkflowOptions, CancellationToken)"/>
-    /// to identify the new child workflow.  This can then be used to perform operations on the
-    /// workflow like: <see cref="WorkflowBase.SignalChildWorkflowAsync(ChildWorkflow, string, byte[])"/>,
-    /// <see cref="WorkflowBase.CancelChildWorkflowAsync(ChildWorkflow)"/> and 
-    /// <see cref="WorkflowBase.WaitForChildWorkflowAsync(ChildWorkflow, CancellationToken)"/>.
+    /// Indicates a workflow's current replay status.
     /// </summary>
-    public struct ChildWorkflow
+    internal enum InternalReplayStatus
     {
         /// <summary>
-        /// Internal constructor.
+        /// Indicates that the corresponding operation cannot determine the replay
+        /// status (e.g. because the it didn't relate to an executing workflow).
+        /// This is the default value.
         /// </summary>
-        /// <param name="childId">The child workflow's local ID.</param>
-        internal ChildWorkflow(long childId)
-        {
-            this.Id = childId;
-        }
+        [EnumMember(Value = "Unspecified")]
+        Unspecified = 0,
 
         /// <summary>
-        /// Returns the child workflow's local ID.
+        /// The related workflow is not replaying.
         /// </summary>
-        internal long Id { get; private set; }
+        [EnumMember(Value = "NotReplaying")]
+        NotReplaying,
+
+        /// <summary>
+        /// The related workflow is replaying.
+        /// </summary>
+        [EnumMember(Value = "Replaying")]
+        Replaying
     }
 }
