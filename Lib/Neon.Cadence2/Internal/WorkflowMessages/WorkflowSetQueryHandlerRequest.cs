@@ -42,7 +42,7 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowSetQueryHandlerReply;
 
         /// <summary>
-        /// Identifies the workflow by ID.
+        /// Identifies the query.
         /// </summary>
         public string QueryName
         {

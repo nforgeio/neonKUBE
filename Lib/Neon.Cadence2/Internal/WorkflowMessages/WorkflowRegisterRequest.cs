@@ -50,6 +50,15 @@ namespace Neon.Cadence.Internal
             set => SetStringProperty(PropertyNames.Name, value);
         }
 
+        /// <summary>
+        /// Identifies the target workflow.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -67,7 +76,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowRegisterRequest)target;
 
-            typedTarget.Name = this.Name;
+            typedTarget.Name   = this.Name;
+            typedTarget.Domain = this.Domain;
         }
     }
 }

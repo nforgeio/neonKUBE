@@ -64,13 +64,17 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityRegisterRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Null(message.Domain);
 
                 // Round-trip
 
                 message.RequestId = 555;
-                message.Name = "Foo";
+                message.Name = "my-name";
+                message.Domain = "my-domain";
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-domain", message.Domain);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -79,21 +83,24 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<ActivityRegisterRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the connection's web server and verify.
 
                 message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-name", message.Name);
+                Assert.Equal("my-domain", message.Domain);
             }
         }
 

@@ -43,6 +43,7 @@ namespace Neon.Cadence
         /// for identifying the workflow implementation in Cadence.  This defaults
         /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
         /// </param>
+        /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if another workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
         /// <exception cref="CadenceWorkflowWorkerStartedException">
@@ -54,7 +55,7 @@ namespace Neon.Cadence
         /// Be sure to register all of your workflow implementations before starting a workflow worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null)
+        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
             where TWorkflow : Workflow
         {
             if (string.IsNullOrEmpty(workflowTypeName))
@@ -72,7 +73,8 @@ namespace Neon.Cadence
                 var reply = (WorkflowRegisterReply)await CallProxyAsync(
                     new WorkflowRegisterRequest()
                     {
-                        Name = workflowTypeName
+                        Name   = workflowTypeName,
+                        Domain = ResolveDomain(domain)
                     });
 
                 reply.ThrowOnError();

@@ -44,7 +44,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Identifies the workflow to be executed if the workflow instance
-        /// idntified by <see cref="WorkflowId"/> is nor currently running.
+        /// idntified by <see cref="WorkflowId"/> is not currently running.
         /// </summary>
         public string Workflow
         {

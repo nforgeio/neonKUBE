@@ -61,6 +61,15 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
         /// Identifies the signal.
         /// </summary>
         public string SignalName
@@ -97,6 +106,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
             typedTarget.SignalName = this.SignalName;
             typedTarget.SignalArgs = this.SignalArgs;
         }

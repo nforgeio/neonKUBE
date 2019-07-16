@@ -42,8 +42,14 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityRecordHeartbeatReply;
 
         /// <summary>
+        /// <para>
         /// Overrides the <see cref="ActivityRequest.ContextId"/> message property when
         /// non-null, indicating that the activity heartbeat is being sent externally.
+        /// </para>
+        /// <note>
+        /// Only one of <see cref="TaskToken"/> or <see cref="Domain"/> may be non-null
+        /// within a given message.
+        /// </note>
         /// </summary>
         public byte[] TaskToken
         {
@@ -52,8 +58,16 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The target domain.
+        /// <para>
+        /// Overrides the <see cref="ActivityRequest.ContextId"/> message property when
+        /// non-null, indicating that the activity heartbeat is being sent externally.
+        /// </para>
         /// </summary>
+        /// <note>
+        /// Only one of <see cref="TaskToken"/> or <see cref="Domain"/> may be non-null
+        /// within a given message.  The <see cref="WorkflowId"/> and <see cref="RunId"/>
+        /// will be valid only when <see cref="Domain"/> is non-null.
+        /// </note>
         public string Domain
         {
             get => GetStringProperty(PropertyNames.Domain);
@@ -61,7 +75,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// <para>
         /// The target workflow ID.
+        /// </para>
+        /// <note>
+        /// This is required when <see cref="Domain"/> is non-null.
+        /// </note>
         /// </summary>
         public string WorkflowId
         {
@@ -70,7 +89,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// <para>
         /// The target run ID.
+        /// </para>
+        /// <note>
+        /// This is optional when <see cref="Domain"/> is non-null.
+        /// </note>
         /// </summary>
         public string RunId
         {
