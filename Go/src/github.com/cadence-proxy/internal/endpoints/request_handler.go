@@ -370,11 +370,30 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 func handleCancelRequest(requestCtx context.Context, request *messages.CancelRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("CancelRequest Received", zap.Int("ProccessId", os.Getpid()))
+	targetID := request.GetTargetRequestID()
+	logger.Debug("CancelRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("TargetId", targetID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
+	// try and cancel the operation
+	var wasCancelled bool
+	var err *cadenceerrors.CadenceError
+	if cancellable := Cancellables.Get(targetID); cancellable != nil {
+		wasCancelled = true
+		cancel := cancellable.GetCancelFunction()
+		cancel()
+	} else {
+		err = cadenceerrors.NewCadenceError(
+			fmt.Sprintf("could not cancel target operation with RequestID %d", targetID),
+			cadenceerrors.Custom,
+		)
+	}
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
-	buildReply(reply, nil, true)
+	buildReply(reply, err, wasCancelled)
 
 	return reply
 }
