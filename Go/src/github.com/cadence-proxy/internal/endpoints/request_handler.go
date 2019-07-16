@@ -355,25 +355,13 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
 		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
 
-		return err
+		// set the reply
+		reply = messages.NewProxyReply()
+		reply.SetRequestID(request.GetRequestID())
+		reply.SetError(cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Custom))
 	}
 
-	// send the reply as an http.Request back to the
-	// Neon.Cadence Library via http.PUT
-	resp, err := putToNeonCadenceClient(reply)
-	if err != nil {
-		return err
-	}
-	defer func() {
-
-		// $debug(jack.burns): DELETE THIS!
-		err := resp.Body.Close()
-		if err != nil {
-			logger.Error("could not close response body", zap.Error(err))
-		}
-	}()
-
-	return nil
+	return err
 }
 
 // -------------------------------------------------------------------------
