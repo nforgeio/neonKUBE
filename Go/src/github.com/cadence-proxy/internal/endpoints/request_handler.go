@@ -54,21 +54,26 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	var reply messages.IProxyReply
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
-		defer cancel()
+		cancel()
+
+		// recover from panic
 		if r := recover(); r != nil {
 			reply = createReplyMessage(request)
 			buildReply(reply, cadenceerrors.NewCadenceError(
 				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d", request.GetType().String(), request.GetRequestID()),
 				cadenceerrors.Panic),
 			)
+		}
 
-			// send the reply
-			var resp *http.Response
-			resp, err = putToNeonCadenceClient(reply)
-			err = resp.Body.Close()
-			if err != nil {
-				logger.Error("could not close response body", zap.Error(err))
-			}
+		// send the reply
+		var resp *http.Response
+		resp, err = putToNeonCadenceClient(reply)
+		if err != nil {
+			return
+		}
+		err = resp.Body.Close()
+		if err != nil {
+			logger.Error("could not close response body", zap.Error(err))
 		}
 	}()
 
@@ -349,25 +354,12 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 		// $debug(jack.burns): DELETE THIS!
 		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
 		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
+
+		// set the reply
 		reply = messages.NewProxyReply()
 		reply.SetRequestID(request.GetRequestID())
 		reply.SetError(cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Custom))
 	}
-
-	// // send the reply as an http.Request back to the
-	// // Neon.Cadence Library via http.PUT
-	// resp, err := putToNeonCadenceClient(reply)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer func() {
-
-	// 	// $debug(jack.burns): DELETE THIS!
-	// 	err = resp.Body.Close()
-	// 	if err != nil {
-	// 		logger.Error("could not close response body", zap.Error(err))
-	// 	}
-	// }()
 
 	return err
 }
@@ -890,7 +882,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Workflow Completed Successfully",
+			logger.Info("Workflow Completed Successfully",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -1443,7 +1435,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		case bool:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("signal completed successfully",
+			logger.Info("signal completed successfully",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
@@ -1452,7 +1444,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 
 		default:
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("signal result unexpected",
+			logger.Info("signal result unexpected",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
@@ -2041,7 +2033,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		case error:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Query Failed With Error",
+			logger.Error("Query Failed With Error",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2055,7 +2047,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Query Completed Successfully",
+			logger.Info("Query Completed Successfully",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2300,7 +2292,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		case error:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Failed With Error",
+			logger.Error("Activity Failed With Error",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2314,7 +2306,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Completed Successfully",
+			logger.Info("Activity Completed Successfully",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2702,7 +2694,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		case error:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Failed With Error",
+			logger.Error("Activity Failed With Error",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),
@@ -2717,7 +2709,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Successful",
+			logger.Info("Activity Successful",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),
