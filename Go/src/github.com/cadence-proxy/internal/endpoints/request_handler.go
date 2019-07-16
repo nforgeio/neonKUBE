@@ -381,9 +381,9 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 	var wasCancelled bool
 	var err *cadenceerrors.CadenceError
 	if cancellable := Cancellables.Get(targetID); cancellable != nil {
+		wasCancelled = true
 		cancel := cancellable.GetCancelFunction()
 		cancel()
-		wasCancelled = true
 	} else {
 		err = cadenceerrors.NewCadenceError(
 			fmt.Sprintf("could not cancel target operation with RequestID %d", targetID),
