@@ -38,7 +38,7 @@ var (
 
 type (
 	operationsMap struct {
-		sync.Map
+		safeMap sync.Map
 	}
 
 	// Operation is used to track pending Neon.Cadence library calls
@@ -235,7 +235,7 @@ func (op *Operation) SendChannel(result interface{}, cadenceError *cadenceerrors
 // returns int64 -> requestID of the request being added
 // in the Operation at the specified requestID
 func (opMap *operationsMap) Add(requestID int64, value *Operation) int64 {
-	opMap.Store(requestID, value)
+	opMap.safeMap.Store(requestID, value)
 	return requestID
 }
 
@@ -248,7 +248,7 @@ func (opMap *operationsMap) Add(requestID int64, value *Operation) int64 {
 // returns int64 -> requestID of the request being removed in the
 // Operation at the specified requestID
 func (opMap *operationsMap) Remove(requestID int64) int64 {
-	opMap.Delete(requestID)
+	opMap.safeMap.Delete(requestID)
 	return requestID
 }
 
@@ -261,7 +261,7 @@ func (opMap *operationsMap) Remove(requestID int64) int64 {
 // returns *Operation -> pointer to Operation at the specified requestID
 // in the map.
 func (opMap *operationsMap) Get(requestID int64) *Operation {
-	if v, ok := opMap.Load(requestID); ok {
+	if v, ok := opMap.safeMap.Load(requestID); ok {
 		if _v, _ok := v.(*Operation); _ok {
 			return _v
 		}

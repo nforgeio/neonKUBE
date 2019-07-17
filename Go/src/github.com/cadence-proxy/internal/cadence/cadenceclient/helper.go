@@ -90,7 +90,7 @@ type (
 	// WorkflowClientsMap holds a thread-safe map[interface{}]interface{} of
 	// cadence WorkflowClients with their domain
 	WorkflowClientsMap struct {
-		sync.Map
+		safeMap sync.Map
 	}
 )
 
@@ -982,7 +982,7 @@ func (helper *ClientHelper) pollDomain(ctx context.Context, channel chan error, 
 //
 // returns string -> the domain for the cadence WorkflowClient added to the map
 func (wcm *WorkflowClientsMap) Add(domain string, wc client.Client) string {
-	wcm.Store(domain, wc)
+	wcm.safeMap.Store(domain, wc)
 	return domain
 }
 
@@ -994,7 +994,7 @@ func (wcm *WorkflowClientsMap) Add(domain string, wc client.Client) string {
 //
 // returns string -> the domain for the cadence WorkflowClient removed from the map
 func (wcm *WorkflowClientsMap) Remove(domain string) string {
-	wcm.Delete(domain)
+	wcm.safeMap.Delete(domain)
 	return domain
 }
 
@@ -1006,7 +1006,7 @@ func (wcm *WorkflowClientsMap) Remove(domain string) string {
 //
 // returns client.Client -> pointer to cadence WorkflowClient with the specified domain
 func (wcm *WorkflowClientsMap) Get(domain string) client.Client {
-	if v, ok := wcm.Load(domain); ok {
+	if v, ok := wcm.safeMap.Load(domain); ok {
 		if _v, _ok := v.(client.Client); _ok {
 			return _v
 		}
