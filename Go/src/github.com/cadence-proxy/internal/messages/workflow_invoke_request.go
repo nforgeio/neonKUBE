@@ -20,6 +20,7 @@ package messages
 import (
 	"time"
 
+	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -198,6 +199,33 @@ func (request *WorkflowInvokeRequest) SetExecutionStartToCloseTimeout(value time
 	request.SetTimeSpanProperty("ExecutionStartToCloseTimeout", value)
 }
 
+// GetReplayStatus gets the ReplayStatus from a WorkflowInvokeRequest's properties
+// map. For workflow requests related to an executing workflow,
+// this will indicate the current history replay state.
+//
+// returns cadenceworkflows.ReplayStatus -> the current history replay
+// state of a workflow
+func (request *WorkflowInvokeRequest) GetReplayStatus() cadenceworkflows.ReplayStatus {
+	replayStatusPtr := request.GetStringProperty("ReplayStatus")
+	if replayStatusPtr == nil {
+		return cadenceworkflows.ReplayStatusUnspecified
+	}
+	replayStatus := cadenceworkflows.StringToReplayStatus(*replayStatusPtr)
+
+	return replayStatus
+}
+
+// SetReplayStatus sets the ReplayStatus in a WorkflowInvokeRequest's properties
+// map. For workflow requests related to an executing workflow,
+// this will indicate the current history replay state.
+//
+// param value cadenceworkflows.ReplayStatus -> the current history replay
+// state of a workflow
+func (request *WorkflowInvokeRequest) SetReplayStatus(value cadenceworkflows.ReplayStatus) {
+	status := value.String()
+	request.SetStringProperty("ReplayStatus", &status)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -222,5 +250,6 @@ func (request *WorkflowInvokeRequest) CopyTo(target IProxyMessage) {
 		v.SetRunID(request.GetRunID())
 		v.SetTaskList(request.GetTaskList())
 		v.SetExecutionStartToCloseTimeout(request.GetExecutionStartToCloseTimeout())
+		v.SetReplayStatus(request.GetReplayStatus())
 	}
 }

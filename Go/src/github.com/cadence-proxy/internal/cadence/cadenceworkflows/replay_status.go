@@ -17,38 +17,39 @@
 
 package cadenceworkflows
 
-import "fmt"
-
 // ReplayStatus indicates a workflow's
 // current replay status.
 type ReplayStatus int
 
 const (
 
-	// Unspecified indicates that the corresponding
+	// ReplayStatusUnspecified indicates that the corresponding
 	// operation cannot determine the replay
 	// status (e.g. because the it didn't relate
 	// to an executing workflow).
 	// This is the default value.
-	Unspecified ReplayStatus = 0
+	ReplayStatusUnspecified ReplayStatus = 0
 
-	// NotReplaying indicates that
+	// ReplayStatusNotReplaying indicates that
 	// the related workflow is not replaying.
-	NotReplaying ReplayStatus = 1
+	ReplayStatusNotReplaying ReplayStatus = 1
 
-	// Replaying indicates that
+	// ReplayStatusReplaying indicates that
 	// The related workflow is replaying.
-	Replaying ReplayStatus = 2
+	ReplayStatusReplaying ReplayStatus = 2
 )
 
 // String is called on a ReplayStatus
 // instance and returns its string value
 func (r ReplayStatus) String() string {
-	return [...]string{
-		"Unspecified",
-		"NotReplaying",
-		"Replaying",
-	}[r]
+	switch r {
+	case ReplayStatusNotReplaying:
+		return "NotReplaying"
+	case ReplayStatusReplaying:
+		return "Replaying"
+	default:
+		return "Unspecified"
+	}
 }
 
 // StringToReplayStatus takes a string and tries to
@@ -56,14 +57,11 @@ func (r ReplayStatus) String() string {
 // if it can
 func StringToReplayStatus(value string) ReplayStatus {
 	switch value {
-	case "Unspecified":
-		return Unspecified
 	case "NotReplaying":
-		return NotReplaying
+		return ReplayStatusNotReplaying
 	case "Replaying":
-		return Replaying
+		return ReplayStatusReplaying
 	default:
-		err := fmt.Errorf("unknown string value %s for ReplayStatus", value)
-		panic(err)
+		return ReplayStatusUnspecified
 	}
 }
