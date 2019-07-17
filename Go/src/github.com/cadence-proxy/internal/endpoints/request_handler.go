@@ -835,6 +835,13 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
+		// check if replaying
+		if workflow.IsReplaying(ctx) {
+			workflowInvokeRequest.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			workflowInvokeRequest.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, workflowInvokeRequest)
 		op.SetChannel(make(chan interface{}))
@@ -1392,6 +1399,13 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		workflowSignalInvokeRequest.SetContextID(contextID)
 		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
 		workflowSignalInvokeRequest.SetSignalName(signalName)
+
+		// check if replaying
+		if workflow.IsReplaying(ctx) {
+			workflowSignalInvokeRequest.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			workflowSignalInvokeRequest.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, workflowSignalInvokeRequest)
@@ -1998,6 +2012,13 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		workflowQueryInvokeRequest.SetContextID(contextID)
 		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
 		workflowQueryInvokeRequest.SetQueryName(queryName)
+
+		// check if replaying
+		if workflow.IsReplaying(ctx) {
+			workflowQueryInvokeRequest.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			workflowQueryInvokeRequest.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, workflowQueryInvokeRequest)
