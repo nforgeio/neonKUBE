@@ -29,9 +29,9 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Provides low-level operations on a workflow instance.
+    /// Performs low-level operations on a workflow instance.
     /// </summary>
-    public class WorkflowStub
+    internal class WorkflowStub : IWorkflowStub
     {
         //---------------------------------------------------------------------
         // Static members
@@ -53,61 +53,62 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private ITypedWorkflowStub      wrappedStub;
-
         /// <summary>
-        /// Constructs a stub without associating a typed stub.
+        /// Default constructor.
         /// </summary>
         internal WorkflowStub()
         {
         }
 
-        internal WorkflowStub(ITypedWorkflowStub wrappedStub)
-        {
-            Covenant.Requires<ArgumentNullException>(wrappedStub != null);
-
-            this.wrappedStub = wrappedStub;
-        }
-
-        public async Task CancelAsync()
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <inheritdoc/>
         public WorkflowExecution Execution { get; private set; }
 
+        /// <inheritdoc/>
         public WorkflowOptions Options { get; private set; }
 
-        public TResult GetResultAsync<TResult>(TimeSpan timeout = default)
+        /// <inheritdoc/>
+        public Task CancelAsync()
         {
             throw new NotImplementedException();
         }
 
-        public object GetResultAsync<TResult>(Type resultType, TimeSpan timeout = default)
+        /// <inheritdoc/>
+        public Task<TResult> GetResultAsync<TResult>(TimeSpan timeout = default)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
+        public Task<object> GetResultAsync(Type resultType, TimeSpan timeout = default)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
         public Task<TResult> QueryAsync<TResult>(string queryType, params object[] args)
         {
             throw new NotImplementedException();
         }
 
-        public Task<object> QueryAsync<TResult>(Type resultType, string queryName, params object[] args)
+        /// <inheritdoc/>
+        public Task<object> QueryAsync(Type resultType, string queryType, params object[] args)
         {
             throw new NotImplementedException();
         }
 
-        public Task SignalAsync<TResult>(string signalName, params object[] args)
+        /// <inheritdoc/>
+        public Task SignalAsync(string signalName, params object[] args)
         {
             throw new NotImplementedException();
         }
 
-        public Task<WorkflowExecution> SignalWithStartAsync<TResult>(string signalName, object[] signalargs, object[] startArgs)
+        /// <inheritdoc/>
+        public Task<WorkflowExecution> SignalWithStartAsync(string signalName, object[] signalArgs, object[] startArgs)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public Task<WorkflowExecution> StartAsync(params object[] args)
         {
             throw new NotImplementedException();

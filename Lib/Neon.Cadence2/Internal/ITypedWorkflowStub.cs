@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -28,10 +29,14 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// All generated typed workflow stubs will derive from this (do-nothing) interface
-    /// for type-checking purposes.
+    /// Internal interface implemented by generated typed workflow stubs.
     /// </summary>
-    public interface ITypedWorkflowStub
+    internal interface ITypedWorkflowStub
     {
+        /// <summary>
+        /// Returns the untyped stub for the workflow.
+        /// </summary>
+        /// <returns>The associated <see cref="IWorkflowStub"/>.</returns>
+        IWorkflowStub GetUntyped();
     }
 }

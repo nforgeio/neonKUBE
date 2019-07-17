@@ -134,7 +134,7 @@ namespace Neon.Cadence
                     }
                     else if (type.IsSubclassOf(typeof(Activity)))
                     {
-                        // Ignore these here.
+                        // Ignore these.
                     }
                     else
                     {
@@ -183,22 +183,72 @@ namespace Neon.Cadence
             return await Task.FromResult(workflowCacheSize);
         }
 
-        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowType = null, string domain = null)
+        /// <summary>
+        /// Creates an untyped stub connected to a known workflow execution.  This can be
+        /// used to query, signal, or retrieve the result for a workflow.
+        /// </summary>
+        /// <param name="workflowId">Specifies the workflow ID.</param>
+        /// <param name="runId">Optionally specifies the workflow's run ID.</param>
+        /// <param name="workflowType">Optionally specifies the workflow type.</param>
+        /// <param name="domain">Optionally overrides the client's default domain.</param>
+        /// <returns>The <see cref="IWorkflowStub"/>.</returns>
+        public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowType = null, string domain = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+
             throw new NotImplementedException();
         }
 
-        public WorkflowStub NewUntypedWorkflowStub(string workflowType, WorkflowOptions options = null, string domain = null)
+        /// <summary>
+        /// Creates an untyped stub that will be used to execute a workflow as well as
+        /// query and signal the new workflow.
+        /// </summary>
+        /// <param name="workflowType">Specifies workflow type.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="domain">Optionally overrides the client's default domain.</param>
+        /// <returns>The <see cref="IWorkflowStub"/>.</returns>
+        public IWorkflowStub NewUntypedWorkflowStub(string workflowType, WorkflowOptions options = null, string domain = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowType));
+
             throw new NotImplementedException();
         }
 
-        public TWorkflow NewWorkflowStub<TWorkflow>(string workflowId, string runId = null, string domain = null)
+        /// <summary>
+        /// Creates a typed workflow stub connected to a known workflow execution.
+        /// This can be used to signal and query the workflow.
+        /// </summary>
+        /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
+        /// <param name="workflowId">Specifies the workflow ID.</param>
+        /// <param name="runId">Optionally specifies the workflow's run ID.</param>
+        /// <param name="workflowType">
+        /// Optionally specifies the workflow type by overriding the fully 
+        /// qualified <typeparamref name="TWorkflow"/> type name or the name
+        /// specified by a <see cref="AutoRegisterAttribute"/>.
+        /// </param>
+        /// <param name="domain">Optionally overrides the client's default domain.</param>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
+        public TWorkflow NewWorkflowStub<TWorkflow>(string workflowId, string runId = null, string workflowType = null, string domain = null)
             where TWorkflow : IWorkflow
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Creates a typed workflow stub that can be used to start as well as 
+        /// query and signal the workflow.
+        /// </summary>
+        /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="workflowType">
+        /// Optionally specifies the workflow type by overriding the fully 
+        /// qualified <typeparamref name="TWorkflow"/> type name or the name
+        /// specified by a <see cref="AutoRegisterAttribute"/>.
+        /// </param>
+        /// <param name="domain">Optionally overrides the client's default domain.</param>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
         public TWorkflow NewWorkflowStub<TWorkflow>(WorkflowOptions options = null, string workflowType = null, string domain = null)
             where TWorkflow : IWorkflow
         {

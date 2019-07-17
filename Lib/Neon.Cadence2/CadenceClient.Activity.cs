@@ -116,7 +116,7 @@ namespace Neon.Cadence
                 {
                     if (type.IsSubclassOf(typeof(Workflow)))
                     {
-                        // Ignore these here.
+                        // Ignore these.
                     }
                     else if (type.IsSubclassOf(typeof(Activity)))
                     {
