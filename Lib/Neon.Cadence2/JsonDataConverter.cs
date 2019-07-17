@@ -110,18 +110,7 @@ namespace Neon.Cadence
                 }
                 else
                 {
-                    // $todo(jeff.lill):
-                    //
-                    // We're reserializing and then reparsing each data item here after
-                    // we just deserialized them above because [NeonHelper] doesn't
-                    // currently have a way to deserialize from a [JToken] while 
-                    // respecting the current [JsonSerializerSettings].
-                    //
-                    // This will add substantial overhead (more than double) for this
-                    // operation.  We should come back in the future and try to optimize
-                    // this.
-
-                    output[i] = NeonHelper.JsonDeserialize(type, item.ToString(Newtonsoft.Json.Formatting.None), strict: false);
+                    output[i] = item.ToObject(type);
                 }
             }
 
