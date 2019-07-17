@@ -155,7 +155,7 @@ namespace TestCadence
 
             Assert.Equal(new string[] { "foo" }, items);
 
-            // Multiple items
+            // Multiple object items
 
             jArray = new JArray();
             jArray.Add("foo");
@@ -164,7 +164,7 @@ namespace TestCadence
             jArray.Add(null);
 
             contents = Encoding.UTF8.GetBytes(jArray.ToString());
-            items = converter.FromDataArray(contents, new Type[] { typeof(string), typeof(int), typeof(TestData), typeof(TestData) });
+            items    = converter.FromDataArray(contents, new Type[] { typeof(string), typeof(int), typeof(TestData), typeof(TestData) });
 
             Assert.Equal(4, items.Length);
             Assert.Equal("foo", items[0]);
@@ -172,7 +172,7 @@ namespace TestCadence
             Assert.Equal("World!", ((TestData)items[2]).Hello);
             Assert.Null(items[3]);
 
-            // Roundtrip data
+            // Roundtrip objects
 
             var bob = new Person()
             {
@@ -191,7 +191,7 @@ namespace TestCadence
             jArray.Add(null);
 
             contents = Encoding.UTF8.GetBytes(jArray.ToString());
-            items = converter.FromDataArray(contents, new Type[] { typeof(string), typeof(int), typeof(Person), typeof(Person) });
+            items    = converter.FromDataArray(contents, new Type[] { typeof(string), typeof(int), typeof(Person), typeof(Person) });
 
             Assert.Equal(4, items.Length);
             Assert.Equal("foo", items[0]);
@@ -199,6 +199,35 @@ namespace TestCadence
             Assert.Equal(bob, (Person)items[2]);
             Assert.Equal("data", ((Person)items[2]).__JObject["extra"].ToString());
             Assert.Null(items[3]);
+
+            // Arrays of other types.
+
+            var guid = Guid.NewGuid();
+
+            jArray = new JArray();
+            jArray.Add(10);
+            jArray.Add(123.4);
+            jArray.Add("Hello World!");
+            jArray.Add(null);
+            jArray.Add(Gender.Female);
+            jArray.Add(true);
+            jArray.Add(new DateTime(2019, 7, 17, 12, 0, 0));
+            jArray.Add(TimeSpan.FromSeconds(1.5));
+            jArray.Add(guid);
+            
+            contents = Encoding.UTF8.GetBytes(jArray.ToString());
+            items    = converter.FromDataArray(contents, new Type[] { typeof(int), typeof(double), typeof(string), typeof(string), typeof(Gender), typeof(bool), typeof(DateTime), typeof(TimeSpan), typeof(Guid) });
+
+            Assert.Equal(9, items.Length);
+            Assert.Equal(10, (int)items[0]);
+            Assert.Equal(123.4, (double)items[1]);
+            Assert.Equal("Hello World!", (string)items[2]);
+            Assert.Null((string)items[3]);
+            Assert.Equal(Gender.Female, (Gender)items[4]);
+            Assert.True((bool)items[5]);
+            Assert.Equal(new DateTime(2019, 7, 17, 12, 0, 0), (DateTime)items[6]);
+            Assert.Equal(TimeSpan.FromSeconds(1.5), (TimeSpan)items[7]);
+            Assert.Equal(guid, (Guid)items[8]);
         }
     }
 }
