@@ -1943,7 +1943,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	// get cancel function
 	// call the cancel function
 	cancel := cctx.GetCancelFunction()
-	go cancel()
+	cancel()
 
 	// build the reply
 	buildReply(reply, nil)
