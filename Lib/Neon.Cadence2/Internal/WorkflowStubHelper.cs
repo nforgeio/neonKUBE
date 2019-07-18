@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Reflection;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -34,21 +36,195 @@ namespace Neon.Cadence
     /// </summary>
     internal class WorkflowStubHelper
     {
-        private CadenceClient       client;
-        private WorkflowOptions     options;
-        private string              domain;
-        private WorkflowStub        untypedStub;
-        private bool                hasStarted;
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Describes what a workflow interface method does.
+        /// </summary>
+        private enum WorkflowMethodType
+        {
+            /// <summary>
+            /// The method implements a query.
+            /// </summary>
+            Query,
+
+            /// <summary>
+            /// The method implements a signal.
+            /// </summary>
+            Signal,
+
+            /// <summary>
+            /// The method is a workflow entrypoint.
+            /// </summary>
+            Workflow
+        }
+
+        /// <summary>
+        /// Holds additional information about a workflow interface method.
+        /// </summary>
+        private class WorkflowMethodDetails
+        {
+            /// <summary>
+            /// The workflow method type.
+            /// </summary>
+            public WorkflowMethodType Type { get; set; }
+
+            /// <summary>
+            /// The signal attributes for signal methods.
+            /// </summary>
+            public SignalMethodAttribute SignalAttribute { get; set; }
+
+            /// <summary>
+            /// The query attributes for query methods.
+            /// </summary>
+            public QueryMethodAttribute QueryAttribute { get; set; }
+
+            /// <summary>
+            /// The workflow attributes for workflow methods.
+            /// </summary>
+            public WorkflowMethodAttribute WorkflowAttribute { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private CadenceClient                                   client;
+        private Type                                            workflowInterface;
+        private string                                          taskList;
+        private WorkflowOptions                                 options;
+        private string                                          domain;
+        private WorkflowStub                                    untypedStub;
+        private bool                                            hasStarted;
+        private Dictionary<MethodBase, WorkflowMethodDetails>   methodToDetails;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
-        public WorkflowStubHelper(CadenceClient client)
+        /// <param name="workflowInterface">The workflow interface definition.</param>
+        /// <param name="execution">Optionally specifies the existing workflow execution.</param>
+        /// <param name="taskList">Optionally specifies the target task list.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="domain">Optionally specifies the target domain.</param>
+        public WorkflowStubHelper(CadenceClient client, Type workflowInterface, WorkflowExecution execution = null, string taskList = null, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
+            Contract.Requires<ArgumentNullException>(workflowInterface != null);
+            Contract.Requires<ArgumentException>(!workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
+            Contract.Requires<ArgumentException>(!workflowInterface.IsGenericType, $"The [{workflowInterface.Name}] interface is generic.  This is not allowed.");
 
-            this.client = client;
+            if (string.IsNullOrEmpty(domain))
+            {
+                domain = null;
+            }
+
+            this.client            = client;
+            this.workflowInterface = workflowInterface;
+            this.taskList          = taskList;
+            this.options           = options;
+            this.domain            = domain ?? client.Settings.DefaultDomain;
+            this.untypedStub       = new WorkflowStub() { Execution = execution, Options = options };
+            this.hasStarted        = execution != null;
+            this.methodToDetails   = new Dictionary<MethodBase, WorkflowMethodDetails>();
+
+            // Scan the interface methods to identify those tagged to indicate 
+            // that they are query, signal, or workflow methods and build a table
+            // that maps these methods to the method type and also holds any options
+            // specified by the tags.
+            //
+            // We're also going to ensure that all interface methods are tagged
+            // as being a signal, query, or workflow method and that no method
+            // is tagged more than once and that the interface has at least one
+            // workflow method.
+            //
+            // Note this code will also ensure that all workflow interface methods
+            // implement a task/async signature by returning a Task and also that
+            // all signal and query methods have unique names.
+
+            var signalNames   = new HashSet<string>();
+            var queryNames    = new HashSet<string>();
+            var methodDetails = new WorkflowMethodDetails();
+
+            this.methodToDetails = new Dictionary<MethodBase, WorkflowMethodDetails>();
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                if (method.ReturnType.IsGenericType)
+                {
+                    if (method.ReturnType.BaseType != typeof(Task))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    }
+                }
+                else
+                {
+                    if (method.ReturnType != typeof(Task))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    }
+                }
+
+                var signalAttributes   = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
+                var queryAttributes    = method.GetCustomAttributes<QueryMethodAttribute>().ToArray();
+                var workflowAttributes = method.GetCustomAttributes<WorkflowMethodAttribute>().ToArray();
+                var attributeCount     = signalAttributes.Length + queryAttributes.Length + workflowAttributes.Length;
+
+                if (attributeCount == 0)
+                {
+                    throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                }
+                else if (attributeCount > 1)
+                {
+                    throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] can have only one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                }
+
+                if (signalAttributes.Length > 0)
+                {
+                    var signalAttribute = signalAttributes.First();
+
+                    if (signalNames.Contains(signalAttribute.Name))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
+                    }
+
+                    signalNames.Add(signalAttribute.Name);
+
+                    methodDetails.Type            = WorkflowMethodType.Signal;
+                    methodDetails.SignalAttribute = signalAttribute;
+
+                    methodToDetails.Add(method, methodDetails);
+                }
+                else if (queryAttributes.Length > 0)
+                {
+                    var queryAttribute = queryAttributes.First();
+
+                    if (queryNames.Contains(queryAttribute.Name))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
+                    }
+
+                    queryNames.Add(queryAttribute.Name);
+
+                    methodDetails.Type           = WorkflowMethodType.Query;
+                    methodDetails.QueryAttribute = queryAttribute;
+
+                    methodToDetails.Add(method, methodDetails);
+                }
+                else if (workflowAttributes.Length > 0)
+                {
+                    var workflowAttribute = workflowAttributes.First();
+
+                    methodDetails.Type              = WorkflowMethodType.Workflow;
+                    methodDetails.WorkflowAttribute = workflowAttribute;
+
+                    methodToDetails.Add(method, methodDetails);
+                }
+                else
+                {
+                    Covenant.Assert(false); // We should never get here.
+                }
+            }
         }
 
         /// <summary>
@@ -58,19 +234,6 @@ namespace Neon.Cadence
         public bool HasStarted()
         {
             return hasStarted;
-        }
-
-        /// <summary>
-        /// Sets the associated untyped <see cref="WorkflowStub"/>.
-        /// </summary>
-        /// <param name="untypedStub">The <see cref="WorkflowStub"/>.</param>
-        /// <param name="hasStarted">Indicates whether the workflow has already been started.</param>
-        public void SetUnTypedStub(WorkflowStub untypedStub, bool hasStarted)
-        {
-            Covenant.Requires<ArgumentNullException>(untypedStub != null);
-
-            this.untypedStub = untypedStub;
-            this.hasStarted  = hasStarted;
         }
 
         /// <summary>

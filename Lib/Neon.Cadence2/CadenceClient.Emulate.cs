@@ -902,7 +902,7 @@ namespace Neon.Cadence
                 ContextId = contextId,
                 Args      = request.Args,
                 // Domain    = request.Domain,  // $todo(jeff.lill): Will need to get this from the new workflow client context
-                TaskList  = request.Options?.TaskList ?? CadenceClient.DefaultTaskList,
+                TaskList  = request.Options?.TaskList ?? Settings.DefaultTaskList,
                 Name      = request.Workflow,
                 Options   = request.Options,
                 IsGlobal  = true

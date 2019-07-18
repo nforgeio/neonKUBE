@@ -234,9 +234,9 @@ namespace Neon.Cadence
     /// Task lists provide an additional way to customize where workflows and activities are executed.
     /// A task list is simply a string used in addition to the domain to indicate which workflows and
     /// activities will be scheduled for execution by workers.  For regular (top-level) workflows,
-    /// the task list <b>"default"</b> will be used when not otherwise specified.  Any non-empty custom
-    /// string is allowed for task lists.  Child workflow and activity task lists will default to
-    /// the parent workflow's task list by default.
+    /// you can specify a default task list via <see cref="CadenceSettings.DefaulTaskList"/>.  
+    /// Any non-empty custom string is allowed for task lists.  Child workflow and activity task lists
+    /// will default to the parent workflow's task list by default.
     /// </para>
     /// <para>
     /// Task lists are typically only required for somewhat advanced deployments.  Let's go through
@@ -252,9 +252,9 @@ namespace Neon.Cadence
     /// This scenario can addressed by having the application running on the regular machines
     /// call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
     /// and the application running on the GPU servers call this with with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c>.
-    /// Both could specify the domain as <b>"render"</b> and leave task list as <b>"default"</b>.
-    /// With this setup, workflows will be scheduled on the regular machines and activities
-    /// on the GPU machines.
+    /// Both could specify the domain as <b>"render"</b> and set  task list as <b>"all"</b>
+    /// (or something).  With this setup, workflows will be scheduled on the regular machines 
+    /// and activities on the GPU machines.
     /// </para>
     /// <para>
     /// Now imagine a more complex scenario where we need to render two movies on the cluster at 
@@ -262,13 +262,13 @@ namespace Neon.Cadence
     /// the other third to <b>movie2</b>.  This can be accomplished via task lists:
     /// </para>
     /// <para>
-    /// We'd start by defining a task list for each movie: <b>"movie1"</b> and <b>movie2</b> and
+    /// We'd start by defining a task list for each movie: <b>"movie1"</b> and <b>"movie2"</b> and
     /// then call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
-    /// twice on the regular machines, once for each task list.  This will schedule workflows for each movie
+    /// twice on the regular machines and once for each task list.  This will schedule workflows for each movie
     /// on these machines (this is OK for this scenario because the workflow won't consume many
     /// resources).  Then on 2/3s of the GPU machines, we'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> 
     /// with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c> with the <b>"movie1"</b>
-    /// task list and the remaining one third of the GPU machines <b>""movie2</b> as the task list. 
+    /// task list and the remaining one third of the GPU machines <b>"movie2"</b> as the task list. 
     /// Then we'll start the rendering workflow for the first movie specifying <b>"movie1"</b> as the
     /// task list and again for the second movie specifying <b>"movie2"</b>.
     /// </para>
@@ -298,13 +298,8 @@ namespace Neon.Cadence
         private const int debugClientPort = 5001;
 
         /// <summary>
-        /// The default Cadence task list.
-        /// </summary>
-        internal const string DefaultTaskList = "default";
-
-        /// <summary>
         /// The default Cadence timeout used for workflow and activity timeouts that don't
-        /// have Cadence supplied values.
+        /// have Cadence supplied values.  This returns a really long time.
         /// </summary>
         internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromDays(365);
 

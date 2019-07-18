@@ -27,8 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to tag a <see cref="Workflow"/> method that will be called to handle an
-    /// external signal.
+    /// Used to identify a workflow interface methods as a signal.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     public class SignalMethodAttribute : Attribute
@@ -36,12 +35,12 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="signalName">Specifies the Cadence signal name.</param>
-        public SignalMethodAttribute(string signalName)
+        /// <param name="Name">Specifies the Cadence signal name.</param>
+        public SignalMethodAttribute(string Name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(Name));
 
-            this.Name = signalName;
+            this.Name = Name;
         }
 
         /// <summary>

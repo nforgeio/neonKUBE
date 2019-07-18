@@ -27,8 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to tag a <see cref="Workflow"/> method that will be called to handle an
-    /// external query.
+    /// Used to identify a workflow interface method as a query.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     public class QueryMethodAttribute : Attribute
@@ -36,12 +35,12 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="queryName">Specifies the Cadence query name.</param>
-        public QueryMethodAttribute(string queryName)
+        /// <param name="Name">Specifies the Cadence query type.</param>
+        public QueryMethodAttribute(string Name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(Name));
 
-            this.Name = queryName;
+            this.Name = Name;
         }
 
         /// <summary>

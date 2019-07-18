@@ -61,10 +61,10 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public WorkflowExecution Execution { get; private set; }
+        public WorkflowExecution Execution { get; internal set; }
 
         /// <inheritdoc/>
-        public WorkflowOptions Options { get; private set; }
+        public WorkflowOptions Options { get; internal set; }
 
         /// <inheritdoc/>
         public Task CancelAsync()
