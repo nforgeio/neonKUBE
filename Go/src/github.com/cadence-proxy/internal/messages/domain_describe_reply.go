@@ -18,8 +18,6 @@
 package messages
 
 import (
-	"errors"
-
 	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -83,30 +81,16 @@ func (reply *DomainDescribeReply) SetDomainInfoDescription(value *string) {
 // GetDomainInfoStatus gets the DomainInfoStatus property as a string
 // pointer from a DomainDescribeReply's properties map
 //
-// returns *DomainStatus -> pointer to the DomainStatus of the Domain being described
+// returns *DomainStatus -> DomainStatus of the Domain being described
 // from a DomainDescribeReply's properties map
-func (reply *DomainDescribeReply) GetDomainInfoStatus() *cadenceclient.DomainStatus {
+func (reply *DomainDescribeReply) GetDomainInfoStatus() cadenceclient.DomainStatus {
 	domainInfoStatusPtr := reply.GetStringProperty("DomainInfoStatus")
 	if domainInfoStatusPtr == nil {
-		return nil
+		return cadenceclient.DomainStatusUnspecified
 	}
+	domainStatus := cadenceclient.StringToDomainStatus(*domainInfoStatusPtr)
 
-	// dereference and switch block on the value
-	domainStatus := *domainInfoStatusPtr
-	var returnStatus cadenceclient.DomainStatus
-	switch domainStatus {
-	case "REGISTERED":
-		returnStatus = cadenceclient.Registered
-	case "DEPRECATED":
-		returnStatus = cadenceclient.Deprecated
-	case "DELETED":
-		returnStatus = cadenceclient.Deleted
-	default:
-		err := errors.New("domainStatus not implemented exception")
-		panic(err)
-	}
-
-	return &returnStatus
+	return domainStatus
 }
 
 // SetDomainInfoStatus sets the DomainInfoStatus property as a string
@@ -114,30 +98,9 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() *cadenceclient.DomainSta
 //
 // param value *DomainStatus -> DomainStatus value to set
 // as the DomainDescribeReply's DomainInfoStatus in its properties map
-func (reply *DomainDescribeReply) SetDomainInfoStatus(value *cadenceclient.DomainStatus) {
-	if value == nil {
-		reply.SetStringProperty("DomainInfoStatus", nil)
-		return
-	}
-
-	// switch block on the param value
-	var statusString string
-	switch *value {
-	case cadenceclient.Registered:
-		statusString = "REGISTERED"
-	case cadenceclient.Deprecated:
-		statusString = "DEPRECATED"
-	case cadenceclient.Deleted:
-		statusString = "DELETED"
-	default:
-
-		// panic if type is not recognized or implemented yet
-		err := errors.New("not implemented exception")
-		panic(err)
-	}
-
-	// set the string in the properties map
-	reply.SetStringProperty("DomainInfoStatus", &statusString)
+func (reply *DomainDescribeReply) SetDomainInfoStatus(value cadenceclient.DomainStatus) {
+	status := value.String()
+	reply.SetStringProperty("DomainInfoStatus", &status)
 }
 
 // GetDomainInfoOwnerEmail gets the DomainInfoOwnerEmail property as a string

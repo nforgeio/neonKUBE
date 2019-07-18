@@ -60,7 +60,9 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 		if r := recover(); r != nil {
 			reply = createReplyMessage(request)
 			buildReply(reply, cadenceerrors.NewCadenceError(
-				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d", request.GetType().String(), request.GetRequestID()),
+				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d",
+					request.GetType().String(),
+					request.GetRequestID()),
 				cadenceerrors.Panic),
 			)
 		}
@@ -835,30 +837,17 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
 		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
 
+		// set ReplayStatus
+		setReplayStatus(ctx, workflowInvokeRequest)
+
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, workflowInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
-		// send the WorkflowInvokeRequest
-		f := func(message messages.IProxyRequest) {
-			resp, err := putToNeonCadenceClient(message)
-			if err != nil {
-				panic(err)
-			}
-			defer func() {
-
-				// $debug(jack.burns): DELETE THIS!
-				err := resp.Body.Close()
-				if err != nil {
-					logger.Error("could not close response body", zap.Error(err))
-				}
-			}()
-		}
-
 		// send workflowInvokeRequest
-		go f(workflowInvokeRequest)
+		go sendMessage(workflowInvokeRequest)
 
 		// block and get result
 		result := <-op.GetChannel()
@@ -882,7 +871,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Workflow Completed Successfully",
+			logger.Info("Workflow Completed Successfully",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -939,15 +928,6 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 	var opts client.StartWorkflowOptions
 	if v := request.GetOptions(); v != nil {
 		opts = *v
-		if opts.DecisionTaskStartToCloseTimeout <= 0 {
-			opts.DecisionTaskStartToCloseTimeout = cadenceClientTimeout
-		}
-
-	} else {
-		opts = client.StartWorkflowOptions{
-			ExecutionStartToCloseTimeout:    cadenceClientTimeout,
-			DecisionTaskStartToCloseTimeout: cadenceClientTimeout,
-		}
 	}
 
 	// signalwithstart the specified workflow
@@ -1006,6 +986,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 	err := clientHelper.CancelWorkflow(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -1050,6 +1031,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 	err := clientHelper.TerminateWorkflow(ctx,
 		*request.GetWorkflowID(),
 		*request.GetRunID(),
+		*request.GetDomain(),
 		*request.GetReason(),
 		request.GetDetails(),
 	)
@@ -1095,6 +1077,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 	// signalwithstart the specified workflow
 	workflowExecution, err := clientHelper.SignalWithStartWorkflow(ctx,
 		workflowID,
+		*request.GetDomain(),
 		*request.GetSignalName(),
 		request.GetSignalArgs(),
 		*request.GetOptions(),
@@ -1169,6 +1152,10 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 		return reply
 	}
 
+	// set ReplayStatus
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// f function for workflow.MutableSideEffect
 	mutableFunc := func(ctx workflow.Context) interface{} {
 		return request.GetResult()
@@ -1212,7 +1199,6 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	// https://github.com/nforgeio/neonKUBE/issues/562
 	//
 	// FYI: This is deprecated and will never be called now.
-	ctx := wectx.GetContext()
 	err := workflow.Sleep(ctx, time.Second)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -1265,7 +1251,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 		return reply
 	}
 
-	// create the context to cancel the workflow
+	// create the context
 	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
@@ -1273,6 +1259,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	dwer, err := clientHelper.DescribeWorkflowExecution(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -1305,7 +1292,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
-	// create the context to cancel the workflow
+	// create the context
 	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 	defer cancel()
 
@@ -1313,6 +1300,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	workflowRun, err := clientHelper.GetWorkflow(ctx,
 		*request.GetWorkflowID(),
 		*request.GetRunID(),
+		*request.GetDomain(),
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
@@ -1388,31 +1376,17 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
 		workflowSignalInvokeRequest.SetSignalName(signalName)
 
+		// set ReplayStatus
+		setReplayStatus(ctx, workflowSignalInvokeRequest)
+
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, workflowSignalInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
 
-		// send a request to the
-		// Neon.Cadence Lib
-		f := func(message messages.IProxyRequest) {
-			resp, err := putToNeonCadenceClient(message)
-			if err != nil {
-				panic(err)
-			}
-			defer func() {
-
-				// $debug(jack.burns): DELETE THIS!
-				err := resp.Body.Close()
-				if err != nil {
-					logger.Error("could not close response body", zap.Error(err))
-				}
-			}()
-		}
-
 		// send the request
-		go f(workflowSignalInvokeRequest)
+		go sendMessage(workflowSignalInvokeRequest)
 
 		// wait for the future to be unblocked
 		result := <-op.GetChannel()
@@ -1430,7 +1404,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		case bool:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("signal completed successfully",
+			logger.Info("signal completed successfully",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
@@ -1438,8 +1412,9 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			)
 
 		default:
+
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("signal result unexpected",
+			logger.Info("signal result unexpected",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
@@ -1505,6 +1480,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 	err := clientHelper.SignalWorkflow(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 		*request.GetSignalName(),
 		request.GetSignalArgs(),
 	)
@@ -1550,8 +1526,12 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 		return reply
 	}
 
+	// set ReplayStatus
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// build the reply
-	buildReply(reply, nil, workflow.HasLastCompletionResult(wectx.GetContext()))
+	buildReply(reply, nil, workflow.HasLastCompletionResult(ctx))
 
 	return reply
 }
@@ -1585,9 +1565,13 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 		return reply
 	}
 
+	// set replay status
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// get the last completion result from the cadence client
 	var result []byte
-	err := workflow.GetLastCompletionResult(wectx.GetContext(), &result)
+	err := workflow.GetLastCompletionResult(ctx, &result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -1670,8 +1654,12 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 		return reply
 	}
 
+	// set replay status
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// build the reply
-	buildReply(reply, nil, workflow.Now(wectx.GetContext()))
+	buildReply(reply, nil, workflow.Now(ctx))
 
 	return reply
 }
@@ -1705,8 +1693,12 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 		return reply
 	}
 
+	// set ReplayStatus
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// pause the current workflow for the specified duration
-	err := workflow.Sleep(wectx.GetContext(), request.GetDuration())
+	err := workflow.Sleep(ctx, request.GetDuration())
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Cancelled))
 
@@ -1748,20 +1740,19 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 		return reply
 	}
 
+	// check if replaying
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// set options on the context
 	var opts workflow.ChildWorkflowOptions
 	if v := request.GetOptions(); v != nil {
 		opts = *v
-	} else {
-		opts = workflow.ChildWorkflowOptions{
-			ExecutionStartToCloseTimeout: cadenceClientTimeout,
-			TaskStartToCloseTimeout:      cadenceClientTimeout,
-		}
 	}
 
 	// set cancellation on the context
 	// execute the child workflow
-	ctx := workflow.WithChildOptions(wectx.GetContext(), opts)
+	ctx = workflow.WithChildOptions(ctx, opts)
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx,
 		*request.GetWorkflow(),
@@ -1823,9 +1814,13 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		return reply
 	}
 
+	// set ReplayStatus
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// wait on the child workflow
 	var result []byte
-	if err := cctx.GetFuture().Get(wectx.GetContext(), &result); err != nil {
+	if err := cctx.GetFuture().Get(ctx, &result); err != nil {
 		var cadenceError *cadenceerrors.CadenceError
 		if isCanceledErr(err) {
 			cadenceError = cadenceerrors.NewCadenceError(err.Error(), cadenceerrors.Cancelled)
@@ -1874,12 +1869,6 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
-	if wectx == nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
-
-		return reply
-	}
-
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
@@ -1887,8 +1876,11 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		return reply
 	}
 
-	// signal the child workflow
+	// set ReplayStatus
 	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
+	// signal the child workflow
 	future := cctx.GetFuture().SignalChildWorkflow(ctx,
 		*request.GetSignalName(),
 		request.GetSignalArgs(),
@@ -1939,6 +1931,9 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 
 		return reply
 	}
+
+	// set replaying
+	setReplayStatus(wectx.GetContext(), reply)
 
 	// get cancel function
 	// call the cancel function
@@ -1993,31 +1988,17 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
 		workflowQueryInvokeRequest.SetQueryName(queryName)
 
+		// set ReplayStatus
+		setReplayStatus(ctx, workflowQueryInvokeRequest)
+
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, workflowQueryInvokeRequest)
 		op.SetContextID(contextID)
 		op.SetChannel(make(chan interface{}))
 		Operations.Add(requestID, op)
 
-		// send a request to the
-		// Neon.Cadence Lib
-		f := func(message messages.IProxyRequest) {
-			resp, err := putToNeonCadenceClient(message)
-			if err != nil {
-				panic(err)
-			}
-			defer func() {
-
-				// $debug(jack.burns): DELETE THIS!
-				err := resp.Body.Close()
-				if err != nil {
-					logger.Error("could not close response body", zap.Error(err))
-				}
-			}()
-		}
-
 		// send the request
-		go f(workflowQueryInvokeRequest)
+		go sendMessage(workflowQueryInvokeRequest)
 
 		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
@@ -2027,7 +2008,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		case error:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Query Failed With Error",
+			logger.Error("Query Failed With Error",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2041,7 +2022,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Query Completed Successfully",
+			logger.Info("Query Completed Successfully",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2103,6 +2084,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 	value, err := clientHelper.QueryWorkflow(ctx,
 		workflowID,
 		runID,
+		*request.GetDomain(),
 		*request.GetQueryName(),
 		request.GetQueryArgs(),
 	)
@@ -2158,8 +2140,12 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 		return reply
 	}
 
+	// set ReplayStatus
+	ctx := wectx.GetContext()
+	setReplayStatus(ctx, reply)
+
 	// get the workflow version
-	version := workflow.GetVersion(wectx.GetContext(),
+	version := workflow.GetVersion(ctx,
 		*request.GetChangeID(),
 		workflow.Version(request.GetMinSupported()),
 		workflow.Version(request.GetMaxSupported()),
@@ -2230,23 +2216,6 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		// get worker stop channel on the context
 		stopChan := activity.GetWorkerStopChannel(ctx)
 
-		// send a request to the
-		// Neon.Cadence Lib
-		f := func(message messages.IProxyRequest) {
-			resp, err := putToNeonCadenceClient(message)
-			if err != nil {
-				panic(err)
-			}
-			defer func() {
-
-				// $debug(jack.burns): DELETE THIS!
-				err := resp.Body.Close()
-				if err != nil {
-					logger.Error("could not close response body", zap.Error(err))
-				}
-			}()
-		}
-
 		// Send and wait for
 		// ActivityStoppingRequest
 		s := func() {
@@ -2269,13 +2238,13 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			Operations.Add(requestID, op)
 
 			// send the request and wait for the reply
-			go f(activityStoppingRequest)
+			go sendMessage(activityStoppingRequest)
 			<-stoppingReplyChan
 		}
 
 		// run go routines
 		go s()
-		go f(activityInvokeRequest)
+		go sendMessage(activityInvokeRequest)
 
 		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
@@ -2285,7 +2254,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		case error:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Failed With Error",
+			logger.Error("Activity Failed With Error",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2299,7 +2268,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Completed Successfully",
+			logger.Info("Activity Completed Successfully",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -2467,18 +2436,18 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	var err error
 	details := request.GetDetails()
 	if request.GetTaskToken() == nil {
-		activityID := request.GetActivityID()
-		if activityID == nil {
+		if request.GetActivityID() == nil {
 			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
 		} else {
 			ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
 			defer cancel()
 
+			// RecordActivityHeartbeatByID
 			err = clientHelper.RecordActivityHeartbeatByID(ctx,
 				*request.GetDomain(),
 				*request.GetWorkflowID(),
 				*request.GetRunID(),
-				*activityID,
+				*request.GetActivityID(),
 				details,
 			)
 		}
@@ -2492,10 +2461,10 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		// record the heartbeat details
 		err = clientHelper.RecordActivityHeartbeat(ctx,
 			request.GetTaskToken(),
+			*request.GetDomain(),
 			details,
 		)
 	}
-
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -2585,11 +2554,11 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	} else {
 		err = clientHelper.CompleteActivity(ctx,
 			taskToken,
+			*request.GetDomain(),
 			request.GetResult(),
 			request.GetError(),
 		)
 	}
-
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -2657,25 +2626,8 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		op.SetContextID(activityContextID)
 		Operations.Add(requestID, op)
 
-		// send a request to the
-		// Neon.Cadence Lib
-		f := func(message messages.IProxyRequest) {
-			resp, err := putToNeonCadenceClient(message)
-			if err != nil {
-				panic(err)
-			}
-			defer func() {
-
-				// $debug(jack.burns): DELETE THIS!
-				err := resp.Body.Close()
-				if err != nil {
-					logger.Error("could not close response body", zap.Error(err))
-				}
-			}()
-		}
-
 		// send the request
-		go f(activityInvokeLocalRequest)
+		go sendMessage(activityInvokeLocalRequest)
 
 		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
@@ -2685,7 +2637,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		case error:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Failed With Error",
+			logger.Error("Activity Failed With Error",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),
@@ -2700,7 +2652,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		case []byte:
 
 			// $debug(jack.burns): DELETE THIS!
-			logger.Debug("Activity Successful",
+			logger.Info("Activity Successful",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),
@@ -2721,14 +2673,6 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	var opts workflow.LocalActivityOptions
 	if v := request.GetOptions(); v == nil {
 		opts = *v
-		if opts.ScheduleToCloseTimeout <= 0 {
-			opts.ScheduleToCloseTimeout = cadenceClientTimeout
-		}
-
-	} else {
-		opts = workflow.LocalActivityOptions{
-			ScheduleToCloseTimeout: cadenceClientTimeout,
-		}
 	}
 
 	// and set the activity options on the context
@@ -2751,49 +2695,32 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 // -------------------------------------------------------------------------
 // Helpers for sending ProxyReply messages back to Neon.Cadence Library
 
-func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
-
-	// $debug(jack.burns): DELETE THIS!
-	proxyMessage := message.GetProxyMessage()
-	logger.Info("Sending request to Neon.Cadence client",
-		zap.String("Address", replyAddress),
-		zap.String("MessageType", proxyMessage.Type.String()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
-
-	// serialize the message
-	content, err := proxyMessage.Serialize(false)
-	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Error("Error serializing proxy message", zap.Error(err))
-		return nil, err
+func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
+	isReplaying := workflow.IsReplaying(ctx)
+	switch s := message.(type) {
+	case messages.IWorkflowReply:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowQueryInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowSignalInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
 	}
-
-	// create a buffer with the serialized bytes to reply with
-	// and create the PUT request
-	buf := bytes.NewBuffer(content)
-	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
-	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Error("Error creating Neon.Cadence Library request", zap.Error(err))
-		return nil, err
-	}
-
-	// set the request header to specified content type
-	// and disable http request compression
-	req.Header.Set("Content-Type", globals.ContentType)
-	req.Header.Set("Accept-Encoding", "identity")
-
-	// initialize the http.Client and send the request
-	resp, err := httpClient.Do(req)
-	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Error("Error sending Neon.Cadence Library request", zap.Error(err))
-		return nil, err
-	}
-
-	return resp, nil
 }

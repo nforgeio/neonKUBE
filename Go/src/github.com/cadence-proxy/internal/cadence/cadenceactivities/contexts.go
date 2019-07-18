@@ -37,7 +37,7 @@ type (
 	// ActivityContextsMap holds a thread-safe map[interface{}]interface{} of
 	// cadence ActivityContextsMap with their contextID's
 	ActivityContextsMap struct {
-		sync.Map
+		safeMap sync.Map
 	}
 
 	// ActivityContext holds a Cadence activity
@@ -174,7 +174,7 @@ func (actx *ActivityContext) SetCancelFunction(value func()) {
 //
 // returns int64 -> long id of the new cadence ActivityContext added to the map
 func (actxs *ActivityContextsMap) Add(id int64, actx *ActivityContext) int64 {
-	actxs.Store(id, actx)
+	actxs.safeMap.Store(id, actx)
 	return id
 }
 
@@ -186,7 +186,7 @@ func (actxs *ActivityContextsMap) Add(id int64, actx *ActivityContext) int64 {
 //
 // returns int64 -> long id of the ActivityContext removed from the map
 func (actxs *ActivityContextsMap) Remove(id int64) int64 {
-	actxs.Delete(id)
+	actxs.safeMap.Delete(id)
 	return id
 }
 
@@ -198,7 +198,7 @@ func (actxs *ActivityContextsMap) Remove(id int64) int64 {
 //
 // returns *ActivityContext -> pointer to ActivityContext with the specified id
 func (actxs *ActivityContextsMap) Get(id int64) *ActivityContext {
-	if v, ok := actxs.Load(id); ok {
+	if v, ok := actxs.safeMap.Load(id); ok {
 		if _v, _ok := v.(*ActivityContext); _ok {
 			return _v
 		}

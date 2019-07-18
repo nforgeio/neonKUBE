@@ -369,9 +369,7 @@ func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError 
 		if v, ok := describeDomainResponse[0].(*cadenceshared.DescribeDomainResponse); ok {
 			reply.SetDomainInfoName(v.DomainInfo.Name)
 			reply.SetDomainInfoDescription(v.DomainInfo.Description)
-
-			domainStatus := cadenceclient.DomainStatus(int(*v.DomainInfo.Status))
-			reply.SetDomainInfoStatus(&domainStatus)
+			reply.SetDomainInfoStatus(cadenceclient.StringToDomainStatus(v.DomainInfo.Status.String()))
 			reply.SetConfigurationEmitMetrics(*v.Configuration.EmitMetric)
 			reply.SetConfigurationRetentionDays(*v.Configuration.WorkflowExecutionRetentionPeriodInDays)
 			reply.SetDomainInfoOwnerEmail(v.DomainInfo.OwnerEmail)

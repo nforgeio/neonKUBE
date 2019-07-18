@@ -86,6 +86,24 @@ func (request *WorkflowDescribeExecutionRequest) SetRunID(value *string) {
 	request.SetStringProperty("RunId", value)
 }
 
+// GetDomain gets a WorkflowDescribeExecutionRequest's Domain value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowDescribeExecutionRequest's Domain
+func (request *WorkflowDescribeExecutionRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a WorkflowDescribeExecutionRequest's Domain value
+// in its properties map.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowDescribeExecutionRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -104,5 +122,6 @@ func (request *WorkflowDescribeExecutionRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowDescribeExecutionRequest); ok {
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetRunID(request.GetRunID())
+		v.SetDomain(request.GetDomain())
 	}
 }
