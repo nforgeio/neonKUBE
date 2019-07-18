@@ -57,11 +57,17 @@ namespace Neon.Cadence.Internal
         //---------------------------------------------------------------------
         // Instance members
 
+        private CadenceClient   client;
+
         /// <summary>
         /// Default constructor.
         /// </summary>
-        internal WorkflowStub()
+        /// <param name="client">The associated client.</param>
+        internal WorkflowStub(CadenceClient client)
         {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            this.client = client;
         }
 
         /// <inheritdoc/>

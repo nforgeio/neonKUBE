@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowStubHelper.cs
+// FILE:	    WorkflowInterfaceHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,9 +32,9 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Used to simplify the generation and implementation of typed
-    /// workflow stubs.
+    /// workflow stubs for a workflow interface.
     /// </summary>
-    internal class WorkflowStubHelper
+    internal class WorkflowInterfaceHelper
     {
         //---------------------------------------------------------------------
         // Private types
@@ -42,7 +42,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Describes what a workflow interface method does.
         /// </summary>
-        private enum WorkflowMethodType
+        private enum WorkflowMethodKind
         {
             /// <summary>
             /// The method implements a query.
@@ -55,7 +55,7 @@ namespace Neon.Cadence.Internal
             Signal,
 
             /// <summary>
-            /// The method is a workflow entrypoint.
+            /// The method is a workflow entry point.
             /// </summary>
             Workflow
         }
@@ -68,7 +68,7 @@ namespace Neon.Cadence.Internal
             /// <summary>
             /// The workflow method type.
             /// </summary>
-            public WorkflowMethodType Type { get; set; }
+            public WorkflowMethodKind Kind { get; set; }
 
             /// <summary>
             /// The signal attributes for signal methods.
@@ -84,19 +84,43 @@ namespace Neon.Cadence.Internal
             /// The workflow attributes for workflow methods.
             /// </summary>
             public WorkflowMethodAttribute WorkflowAttribute { get; set; }
+
+            /// <summary>
+            /// The workflow result type, not including the wrapping <see cref="Task"/>.
+            /// This will be <see cref="void"/> for methods that don't return a value.
+            /// </summary>
+            public Type ReturnType { get; set; }
+
+            /// <summary>
+            /// The low-level method information.
+            /// </summary>
+            public MethodInfo Method { get; set; }
         }
 
         //---------------------------------------------------------------------
-        // Implementation
+        // Static members
 
-        private CadenceClient                                   client;
-        private Type                                            workflowInterface;
-        private string                                          taskList;
-        private WorkflowOptions                                 options;
-        private string                                          domain;
-        private WorkflowStub                                    untypedStub;
-        private bool                                            hasStarted;
-        private Dictionary<MethodBase, WorkflowMethodDetails>   methodToDetails;
+        // This dictionary maps workflow interfaces to their dynamically generated
+        // assemblies.
+
+        private static Dictionary<Type, Assembly> workflowInterfaceToStub = new Dictionary<Type, Assembly>();
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private CadenceClient       client;
+        private Type                workflowInterface;
+        private string              taskList;
+        private WorkflowOptions     options;
+        private string              domain;
+        private WorkflowStub        untypedStub;
+        private bool                hasStarted;
+
+        // Maps the workflow entry point, signal, or query methods to 
+        // implementation details using the method's [MethodBase.ToString()]
+        // value as the key.
+
+        private Dictionary<string, WorkflowMethodDetails>   methodToDetails;
 
         /// <summary>
         /// Constructor.
@@ -107,12 +131,14 @@ namespace Neon.Cadence.Internal
         /// <param name="taskList">Optionally specifies the target task list.</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="domain">Optionally specifies the target domain.</param>
-        public WorkflowStubHelper(CadenceClient client, Type workflowInterface, WorkflowExecution execution = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        public WorkflowInterfaceHelper(CadenceClient client, Type workflowInterface, WorkflowExecution execution = null, string taskList = null, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Contract.Requires<ArgumentNullException>(workflowInterface != null);
             Contract.Requires<ArgumentException>(!workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
             Contract.Requires<ArgumentException>(!workflowInterface.IsGenericType, $"The [{workflowInterface.Name}] interface is generic.  This is not allowed.");
+
+            options = options ?? new WorkflowOptions();
 
             if (string.IsNullOrEmpty(domain))
             {
@@ -121,12 +147,22 @@ namespace Neon.Cadence.Internal
 
             this.client            = client;
             this.workflowInterface = workflowInterface;
-            this.taskList          = taskList;
             this.options           = options;
+            this.taskList          = taskList ?? client.Settings.DefaultTaskList;
             this.domain            = domain ?? client.Settings.DefaultDomain;
-            this.untypedStub       = new WorkflowStub() { Execution = execution, Options = options };
+            this.untypedStub       = new WorkflowStub(client) { Execution = execution, Options = options };
             this.hasStarted        = execution != null;
-            this.methodToDetails   = new Dictionary<MethodBase, WorkflowMethodDetails>();
+            this.methodToDetails   = new Dictionary<string, WorkflowMethodDetails>();
+
+            if (string.IsNullOrEmpty(this.taskList))
+            {
+                throw new ArgumentException("No Cadence task list was specified either explicitly or as the default in the client settings.");
+            }
+
+            if (string.IsNullOrEmpty(this.domain))
+            {
+                throw new ArgumentException("No Cadence domain was specified either explicitly or as the default in the client settings.");
+            }
 
             // Scan the interface methods to identify those tagged to indicate 
             // that they are query, signal, or workflow methods and build a table
@@ -135,27 +171,28 @@ namespace Neon.Cadence.Internal
             //
             // We're also going to ensure that all interface methods are tagged
             // as being a signal, query, or workflow method and that no method
-            // is tagged more than once and that the interface has at least one
-            // workflow method.
+            // is tagged more than once and finally, that the interface has at
+            // least one workflow method.
             //
             // Note this code will also ensure that all workflow interface methods
             // implement a task/async signature by returning a Task and also that
             // all signal and query methods have unique names.
 
-            var signalNames   = new HashSet<string>();
-            var queryNames    = new HashSet<string>();
-            var methodDetails = new WorkflowMethodDetails();
-
-            this.methodToDetails = new Dictionary<MethodBase, WorkflowMethodDetails>();
+            var signalNames = new HashSet<string>();
+            var queryNames  = new HashSet<string>();
 
             foreach (var method in workflowInterface.GetMethods())
             {
+                var details = new WorkflowMethodDetails() { Method = method };
+
                 if (method.ReturnType.IsGenericType)
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
                         throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
+
+                    details.ReturnType = typeof(void);
                 }
                 else
                 {
@@ -163,6 +200,8 @@ namespace Neon.Cadence.Internal
                     {
                         throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
+
+                    details.ReturnType = method.ReturnType.GetGenericArguments().First();
                 }
 
                 var signalAttributes   = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
@@ -190,10 +229,8 @@ namespace Neon.Cadence.Internal
 
                     signalNames.Add(signalAttribute.Name);
 
-                    methodDetails.Type            = WorkflowMethodType.Signal;
-                    methodDetails.SignalAttribute = signalAttribute;
-
-                    methodToDetails.Add(method, methodDetails);
+                    details.Kind            = WorkflowMethodKind.Signal;
+                    details.SignalAttribute = signalAttribute;
                 }
                 else if (queryAttributes.Length > 0)
                 {
@@ -206,24 +243,22 @@ namespace Neon.Cadence.Internal
 
                     queryNames.Add(queryAttribute.Name);
 
-                    methodDetails.Type           = WorkflowMethodType.Query;
-                    methodDetails.QueryAttribute = queryAttribute;
-
-                    methodToDetails.Add(method, methodDetails);
+                    details.Kind           = WorkflowMethodKind.Query;
+                    details.QueryAttribute = queryAttribute;
                 }
                 else if (workflowAttributes.Length > 0)
                 {
                     var workflowAttribute = workflowAttributes.First();
 
-                    methodDetails.Type              = WorkflowMethodType.Workflow;
-                    methodDetails.WorkflowAttribute = workflowAttribute;
-
-                    methodToDetails.Add(method, methodDetails);
+                    details.Kind              = WorkflowMethodKind.Workflow;
+                    details.WorkflowAttribute = workflowAttribute;
                 }
                 else
                 {
                     Covenant.Assert(false); // We should never get here.
                 }
+
+                methodToDetails.Add(method.ToString(), details);
             }
         }
 
@@ -243,6 +278,55 @@ namespace Neon.Cadence.Internal
         public WorkflowStub GetUntypedStub()
         {
             return untypedStub;
+        }
+
+        /// <summary>
+        /// Executes the workflow method with the specified method signature, passing 
+        /// the arguments.  This method will be used for executing workflows that 
+        /// return <see cref="void"/>.
+        /// </summary>
+        /// <param name="methodSignature">The workflow method signature.</param>
+        /// <param name="args">The method arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ExecuteAsync(string methodSignature, object[] args)
+        {
+            if (!methodToDetails.TryGetValue(methodSignature, out var details))
+            {
+                throw new KeyNotFoundException($"Cannot locate a workflow method with signature: {methodSignature}");
+            }
+
+            if (details.ReturnType != typeof(void))
+            {
+                throw new InvalidOperationException($"Cannot execute workflow method because the method returns a result when VOID is expected: {methodSignature}");
+            }
+
+            var execution = await untypedStub.StartAsync(args);
+
+            await untypedStub.GetResultAsync(typeof(void));
+        }
+
+        /// <summary>
+        /// Executes the workflow method with the specified method signature,
+        /// passing the arguments and returning the workflow result.
+        /// </summary>
+        /// <param name="methodSignature">The workflow method signature.</param>
+        /// <param name="args">The method arguments.</param>
+        /// <returns>The method result.</returns>
+        public async Task<object> ExecuteWithResultAsync(string methodSignature, object[] args)
+        {
+            if (!methodToDetails.TryGetValue(methodSignature, out var details))
+            {
+                throw new KeyNotFoundException($"Cannot locate a workflow method with signature: {methodSignature}");
+            }
+
+            if (details.ReturnType == typeof(void))
+            {
+                throw new InvalidOperationException($"Cannot execute workflow method because the method returns VOID when a result is expected: {methodSignature}");
+            }
+
+            var execution = await untypedStub.StartAsync(args);
+
+            return await untypedStub.GetResultAsync(details.ReturnType);
         }
     }
 }

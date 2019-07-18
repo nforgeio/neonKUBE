@@ -61,6 +61,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.2.0-beta4-final" />
   </ItemGroup>
 
   <ItemGroup>
