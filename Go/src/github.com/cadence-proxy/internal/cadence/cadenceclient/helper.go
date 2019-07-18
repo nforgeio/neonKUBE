@@ -202,9 +202,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 		break
 	}
 	if err != nil {
-		defer func() {
-			helper = nil
-		}()
+		helper = nil
 		return err
 	}
 	helper.Service = service
@@ -229,9 +227,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	// poll on system domain
 	err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
 	if err != nil {
-		defer func() {
-			helper = nil
-		}()
+		helper = nil
 		return err
 	}
 

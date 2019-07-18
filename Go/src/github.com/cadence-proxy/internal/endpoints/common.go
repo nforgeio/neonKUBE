@@ -172,6 +172,68 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	return message, nil
 }
 
+func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
+
+	// $debug(jack.burns): DELETE THIS!
+	proxyMessage := message.GetProxyMessage()
+	logger.Info("Sending request to Neon.Cadence client",
+		zap.String("Address", replyAddress),
+		zap.String("MessageType", proxyMessage.Type.String()),
+		zap.Int("ProcessId", os.Getpid()),
+	)
+
+	// serialize the message
+	content, err := proxyMessage.Serialize(false)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Error serializing proxy message", zap.Error(err))
+		return nil, err
+	}
+
+	// create a buffer with the serialized bytes to reply with
+	// and create the PUT request
+	buf := bytes.NewBuffer(content)
+	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Error creating Neon.Cadence Library request", zap.Error(err))
+		return nil, err
+	}
+
+	// set the request header to specified content type
+	// and disable http request compression
+	req.Header.Set("Content-Type", globals.ContentType)
+	req.Header.Set("Accept-Encoding", "identity")
+
+	// initialize the http.Client and send the request
+	resp, err := httpClient.Do(req)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Error sending Neon.Cadence Library request", zap.Error(err))
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func sendMessage(message messages.IProxyMessage) {
+	resp, err := putToNeonCadenceClient(message)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+
+		// $debug(jack.burns): DELETE THIS!
+		err := resp.Body.Close()
+		if err != nil {
+			logger.Error("could not close response body", zap.Error(err))
+		}
+	}()
+}
+
 func isCanceledErr(err interface{}) bool {
 	var errStr string
 	if v, ok := err.(*cadenceerrors.CadenceError); ok {
