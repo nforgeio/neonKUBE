@@ -45,9 +45,9 @@ type (
 	// This struct is used as an intermediate for storing worklfow information
 	// and state while registering and executing cadence workflows
 	WorkflowContext struct {
-		ctx           workflow.Context
 		workflowName  *string
-		cancelFunc    func()
+		ctx           workflow.Context
+		cancelFunc    workflow.CancelFunc
 		childContexts *ChildContextsMap
 	}
 )
@@ -61,7 +61,6 @@ func NextContextID() int64 {
 	mu.Lock()
 	contextID = contextID + 1
 	defer mu.Unlock()
-
 	return contextID
 }
 
@@ -70,7 +69,6 @@ func NextContextID() int64 {
 func GetContextID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-
 	return contextID
 }
 
@@ -121,15 +119,15 @@ func (wectx *WorkflowContext) SetWorkflowName(value *string) {
 
 // GetCancelFunction gets a WorkflowContext's context cancel function
 //
-// returns func() -> a cadence workflow context cancel function
-func (wectx *WorkflowContext) GetCancelFunction() func() {
+// returns workflow.CancelFunc -> a cadence workflow context cancel function
+func (wectx *WorkflowContext) GetCancelFunction() workflow.CancelFunc {
 	return wectx.cancelFunc
 }
 
 // SetCancelFunction sets a WorkflowContext's cancel function
 //
-// param value func() -> a cadence workflow context cancel function
-func (wectx *WorkflowContext) SetCancelFunction(value func()) {
+// param value workflow.CancelFunc -> a cadence workflow context cancel function
+func (wectx *WorkflowContext) SetCancelFunction(value workflow.CancelFunc) {
 	wectx.cancelFunc = value
 }
 

@@ -49,7 +49,6 @@ func NextWorkerID() int64 {
 	mu.Lock()
 	workerID = workerID + 1
 	defer mu.Unlock()
-
 	return workerID
 }
 

@@ -58,7 +58,6 @@ func NextRequestID() int64 {
 	mu.Lock()
 	requestID = requestID + 1
 	defer mu.Unlock()
-
 	return requestID
 }
 

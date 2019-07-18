@@ -44,7 +44,7 @@ type (
 	// and cancellation function
 	ChildContext struct {
 		future     workflow.ChildWorkflowFuture
-		cancelFunc func()
+		cancelFunc workflow.CancelFunc
 	}
 )
 
@@ -57,7 +57,6 @@ func NextChildID() int64 {
 	mu.Lock()
 	childID = childID + 1
 	defer mu.Unlock()
-
 	return childID
 }
 
@@ -66,7 +65,6 @@ func NextChildID() int64 {
 func GetChildID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-
 	return childID
 }
 
@@ -84,15 +82,15 @@ func NewChildContext() *ChildContext {
 
 // GetCancelFunction gets a ChildContext's context cancel function
 //
-// returns func() -> a cadence workflow context cancel function
-func (cctx *ChildContext) GetCancelFunction() func() {
+// returns workflow.CancelFunc -> a cadence workflow context cancel function
+func (cctx *ChildContext) GetCancelFunction() workflow.CancelFunc {
 	return cctx.cancelFunc
 }
 
 // SetCancelFunction sets a ChildContext's cancel function
 //
-// param value func() -> a cadence workflow context cancel function
-func (cctx *ChildContext) SetCancelFunction(value func()) {
+// param value workflow.CancelFunc -> a cadence workflow context cancel function
+func (cctx *ChildContext) SetCancelFunction(value workflow.CancelFunc) {
 	cctx.cancelFunc = value
 }
 

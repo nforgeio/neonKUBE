@@ -52,9 +52,8 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	// defer panic recovery
 	var err error
 	var reply messages.IProxyReply
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 	defer func() {
-		cancel()
 
 		// recover from panic
 		if r := recover(); r != nil {
@@ -81,8 +80,9 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 
 	// look for IsCancelled
 	if request.GetIsCancellable() {
-		c := NewCancellable(ctx, cancel)
-		_ = Cancellables.Add(request.GetRequestID(), c)
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithCancel(ctx)
+		_ = Cancellables.Add(request.GetRequestID(), cancel)
 	}
 
 	// handle the messages individually
@@ -384,19 +384,15 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 
 	// try and cancel the operation
 	var wasCancelled bool
-	var err *cadenceerrors.CadenceError
-	if cancellable := Cancellables.Get(targetID); cancellable != nil {
+	if cancel := Cancellables.Get(targetID); cancel != nil {
 		wasCancelled = true
-		cancel := cancellable.GetCancelFunction()
 		cancel()
-	} else {
-		err = cadenceerrors.NewCadenceError(
-			fmt.Sprintf("could not cancel target operation with RequestID %d", targetID),
-			cadenceerrors.Custom,
-		)
+		defer func() {
+			_ = Cancellables.Remove(targetID)
+		}()
 	}
 
-	buildReply(reply, err, wasCancelled)
+	buildReply(reply, nil, wasCancelled)
 
 	return reply
 }
@@ -2363,13 +2359,15 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 		return reply
 	}
 
-	// create the new context and a []byte to
-	// drop the heartbeat details into
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
-	defer cancel()
+	actx := ActivityContexts.Get(request.GetContextID())
+	if actx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
+
+		return reply
+	}
 
 	// build the reply
-	buildReply(reply, nil, activity.HasHeartbeatDetails(ctx))
+	buildReply(reply, nil, activity.HasHeartbeatDetails(actx.GetContext()))
 
 	return reply
 }
@@ -2393,14 +2391,17 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 		return reply
 	}
 
-	// create the new context and a []byte to
-	// drop the heartbeat details into
-	var details []byte
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
-	defer cancel()
+	// get the activity context
+	actx := ActivityContexts.Get(request.GetContextID())
+	if actx == nil {
+		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
+
+		return reply
+	}
 
 	// get the activity heartbeat details
-	err := activity.GetHeartbeatDetails(ctx, &details)
+	var details []byte
+	err := activity.GetHeartbeatDetails(actx.GetContext(), &details)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -2438,6 +2439,12 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	details := request.GetDetails()
 	if request.GetTaskToken() == nil {
 		if request.GetActivityID() == nil {
+			actx := ActivityContexts.Get(request.GetContextID())
+			if actx == nil {
+				buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist.Error()))
+
+				return reply
+			}
 			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
 		} else {
 			ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
@@ -2672,7 +2679,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 	// get the activity options
 	var opts workflow.LocalActivityOptions
-	if v := request.GetOptions(); v == nil {
+	if v := request.GetOptions(); v != nil {
 		opts = *v
 	}
 
