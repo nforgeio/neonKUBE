@@ -86,8 +86,8 @@ namespace Neon.Cadence.Internal
         /// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((int)Cadence.ChildPolicy.Abandon)]
-        public int ChildPolicy { get; set; } = (int)Cadence.ChildPolicy.Abandon;
+        [DefaultValue((int)ChildTerminationPolicy.Abandon)]
+        public int ChildPolicy { get; set; } = (int)ChildTerminationPolicy.Abandon;
 
         /// <summary>
         /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended
@@ -118,10 +118,10 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <para>
         /// CronSchedule - Optional cron schedule for workflow. If a cron schedule is specified, the workflow will run
-        /// as a CRON workflow based on the schedule. The scheduling will be based on UTC time. Schedule for next execution only happen
-        /// after the current execution is completed/failed/timeout. If a RetryPolicy is also supplied, and the workflow failed
+        /// as a cron based on the schedule. The scheduling will be based on UTC time. Schedule for next run only happen
+        /// after the current run is completed/failed/timeout. If a RetryPolicy is also supplied, and the workflow failed
         /// or timeout, the workflow will be retried based on the retry policy. While the workflow is retrying, it won't
-        /// schedule its next execution. If next schedule is due while workflow is running (or retrying), then it will skip that
+        /// schedule its next run. If next schedule is due while workflow is running (or retrying), then it will skip that
         /// schedule. Cron workflow will not stop until it is terminated or cancelled (by returning cadence.CanceledError).
         /// The cron spec is as following:
         /// </para>

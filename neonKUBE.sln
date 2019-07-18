@@ -239,7 +239,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Nats", "Lib\Neon.Nats\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.SSH.NET", "Lib\Neon.SSH.NET\Neon.SSH.NET.csproj", "{123530FE-5F4C-4129-97A8-2246DF8B583E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cadence2", "Test\Test.Neon.Cadence2\Test.Neon.Cadence2.csproj", "{3142BF8F-8A1A-4D4B-9527-6C496A9671F5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cadence2", "Lib\Neon.Xunit.Cadence2\Neon.Xunit.Cadence2.csproj", "{22AC27D9-1DB4-4D92-9E93-E181FF1981FD}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Web", "Test\Test.Neon.Web\Test.Neon.Web.csproj", "{DF45D6DD-02D7-479E-8856-A06A0C679B58}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cadence2", "Lib\Neon.Cadence2\Neon.Cadence2.csproj", "{239DFD58-B090-439A-BD75-6F26802FD912}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {C2071335-AFDF-4643-93A2-EAC482E90E73}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

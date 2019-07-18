@@ -53,7 +53,7 @@ namespace Neon.Cadence
         public TimeSpan ExecutionStartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
         /// <summary>
-        /// Optionally specifies the time out for processing decision task from the time the worker
+        /// Op[tionally specifies the time out for processing decision task from the time the worker
         /// pulled this task.  If a decision task is lost, it is retried after this timeout.
         /// This defaults to <b>10 seconds</b>.
         /// </summary>
@@ -66,9 +66,10 @@ namespace Neon.Cadence
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
         
         /// <summary>
-        /// Optional retry options for the workflow.
+        /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
+        /// server will start new workflow execution if needed based on the retry policy.
         /// </summary>
-        public RetryOptions RetryOptions { get; set; }
+        public CadenceRetryPolicy RetryPolicy { get; set; }
 
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
@@ -113,7 +114,7 @@ namespace Neon.Cadence
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>value1,value2,...</b></term>
+        ///     <term><b>valiue1,value2,...</b></term>
         ///     <description>
         ///     Matches a list of values to be matched.
         ///     </description>
@@ -151,7 +152,7 @@ namespace Neon.Cadence
                 TaskList                        = taskList,
                 DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.DecisionTaskStartToCloseTimeout),
                 ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
-                RetryPolicy                     = this.RetryOptions?.ToInternal(),
+                RetryPolicy                     = this.RetryPolicy?.ToInternal(),
                 WorkflowIdReusePolicy           = (int)this.WorkflowIdReusePolicy,
                 CronSchedule                    = this.CronSchedule,
                 Memo                            = this.Memo

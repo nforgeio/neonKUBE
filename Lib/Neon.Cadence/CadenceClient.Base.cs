@@ -52,9 +52,9 @@ namespace Neon.Cadence
         /// Signals Cadence that the application is capable of executing activities for a specific
         /// domain and task list.
         /// </summary>
+        /// <param name="domain">Optionally specifies the target Cadence domain.  This defaults to the domain configured for the client.</param>
         /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown when an attempt is made to recreate a worker with the
@@ -86,88 +86,66 @@ namespace Neon.Cadence
         /// are made.
         /// </note>
         /// </remarks>
-        private async Task<Worker> StartWorkerAsync(string taskList = "default", WorkerOptions options = null, string domain = null)
+        public async Task<Worker> StartWorkerAsync(string domain, string taskList = "default", WorkerOptions options = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+
+            Worker worker;
 
             options = options ?? new WorkerOptions();
 
-            WorkerMode  mode = options.Mode;
-            Worker      worker;
-
-            try
+            using (await workerRegistrationMutex.AcquireAsync())
             {
-                using (await workerRegistrationMutex.AcquireAsync())
+                // Ensure that we haven't already registered a worker for the
+                // specified activity, domain, and task list.  We'll just increment
+                // the reference count for the existing worker and return it 
+                // in this case.
+                //
+                // I know that this is a linear search but the number of activity
+                // registrations per service will generally be very small and 
+                // registrations will happen infrequently (typically just once
+                // per service, when it starts).
+
+                // $note(jeff.lill):
+                //
+                // If the worker exists but its [refcount==0], then we're going to
+                // throw an exception because Cadence doesn't support recreating
+                // a worker with the same parameters on the same client.
+
+                worker = workers.Values.SingleOrDefault(wf => 
+                    wf.Options.DisableActivityWorker == options.DisableActivityWorker && 
+                    wf.Options.DisableWorkflowWorker == options.DisableWorkflowWorker && 
+                    wf.Domain == domain && wf.Tasklist == taskList);
+
+                if (worker != null)
                 {
-                    // Ensure that we haven't already registered a worker for the
-                    // specified activity, domain, and task list.  We'll just increment
-                    // the reference count for the existing worker and return it 
-                    // in this case.
-                    //
-                    // I know that this is a linear search but the number of activity
-                    // registrations per service will generally be very small and 
-                    // registrations will happen infrequently (typically just once
-                    // per service, when it starts).
-
-                    // $note(jeff.lill):
-                    //
-                    // If the worker exists but its refcount==0, then we're going to
-                    // throw an exception because Cadence doesn't support recreating
-                    // a worker with the same parameters on the same client.
-
-                    worker = workers.Values.SingleOrDefault(wf => wf.Mode == mode && wf.Domain == domain && wf.Tasklist == taskList);
-
-                    if (worker != null)
+                    if (worker.RefCount == 0)
                     {
-                        if (worker.RefCount == 0)
-                        {
-                            throw new InvalidOperationException("A worker with these same parameters has already been started and stopped on this Cadence client.  Cadence does not support recreating workers for a given client instance.");
-                        }
-
-                        Interlocked.Increment(ref worker.RefCount);
-                        return worker;
+                        throw new InvalidOperationException("A worker with these same parameters has already been started and stopped on this Cadence client.  Cadence does not support recreating workers for a given client instance.");
                     }
 
-                    options = options ?? new WorkerOptions();
-
-                    var reply = (NewWorkerReply)(await CallProxyAsync(
-                        new NewWorkerRequest()
-                        {
-                            Domain   = ResolveDomain(domain),
-                            TaskList = taskList,
-                            Options  = options.ToInternal()
-                        }));
-
-                    reply.ThrowOnError();
-
-                    worker = new Worker(this, mode, reply.WorkerId, domain, taskList);
-                    workers.Add(reply.WorkerId, worker);
+                    Interlocked.Increment(ref worker.RefCount);
+                    return worker;
                 }
-            }
-            finally
-            {
-                switch (mode)
-                {
-                    case WorkerMode.Activity:
 
-                        activityWorkerStarted = true;
-                        break;
+                options = options ?? new WorkerOptions();
 
-                    case WorkerMode.Workflow:
+                var reply = (NewWorkerReply)(await CallProxyAsync(
+                    new NewWorkerRequest()
+                    {
+                        Domain   = domain,
+                        TaskList = taskList,
+                        Options  = options.ToInternal()
+                    }));
 
-                        workflowWorkerStarted = true;
-                        break;
+                reply.ThrowOnError();
 
-                    case WorkerMode.Both:
+                worker = new Worker(this, reply.WorkerId, domain, taskList, options);
+                workers.Add(reply.WorkerId, worker);
 
-                        activityWorkerStarted = true;
-                        workflowWorkerStarted = true;
-                        break;
-
-                    default:
-
-                        throw new NotImplementedException();
-                }
+                activityWorkerStarted = !options.DisableActivityWorker || activityWorkerStarted;
+                workflowWorkerStarted = !options.DisableWorkflowWorker || workflowWorkerStarted;
             }
 
             return worker;
@@ -176,7 +154,8 @@ namespace Neon.Cadence
         /// <summary>
         /// Signals Cadence that it should stop invoking activities and workflows 
         /// for the specified <see cref="Worker"/> (returned by a previous call to
-        /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>).
+        /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>)
+        /// or <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>

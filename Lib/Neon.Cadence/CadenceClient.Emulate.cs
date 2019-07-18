@@ -242,11 +242,6 @@ namespace Neon.Cadence
             public long WorkerId { get; set; }
 
             /// <summary>
-            /// Indicates whether the worker handles workflows or activities.
-            /// </summary>
-            public bool IsWorkflow { get; set; }
-
-            /// <summary>
             /// The worker domain.
             /// </summary>
             public string Domain { get; set; }
@@ -255,6 +250,11 @@ namespace Neon.Cadence
             /// The worker task list.
             /// </summary>
             public string TaskList { get; set; }
+
+            /// <summary>
+            /// Returns the worker options.
+            /// </summary>
+            public InternalWorkerOptions Options { get; set; }
 
             /// <summary>
             /// The workflows currently executing on the worker.
@@ -677,7 +677,8 @@ namespace Neon.Cadence
             {
                 WorkerId = workerId,
                 Domain   = request.Domain,
-                TaskList = request.TaskList
+                TaskList = request.TaskList,
+                Options  = request.Options
             };
 
             using (await emulationMutex.AcquireAsync())
@@ -901,7 +902,7 @@ namespace Neon.Cadence
                 RunId     = Guid.NewGuid().ToString("D"),
                 ContextId = contextId,
                 Args      = request.Args,
-                // Domain    = request.Domain,  // $todo(jeff.lill): Will need to get this from the new workflow client context
+                Domain    = request.Domain,
                 TaskList  = request.Options?.TaskList ?? CadenceClient.DefaultTaskList,
                 Name      = request.Workflow,
                 Options   = request.Options,
@@ -998,7 +999,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="EmulatedWorker"/> or <c>null</c>.</returns>
         private EmulatedWorker GetWorkflowWorker(string domain, string taskList)
         {
-            return emulatedWorkers.Values.SingleOrDefault(worker => worker.IsWorkflow && worker.Domain == domain && worker.TaskList == taskList);
+            return emulatedWorkers.Values.SingleOrDefault(worker => !worker.Options.DisableWorkflowWorker && worker.Domain == domain && worker.TaskList == taskList);
         }
 
         /// <summary>

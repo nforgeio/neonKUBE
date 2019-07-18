@@ -32,9 +32,9 @@ namespace Neon.Cadence
     public class WorkflowState
     {
         /// <summary>
-        /// Describes the workflow execution.
+        /// Describes the workflow run.
         /// </summary>
-        public WorkflowExecution Run { get; internal set; }
+        public WorkflowRun Run { get; internal set; }
 
         /// <summary>
         /// Identifies the workflow implementation.
@@ -70,7 +70,7 @@ namespace Neon.Cadence
         /// <summary>
         /// The status for a closed workflow.
         /// </summary>
-        public WorkflowExecutionCloseStatus WorkflowCloseStatus { get; internal set; }
+        public WorkflowCloseStatus WorkflowCloseStatus { get; internal set; }
 
         /// <summary>
         /// Workflow history length.
@@ -85,7 +85,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Identfies the parent workflow.
         /// </summary>
-        public WorkflowExecution ParentExecution { get; internal set; }
+        public WorkflowRun ParentExecution { get; internal set; }
 
         /// <summary>
         /// The workflow execution time.
@@ -96,5 +96,16 @@ namespace Neon.Cadence
         /// Optional workflow metadata.
         /// </summary>
         public Dictionary<string, byte[]> Memo { get; internal set; }
+
+        /// <summary>
+        /// <para>
+        /// Not sure what is for.
+        /// </para>
+        /// <note>
+        /// I'm making this <c>internal</c> for now until we decide it makes sense
+        /// to expose this to .NET workflow applications.
+        /// </note>
+        /// </summary>
+        internal List<WorkflowResetPoint> AutoResetPoints { get; set; }
     }
 }

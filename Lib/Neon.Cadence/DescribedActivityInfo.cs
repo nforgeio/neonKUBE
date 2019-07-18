@@ -52,12 +52,12 @@ namespace Neon.Cadence
         /// <summary>
         /// Time when the last activity heartbeat was received.
         /// </summary>
-        public DateTime LastHeartbeatTimeUtc { get; internal set; }
+        public DateTime LastHeartbeatTimestamp { get; internal set; }
 
         /// <summary>
         /// Time when the activity was most recently started.
         /// </summary>
-        public DateTime LastStartedTimeUtc { get; internal set; }
+        public DateTime LastStartedTimestamp { get; internal set; }
 
         /// <summary>
         /// The number of times the activity has been started/restarted.
@@ -72,11 +72,11 @@ namespace Neon.Cadence
         /// <summary>
         /// Time when the activity is scheduled to run.
         /// </summary>
-        public DateTime ScheduledTimeUtc { get; internal set; }
+        public DateTime ScheduledTimestamp { get; internal set; }
 
         /// <summary>
         /// Time when the activity must complete.
         /// </summary>
-        public DateTime ExpirationTimeUtc { get; internal set; }
+        public DateTime ExpirationTimestamp { get; internal set; }
     }
 }

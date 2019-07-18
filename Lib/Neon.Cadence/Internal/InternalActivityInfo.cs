@@ -38,7 +38,7 @@ namespace Neon.Cadence.Internal
         public byte[] TaskToken { get; set; }
 
         /// <summary>
-        /// The parent workflow type.
+        /// The parent workflow type name.
         /// </summary>
         public InternalWorkflowType WorkflowType { get; set; }
 
@@ -94,16 +94,16 @@ namespace Neon.Cadence.Internal
         public int Attempt { get; set; }
 
         /// <summary>
-        /// Converts the instance into a public <see cref="ActivityTask"/>.
+        /// Converts the instance into a public <see cref="ActivityInfo"/>.
         /// </summary>
-        public ActivityTask ToPublic()
+        public ActivityInfo ToPublic()
         {
-            return new ActivityTask()
+            return new ActivityInfo()
             {
                 TaskToken           = this.TaskToken,
                 WorkflowTypeName    = this.WorkflowType?.Name,
                 WorkflowDomain      = this.WorkflowDomain,
-                WorkflowExecution         = this.WorkflowExecution.ToPublic(),
+                WorkflowRun         = this.WorkflowExecution.ToPublic(),
                 ActivityId          = this.ActivityId,
                 ActivityTypeName    = this.ActivityType?.Name,
                 TaskList            = this.TaskList,

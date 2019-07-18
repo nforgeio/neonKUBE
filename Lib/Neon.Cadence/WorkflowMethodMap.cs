@@ -65,7 +65,7 @@ namespace Neon.Cadence
                 // Signal methods are tagged by [SignalHandler], accept a single byte array parameter,
                 // and returns [Task].
 
-                var signalHandlerAttribute = method.GetCustomAttribute<SignalMethodAttribute>();
+                var signalHandlerAttribute = method.GetCustomAttribute<SignalHandlerAttribute>();
 
                 if (signalHandlerAttribute != null)
                 {
@@ -90,7 +90,7 @@ namespace Neon.Cadence
                 // Query methods are tagged by [QueryHandler], accept a single byte array parameter,
                 // and returns [Task<byte[]>].
 
-                var queryHandlerAttribute = method.GetCustomAttribute<QueryMethodAttribute>();
+                var queryHandlerAttribute = method.GetCustomAttribute<QueryHandlerAttribute>();
 
                 if (queryHandlerAttribute != null)
                 {

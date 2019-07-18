@@ -393,7 +393,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         ///  <b>client --> proxy:</b> Determines whether the last execution of the workflow has
         ///  a completion result.  This can be used by CRON workflows to determine whether the
-        ///  last execution returned a result.
+        ///  last run returned a result.
         /// </summary>
         WorkflowHasLastResultRequest = 140,
 
@@ -404,7 +404,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         ///  <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
-        ///  This can be used by CRON workflows to retrieve state from the last workflow execution.
+        ///  This can be used by CRON workflows to retrieve state from the last workflow run.
         /// </summary>
         WorkflowGetLastResultRequest = 142,
 
@@ -530,7 +530,7 @@ namespace Neon.Cadence.Internal
         ActivityInvokeReply = 203,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity execution.
+        /// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity run.
         /// </summary>
         ActivityGetHeartbeatDetailsRequest = 204,
 

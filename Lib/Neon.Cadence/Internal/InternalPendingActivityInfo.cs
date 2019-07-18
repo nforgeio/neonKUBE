@@ -112,12 +112,12 @@ namespace Neon.Cadence.Internal
                 Name                   = this.ActivityType?.Name,
                 Status                 = (ActivityStatus)this.State,
                 HeartbeatDetails       = this.HeartbeatDetails,
-                LastHeartbeatTimeUtc = new DateTime(this.LastHeartbeatTimestamp),
-                LastStartedTimeUtc   = new DateTime(this.LastStartedTimestamp),
+                LastHeartbeatTimestamp = new DateTime(this.LastHeartbeatTimestamp),
+                LastStartedTimestamp   = new DateTime(this.LastStartedTimestamp),
                 Attempt                = this.Attempt,
                 MaximumAttempts        = this.MaximumAttempts,
-                ScheduledTimeUtc     = new DateTime(this.ScheduledTimestamp),
-                ExpirationTimeUtc    = new DateTime(this.ExpirationTimestamp)
+                ScheduledTimestamp     = new DateTime(this.ScheduledTimestamp),
+                ExpirationTimestamp    = new DateTime(this.ExpirationTimestamp)
             };
         }
     }

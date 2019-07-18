@@ -42,7 +42,8 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityCompleteReply;
 
         /// <summary>
-        /// The opaque activity task token.
+        /// Optionally specifies the opaque activity task token.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
         /// </summary>
         public byte[] TaskToken
         {
@@ -51,25 +52,8 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The target domain.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
-        }
-
-        /// <summary>
-        /// The target workflow ID.
-        /// </summary>
-        public string WorkflowId
-        {
-            get => GetStringProperty(PropertyNames.WorkflowId);
-            set => SetStringProperty(PropertyNames.WorkflowId, value);
-        }
-
-        /// <summary>
-        /// The target run ID.
+        /// Optionally specifies the opaque activity task token.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
         /// </summary>
         public string RunId
         {
@@ -78,7 +62,18 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The target activity ID.
+        /// Optionally specifies the activity domain.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
+        /// Optionally specifies the activity ID.  You can specify the target activity via 
+        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
         /// </summary>
         public string ActivityId
         {
@@ -122,12 +117,12 @@ namespace Neon.Cadence.Internal
             var typedTarget = (ActivityCompleteRequest)target;
 
             typedTarget.TaskToken  = this.TaskToken;
-            typedTarget.Domain     = this.Domain;
-            typedTarget.WorkflowId = this.WorkflowId;
-            typedTarget.RunId      = this.RunId;
-            typedTarget.ActivityId = this.ActivityId;
             typedTarget.Result     = this.Result;
             typedTarget.Error      = this.Error;
+            typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
+            typedTarget.ActivityId = this.ActivityId;
+            typedTarget.Result     = this.Result;
         }
     }
 }

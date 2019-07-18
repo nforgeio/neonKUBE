@@ -49,11 +49,11 @@ namespace Neon.Cadence.Internal
         public string RunID { get; set; }
 
         /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowExecution"/>.
+        /// Converts the instance into a public <see cref="WorkflowRun"/>.
         /// </summary>
-        public WorkflowExecution ToPublic()
+        public WorkflowRun ToPublic()
         {
-            return new WorkflowExecution(this.ID, this.RunID);
+            return new WorkflowRun(this.ID, this.RunID);
         }
     }
 }

@@ -40,12 +40,12 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Specifies the maximum time the activity can run.
         /// </summary>
-        public TimeSpan ScheduleToCloseTimeout { get; set; }
+        public TimeSpan ScheduleToCloseTimeoutSeconds { get; set; }
 
         /// <summary>
-        /// The activity retry options.
+        /// The activity retry policy.
         /// </summary>
-        public RetryOptions RetryOptions { get; set; } = null;
+        public CadenceRetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
         /// Converts this instance into the corresponding internal object.
@@ -55,8 +55,8 @@ namespace Neon.Cadence.Internal
         {
             return new InternalLocalActivityOptions()
             {
-                ScheduleToCloseTimeoutSeconds = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
-                RetryPolicy                   = RetryOptions?.ToInternal()
+                ScheduleToCloseTimeoutSeconds = CadenceHelper.ToCadence(this.ScheduleToCloseTimeoutSeconds),
+                RetryPolicy                   = RetryPolicy?.ToInternal()
             };
         }
     }
