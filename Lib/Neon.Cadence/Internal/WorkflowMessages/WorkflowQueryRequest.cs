@@ -61,6 +61,15 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
         /// Identifies the query.
         /// </summary>
         public string QueryName
@@ -97,6 +106,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
             typedTarget.QueryName  = this.QueryName;
             typedTarget.QueryArgs  = this.QueryArgs;
         }

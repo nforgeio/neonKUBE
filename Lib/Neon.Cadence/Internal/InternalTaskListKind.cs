@@ -23,7 +23,7 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Enumerates the different kinds of task lists.

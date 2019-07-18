@@ -47,29 +47,43 @@ namespace Neon.Cadence
         public string WorkflowId { get; set; } = null;
 
         /// <summary>
-        /// Specifies the maximum time the workflow may run from start
-        /// to finish.  This defaults to 365 days.
+        /// <para>
+        /// Specifies the maximum time the workflow may run from start to finish.
+        /// This will default to a very long time (currently 365 days) when unspecified.
+        /// </para>
+        /// <note>
+        /// This overrides the optional corresponding value specified in the
+        /// <see cref="WorkflowMethodAttribute"/> tagging the workflow entry 
+        /// point method.
+        /// </note>
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
+        public TimeSpan? ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
-        /// Op[tionally specifies the time out for processing decision task from the time the worker
-        /// pulled this task.  If a decision task is lost, it is retried after this timeout.
-        /// This defaults to <b>10 seconds</b>.
+        /// Optionally specifies the time out for processing decision task from the time the worker
+        /// pulled this task.  If a decision task times out, it will be retried after this timeout.
+        /// This defaults to <b>10 seconds</b> when not specified.  The maximum allowed is 60 seconds.
         /// </summary>
-        public TimeSpan DecisionTaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan? TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
-        /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// <para>
+        /// Optionally determines how Cadence handles workflows that attempt to reuse workflow IDs.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>
+        /// for workflows when not specified.
+        /// </para>
+        /// <note>
+        /// This overrides the optional corresponding value specified in the
+        /// <see cref="WorkflowMethodAttribute"/> tagging the workflow entry 
+        /// point method.
+        /// </note>
         /// </summary>
-        public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+        public WorkflowIdReusePolicy? WorkflowIdReusePolicy { get; set; }
         
         /// <summary>
-        /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
-        /// server will start new workflow execution if needed based on the retry policy.
+        /// Optional retry options for the workflow.
         /// </summary>
-        public CadenceRetryPolicy RetryPolicy { get; set; }
+        public RetryOptions RetryOptions { get; set; }
 
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
@@ -114,7 +128,7 @@ namespace Neon.Cadence
         ///     </description>
         /// </item>
         /// <item>
-        ///     <term><b>valiue1,value2,...</b></term>
+        ///     <term><b>value1,value2,...</b></term>
         ///     <description>
         ///     Matches a list of values to be matched.
         ///     </description>
@@ -140,22 +154,67 @@ namespace Neon.Cadence
         /// <summary>
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
+        /// <param name="client">The <see cref="CadenceClient"/>.</param>
         /// <param name="taskList">The target task list.</param>
+        /// <param name="methodAttribute">An optional <see cref="WorkflowMethodAttribute"/>.</param>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
-        internal InternalStartWorkflowOptions ToInternal(string taskList)
+        internal InternalStartWorkflowOptions ToInternal(CadenceClient client, string taskList, WorkflowMethodAttribute methodAttribute)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            taskList = taskList ?? client.Settings.DefaultTaskList;
+
+            if (string.IsNullOrEmpty(taskList))
+            {
+                throw new ArgumentException("You must specify a task list.");
+            }
+
+            // Merge optional settings from these options and the method attribute.
+
+            var taskStartToCloseTimeout      = TimeSpan.FromSeconds(10);
+            var executionStartToCloseTimeout = CadenceClient.DefaultTimeout;
+            var workflowIdReusePolicy        = global::Neon.Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+
+            if (methodAttribute != null)
+            {
+                if (string.IsNullOrEmpty(taskList))
+                {
+                    if (methodAttribute.TaskList != null)
+                    {
+                        taskList = methodAttribute.TaskList;
+                    }
+                    else
+                    {
+                        taskList = client.Settings.DefaultTaskList;
+                    }
+                }
+
+                if (!TaskStartToCloseTimeout.HasValue && methodAttribute.TaskStartToCloseTimeoutSeconds > 0)
+                {
+                    taskStartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.TaskStartToCloseTimeoutSeconds);
+                }
+
+                if (!ExecutionStartToCloseTimeout.HasValue && methodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
+                {
+                    executionStartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ExecutionStartToCloseTimeoutSeconds);
+                }
+
+                if (!WorkflowIdReusePolicy.HasValue && methodAttribute.WorkflowIdReusePolicy.HasValue)
+                {
+                    workflowIdReusePolicy = methodAttribute.WorkflowIdReusePolicy.Value;
+                }
+            }
 
             return new InternalStartWorkflowOptions()
             {
-                ID                              = this.WorkflowId,
-                TaskList                        = taskList,
-                DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.DecisionTaskStartToCloseTimeout),
-                ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
-                RetryPolicy                     = this.RetryPolicy?.ToInternal(),
-                WorkflowIdReusePolicy           = (int)this.WorkflowIdReusePolicy,
-                CronSchedule                    = this.CronSchedule,
-                Memo                            = this.Memo
+                ID                           = this.WorkflowId,
+                TaskList                     = taskList,
+                TaskStartToCloseTimeout      = CadenceHelper.ToCadence(taskStartToCloseTimeout),
+                ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(executionStartToCloseTimeout),
+                RetryPolicy                  = this.RetryOptions?.ToInternal(),
+                WorkflowIdReusePolicy        = (int)workflowIdReusePolicy,
+                CronSchedule                 = this.CronSchedule,
+                Memo                         = this.Memo
             };
         }
     }

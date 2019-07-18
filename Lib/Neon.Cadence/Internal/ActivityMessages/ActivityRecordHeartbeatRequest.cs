@@ -42,13 +42,73 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityRecordHeartbeatReply;
 
         /// <summary>
+        /// <para>
         /// Overrides the <see cref="ActivityRequest.ContextId"/> message property when
         /// non-null, indicating that the activity heartbeat is being sent externally.
+        /// </para>
+        /// <note>
+        /// Only one of <see cref="TaskToken"/> or <see cref="Domain"/> may be non-null
+        /// within a given message.
+        /// </note>
         /// </summary>
         public byte[] TaskToken
         {
             get => GetBytesProperty(PropertyNames.TaskToken);
             set => SetBytesProperty(PropertyNames.TaskToken, value);
+        }
+
+        /// <summary>
+        /// <para>
+        /// Overrides the <see cref="ActivityRequest.ContextId"/> message property when
+        /// non-null, indicating that the activity heartbeat is being sent externally.
+        /// </para>
+        /// </summary>
+        /// <note>
+        /// Only one of <see cref="TaskToken"/> or <see cref="Domain"/> may be non-null
+        /// within a given message.  The <see cref="WorkflowId"/> and <see cref="RunId"/>
+        /// will be valid only when <see cref="Domain"/> is non-null.
+        /// </note>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
+        /// <para>
+        /// The target workflow ID.
+        /// </para>
+        /// <note>
+        /// This is required when <see cref="Domain"/> is non-null.
+        /// </note>
+        /// </summary>
+        public string WorkflowId
+        {
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
+        }
+
+        /// <summary>
+        /// <para>
+        /// The target run ID.
+        /// </para>
+        /// <note>
+        /// This is optional when <see cref="Domain"/> is non-null.
+        /// </note>
+        /// </summary>
+        public string RunId
+        {
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// The target activity ID.
+        /// </summary>
+        public string ActivityId
+        {
+            get => GetStringProperty(PropertyNames.ActivityId);
+            set => SetStringProperty(PropertyNames.ActivityId, value);
         }
 
         /// <summary>
@@ -77,8 +137,12 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityRecordHeartbeatRequest)target;
 
-            typedTarget.TaskToken = this.TaskToken;
-            typedTarget.Details   = this.Details;
+            typedTarget.TaskToken  = this.TaskToken;
+            typedTarget.Domain     = this.Domain;
+            typedTarget.WorkflowId = this.WorkflowId;
+            typedTarget.RunId      = this.RunId;
+            typedTarget.ActivityId = this.ActivityId;
+            typedTarget.Details    = this.Details;
         }
     }
 }

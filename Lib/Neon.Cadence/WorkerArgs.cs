@@ -26,10 +26,10 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the opaque arguments passed to <see cref="WorkflowBase"/> and <see cref="ActivityBase"/>
+    /// Holds the opaque arguments passed to <see cref="Workflow"/> and <see cref="Activity"/>
     /// implementations by the <see cref="CadenceClient"/> when the workflow or activity is 
-    /// executed on a worker.  This must be passed to the base <see cref="WorkflowBase"/> or
-    /// <see cref="ActivityBase"/> class constructors.
+    /// executed on a worker.  This must be passed to the base <see cref="Workflow"/> or
+    /// <see cref="Activity"/> class constructors.
     /// </summary>
     public class WorkerArgs
     {

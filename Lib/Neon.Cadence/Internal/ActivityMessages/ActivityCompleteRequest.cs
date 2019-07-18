@@ -42,8 +42,7 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityCompleteReply;
 
         /// <summary>
-        /// Optionally specifies the opaque activity task token.  You can specify the target activity via 
-        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
+        /// The opaque activity task token.
         /// </summary>
         public byte[] TaskToken
         {
@@ -52,18 +51,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Optionally specifies the opaque activity task token.  You can specify the target activity via 
-        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
-        /// </summary>
-        public string RunId
-        {
-            get => GetStringProperty(PropertyNames.RunId);
-            set => SetStringProperty(PropertyNames.RunId, value);
-        }
-
-        /// <summary>
-        /// Optionally specifies the activity domain.  You can specify the target activity via 
-        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
+        /// The target domain.
         /// </summary>
         public string Domain
         {
@@ -72,8 +60,25 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Optionally specifies the activity ID.  You can specify the target activity via 
-        /// <see cref="TaskToken"/> or <see cref="RunId"/>, <see cref="Domain"/>, and <see cref="ActivityId"/>.
+        /// The target workflow ID.
+        /// </summary>
+        public string WorkflowId
+        {
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
+        }
+
+        /// <summary>
+        /// The target run ID.
+        /// </summary>
+        public string RunId
+        {
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// The target activity ID.
         /// </summary>
         public string ActivityId
         {
@@ -117,12 +122,12 @@ namespace Neon.Cadence.Internal
             var typedTarget = (ActivityCompleteRequest)target;
 
             typedTarget.TaskToken  = this.TaskToken;
-            typedTarget.Result     = this.Result;
-            typedTarget.Error      = this.Error;
-            typedTarget.RunId      = this.RunId;
             typedTarget.Domain     = this.Domain;
+            typedTarget.WorkflowId = this.WorkflowId;
+            typedTarget.RunId      = this.RunId;
             typedTarget.ActivityId = this.ActivityId;
             typedTarget.Result     = this.Result;
+            typedTarget.Error      = this.Error;
         }
     }
 }

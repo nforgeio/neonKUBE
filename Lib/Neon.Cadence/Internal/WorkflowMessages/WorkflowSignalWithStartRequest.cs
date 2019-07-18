@@ -62,6 +62,15 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
         /// Identifies the signal.
         /// </summary>
         public string SignalName
@@ -114,12 +123,13 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowSignalWithStartRequest)target;
 
-            typedTarget.Workflow        = this.Workflow;
-            typedTarget.WorkflowId      = this.WorkflowId;
-            typedTarget.SignalName      = this.SignalName;
-            typedTarget.SignalArgs      = this.SignalArgs;
-            typedTarget.Options         = this.Options;
-            typedTarget.WorkflowArgs    = this.WorkflowArgs;
+            typedTarget.Workflow     = this.Workflow;
+            typedTarget.WorkflowId   = this.WorkflowId;
+            typedTarget.Domain       = this.Domain;
+            typedTarget.SignalName   = this.SignalName;
+            typedTarget.SignalArgs   = this.SignalArgs;
+            typedTarget.Options      = this.Options;
+            typedTarget.WorkflowArgs = this.WorkflowArgs;
         }
     }
 }

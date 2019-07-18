@@ -75,8 +75,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <remarks>
         /// <para>
-        /// When <see cref="CadenceRetryPolicy.ExpirationInterval"/> is specified and it is larger than the activity's 
-        /// <see cref="ScheduleToStartTimeout"/>, then the <see cref="CadenceRetryPolicy.ExpirationInterval"/> will override 
+        /// When <see cref="RetryOptions.ExpirationInterval"/> is specified and it is larger than the activity's 
+        /// <see cref="ScheduleToStartTimeout"/>, then the <see cref="RetryOptions.ExpirationInterval"/> will override 
         /// activity's <see cref="ScheduleToStartTimeout"/>. This is to avoid retrying on <see cref="ScheduleToStartTimeout"/>
         /// error which only happen when worker is not picking up the task within the timeout.
         /// </para>
@@ -87,7 +87,7 @@ namespace Neon.Cadence.Internal
         /// Same apply to <see cref="ScheduleToCloseTimeout"/>.
         /// </para>
         /// </remarks>
-        public CadenceRetryPolicy RetryPolicy { get; set; }
+        public RetryOptions RetryOptions { get; set; }
 
         /// <summary>
         /// Converts the instance to its internal representation.
@@ -102,7 +102,7 @@ namespace Neon.Cadence.Internal
                 StartToCloseTimeout    = CadenceHelper.ToCadence(this.StartToCloseTimeout),
                 HeartbeatTimeout       = CadenceHelper.ToCadence(this.HeartbeatTimeout),
                 WaitForCancellation    = WaitForCancellation,
-                RetryPolicy            = RetryPolicy?.ToInternal()
+                RetryPolicy            = RetryOptions?.ToInternal()
             };
         }
     }

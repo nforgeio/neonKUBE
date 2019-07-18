@@ -64,12 +64,11 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Mode  = ConnectionMode.ListenOnly,
                 Debug = true,
 
                 //--------------------------------
                 // $debug(jeff.lill): DELETE THIS!
-                Emulate                = false,
+                Emulate                = true,
                 DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
                 DebugDisableHeartbeats = false,

@@ -42,12 +42,31 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDescribeReply;
 
         /// <summary>
-        /// The target Cadence domain name.
+        /// <para>
+        /// The target Cadence domain name. (or <c>null</c>).
+        /// </para>
+        /// <note>
+        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
+        /// </note>
         /// </summary>
         public string Name
         {
             get => GetStringProperty(PropertyNames.Name);
             set => SetStringProperty(PropertyNames.Name, value);
+        }
+
+        /// <summary>
+        /// <para>
+        /// The target Cadence domain UUID (or <c>null</c>).
+        /// </para>
+        /// <note>
+        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
+        /// </note>
+        /// </summary>
+        public string Uuid
+        {
+            get => GetStringProperty(PropertyNames.Uuid);
+            set => SetStringProperty(PropertyNames.Uuid, value);
         }
 
         /// <inheritdoc/>
@@ -68,6 +87,7 @@ namespace Neon.Cadence.Internal
             var typedTarget = (DomainDescribeRequest)target;
 
             typedTarget.Name = this.Name;
+            typedTarget.Uuid = this.Uuid;
         }
     }
 }

@@ -43,15 +43,6 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Specifies the connection mode.  User applications should use
-        /// the default: <see cref="ConnectionMode.Normal"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "mode", ApplyNamingConventions = false)]
-        [DefaultValue(ConnectionMode.Normal)]
-        public ConnectionMode Mode { get; set; } = ConnectionMode.Normal;
-
-        /// <summary>
         /// One or more Couchbase server URIs.
         /// </summary>
         /// <remarks>
@@ -76,8 +67,19 @@ namespace Neon.Cadence
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
-        /// Specifies the default Cadence domain for this client.  This is required.
+        /// Specifies the default Cadence domain for this client.  This defaults to <c>null</c>.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Specifying a default domain can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single domain (which is pretty common).
+        /// </para>
+        /// <para>
+        /// The default domain can be overridden for individual method calls by passing a value as the optional <b>domain</b>
+        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
+        /// the <b>domain</b> parameters.
+        /// </para>
+        /// </remarks>
         [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
         [DefaultValue(null)]
@@ -91,6 +93,25 @@ namespace Neon.Cadence
         [YamlMember(Alias = "createDomain", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CreateDomain { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the default Cadence task list for this client.  This defaults to <b>null</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Specifying a default task list can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single task list (which is pretty common).
+        /// </para>
+        /// <para>
+        /// The default task list can be overridden for individual method calls by passing a value as the optional <b>taskList</b>
+        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
+        /// the <b>TASKlIST</b> parameters.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultTaskList", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultTaskList", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string DefaultTaskList { get; set; }
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
@@ -115,6 +136,20 @@ namespace Neon.Cadence
         [DefaultValue("unknown")]
         public string ClientIdentity { get; set; } = "unknown";
 
+        /// <summary>
+        /// <para>
+        /// The Cadence cluster security token.  This defaults to <c>null</c>.
+        /// </para>
+        /// <note>
+        /// This is not currently supported by the .NET Cadence client and should be
+        /// left alone for now.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "SecurityToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "securityToken", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SecurityToken { get; set; } = null;
+        
         /// <summary>
         /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
         /// to indicate that it has received a proxy request message by returning an

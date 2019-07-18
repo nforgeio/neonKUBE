@@ -17,6 +17,8 @@
 
 using System;
 
+using Neon.Cadence.Internal;
+
 namespace Neon.Cadence
 {
     /// <summary>

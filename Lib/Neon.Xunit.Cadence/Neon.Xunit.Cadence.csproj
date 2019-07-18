@@ -20,6 +20,7 @@
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>Neon.Xunit.Cadence</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -32,7 +32,7 @@ namespace Neon.Cadence
     /// <remarks>
     /// <para>
     /// Cadence doesn't appear to support starting, stopping, and then restarting the same
-    /// worker within an individual Cadence client so this class will prevent this
+    /// worker within an individual Cadence client so this class will prevent this.
     /// </para>
     /// </remarks>
     public sealed class Worker : IDisposable
@@ -41,18 +41,18 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="client">The parent client.</param>
+        /// <param name="mode">Identifies whether the worker will process activities, workflows, or both.</param>
         /// <param name="workerId">The ID of the worker as tracked by the <b>cadence-proxy</b>.</param>
         /// <param name="domain">The Cadence domain where the worker is registered.</param>
         /// <param name="taskList">The Cadence task list.</param>
-        /// <param name="options">The worker options.</param>
-        internal Worker(CadenceClient client, long workerId, string domain, string taskList, WorkerOptions options)
+        internal Worker(CadenceClient client, WorkerMode mode, long workerId, string domain, string taskList)
         {
-            this.Client   = client;
-            this.WorkerId = workerId;
-            this.Domain   = domain;
-            this.Tasklist = taskList;
-            this.Options  = options;
-            this.RefCount = 1;
+            this.Client     = client;
+            this.Mode       = mode;
+            this.WorkerId   = workerId;
+            this.Domain     = domain;
+            this.Tasklist   = taskList;
+            this.RefCount   = 1;
         }
 
         /// <inheritdoc/>
@@ -83,6 +83,11 @@ namespace Neon.Cadence
         internal bool IsDisposed => RefCount == 0;
 
         /// <summary>
+        /// Identifies whether the worker will process activities, workflows, or both.
+        /// </summary>
+        internal WorkerMode Mode { get; private set; }
+
+        /// <summary>
         /// Returns the ID of the worker as tracked by the <b>cadence-proxy</b>.
         /// </summary>
         internal long WorkerId { get; private set; }
@@ -96,11 +101,6 @@ namespace Neon.Cadence
         /// Returns the Cadence task list.
         /// </summary>
         internal string Tasklist { get; private set; }
-
-        /// <summary>
-        /// Returns the worker options.
-        /// </summary>
-        internal WorkerOptions Options { get; private set; }
 
         /// <summary>
         /// Returns the current worker reference count.  This will be set to

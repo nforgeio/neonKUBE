@@ -72,21 +72,5 @@ namespace Neon.Cadence.Internal
         [JsonProperty(PropertyName = "Resettable", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
         public bool Resettable { get; set; }
-
-        /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowResetPoint"/>.
-        /// </summary>
-        public WorkflowResetPoint ToPublic()
-        {
-            return new WorkflowResetPoint()
-            {
-                BinaryChecksum           = this.BinaryChecksum,
-                RunId                    = this.RunId,
-                FirstDecisionCompletedId = this.FirstDecisionCompletedId,
-                CreatedTime              = new DateTime(this.CreatedTimeNano / 100),
-                ExpiringTime             = new DateTime(this.ExpiringTimeNano / 100),
-                Resettable               = this.Resettable
-            };
-        }
     }
 }
