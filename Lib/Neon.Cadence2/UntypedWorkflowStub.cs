@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalTaskListKind.cs
+// FILE:	    UntypedWorkflowStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,28 +18,24 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Enumerates the different kinds of task lists.
+    /// Used to invoke, signal, and query a workflow using when the actual workflow
+    /// interface isn't available.  This can happen when the workflow was implemented
+    /// in another language or within another inaccessible codebase.  This can provide
+    /// a relatively easy way to interact with such workflows at the cost of needing
+    /// to care when mapping the method parameter and result types. 
     /// </summary>
-    public enum InternalTaskListKind
+    public class UntypedWorkflowStub
     {
-        // WARNING: These values must match those defined by [TaskListKind].
-
-        /// <summary>
-        /// Normal.
-        /// </summary>
-        NORMAL = 0,
-
-        /// <summary>
-        /// Sticky.
-        /// </summary>
-        STICKY = 1
     }
 }

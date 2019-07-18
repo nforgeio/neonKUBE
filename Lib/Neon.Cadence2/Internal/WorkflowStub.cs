@@ -26,10 +26,14 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Performs low-level operations on a workflow instance.
+    /// Used to invoke, signal, and query a workflow using when the actual workflow
+    /// interface isn't available.  This can happen when the workflow was implemented
+    /// in another language or within another inaccessible codebase.  This can provide
+    /// a relatively easy way to interact with such workflows at the cost of needing
+    /// to care when mapping the method parameter and result types. 
     /// </summary>
     internal class WorkflowStub : IWorkflowStub
     {
