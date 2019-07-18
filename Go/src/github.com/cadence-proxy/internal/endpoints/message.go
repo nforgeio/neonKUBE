@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cadence-proxy/internal/messages"
 	"go.uber.org/zap"
+
+	"github.com/cadence-proxy/internal/messages"
 )
 
 // MessageHandler accepts an http.PUT requests and parses the

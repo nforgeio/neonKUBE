@@ -21,8 +21,6 @@ import (
 	"errors"
 	"sync"
 
-	"go.uber.org/cadence/workflow"
-
 	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
@@ -43,8 +41,6 @@ type (
 
 	// Operation is used to track pending Neon.Cadence library calls
 	Operation struct {
-		future      workflow.Future
-		settable    workflow.Settable
 		requestID   int64
 		contextID   int64
 		request     messages.IProxyRequest
@@ -125,66 +121,6 @@ func (op *Operation) GetRequest() messages.IProxyRequest {
 // SetRequest sets the request
 func (op *Operation) SetRequest(value messages.IProxyRequest) {
 	op.request = value
-}
-
-// GetFuture gets a Operation's workflow.Future
-//
-// returns workflow.Future -> a cadence workflow.Future
-func (op *Operation) GetFuture() workflow.Future {
-	return op.future
-}
-
-// SetFuture sets a Operation's workflow.Future
-//
-// param value workflow.Future -> a cadence workflow.Future to be
-// set as a Operation's cadence workflow.Future
-func (op *Operation) SetFuture(value workflow.Future) {
-	op.future = value
-}
-
-// GetSettable gets a Operation's workflow.Settable
-//
-// returns workflow.Settable -> a cadence workflow.Settable
-func (op *Operation) GetSettable() workflow.Settable {
-	return op.settable
-}
-
-// SetSettable sets a Operation's workflow.Settable
-//
-// param value workflow.Settable -> a cadence workflow.Settable to be
-// set as a Operation's cadence workflow.Settable
-func (op *Operation) SetSettable(value workflow.Settable) {
-	op.settable = value
-}
-
-// SetReply signals the awaiting task that a workflow reply message
-// has been received
-func (op *Operation) SetReply(result interface{}, cadenceError *cadenceerrors.CadenceError) error {
-	if op.future == nil {
-		return globals.ErrArgumentNil
-	}
-
-	settable := op.GetSettable()
-	if cadenceError != nil {
-		settable.Set(nil, errors.New(cadenceError.ToString()))
-	} else {
-		settable.Set(result, nil)
-	}
-
-	return nil
-}
-
-// SetError signals the awaiting task that it should fails with an
-// error
-func (op *Operation) SetError(value *cadenceerrors.CadenceError) error {
-	if op.future == nil {
-		return globals.ErrArgumentNil
-	}
-
-	settable := op.GetSettable()
-	settable.SetError(errors.New(value.ToString()))
-
-	return nil
 }
 
 // SetCancelled signals the awaiting task that the Operation has

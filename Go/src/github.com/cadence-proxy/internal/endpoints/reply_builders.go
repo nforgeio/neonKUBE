@@ -122,12 +122,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowExecuteReply(v, cadenceError, value)
 		}
 
-	// WorkflowInvokeReply
-	case messagetypes.WorkflowInvokeReply:
-		if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
-			buildWorkflowInvokeReply(v, cadenceError, value)
-		}
-
 	// WorkflowRegisterReply
 	case messagetypes.WorkflowRegisterReply:
 		if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
@@ -273,12 +267,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	case messagetypes.ActivityExecuteReply:
 		if v, ok := reply.(*messages.ActivityExecuteReply); ok {
 			buildActivityExecuteReply(v, cadenceError, value)
-		}
-
-	// ActivityInvokeReply
-	case messagetypes.ActivityInvokeReply:
-		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
-			buildActivityInvokeReply(v, cadenceError, value)
 		}
 
 	// ActivityHasHeartbeatDetailsReply
@@ -428,16 +416,6 @@ func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceErro
 	if len(execution) > 0 {
 		if v, ok := execution[0].(*workflow.Execution); ok {
 			reply.SetExecution(v)
-		}
-	}
-}
-
-func buildWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
-	reply.SetError(cadenceError)
-
-	if len(result) > 0 {
-		if v, ok := result[0].([]byte); ok {
-			reply.SetResult(v)
 		}
 	}
 }
@@ -612,16 +590,6 @@ func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceEr
 }
 
 func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
-	reply.SetError(cadenceError)
-
-	if len(result) > 0 {
-		if v, ok := result[0].([]byte); ok {
-			reply.SetResult(v)
-		}
-	}
-}
-
-func buildActivityInvokeReply(reply *messages.ActivityInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {

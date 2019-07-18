@@ -379,6 +379,9 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 		zap.Int("ProccessId", os.Getpid()),
 	)
 
+	// new InitializeReply
+	reply := createReplyMessage(request)
+
 	// try and cancel the operation
 	var wasCancelled bool
 	var err *cadenceerrors.CadenceError
@@ -393,8 +396,6 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 		)
 	}
 
-	// new InitializeReply
-	reply := createReplyMessage(request)
 	buildReply(reply, err, wasCancelled)
 
 	return reply
