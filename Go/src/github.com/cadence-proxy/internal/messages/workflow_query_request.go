@@ -124,6 +124,24 @@ func (request *WorkflowQueryRequest) SetQueryArgs(value []byte) {
 	request.SetBytesProperty("QueryArgs", value)
 }
 
+// GetDomain gets a WorkflowQueryRequest's Domain value
+// from its properties map
+//
+// returns *string -> pointer to a string in memory holding the value
+// of a WorkflowQueryRequest's Domain
+func (request *WorkflowQueryRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets a WorkflowQueryRequest's Domain value
+// in its properties map.
+//
+// param value *string -> a pointer to a string in memory that holds the value
+// to be set in the properties map
+func (request *WorkflowQueryRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -144,5 +162,6 @@ func (request *WorkflowQueryRequest) CopyTo(target IProxyMessage) {
 		v.SetRunID(request.GetRunID())
 		v.SetQueryName(request.GetQueryName())
 		v.SetQueryArgs(request.GetQueryArgs())
+		v.SetDomain(request.GetDomain())
 	}
 }

@@ -18,6 +18,7 @@
 package messages
 
 import (
+	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -87,6 +88,33 @@ func (request *WorkflowSignalInvokeRequest) SetSignalArgs(value []byte) {
 	request.SetBytesProperty("SignalArgs", value)
 }
 
+// GetReplayStatus gets the ReplayStatus from a WorkflowSignalInvokeRequest's properties
+// map. For workflow requests related to an executing workflow,
+// this will indicate the current history replay state.
+//
+// returns cadenceworkflows.ReplayStatus -> the current history replay
+// state of a workflow
+func (request *WorkflowSignalInvokeRequest) GetReplayStatus() cadenceworkflows.ReplayStatus {
+	replayStatusPtr := request.GetStringProperty("ReplayStatus")
+	if replayStatusPtr == nil {
+		return cadenceworkflows.ReplayStatusUnspecified
+	}
+	replayStatus := cadenceworkflows.StringToReplayStatus(*replayStatusPtr)
+
+	return replayStatus
+}
+
+// SetReplayStatus sets the ReplayStatus in a WorkflowSignalInvokeRequest's properties
+// map. For workflow requests related to an executing workflow,
+// this will indicate the current history replay state.
+//
+// param value cadenceworkflows.ReplayStatus -> the current history replay
+// state of a workflow
+func (request *WorkflowSignalInvokeRequest) SetReplayStatus(value cadenceworkflows.ReplayStatus) {
+	status := value.String()
+	request.SetStringProperty("ReplayStatus", &status)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -105,5 +133,6 @@ func (request *WorkflowSignalInvokeRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowSignalInvokeRequest); ok {
 		v.SetSignalName(request.GetSignalName())
 		v.SetSignalArgs(request.GetSignalArgs())
+		v.SetReplayStatus(request.GetReplayStatus())
 	}
 }

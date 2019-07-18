@@ -18,6 +18,7 @@
 package messages
 
 import (
+	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -38,6 +39,8 @@ type (
 		IProxyReply
 		GetContextID() int64
 		SetContextID(value int64)
+		GetReplayStatus() cadenceworkflows.ReplayStatus
+		SetReplayStatus(status cadenceworkflows.ReplayStatus)
 	}
 )
 
@@ -73,6 +76,33 @@ func (reply *WorkflowReply) SetContextID(value int64) {
 	reply.SetLongProperty("ContextId", value)
 }
 
+// GetReplayStatus gets the ReplayStatus from a WorkflowReply's properties
+// map. For workflow requests related to an executing workflow,
+// this will indicate the current history replay state.
+//
+// returns cadenceworkflows.ReplayStatus -> the current history replay
+// state of a workflow
+func (reply *WorkflowReply) GetReplayStatus() cadenceworkflows.ReplayStatus {
+	replayStatusPtr := reply.GetStringProperty("ReplayStatus")
+	if replayStatusPtr == nil {
+		return cadenceworkflows.ReplayStatusUnspecified
+	}
+	replayStatus := cadenceworkflows.StringToReplayStatus(*replayStatusPtr)
+
+	return replayStatus
+}
+
+// SetReplayStatus sets the ReplayStatus in a WorkflowReply's properties
+// map. For workflow requests related to an executing workflow,
+// this will indicate the current history replay state.
+//
+// param value cadenceworkflows.ReplayStatus -> the current history replay
+// state of a workflow
+func (reply *WorkflowReply) SetReplayStatus(value cadenceworkflows.ReplayStatus) {
+	status := value.String()
+	reply.SetStringProperty("ReplayStatus", &status)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -90,5 +120,6 @@ func (reply *WorkflowReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 	if v, ok := target.(IWorkflowReply); ok {
 		v.SetContextID(reply.GetContextID())
+		v.SetReplayStatus(reply.GetReplayStatus())
 	}
 }
