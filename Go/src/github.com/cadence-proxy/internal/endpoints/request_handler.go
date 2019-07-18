@@ -60,7 +60,9 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 		if r := recover(); r != nil {
 			reply = createReplyMessage(request)
 			buildReply(reply, cadenceerrors.NewCadenceError(
-				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d", request.GetType().String(), request.GetRequestID()),
+				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d",
+					request.GetType().String(),
+					request.GetRequestID()),
 				cadenceerrors.Panic),
 			)
 		}
