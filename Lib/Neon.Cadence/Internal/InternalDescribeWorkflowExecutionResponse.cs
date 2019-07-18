@@ -53,11 +53,11 @@ namespace Neon.Cadence.Internal
         public List<InternalPendingActivityInfo> PendingActivities { get; set; }
 
         /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowDetails"/>.
+        /// Converts the instance into a public <see cref="WorkflowDescription"/>.
         /// </summary>
-        public WorkflowDetails ToPublic()
+        public WorkflowDescription ToPublic()
         {
-            var details = new WorkflowDetails()
+            var details = new WorkflowDescription()
             {
                 Configuration = this.ExecutionConfiguration?.ToPublic(),
                 Execution     = this.WorkflowExecutionInfo?.ToPublic()

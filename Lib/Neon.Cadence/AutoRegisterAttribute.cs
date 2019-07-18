@@ -28,7 +28,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Use this to tag workflow and activity implementations that inherit from
-    /// <see cref="WorkflowBase"/> and <see cref="ActivityBase"/> such that calls
+    /// <see cref="Workflow"/> and <see cref="Activity"/> such that calls
     /// to <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and
     /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> can 
     /// automatically register the tagged classes.

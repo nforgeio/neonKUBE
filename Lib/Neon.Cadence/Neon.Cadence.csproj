@@ -20,6 +20,7 @@
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>Neon.Cadence</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -33,8 +34,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Release\Neon.Cadence.xml</DocumentationFile>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
     <NoWarn>NU1605</NoWarn>
@@ -44,6 +44,15 @@
     <None Remove="Resources\cadence-proxy.linux.gz" />
     <None Remove="Resources\cadence-proxy.osx.gz" />
     <None Remove="Resources\cadence-proxy.win.exe.gz" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
+    <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
+    <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -51,17 +60,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
 </Project>

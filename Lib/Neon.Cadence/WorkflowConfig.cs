@@ -54,6 +54,6 @@ namespace Neon.Cadence
         /// The termination policy to apply to the child workflow when
         /// the parent workflow is terminated.
         /// </summary>
-        public ChildTerminationPolicy ChildPolicy { get; internal set; }
+        public ChildPolicy ChildPolicy { get; internal set; }
     }
 }

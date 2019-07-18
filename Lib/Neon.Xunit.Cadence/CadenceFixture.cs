@@ -167,7 +167,7 @@ namespace Neon.Xunit.Cadence
                     new string[]
                     {
                         "--detach",
-                        "-p", "7933:7933",
+                        "-p", "7933-7939:7933-7939",
                         "-p", "8088:8088"
                     },
                     env: env,
@@ -298,19 +298,13 @@ namespace Neon.Xunit.Cadence
                 return;
             }
 
-            // Close any existing connection related objects.
+            // Close the existing connections.
 
-            if (Connection != null)
-            {
-                Connection.Dispose();
-                Connection = null;
-            }
+            Connection.Dispose();
+            Connection = null;
 
-            if (ConnectionClient != null)
-            {
-                ConnectionClient.Dispose();
-                ConnectionClient = null;
-            }
+            ConnectionClient.Dispose();
+            ConnectionClient = null;
 
             // Establish fresh connections.
 
