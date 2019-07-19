@@ -43,6 +43,7 @@ type (
 	// It holds a workflow Context, Future, Settable,
 	// and cancellation function
 	ChildContext struct {
+		ctx        workflow.Context
 		future     workflow.ChildWorkflowFuture
 		cancelFunc workflow.CancelFunc
 	}
@@ -76,8 +77,25 @@ func GetChildID() int64 {
 //
 // returns *ChildContext -> pointer to a newly initialized
 // ChildContext in memory
-func NewChildContext() *ChildContext {
-	return new(ChildContext)
+func NewChildContext(ctx workflow.Context) *ChildContext {
+	cctx := new(ChildContext)
+	cctx.SetContext(ctx)
+	return cctx
+}
+
+// GetContext gets a ChildContext's workflow.Context
+//
+// returns workflow.Context -> a cadence workflow context
+func (cctx *ChildContext) GetContext() workflow.Context {
+	return cctx.ctx
+}
+
+// SetContext sets a ChildContext's workflow.Context
+//
+// param value workflow.Context -> a cadence workflow context to be
+// set as a ChildContext's cadence workflow.Context
+func (cctx *ChildContext) SetContext(value workflow.Context) {
+	cctx.ctx = value
 }
 
 // GetCancelFunction gets a ChildContext's context cancel function

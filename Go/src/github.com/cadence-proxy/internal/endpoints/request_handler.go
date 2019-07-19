@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"runtime/debug"
 	"time"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
@@ -59,10 +60,10 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 		if r := recover(); r != nil {
 			reply = createReplyMessage(request)
 			buildReply(reply, cadenceerrors.NewCadenceError(
-				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d",
+				fmt.Sprintf("recovered from panic when processing message type: %s, RequestId: %d\n%s",
 					request.GetType().String(),
-					request.GetRequestID()),
-				cadenceerrors.Panic),
+					request.GetRequestID(), string(debug.Stack())),
+				cadenceerrors.Generic),
 			)
 		}
 
@@ -1757,7 +1758,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	)
 
 	// create the new ChildContext
-	cctx := cadenceworkflows.NewChildContext()
+	cctx := cadenceworkflows.NewChildContext(ctx)
 	cctx.SetCancelFunction(cancel)
 	cctx.SetFuture(childFuture)
 
@@ -1812,7 +1813,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	}
 
 	// set ReplayStatus
-	ctx := wectx.GetContext()
+	ctx := cctx.GetContext()
 	setReplayStatus(ctx, reply)
 
 	// wait on the child workflow
@@ -1874,7 +1875,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	}
 
 	// set ReplayStatus
-	ctx := wectx.GetContext()
+	ctx := cctx.GetContext()
 	setReplayStatus(ctx, reply)
 
 	// signal the child workflow
@@ -1930,7 +1931,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	}
 
 	// set replaying
-	setReplayStatus(wectx.GetContext(), reply)
+	setReplayStatus(cctx.GetContext(), reply)
 
 	// get cancel function
 	// call the cancel function
