@@ -149,13 +149,13 @@ namespace Neon.Cadence.Internal
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The stub instance.</returns>
         public static TWorkflowInterface Create<TWorkflowInterface>(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
-            where TWorkflowInterface : class, IWorkflow, new()
+            where TWorkflowInterface : class, IWorkflow
         {
             var workflowInterface = typeof(TWorkflowInterface);
 
             Covenant.Requires<ArgumentNullException>(client != null);
-            Contract.Requires<NotSupportedException>(!workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
-            Contract.Requires<NotSupportedException>(!workflowInterface.IsGenericType, $"The [{workflowInterface.Name}] interface is generic.  This is not supported.");
+            Covenant.Requires<WorkflowDefinitionException>(!workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
+            Covenant.Requires<WorkflowDefinitionException>(!workflowInterface.IsGenericType, $"The [{workflowInterface.Name}] interface is generic.  This is not supported.");
 
             options = options ?? new WorkflowOptions();
 
@@ -212,7 +212,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = typeof(void);
@@ -221,7 +221,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
@@ -234,11 +234,11 @@ namespace Neon.Cadence.Internal
 
                 if (attributeCount == 0)
                 {
-                    throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
                 }
                 else if (attributeCount > 1)
                 {
-                    throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] can have only one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] can have only one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
                 }
 
                 if (signalAttributes.Length > 0)
@@ -247,7 +247,7 @@ namespace Neon.Cadence.Internal
 
                     if (signalNames.Contains(signalAttribute.Name))
                     {
-                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     signalNames.Add(signalAttribute.Name);
@@ -261,7 +261,7 @@ namespace Neon.Cadence.Internal
 
                     if (queryNames.Contains(queryAttribute.Name))
                     {
-                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     queryNames.Add(queryAttribute.Name);
@@ -313,10 +313,10 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private string            taskList");
             sbSource.AppendLine($"        private WorkflowOptions   options");
             sbSource.AppendLine($"        private string            domain");
-            sbSource.AppendLine();
 
             // Generate the constructor.
 
+            sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, string taskList, WorkflowOptions options, string domain)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client   = client;");

@@ -254,5 +254,11 @@ namespace Neon.Cadence
         {
             throw new NotImplementedException();
         }
+
+        //---------------------------------------------------------------------
+        // Internal workflow related methods that will be available to be called
+        // by dynamically generated workflow stubs.
+
+
     }
 }
