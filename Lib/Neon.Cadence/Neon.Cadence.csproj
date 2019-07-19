@@ -21,6 +21,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AssemblyName>Neon.Cadence</AssemblyName>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -41,12 +42,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Netstandard\netstandard.dll" />
     <None Remove="Resources\cadence-proxy.linux.gz" />
     <None Remove="Resources\cadence-proxy.osx.gz" />
     <None Remove="Resources\cadence-proxy.win.exe.gz" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Netstandard\netstandard.dll" />
     <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
     <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
     <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
@@ -62,6 +65,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.2.0-beta4-final" />
+    <PackageReference Include="System.Runtime" Version="4.3.1" />
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>

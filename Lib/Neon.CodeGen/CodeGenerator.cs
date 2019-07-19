@@ -111,7 +111,7 @@ namespace Neon.CodeGen
 
             // NOTE: 
             // 
-            // We need add all of the NetStandard reference assemblies so
+            // We need add all of the NETStandard reference assembly so that
             // compilation will actually work.
             // 
             // We've set [PreserveCompilationContext=true] in [Neon.CodeGen.csproj]
@@ -122,7 +122,7 @@ namespace Neon.CodeGen
             // This is where we obtained the these assemblies and added them
             // all as resources within the [Netstandard] project folder.
             //
-            // We'll need to replace all of these when/if we upgrade the 
+            // We'll need to replace this when/if we upgrade the 
             // library to a new version of NetStandard.
 
             if (cachedNetStandard == null)
@@ -145,8 +145,7 @@ namespace Neon.CodeGen
             }
 
             var compilation = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, options);
-
-            var dllStream = new MemoryStream();
+            var dllStream   = new MemoryStream();
 
             using (var pdbStream = new MemoryStream())
             {
@@ -2974,8 +2973,7 @@ namespace Neon.CodeGen
                 return StripNamespace(typeName);
             }
 
-            // We're going to use the global namespace to avoid namespace conflicts
-            // for types that 
+            // We're going to use the global namespace to avoid namespace conflicts.
 
             return $"global::{typeName}";
         }
@@ -3030,7 +3028,7 @@ namespace Neon.CodeGen
 
             if (isResultType)
             {
-                if (type == typeof(void) || type == typeof(Task) || type == typeof(IActionResult))
+                if (type == typeof(void) || (type == typeof(Task) || type == typeof(IActionResult)))
                 {
                     // These types are all essentially a way of specifying [void].
 
@@ -3120,7 +3118,6 @@ namespace Neon.CodeGen
             }
 
             Covenant.Assert(false); // We should never get here.
-            
             return null;
         }
 

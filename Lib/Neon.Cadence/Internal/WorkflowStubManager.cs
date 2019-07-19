@@ -1,0 +1,406 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    WorkflowStubManager.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Reflection;
+using System.Runtime;
+using System.Runtime.Loader;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+
+using Neon.Cadence;
+using Neon.Cadence.Internal;
+using Neon.Common;
+using System.IO;
+
+namespace Neon.Cadence.Internal
+{
+    /// <summary>
+    /// Manages the dynamic generation of workflow stub classes that implement
+    /// workflow interfaces.
+    /// </summary>
+    internal static class WorkflowStubManager
+    {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Describes what a workflow interface method does.
+        /// </summary>
+        private enum WorkflowMethodKind
+        {
+            /// <summary>
+            /// The method implements a query.
+            /// </summary>
+            Query,
+
+            /// <summary>
+            /// The method implements a signal.
+            /// </summary>
+            Signal,
+
+            /// <summary>
+            /// The method is a workflow entry point.
+            /// </summary>
+            Workflow
+        }
+
+        /// <summary>
+        /// Holds additional information about a workflow interface method.
+        /// </summary>
+        private class WorkflowMethodDetails
+        {
+            /// <summary>
+            /// The workflow method type.
+            /// </summary>
+            public WorkflowMethodKind Kind { get; set; }
+
+            /// <summary>
+            /// The signal attributes for signal methods.
+            /// </summary>
+            public SignalMethodAttribute SignalAttribute { get; set; }
+
+            /// <summary>
+            /// The query attributes for query methods.
+            /// </summary>
+            public QueryMethodAttribute QueryAttribute { get; set; }
+
+            /// <summary>
+            /// The workflow attributes for workflow methods.
+            /// </summary>
+            public WorkflowMethodAttribute WorkflowAttribute { get; set; }
+
+            /// <summary>
+            /// The workflow result type, not including the wrapping <see cref="Task"/>.
+            /// This will be <see cref="void"/> for methods that don't return a value.
+            /// </summary>
+            public Type ReturnType { get; set; }
+
+            /// <summary>
+            /// The low-level method information.
+            /// </summary>
+            public MethodInfo Method { get; set; }
+        }
+
+        /// <summary>
+        /// Manages a dynamically generated workflow stub class for a workflow interface.
+        /// </summary>
+        /// <remarks>
+        /// This class manages the dyanmic generation and activation of stub classes
+        /// that implement a workflow 
+        /// </remarks>
+        private class DynamicWorkflowStub
+        {
+            private int                 classId;
+            private string              className;
+            private Assembly            assembly;
+            private ConstructorInfo     constructor;
+
+            public DynamicWorkflowStub(Type workflowInterface)
+            {
+            }
+
+            public object Create(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
+            {
+                return null;
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private static int      nextClassId = 0;
+        private static object   syncLock    = new object();
+
+        // This dictionary maps workflow interfaces to their dynamically generated stubs.
+
+        private static Dictionary<Type, DynamicWorkflowStub> workflowInterfaceToStub = new Dictionary<Type, DynamicWorkflowStub>();
+
+        /// <summary>
+        /// Creates a dynamically generated stub for the specified workflow interface.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="taskList">Optionally specifies the target task list.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="domain">Optionally specifies the target domain.</param>
+        /// <returns>The stub instance.</returns>
+        public static TWorkflowInterface Create<TWorkflowInterface>(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
+            where TWorkflowInterface : class, IWorkflow, new()
+        {
+            var workflowInterface = typeof(TWorkflowInterface);
+
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Contract.Requires<NotSupportedException>(!workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
+            Contract.Requires<NotSupportedException>(!workflowInterface.IsGenericType, $"The [{workflowInterface.Name}] interface is generic.  This is not supported.");
+
+            options = options ?? new WorkflowOptions();
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                domain = null;
+            }
+
+            //-----------------------------------------------------------------
+            // Check whether we already have generated a stub class for the interface
+            // and return an instance right away.
+
+            DynamicWorkflowStub stub;
+
+            lock (syncLock)
+            {
+                if (!workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
+                {
+                    stub = null;
+                }
+            }
+
+            if (stub != null)
+            {
+                return (TWorkflowInterface)stub.Create(client, taskList, options, domain);
+            }
+
+            //-----------------------------------------------------------------
+            // We need to generate the stub class.
+
+            // Scan the interface methods to identify those tagged to indicate 
+            // that they are query, signal, or workflow methods and build a table
+            // that maps these methods to the method type and also holds any options
+            // specified by the tags.
+            //
+            // We're also going to ensure that all interface methods are tagged
+            // as being a signal, query, or workflow method and that no method
+            // is tagged more than once and finally, that the interface has at
+            // least one workflow method.
+            //
+            // Note this code will also ensure that all workflow interface methods
+            // implement a task/async signature by returning a Task and also that
+            // all signal and query methods have unique names.
+
+            var methodToDetails = new Dictionary<string, WorkflowMethodDetails>();
+            var signalNames     = new HashSet<string>();
+            var queryNames      = new HashSet<string>();
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var details = new WorkflowMethodDetails() { Method = method };
+
+                if (method.ReturnType.IsGenericType)
+                {
+                    if (method.ReturnType.BaseType != typeof(Task))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    }
+
+                    details.ReturnType = typeof(void);
+                }
+                else
+                {
+                    if (method.ReturnType != typeof(Task))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    }
+
+                    details.ReturnType = method.ReturnType.GetGenericArguments().First();
+                }
+
+                var signalAttributes   = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
+                var queryAttributes    = method.GetCustomAttributes<QueryMethodAttribute>().ToArray();
+                var workflowAttributes = method.GetCustomAttributes<WorkflowMethodAttribute>().ToArray();
+                var attributeCount     = signalAttributes.Length + queryAttributes.Length + workflowAttributes.Length;
+
+                if (attributeCount == 0)
+                {
+                    throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                }
+                else if (attributeCount > 1)
+                {
+                    throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] can have only one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                }
+
+                if (signalAttributes.Length > 0)
+                {
+                    var signalAttribute = signalAttributes.First();
+
+                    if (signalNames.Contains(signalAttribute.Name))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
+                    }
+
+                    signalNames.Add(signalAttribute.Name);
+
+                    details.Kind            = WorkflowMethodKind.Signal;
+                    details.SignalAttribute = signalAttribute;
+                }
+                else if (queryAttributes.Length > 0)
+                {
+                    var queryAttribute = queryAttributes.First();
+
+                    if (queryNames.Contains(queryAttribute.Name))
+                    {
+                        throw new ArgumentException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
+                    }
+
+                    queryNames.Add(queryAttribute.Name);
+
+                    details.Kind           = WorkflowMethodKind.Query;
+                    details.QueryAttribute = queryAttribute;
+                }
+                else if (workflowAttributes.Length > 0)
+                {
+                    var workflowAttribute = workflowAttributes.First();
+
+                    details.Kind              = WorkflowMethodKind.Workflow;
+                    details.WorkflowAttribute = workflowAttribute;
+                }
+                else
+                {
+                    Covenant.Assert(false); // We should never get here.
+                }
+
+                methodToDetails.Add(method.ToString(), details);
+            }
+
+            // Generate C# source code that implements the stub.  Note that stub classes will
+            // be generated within the [Neon.Cadence.Stubs] namespace and will be named by
+            // the interface name plus the "Stub_#" suffix where "#" is the number of stubs
+            // generated so far.  This will help avoid naming conflicts while still being
+            // somewhat readable.
+
+            var classId           = Interlocked.Increment(ref nextClassId);
+            var stubClassName     = $"{workflowInterface.Name}Stub_{classId}";
+            var stubFullClassName = $"Neon.Cadence.Stubs.{stubClassName}";
+            var sbSource          = new StringBuilder();
+
+            sbSource.AppendLine($"using System;");
+            sbSource.AppendLine($"using System.Collections.Generic;");
+            sbSource.AppendLine($"using System.ComponentModel;");
+            sbSource.AppendLine($"using System.Diagnostics;");
+            sbSource.AppendLine($"using System.Diagnostics.Contracts;");
+            sbSource.AppendLine($"using System.Threading.Tasks;");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"using Neon.Common;");
+            sbSource.AppendLine($"using Neon.Cadence;");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
+            sbSource.AppendLine($"{{");
+            sbSource.AppendLine($"    public class {stubClassName}");
+            sbSource.AppendLine($"    {{");
+            sbSource.AppendLine($"        private CadenceClient     client");
+            sbSource.AppendLine($"        private string            taskList");
+            sbSource.AppendLine($"        private WorkflowOptions   options");
+            sbSource.AppendLine($"        private string            domain");
+            sbSource.AppendLine();
+
+            // Generate the constructor.
+
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, string taskList, WorkflowOptions options, string domain)");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            this.client   = client;");
+            sbSource.AppendLine($"            this.taskList = taskList;");
+            sbSource.AppendLine($"            this.options  = options;");
+            sbSource.AppendLine($"            this.domain   = domain;");
+            sbSource.AppendLine($"        }}");
+
+            // Generate the workflow entry point methods.
+
+            foreach (var details in methodToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Workflow))
+            {
+                var resultType = CadenceHelper.TypeToCSharp(details.ReturnType);
+                var sbParams   = new StringBuilder();
+
+                foreach (var param in details.Method.GetParameters())
+                {
+                    if (sbParams.Length > 0)
+                    {
+                        sbParams.Append(", ");
+                    }
+
+                    sbParams.Append($"{CadenceHelper.TypeToCSharp(param.ParameterType)} {param.Name}");
+                }
+
+                sbSource.AppendLine();
+                sbSource.AppendLine($"        public async {resultType} {details.Method.Name}({sbParams})");
+                sbSource.AppendLine($"        {{");
+                sbSource.AppendLine($"            return null;");
+                sbSource.AppendLine($"        }}");
+            }
+
+            sbSource.AppendLine($"    }}");
+            sbSource.AppendLine($"}}");
+
+            var source = sbSource.ToString();
+
+            //-----------------------------------------------------------------
+            // Compile the new stub class into an assembly.
+
+            var syntaxTree = CSharpSyntaxTree.ParseText(source);
+            var references = new List<MetadataReference>();
+
+            references.Add(CadenceHelper.NetStandardReference);
+            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
+            references.Add(MetadataReference.CreateFromFile(typeof(CadenceClient).Assembly.Location));
+
+            var assemblyName    = $"Neon-Cadence-Stub-{classId}";
+            var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
+            var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
+            var dllStream       = new MemoryStream();
+
+            using (var pdbStream = new MemoryStream())
+            {
+                var emitted = compilation.Emit(dllStream, pdbStream);
+
+                if (!emitted.Success)
+                {
+                    throw new Exception(emitted.Diagnostics.ToString());
+                }
+            }
+
+            dllStream.Position = 0;
+
+            //-----------------------------------------------------------------
+            // Load the new assembly into the current context.  Note that we're
+            // going to do this within a lock because it's possible that we created
+            // two stubs for the same workflow interface in parallel and we need
+            // to ensure that we're only going to load one of them.
+
+            lock (syncLock)
+            {
+                if (!workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
+                {
+                    var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
+                    var stubType     = stubAssembly.GetType(stubFullClassName);
+
+                    stub = new DynamicWorkflowStub(stubType);
+
+                    workflowInterfaceToStub.Add(stubType, stub);
+                }
+            }
+
+            return (TWorkflowInterface)stub.Create(client, taskList, options, domain);
+        }
+    }
+}
