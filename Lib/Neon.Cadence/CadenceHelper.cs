@@ -52,43 +52,6 @@ namespace Neon.Cadence
         private static MetadataReference cachedNetStandard;
 
         /// <summary>
-        /// Returns the <see cref="MetadataReference"/> for the NETStandard reference assembly.
-        /// </summary>
-        public static MetadataReference NetStandardReference
-        {
-            get
-            {
-                // NOTE: 
-                // 
-                // We need add all of the NETStandard reference assembly so that
-                // compilation will actually work.
-                // 
-                // We've set [PreserveCompilationContext=true] in [Neon.Cadence.csproj]
-                // so that the reference assemblies will be written to places like:
-                //
-                //      bin/Debug/netstandard2.0/refs/*
-                //
-                // This is where we obtained the these assemblies and added them
-                // all as resources within the [Netstandard] project folder.
-                //
-                // We'll need to replace this when/if we upgrade the 
-                // library to a new version of NetStandard.
-
-                if (cachedNetStandard == null)
-                {
-                    var thisAssembly = Assembly.GetExecutingAssembly();
-
-                    using (var resourceStream = thisAssembly.GetManifestResourceStream("Neon.Cadence.Netstandard.netstandard.dll"))
-                    {
-                        cachedNetStandard = MetadataReference.CreateFromStream(resourceStream);
-                    }
-                }
-
-                return cachedNetStandard;
-            }
-        }
-
-        /// <summary>
         /// Ensures that the timespan passed doesn't exceed the minimum or maximum
         /// supported by Cadence/GOLANG.
         /// </summary>

@@ -94,6 +94,11 @@ namespace Neon.Cadence.Internal
             public WorkflowMethodAttribute WorkflowAttribute { get; set; }
 
             /// <summary>
+            /// Indicates whether the workflow result is <see cref="void"/>.
+            /// </summary>
+            public bool IsVoid => ReturnType == typeof(void);
+
+            /// <summary>
             /// The workflow result type, not including the wrapping <see cref="Task"/>.
             /// This will be <see cref="void"/> for methods that don't return a value.
             /// </summary>
@@ -377,19 +382,16 @@ namespace Neon.Cadence.Internal
 
                 foreach (var param in details.Method.GetParameters())
                 {
-                    if (sbParams.Length > 0)
-                    {
-                        sbParams.Append(", ");
-                    }
-
-                    sbParams.Append($"{CadenceHelper.TypeToCSharp(param.ParameterType)} {param.Name}");
+                    sbParams.AppendWithSeparator($"{CadenceHelper.TypeToCSharp(param.ParameterType)} {param.Name}", ", ");
                 }
 
+                var resultTaskType = details.IsVoid ? "Task" : $"Task<{resultType}>";
+
                 sbSource.AppendLine();
-                sbSource.AppendLine($"        public async {resultType} {details.Method.Name}({sbParams})");
+                sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
 
-                if (details.ReturnType != typeof(void))
+                if (!details.IsVoid)
                 {
                     sbSource.AppendLine($"            return ({resultType})null;");
                 }
@@ -405,21 +407,38 @@ namespace Neon.Cadence.Internal
             //-----------------------------------------------------------------
             // Compile the new stub class into an assembly.
 
+            // $hack(jeff.lill):
+            //
+            // Note that referencing the correct assemblies is a bit tricky and I hope
+            // that this works for deployed applications where the .NET SDK is not
+            // installed.  Our scenario is a bit tricky where we're dynamically compiling
+            // an assembly and then need to load it within the current process.  Here's a
+            // Roslyn issue discussing this:
+            //
+            //      https://github.com/dotnet/roslyn/issues/16211
+            //
+            // The solution is to hardcode references to the system assemblies we'll need, 
+            // looking for them in the same folder where the assembly implementing [object]
+            // lives.  We'll need to test this separately with for old .NET Framework to
+            // ensure this works for that too.
+
+            // $todo(jeff.lill):
+            //
+            // Be sure to test this against the old .NET Framework too:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/590
+
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
+            var dotnetPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
             var references = new List<MetadataReference>();
 
-            //references.Add(CadenceHelper.NetStandardReference);                                         // reference: Netstandard20
-            references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));         // reference: mscorlib or equivalent
+            references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));                 // reference: mscorlib or equivalent
+            references.Add(MetadataReference.CreateFromFile(Path.Combine(dotnetPath, "System.Runtime.dll")));   // reference: System.Runtime.dll
+            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));             // reference: Neon.Common.dll
+            references.Add(MetadataReference.CreateFromFile(typeof(CadenceClient).Assembly.Location));          // reference: Neon.Cadence.dll
+            references.Add(MetadataReference.CreateFromFile(workflowInterface.Assembly.Location));              // reference: workflow implementation assembly
 
-            var path = Path.GetDirectoryName(typeof(Task).Assembly.Location);
-
-            references.Add(MetadataReference.CreateFromFile(Path.Combine(path, "System.Runtime.dll")));
-
-            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));     // reference: Neon.Common
-            references.Add(MetadataReference.CreateFromFile(typeof(CadenceClient).Assembly.Location));  // reference: Neon.Cadence
-            references.Add(MetadataReference.CreateFromFile(workflowInterface.Assembly.Location));      // reference: workflow implementation
-
-            var assemblyName    = $"Neon-Cadence-Stub-{classId}";
+            var assemblyName    = $"Neon-Cadence-WorkflowStub-{classId}";
             var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
             var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
             var dllStream       = new MemoryStream();
