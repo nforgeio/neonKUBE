@@ -901,8 +901,8 @@ namespace Neon.Cadence
                 RunId     = Guid.NewGuid().ToString("D"),
                 ContextId = contextId,
                 Args      = request.Args,
-                // Domain    = request.Domain,  // $todo(jeff.lill): Will need to get this from the new workflow client context
-                TaskList  = request.Options?.TaskList ?? Settings.DefaultTaskList,
+                Domain    = ResolveDomain(request.Domain),
+                TaskList  = ResolveTaskList(request.Options.TaskList),
                 Name      = request.Workflow,
                 Options   = request.Options,
                 IsGlobal  = true

@@ -626,7 +626,7 @@ namespace Neon.Cadence
             {
                 var client = new CadenceClient(settings);
 
-                await client.SetStickyWorkflowCacheSizeAsync(10000);
+                await client.SetSCacheMaximumSizeAsync(10000);
 
                 return client;
             }
@@ -1055,6 +1055,31 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the Cadence task list to be referenced for an operation.  If <paramref name="taskList"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise the default domain
+        /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
+        /// be non-empty.
+        /// </summary>
+        /// <param name="taskList">The specific task list to use or null/empty.</param>
+        /// <param name="allowEmpty">Optionally allow an empty task list.</param>
+        /// <returns>The task list to be referenced.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default tasklist are both null or empty.</exception>
+        internal string ResolveTaskList(string taskList, bool allowEmpty = false)
+        {
+            if (!string.IsNullOrEmpty(taskList))
+            {
+                return taskList;
+            }
+
+            if (!allowEmpty && !string.IsNullOrEmpty(Settings.DefaultTaskList))
+            {
+                return Settings.DefaultTaskList;
+            }
+
+            throw new ArgumentNullException($"One of [{nameof(taskList)}] parameter or the client's default task list must be non-empty.");
+        }
+
+        /// <summary>
         /// Returns the Cadence domain to be referenced for an operation.  If <paramref name="domain"/>
         /// is not <c>null</c> or empty then that will be returned otherwise the default domain
         /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
@@ -1062,7 +1087,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="domain">The specific domain to use or null/empty.</param>
         /// <returns>The domain to be referenced.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domains are both null or empty.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domain are both null or empty.</exception>
         internal string ResolveDomain(string domain)
         {
             if (!string.IsNullOrEmpty(domain))
@@ -1075,7 +1100,7 @@ namespace Neon.Cadence
                 return Settings.DefaultDomain;
             }
 
-            throw new ArgumentNullException($"One of [{nameof(domain)}] or the client's default domain must be non-empty.");
+            throw new ArgumentNullException($"One of [{nameof(domain)}] parameter or the client's default domain must be non-empty.");
         }
 
         /// <summary>

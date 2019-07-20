@@ -54,7 +54,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Gen_VoidWorkflow()
+        public void Generate_VoidWorkflow()
         {
             // We don't support workflow interfaces with generic parameters.
 

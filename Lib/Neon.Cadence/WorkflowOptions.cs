@@ -155,19 +155,14 @@ namespace Neon.Cadence
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
         /// <param name="client">The <see cref="CadenceClient"/>.</param>
-        /// <param name="taskList">The target task list.</param>
-        /// <param name="methodAttribute">An optional <see cref="WorkflowMethodAttribute"/>.</param>
+        /// <param name="taskList">Optionally specifies the target task list.</param>
+        /// <param name="methodAttribute">Optionally specifies a <see cref="WorkflowMethodAttribute"/>.</param>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
-        internal InternalStartWorkflowOptions ToInternal(CadenceClient client, string taskList, WorkflowMethodAttribute methodAttribute)
+        internal InternalStartWorkflowOptions ToInternal(CadenceClient client, string taskList = null, WorkflowMethodAttribute methodAttribute = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            taskList = taskList ?? client.Settings.DefaultTaskList;
-
-            if (string.IsNullOrEmpty(taskList))
-            {
-                throw new ArgumentException("You must specify a task list.");
-            }
+            taskList = client.ResolveTaskList(taskList, allowEmpty: true);
 
             // Merge optional settings from these options and the method attribute.
 

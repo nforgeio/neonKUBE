@@ -348,6 +348,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"using System.ComponentModel;");
             sbSource.AppendLine($"using System.Diagnostics;");
             sbSource.AppendLine($"using System.Diagnostics.Contracts;");
+            sbSource.AppendLine($"using System.Reflection;");
             sbSource.AppendLine($"using System.Threading.Tasks;");
             sbSource.AppendLine();
             sbSource.AppendLine($"using Neon.Common;");
@@ -357,6 +358,10 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"{{");
             sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
+
+            AppendClientProxy(sbSource);
+
+            sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient     client;");
             sbSource.AppendLine($"        private string            taskList;");
             sbSource.AppendLine($"        private WorkflowOptions   options;");
@@ -475,6 +480,50 @@ namespace Neon.Cadence.Internal
             }
 
             return (TWorkflowInterface)stub.Create(client, taskList, options, domain);
+        }
+
+        /// <summary>
+        /// Generates the static <b>ClientProxy</b> class that exposes the internal
+        /// <see cref="CadenceClient"/> methods the workflow stub requires.  The
+        /// generated class will use reflection to access these methods.
+        /// </summary>
+        /// <param name="sbSource">The C# source code being generated.</param>
+        private static void AppendClientProxy(StringBuilder sbSource)
+        {
+            typeof(int).GetMethod("", BindingFlags.NonPublic, null, null, null)
+
+            sbSource.Append(
+@"        private static class ClientProxy
+        {
+            private object          syncLock      = new object();
+            private bool            isInitialized = false;
+            private MethodInfo      startWorkflowAsync;
+            private MethodInfo      getWorkflowDescriptionAsync;
+            private MethodInfo      getWorkflowResultAsync;
+            private MethodInfo      cancelWorkflowAsync;
+            private MethodInfo      terminateWorflowAsync;
+            private MethodInfo      signalWorkflowAsync;
+            private MethodInfo      signalWorkflowWithStartAsync;
+            private MethodInfo      queryWorkflowAsync;
+
+            public static void Initialize()
+            {
+                lock (syncLock)
+                {
+                    if (isInitialized)
+                    {
+                        return;
+                    }
+
+                    var clientType = typeof(CadenceClient);
+
+                    startWorkflowAsync = clientType.GetMethod(BindingFlags.NonPublic | BindingFlags.Instance, 
+
+                    isInitialized = true;
+                }
+            }
+        }
+");
         }
     }
 }
