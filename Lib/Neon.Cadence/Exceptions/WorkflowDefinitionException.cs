@@ -22,7 +22,7 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Indicates that a workflow interface is not valid.
+    /// Thrown when ak workflow interface is not valid.
     /// </summary>
     public class WorkflowDefinitionException : Exception
     {

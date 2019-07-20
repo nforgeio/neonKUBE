@@ -114,25 +114,48 @@ namespace Neon.Cadence.Internal
         /// </remarks>
         private class DynamicWorkflowStub
         {
-            private int                 classId;
+            private Type                workflowInterface;
             private string              className;
             private Assembly            assembly;
+            private Type                stubType;
             private ConstructorInfo     constructor;
 
-            public DynamicWorkflowStub(Type workflowInterface)
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="workflowInterface">Specifies the workflow interface type.</param>
+            /// <param name="assembly">The assembly holding the generated stub class.</param>
+            /// <param name="className">The fully qualified stub class name.</param>
+            public DynamicWorkflowStub(Type workflowInterface, Assembly assembly, string className)
             {
+                this.workflowInterface = workflowInterface;
+                this.assembly          = assembly;
+                this.className         = className;
+
+                // Fetch the stub type and constructor.
+
+                this.stubType    = assembly.GetType(className);
+                this.constructor = stubType.GetConstructor(new Type[] { typeof(CadenceClient), typeof(string), typeof(WorkflowOptions), typeof(string) });
             }
 
-            public object Create(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
+            /// <summary>
+            /// Creates a workflow stub instance.
+            /// </summary>
+            /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+            /// <param name="taskList">Specifies the target task list.</param>
+            /// <param name="options">Specifies the <see cref="WorkflowOptions"/>.</param>
+            /// <param name="domain">Specifies the target domain.</param>
+            /// <returns>The workflow stub as an <see cref="object"/>.</returns>
+            public object Create(CadenceClient client, string taskList, WorkflowOptions options, string domain)
             {
-                return null;
+                return constructor.Invoke(new object[] { client, taskList, options, domain });
             }
         }
 
         //---------------------------------------------------------------------
         // Implementation
 
-        private static int      nextClassId = 0;
+        private static int      nextClassId = -1;
         private static object   syncLock    = new object();
 
         // This dictionary maps workflow interfaces to their dynamically generated stubs.
@@ -154,7 +177,7 @@ namespace Neon.Cadence.Internal
             var workflowInterface = typeof(TWorkflowInterface);
 
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<WorkflowDefinitionException>(!workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
+            Covenant.Requires<WorkflowDefinitionException>(workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
             Covenant.Requires<WorkflowDefinitionException>(!workflowInterface.IsGenericType, $"The [{workflowInterface.Name}] interface is generic.  This is not supported.");
 
             options = options ?? new WorkflowOptions();
@@ -181,6 +204,14 @@ namespace Neon.Cadence.Internal
             if (stub != null)
             {
                 return (TWorkflowInterface)stub.Create(client, taskList, options, domain);
+            }
+
+            //-----------------------------------------------------------------
+            // Workflow interfaces must be public.
+
+            if (!workflowInterface.IsPublic && !workflowInterface.IsNestedPublic)
+            {
+                throw new WorkflowDefinitionException($"Workflow interface method is not public.");
             }
 
             //-----------------------------------------------------------------
@@ -215,7 +246,7 @@ namespace Neon.Cadence.Internal
                         throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
-                    details.ReturnType = typeof(void);
+                    details.ReturnType = method.ReturnType.GetGenericArguments().First();
                 }
                 else
                 {
@@ -224,7 +255,7 @@ namespace Neon.Cadence.Internal
                         throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
-                    details.ReturnType = method.ReturnType.GetGenericArguments().First();
+                    details.ReturnType = typeof(void);
                 }
 
                 var signalAttributes   = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
@@ -234,11 +265,11 @@ namespace Neon.Cadence.Internal
 
                 if (attributeCount == 0)
                 {
-                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
                 else if (attributeCount > 1)
                 {
-                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] can have only one of these attributes: SignalMethod, QueryMethod, or WorkflowMethod");
+                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] may only be tagged with one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
 
                 if (signalAttributes.Length > 0)
@@ -284,15 +315,27 @@ namespace Neon.Cadence.Internal
                 methodToDetails.Add(method.ToString(), details);
             }
 
+            if (methodToDetails.Values.Count(d => d.Kind == WorkflowMethodKind.Workflow) == 0)
+            {
+                throw new WorkflowDefinitionException($"Workflow interface[{workflowInterface.FullName}] does not define a [WorkflowMethod].");
+            }
+
             // Generate C# source code that implements the stub.  Note that stub classes will
             // be generated within the [Neon.Cadence.Stubs] namespace and will be named by
             // the interface name plus the "Stub_#" suffix where "#" is the number of stubs
             // generated so far.  This will help avoid naming conflicts while still being
-            // somewhat readable.
+            // somewhat readable in the debugger.
 
-            var classId           = Interlocked.Increment(ref nextClassId);
-            var stubClassName     = $"{workflowInterface.Name}Stub_{classId}";
+            var classId       = Interlocked.Increment(ref nextClassId);
+            var stubClassName = $"{workflowInterface.Name}Stub_{classId}";
+
+            if (stubClassName.Length > 1 && stubClassName.StartsWith("I"))
+            {
+                stubClassName = stubClassName.Substring(1);
+            }
+
             var stubFullClassName = $"Neon.Cadence.Stubs.{stubClassName}";
+            var interfaceFullName = workflowInterface.FullName.Replace('+', '.');   // .NET uses "+" for nested types (convert these to ".")
             var sbSource          = new StringBuilder();
 
             sbSource.AppendLine($"using System;");
@@ -307,12 +350,12 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");
-            sbSource.AppendLine($"    public class {stubClassName}");
+            sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
-            sbSource.AppendLine($"        private CadenceClient     client");
-            sbSource.AppendLine($"        private string            taskList");
-            sbSource.AppendLine($"        private WorkflowOptions   options");
-            sbSource.AppendLine($"        private string            domain");
+            sbSource.AppendLine($"        private CadenceClient     client;");
+            sbSource.AppendLine($"        private string            taskList;");
+            sbSource.AppendLine($"        private WorkflowOptions   options;");
+            sbSource.AppendLine($"        private string            domain;");
 
             // Generate the constructor.
 
@@ -345,7 +388,12 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            return null;");
+
+                if (details.ReturnType != typeof(void))
+                {
+                    sbSource.AppendLine($"            return ({resultType})null;");
+                }
+
                 sbSource.AppendLine($"        }}");
             }
 
@@ -360,9 +408,16 @@ namespace Neon.Cadence.Internal
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var references = new List<MetadataReference>();
 
-            references.Add(CadenceHelper.NetStandardReference);
-            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
-            references.Add(MetadataReference.CreateFromFile(typeof(CadenceClient).Assembly.Location));
+            //references.Add(CadenceHelper.NetStandardReference);                                         // reference: Netstandard20
+            references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));         // reference: mscorlib or equivalent
+
+            var path = Path.GetDirectoryName(typeof(Task).Assembly.Location);
+
+            references.Add(MetadataReference.CreateFromFile(Path.Combine(path, "System.Runtime.dll")));
+
+            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));     // reference: Neon.Common
+            references.Add(MetadataReference.CreateFromFile(typeof(CadenceClient).Assembly.Location));  // reference: Neon.Cadence
+            references.Add(MetadataReference.CreateFromFile(workflowInterface.Assembly.Location));      // reference: workflow implementation
 
             var assemblyName    = $"Neon-Cadence-Stub-{classId}";
             var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
@@ -375,7 +430,7 @@ namespace Neon.Cadence.Internal
 
                 if (!emitted.Success)
                 {
-                    throw new Exception(emitted.Diagnostics.ToString());
+                    throw new CompilerErrorException(emitted.Diagnostics);
                 }
             }
 
@@ -394,7 +449,7 @@ namespace Neon.Cadence.Internal
                     var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
                     var stubType     = stubAssembly.GetType(stubFullClassName);
 
-                    stub = new DynamicWorkflowStub(stubType);
+                    stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
 
                     workflowInterfaceToStub.Add(stubType, stub);
                 }
