@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
 	globals "github.com/cadence-proxy/internal"
@@ -36,6 +37,7 @@ import (
 	"github.com/cadence-proxy/internal/cadence/cadenceworkers"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"
+	messagetypes "github.com/cadence-proxy/internal/messages/types"
 	"github.com/cadence-proxy/internal/server"
 )
 
@@ -217,6 +219,54 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	}
 
 	return resp, nil
+}
+
+func verifyClientHelper(request messages.IProxyRequest, helper *cadenceclient.ClientHelper) error {
+	switch request.GetType() {
+	case messagetypes.InitializeRequest,
+		messagetypes.PingRequest,
+		messagetypes.ConnectRequest,
+		messagetypes.TerminateRequest,
+		messagetypes.CancelRequest,
+		messagetypes.HeartbeatRequest:
+		return nil
+	default:
+		if helper == nil {
+			return globals.ErrConnection
+		}
+	}
+
+	return nil
+}
+
+func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
+	isReplaying := workflow.IsReplaying(ctx)
+	switch s := message.(type) {
+	case messages.IWorkflowReply:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowQueryInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowSignalInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	}
 }
 
 func sendMessage(message messages.IProxyMessage) {

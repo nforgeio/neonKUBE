@@ -461,7 +461,12 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		// $debug(jack.burns): DELETE THIS!
 		// THIS IS A PATCH, NEED TO COME BACK AND LOOK AT THIS
 		retention := int32(365)
-		err = clientHelper.RegisterDomain(ctx, &cadenceshared.RegisterDomainRequest{Name: &defaultDomain, WorkflowExecutionRetentionPeriodInDays: &retention})
+		err = clientHelper.RegisterDomain(ctx,
+			&cadenceshared.RegisterDomainRequest{
+				Name:                                   &defaultDomain,
+				WorkflowExecutionRetentionPeriodInDays: &retention,
+			},
+		)
 		if err != nil {
 			buildReply(reply, cadenceerrors.NewCadenceError(err.Error()))
 
@@ -2411,55 +2416,4 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	buildReply(reply, nil, result)
 
 	return reply
-}
-
-// -------------------------------------------------------------------------
-// Helpers for sending ProxyReply messages back to Neon.Cadence Library
-
-func verifyClientHelper(request messages.IProxyRequest, helper *cadenceclient.ClientHelper) error {
-	switch request.GetType() {
-	case messagetypes.InitializeRequest,
-		messagetypes.PingRequest,
-		messagetypes.ConnectRequest,
-		messagetypes.TerminateRequest,
-		messagetypes.CancelRequest,
-		messagetypes.HeartbeatRequest:
-		return nil
-	default:
-		if helper == nil {
-			return globals.ErrConnection
-		}
-	}
-
-	return nil
-}
-
-func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
-	isReplaying := workflow.IsReplaying(ctx)
-	switch s := message.(type) {
-	case messages.IWorkflowReply:
-		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
-		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
-		}
-	case *messages.WorkflowInvokeRequest:
-		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
-		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
-		}
-	case *messages.WorkflowQueryInvokeRequest:
-		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
-		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
-		}
-	case *messages.WorkflowSignalInvokeRequest:
-		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
-		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
-		}
-	}
 }
