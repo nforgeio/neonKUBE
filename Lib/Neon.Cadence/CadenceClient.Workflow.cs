@@ -306,7 +306,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the current state of a running workflow.
         /// </summary>
-        /// <param name="execution">Identifies the workflow run.</param>
+        /// <param name="execution">Identifies the workflow execution.</param>
         /// <returns>A <see cref="WorkflowDescription"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
@@ -328,10 +328,10 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the result from a workflow run, blocking until the workflow
+        /// Returns the result from a workflow execution, blocking until the workflow
         /// completes if it is still running.
         /// </summary>
-        /// <param name="execution">Identifies the workflow run.</param>
+        /// <param name="execution">Identifies the workflow execution.</param>
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
@@ -363,6 +363,7 @@ namespace Neon.Cadence
         /// </note>
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
+        /// <param name="domain">Optionally identifies the domain.  This defaults to the client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
@@ -391,22 +392,22 @@ namespace Neon.Cadence
         /// opposed to cancellation which is usually considered as a normal activity.
         /// </note>
         /// </summary>
-        /// <param name="workflowRun">Identifies the running workflow.</param>
+        /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
         /// <param name="details">Optionally specifies additional details as a byte array.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task TerminateWorkflowAsync(WorkflowExecution workflowRun, string reason = null, byte[] details = null)
+        internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null)
         {
-            Covenant.Requires<ArgumentNullException>(workflowRun != null);
+            Covenant.Requires<ArgumentNullException>(execution != null);
 
             var reply = (WorkflowTerminateReply)await CallProxyAsync(
                 new WorkflowTerminateRequest()
                 {
-                    WorkflowId = workflowRun.WorkflowId,
-                    RunId      = workflowRun.RunId,
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
                     Reason     = reason,
                     Details    = details
                 });
@@ -476,21 +477,21 @@ namespace Neon.Cadence
         /// Queries a workflow.
         /// </summary>
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
-        /// <param name="queryName">Identifies the signal.</param>
+        /// <param name="queryType">Identifies the query.</param>
         /// <param name="queryArgs">Optionally specifies query arguments encoded as a byte array.</param>
         /// <returns>The query result encoded as a byte array.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryName, byte[] queryArgs = null)
+        internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType));
 
             var reply = (WorkflowQueryReply)await CallProxyAsync(
                 new WorkflowQueryRequest()
                 {
                     WorkflowId = execution.WorkflowId,
-                    QueryName  = queryName,
+                    QueryName  = queryType,
                     QueryArgs  = queryArgs,
                     RunId      = execution.RunId
                 });

@@ -97,11 +97,11 @@ namespace Neon.Cadence
         /// </summary>
         private struct EmulatedSignal
         {
-            public EmulatedSignal(string queryName, byte[] args)
+            public EmulatedSignal(string signalName, byte[] args)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-                this.SignalName = queryName;
+                this.SignalName = signalName;
                 this.SignalArgs = args;
             }
 

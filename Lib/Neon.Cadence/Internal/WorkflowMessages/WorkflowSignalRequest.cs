@@ -51,7 +51,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run to be cancelled.  The latest run
+        /// Identifies the specific workflow execution to be cancelled.  The latest run
         /// will be cancelled when this is <c>null</c> or empty.
         /// </summary>
         public string RunId

@@ -32,7 +32,7 @@ namespace Neon.Cadence.Internal
     internal class InternalWorkflowExecutionInfo
     {
         /// <summary>
-        /// Describes the workflow run.
+        /// Describes the workflow execution.
         /// </summary>
         [JsonProperty(PropertyName = "Execution", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
