@@ -493,7 +493,7 @@ namespace Neon.Cadence
                     {
                         return new WorkflowQueryInvokeReply()
                         {
-                            Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a query handler for [queryName={request.QueryName}].").ToCadenceError()
+                            Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a query handler for [queryType={request.QueryName}].").ToCadenceError()
                         };
                     }
                 }

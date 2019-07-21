@@ -238,7 +238,7 @@ namespace Neon.Cadence.Internal
 
             var methodToDetails = new Dictionary<string, WorkflowMethodDetails>();
             var signalNames     = new HashSet<string>();
-            var queryNames      = new HashSet<string>();
+            var queryTypes      = new HashSet<string>();
 
             foreach (var method in workflowInterface.GetMethods())
             {
@@ -295,12 +295,12 @@ namespace Neon.Cadence.Internal
                 {
                     var queryAttribute = queryAttributes.First();
 
-                    if (queryNames.Contains(queryAttribute.Name))
+                    if (queryTypes.Contains(queryAttribute.Name))
                     {
                         throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
                     }
 
-                    queryNames.Add(queryAttribute.Name);
+                    queryTypes.Add(queryAttribute.Name);
 
                     details.Kind           = WorkflowMethodKind.Query;
                     details.QueryAttribute = queryAttribute;
@@ -349,6 +349,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"using System.Diagnostics;");
             sbSource.AppendLine($"using System.Diagnostics.Contracts;");
             sbSource.AppendLine($"using System.Reflection;");
+            sbSource.AppendLine($"using System.Runtime.CompilerServices;");
             sbSource.AppendLine($"using System.Threading.Tasks;");
             sbSource.AppendLine();
             sbSource.AppendLine($"using Neon.Common;");
@@ -359,7 +360,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
 
-            AppendClientProxy(sbSource);
+            AppendClientProxy(sbSource);    // Generate the [ClientProxy] class. 
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient     client;");
@@ -383,7 +384,7 @@ namespace Neon.Cadence.Internal
             foreach (var details in methodToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Workflow))
             {
                 var resultType = CadenceHelper.TypeToCSharp(details.ReturnType);
-                var sbParams   = new StringBuilder();
+                var sbParams = new StringBuilder();
 
                 foreach (var param in details.Method.GetParameters())
                 {
@@ -396,6 +397,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
 
+                sbSource.AppendLine($"            await Task.CompletedTask;");
                 if (!details.IsVoid)
                 {
                     sbSource.AppendLine($"            return ({resultType})null;");
@@ -412,36 +414,21 @@ namespace Neon.Cadence.Internal
             //-----------------------------------------------------------------
             // Compile the new stub class into an assembly.
 
-            // $hack(jeff.lill):
-            //
-            // Note that referencing the correct assemblies is a bit tricky and I hope
-            // that this works for deployed applications where the .NET SDK is not
-            // installed.  Our scenario is a bit tricky where we're dynamically compiling
-            // an assembly and then need to load it within the current process.  Here's a
-            // Roslyn issue discussing this:
-            //
-            //      https://github.com/dotnet/roslyn/issues/16211
-            //
-            // The solution is to hardcode references to the system assemblies we'll need, 
-            // looking for them in the same folder where the assembly implementing [object]
-            // lives.  We'll need to test this separately with for old .NET Framework to
-            // ensure this works for that too.
-
-            // $todo(jeff.lill):
-            //
-            // Be sure to test this against the old .NET Framework too:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/590
-
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var dotnetPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
             var references = new List<MetadataReference>();
 
-            references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));                 // reference: mscorlib or equivalent
-            references.Add(MetadataReference.CreateFromFile(Path.Combine(dotnetPath, "System.Runtime.dll")));   // reference: System.Runtime.dll
-            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));             // reference: Neon.Common.dll
-            references.Add(MetadataReference.CreateFromFile(typeof(CadenceClient).Assembly.Location));          // reference: Neon.Cadence.dll
-            references.Add(MetadataReference.CreateFromFile(workflowInterface.Assembly.Location));              // reference: workflow implementation assembly
+            // Reference these required assemblies.
+
+            references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
+
+            // Reference all loaded assemblies.
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic))
+            {
+                references.Add(MetadataReference.CreateFromFile(assembly.Location));
+            }
 
             var assemblyName    = $"Neon-Cadence-WorkflowStub-{classId}";
             var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
@@ -490,37 +477,99 @@ namespace Neon.Cadence.Internal
         /// <param name="sbSource">The C# source code being generated.</param>
         private static void AppendClientProxy(StringBuilder sbSource)
         {
-            typeof(int).GetMethod("", BindingFlags.NonPublic, null, null, null)
-
             sbSource.Append(
 @"        private static class ClientProxy
         {
-            private object          syncLock      = new object();
-            private bool            isInitialized = false;
-            private MethodInfo      startWorkflowAsync;
-            private MethodInfo      getWorkflowDescriptionAsync;
-            private MethodInfo      getWorkflowResultAsync;
-            private MethodInfo      cancelWorkflowAsync;
-            private MethodInfo      terminateWorflowAsync;
-            private MethodInfo      signalWorkflowAsync;
-            private MethodInfo      signalWorkflowWithStartAsync;
-            private MethodInfo      queryWorkflowAsync;
+            private static MethodInfo   startWorkflowAsync;
+            private static MethodInfo   getWorkflowDescriptionAsync;
+            private static MethodInfo   getWorkflowResultAsync;
+            private static MethodInfo   cancelWorkflowAsync;
+            private static MethodInfo   terminateWorkflowAsync;
+            private static MethodInfo   signalWorkflowAsync;
+            private static MethodInfo   signalWorkflowWithStartAsync;
+            private static MethodInfo   queryWorkflowAsync;
 
-            public static void Initialize()
+            static ClientProxy()
             {
-                lock (syncLock)
-                {
-                    if (isInitialized)
-                    {
-                        return;
-                    }
+                var clientType = typeof(CadenceClient);
 
-                    var clientType = typeof(CadenceClient);
+                startWorkflowAsync           = GetInternalMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
+                getWorkflowDescriptionAsync  = GetInternalMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
+                getWorkflowResultAsync       = GetInternalMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
+                cancelWorkflowAsync          = GetInternalMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
+                terminateWorkflowAsync       = GetInternalMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                signalWorkflowAsync          = GetInternalMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                signalWorkflowWithStartAsync = GetInternalMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
+                queryWorkflowAsync           = GetInternalMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+            }
 
-                    startWorkflowAsync = clientType.GetMethod(BindingFlags.NonPublic | BindingFlags.Instance, 
+            private static MethodInfo GetInternalMethod(Type type, string name, params Type[] types)
+            {
+                var method = type.GetMethod(
+                    name:           name, 
+                    bindingAttr:    BindingFlags.NonPublic | BindingFlags.Instance, 
+                    binder:         null, 
+                    types:          types,
+                    modifiers:      null);
 
-                    isInitialized = true;
-                }
+                Covenant.Assert(method != null, $""Cannot locate the [{type.FullName}.{name}()] method."");
+                return method;
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, string taskList, WorkflowOptions options, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, taskList, options, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<WorkflowDescription> GetWorkflowDescriptionAsync(CadenceClient client, WorkflowExecution execution, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                return await (Task<WorkflowDescription>)getWorkflowDescriptionAsync.Invoke(client, new object[] { execution, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> GetWorkflowResultAsync(CadenceClient client, WorkflowExecution execution, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task CancelWorkflowAsync(CadenceClient client, WorkflowExecution execution, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task TerminateWorkflowAsync(CadenceClient client, WorkflowExecution execution, string reason, byte[] details, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task SignalWorkflowAsync(CadenceClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task SignalWorkflowWithStartAsync(CadenceClient client, string workflowId, string signalName, byte[] signalArgs, byte[] workflowArgs, string taskList, WorkflowOptions options, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                await (Task)signalWorkflowWithStartAsync.Invoke(client, new object[] { workflowId, signalName, signalArgs, workflowArgs, taskList, options, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> QueryWorkflowAsync(CadenceClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string domain)
+            {
+                Covenant.Requires<ArgumentNullException>(client != null);
+                return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, domain });
             }
         }
 ");

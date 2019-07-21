@@ -49,8 +49,6 @@ namespace Neon.Cadence
         /// </summary>
         public static TimeSpan MinTimespan { get; private set; } = TimeSpan.FromTicks(long.MinValue / 100);
 
-        private static MetadataReference cachedNetStandard;
-
         /// <summary>
         /// Ensures that the timespan passed doesn't exceed the minimum or maximum
         /// supported by Cadence/GOLANG.
