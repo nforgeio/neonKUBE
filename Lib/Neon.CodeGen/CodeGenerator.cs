@@ -976,6 +976,7 @@ namespace Neon.CodeGen
             }
 
             writer.WriteLine($"using System.ComponentModel;");
+            writer.WriteLine($"using System.Diagnostics;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
             writer.WriteLine($"using System.Linq;");
@@ -1315,6 +1316,12 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// Performs any persistence related initialization including registering the Linq2Couchbase type");
                         writer.WriteLine($"        /// filter.  This is typically called via <see cref=\"RoundtripDataHelper.PersistableInitialize()\"/>.");
                         writer.WriteLine($"        /// </summary>");
+
+                        if (!Settings.AllowDebuggerStepInto)
+                        {
+                            writer.WriteLine($"        [DebuggerStepThrough]");
+                        }
+
                         writer.WriteLine($"        public static void PersistableInitialize()");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            // Register the document filter with Linq2Couchbase.");
@@ -1329,6 +1336,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"jsonText\">The JSON text input.</param>");
                     writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static {className} CreateFrom(string jsonText)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (string.IsNullOrEmpty(jsonText))");
@@ -1347,6 +1360,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"jObject\">The input <see cref=\"JObject\"/>.</param>");
                     writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static {className} CreateFrom(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (jObject == null)");
@@ -1366,6 +1385,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <param name=\"stream\">The input <see cref=\"Stream\"/>.</param>");
                     writer.WriteLine($"        /// <param name=\"encoding\">Optionally specifies the inout encoding.  This defaults to <see cref=\"Encoding.UTF8\"/>.</param>");
                     writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static {className} CreateFrom(Stream stream, Encoding encoding = null)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
@@ -1391,6 +1416,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"bytes\">The input byte array.</param>");
                     writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static {className} CreateFrom(byte[] bytes)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (bytes == null)");
@@ -1410,6 +1441,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <param name=\"stream\">The input <see cref=\"Stream\"/>.</param>");
                     writer.WriteLine($"        /// <param name=\"encoding\">Optionally specifies the inout encoding.  This defaults to <see cref=\"Encoding.UTF8\"/>.</param>");
                     writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static async Task<object> CreateFromAsync(Stream stream, Encoding encoding = null)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
@@ -1435,6 +1472,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"response\">The input <see cref=\"JsonResponse\"/>.</param>");
                     writer.WriteLine($"        /// <returns>The deserialized <see cref=\"{className}\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static {className} CreateFrom(JsonResponse response)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (response == null)");
@@ -1456,6 +1499,12 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <c>true</c> if the <paramref name=\"instance\"/> is not <c>null</c> and it has");
                         writer.WriteLine($"        /// the same type as the current class.");
                         writer.WriteLine($"        /// </returns>");
+
+                        if (!Settings.AllowDebuggerStepInto)
+                        {
+                            writer.WriteLine($"        [DebuggerStepThrough]");
+                        }
+
                         writer.WriteLine($"        public static bool SameTypeAs(IPersistableType instance)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            if (instance == null)");
@@ -1476,6 +1525,12 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// Creates a persistence key.");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        /// <param name=\"args\">Arguments identifying the item.</param>");
+
+                        if (!Settings.AllowDebuggerStepInto)
+                        {
+                            writer.WriteLine($"        [DebuggerStepThrough]");
+                        }
+
                         writer.WriteLine($"        public static string CreateKey(params object[] args)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            return RoundtripDataHelper.GetPersistedKey(\"{dataModel.PersistedType}\", args);");
@@ -1490,6 +1545,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <param name=\"value1\">The first value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <param name=\"value2\">The second value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <returns><c>true</c> if the values are equal.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static bool operator ==({className} value1, {className} value2)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            var value1IsNull = object.ReferenceEquals(value1, null);");
@@ -1519,6 +1580,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <param name=\"value1\">The first value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <param name=\"value2\">The second value or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <returns><c>true</c> if the values are not equal.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public static bool operator !=({className} value1, {className} value2)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            return !(value1 == value2);");
@@ -1559,6 +1626,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Constructs an uninitialized instance.");
                     writer.WriteLine($"        /// </summary>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {className}()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __JObject = new JObject();");
@@ -1569,6 +1642,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Protected constructor used internally to initialize derived classes.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"jObject\">The backing <see cref=\"JObject\"/>.</param>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        protected {className}(JObject jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __JObject = jObject;");
@@ -1580,6 +1659,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Constructs an uninitialized instance.");
                     writer.WriteLine($"        /// </summary>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {className}() : base()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"        }}");
@@ -1589,6 +1674,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Protected constructor.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"jObject\">The backing <see cref=\"JObject\"/>.</param>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        protected {className}(JObject jObject) : base(jObject)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"        }}");
@@ -1703,6 +1794,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"source\">The optional source <see cref=\"JObject\"/>.</param>");
                     writer.WriteLine($"        /// <param name=\"isDerived\">Optionally indicates that were deserializing a derived class.</param>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {virtualModifier} void __Load(JObject source = null, bool isDerived = false)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            JProperty property;");
@@ -1800,6 +1897,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Persists the properties from this instance to the backing <see cref=\"JObject\"/>.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The backing <see cref=\"JObject\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {virtualModifier} JObject __Save()");
                     writer.WriteLine($"        {{");
 
@@ -1898,6 +2001,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Renders the instance as JSON text.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The serialized JSON string.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -1910,6 +2019,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"indented\">Optionally pass <c>true</c> to format the output.</param>");
                     writer.WriteLine($"        /// <returns>The serialized JSON string.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -1927,6 +2042,12 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        /// <param name=\"noClone\">Optionally return the underlying <see cref=\"JObject\"/> without cloning it for better performance.</param>");
                         writer.WriteLine($"        /// <returns>The underlying <see cref=\"JObject\"/> (cloned by default).</returns>");
+
+                        if (!Settings.AllowDebuggerStepInto)
+                        {
+                            writer.WriteLine($"        [DebuggerStepThrough]");
+                        }
+
                         writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
@@ -1942,6 +2063,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Renders the instance as UTF-8 encoded JSON.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The serialized JSON bytes.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {virtualModifier} byte[] ToBytes()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -1956,6 +2083,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Returns a deep clone of the instance.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The cloned instance.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {className} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -1974,6 +2107,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// original instance will no longer be accessed.");
                     writer.WriteLine($"        /// </param>");
                     writer.WriteLine($"        /// <returns>The converted instance of type <typeparamref name=\"T\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public T ToDerived<T>(bool noClone = false)");
                     writer.WriteLine($"           where T : {className}, IRoundtripData");
                     writer.WriteLine($"        {{");
@@ -1986,6 +2125,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <param name=\"obj\">The other object instance or <c>null</c>.</param>");
                     writer.WriteLine($"        /// <returns><c>true</c> if the object reference equals the current instance.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public override bool Equals(object obj)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            if (object.ReferenceEquals(this, obj))");
@@ -2014,6 +2159,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The calculated hash code.</returns>");
                     writer.WriteLine($"        /// <exception cref=\"InvalidOperationException\">Thrown when no class properties are tagged with a <c>[HashSourceAttribute]</c>.</exception>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public override int GetHashCode()");
                     writer.WriteLine($"        {{");
 
@@ -2096,6 +2247,12 @@ namespace Neon.CodeGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// Returns the object's persistence key.");
                         writer.WriteLine($"        /// </summary>");
+
+                        if (!Settings.AllowDebuggerStepInto)
+                        {
+                            writer.WriteLine($"        [DebuggerStepThrough]");
+                        }
+
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
 
@@ -2132,6 +2289,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// <summary>");
                     writer.WriteLine($"        /// Writes the instance as JSON to a <see cref=\"Stream\"/>.");
                     writer.WriteLine($"        /// </summary>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {virtualModifier} void WriteJsonTo(Stream stream)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -2146,6 +2309,12 @@ namespace Neon.CodeGen
                     writer.WriteLine($"        /// Asynchronously writes the instance as JSON to a <see cref=\"Stream\"/>.");
                     writer.WriteLine($"        /// </summary>");
                     writer.WriteLine($"        /// <returns>The tracking <see cref=\"Task\"/>.</returns>");
+
+                    if (!Settings.AllowDebuggerStepInto)
+                    {
+                        writer.WriteLine($"        [DebuggerStepThrough]");
+                    }
+
                     writer.WriteLine($"        public {virtualModifier} async Task WriteJsonToAsync(Stream stream)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
@@ -2295,6 +2464,12 @@ namespace Neon.CodeGen
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"handler\">An optional message handler.  This defaults to a reasonable handler with compression enabled.</param>");
             writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
+
+            if (!Settings.AllowDebuggerStepInto)
+            {
+                writer.WriteLine($"        [DebuggerStepThrough]");
+            }
+
             writer.WriteLine($"        public {clientTypeName}(HttpMessageHandler handler = null, bool disposeHandler = false)");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            this.client = new JsonClient(handler, disposeHandler);");
@@ -2320,6 +2495,12 @@ namespace Neon.CodeGen
             writer.WriteLine($"        }}");
             writer.WriteLine();
             writer.WriteLine($"        /// <inheritdoc/>");
+
+            if (!Settings.AllowDebuggerStepInto)
+            {
+                writer.WriteLine($"        [DebuggerStepThrough]");
+            }
+
             writer.WriteLine($"        public void Dispose()");
             writer.WriteLine($"        {{");
             writer.WriteLine($"        }}");
@@ -2328,6 +2509,12 @@ namespace Neon.CodeGen
             writer.WriteLine($"        /// Releases any important resources associated with the instance.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"disposing\">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>");
+
+            if (!Settings.AllowDebuggerStepInto)
+            {
+                writer.WriteLine($"        [DebuggerStepThrough]");
+            }
+
             writer.WriteLine($"        protected void Dispose(bool disposing)");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            if (isDisposed)");
@@ -2852,6 +3039,12 @@ namespace Neon.CodeGen
             generatedMethodAttribute = $"[GeneratedMethod(DefinedAs = \"{serviceMethod.MethodInfo.Name}\", Returns = typeof({returnType}), RouteTemplate = \"{routeTemplate}\", HttpMethod = \"{serviceMethod.HttpMethod}\")]";
 
             writer.WriteLine();
+
+            if (!Settings.AllowDebuggerStepInto)
+            {
+                writer.WriteLine($"{indent}        [DebuggerStepThrough]");
+            }
+
             writer.WriteLine($"{indent}        {generatedMethodAttribute}");
             writer.WriteLine($"{indent}        public async {methodReturnType} {methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
@@ -2883,6 +3076,12 @@ namespace Neon.CodeGen
             // Generate the [unsafe] version of the method.
 
             writer.WriteLine();
+
+            if (!Settings.AllowDebuggerStepInto)
+            {
+                writer.WriteLine($"{indent}        [DebuggerStepThrough]");
+            }
+
             writer.WriteLine($"{indent}        public async Task<JsonResponse> Unsafe{methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
 

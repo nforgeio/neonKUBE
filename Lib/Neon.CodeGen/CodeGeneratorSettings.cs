@@ -116,5 +116,12 @@ namespace Neon.CodeGen
         /// <c>null</c> which disables any filtering.
         /// </summary>
         public string SourceNamespace { get; set; }
+
+        /// <summary>
+        /// Enables source code debuggers to step into methods and properties 
+        /// generated for both data and service models.  This defaults to
+        /// <c>false</c>.
+        /// </summary>
+        public bool AllowDebuggerStepInto { get; set; } = false;
     }
 }
