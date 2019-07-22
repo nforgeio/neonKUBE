@@ -516,8 +516,6 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            // Ensure that this stub instance has been started.");
-                sbSource.AppendLine();
                 sbSource.AppendLine($"            if (this.execution == null)");
                 sbSource.AppendLine($"            {{");
                 sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be queried because the workflow hasn't been started.\");");

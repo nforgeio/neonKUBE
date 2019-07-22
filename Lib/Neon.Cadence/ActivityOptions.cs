@@ -46,13 +46,13 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Specifies the maximum time the activity be queued, waiting to be scheduled
-        /// on a worker.  This defaults to 365 days.
+        /// on a worker.  This defaults to 24 hours.
         /// </summary>
         public TimeSpan ScheduleToStartTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
         /// <summary>
         /// Specifies the maximum time the activity may take to run.  This defaults
-        /// to 365 days.
+        /// to 24 hours.
         /// </summary>
         public TimeSpan StartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
 

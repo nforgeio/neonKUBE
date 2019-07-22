@@ -57,7 +57,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Specifies the maximum time the child workflow may run from start
-        /// to finish.  This defaults to 365 days.
+        /// to finish.  This defaults to 24 hours.
         /// </summary>
         public TimeSpan ExecutionStartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
