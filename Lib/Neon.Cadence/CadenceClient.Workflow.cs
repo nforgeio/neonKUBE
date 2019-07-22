@@ -84,8 +84,8 @@ namespace Neon.Cadence
         /// <summary>
         /// Scans the assembly passed looking for workflow implementations derived from
         /// <see cref="IWorkflow"/> and tagged by <see cref="WorkflowAttribute"/> with
-        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c>.
-        /// and registers them with Cadence.
+        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
+        /// them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -224,7 +224,7 @@ namespace Neon.Cadence
         /// <param name="workflowType">
         /// Optionally specifies the workflow type by overriding the fully 
         /// qualified <typeparamref name="TWorkflow"/> type name or the name
-        /// specified by a <see cref="AutoRegisterAttribute"/>.
+        /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
@@ -245,7 +245,7 @@ namespace Neon.Cadence
         /// <param name="workflowType">
         /// Optionally specifies the workflow type by overriding the fully 
         /// qualified <typeparamref name="TWorkflow"/> type name or the name
-        /// specified by a <see cref="AutoRegisterAttribute"/>.
+        /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
@@ -426,11 +426,12 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="signalName">Identifies the signal.</param>
-        /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
+        /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null)
+        internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
 
@@ -440,7 +441,8 @@ namespace Neon.Cadence
                     WorkflowId = execution.WorkflowId,
                     SignalName = signalName,
                     SignalArgs = signalArgs,
-                    RunId      = execution.RunId
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
                 });
 
             reply.ThrowOnError();
@@ -451,7 +453,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="signalName">Identifies the signal.</param>
-        /// <param name="signalArgs">Optionally specifies signal arguments as a byte array.</param>
+        /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
         /// <param name="workflowArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
         /// <param name="taskList">Optionally specifies the task list.  This defaults to <b>"default"</b>.</param>
@@ -486,7 +488,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="queryType">Identifies the query.</param>
-        /// <param name="queryArgs">Optionally specifies query arguments encoded as a byte array.</param>
+        /// <param name="queryArgs">Optionally specifies the query arguments encoded as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The query result encoded as a byte array.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>

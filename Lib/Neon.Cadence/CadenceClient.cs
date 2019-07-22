@@ -123,10 +123,12 @@ namespace Neon.Cadence
     /// For situations where you have a lot of workflow and activity classes, it can become
     /// cumbersome to register each implementation class individually (generally because you
     /// forget to register new classes after they've been implemented).  To assist with this,
-    /// you can also tag your workflow and activity classes with <see cref="AutoRegisterAttribute"/>
-    /// and then call <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
-    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an assembly and
-    /// automatically register the tagged implementation classes it finds.
+    /// you can also tag your workflow and activity classes with <see cref="WorkflowAttribute"/>
+    /// or <see cref="ActivityAttribute"/> with <see cref="WorkflowAttribute.AutoRegister"/>
+    /// or <see cref="ActivityAttribute.AutoRegister"/> set to <c>true</c> and then call
+    /// <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
+    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an
+    /// assembly and automatically register the tagged implementation classes it finds.
     /// </para>
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
@@ -1063,32 +1065,30 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the Cadence task list to be referenced for an operation.  If <paramref name="taskList"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise the default domain
-        /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
-        /// be non-empty.
+        /// is not <c>null</c> or empty then that will be returned otherwise <see cref="CadenceSettings.DefaultTaskList"/>
+        /// will be returned.  Note that one of <paramref name="taskList"/> or the default task list
+        /// must be non-empty.
         /// </summary>
         /// <param name="taskList">The specific task list to use or null/empty.</param>
-        /// <param name="allowEmpty">Optionally allow an empty task list.</param>
         /// <returns>The task list to be referenced.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default tasklist are both null or empty.</exception>
-        internal string ResolveTaskList(string taskList, bool allowEmpty = false)
+        internal string ResolveTaskList(string taskList)
         {
             if (!string.IsNullOrEmpty(taskList))
             {
                 return taskList;
             }
-
-            if (!allowEmpty && !string.IsNullOrEmpty(Settings.DefaultTaskList))
+            else if (!string.IsNullOrEmpty(Settings.DefaultTaskList))
             {
                 return Settings.DefaultTaskList;
             }
 
-            throw new ArgumentNullException($"One of [{nameof(taskList)}] parameter or the client's default task list must be non-empty.");
+            throw new ArgumentNullException($"One of [{nameof(taskList)}] parameter or the client's default task list (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultTaskList)}]) must be non-empty.");
         }
 
         /// <summary>
         /// Returns the Cadence domain to be referenced for an operation.  If <paramref name="domain"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise the default domain
+        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="CadenceSettings.DefaultDomain"/>
         /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
         /// be non-empty.
         /// </summary>
@@ -1101,13 +1101,12 @@ namespace Neon.Cadence
             {
                 return domain;
             }
-
-            if (!string.IsNullOrEmpty(Settings.DefaultDomain))
+            else if (!string.IsNullOrEmpty(Settings.DefaultDomain))
             {
                 return Settings.DefaultDomain;
             }
 
-            throw new ArgumentNullException($"One of [{nameof(domain)}] parameter or the client's default domain must be non-empty.");
+            throw new ArgumentNullException($"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
         }
 
         /// <summary>

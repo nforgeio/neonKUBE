@@ -52,7 +52,9 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                Debug = true,
+                DefaultDomain   = CadenceFixture.DefaultDomain,
+                DefaultTaskList = CadenceFixture.DefaultTaskList,
+                Debug           = true,
             };
 
             fixture.Start(settings, keepConnection: true);

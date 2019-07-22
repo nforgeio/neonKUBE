@@ -162,7 +162,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            taskList = client.ResolveTaskList(taskList, allowEmpty: true);
+            taskList = client.ResolveTaskList(taskList);
 
             // Merge optional settings from these options and the method attribute.
 

@@ -579,7 +579,7 @@ namespace Neon.Cadence.Internal
             // Reference all loaded assemblies.
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic))
+                .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)))
             {
                 references.Add(MetadataReference.CreateFromFile(assembly.Location));
             }
