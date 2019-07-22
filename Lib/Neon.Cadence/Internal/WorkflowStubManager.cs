@@ -140,20 +140,21 @@ namespace Neon.Cadence.Internal
                 // Fetch the stub type and constructor.
 
                 this.stubType    = assembly.GetType(className);
-                this.constructor = stubType.GetConstructor(new Type[] { typeof(CadenceClient), typeof(string), typeof(WorkflowOptions), typeof(string) });
+                this.constructor = stubType.GetConstructor(new Type[] { typeof(CadenceClient), typeof(string), typeof(string), typeof(WorkflowOptions), typeof(string) });
             }
 
             /// <summary>
             /// Creates a workflow stub instance.
             /// </summary>
             /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+            /// <param name="workflowTypeName">Specifies the workflow type name.</param>
             /// <param name="taskList">Specifies the target task list.</param>
             /// <param name="options">Specifies the <see cref="WorkflowOptions"/>.</param>
             /// <param name="domain">Specifies the target domain.</param>
             /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-            public object Create(CadenceClient client, string taskList, WorkflowOptions options, string domain)
+            public object Create(CadenceClient client, string workflowTypeName, string taskList, WorkflowOptions options, string domain)
             {
-                return constructor.Invoke(new object[] { client, taskList, options, domain });
+                return constructor.Invoke(new object[] { client, workflowTypeName, taskList, options, domain });
             }
         }
 
@@ -211,7 +212,7 @@ namespace Neon.Cadence.Internal
 
             if (stub != null)
             {
-                return (TWorkflowInterface)stub.Create(client, taskList, options, domain);
+                return (TWorkflowInterface)stub.Create(client, workflowTypeName, taskList, options, domain);
             }
 
             //-----------------------------------------------------------------
@@ -266,10 +267,10 @@ namespace Neon.Cadence.Internal
                     details.ReturnType = typeof(void);
                 }
 
-                var signalMethofAttributes = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
+                var signalMethodAttributes = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
                 var queryMethodAttributes  = method.GetCustomAttributes<QueryMethodAttribute>().ToArray();
                 var workflowAttributes     = method.GetCustomAttributes<WorkflowMethodAttribute>().ToArray();
-                var attributeCount         = signalMethofAttributes.Length + queryMethodAttributes.Length + workflowAttributes.Length;
+                var attributeCount         = signalMethodAttributes.Length + queryMethodAttributes.Length + workflowAttributes.Length;
 
                 if (attributeCount == 0)
                 {
@@ -280,13 +281,18 @@ namespace Neon.Cadence.Internal
                     throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] may only be tagged with one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
 
-                if (signalMethofAttributes.Length > 0)
+                if (signalMethodAttributes.Length > 0)
                 {
-                    var signalAttribute = signalMethofAttributes.First();
+                    var signalAttribute = signalMethodAttributes.First();
+
+                    if (method.ReturnType.IsGenericType || method.ReturnType != typeof(Task))
+                    {
+                        throw new WorkflowDefinitionException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                    }
 
                     if (signalNames.Contains(signalAttribute.Name))
                     {
-                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowDefinitionException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     signalNames.Add(signalAttribute.Name);
@@ -298,9 +304,14 @@ namespace Neon.Cadence.Internal
                 {
                     var queryAttribute = queryMethodAttributes.First();
 
+                    if (method.ReturnType != typeof(Task) && method.ReturnType.BaseType != typeof(Task))
+                    {
+                        throw new WorkflowDefinitionException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                    }
+
                     if (queryTypes.Contains(queryAttribute.Name))
                     {
-                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowDefinitionException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     queryTypes.Add(queryAttribute.Name);
@@ -311,6 +322,11 @@ namespace Neon.Cadence.Internal
                 else if (workflowAttributes.Length > 0)
                 {
                     var workflowMethodAttribute = workflowAttributes.First();
+
+                    if (method.ReturnType != typeof(Task) && method.ReturnType.BaseType != typeof(Task))
+                    {
+                        throw new WorkflowDefinitionException($"Workflow entry point method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                    }
 
                     details.Kind                    = WorkflowMethodKind.Workflow;
                     details.WorkflowMethodAttribute = workflowMethodAttribute;
@@ -366,13 +382,13 @@ namespace Neon.Cadence.Internal
             AppendClientProxy(sbSource);    // Generate the [ClientProxy] class. 
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        private CadenceClient     client;");
-            sbSource.AppendLine($"        private IDataConverter    converter;");
-            sbSource.AppendLine($"        private string            workflowTypeName;");
-            sbSource.AppendLine($"        private WorkflowOptions   options;");
-            sbSource.AppendLine($"        private string            taskList;");
-            sbSource.AppendLine($"        private string            domain;");
-            sbSource.AppendLine($"        private bool              hasStarted;");
+            sbSource.AppendLine($"        private CadenceClient         client;");
+            sbSource.AppendLine($"        private IDataConverter        converter;");
+            sbSource.AppendLine($"        private string                workflowTypeName;");
+            sbSource.AppendLine($"        private WorkflowOptions       options;");
+            sbSource.AppendLine($"        private string                taskList;");
+            sbSource.AppendLine($"        private string                domain;");
+            sbSource.AppendLine($"        private WorkflowExecution     execution;");
 
             // Generate the constructor.
 
@@ -414,12 +430,12 @@ namespace Neon.Cadence.Internal
                 {
                     if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.TaskList))
                     {
-                        sbSource.AppendLine($"            ___taskList = \"{details.WorkflowMethodAttribute.TaskList}\";");
+                        sbSource.AppendLine($"            ___taskList = {StringLiteral(details.WorkflowMethodAttribute.TaskList)};");
                     }
 
                     if (details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
                     {
-                        sbSource.AppendLine($"            ___options.ExecutionStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds})\";");
+                        sbSource.AppendLine($"            ___options.ExecutionStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds});");
                     }
 
                     if (details.WorkflowMethodAttribute.TaskStartToCloseTimeoutSeconds > 0)
@@ -429,25 +445,23 @@ namespace Neon.Cadence.Internal
 
                     if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.WorkflowId))
                     {
-                        sbSource.AppendLine($"            ___options.WorkflowId = \"{details.WorkflowMethodAttribute.WorkflowId}\";");
+                        sbSource.AppendLine($"            ___options.WorkflowId = {StringLiteral(details.WorkflowMethodAttribute.WorkflowId)};");
                     }
                 }
 
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            // Ensure that this stub instance has not already been started.");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"            if (this.hasStarted)");
+                sbSource.AppendLine($"            if (this.execution != null)");
                 sbSource.AppendLine($"            {{");
                 sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
                 sbSource.AppendLine($"            }}");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"            this.hasStarted = true;");
-                sbSource.AppendLine();
                 sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                sbSource.AppendLine($"            var ___execution   = await ___ClientProxy.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___taskList, ___options, this.domain);");
-                sbSource.AppendLine($"            var ___resultBytes = await ___ClientProxy.GetWorkflowResultAsync(this.client, ___execution, this.domain);");
+                sbSource.AppendLine($"            this.execution     = await ___ClientProxy.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___taskList, ___options, this.domain);");
+                sbSource.AppendLine($"            var ___resultBytes = await ___ClientProxy.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
 
                 if (!details.IsVoid)
                 {
@@ -457,6 +471,71 @@ namespace Neon.Cadence.Internal
 
                 sbSource.AppendLine($"        }}");
             }
+
+            // Generate the workflow signal methods.
+
+            foreach (var details in methodToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Signal))
+            {
+                var sbParams = new StringBuilder();
+
+                foreach (var param in details.Method.GetParameters())
+                {
+                    sbParams.AppendWithSeparator($"{CadenceHelper.TypeToCSharp(param.ParameterType)} {param.Name}", ", ");
+                }
+
+                sbSource.AppendLine();
+                sbSource.AppendLine($"        public async Task {details.Method.Name}({sbParams})");
+                sbSource.AppendLine($"        {{");
+                sbSource.AppendLine($"            // Ensure that this stub instance has been started.");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            if (this.execution == null)");
+                sbSource.AppendLine($"            {{");
+                sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because the workflow hasn't been started.\");");
+                sbSource.AppendLine($"            }}");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            await ___ClientProxy.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
+                sbSource.AppendLine($"        }}");
+            }
+
+            // Generate the workflow query methods.
+
+            foreach (var details in methodToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Query))
+            {
+                var resultType = CadenceHelper.TypeToCSharp(details.ReturnType);
+                var sbParams   = new StringBuilder();
+
+                foreach (var param in details.Method.GetParameters())
+                {
+                    sbParams.AppendWithSeparator($"{CadenceHelper.TypeToCSharp(param.ParameterType)} {param.Name}", ", ");
+                }
+
+                var resultTaskType = details.IsVoid ? "Task" : $"Task<{resultType}>";
+
+                sbSource.AppendLine();
+                sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
+                sbSource.AppendLine($"        {{");
+                sbSource.AppendLine($"            // Ensure that this stub instance has been started.");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            if (this.execution == null)");
+                sbSource.AppendLine($"            {{");
+                sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be queried because the workflow hasn't been started.\");");
+                sbSource.AppendLine($"            }}");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                sbSource.AppendLine($"            var ___resultBytes = await ___ClientProxy.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
+
+                if (!details.IsVoid)
+                {
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            return converter.FromData<{resultType}>(___resultBytes);");
+                }
+
+                sbSource.AppendLine($"        }}");
+            }
+
+            // Close out the stub class definition.
 
             sbSource.AppendLine($"    }}");
             sbSource.AppendLine($"}}");
@@ -518,7 +597,7 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            return (TWorkflowInterface)stub.Create(client, taskList, options, domain);
+            return (TWorkflowInterface)stub.Create(client, workflowTypeName, taskList, options, domain);
         }
 
         /// <summary>
@@ -651,6 +730,19 @@ namespace Neon.Cadence.Internal
             }
 
             return $"this.converter.ToData(new object[] {{ {sb} }})";
+        }
+
+        /// <summary>
+        /// Renders the string passed as a C# literal, escaping any double quotes.
+        /// </summary>
+        public static string StringLiteral(string value)
+        {
+            if (value == null)
+            {
+                return "null";
+            }
+
+            return $"\"{value.Replace("\"", "\\\"")}\"";
         }
     }
 }
