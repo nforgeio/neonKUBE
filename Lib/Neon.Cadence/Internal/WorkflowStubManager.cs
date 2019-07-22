@@ -123,7 +123,8 @@ namespace Neon.Cadence.Internal
             private string              className;
             private Assembly            assembly;
             private Type                stubType;
-            private ConstructorInfo     constructor;
+            private ConstructorInfo     startConstructor;
+            private ConstructorInfo     connectConstructor;
 
             /// <summary>
             /// Constructor.
@@ -139,12 +140,13 @@ namespace Neon.Cadence.Internal
 
                 // Fetch the stub type and constructor.
 
-                this.stubType    = assembly.GetType(className);
-                this.constructor = stubType.GetConstructor(new Type[] { typeof(CadenceClient), typeof(string), typeof(string), typeof(WorkflowOptions), typeof(string) });
+                this.stubType           = assembly.GetType(className);
+                this.startConstructor   = stubType.GetConstructor(new Type[] { typeof(CadenceClient), typeof(string), typeof(string), typeof(WorkflowOptions), typeof(string) });
+                this.connectConstructor = stubType.GetConstructor(new Type[] { typeof(CadenceClient), typeof(WorkflowExecution), typeof(string) }); 
             }
 
             /// <summary>
-            /// Creates a workflow stub instance.
+            /// Creates a workflow stub instance suitable for starting a new workflow.
             /// </summary>
             /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
             /// <param name="workflowTypeName">Specifies the workflow type name.</param>
@@ -154,7 +156,19 @@ namespace Neon.Cadence.Internal
             /// <returns>The workflow stub as an <see cref="object"/>.</returns>
             public object Create(CadenceClient client, string workflowTypeName, string taskList, WorkflowOptions options, string domain)
             {
-                return constructor.Invoke(new object[] { client, workflowTypeName, taskList, options, domain });
+                return startConstructor.Invoke(new object[] { client, workflowTypeName, taskList, options, domain });
+            }
+
+            /// <summary>
+            /// Creates a workflow stub instance connected to an existing workflow execution.
+            /// </summary>
+            /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+            /// <param name="execution">The workflow execution.</param>
+            /// <param name="domain">Specifies the target domain.</param>
+            /// <returns>The workflow stub as an <see cref="object"/>.</returns>
+            public object Create(CadenceClient client, WorkflowExecution execution, string domain)
+            {
+                return connectConstructor.Invoke(new object[] { client, execution, domain });
             }
         }
 
@@ -390,7 +404,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private string                domain;");
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
 
-            // Generate the constructor.
+            // Generate the constructor used to create a new workflow.
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, string workflowTypeName, string taskList, WorkflowOptions options, string domain)");
@@ -401,6 +415,17 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.options          = options ?? new WorkflowOptions();");
             sbSource.AppendLine($"            this.taskList         = ___ClientProxy.ResolveTaskList(client, taskList);");
             sbSource.AppendLine($"            this.domain           = ___ClientProxy.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"        }}");
+
+            // Generate the constructor used to attach to an existing workflow.
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, WorkflowExecution execution, string domain)");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            this.client    = client;");
+            sbSource.AppendLine($"            this.converter = client.DataConverter;");
+            sbSource.AppendLine($"            this.execution = execution;");
+            sbSource.AppendLine($"            this.domain    = ___ClientProxy.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
             // Generate the workflow entry point methods.

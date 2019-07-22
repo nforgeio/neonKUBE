@@ -214,5 +214,46 @@ namespace TestCadence
 
             Assert.NotNull(stub);
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowMultiMethods : IWorkflow
+        {
+            [WorkflowMethod]
+            Task RunAsync();
+
+            [WorkflowMethod]
+            Task<int> RunAsync(string arg1);
+
+            [WorkflowMethod]
+            Task<int> RunAsync(string arg1, string arg2);
+
+            [QueryMethod("my-query1")]
+            Task<string> QueryAsync();
+
+            [QueryMethod("my-query2")]
+            Task<string> QueryAsync(string arg1);
+
+            [QueryMethod("my-query3")]
+            Task<string> QueryAsync(string arg1, string arg2);
+
+            [QueryMethod("my-signal1")]
+            Task<string> SignalAsync();
+
+            [QueryMethod("my-signal2")]
+            Task<string> SignalAsync(string arg1);
+
+            [QueryMethod("my-signal3")]
+            Task<string> SignalAsync(string arg1, string arg2);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Generate_WorkflowMultiMethods()
+        {
+            var stub = WorkflowStubManager.Create<IWorkflowMultiMethods>(client);
+
+            Assert.NotNull(stub);
+        }
     }
 }
