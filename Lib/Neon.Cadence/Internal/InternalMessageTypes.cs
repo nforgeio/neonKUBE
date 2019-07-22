@@ -160,6 +160,16 @@ namespace Neon.Cadence.Internal
         /// </summary>
         PingReply = 22,
 
+        /// <summary>
+        /// <b>client --> proxy:</b> Requests that the proxy deprecate a Cadence domain.
+        /// </summary>
+        DomainDeprecateRequest = 23,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDeprecateRequest"/> message.
+        /// </summary>
+        DomainDeprecateReply = 24,
+
         //---------------------------------------------------------------------
         // Workflow messages
         //
@@ -234,7 +244,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetHistoryRequest"/> message.
         /// </summary>
-        WorkflowGetWorkflowHistoryReply = 113,
+        WorkflowGetHistoryReply = 113,
 
         /// <summary>
         /// <b>client --> proxy:</b> Requests the list of closed workflows.
@@ -383,7 +393,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         ///  <b>client --> proxy:</b> Determines whether the last execution of the workflow has
         ///  a completion result.  This can be used by CRON workflows to determine whether the
-        ///  last run returned a result.
+        ///  last execution returned a result.
         /// </summary>
         WorkflowHasLastResultRequest = 140,
 
@@ -394,7 +404,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         ///  <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
-        ///  This can be used by CRON workflows to retrieve state from the last workflow run.
+        ///  This can be used by CRON workflows to retrieve state from the last workflow execution.
         /// </summary>
         WorkflowGetLastResultRequest = 142,
 
@@ -520,7 +530,7 @@ namespace Neon.Cadence.Internal
         ActivityInvokeReply = 203,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity run.
+        /// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity execution.
         /// </summary>
         ActivityGetHeartbeatDetailsRequest = 204,
 

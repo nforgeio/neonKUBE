@@ -112,7 +112,23 @@ namespace Neon.Data
             Covenant.Requires(resultType != null);
             Covenant.Requires(bytes != null);
 
-            return CreateFrom(resultType, JObject.Parse(Encoding.UTF8.GetString(bytes)));
+            var json    = Encoding.UTF8.GetString(bytes);  // $debug(jeff.lill): DELETE THIS!
+            var jToken  = JToken.Parse(json);
+
+            switch (jToken.Type)
+            {
+                case JTokenType.Null:
+
+                    return null;
+
+                case JTokenType.Object:
+
+                    return CreateFrom(resultType, JObject.Parse(json));
+
+                default:
+
+                    throw new ArgumentException("Invalid JSON: Expecting an object or NULL.");
+            }
         }
 
         /// <summary>

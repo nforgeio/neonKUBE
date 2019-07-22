@@ -85,5 +85,7 @@ neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\c
 neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"
 neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz"
 
+#---------------------------------------------------------------------
+
 # Go back to the original directory
 Set-Location $orgDirectory

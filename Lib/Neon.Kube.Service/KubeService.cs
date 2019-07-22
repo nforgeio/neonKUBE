@@ -75,7 +75,7 @@ namespace Neon.Kube.Service
     /// the service is running in test mode or not.  This variable will typically be defined
     /// on developer workstations as well as CI/CD machines.  This variable must never be
     /// defined for production environments.  You can use the <see cref="InProduction"/>
-    /// or <see cref="InDevelopment"/> properties to determine check this.
+    /// or <see cref="InDevelopment"/> properties to check this.
     /// </note>
     /// <para><b>CONFIGURATION</b></para>
     /// <para>
@@ -255,7 +255,18 @@ namespace Neon.Kube.Service
         }
 
         //---------------------------------------------------------------------
-        // Implementation
+        // Static members
+
+        /// <summary>
+        /// This controls whether any <see cref="KubeService"/> instances will use the global
+        /// <see cref="LogManager.Default"/> log manager for logging or maintain its own
+        /// log manager.  This defaults to <c>true</c> which will be appropriate for most
+        /// production situations.  It may be useful to disable this for some unit tests.
+        /// </summary>
+        public static bool GlobalLogging = true;
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         private object                          syncLock = new object();
         private bool                            isRunning;
@@ -426,7 +437,7 @@ namespace Neon.Kube.Service
         /// </para>
         /// <note>
         /// This will throw a <see cref="InvalidOperationException"/> if the service
-        /// defines no endpoints or multiple endpoints.
+        /// defines no endpoints or has multiple endpoints.
         /// </note>
         /// </summary>
         /// <exception cref="InvalidOperationException">
@@ -582,7 +593,15 @@ namespace Neon.Kube.Service
 
             // Initialize the logger.
 
-            LogManager = new LogManager(parseLogLevel: false);
+            if (GlobalLogging)
+            {
+                LogManager = global::Neon.Diagnostics.LogManager.Default;
+            }
+            else
+            {
+                LogManager = new LogManager(parseLogLevel: false);
+            }
+
             LogManager.SetLogLevel(GetEnvironmentVariable("LOG_LEVEL", "info"));
 
             Log = LogManager.GetLogger();

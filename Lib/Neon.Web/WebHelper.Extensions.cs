@@ -82,20 +82,16 @@ namespace Neon.Web
 
         /// <summary>
         /// Adds the services from an <see cref="IServiceContainer"/> to the <see cref="IServiceCollection"/>.
-        /// This is commonly used when configuring services for an ASP.NET application pipeline.  This also
-        /// calls <c>IMvcBuilder.AddNewtonsoftJson()</c> by default to enable JSON serialization using the
-        /// same settings as returned by <see cref="NeonHelper.JsonRelaxedSerializerSettings"/>.  The method
+        /// This is commonly used when configuring services for an ASP.NET application pipeline.  The method
         /// also enables response compression by default.
         /// </summary>
         /// <param name="builder">The target <see cref="IMvcBuilder"/>.</param>
         /// <param name="source">The service source container or <c>null</c> to copy from <see cref="NeonHelper.ServiceContainer"/>.</param>
-        /// <param name="disableNewtonsoft">Optionally disable adding Newtonsoft JSON support.</param>
         /// <param name="disableResponseCompression">Optionally disable response compression.</param>
         /// <returns>The <paramref name="builder"/>.</returns>
         public static IMvcBuilder AddNeon(
             IMvcBuilder         builder, 
             IServiceContainer   source = null,
-            bool                disableNewtonsoft = false, 
             bool                disableResponseCompression = false)
         {
             Covenant.Requires<ArgumentNullException>(builder != null);
@@ -105,11 +101,6 @@ namespace Neon.Web
             foreach (var service in source)
             {
                 builder.Services.Add(service);
-            }
-
-            if (!disableNewtonsoft)
-            {
-                builder.AddNewtonsoftJson(options => NeonHelper.JsonRelaxedSerializerSettings.Value.CopyTo(options.SerializerSettings));
             }
 
             if (!disableResponseCompression)
@@ -132,7 +123,6 @@ namespace Neon.Web
         /// </summary>
         /// <param name="builder">The MVC builder.</param>
         /// <param name="disableRoundTripFormatters">Optionally disable adding the round-trip formatters.</param>
-        /// <param name="disableNewtonsoftFormatters">Optionally disable the Newtonsoft JSON formatters.</param>
         /// <param name="allowRoundtripFormatter">
         /// Optional lamda function that can be used to customize which types allowed
         /// to be handled by the custom round-trip formatters.  When this is <c>null</c>, 
@@ -152,18 +142,8 @@ namespace Neon.Web
         public static IMvcBuilder AddNeon(
             this IMvcBuilder    builder, 
             bool                disableRoundTripFormatters  = false, 
-            bool                disableNewtonsoftFormatters = false,
             Func<Type, bool>    allowRoundtripFormatter     = null)
         {
-            // Add any Newtonsodt formatters first so we can insert the round-trip
-            // formatters before them below so the round-trip formatters will take
-            // precedence.
-
-            if (!disableNewtonsoftFormatters)
-            {
-                builder.AddNewtonsoftJson();
-            }
-
             if (!disableRoundTripFormatters)
             {
                 builder.AddMvcOptions(

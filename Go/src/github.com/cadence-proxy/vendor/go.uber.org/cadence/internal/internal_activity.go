@@ -29,6 +29,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/encoded"
@@ -75,6 +76,7 @@ type (
 		ActivityType  ActivityType
 		Input         []byte
 		DataConverter encoded.DataConverter
+		Header        *shared.Header
 	}
 
 	executeLocalActivityParams struct {
@@ -128,6 +130,8 @@ type (
 		workflowType       *WorkflowType
 		workflowDomain     string
 		workerStopChannel  <-chan struct{}
+		contextPropagators []ContextPropagator
+		tracer             opentracing.Tracer
 	}
 
 	// context.WithValue need this type instead of basic type string to avoid lint error
@@ -190,7 +194,6 @@ func getValidatedActivityOptions(ctx Context) (*activityOptions, error) {
 	if p.HeartbeatTimeoutSeconds < 0 {
 		return nil, errors.New("invalid negative HeartbeatTimeoutSeconds")
 	}
-
 	if err := validateRetryPolicy(p.RetryPolicy); err != nil {
 		return nil, err
 	}

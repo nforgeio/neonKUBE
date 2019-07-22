@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Determines whether the last execution of the workflow has
     ///  a completion result.  This can be used by CRON workflows to determine whether the
-    ///  last run returned a result.
+    ///  last execution returned a result.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.WorkflowHasLastResultRequest)]
     internal class WorkflowHasLastResultRequest : WorkflowRequest

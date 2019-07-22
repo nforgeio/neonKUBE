@@ -57,7 +57,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Specifies the maximum time the child workflow may run from start
-        /// to finish.  This defaults to 365 days.
+        /// to finish.  This defaults to 24 hours.
         /// </summary>
         public TimeSpan ExecutionStartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
@@ -69,9 +69,9 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ChildTerminationPolicy.Abandon"/>.
+        /// This defaults to <see cref="ChildPolicy.Abandon"/>.
         /// </summary>
-        public ChildTerminationPolicy ChildTerminationPolicy { get; set; } = ChildTerminationPolicy.Abandon;
+        public ChildPolicy ChildPolicy { get; set; } = ChildPolicy.Abandon;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any
@@ -86,15 +86,70 @@ namespace Neon.Cadence.Internal
         public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
 
         /// <summary>
-        /// Optionally specifies a retry policy.
+        /// Optionally specifies retry options.
         /// </summary>
-        public CadenceRetryPolicy RetryPolicy { get; set; } = null;
+        public RetryOptions RetryPolicy { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies a recurring schedule for the workflow.  See <see cref="CronSchedule"/>
-        /// for more information.
+        /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
+        /// the minute, hour, day of month, month, and day of week scheduling parameters using the standard Linux
+        /// CRON format described here: <a href="https://en.wikipedia.org/wiki/Cron"/>
         /// </summary>
-        public CronSchedule CronSchedule { get; set; }
+        /// <remarks>
+        /// <para>
+        /// Cadence accepts a CRON string formatted as a single line of text with 5 parameters separated by
+        /// spaces.  The parameters specified the minute, hour, day of month, month, and day of week values:
+        /// </para>
+        /// <code>
+        /// ┌───────────── minute (0 - 59)
+        /// │ ┌───────────── hour (0 - 23)
+        /// │ │ ┌───────────── day of the month (1 - 31)
+        /// │ │ │ ┌───────────── month (1 - 12)
+        /// │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+        /// │ │ │ │ │
+        /// │ │ │ │ │
+        /// * * * * * 
+        /// </code>
+        /// <para>
+        /// Each parameter may be set to one of:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>*</b></term>
+        ///     <description>
+        ///     Matches any value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value</b></term>
+        ///     <description>
+        ///     Matches a specific integer value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>first-last</b></term>
+        ///     <description>
+        ///     Matches a range of integer values (inclusive).
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1,value2,...</b></term>
+        ///     <description>
+        ///     Matches a list of integer values.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>first/step</b></term>
+        ///     <description>
+        ///     Matches values starting at <b>first</b> and then succeeding incremented by <b>step</b>.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// You can use this handy CRON calculator to see how this works: <a href="https://crontab.guru"/>
+        /// </para>
+        /// </remarks>
+        public string CronSchedule { get; set; }
 
         /// <summary>
         /// Optionally specifies workflow metadata as a dictionary of named byte array values.
@@ -114,11 +169,11 @@ namespace Neon.Cadence.Internal
                 TaskList                     = this.TaskList,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
-                ChildPolicy                  = (int)this.ChildTerminationPolicy,
+                ChildPolicy                  = (int)this.ChildPolicy,
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy,
                 RetryPolicy                  = this.RetryPolicy?.ToInternal(),
-                CronSchedule                 = this.CronSchedule.ToInternal()
+                CronSchedule                 = this.CronSchedule
             };
         }
     }

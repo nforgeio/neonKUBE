@@ -21,14 +21,17 @@
 package internal
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pborman/uuid"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
@@ -188,6 +191,30 @@ type (
 		// Optional: worker graceful shutdown timeout
 		// default: 0s
 		WorkerStopTimeout time.Duration
+
+		// Optional: Enable running session workers.
+		// Session workers is for activities within a session.
+		// Enable this option to allow worker to process sessions.
+		// default: false
+		EnableSessionWorker bool
+
+		// Uncomment this option when we support automatic restablish failed sessions.
+		// Optional: The identifier of the resource consumed by sessions.
+		// It's the user's responsibility to ensure there's only one worker using this resourceID.
+		// For now, if user doesn't specify one, a new uuid will be used as the resourceID.
+		// SessionResourceID string
+
+		// Optional: Sets the maximum number of concurrently running sessions the resource support.
+		// default: 1000
+		MaxConcurrentSessionExecutionSize int
+
+		// Optional: Sets ContextPropagators that allows users to control the context information passed through a workflow
+		// default: no ContextPropagators
+		ContextPropagators []ContextPropagator
+
+		// Optional: Sets opentracing Tracer that is to be used to emit tracing information
+		// default: no tracer - opentracing.NoopTracer
+		Tracer opentracing.Tracer
 	}
 )
 
@@ -208,7 +235,14 @@ const (
 	// Whereas default does *NOT* reply anything back to the server, fail workflow replies back with a request
 	// to fail the workflow execution.
 	NonDeterministicWorkflowPolicyFailWorkflow
+
+	// we have to put a domainName for replay because startEvent doesn't contain it
+	ReplayDomainName = "ReplayDomain"
 )
+
+func IsReplayDomain(dn string) bool {
+	return ReplayDomainName == dn
+}
 
 // NewWorker creates an instance of worker for managing workflow and activity executions.
 // service 	- thrift connection to the cadence server.
@@ -258,9 +292,7 @@ func ReplayWorkflowHistory(logger *zap.Logger, history *shared.History) error {
 	controller := gomock.NewController(testReporter)
 	service := workflowservicetest.NewMockClient(controller)
 
-	domain := "ReplayDomain"
-
-	return replayWorkflowHistory(logger, service, domain, history)
+	return replayWorkflowHistory(logger, service, ReplayDomainName, history)
 }
 
 // ReplayWorkflowHistoryFromJSONFile executes a single decision task for the given json history file.
@@ -282,9 +314,7 @@ func ReplayWorkflowHistoryFromJSONFile(logger *zap.Logger, jsonfileName string) 
 	controller := gomock.NewController(testReporter)
 	service := workflowservicetest.NewMockClient(controller)
 
-	domain := "ReplayDomain"
-
-	return replayWorkflowHistory(logger, service, domain, history)
+	return replayWorkflowHistory(logger, service, ReplayDomainName, history)
 }
 
 func replayWorkflowHistory(logger *zap.Logger, service workflowserviceclient.Interface, domain string, history *shared.History) error {
@@ -300,6 +330,8 @@ func replayWorkflowHistory(logger *zap.Logger, service workflowserviceclient.Int
 	if first.GetEventType() != shared.EventTypeWorkflowExecutionStarted {
 		return errors.New("first event is not WorkflowExecutionStarted")
 	}
+	last := events[len(events)-1]
+
 	attr := first.WorkflowExecutionStartedEventAttributes
 	if attr == nil {
 		return errors.New("corrupted WorkflowExecutionStarted")
@@ -309,6 +341,10 @@ func replayWorkflowHistory(logger *zap.Logger, service workflowserviceclient.Int
 		RunId:      common.StringPtr(uuid.NewUUID().String()),
 		WorkflowId: common.StringPtr("ReplayId"),
 	}
+	if first.WorkflowExecutionStartedEventAttributes.GetOriginalExecutionRunId() != "" {
+		execution.RunId = common.StringPtr(first.WorkflowExecutionStartedEventAttributes.GetOriginalExecutionRunId())
+	}
+
 	task := &shared.PollForDecisionTaskResponse{
 		Attempt:                common.Int64Ptr(0),
 		TaskToken:              []byte("ReplayTaskToken"),
@@ -325,7 +361,7 @@ func replayWorkflowHistory(logger *zap.Logger, service workflowserviceclient.Int
 	iterator := &historyIteratorImpl{
 		nextPageToken: task.NextPageToken,
 		execution:     task.WorkflowExecution,
-		domain:        "ReplayDomain",
+		domain:        ReplayDomainName,
 		service:       service,
 		metricsScope:  metricScope,
 		maxEventID:    task.GetStartedEventId(),
@@ -336,7 +372,40 @@ func replayWorkflowHistory(logger *zap.Logger, service workflowserviceclient.Int
 		Logger:   logger,
 	}
 	taskHandler := newWorkflowTaskHandler(domain, params, nil, getHostEnvironment())
-	_, _, err := taskHandler.ProcessWorkflowTask(&workflowTask{task: task, historyIterator: iterator})
+	resp, err := taskHandler.ProcessWorkflowTask(&workflowTask{task: task, historyIterator: iterator}, nil)
+	if err != nil {
+		return err
+	}
+
+	if last.GetEventType() != shared.EventTypeWorkflowExecutionCompleted && last.GetEventType() != shared.EventTypeWorkflowExecutionContinuedAsNew {
+		return nil
+	}
+	err = fmt.Errorf("replay workflow doesn't return the same result as the last event, resp: %v, last: %v", resp, last)
+	if resp != nil {
+		completeReq, ok := resp.(*shared.RespondDecisionTaskCompletedRequest)
+		if ok {
+			for _, d := range completeReq.Decisions {
+				if d.GetDecisionType() == shared.DecisionTypeContinueAsNewWorkflowExecution {
+					if last.GetEventType() == shared.EventTypeWorkflowExecutionContinuedAsNew {
+						inputA := d.ContinueAsNewWorkflowExecutionDecisionAttributes.Input
+						inputB := last.WorkflowExecutionContinuedAsNewEventAttributes.Input
+						if bytes.Compare(inputA, inputB) == 0 {
+							return nil
+						}
+					}
+				}
+				if d.GetDecisionType() == shared.DecisionTypeCompleteWorkflowExecution {
+					if last.GetEventType() == shared.EventTypeWorkflowExecutionCompleted {
+						resultA := last.WorkflowExecutionCompletedEventAttributes.Result
+						resultB := d.CompleteWorkflowExecutionDecisionAttributes.Result
+						if bytes.Compare(resultA, resultB) == 0 {
+							return nil
+						}
+					}
+				}
+			}
+		}
+	}
 	return err
 }
 

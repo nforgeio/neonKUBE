@@ -83,5 +83,10 @@ namespace Neon.Xunit
         /// Identifies <b>neon-xunit</b> tests.
         /// </summary>
         public const string NeonXunit = "neon-xunit";
+
+        /// <summary>
+        /// Identifies <b>Neon.Web</b> tests.
+        /// </summary>
+        public const string NeonWeb = "Neon.Web";
     }
 }

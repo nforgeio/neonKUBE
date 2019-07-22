@@ -33,18 +33,19 @@ var (
 
 type (
 
-	// childContextsMap holds a thread-safe map[interface{}]interface{} of
+	// ChildContextsMap holds a thread-safe map[interface{}]interface{} of
 	// cadence childContextsMap with their contextID's
-	childContextsMap struct {
-		sync.Map
+	ChildContextsMap struct {
+		safeMap sync.Map
 	}
 
 	// ChildContext maps a child workflow contexts to a ChildID.
 	// It holds a workflow Context, Future, Settable,
 	// and cancellation function
 	ChildContext struct {
+		ctx        workflow.Context
 		future     workflow.ChildWorkflowFuture
-		cancelFunc func()
+		cancelFunc workflow.CancelFunc
 	}
 )
 
@@ -57,7 +58,6 @@ func NextChildID() int64 {
 	mu.Lock()
 	childID = childID + 1
 	defer mu.Unlock()
-
 	return childID
 }
 
@@ -66,7 +66,6 @@ func NextChildID() int64 {
 func GetChildID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-
 	return childID
 }
 
@@ -78,21 +77,38 @@ func GetChildID() int64 {
 //
 // returns *ChildContext -> pointer to a newly initialized
 // ChildContext in memory
-func NewChildContext() *ChildContext {
-	return new(ChildContext)
+func NewChildContext(ctx workflow.Context) *ChildContext {
+	cctx := new(ChildContext)
+	cctx.SetContext(ctx)
+	return cctx
+}
+
+// GetContext gets a ChildContext's workflow.Context
+//
+// returns workflow.Context -> a cadence workflow context
+func (cctx *ChildContext) GetContext() workflow.Context {
+	return cctx.ctx
+}
+
+// SetContext sets a ChildContext's workflow.Context
+//
+// param value workflow.Context -> a cadence workflow context to be
+// set as a ChildContext's cadence workflow.Context
+func (cctx *ChildContext) SetContext(value workflow.Context) {
+	cctx.ctx = value
 }
 
 // GetCancelFunction gets a ChildContext's context cancel function
 //
-// returns func() -> a cadence workflow context cancel function
-func (cctx *ChildContext) GetCancelFunction() func() {
+// returns workflow.CancelFunc -> a cadence workflow context cancel function
+func (cctx *ChildContext) GetCancelFunction() workflow.CancelFunc {
 	return cctx.cancelFunc
 }
 
 // SetCancelFunction sets a ChildContext's cancel function
 //
-// param value func() -> a cadence workflow context cancel function
-func (cctx *ChildContext) SetCancelFunction(value func()) {
+// param value workflow.CancelFunc -> a cadence workflow context cancel function
+func (cctx *ChildContext) SetCancelFunction(value workflow.CancelFunc) {
 	cctx.cancelFunc = value
 }
 
@@ -112,10 +128,10 @@ func (cctx *ChildContext) SetFuture(value workflow.ChildWorkflowFuture) {
 }
 
 //----------------------------------------------------------------------------
-// childContextsMap instance methods
+// ChildContextsMap instance methods
 
 // Add adds a new cadence context and its corresponding ContextId into
-// the childContextsMap map.  This method is thread-safe.
+// the ChildContextsMap map.  This method is thread-safe.
 //
 // param id int64 -> the long id passed to Cadence
 // child workflow function.  This will be the mapped key
@@ -124,32 +140,32 @@ func (cctx *ChildContext) SetFuture(value workflow.ChildWorkflowFuture) {
 // execute child workflow function. This will be the mapped value
 //
 // returns int64 -> long id of the new cadence ChildContext added to the map
-func (cctxs *childContextsMap) Add(id int64, cctx *ChildContext) int64 {
-	cctxs.Store(id, cctx)
+func (cctxs *ChildContextsMap) Add(id int64, cctx *ChildContext) int64 {
+	cctxs.safeMap.Store(id, cctx)
 	return id
 }
 
-// Remove removes key/value entry from the childContextsMap map at the specified
+// Remove removes key/value entry from the ChildContextsMap map at the specified
 // ContextId.  This is a thread-safe method.
 //
 // param id int64 -> the long id passed to Cadence
 // child workflow function.  This will be the mapped key
 //
 // returns int64 -> long id of the ChildContext removed from the map
-func (cctxs *childContextsMap) Remove(id int64) int64 {
-	cctxs.Delete(id)
+func (cctxs *ChildContextsMap) Remove(id int64) int64 {
+	cctxs.safeMap.Delete(id)
 	return id
 }
 
-// Get gets a ChildContext from the childContextsMap at the specified
+// Get gets a ChildContext from the ChildContextsMap at the specified
 // ContextID.  This method is thread-safe.
 //
 // param id int64 -> the long id passed to Cadence
 // child workflow function.  This will be the mapped key
 //
 // returns *ChildContext -> pointer to ChildContext with the specified id
-func (cctxs *childContextsMap) Get(id int64) *ChildContext {
-	if v, ok := cctxs.Load(id); ok {
+func (cctxs *ChildContextsMap) Get(id int64) *ChildContext {
+	if v, ok := cctxs.safeMap.Load(id); ok {
 		if _v, _ok := v.(*ChildContext); _ok {
 			return _v
 		}

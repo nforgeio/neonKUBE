@@ -115,7 +115,7 @@ namespace TestCouchbase
                 // can explicitly specify the durability override.
                 //
                 // Note that the code below assumes that the Couchbase test fixture
-                // creates a single node hive.
+                // creates a single node cluster.
 
                 Environment.SetEnvironmentVariable("DEV_WORKSTATION", null);
 

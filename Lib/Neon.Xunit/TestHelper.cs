@@ -417,7 +417,7 @@ namespace Neon.Xunit
             try
             {
                 await action();
-                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   (no exception thrown)");
+                Assert.True(false, $"Expected: {typeof(TException).FullName}\r\nActual:   (no exception thrown)");
             }
             catch (Exception e)
             {
@@ -426,7 +426,7 @@ namespace Neon.Xunit
                     return;
                 }
 
-                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   {e.GetType().Name}");
+                Assert.True(false, $"Expected: {typeof(TException).FullName}\r\nActual:   {e.GetType().Name}");
             }
         }
 

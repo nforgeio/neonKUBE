@@ -20,8 +20,6 @@ package cadenceactivities
 import (
 	"context"
 	"sync"
-
-	"go.uber.org/cadence/workflow"
 )
 
 var (
@@ -37,7 +35,7 @@ type (
 	// ActivityContextsMap holds a thread-safe map[interface{}]interface{} of
 	// cadence ActivityContextsMap with their contextID's
 	ActivityContextsMap struct {
-		sync.Map
+		safeMap sync.Map
 	}
 
 	// ActivityContext holds a Cadence activity
@@ -46,9 +44,8 @@ type (
 	// and state while registering and executing cadence activitys
 	ActivityContext struct {
 		ctx          context.Context
-		workflowCtx  workflow.Context
+		cancelFunc   context.CancelFunc
 		activityName *string
-		cancelFunc   func()
 	}
 )
 
@@ -61,7 +58,6 @@ func NextContextID() int64 {
 	mu.Lock()
 	contextID = contextID + 1
 	defer mu.Unlock()
-
 	return contextID
 }
 
@@ -70,7 +66,6 @@ func NextContextID() int64 {
 func GetContextID() int64 {
 	mu.RLock()
 	defer mu.RUnlock()
-
 	return contextID
 }
 
@@ -82,22 +77,9 @@ func GetContextID() int64 {
 //
 // returns *ActivityContext -> pointer to a newly initialized
 // activity ExecutionContext in memory
-func NewActivityContext(ctx ...interface{}) *ActivityContext {
+func NewActivityContext(ctx context.Context) *ActivityContext {
 	actx := new(ActivityContext)
-
-	if len(ctx) > 0 {
-		c := ctx[0]
-
-		if v, ok := c.(workflow.Context); ok {
-			actx.SetWorkflowContext(v)
-			return actx
-		}
-
-		if v, ok := c.(context.Context); ok {
-			actx.SetContext(v)
-			return actx
-		}
-	}
+	actx.SetContext(ctx)
 
 	return actx
 }
@@ -117,21 +99,6 @@ func (actx *ActivityContext) SetContext(value context.Context) {
 	actx.ctx = value
 }
 
-// GetWorkflowContext gets a ActivityContext's workflow.Context
-//
-// returns workflow.Context -> a cadence context context
-func (actx *ActivityContext) GetWorkflowContext() workflow.Context {
-	return actx.workflowCtx
-}
-
-// SetWorkflowContext sets a ActivityContext's workflow.Context
-//
-// param value workflow.Context -> a cadence activity context to be
-// set as a ActivityContext's cadence workflow.Context
-func (actx *ActivityContext) SetWorkflowContext(value workflow.Context) {
-	actx.workflowCtx = value
-}
-
 // GetActivityName gets a ActivityContext's activity function name
 //
 // returns *string -> a cadence activity function name
@@ -148,15 +115,15 @@ func (actx *ActivityContext) SetActivityName(value *string) {
 
 // GetCancelFunction gets a ActivityContext's context cancel function
 //
-// returns func() -> a cadence activity context cancel function
-func (actx *ActivityContext) GetCancelFunction() func() {
+// returns context.CancelFunc -> a cadence activity context cancel function
+func (actx *ActivityContext) GetCancelFunction() context.CancelFunc {
 	return actx.cancelFunc
 }
 
 // SetCancelFunction sets a ActivityContext's cancel function
 //
-// param value func() -> a cadence activity context cancel function
-func (actx *ActivityContext) SetCancelFunction(value func()) {
+// param value context.CancelFunc -> a cadence activity context cancel function
+func (actx *ActivityContext) SetCancelFunction(value context.CancelFunc) {
 	actx.cancelFunc = value
 }
 
@@ -174,7 +141,7 @@ func (actx *ActivityContext) SetCancelFunction(value func()) {
 //
 // returns int64 -> long id of the new cadence ActivityContext added to the map
 func (actxs *ActivityContextsMap) Add(id int64, actx *ActivityContext) int64 {
-	actxs.Store(id, actx)
+	actxs.safeMap.Store(id, actx)
 	return id
 }
 
@@ -186,7 +153,7 @@ func (actxs *ActivityContextsMap) Add(id int64, actx *ActivityContext) int64 {
 //
 // returns int64 -> long id of the ActivityContext removed from the map
 func (actxs *ActivityContextsMap) Remove(id int64) int64 {
-	actxs.Delete(id)
+	actxs.safeMap.Delete(id)
 	return id
 }
 
@@ -198,7 +165,7 @@ func (actxs *ActivityContextsMap) Remove(id int64) int64 {
 //
 // returns *ActivityContext -> pointer to ActivityContext with the specified id
 func (actxs *ActivityContextsMap) Get(id int64) *ActivityContext {
-	if v, ok := actxs.Load(id); ok {
+	if v, ok := actxs.safeMap.Load(id); ok {
 		if _v, _ok := v.(*ActivityContext); _ok {
 			return _v
 		}

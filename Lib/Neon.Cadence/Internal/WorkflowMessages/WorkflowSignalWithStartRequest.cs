@@ -44,7 +44,7 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Identifies the workflow to be executed if the workflow instance
-        /// idntified by <see cref="WorkflowId"/> is nor currently running.
+        /// idntified by <see cref="WorkflowId"/> is not currently running.
         /// </summary>
         public string Workflow
         {
@@ -59,6 +59,15 @@ namespace Neon.Cadence.Internal
         {
             get => GetStringProperty(PropertyNames.WorkflowId);
             set => SetStringProperty(PropertyNames.WorkflowId, value);
+        }
+
+        /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <summary>
@@ -114,12 +123,13 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowSignalWithStartRequest)target;
 
-            typedTarget.Workflow        = this.Workflow;
-            typedTarget.WorkflowId      = this.WorkflowId;
-            typedTarget.SignalName      = this.SignalName;
-            typedTarget.SignalArgs      = this.SignalArgs;
-            typedTarget.Options         = this.Options;
-            typedTarget.WorkflowArgs    = this.WorkflowArgs;
+            typedTarget.Workflow     = this.Workflow;
+            typedTarget.WorkflowId   = this.WorkflowId;
+            typedTarget.Domain       = this.Domain;
+            typedTarget.SignalName   = this.SignalName;
+            typedTarget.SignalArgs   = this.SignalArgs;
+            typedTarget.Options      = this.Options;
+            typedTarget.WorkflowArgs = this.WorkflowArgs;
         }
     }
 }

@@ -19,35 +19,26 @@ package endpoints
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
+	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceactivities"
 	"github.com/cadence-proxy/internal/cadence/cadenceclient"
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkers"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"
+	messagetypes "github.com/cadence-proxy/internal/messages/types"
 	"github.com/cadence-proxy/internal/server"
-)
-
-const (
-
-	// ContentType is the content type to be used for HTTP requests
-	// encapsulationg a ProxyMessage
-	ContentType = "application/x-neon-cadence-proxy"
-
-	// _cadenceSystemDomain is the string name of the cadence-system domain that
-	// exists on all cadence servers.  This value is used to check that a connection
-	// has been established to the cadence server instance and that it is ready to
-	// accept requests
-	_cadenceSystemDomain = "cadence-system"
 )
 
 var (
@@ -59,18 +50,6 @@ var (
 	// cadence-proxy is listening on.  This gets set in main.go
 	Instance *server.Instance
 
-	// errConnection is the custom error that is thrown when the cadence-proxy
-	// is not able to establish a connection with the cadence server
-	errConnection = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
-
-	// errEntityNotExist is the custom error that is thrown when a cadence
-	// entity cannot be found in the cadence server
-	errEntityNotExist = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
-
-	// argumentNullError is the custom error that is thrown when trying to access a nil
-	// value
-	errArgumentNil = errors.New("ArgumentNilError{Message: failed to access nil value.}")
-
 	// replyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy
 	replyAddress string
@@ -81,21 +60,14 @@ var (
 	// indicates the server continues to run
 	terminate bool
 
-	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
-	// already be running for debugging purposes.  When this is true, the
-	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
-	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
-	// This defaults to false.
-	DebugPrelaunched = false
-
 	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
 	// a request has been received by the cadence-proxy
-	cadenceClientTimeout time.Duration = time.Second * 30
+	cadenceClientTimeout time.Duration = time.Minute
 
 	// ClientHelper is a global variable that holds this cadence-proxy's instance
-	// of the CadenceClientHelper that will be used to create domain and workflow clients
+	// of the ClientHelper that will be used to create domain and workflow clients
 	// that communicate with the cadence server
-	clientHelper = cadenceclient.NewCadenceClientHelper()
+	clientHelper = cadenceclient.NewClientHelper()
 
 	// ActivityContexts maps a int64 ContextId to the cadence
 	// Activity Context passed to the cadence Activity functions.
@@ -118,6 +90,15 @@ var (
 	// Operations is a map of operations used to track pending
 	// cadence-client operations
 	Operations = new(operationsMap)
+
+	// Cancellables is a map of golang cancel functions to requestID,
+	// used to track cancellable operations sent from the Neon.Cadence
+	// client
+	Cancellables = new(cancellablesMap)
+
+	// httpClient is the HTTP client used to send requests
+	// to the Neon.Cadence client
+	httpClient = http.Client{}
 )
 
 //----------------------------------------------------------------------------
@@ -133,16 +114,16 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 	)
 
 	// check if the content type is correct
-	if r.Header.Get("Content-Type") != ContentType {
+	if r.Header.Get("Content-Type") != globals.ContentType {
 		err := fmt.Errorf("incorrect Content-Type %s. Content must be %s",
 			r.Header.Get("Content-Type"),
-			ContentType,
+			globals.ContentType,
 		)
 
 		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Incorrect Content-Type",
 			zap.String("Content Type", r.Header.Get("Content-Type")),
-			zap.String("Expected Content Type", ContentType),
+			zap.String("Expected Content Type", globals.ContentType),
 			zap.Error(err),
 		)
 
@@ -191,4 +172,127 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	}
 
 	return message, nil
+}
+
+func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
+
+	// $debug(jack.burns): DELETE THIS!
+	proxyMessage := message.GetProxyMessage()
+	logger.Info("Sending request to Neon.Cadence client",
+		zap.String("Address", replyAddress),
+		zap.String("MessageType", proxyMessage.Type.String()),
+		zap.Int("ProcessId", os.Getpid()),
+	)
+
+	// serialize the message
+	content, err := proxyMessage.Serialize(false)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Error serializing proxy message", zap.Error(err))
+		return nil, err
+	}
+
+	// create a buffer with the serialized bytes to reply with
+	// and create the PUT request
+	buf := bytes.NewBuffer(content)
+	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Error creating Neon.Cadence Library request", zap.Error(err))
+		return nil, err
+	}
+
+	// set the request header to specified content type
+	// and disable http request compression
+	req.Header.Set("Content-Type", globals.ContentType)
+	req.Header.Set("Accept-Encoding", "identity")
+
+	// initialize the http.Client and send the request
+	resp, err := httpClient.Do(req)
+	if err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Error sending Neon.Cadence Library request", zap.Error(err))
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func verifyClientHelper(request messages.IProxyRequest, helper *cadenceclient.ClientHelper) error {
+	switch request.GetType() {
+	case messagetypes.InitializeRequest,
+		messagetypes.PingRequest,
+		messagetypes.ConnectRequest,
+		messagetypes.TerminateRequest,
+		messagetypes.CancelRequest,
+		messagetypes.HeartbeatRequest:
+		return nil
+	default:
+		if helper == nil {
+			return globals.ErrConnection
+		}
+	}
+
+	return nil
+}
+
+func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
+	isReplaying := workflow.IsReplaying(ctx)
+	switch s := message.(type) {
+	case messages.IWorkflowReply:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowQueryInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	case *messages.WorkflowSignalInvokeRequest:
+		if isReplaying {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		} else {
+			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		}
+	}
+}
+
+func sendMessage(message messages.IProxyMessage) {
+	resp, err := putToNeonCadenceClient(message)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+
+		// $debug(jack.burns): DELETE THIS!
+		err := resp.Body.Close()
+		if err != nil {
+			logger.Error("could not close response body", zap.Error(err))
+		}
+	}()
+}
+
+func isCanceledErr(err interface{}) bool {
+	var errStr string
+	if v, ok := err.(*cadenceerrors.CadenceError); ok {
+		errStr = v.ToString()
+	}
+
+	if v, ok := err.(error); ok {
+		errStr = v.Error()
+	}
+
+	return strings.Contains(errStr, "CanceledError")
 }

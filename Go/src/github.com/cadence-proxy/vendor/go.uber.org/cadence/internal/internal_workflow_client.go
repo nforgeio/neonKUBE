@@ -22,11 +22,13 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/pborman/uuid"
 	"github.com/uber-go/tally"
 
@@ -50,11 +52,13 @@ const (
 type (
 	// workflowClient is the client for starting a workflow execution.
 	workflowClient struct {
-		workflowService workflowserviceclient.Interface
-		domain          string
-		metricsScope    *metrics.TaggedScope
-		identity        string
-		dataConverter   encoded.DataConverter
+		workflowService    workflowserviceclient.Interface
+		domain             string
+		metricsScope       *metrics.TaggedScope
+		identity           string
+		dataConverter      encoded.DataConverter
+		contextPropagators []ContextPropagator
+		tracer             opentracing.Tracer
 	}
 
 	// domainClient is the client for managing domains.
@@ -172,6 +176,25 @@ func (wc *workflowClient) StartWorkflow(
 		return nil, err
 	}
 
+	searchAttr, err := serializeSearchAttributes(options.SearchAttributes)
+	if err != nil {
+		return nil, err
+	}
+
+	// create a workflow start span and attach it to the context object.
+	// N.B. we need to finish this immediately as jaeger does not give us a way
+	// to recreate a span given a span context - which means we will run into
+	// issues during replay. we work around this by creating and ending the
+	// workflow start span and passing in that context to the workflow. So
+	// everything beginning with the StartWorkflowExecutionRequest will be
+	// parented by the created start workflow span.
+	ctx, span := createOpenTracingWorkflowSpan(ctx, wc.tracer, time.Now(), fmt.Sprintf("StartWorkflow-%s", workflowType.Name), workflowID)
+	span.Finish()
+
+	// get workflow headers from the context
+	header := wc.getWorkflowHeader(ctx)
+
+	// run propagators to extract information about tracing and other stuff, store in headers field
 	startRequest := &s.StartWorkflowExecutionRequest{
 		Domain:                              common.StringPtr(wc.domain),
 		RequestId:                           common.StringPtr(uuid.New()),
@@ -186,6 +209,8 @@ func (wc *workflowClient) StartWorkflow(
 		RetryPolicy:                         convertRetryPolicy(options.RetryPolicy),
 		CronSchedule:                        common.StringPtr(options.CronSchedule),
 		Memo:                                memo,
+		SearchAttributes:                    searchAttr,
+		Header:                              header,
 	}
 
 	var response *s.StartWorkflowExecutionResponse
@@ -347,6 +372,18 @@ func (wc *workflowClient) SignalWithStartWorkflow(ctx context.Context, workflowI
 		return nil, err
 	}
 
+	searchAttr, err := serializeSearchAttributes(options.SearchAttributes)
+	if err != nil {
+		return nil, err
+	}
+
+	// create a workflow start span and attach it to the context object. finish it immediately
+	ctx, span := createOpenTracingWorkflowSpan(ctx, wc.tracer, time.Now(), fmt.Sprintf("SignalWithStartWorkflow-%s", workflowType.Name), workflowID)
+	span.Finish()
+
+	// get workflow headers from the context
+	header := wc.getWorkflowHeader(ctx)
+
 	signalWithStartRequest := &s.SignalWithStartWorkflowExecutionRequest{
 		Domain:                              common.StringPtr(wc.domain),
 		RequestId:                           common.StringPtr(uuid.New()),
@@ -362,7 +399,9 @@ func (wc *workflowClient) SignalWithStartWorkflow(ctx context.Context, workflowI
 		RetryPolicy:                         convertRetryPolicy(options.RetryPolicy),
 		CronSchedule:                        common.StringPtr(options.CronSchedule),
 		Memo:                                memo,
+		SearchAttributes:                    searchAttr,
 		WorkflowIdReusePolicy:               options.WorkflowIDReusePolicy.toThriftPtr(),
+		Header:                              header,
 	}
 
 	var response *s.StartWorkflowExecutionResponse
@@ -660,6 +699,23 @@ func (wc *workflowClient) CountWorkflow(ctx context.Context, request *s.CountWor
 	return response, nil
 }
 
+// GetSearchAttributes implementation
+func (wc *workflowClient) GetSearchAttributes(ctx context.Context) (*s.GetSearchAttributesResponse, error) {
+	var response *s.GetSearchAttributesResponse
+	err := backoff.Retry(ctx,
+		func() error {
+			var err1 error
+			tchCtx, cancel, opt := newChannelContext(ctx)
+			defer cancel()
+			response, err1 = wc.workflowService.GetSearchAttributes(tchCtx, opt...)
+			return err1
+		}, createDynamicServiceRetryPolicy(ctx), isServiceTransientError)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 // DescribeWorkflowExecution returns information about the specified workflow execution.
 // The errors it can return:
 //  - BadRequestError
@@ -767,6 +823,17 @@ func (wc *workflowClient) DescribeTaskList(ctx context.Context, tasklist string,
 	return resp, nil
 }
 
+func (wc *workflowClient) getWorkflowHeader(ctx context.Context) *s.Header {
+	header := &s.Header{
+		Fields: make(map[string][]byte),
+	}
+	writer := NewHeaderWriter(header)
+	for _, ctxProp := range wc.contextPropagators {
+		ctxProp.Inject(ctx, writer)
+	}
+	return header
+}
+
 // Register a domain with cadence server
 // The errors it can throw:
 //	- DomainAlreadyExistsError
@@ -861,7 +928,6 @@ func (iter *historyEventIteratorImpl) HasNext() bool {
 func (iter *historyEventIteratorImpl) Next() (*s.HistoryEvent, error) {
 	// if caller call the Next() when iteration is over, just return nil, nil
 	if !iter.HasNext() {
-		// debug.PrintStack()
 		panic("HistoryEventIterator Next() called without checking HasNext()")
 	}
 
@@ -946,4 +1012,20 @@ func getWorkflowMemo(input map[string]interface{}, dc encoded.DataConverter) (*s
 		memo[k] = memoBytes
 	}
 	return &s.Memo{Fields: memo}, nil
+}
+
+func serializeSearchAttributes(input map[string]interface{}) (*s.SearchAttributes, error) {
+	if input == nil {
+		return nil, nil
+	}
+
+	attr := make(map[string][]byte)
+	for k, v := range input {
+		attrBytes, err := json.Marshal(v)
+		if err != nil {
+			return nil, fmt.Errorf("encode search attribute [%s] error: %v", k, err)
+		}
+		attr[k] = attrBytes
+	}
+	return &s.SearchAttributes{IndexedFields: attr}, nil
 }

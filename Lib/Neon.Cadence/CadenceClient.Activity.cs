@@ -36,7 +36,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers an activity implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived type implementing the activity.</typeparam>
+        /// <typeparam name="TActivity">The <see cref="Activity"/> derived type implementing the activity.</typeparam>
         /// <param name="activityTypeName">
         /// Optionally specifies a custom activity type name that will be used 
         /// for identifying the activity implementation in Cadence.  This defaults
@@ -54,7 +54,7 @@ namespace Neon.Cadence
         /// </note>
         /// </remarks>
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
-            where TActivity : ActivityBase
+            where TActivity : Activity
         {
             if (string.IsNullOrEmpty(activityTypeName))
             {
@@ -66,7 +66,7 @@ namespace Neon.Cadence
                 throw new CadenceActivityWorkerStartedException();
             }
 
-            if (!ActivityBase.Register(this, typeof(TActivity), activityTypeName))
+            if (!Activity.Register(this, typeof(TActivity), activityTypeName))
             {
                 var reply = (ActivityRegisterReply)await CallProxyAsync(
                     new ActivityRegisterRequest()
@@ -80,14 +80,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for activity implementations derived from
-        /// <see cref="ActivityBase"/> and tagged with <see cref="AutoRegisterAttribute"/>
-        /// and registers them with Cadence.
+        /// <see cref="IActivity"/> and tagged by <see cref="ActivityAttribute"/> and
+        /// registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
-        /// derived from <see cref="WorkflowBase"/> or <see cref="ActivityBase"/>.
+        /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
+        /// derived from <see cref="IActivity"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceActivityWorkerStartedException">
@@ -110,46 +110,92 @@ namespace Neon.Cadence
 
             foreach (var type in assembly.GetTypes())
             {
-                var autoRegisterAttribute = type.GetCustomAttribute<AutoRegisterAttribute>();
+                var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
 
-                if (autoRegisterAttribute != null)
+                if (activityAttribute != null)
                 {
-                    if (type.IsSubclassOf(typeof(WorkflowBase)))
+                    if (type.Implements<IActivity>())
                     {
-                        // Ignore these here.
-                    }
-                    else if (type.IsSubclassOf(typeof(ActivityBase)))
-                    {
-                        var activityTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
-
-                        if (!ActivityBase.Register(this, type, activityTypeName))
+                        if (activityAttribute.AutoRegister)
                         {
-                            var reply = (ActivityRegisterReply)await CallProxyAsync(
-                                new ActivityRegisterRequest()
-                                {
-                                    Name = activityTypeName
-                                });
+                            var activityTypeName = activityAttribute.TypeName ?? type.FullName;
 
-                            reply.ThrowOnError();
+                            if (!Activity.Register(this, type, activityTypeName))
+                            {
+                                var reply = (ActivityRegisterReply)await CallProxyAsync(
+                                    new ActivityRegisterRequest()
+                                    {
+                                        Name = activityTypeName
+                                    });
+
+                                reply.ThrowOnError();
+                            }
                         }
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(ActivityAttribute)}] but is not derived from [{nameof(IActivity)}].");
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Used to complete an activity externally.
+        /// Used to send record activity heartbeat externally by task token.
+        /// </summary>
+        /// <param name="taskToken">The opaque activity task token.</param>
+        /// <param name="details">Optional heartbeart details.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task RecordActivityHeartbeatAsync(byte[] taskToken, byte[] details = null)
+        {
+            Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+            
+            var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
+                new ActivityRecordHeartbeatRequest()
+                {
+                    TaskToken = taskToken,
+                    Details   = details
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to send record activity heartbeat externally by activity ID.
+        /// </summary>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <param name="details">Optional heartbeart details.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task RecordActivityHeartbeatByIdAsync(string workflowId, string runId, string activityId, byte[] details = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+
+            var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
+                new ActivityRecordHeartbeatRequest()
+                {
+                    Domain     = ResolveDomain(domain),
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Details    = details
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally complete an activity identified by task token.
         /// </summary>
         /// <param name="taskToken">The opaque activity task token.</param>
         /// <param name="result">Passed as the activity result for activity success.</param>
-        /// <param name="e">Passed as an exception when the activity failed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task CompleteActivityAsync(byte[] taskToken, byte[] result = null, Exception e = null)
+        public async Task RespondActivityCompletedAsync(byte[] taskToken, byte[] result = null)
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
 
@@ -157,8 +203,136 @@ namespace Neon.Cadence
                 new ActivityCompleteRequest()
                 {
                     TaskToken = taskToken,
-                    Result    = result,
-                    Error     = e != null ? new CadenceError(e) : null
+                    Result    = result
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally complete an activity identified by activity ID.
+        /// </summary>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <param name="result">Passed as the activity result for activity success.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityCompletedByIdAsync(string workflowId, string runId, string activityId, byte[] result = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    Domain     = ResolveDomain(domain),
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Result     = result
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally cancel an activity identified by task token.
+        /// </summary>
+        /// <param name="taskToken">The opaque activity task token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityCancelAsync(byte[] taskToken)
+        {
+            Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    TaskToken = taskToken,
+                    Error     = new CadenceError(new CadenceCancelledException("Cancelled"))
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally cancel an activity identified by activity ID.
+        /// </summary>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityCancelByIdAsync(string workflowId, string runId, string activityId, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    Domain     = ResolveDomain(domain),
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Error      = new CadenceError(new CadenceCancelledException("Cancelled"))
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally fail an activity by task token.
+        /// </summary>
+        /// <param name="taskToken">The opaque activity task token.</param>
+        /// <param name="error">Specifies the activity error.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityFailAsync(byte[] taskToken, Exception error)
+        {
+            Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+            Covenant.Requires<ArgumentNullException>(error != null);
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    TaskToken = taskToken,
+                    Error     = new CadenceError(error)
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Used to externally fail an activity by task token.
+        /// </summary>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="activityId">The activity ID.</param>
+        /// <param name="error">Specifies the activity error.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        public async Task RespondActivityFailByIdAsync(string workflowId, string runId, string activityId, Exception error, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+            Covenant.Requires<ArgumentNullException>(error != null);
+
+            var reply = (ActivityCompleteReply)await CallProxyAsync(
+                new ActivityCompleteRequest()
+                {
+                    Domain     = ResolveDomain(domain),
+                    WorkflowId = workflowId,
+                    RunId      = runId,
+                    ActivityId = activityId,
+                    Error      = new CadenceError(error)
                 });
 
             reply.ThrowOnError();

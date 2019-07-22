@@ -154,6 +154,16 @@ const (
 	/// </summary>
 	PingReply MessageType = 22
 
+	/// <summary>
+	/// <b>client --> proxy:</b> Requests that the proxy deprecate a Cadence domain.
+	/// </summary>
+	DomainDeprecateRequest MessageType = 23
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDeprecateRequest"/> message.
+	/// </summary>
+	DomainDeprecateReply MessageType = 24
+
 	//---------------------------------------------------------------------
 	// Workflow messages
 	//
@@ -228,7 +238,7 @@ const (
 	/// <summary>
 	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetHistoryRequest"/> message.
 	/// </summary>
-	WorkflowGetWorkflowHistoryReply MessageType = 113
+	WorkflowGetHistoryReply MessageType = 113
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Requests the list of closed workflows.
@@ -335,14 +345,14 @@ const (
 	WorkflowMutableReply MessageType = 133
 
 	/// <summary>
-	/// <b>UNUSED:</b> Available message ID.
+	/// <b>client --> proxy:</b> Manages workflow versioning.
 	/// </summary>
-	UNUSED_0 MessageType = 134
+	WorkflowGetVersionRequest MessageType = 134
 
 	/// <summary>
-	/// <b>UNUSED:</b> Available message ID.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowGetVersionRequest"/> message.
 	/// </summary>
-	UNUSED_1 MessageType = 135
+	WorkflowGetVersionReply MessageType = 135
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sets the maximum number of bytes the client will use
@@ -373,7 +383,7 @@ const (
 	/// <summary>
 	///  <b>client --> proxy:</b> Determines whether the last execution of the workflow has
 	///  a completion result.  This can be used by CRON workflows to determine whether the
-	///  last run returned a result.
+	///  last execution returned a result.
 	/// </summary>
 	WorkflowHasLastResultRequest MessageType = 140
 
@@ -384,7 +394,7 @@ const (
 
 	/// <summary>
 	///  <b>client --> proxy:</b> Returns the result from the last execution of the workflow.
-	///  This can be used by CRON workflows to retrieve state from the last workflow run.
+	///  This can be used by CRON workflows to retrieve state from the last workflow execution.
 	/// </summary>
 	WorkflowGetLastResultRequest MessageType = 142
 
@@ -510,7 +520,7 @@ const (
 	ActivityInvokeReply MessageType = 203
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity run.
+	/// <b>client --> proxy:</b> Requests the heartbeat details from the last failed activity execution.
 	/// </summary>
 	ActivityGetHeartbeatDetailsRequest MessageType = 204
 
@@ -609,3 +619,230 @@ const (
 	/// </summary>
 	ActivityCompleteReply MessageType = 223
 )
+
+// String translates a message type enum into
+// the corresponding string
+func (m MessageType) String() string {
+	switch m {
+	case Unspecified:
+		return "Unspecified"
+	case InitializeRequest:
+		return "InitializeRequest"
+	case InitializeReply:
+		return "InitializeReply"
+	case ConnectRequest:
+		return "ConnectRequest"
+	case ConnectReply:
+		return "ConnectReply"
+	case TerminateRequest:
+		return "TerminateRequest"
+	case TerminateReply:
+		return "TerminateReply"
+	case DomainRegisterRequest:
+		return "DomainRegisterRequest"
+	case DomainRegisterReply:
+		return "DomainRegisterReply"
+	case DomainDeprecateRequest:
+		return "DomainDeprecateRequest"
+	case DomainDeprecateReply:
+		return "DomainDeprecateReply"
+	case DomainDescribeRequest:
+		return "DomainDescribeRequest"
+	case DomainDescribeReply:
+		return "DomainDescribeReply"
+	case DomainUpdateRequest:
+		return "DomainUpdateRequest"
+	case DomainUpdateReply:
+		return "DomainUpdateReply"
+	case HeartbeatRequest:
+		return "HeartbeatRequest"
+	case HeartbeatReply:
+		return "HeartbeatReply"
+	case CancelRequest:
+		return "CancelRequest"
+	case CancelReply:
+		return "CancelReply"
+	case NewWorkerRequest:
+		return "NewWorkerRequest"
+	case NewWorkerReply:
+		return "NewWorkerReply"
+	case StopWorkerRequest:
+		return "StopWorkerRequest"
+	case StopWorkerReply:
+		return "StopWorkerReply"
+	case PingRequest:
+		return "PingRequest"
+	case PingReply:
+		return "PingReply"
+	case WorkflowRegisterRequest:
+		return "WorkflowRegisterRequest"
+	case WorkflowRegisterReply:
+		return "WorkflowRegisterReply"
+	case WorkflowExecuteRequest:
+		return "WorkflowExecuteRequest"
+	case WorkflowExecuteReply:
+		return "WorkflowExecuteReply"
+	case WorkflowSignalRequest:
+		return "WorkflowSignalRequest"
+	case WorkflowSignalReply:
+		return "WorkflowSignalReply"
+	case WorkflowSignalWithStartRequest:
+		return "WorkflowSignalWithStartRequest"
+	case WorkflowSignalWithStartReply:
+		return "WorkflowSignalWithStartReply"
+	case WorkflowCancelRequest:
+		return "WorkflowCancelRequest"
+	case WorkflowCancelReply:
+		return "WorkflowCancelReply"
+	case WorkflowTerminateRequest:
+		return "WorkflowTerminateRequest"
+	case WorkflowTerminateReply:
+		return "WorkflowTerminateReply"
+	case WorkflowGetHistoryRequest:
+		return "WorkflowGetHistoryRequest"
+	case WorkflowGetHistoryReply:
+		return "WorkflowGetHistoryReply"
+	case WorkflowListClosedRequest:
+		return "WorkflowListClosedRequest"
+	case WorkflowListClosedReply:
+		return "WorkflowListClosedReply"
+	case WorkflowListOpenExecutionsRequest:
+		return "WorkflowListOpenExecutionRequest"
+	case WorkflowListOpenExecutionsReply:
+		return "WorkflowListOpenExecutionReply"
+	case WorkflowQueryRequest:
+		return "WorkflowQueryRequest"
+	case WorkflowQueryReply:
+		return "WorkflowQueryReply"
+	case WorkflowDescribeExecutionRequest:
+		return "WorkflowDescribeExecutionRequest"
+	case WorkflowDescribeExecutionReply:
+		return "WorkflowDescribeExecutionReply"
+	case WorkflowDescribeTaskListRequest:
+		return "WorkflowDescribeTaskListRequest"
+	case WorkflowDescribeTaskListReply:
+		return "WorkflowDescribeTaskListReply"
+	case WorkflowInvokeRequest:
+		return "WorkflowInvokeRequest"
+	case WorkflowInvokeReply:
+		return "WorkflowInvokeReply"
+	case WorkflowExecuteChildRequest:
+		return "WorkflowExecuteChildRequest"
+	case WorkflowExecuteChildReply:
+		return "WorkflowExecuteChildReply"
+	case WorkflowSignalSubscribeRequest:
+		return "WorkflowSignalSubscribeRequest"
+	case WorkflowSignalSubscribeReply:
+		return "WorkflowSignalSubscribeReply"
+	case WorkflowSignalInvokeRequest:
+		return "WorkflowSignalInvokeRequest"
+	case WorkflowSignalInvokeReply:
+		return "WorkflowSignalInvokeReply"
+	case WorkflowMutableRequest:
+		return "WorkflowMutableRequest"
+	case WorkflowMutableReply:
+		return "WorkflowMutableReply"
+	case WorkflowGetVersionRequest:
+		return "WorkflowGetVersionRequest"
+	case WorkflowGetVersionReply:
+		return "WorkflowGetVersionReply"
+	case WorkflowSetCacheSizeRequest:
+		return "WorkflowSetCacheSizeRequest"
+	case WorkflowSetCacheSizeReply:
+		return "WorkflowSetCacheSizeReply"
+	case WorkflowGetResultRequest:
+		return "WorkflowGetResultRequest"
+	case WorkflowGetResultReply:
+		return "WorkflowGetResultReply"
+	case WorkflowHasLastResultRequest:
+		return "WorkflowHasLastResultRequest"
+	case WorkflowHasLastResultReply:
+		return "WorkflowHasLastResultReply"
+	case WorkflowGetLastResultRequest:
+		return "WorkflowGetLastResultRequest"
+	case WorkflowGetLastResultReply:
+		return "WorkflowGetLastResultReply"
+	case WorkflowDisconnectContextRequest:
+		return "WorkflowDisconnectContextRequest"
+	case WorkflowDisconnectContextReply:
+		return "WorkflowDisconnectContextReply"
+	case WorkflowGetTimeRequest:
+		return "WorkflowGetTimeRequest"
+	case WorkflowGetTimeReply:
+		return "WorkflowGetTimeReply"
+	case WorkflowSleepRequest:
+		return "WorkflowSleepRequest"
+	case WorkflowSleepReply:
+		return "WorkflowSleepReply"
+	case WorkflowWaitForChildRequest:
+		return "WorkflowWaitForChildRequest"
+	case WorkflowWaitForChildReply:
+		return "WorkflowWaitForChildReply"
+	case WorkflowSignalChildRequest:
+		return "WorkflowSignalChildRequest"
+	case WorkflowSignalChildReply:
+		return "WorkflowSignalChildReply"
+	case WorkflowCancelChildRequest:
+		return "WorkflowCancelChildRequest"
+	case WorkflowCancelChildReply:
+		return "WorkflowCancelChildReply"
+	case WorkflowSetQueryHandlerRequest:
+		return "WorkflowSetQueryHandlerRequest"
+	case WorkflowSetQueryHandlerReply:
+		return "WorkflowSetQueryHandlerReply"
+	case WorkflowQueryInvokeRequest:
+		return "WorkflowQueryInvokeRequest"
+	case WorkflowQueryInvokeReply:
+		return "WorkflowQueryInvokeReply"
+	case ActivityExecuteRequest:
+		return "ActivityExecuteRequest"
+	case ActivityExecuteReply:
+		return "ActivityExecuteReply"
+	case ActivityInvokeRequest:
+		return "ActivityInvokeRequest"
+	case ActivityInvokeReply:
+		return "ActivityInvokeReply"
+	case ActivityGetHeartbeatDetailsRequest:
+		return "ActivityGetHeartbeatDetailsRequest"
+	case ActivityGetHeartbeatDetailsReply:
+		return "ActivityGetHeartbeatDetailsReply"
+	case ActivityLogRequest:
+		return "ActivityLogRequest"
+	case ActivityLogReply:
+		return "ActivityLogReply"
+	case ActivityRecordHeartbeatRequest:
+		return "ActivityRecordHeartbeatRequest"
+	case ActivityRecordHeartbeatReply:
+		return "ActivityRecordHeartbeatReply"
+	case ActivityHasHeartbeatDetailsRequest:
+		return "ActivityHasHeartbeatDetailsRequest"
+	case ActivityHasHeartbeatDetailsReply:
+		return "ActivityHasHeartbeatDetailsReply"
+	case ActivityStoppingRequest:
+		return "ActivityStoppingRequest"
+	case ActivityStoppingReply:
+		return "ActivityStoppingReply"
+	case ActivityExecuteLocalRequest:
+		return "ActivityExecuteLocalRequest"
+	case ActivityExecuteLocalReply:
+		return "ActivityExecuteLocalReply"
+	case ActivityInvokeLocalRequest:
+		return "ActivityInvokeLocalRequest"
+	case ActivityInvokeLocalReply:
+		return "ActivityInvokeLocalReply"
+	case ActivityRegisterRequest:
+		return "ActivityRegisterRequest"
+	case ActivityRegisterReply:
+		return "ActivityRegisterReply"
+	case ActivityGetInfoRequest:
+		return "ActivityGetInfoRequest"
+	case ActivityGetInfoReply:
+		return "ActivityGetInfoReply"
+	case ActivityCompleteRequest:
+		return "ActivityCompleteRequest"
+	case ActivityCompleteReply:
+		return "ActivityCompleteReply"
+	default:
+		return ""
+	}
+}

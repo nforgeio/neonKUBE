@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cadence</RootNamespace>
-    <Version>0.5.3-alpha</Version>
+    <Version>0.5.4-alpha</Version>
     <Company>neonFORGE, LLC</Company>
-    <Authors>Jeff Lill</Authors>
-    <Description>neonKUBE client for Uber Cadence.</Description>
+    <Authors>Jeff Lill, John C Burns</Authors>
+    <Description>.NET client for Uber Cadence.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
@@ -20,24 +20,40 @@
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>Neon.Cadence</AssemblyName>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
     <DocumentationFile>bin\Debug\Neon.Cadence.xml</DocumentationFile>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Release\Neon.Cadence.xml</DocumentationFile>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Resources\cadence-proxy.linux.gz" />
     <None Remove="Resources\cadence-proxy.osx.gz" />
     <None Remove="Resources\cadence-proxy.win.exe.gz" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
+    <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
+    <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -45,17 +61,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.1.0" />
+    <PackageReference Include="System.Runtime" Version="4.3.1" />
+    <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
   </ItemGroup>
 
 </Project>

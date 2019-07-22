@@ -23,10 +23,9 @@
 #   non-go = false
 #   go-tests = true
 #   unused-packages = true
-
 [[constraint]]
   name = "go.uber.org/cadence"
-  version = "0.8.3"
+  version = "0.8.8"
 
 [[constraint]]
   name = "github.com/uber-go/tally"
@@ -34,7 +33,7 @@
 
 [[constraint]]
   name = "go.uber.org/yarpc"
-  version = "1.7.1"
+  version = "1.38.0"
 
 [[constraint]]
   name = "go.uber.org/zap"
@@ -42,7 +41,11 @@
 
 [[override]]
   name = "github.com/apache/thrift"
-  version = "0.9.3"
+  version = "0.10.0"
+
+[[constraint]]
+  name = "go.uber.org/goleak"
+  version = "0.10.0"
 
 [prune]
   go-tests = true

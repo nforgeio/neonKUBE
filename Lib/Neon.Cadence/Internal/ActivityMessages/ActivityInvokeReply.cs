@@ -47,6 +47,15 @@ namespace Neon.Cadence.Internal
             set => SetBytesProperty(PropertyNames.Result, value);
         }
 
+        /// <summary>
+        /// Indicates that the activity will be completed externally.
+        /// </summary>
+        public bool Pending
+        {
+            get => GetBoolProperty(PropertyNames.Pending);
+            set => SetBoolProperty(PropertyNames.Pending, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -64,7 +73,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityInvokeReply)target;
 
-            typedTarget.Result = this.Result;
+            typedTarget.Result  = this.Result;
+            typedTarget.Pending = this.Pending;
         }
     }
 }

@@ -59,6 +59,7 @@ namespace Neon.Xunit
         private IEnumerable<string>     containerArgs;
         private IEnumerable<string>     env;
         private bool                    noRemove;
+        private bool                    keepOpen;
 
         /// <summary>
         /// Constructor.
@@ -87,13 +88,12 @@ namespace Neon.Xunit
         /// </summary>
         public string ContainerId { get; private set; }
 
-
         /// <summary>
         /// <para>
         /// Starts the container.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(string, string, string[], IEnumerable{string}, IEnumerable{string}, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[], IEnumerable{string}, IEnumerable{string}, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -103,6 +103,10 @@ namespace Neon.Xunit
         /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="noRemove">Optionally indicates that the <b>--rm</b> option should not be included when creating the container.</param>
+        /// <param name="keepOpen">
+        /// Optionally indicates that the container should continue to run after the fixture is disposed.  
+        /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>true</c>.
+        /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
@@ -120,12 +124,12 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public TestFixtureStatus Start(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
+        public TestFixtureStatus Start(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false, bool keepOpen = false)
         {
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(name, image, dockerArgs, containerArgs, env, noRemove);
+                    StartAsComposed(name, image, dockerArgs, containerArgs, env, noRemove, keepOpen);
                 });
         }
 
@@ -138,6 +142,10 @@ namespace Neon.Xunit
         /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="noRemove">Optionally indicates that the <b>--rm</b> option should not be included when creating the container.</param>
+        /// <param name="keepOpen">
+        /// Optionally indicates that the container should continue to run after the fixture is disposed.  
+        /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>true</c>.
+        /// </param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this is not called from  within the <see cref="Action"/> method 
         /// passed <see cref="ITestFixture.Start(Action)"/>
@@ -150,7 +158,7 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public void StartAsComposed(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false)
+        public void StartAsComposed(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false, bool keepOpen = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -162,12 +170,18 @@ namespace Neon.Xunit
                 return;
             }
 
+            if (keepOpen)
+            {
+                noRemove = true;
+            }
+
             this.name          = name;
             this.image         = image;
             this.dockerArgs    = dockerArgs;
             this.containerArgs = containerArgs;
             this.env           = env;
             this.noRemove      = noRemove;
+            this.keepOpen      = true;
 
             StartContainer();
         }
@@ -284,9 +298,9 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public override void Reset()
         {
-            // Remove the container if it's running.
+            // Remove the container if it's running and [keepOpen] is disabled.
 
-            if (ContainerId != null)
+            if (ContainerId != null && !keepOpen)
             {
                 try
                 {

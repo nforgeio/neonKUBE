@@ -27,17 +27,21 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/cadence/activity"
+	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
 	"go.uber.org/cadence/worker"
 	"go.uber.org/cadence/workflow"
+	goleak "go.uber.org/goleak"
 	"go.uber.org/zap"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
+
 	"github.com/stretchr/testify/suite"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/endpoints"
@@ -77,6 +81,9 @@ func TestUnitTestSuite(t *testing.T) {
 	// to exit until the server shuts down gracefully
 	s.instance.ShutdownChannel <- true
 	time.Sleep(time.Second * 1)
+
+	// check for goroutine leaks
+	goleak.VerifyNoLeaks(t)
 }
 
 func (s *UnitTestSuite) setupTestSuiteServer() {
@@ -111,7 +118,7 @@ func (s *UnitTestSuite) echoToConnection(message messages.IProxyMessage) (messag
 	}
 
 	// set the request header to specified content type
-	req.Header.Set("Content-Type", endpoints.ContentType)
+	req.Header.Set("Content-Type", globals.ContentType)
 
 	// initialize the http.Client and send the request
 	client := &http.Client{}
@@ -254,7 +261,11 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetEndpoints())
 		s.Nil(v.GetIdentity())
-		s.Equal(time.Second*30, v.GetClientTimeout())
+		s.Equal(time.Duration(0), v.GetClientTimeout())
+		s.False(v.GetCreateDomain())
+		s.Nil(v.GetDomain())
+		s.Equal(time.Duration(0), v.GetRetryDelay())
+		s.Equal(int32(0), v.GetRetries())
 
 		// Round-trip
 
@@ -271,6 +282,19 @@ func (s *UnitTestSuite) TestConnectRequest() {
 
 		v.SetClientTimeout(time.Second * 30)
 		s.Equal(time.Second*30, v.GetClientTimeout())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
+
+		v.SetCreateDomain(true)
+		s.True(v.GetCreateDomain())
+
+		v.SetRetries(int32(3))
+		s.Equal(int32(3), v.GetRetries())
+
+		v.SetRetryDelay(time.Second * 30)
+		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -286,6 +310,10 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
+		s.Equal("my-domain", *v.GetDomain())
+		s.True(v.GetCreateDomain())
+		s.Equal(int32(3), v.GetRetries())
+		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -297,6 +325,10 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
+		s.Equal("my-domain", *v.GetDomain())
+		s.True(v.GetCreateDomain())
+		s.Equal(int32(3), v.GetRetries())
+		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
 }
 
@@ -418,7 +450,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Nil(v.GetDomainInfoName())
 		s.Nil(v.GetDomainInfoDescription())
 		s.Nil(v.GetDomainInfoOwnerEmail())
-		s.Nil(v.GetDomainInfoStatus())
+		s.Equal(cadenceclient.DomainStatusUnspecified, v.GetDomainInfoStatus())
 
 		// Round-trip
 
@@ -442,9 +474,8 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		v.SetDomainInfoDescription(&domainInfoDescriptionStr)
 		s.Equal("my-description", *v.GetDomainInfoDescription())
 
-		domainStatus := cadenceclient.Deprecated
-		v.SetDomainInfoStatus(&domainStatus)
-		s.Equal(cadenceclient.Deprecated, *v.GetDomainInfoStatus())
+		v.SetDomainInfoStatus(cadenceclient.DomainStatusDeprecated)
+		s.Equal(cadenceclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
 
 		domainInfoOwnerEmailStr := "joe@bloe.com"
 		v.SetDomainInfoOwnerEmail(&domainInfoOwnerEmailStr)
@@ -464,7 +495,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(cadenceclient.Deprecated, *v.GetDomainInfoStatus())
+		s.Equal(cadenceclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -479,7 +510,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(cadenceclient.Deprecated, *v.GetDomainInfoStatus())
+		s.Equal(cadenceclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -508,6 +539,7 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 		s.Nil(v.GetOwnerEmail())
 		s.False(v.GetEmitMetrics())
 		s.Equal(int32(0), v.GetRetentionDays())
+		s.Nil(v.GetSecurityToken())
 
 		// Round-trip
 
@@ -532,6 +564,10 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 		v.SetRetentionDays(int32(14))
 		s.Equal(int32(14), v.GetRetentionDays())
 
+		securityToken := "security-token"
+		v.SetSecurityToken(&securityToken)
+		s.Equal("security-token", *v.GetSecurityToken())
+
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -549,6 +585,7 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 		s.Equal("my-email", *v.GetOwnerEmail())
 		s.True(v.GetEmitMetrics())
 		s.Equal(int32(14), v.GetRetentionDays())
+		s.Equal("security-token", *v.GetSecurityToken())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -562,6 +599,7 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 		s.Equal("my-email", *v.GetOwnerEmail())
 		s.True(v.GetEmitMetrics())
 		s.Equal(int32(14), v.GetRetentionDays())
+		s.Equal("security-token", *v.GetSecurityToken())
 	}
 }
 
@@ -612,6 +650,113 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 	}
 }
 
+func (s *UnitTestSuite) TestDomainDeprecateRequest() {
+
+	var message messages.IProxyMessage = messages.NewDomainDeprecateRequest()
+	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
+		s.Equal(messagetypes.DomainDeprecateReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetName())
+		s.Nil(v.GetSecurityToken())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		nameStr := "my-domain"
+		v.SetName(&nameStr)
+		s.Equal("my-domain", *v.GetName())
+
+		securityToken := "security-token"
+		v.SetSecurityToken(&securityToken)
+		s.Equal("security-token", *v.GetSecurityToken())
+
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+		s.Equal("security-token", *v.GetSecurityToken())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal("my-domain", *v.GetName())
+		s.Equal("security-token", *v.GetSecurityToken())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainDeprecateReply() {
+	var message messages.IProxyMessage = messages.NewDomainDeprecateReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainDeprecateReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetError(cadenceerrors.NewCadenceError("foo"))
+		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainDeprecateReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainDeprecateReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+	}
+}
+
 func (s *UnitTestSuite) TestDomainUpdateRequest() {
 
 	var message messages.IProxyMessage = messages.NewDomainUpdateRequest()
@@ -634,6 +779,7 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 		s.Nil(v.GetUpdatedInfoOwnerEmail())
 		s.False(v.GetConfigurationEmitMetrics())
 		s.Equal(int32(0), v.GetConfigurationRetentionDays())
+		s.Nil(v.GetSecurityToken())
 
 		// Round-trip
 
@@ -658,6 +804,10 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 		v.SetConfigurationRetentionDays(int32(14))
 		s.Equal(int32(14), v.GetConfigurationRetentionDays())
 
+		securityToken := "security-token"
+		v.SetSecurityToken(&securityToken)
+		s.Equal("security-token", *v.GetSecurityToken())
+
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -675,6 +825,7 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
 		s.True(v.GetConfigurationEmitMetrics())
 		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		s.Equal("security-token", *v.GetSecurityToken())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -688,6 +839,7 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
 		s.True(v.GetConfigurationEmitMetrics())
 		s.Equal(int32(14), v.GetConfigurationRetentionDays())
+		s.Equal("security-token", *v.GetSecurityToken())
 	}
 }
 
@@ -1095,7 +1247,6 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 		s.Nil(v.GetDomain())
 		s.Nil(v.GetTaskList())
 		s.Nil(v.GetOptions())
-		s.False(v.GetIsWorkflow())
 
 		// Round-trip
 
@@ -1433,6 +1584,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 		s.Equal(messagetypes.WorkflowRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -1442,6 +1594,10 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 		name := "Foo"
 		v.SetName(&name)
 		s.Equal("Foo", *v.GetName())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1455,6 +1611,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 	if v, ok := message.(*messages.WorkflowRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1464,6 +1621,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 	if v, ok := message.(*messages.WorkflowRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -1663,6 +1821,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Nil(v.GetWorkflowType())
 		s.Nil(v.GetTaskList())
 		s.Equal(time.Duration(0), v.GetExecutionStartToCloseTimeout())
+		s.Equal(cadenceworkflows.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 
@@ -1702,6 +1861,9 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 
 		v.SetExecutionStartToCloseTimeout(time.Hour * 24)
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
+
+		v.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+		s.Equal(cadenceworkflows.ReplayStatusNotReplaying, v.GetReplayStatus())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1723,6 +1885,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
+		s.Equal(cadenceworkflows.ReplayStatusNotReplaying, v.GetReplayStatus())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1740,6 +1903,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("my-runid", *v.GetRunID())
 		s.Equal("my-workflowtype", *v.GetWorkflowType())
 		s.Equal(time.Hour*24, v.GetExecutionStartToCloseTimeout())
+		s.Equal(cadenceworkflows.ReplayStatusNotReplaying, v.GetReplayStatus())
 	}
 }
 
@@ -1930,6 +2094,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetReason())
 		s.Nil(v.GetDetails())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -1951,6 +2116,10 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		details := []byte{0, 1, 2, 3, 4}
 		v.SetDetails(details)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1967,6 +2136,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		s.Equal("my-reason", *v.GetReason())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1979,6 +2149,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		s.Equal("my-reason", *v.GetReason())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -2047,6 +2218,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetSignalName())
 		s.Nil(v.GetSignalArgs())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -2068,6 +2240,10 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		signalArgs := []byte{0, 1, 2, 3, 4}
 		v.SetSignalArgs(signalArgs)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2084,6 +2260,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		s.Equal("my-signal", *v.GetSignalName())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2096,6 +2273,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		s.Equal("my-signal", *v.GetSignalName())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -2166,6 +2344,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Nil(v.GetSignalArgs())
 		s.Nil(v.GetOptions())
 		s.Nil(v.GetWorkflowArgs())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -2196,6 +2375,10 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		workflowArgs := []byte{5, 6, 7, 8, 9}
 		v.SetWorkflowArgs(workflowArgs)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2215,6 +2398,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Equal("my-tasklist", v.GetOptions().TaskList)
 		s.Equal(client.WorkflowIDReusePolicyAllowDuplicate, v.GetOptions().WorkflowIDReusePolicy)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2230,6 +2414,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Equal("my-tasklist", v.GetOptions().TaskList)
 		s.Equal(client.WorkflowIDReusePolicyAllowDuplicate, v.GetOptions().WorkflowIDReusePolicy)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -2403,6 +2588,7 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetQueryName())
 		s.Nil(v.GetQueryArgs())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -2424,6 +2610,10 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		queryArgs := []byte{0, 1, 2, 3, 4}
 		v.SetQueryArgs(queryArgs)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2440,6 +2630,7 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2452,6 +2643,7 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -2652,6 +2844,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -2665,6 +2858,10 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		runID := "666"
 		v.SetRunID(&runID)
 		s.Equal("666", *v.GetRunID())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2679,6 +2876,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("666", *v.GetRunID())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2689,6 +2887,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("666", *v.GetRunID())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -3131,6 +3330,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -3144,6 +3344,10 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		runID := "my-run"
 		v.SetRunID(&runID)
 		s.Equal("my-run", *v.GetRunID())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3158,6 +3362,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-run", *v.GetRunID())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3168,6 +3373,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-run", *v.GetRunID())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -3431,6 +3637,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetQueryName())
 		s.Nil(v.GetQueryArgs())
+		s.Equal(cadenceworkflows.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 
@@ -3446,6 +3653,9 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 
 		v.SetQueryArgs([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
+
+		v.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3461,6 +3671,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3472,6 +3683,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 }
 
@@ -3761,6 +3973,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetSignalName())
 		s.Nil(v.GetSignalArgs())
+		s.Equal(cadenceworkflows.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 
@@ -3776,6 +3989,9 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 
 		v.SetSignalArgs([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
+
+		v.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3791,6 +4007,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("signal", *v.GetSignalName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3802,6 +4019,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal("signal", *v.GetSignalName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 }
 
@@ -4115,6 +4333,126 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildRequest() {
 	}
 }
 
+func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
+	var message messages.IProxyMessage = messages.NewWorkflowGetVersionReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowGetVersionReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int32(0), v.GetVersion())
+		s.Nil(v.GetError())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetVersion(int32(20))
+		s.Equal(int32(20), v.GetVersion())
+
+		v.SetError(cadenceerrors.NewCadenceError("foo"))
+		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowGetVersionReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int32(20), v.GetVersion())
+		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowGetVersionReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int32(20), v.GetVersion())
+		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+	}
+}
+
+func (s *UnitTestSuite) TestWorkflowGetVersionRequest() {
+	var message messages.IProxyMessage = messages.NewWorkflowGetVersionRequest()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowGetVersionRequest); ok {
+		s.Equal(messagetypes.WorkflowGetVersionReply, v.ReplyType)
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int64(0), v.GetContextID())
+		s.Equal(int32(0), v.GetMaxSupported())
+		s.Equal(int32(0), v.GetMinSupported())
+		s.Nil(v.GetChangeID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetContextID(int64(666))
+		s.Equal(int64(666), v.GetContextID())
+
+		v.SetMinSupported(int32(777))
+		s.Equal(int32(777), v.GetMinSupported())
+
+		v.SetMaxSupported(int32(888))
+		s.Equal(int32(888), v.GetMaxSupported())
+
+		changeID := "my-change"
+		v.SetChangeID(&changeID)
+		s.Equal("my-change", *v.GetChangeID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowGetVersionRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetContextID())
+		s.Equal(int32(777), v.GetMinSupported())
+		s.Equal(int32(888), v.GetMaxSupported())
+		s.Equal("my-change", *v.GetChangeID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowGetVersionRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetContextID())
+		s.Equal(int32(777), v.GetMinSupported())
+		s.Equal(int32(888), v.GetMaxSupported())
+		s.Equal("my-change", *v.GetChangeID())
+	}
+}
+
 func (s *UnitTestSuite) TestActivityCompleteRequest() {
 	var message messages.IProxyMessage = messages.NewActivityCompleteRequest()
 	proxyMessage := message.GetProxyMessage()
@@ -4132,6 +4470,10 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Nil(v.GetTaskToken())
 		s.Nil(v.GetResult())
 		s.Nil(v.GetError())
+		s.Nil(v.GetDomain())
+		s.Nil(v.GetWorkflowID())
+		s.Nil(v.GetRunID())
+		s.Nil(v.GetActivityID())
 
 		// Round-trip
 
@@ -4146,6 +4488,21 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 
 		v.SetError(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic))
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic), v.GetError())
+
+		domain := "my-domain"
+		workflowID := "my-workflow"
+		runID := "my-workflowrun"
+		activityID := "my-activity"
+
+		v.SetDomain(&domain)
+		v.SetWorkflowID(&workflowID)
+		v.SetRunID(&runID)
+		v.SetActivityID(&activityID)
+
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflow", *v.GetWorkflowID())
+		s.Equal("my-workflowrun", *v.GetRunID())
+		s.Equal("my-activity", *v.GetActivityID())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4161,6 +4518,10 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic), v.GetError())
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflow", *v.GetWorkflowID())
+		s.Equal("my-workflowrun", *v.GetRunID())
+		s.Equal("my-activity", *v.GetActivityID())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4172,6 +4533,10 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic), v.GetError())
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflow", *v.GetWorkflowID())
+		s.Equal("my-workflowrun", *v.GetRunID())
+		s.Equal("my-activity", *v.GetActivityID())
 	}
 }
 
@@ -4401,6 +4766,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -4417,6 +4783,10 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		}
 		v.SetOptions(&opts)
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4431,6 +4801,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4441,6 +4812,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -5013,6 +5385,11 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 		s.Equal(messagetypes.ActivityRecordHeartbeatReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetDetails())
+		s.Nil(v.GetTaskToken())
+		s.Nil(v.GetDomain())
+		s.Nil(v.GetWorkflowID())
+		s.Nil(v.GetRunID())
+		s.Nil(v.GetActivityID())
 
 		// Round-trip
 
@@ -5021,6 +5398,24 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 
 		v.SetDetails([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+
+		v.SetTaskToken([]byte{5, 6, 7, 8, 9})
+		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
+
+		domain := "my-domain"
+		workflowID := "my-workflow"
+		runID := "my-workflowrun"
+		activityID := "my-activity"
+
+		v.SetDomain(&domain)
+		v.SetWorkflowID(&workflowID)
+		v.SetRunID(&runID)
+		v.SetActivityID(&activityID)
+
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflow", *v.GetWorkflowID())
+		s.Equal("my-workflowrun", *v.GetRunID())
+		s.Equal("my-activity", *v.GetActivityID())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5034,6 +5429,11 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 	if v, ok := message.(*messages.ActivityRecordHeartbeatRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflow", *v.GetWorkflowID())
+		s.Equal("my-workflowrun", *v.GetRunID())
+		s.Equal("my-activity", *v.GetActivityID())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5043,6 +5443,11 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 	if v, ok := message.(*messages.ActivityRecordHeartbeatRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
+		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
+		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-workflow", *v.GetWorkflowID())
+		s.Equal("my-workflowrun", *v.GetRunID())
+		s.Equal("my-activity", *v.GetActivityID())
 	}
 }
 
@@ -5108,6 +5513,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 		s.Equal(messagetypes.ActivityRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
+		s.Nil(v.GetDomain())
 
 		// Round-trip
 
@@ -5117,6 +5523,10 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 		name := "my-activity"
 		v.SetName(&name)
 		s.Equal("my-activity", *v.GetName())
+
+		domain := "my-domain"
+		v.SetDomain(&domain)
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5130,6 +5540,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 	if v, ok := message.(*messages.ActivityRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-activity", *v.GetName())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5139,6 +5550,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 	if v, ok := message.(*messages.ActivityRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-activity", *v.GetName())
+		s.Equal("my-domain", *v.GetDomain())
 	}
 }
 
@@ -5453,14 +5865,17 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 	if v, ok := message.(*messages.WorkflowReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
+		s.Equal(cadenceworkflows.ReplayStatusUnspecified, v.GetReplayStatus())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
 		v.SetError(cadenceerrors.NewCadenceError("MyError"))
+		v.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
 		s.Equal("MyError", *v.GetError().String)
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -5478,6 +5893,7 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
 		s.Equal("MyError", *v.GetError().String)
+		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 }
 

@@ -51,12 +51,21 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run.
+        /// Identifies the specific workflow execution.
         /// </summary>
         public string RunId
         {
             get => GetStringProperty(PropertyNames.RunId);
             set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <inheritdoc/>
@@ -78,6 +87,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
         }
     }
 }

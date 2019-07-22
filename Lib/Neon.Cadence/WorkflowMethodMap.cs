@@ -65,11 +65,11 @@ namespace Neon.Cadence
                 // Signal methods are tagged by [SignalHandler], accept a single byte array parameter,
                 // and returns [Task].
 
-                var signalHandlerAttribute = method.GetCustomAttribute<SignalHandlerAttribute>();
+                var signalHandlerAttribute = method.GetCustomAttribute<SignalMethodAttribute>();
 
                 if (signalHandlerAttribute != null)
                 {
-                    if (method.ReturnType != typeof(void))
+                    if (method.ReturnType != typeof(Task))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't return [void].  It will be ignored.");
                         continue;
@@ -77,7 +77,7 @@ namespace Neon.Cadence
 
                     var parameters = method.GetParameters();
 
-                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(Task))
+                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
                         continue;
@@ -90,11 +90,11 @@ namespace Neon.Cadence
                 // Query methods are tagged by [QueryHandler], accept a single byte array parameter,
                 // and returns [Task<byte[]>].
 
-                var queryHandlerAttribute = method.GetCustomAttribute<QueryHandlerAttribute>();
+                var queryHandlerAttribute = method.GetCustomAttribute<QueryMethodAttribute>();
 
                 if (queryHandlerAttribute != null)
                 {
-                    if (method.ReturnType != typeof(byte[]))
+                    if (method.ReturnType != typeof(Task<byte[]>))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't return a byte array.  It will be ignored.");
                         continue;
@@ -102,7 +102,7 @@ namespace Neon.Cadence
 
                     var parameters = method.GetParameters();
 
-                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(Task<byte[]>))
+                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
                     {
                         Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
                         continue;
@@ -182,7 +182,7 @@ namespace Neon.Cadence
         /// Returns the names of the mapped queries.
         /// </summary>
         /// <returns>The query name list.</returns>
-        public List<string> GetQueryNames()
+        public List<string> GetQueryTypes()
         {
             return nameToQueryMethod.Keys.ToList();
         }

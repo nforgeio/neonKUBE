@@ -30,6 +30,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/shared"
 	m "go.uber.org/cadence/.gen/go/shared"
@@ -92,6 +93,7 @@ type (
 		pendingLaTasks    map[string]*localActivityTask
 		mutableSideEffect map[string][]byte
 		unstartedLaTasks  map[string]struct{}
+		openSessions      map[string]*SessionInfo
 
 		counterID         int32     // To generate sequence IDs for activity/timer etc.
 		currentReplayTime time.Time // Indicates current replay time of the decision.
@@ -106,9 +108,11 @@ type (
 		isReplay              bool // flag to indicate if workflow is in replay mode
 		enableLoggingInReplay bool // flag to indicate if workflow should enable logging in replay mode
 
-		metricsScope  tally.Scope
-		hostEnv       *hostEnvImpl
-		dataConverter encoded.DataConverter
+		metricsScope       tally.Scope
+		hostEnv            *hostEnvImpl
+		dataConverter      encoded.DataConverter
+		contextPropagators []ContextPropagator
+		tracer             opentracing.Tracer
 	}
 
 	localActivityTask struct {
@@ -170,6 +174,8 @@ func newWorkflowExecutionEventHandler(
 	scope tally.Scope,
 	hostEnv *hostEnvImpl,
 	dataConverter encoded.DataConverter,
+	contextPropagators []ContextPropagator,
+	tracer opentracing.Tracer,
 ) workflowExecutionEventHandler {
 	context := &workflowEnvironmentImpl{
 		workflowInfo:          workflowInfo,
@@ -179,10 +185,13 @@ func newWorkflowExecutionEventHandler(
 		changeVersions:        make(map[string]Version),
 		pendingLaTasks:        make(map[string]*localActivityTask),
 		unstartedLaTasks:      make(map[string]struct{}),
+		openSessions:          make(map[string]*SessionInfo),
 		completeHandler:       completeHandler,
 		enableLoggingInReplay: enableLoggingInReplay,
 		hostEnv:               hostEnv,
 		dataConverter:         dataConverter,
+		contextPropagators:    contextPropagators,
+		tracer:                tracer,
 	}
 	context.logger = logger.With(
 		zapcore.Field{Key: tagWorkflowType, Type: zapcore.StringType, String: workflowInfo.WorkflowType.Name},
@@ -301,6 +310,7 @@ func (wc *workflowEnvironmentImpl) ExecuteChildWorkflow(
 	attributes.ChildPolicy = params.childPolicy.toThriftChildPolicyPtr()
 	attributes.WorkflowIdReusePolicy = params.workflowIDReusePolicy.toThriftPtr()
 	attributes.RetryPolicy = params.retryPolicy
+	attributes.Header = params.header
 	if len(params.cronSchedule) > 0 {
 		attributes.CronSchedule = common.StringPtr(params.cronSchedule)
 	}
@@ -339,6 +349,10 @@ func (wc *workflowEnvironmentImpl) GetDataConverter() encoded.DataConverter {
 	return wc.dataConverter
 }
 
+func (wc *workflowEnvironmentImpl) GetContextPropagators() []ContextPropagator {
+	return wc.contextPropagators
+}
+
 func (wc *workflowEnvironmentImpl) IsReplaying() bool {
 	return wc.isReplay
 }
@@ -375,6 +389,7 @@ func (wc *workflowEnvironmentImpl) ExecuteActivity(parameters executeActivityPar
 	scheduleTaskAttr.ScheduleToStartTimeoutSeconds = common.Int32Ptr(parameters.ScheduleToStartTimeoutSeconds)
 	scheduleTaskAttr.HeartbeatTimeoutSeconds = common.Int32Ptr(parameters.HeartbeatTimeoutSeconds)
 	scheduleTaskAttr.RetryPolicy = parameters.RetryPolicy
+	scheduleTaskAttr.Header = parameters.Header
 
 	decision := wc.decisionsHelper.scheduleActivityTask(scheduleTaskAttr)
 	decision.setData(&scheduledActivity{
@@ -618,6 +633,22 @@ func (wc *workflowEnvironmentImpl) recordMutableSideEffect(id string, data []byt
 	return newEncodedValue(data, wc.GetDataConverter())
 }
 
+func (wc *workflowEnvironmentImpl) AddSession(sessionInfo *SessionInfo) {
+	wc.openSessions[sessionInfo.SessionID] = sessionInfo
+}
+
+func (wc *workflowEnvironmentImpl) RemoveSession(sessionID string) {
+	delete(wc.openSessions, sessionID)
+}
+
+func (wc *workflowEnvironmentImpl) getOpenSessions() []*SessionInfo {
+	openSessions := make([]*SessionInfo, 0, len(wc.openSessions))
+	for _, info := range wc.openSessions {
+		openSessions = append(openSessions, info)
+	}
+	return openSessions
+}
+
 func (weh *workflowExecutionEventHandlerImpl) ProcessEvent(
 	event *m.HistoryEvent,
 	isReplay bool,
@@ -789,10 +820,14 @@ func (weh *workflowExecutionEventHandlerImpl) ProcessEvent(
 }
 
 func (weh *workflowExecutionEventHandlerImpl) ProcessQuery(queryType string, queryArgs []byte) ([]byte, error) {
-	if queryType == QueryTypeStackTrace {
+	switch queryType {
+	case QueryTypeStackTrace:
 		return weh.encodeArg(weh.StackTrace())
+	case QueryTypeOpenSessions:
+		return weh.encodeArg(weh.getOpenSessions())
+	default:
+		return weh.queryHandler(queryType, queryArgs)
 	}
-	return weh.queryHandler(queryType, queryArgs)
 }
 
 func (weh *workflowExecutionEventHandlerImpl) StackTrace() string {
@@ -815,7 +850,7 @@ func (weh *workflowExecutionEventHandlerImpl) handleWorkflowExecutionStarted(
 	}
 
 	// Invoke the workflow.
-	weh.workflowDefinition.Execute(weh, attributes.Input)
+	weh.workflowDefinition.Execute(weh, attributes.Header, attributes.Input)
 	return nil
 }
 
@@ -854,14 +889,8 @@ func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskTimedOut(event *
 	}
 
 	attributes := event.ActivityTaskTimedOutEventAttributes
-	var err error
-	tt := attributes.GetTimeoutType()
-	if tt == m.TimeoutTypeHeartbeat {
-		details := newEncodedValues(attributes.Details, weh.GetDataConverter())
-		err = NewHeartbeatTimeoutError(details)
-	} else {
-		err = NewTimeoutError(attributes.GetTimeoutType())
-	}
+	details := newEncodedValues(attributes.Details, weh.GetDataConverter())
+	err := NewTimeoutError(attributes.GetTimeoutType(), details)
 	activity.handle(nil, err)
 	return nil
 }

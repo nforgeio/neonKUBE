@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Nats</RootNamespace>
-    <Version>0.5.3-alpha</Version>
+    <Version>0.5.4-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE NATS messaging extensions.</Description>
@@ -25,15 +25,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DocumentationFile>C:\src\neonKUBE\Lib\Neon.Nats\bin\Debug\Neon.Nats.xml</DocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>C:\src\neonKUBE\Lib\Neon.Nats\bin\Release\Neon.Nats.xml</DocumentationFile>
     <DefineConstants />
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NATS.Client" Version="0.8.1" />
+    <PackageReference Include="NATS.Client" Version="0.9.0" />
     <PackageReference Include="STAN.Client" Version="0.1.6" />
   </ItemGroup>
 

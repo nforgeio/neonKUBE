@@ -24,10 +24,12 @@ import (
 	"context"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/internal/common"
+	"go.uber.org/cadence/internal/common/backoff"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -252,6 +254,7 @@ type ServiceInvoker interface {
 	// Returns ActivityTaskCanceledError if activity is cancelled
 	Heartbeat(details []byte) error
 	Close(flushBufferedHeartbeat bool)
+	GetClient(domain string, options *ClientOptions) Client
 }
 
 // WithActivityTask adds activity specific information into context.
@@ -265,6 +268,8 @@ func WithActivityTask(
 	scope tally.Scope,
 	dataConverter encoded.DataConverter,
 	workerStopChannel <-chan struct{},
+	contextPropagators []ContextPropagator,
+	tracer opentracing.Tracer,
 ) context.Context {
 	var deadline time.Time
 	scheduled := time.Unix(0, task.GetScheduledTimestamp())
@@ -310,8 +315,10 @@ func WithActivityTask(
 		workflowType: &WorkflowType{
 			Name: *task.WorkflowType.Name,
 		},
-		workflowDomain:    *task.WorkflowDomain,
-		workerStopChannel: workerStopChannel,
+		workflowDomain:     *task.WorkflowDomain,
+		workerStopChannel:  workerStopChannel,
+		contextPropagators: contextPropagators,
+		tracer:             tracer,
 	})
 }
 
@@ -405,6 +412,9 @@ func WithRetryPolicy(ctx Context, retryPolicy RetryPolicy) Context {
 func convertRetryPolicy(retryPolicy *RetryPolicy) *shared.RetryPolicy {
 	if retryPolicy == nil {
 		return nil
+	}
+	if retryPolicy.BackoffCoefficient == 0 {
+		retryPolicy.BackoffCoefficient = backoff.DefaultBackoffCoefficient
 	}
 	thriftRetryPolicy := shared.RetryPolicy{
 		InitialIntervalInSeconds:    common.Int32Ptr(common.Int32Ceil(retryPolicy.InitialInterval.Seconds())),

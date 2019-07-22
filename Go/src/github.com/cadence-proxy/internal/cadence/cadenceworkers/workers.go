@@ -36,7 +36,7 @@ type (
 	// WorkersMap holds a thread-safe map[interface{}]interface{} that stores
 	// cadence Workers with their workerID's
 	WorkersMap struct {
-		sync.Map
+		safeMap sync.Map
 	}
 )
 
@@ -49,7 +49,6 @@ func NextWorkerID() int64 {
 	mu.Lock()
 	workerID = workerID + 1
 	defer mu.Unlock()
-
 	return workerID
 }
 
@@ -75,7 +74,7 @@ func GetWorkerID() int64 {
 //
 // returns int64 -> long workerID of the new cadence Worker added to the map
 func (workers *WorkersMap) Add(workerID int64, worker worker.Worker) int64 {
-	workers.Store(workerID, worker)
+	workers.safeMap.Store(workerID, worker)
 	return workerID
 }
 
@@ -87,7 +86,7 @@ func (workers *WorkersMap) Add(workerID int64, worker worker.Worker) int64 {
 //
 // returns int64 -> long workerID of the cadence Worker removed from the map
 func (workers *WorkersMap) Remove(workerID int64) int64 {
-	workers.Delete(workerID)
+	workers.safeMap.Delete(workerID)
 	return workerID
 }
 
@@ -99,7 +98,7 @@ func (workers *WorkersMap) Remove(workerID int64) int64 {
 //
 // returns worker.Worker -> cadence Worker with the specified workerID
 func (workers *WorkersMap) Get(workerID int64) worker.Worker {
-	if v, ok := workers.Load(workerID); ok {
+	if v, ok := workers.safeMap.Load(workerID); ok {
 		if _v, _ok := v.(worker.Worker); _ok {
 			return _v
 		}

@@ -32,7 +32,7 @@ namespace Neon.Cadence.Internal
     internal class InternalWorkflowExecutionInfo
     {
         /// <summary>
-        /// Describes the workflow run.
+        /// Describes the workflow execution.
         /// </summary>
         [JsonProperty(PropertyName = "Execution", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -110,7 +110,7 @@ namespace Neon.Cadence.Internal
             {
                 Run                 = this.Execution.ToPublic(),
                 TypeName                = this.WorkflowType.Name,
-                WorkflowCloseStatus = (WorkflowCloseStatus)this.WorkflowCloseStatus,
+                WorkflowCloseStatus = (WorkflowExecutionCloseStatus)this.WorkflowCloseStatus,
                 HistoryLength       = this.HistoryLength,
                 ParentDomain        = this.ParentDomainId,
                 ExecutionTime       = TimeSpan.FromTicks(this.ExecutionTime / 100),

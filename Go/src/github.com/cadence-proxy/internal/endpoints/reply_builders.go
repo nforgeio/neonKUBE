@@ -122,12 +122,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowExecuteReply(v, cadenceError, value)
 		}
 
-	// WorkflowInvokeReply
-	case messagetypes.WorkflowInvokeReply:
-		if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
-			buildWorkflowInvokeReply(v, cadenceError, value)
-		}
-
 	// WorkflowRegisterReply
 	case messagetypes.WorkflowRegisterReply:
 		if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
@@ -150,6 +144,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	case messagetypes.WorkflowQueryReply:
 		if v, ok := reply.(*messages.WorkflowQueryReply); ok {
 			buildWorkflowQueryReply(v, cadenceError, value)
+		}
+
+	// WorkflowSetQueryHandlerReply
+	case messagetypes.WorkflowSetQueryHandlerReply:
+		if v, ok := reply.(*messages.WorkflowSetQueryHandlerReply); ok {
+			buildWorkflowSetQueryHandlerReply(v, cadenceError)
 		}
 
 	// WorkflowSetCacheSizeReply
@@ -248,6 +248,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildWorkflowSignalSubscribeReply(v, cadenceError)
 		}
 
+	// WorkflowGetVersionReply
+	case messagetypes.WorkflowGetVersionReply:
+		if v, ok := reply.(*messages.WorkflowGetVersionReply); ok {
+			buildWorkflowGetVersionReply(v, cadenceError, value)
+		}
+
 	// -------------------------------------------------------------------------
 	// activity message types
 
@@ -261,12 +267,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	case messagetypes.ActivityExecuteReply:
 		if v, ok := reply.(*messages.ActivityExecuteReply); ok {
 			buildActivityExecuteReply(v, cadenceError, value)
-		}
-
-	// ActivityInvokeReply
-	case messagetypes.ActivityInvokeReply:
-		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
-			buildActivityInvokeReply(v, cadenceError, value)
 		}
 
 	// ActivityHasHeartbeatDetailsReply
@@ -357,9 +357,7 @@ func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError 
 		if v, ok := describeDomainResponse[0].(*cadenceshared.DescribeDomainResponse); ok {
 			reply.SetDomainInfoName(v.DomainInfo.Name)
 			reply.SetDomainInfoDescription(v.DomainInfo.Description)
-
-			domainStatus := cadenceclient.DomainStatus(int(*v.DomainInfo.Status))
-			reply.SetDomainInfoStatus(&domainStatus)
+			reply.SetDomainInfoStatus(cadenceclient.StringToDomainStatus(v.DomainInfo.Status.String()))
 			reply.SetConfigurationEmitMetrics(*v.Configuration.EmitMetric)
 			reply.SetConfigurationRetentionDays(*v.Configuration.WorkflowExecutionRetentionPeriodInDays)
 			reply.SetDomainInfoOwnerEmail(v.DomainInfo.OwnerEmail)
@@ -418,16 +416,6 @@ func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceErro
 	if len(execution) > 0 {
 		if v, ok := execution[0].(*workflow.Execution); ok {
 			reply.SetExecution(v)
-		}
-	}
-}
-
-func buildWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
-	reply.SetError(cadenceError)
-
-	if len(result) > 0 {
-		if v, ok := result[0].([]byte); ok {
-			reply.SetResult(v)
 		}
 	}
 }
@@ -580,6 +568,20 @@ func buildWorkflowCancelChildReply(reply *messages.WorkflowCancelChildReply, cad
 	reply.SetError(cadenceError)
 }
 
+func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(result) > 0 {
+		if v, ok := result[0].(workflow.Version); ok {
+			reply.SetVersion(int32(v))
+		}
+	}
+}
+
+func buildWorkflowSetQueryHandlerReply(reply *messages.WorkflowSetQueryHandlerReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
 // -------------------------------------------------------------------------
 // Activity message builders
 
@@ -588,16 +590,6 @@ func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceEr
 }
 
 func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
-	reply.SetError(cadenceError)
-
-	if len(result) > 0 {
-		if v, ok := result[0].([]byte); ok {
-			reply.SetResult(v)
-		}
-	}
-}
-
-func buildActivityInvokeReply(reply *messages.ActivityInvokeReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {

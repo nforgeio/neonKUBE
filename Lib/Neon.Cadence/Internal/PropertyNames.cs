@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Text;
 
@@ -25,7 +26,6 @@ using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Common;
-using System.Diagnostics.Contracts;
 
 namespace Neon.Cadence.Internal
 {
@@ -57,6 +57,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 ContinueAsNewScheduleToStartTimeout { get; private set; }       = new PropertyNameUtf8("ContinueAsNewScheduleToStartTimeout");
         public static PropertyNameUtf8 ContinueAsNewStartToCloseTimeout { get; private set; }          = new PropertyNameUtf8("ContinueAsNewStartToCloseTimeout");
         public static PropertyNameUtf8 ContinueAsNewTaskList { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewTaskList");
+        public static PropertyNameUtf8 CreateDomain { get; private set; }                              = new PropertyNameUtf8("CreateDomain");
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");
         public static PropertyNameUtf8 Domain { get; private set; }                                    = new PropertyNameUtf8("Domain");
@@ -84,13 +85,18 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
         public static PropertyNameUtf8 OwnerEmail { get; private set; }                                = new PropertyNameUtf8("OwnerEmail");
+        public static PropertyNameUtf8 Pending { get; private set; }                                   = new PropertyNameUtf8("Pending");
         public static PropertyNameUtf8 QueryArgs { get; private set; }                                 = new PropertyNameUtf8("QueryArgs");
         public static PropertyNameUtf8 QueryName { get; private set; }                                 = new PropertyNameUtf8("QueryName");
         public static PropertyNameUtf8 Reason { get; private set; }                                    = new PropertyNameUtf8("Reason");
         public static PropertyNameUtf8 RequestId { get; private set; }                                 = new PropertyNameUtf8("RequestId");
         public static PropertyNameUtf8 Result { get; private set; }                                    = new PropertyNameUtf8("Result");
         public static PropertyNameUtf8 RetentionDays { get; private set; }                             = new PropertyNameUtf8("RetentionDays");
+        public static PropertyNameUtf8 RetryAttempts { get; private set; }                             = new PropertyNameUtf8("RetryAttempts");
+        public static PropertyNameUtf8 RetryDelay { get; private set; }                                = new PropertyNameUtf8("RetryDelay");
+        public static PropertyNameUtf8 ReplayStatus { get; private set; }                              = new PropertyNameUtf8("ReplayStatus");
         public static PropertyNameUtf8 RunId { get; private set; }                                     = new PropertyNameUtf8("RunId");
+        public static PropertyNameUtf8 SecurityToken { get; private set; }                             = new PropertyNameUtf8("SecurityToken");
         public static PropertyNameUtf8 SignalArgs { get; private set; }                                = new PropertyNameUtf8("SignalArgs");
         public static PropertyNameUtf8 SignalName { get; private set; }                                = new PropertyNameUtf8("SignalName");
         public static PropertyNameUtf8 Size { get; private set; }                                      = new PropertyNameUtf8("Size");
@@ -101,6 +107,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Update { get; private set; }                                    = new PropertyNameUtf8("Update");
         public static PropertyNameUtf8 UpdatedInfoDescription { get; private set; }                    = new PropertyNameUtf8("UpdatedInfoDescription");
         public static PropertyNameUtf8 UpdatedInfoOwnerEmail { get; private set; }                     = new PropertyNameUtf8("UpdatedInfoOwnerEmail");
+        public static PropertyNameUtf8 Uuid { get; private set; }                                      = new PropertyNameUtf8("Uuid");
         public static PropertyNameUtf8 Version { get; private set; }                                   = new PropertyNameUtf8("Version");
         public static PropertyNameUtf8 WasCancelled { get; private set; }                              = new PropertyNameUtf8("WasCancelled");
         public static PropertyNameUtf8 WorkerId { get; private set; }                                  = new PropertyNameUtf8("WorkerId");

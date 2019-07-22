@@ -78,6 +78,11 @@ OPTIONS:
                                   names.  Any input models that are not tagged
                                   with these target will not be generated.
 
+    --debug-allow-stepinto      - Indicates that generated class methods will
+                                  not include the [DebuggerStepThrough]
+                                  attribute allowing the debugger to step
+                                  into the generated methods.
+
 REMARKS:
 
 This command is used to generate enhanced JSON based data models and
@@ -97,7 +102,7 @@ style design conventions.  See this GitHub issue for more information:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets" }; }
+            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets", "--debug-allow-stepinto" }; }
         }
 
         /// <inheritdoc/>
@@ -131,10 +136,11 @@ style design conventions.  See this GitHub issue for more information:
 
             var settings = new CodeGeneratorSettings(targets.ToArray())
             {
-                SourceNamespace  = commandLine.GetOption("--source-namespace"),
-                TargetNamespace  = commandLine.GetOption("--target-namespace"),
-                Persisted        = commandLine.HasOption("--persisted"),
-                NoServiceClients = commandLine.HasOption("--no-services")
+                SourceNamespace       = commandLine.GetOption("--source-namespace"),
+                TargetNamespace       = commandLine.GetOption("--target-namespace"),
+                Persisted             = commandLine.HasOption("--persisted"),
+                NoServiceClients      = commandLine.HasOption("--no-services"),
+                AllowDebuggerStepInto = commandLine.HasOption("--debug-allow-stepinto")
             };
 
             var ux = commandLine.GetOption("--ux");

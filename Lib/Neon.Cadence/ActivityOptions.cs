@@ -46,13 +46,13 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// Specifies the maximum time the activity be queued, waiting to be scheduled
-        /// on a worker.  This defaults to 365 days.
+        /// on a worker.  This defaults to 24 hours.
         /// </summary>
         public TimeSpan ScheduleToStartTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
         /// <summary>
         /// Specifies the maximum time the activity may take to run.  This defaults
-        /// to 365 days.
+        /// to 24 hours.
         /// </summary>
         public TimeSpan StartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
 
@@ -75,8 +75,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <remarks>
         /// <para>
-        /// When <see cref="CadenceRetryPolicy.ExpirationInterval"/> is specified and it is larger than the activity's 
-        /// <see cref="ScheduleToStartTimeout"/>, then the <see cref="CadenceRetryPolicy.ExpirationInterval"/> will override 
+        /// When <see cref="RetryOptions.ExpirationInterval"/> is specified and it is larger than the activity's 
+        /// <see cref="ScheduleToStartTimeout"/>, then the <see cref="RetryOptions.ExpirationInterval"/> will override 
         /// activity's <see cref="ScheduleToStartTimeout"/>. This is to avoid retrying on <see cref="ScheduleToStartTimeout"/>
         /// error which only happen when worker is not picking up the task within the timeout.
         /// </para>
@@ -87,7 +87,7 @@ namespace Neon.Cadence.Internal
         /// Same apply to <see cref="ScheduleToCloseTimeout"/>.
         /// </para>
         /// </remarks>
-        public CadenceRetryPolicy RetryPolicy { get; set; }
+        public RetryOptions RetryOptions { get; set; }
 
         /// <summary>
         /// Converts the instance to its internal representation.
@@ -102,7 +102,25 @@ namespace Neon.Cadence.Internal
                 StartToCloseTimeout    = CadenceHelper.ToCadence(this.StartToCloseTimeout),
                 HeartbeatTimeout       = CadenceHelper.ToCadence(this.HeartbeatTimeout),
                 WaitForCancellation    = WaitForCancellation,
-                RetryPolicy            = RetryPolicy?.ToInternal()
+                RetryPolicy            = RetryOptions?.ToInternal()
+            };
+        }
+
+        /// <summary>
+        /// Returns a shallow clone of the current instance.
+        /// </summary>
+        /// <returns>The cloned <see cref="ActivityOptions"/>.</returns>
+        public ActivityOptions Clone()
+        {
+            return new ActivityOptions()
+            {
+                HeartbeatTimeout       = this.HeartbeatTimeout,
+                RetryOptions           = this.RetryOptions,
+                ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,
+                ScheduleToStartTimeout = this.ScheduleToStartTimeout,
+                StartToCloseTimeout    = this.StartToCloseTimeout,
+                TaskList               = this.TaskList,
+                WaitForCancellation    = this.WaitForCancellation
             };
         }
     }

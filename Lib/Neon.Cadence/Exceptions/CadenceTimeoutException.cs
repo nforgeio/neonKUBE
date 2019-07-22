@@ -17,6 +17,8 @@
 
 using System;
 
+using Neon.Cadence.Internal;
+
 namespace Neon.Cadence
 {
     /// <summary>
@@ -27,9 +29,9 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message">The message.</param>
+        /// <param name="message">Optionally specifies message.</param>
         /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceTimeoutException(string message, Exception innerException = null)
+        public CadenceTimeoutException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }

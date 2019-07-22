@@ -51,13 +51,22 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run to be cancelled.  The latest run
+        /// Identifies the specific workflow execution to be cancelled.  The latest run
         /// will be cancelled when this is <c>null</c> or empty.
         /// </summary>
         public string RunId
         {
             get => GetStringProperty(PropertyNames.RunId);
             set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <inheritdoc/>
@@ -79,6 +88,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
         }
     }
 }

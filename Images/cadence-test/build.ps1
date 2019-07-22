@@ -23,8 +23,9 @@ param
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
 	[parameter(Mandatory=$true,Position=2)][string] $version,       # Cadence version
-    [parameter(Mandatory=$true,Position=3)][string] $goVersion,     # Go version
-	[parameter(Mandatory=$true,Position=4)][string] $tag
+	[parameter(Mandatory=$true,Position=3)][string] $goVersion,     # Go version
+	[parameter(Mandatory=$true,Position=4)][string] $uiVersion,     # Cadence ui version
+	[parameter(Mandatory=$true,Position=5)][string] $tag
 )
 
 "   "
@@ -32,6 +33,7 @@ param
 "* CADENCE-TEST:" + $tag
 "* GO_VERSION:" + $goVersion
 "* CADENCE_VERSION:" + $version
+"* CADENCE_UI_VERSION:" + $uiVersion
 "======================================="
 
 # Copy the common scripts.
@@ -42,7 +44,7 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GO_VERSION=$goVersion" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" --build-arg "GO_VERSION=$goVersion" --build-arg "UI_VERSION=$uiVersion" . }
 
 # Clean up
 DeleteFolder _common

@@ -45,6 +45,11 @@ namespace TestCodeGen.UxDataModel
     {
     }
 
+    [Persistable]   // This should cause the "__T" property to be generated.
+    public interface EmptyPersistableData
+    {
+    }
+
     public enum MyEnum1
     {
         One,
@@ -229,6 +234,51 @@ namespace TestCodeGen.UxDataModel
 
                 var value1 = context.CreateDataWrapperFrom<EmptyData>(data.ToJObject());
                 var value2 = context.CreateDataWrapperFrom<EmptyData>(data.ToJObject());
+
+                Assert.True(value1.Equals(value1));
+                Assert.True(value1.Equals(value2));
+                Assert.True(value2.Equals(value1));
+
+                Assert.False(value1.Equals(null));
+                Assert.False(value1.Equals("Hello World!"));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCodeGen)]
+        public void EmptyPersistable ()
+        {
+            // Verify that we can generate code for an empty data model.
+
+            var settings = new CodeGeneratorSettings()
+            {
+                SourceNamespace = typeof(Test_UxDataModel).Namespace,
+                UxFramework     = UxFrameworks.Xaml
+            };
+
+            var generator = new CodeGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = CodeGenerator.Compile(output.SourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+
+            using (var context = new AssemblyContext("Neon.CodeGen.Output", assemblyStream))
+            {
+                var data = context.CreateDataWrapper<EmptyPersistableData>();
+                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
+
+                data = context.CreateDataWrapperFrom<EmptyPersistableData>(data.ToString());
+                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
+
+                data = context.CreateDataWrapperFrom<EmptyPersistableData>(data.ToJObject());
+                Assert.Equal("{\"__T\":\"TestCodeGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
+
+                //-------------------------------------------------------------
+                // Verify Equals():
+
+                var value1 = context.CreateDataWrapperFrom<EmptyPersistableData>(data.ToJObject());
+                var value2 = context.CreateDataWrapperFrom<EmptyPersistableData>(data.ToJObject());
 
                 Assert.True(value1.Equals(value1));
                 Assert.True(value1.Equals(value2));

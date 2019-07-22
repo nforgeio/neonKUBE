@@ -153,5 +153,29 @@ namespace NATS.Client
         {
             return new Msg<TMessage>(subscription.NextMessage(timeout));
         }
+
+        /// <inheritdoc/>
+        public void Drain()
+        {
+            subscription.Drain();
+        }
+
+        /// <inheritdoc/>
+        public void Drain(int timeout)
+        {
+            subscription.Drain(timeout);
+        }
+
+        /// <inheritdoc/>
+        public async Task DrainAsync()
+        {
+            await subscription.DrainAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task DrainAsync(int timeout)
+        {
+            await subscription.DrainAsync(timeout);
+        }
     }
 }

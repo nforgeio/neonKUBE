@@ -40,6 +40,7 @@ function Build
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
 		[parameter(Mandatory=$true, Position=2)][string] $goVersion,
+		[parameter(Mandatory=$true, Position=3)][string] $uiVersion,
 		[switch]$latest = $false
 	)
 
@@ -50,7 +51,7 @@ function Build
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -goVersion $goVersion -tag $tag
+	. ./build.ps1 -registry $registry -version $version -goVersion $goVersion -uiVersion $uiVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsRelease)
@@ -79,7 +80,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-    Build 0.5.6 -goVersion 1.12.3 -latest
+    Build v0.5.8 -goVersion 1.12.6 -uiVersion 3.3.1 -latest
 }
 
-Build 0.5.8_release -goVersion 1.12.3 -latest
+Build v0.5.9 -goVersion 1.12.6 -uiVersion 3.3.1 -latest

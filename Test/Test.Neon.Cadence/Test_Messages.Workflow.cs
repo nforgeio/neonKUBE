@@ -64,13 +64,17 @@ namespace TestCadence
                 message = ProxyMessage.Deserialize<WorkflowRegisterRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Null(message.Domain);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.Name = "Foo";
+                message.Domain = "my-domain";
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-domain", message.Domain);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -80,6 +84,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -87,6 +92,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -94,6 +100,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
+                Assert.Equal("my-domain", message.Domain);
             }
         }
 
@@ -640,6 +647,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
                 Assert.Null(message.RunId);
+                Assert.Null(message.Domain);
                 Assert.Null(message.Reason);
                 Assert.Null(message.Details);
 
@@ -648,11 +656,13 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
+                message.Domain = "my-domain";
                 message.Reason = "my-reason";
                 message.Details = new byte[] { 0, 1, 2, 3, 4 };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
 
@@ -665,6 +675,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
 
@@ -675,6 +686,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
 
@@ -685,6 +697,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
             }
@@ -747,11 +760,11 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_WorkflowSignalRequest()
         {
-            WorkflowSignalequest message;
+            WorkflowSignalRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new WorkflowSignalequest();
+                message = new WorkflowSignalRequest();
 
                 Assert.Equal(InternalMessageTypes.WorkflowSignalReply, message.ReplyType);
 
@@ -761,11 +774,12 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
                 Assert.Null(message.RunId);
+                Assert.Null(message.Domain);
                 Assert.Null(message.SignalName);
                 Assert.Null(message.SignalArgs);
 
@@ -774,11 +788,13 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
+                message.Domain = "my-domain";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
@@ -786,11 +802,12 @@ namespace TestCadence
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<WorkflowSignalequest>(stream);
+                message = ProxyMessage.Deserialize<WorkflowSignalRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
@@ -801,6 +818,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
@@ -811,6 +829,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
             }
@@ -892,6 +911,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Workflow);
                 Assert.Null(message.WorkflowId);
+                Assert.Null(message.Domain);
                 Assert.Null(message.SignalName);
                 Assert.Null(message.SignalArgs);
                 Assert.Null(message.Options);
@@ -902,6 +922,7 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.Workflow = "my-workflow";
                 message.WorkflowId = "666";
+                message.Domain = "my-domain";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalStartWorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = (int)WorkflowIdReusePolicy.AllowDuplicate };
@@ -909,6 +930,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -924,6 +946,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -937,6 +960,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -950,6 +974,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -1042,6 +1067,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
                 Assert.Null(message.RunId);
+                Assert.Null(message.Domain);
                 Assert.Null(message.QueryName);
                 Assert.Null(message.QueryArgs);
 
@@ -1050,11 +1076,13 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
+                message.Domain = "my-domain";
                 message.QueryName = "my-query";
                 message.QueryArgs = new byte[] { 0, 1, 2, 3, 4 };
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
@@ -1067,6 +1095,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
@@ -1077,6 +1106,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
@@ -1087,6 +1117,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
             }
@@ -1311,15 +1342,18 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
                 Assert.Null(message.RunId);
+                Assert.Null(message.Domain);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
+                message.Domain = "my-domain";
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1331,6 +1365,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -1340,6 +1375,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1349,6 +1385,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
             }
         }
 
@@ -1364,7 +1401,7 @@ namespace TestCadence
                     TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (InternalTaskListKind)TaskListKind.Sticky },
                     ExecutionStartToCloseTimeout   = 1000,
                     TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = InternalChildTerminationPolicy.REQUEST_CANCEL
+                    ChildPolicy                    = InternalChildPolicy.REQUEST_CANCEL
                 },
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
@@ -1547,12 +1584,14 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.WorkflowId);
                 Assert.Null(message.RunId);
+                Assert.Null(message.Domain);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
+                message.Domain = "my-domain";
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
@@ -1567,6 +1606,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -1576,6 +1616,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1585,6 +1626,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
+                Assert.Equal("my-domain", message.Domain);
             }
         }
 
@@ -2456,8 +2498,8 @@ namespace TestCadence
                 {
                     TaskList                     = "my-tasklist",
                     Domain                       = "my-domain",
-                    ChildPolicy                  = (int)InternalChildTerminationPolicy.REQUEST_CANCEL,
-                    CronSchedule                 = (new CronSchedule() { Hour = 12 }).ToString(),
+                    ChildPolicy                  = (int)InternalChildPolicy.REQUEST_CANCEL,
+                    CronSchedule                 = "* 12 * * *",
                     WorkflowID                   = "my-workflow",
                     WaitForCancellation          = true,
                     ExecutionStartToCloseTimeout = 1000,

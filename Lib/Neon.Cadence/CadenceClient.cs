@@ -47,8 +47,8 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements a client that can be used to create and manage
-    /// workflows.
+    /// Implements a client that will be connected to a Cadence cluster and be used
+    /// to create and manage workflows.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -75,13 +75,19 @@ namespace Neon.Cadence
     /// for registering workflows and activities types as well as the workers that
     /// indicate that workflows and activities can be executed in the current process.
     /// </para>
+    /// <note>
+    /// <b>IMPORTANT:</b> The current .NET Cadence client release supports having one
+    /// client open at a time.  A <see cref="NotSupportedException"/> will be thrown
+    /// when attempting to connect a second client.  This restriction may be relaxed
+    /// for future releases.
+    /// </note>
     /// <para>
     /// You'll implement your workflows and activities by implementing classes that
-    /// derive from <see cref="WorkflowBase"/> and <see cref="ActivityBase"/> and then
+    /// derive from <see cref="Workflow"/> and <see cref="Activity"/> and then
     /// registering these types with Cadence.  Then you'll start workflow or activity
     /// workers so that Cadence will begin scheduling operations for execution by your code.
     /// Workflows and activities are registered using the fully qualified names 
-    /// of the derived <see cref="WorkflowBase"/> and <see cref="ActivityBase"/> types
+    /// of the derived <see cref="Workflow"/> and <see cref="Activity"/> types
     /// by defaut, but you can customize this if desired.
     /// </para>
     /// <para>
@@ -91,23 +97,21 @@ namespace Neon.Cadence
     /// a string.  The combination of a domain along with a workflow or activity type name
     /// must be unique within a Cadence cluster.  Once you have a connected <see cref="CadenceClient"/>,
     /// you can create and manage Cadence domains via methods like <see cref="RegisterDomainAsync(string, string, string, int, bool)"/>,
-    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, DomainUpdateArgs)"/>.
+    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, UpdateDomainRequest)"/>.
     /// Domains can be used provide isolated areas for different teams and/or different environments
     /// (e.g. production, staging, and test).  We discuss task lists in detail further below.
     /// </para>
     /// <para>
     /// Cadence workers are started to indicate that the current process can execute workflows
     /// and activities from a Cadence domain, and optionally a task list (discussed further below).
-    /// You'll call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> to start
-    /// a workflow worker and  <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
-    /// for an activity worker.  These calls indicate to Cadence that it can begin scheduling
-    /// workflow and activity executions from the current client.
+    /// You'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> to indicate
+    /// that Cadence can begin scheduling workflow and activity executions from the current client.
     /// </para>
     /// <para>
-    /// Worflows are implemented by deriving a class from <see cref="WorkflowBase"/> and activities
-    /// are implemented by deriving a class from <see cref="ActivityBase"/>.  These classes
-    /// require the implementation of the <see cref="WorkflowBase.RunAsync(byte[])"/> and
-    /// <see cref="ActivityBase.RunAsync(byte[])"/> methods that actually implement the workflow
+    /// Worflows are implemented by deriving a class from <see cref="Workflow"/> and activities
+    /// are implemented by deriving a class from <see cref="Activity"/>.  These classes
+    /// require the implementation of the <see cref="Workflow.RunAsync(byte[])"/> and
+    /// <see cref="Activity.RunAsync(byte[])"/> methods that actually implement the workflow
     /// and activity logic.  After establishing a connection ot a Cadence cluster, you'll need
     /// to call <see cref="CadenceClient.RegisterWorkflowAsync{TWorkflow}(string)"/> and/or
     /// <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string)"/> to register your
@@ -117,25 +121,25 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// For situations where you have a lot of workflow and activity classes, it can become
-    /// combersome to register each implementation class individually (generally because you
+    /// cumbersome to register each implementation class individually (generally because you
     /// forget to register new classes after they've been implemented).  To assist with this,
-    /// you can also tag your workflow and activity classes with <see cref="AutoRegisterAttribute"/>
-    /// and then call <see cref="CadenceClient.RegisterAssemblyAsync(Assembly)"/> and/or
-    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an assembly and
-    /// automatically register the tagged implementation classes it finds.
+    /// you can also tag your workflow and activity classes with <see cref="WorkflowAttribute"/>
+    /// or <see cref="ActivityAttribute"/> with <see cref="WorkflowAttribute.AutoRegister"/>
+    /// or <see cref="ActivityAttribute.AutoRegister"/> set to <c>true</c> and then call
+    /// <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
+    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an
+    /// assembly and automatically register the tagged implementation classes it finds.
     /// </para>
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
     /// the current process implements specific workflow and activity types.  You'll call
-    /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> for
-    /// workflows and <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
-    /// for activities, passing your custom implementations of <see cref="WorkflowBase"/> and <see cref="ActivityBase"/>
-    /// as the type parameter.  The <b>Neon.Cadence</b> will then automatically handle the instantiation
-    /// of your workflow or activity types and call their <see cref="WorkflowBase.RunAsync(byte[])"/>
+    /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
+    /// Cadence domain and tasklist the worker will listen on as well as whether activities,
+    /// workflows, or both are to be processed.
     /// </para>
     /// <para>
-    /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/> 
-    /// or <see cref="StartWorkflowAsync{TWorkflow}(string, byte[], string, WorkflowOptions)"/>, passing the workflow 
+    /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> 
+    /// or <see cref="StartWorkflowAsync{TWorkflow}(byte[], string, string, WorkflowOptions)"/>, passing the workflow 
     /// type string, the target Cadence domain along with optional arguments (encoded into a byte array) 
     /// and optional workflow options.  The workflow type string must be the same one used when calling 
     /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
@@ -143,38 +147,81 @@ namespace Neon.Cadence
     /// <note>
     /// <b>External workflows</b> are top-level workflows that have no workflow parent.
     /// This is distinugished from <b>child workflows</b> that are executed within the
-    /// context of another workflow via <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>.
+    /// context of another workflow via <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
     /// </note>
     /// <para>
-    /// <see cref="StartWorkflowAsync(string, string, byte[], string, WorkflowOptions)"/> returns
+    /// <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> returns
     /// immediately after the workflow is submitted to Cadence and the workflow will be scheduled and
-    /// executed independently.  This method returns a <see cref="WorkflowRun"/> which you'll use
+    /// executed independently.  This method returns a <see cref="WorkflowExecution"/> which you'll use
     /// to identify your running workflow to the methods desribed below.
     /// </para>
     /// <para>
-    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowStateAsync(WorkflowRun)"/>
-    /// or obtain a workflow result via <see cref="GetWorkflowResultAsync(WorkflowRun)"/>, which blocks until the 
+    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowStateAsync(WorkflowExecution)"/>
+    /// or obtain a workflow result via <see cref="GetWorkflowResultAsync(WorkflowExecution)"/>, which blocks until the 
     /// workflow completes.
     /// </para>
     /// <note>
-    /// Child workflows and activities are started from within a <see cref="WorkflowBase"/> implementation
-    /// via the <see cref="WorkflowBase.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken?)"/>,
-    /// <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken?)"/>,
-    /// <see cref="WorkflowBase.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken?)"/>
-    /// <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken?)"/>, and
-    /// <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken?)"/>
+    /// Child workflows and activities are started from within a <see cref="Workflow"/> implementation
+    /// via the <see cref="Workflow.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    /// <see cref="Workflow.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
+    /// <see cref="Workflow.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken)"/>
+    /// <see cref="Workflow.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>, and
+    /// <see cref="Workflow.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>
     /// methods.
     /// </note>
     /// <para>
     /// Workflows can be signalled via <see cref="SignalWorkflowAsync(string, string, byte[], string)"/> or
-    /// <see cref="SignalWorkflowAsync(string, string, byte[], byte[], string, WorkflowOptions)"/> that starts the
+    /// <see cref="SignalWorkflowWithStartAsync(string, string, byte[], byte[], string, WorkflowOptions)"/> that starts the
     /// workflow if its not already running.  You can query running workflows via 
     /// <see cref="QueryWorkflowAsync(string, string, byte[], string)"/>.
     /// </para>
     /// <para>
-    /// Workflows can be expicitly closed using <see cref="CancelWorkflowAsync(WorkflowRun)"/>,
-    /// <see cref="TerminateWorkflowAsync(WorkflowRun, string, byte[])"/>.
+    /// Workflows can be expicitly closed using <see cref="CancelWorkflowExecution(WorkflowExecution)"/>,
+    /// <see cref="TerminateWorkflowAsync(WorkflowExecution, string, byte[])"/>.
     /// </para>
+    /// <para><b>Restarting Workflows</b></para>
+    /// <para>
+    /// Long running workflows that are essentially a high-level loop can result in the recording
+    /// of an excessive number of events to its history.  This can result in poor performance
+    /// due to having to replay this history when the workflow has to be rehydrated.  
+    /// </para>
+    /// <para>
+    /// You can avoid this by removing the workflow loop and calling <see cref="Workflow.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
+    /// at the end of your workflow logic.  This causes Cadence to reschedule the workflow
+    /// with a clean history, somewhat similar to what happens for CRON workflows (which are
+    /// rescheduled automatically).  <see cref="Workflow.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
+    /// works by throwing a <see cref="CadenceWorkflowRestartException"/> which will exit
+    /// the workflow method and be caught by the calling <see cref="CadenceClient"/> which
+    /// which then informs Cadence.
+    /// </para>
+    /// <note>
+    /// Workflow entry points must allow the <see cref="CadenceWorkflowRestartException"/> to be caught by the
+    /// calling <see cref="CadenceClient"/> so that <see cref="Workflow.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
+    /// will work properly.
+    /// </note>
+    /// <para><b>External Activity Completion</b></para>
+    /// <para>
+    /// Normally, activities are self-contained and will finish whatever they're doing and then
+    /// simply return.  It's often useful though to be able to have an activity kickoff operations
+    /// on an external system, exit the activity indicating that it's still pending, and then
+    /// have the external system manage the activity heartbeats and report the activity completion.
+    /// </para>
+    /// <para>
+    /// To take advantage of this, you'll need to obtain the opaque activity identifier from
+    /// <see cref="Activity.ActivityTask"/> via its <see cref="ActivityInfo.TaskToken"/> property.
+    /// This is a byte array including enough information for Cadence to identify the specific
+    /// activity.  Your activity should start the external action, passing the task token and
+    /// then call <see cref="Activity.CompleteExternallyAsync()"/> which will thrown a
+    /// <see cref="CadenceActivityExternalCompletionException"/> that will exit the activity 
+    /// and then be handled internally by informing Cadence that the activity will continue
+    /// running.
+    /// </para>
+    /// <note>
+    /// You should not depend on the structure or contents of the task token since this
+    /// may change for future Cadence releases and you must allow the <see cref="CadenceActivityExternalCompletionException"/>
+    /// to be caught by the calling <see cref="CadenceClient"/> so <see cref="Activity.CompleteExternallyAsync()"/>
+    /// will work properly.
+    /// </note>
     /// <para><b>Arguments and Results</b></para>
     /// <para>
     /// The <b>Neon.Cadence</b> library standardizes on having workflow and activity arguments
@@ -189,9 +236,9 @@ namespace Neon.Cadence
     /// Task lists provide an additional way to customize where workflows and activities are executed.
     /// A task list is simply a string used in addition to the domain to indicate which workflows and
     /// activities will be scheduled for execution by workers.  For regular (top-level) workflows,
-    /// the task list <b>"default"</b> will be used when not otherwise specified.  Any non-empty custom
-    /// string is allowed for task lists.  Child workflow and activity task lists will default to
-    /// the parent workflow's task list by default.
+    /// you can specify a default task list via <see cref="CadenceSettings.DefaultTaskList"/>.  
+    /// Any non-empty custom string is allowed for task lists.  Child workflow and activity task lists
+    /// will default to the parent workflow's task list by default.
     /// </para>
     /// <para>
     /// Task lists are typically only required for somewhat advanced deployments.  Let's go through
@@ -204,12 +251,12 @@ namespace Neon.Cadence
     /// (because there's no point in wasting any expensive GPU machine resources on the workflow).
     /// </para>
     /// <para>
-    /// This scenario can addressed by having the applications running on the regular machines
-    /// call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> and those
-    /// running on the GPU servers call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
-    /// Both could specify the domain as <b>"render"</b> and leave task list as <b>"default"</b>.
-    /// With this setup, workflows will be scheduled on the regular machines and activities
-    /// on the GPU machines, accomplishing our simple goal.
+    /// This scenario can addressed by having the application running on the regular machines
+    /// call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
+    /// and the application running on the GPU servers call this with with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c>.
+    /// Both could specify the domain as <b>"render"</b> and set  task list as <b>"all"</b>
+    /// (or something).  With this setup, workflows will be scheduled on the regular machines 
+    /// and activities on the GPU machines.
     /// </para>
     /// <para>
     /// Now imagine a more complex scenario where we need to render two movies on the cluster at 
@@ -217,15 +264,15 @@ namespace Neon.Cadence
     /// the other third to <b>movie2</b>.  This can be accomplished via task lists:
     /// </para>
     /// <para>
-    /// We'd start by defining a task list for each movie: <b>"movie1"</b> and <b>movie2</b> and
-    /// then call <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/> twice on
-    /// the regular machines, once for each task list.  This will schedule workflows for each movie
+    /// We'd start by defining a task list for each movie: <b>"movie1"</b> and <b>"movie2"</b> and
+    /// then call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
+    /// twice on the regular machines and once for each task list.  This will schedule workflows for each movie
     /// on these machines (this is OK for this scenario because the workflow won't consume many
-    /// resources).  Then on 2/3s of the GPU machines, we'll call <see cref="StartActivityWorkerAsync(string, string, WorkerOptions)"/>
-    /// with the <b>"movie1"</b> task list and the remaining one third of the GPU machines with
-    /// <b>""movie2</b> as the task list.  Then we'll start the rendering workflow for the first
-    /// movie specifying <b>"movie1"</b> as the task list and again for the second movie specifying 
-    /// <b>"movie2"</b>.
+    /// resources).  Then on 2/3s of the GPU machines, we'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> 
+    /// with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c> with the <b>"movie1"</b>
+    /// task list and the remaining one third of the GPU machines <b>"movie2"</b> as the task list. 
+    /// Then we'll start the rendering workflow for the first movie specifying <b>"movie1"</b> as the
+    /// task list and again for the second movie specifying <b>"movie2"</b>.
     /// </para>
     /// <para>
     /// The two movie workflows will be scheduled on the regular machines and these will each
@@ -234,11 +281,11 @@ namespace Neon.Cadence
     /// on the appropriate GPU servers.
     /// </para>
     /// <para>
-    /// This was just one example.  Domains and task lists can be combined in different ways
-    /// to manage where workflows and activities execute.
+    /// These are just a couple examples.  Domains, task lists, and worker options can be combined
+    /// in different ways to manage where workflows and activities will be scheduled for execution.
     /// </para>
     /// </remarks>
-    public partial class CadenceClient : IDisposable
+    public partial class CadenceClient
     {
         /// <summary>
         /// The <b>cadence-proxy</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
@@ -253,15 +300,10 @@ namespace Neon.Cadence
         private const int debugClientPort = 5001;
 
         /// <summary>
-        /// The default Cadence task list.
-        /// </summary>
-        internal const string DefaultTaskList = "default";
-
-        /// <summary>
         /// The default Cadence timeout used for workflow and activity timeouts that don't
         /// have Cadence supplied values.
         /// </summary>
-        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromDays(365);
+        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromHours(24);
 
         //---------------------------------------------------------------------
         // Private types
@@ -412,11 +454,12 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly object      staticSyncLock = new object();
-        private static readonly Assembly    thisAssembly   = Assembly.GetExecutingAssembly();
-        private static readonly INeonLogger log            = LogManager.Default.GetLogger<CadenceClient>();
-        private static bool                 proxyWritten   = false;
-        private static long                 nextClientId   = 0;
+        private static readonly object      staticSyncLock  = new object();
+        private static readonly Assembly    thisAssembly    = Assembly.GetExecutingAssembly();
+        private static readonly INeonLogger log             = LogManager.Default.GetLogger<CadenceClient>();
+        private static bool                 proxyWritten    = false;
+        private static long                 nextClientId    = 0;
+        private static bool                 clientConnected = false;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -532,8 +575,8 @@ namespace Neon.Cadence
             // Launch the proxy with a console window when we're running in DEBUG
             // mode on Windows.  We'll ignore this for the other platforms.
 
-            var debugOption             = settings.Debug ? " --debug" : string.Empty;
-            var commandLine             = $"--listen {endpoint.Address}:{endpoint.Port} --log-level {settings.LogLevel}{debugOption}";
+            var debugOption = settings.Debug ? " --debug" : string.Empty;
+            var commandLine = $"--listen {endpoint.Address}:{endpoint.Port} --log-level {settings.LogLevel}{debugOption}";
 
             if (NeonHelper.IsWindows)
             {
@@ -555,20 +598,49 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
         /// <returns>The connected <see cref="CadenceClient"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// The <see cref="CadenceSettings"/> passed must specify a <see cref="CadenceSettings.DefaultDomain"/>.
+        /// </note>
+        /// <note>
+        /// <b>IMPORTANT:</b> The current .NET Cadence client release supports having one
+        /// client open at a time.  A <see cref="NotSupportedException"/> will be thrown
+        /// when attempting to connect a second client.  This restriction may be relaxed
+        /// for future releases.
+        /// </note>
+        /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
 
-            if (settings.ClientTimeout <= TimeSpan.Zero)
+            lock (staticSyncLock)
             {
-                settings.ClientTimeout = TimeSpan.FromSeconds(45);
+                if (clientConnected)
+                {
+                    throw new NotSupportedException($"Only a single [{nameof(CadenceClient)}] may be connected at a time for the current release.");
+                }
+
+                clientConnected = true;
             }
 
-            var client = new CadenceClient(settings);
+            try
+            {
+                var client = new CadenceClient(settings);
 
-            await client.SetWorkflowCacheSizeAsync(10000);
+                await client.SetSCacheMaximumSizeAsync(10000);
 
-            return client;
+                return client;
+            }
+            catch
+            {
+                lock (staticSyncLock)
+                {
+                    clientConnected = false;
+                }
+
+                throw;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -600,6 +672,7 @@ namespace Neon.Cadence
         private CadenceClient(CadenceSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -632,9 +705,11 @@ namespace Neon.Cadence
                 //
                 // This should never happen for production.
 
-                Settings.ProxyTimeout     =
-                Settings.DebugHttpTimeout = TimeSpan.FromHours(48);
+                Settings.DebugHttpTimeout    = TimeSpan.FromHours(48);
+                Settings.ProxyTimeoutSeconds = Settings.DebugHttpTimeout.TotalSeconds;
             }
+
+            DataConverter = settings.DataConverter ?? new JsonDataConverter();
 
             // Start the web server that will listen for requests from the associated 
             // [cadence-proxy] process.
@@ -744,7 +819,9 @@ namespace Neon.Cadence
                         {
                             Endpoints     = sbEndpoints.ToString(),
                             Identity      = settings.ClientIdentity,
-                            ClientTimeout = TimeSpan.FromSeconds(45)
+                            ClientTimeout = TimeSpan.FromSeconds(60),
+                            Domain        = settings.DefaultDomain,
+                            CreateDomain  = settings.CreateDomain
                         };
 
 
@@ -817,7 +894,7 @@ namespace Neon.Cadence
                     // Signal the proxy that it should exit gracefully and then
                     // allow it [Settings.TerminateTimeout] to actually exit
                     // before killing it.
-       
+
                     try
                     {
                         CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
@@ -838,6 +915,13 @@ namespace Neon.Cadence
                 catch
                 {
                     // Ignoring this.
+                }
+                finally
+                {
+                    lock (staticSyncLock)
+                    {
+                        clientConnected = false;
+                    }
                 }
             }
 
@@ -882,8 +966,8 @@ namespace Neon.Cadence
                 host = null;
             }
 
-            WorkflowBase.UnregisterClient(this);
-            ActivityBase.UnregisterClient(this);
+            Workflow.UnregisterClient(this);
+            Activity.UnregisterClient(this);
 
             if (disposing)
             {
@@ -915,6 +999,11 @@ namespace Neon.Cadence
         /// Returns the <b>cadence-proxy</b> process or <c>null</c>.s
         /// </summary>
         internal Process ProxyProcess { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="IDataConverter"/> used for workflows and activities managed by the client.
+        /// </summary>
+        public IDataConverter DataConverter { get; private set; }
 
         /// <summary>
         /// Raised when the connection is closed.  You can determine whether the connection
@@ -972,6 +1061,52 @@ namespace Neon.Cadence
                     return null;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the Cadence task list to be referenced for an operation.  If <paramref name="taskList"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise <see cref="CadenceSettings.DefaultTaskList"/>
+        /// will be returned.  Note that one of <paramref name="taskList"/> or the default task list
+        /// must be non-empty.
+        /// </summary>
+        /// <param name="taskList">The specific task list to use or null/empty.</param>
+        /// <returns>The task list to be referenced.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default tasklist are both null or empty.</exception>
+        internal string ResolveTaskList(string taskList)
+        {
+            if (!string.IsNullOrEmpty(taskList))
+            {
+                return taskList;
+            }
+            else if (!string.IsNullOrEmpty(Settings.DefaultTaskList))
+            {
+                return Settings.DefaultTaskList;
+            }
+
+            throw new ArgumentNullException($"One of [{nameof(taskList)}] parameter or the client's default task list (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultTaskList)}]) must be non-empty.");
+        }
+
+        /// <summary>
+        /// Returns the Cadence domain to be referenced for an operation.  If <paramref name="domain"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="CadenceSettings.DefaultDomain"/>
+        /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
+        /// be non-empty.
+        /// </summary>
+        /// <param name="domain">The specific domain to use or null/empty.</param>
+        /// <returns>The domain to be referenced.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domain are both null or empty.</exception>
+        internal string ResolveDomain(string domain)
+        {
+            if (!string.IsNullOrEmpty(domain))
+            {
+                return domain;
+            }
+            else if (!string.IsNullOrEmpty(Settings.DefaultDomain))
+            {
+                return Settings.DefaultDomain;
+            }
+
+            throw new ArgumentNullException($"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
         }
 
         /// <summary>
@@ -1056,13 +1191,13 @@ namespace Neon.Cadence
                     case InternalMessageTypes.WorkflowQueryInvokeRequest:
                     case InternalMessageTypes.ActivityInvokeLocalRequest:
 
-                        await WorkflowBase.OnProxyRequestAsync(this, request);
+                        await Workflow.OnProxyRequestAsync(this, request);
                         break;
 
                     case InternalMessageTypes.ActivityInvokeRequest:
                     case InternalMessageTypes.ActivityStoppingRequest:
 
-                        await ActivityBase.OnProxyRequestAsync(this, request);
+                        await Activity.OnProxyRequestAsync(this, request);
                         break;
 
                     default:
@@ -1125,7 +1260,7 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         /// <returns>The reply message.</returns>
-        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken? cancellationToken = null)
+        internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -1137,11 +1272,11 @@ namespace Neon.Cadence
                     operations.Add(requestId, operation);
                 }
 
-                if (cancellationToken != null)
+                if (cancellationToken != default)
                 {
                     request.IsCancellable = true;
 
-                    cancellationToken.Value.Register(
+                    cancellationToken.Register(
                         () =>
                         {
                             CallProxyAsync(new CancelRequest() { RequestId = requestId }).Wait();

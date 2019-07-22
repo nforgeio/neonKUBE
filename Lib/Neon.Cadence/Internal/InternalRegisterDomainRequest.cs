@@ -54,5 +54,10 @@ namespace Neon.Cadence.Internal
         /// Enables metric generation.  This defaults to <c>false.</c>
         /// </summary>
         public bool EmitMetrics { get; set; }
+
+        /// <summary>
+        /// Optional security token.
+        /// </summary>
+        public string SecurityToken { get; set; }
     }
 }

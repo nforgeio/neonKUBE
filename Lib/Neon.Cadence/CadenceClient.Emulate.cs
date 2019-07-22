@@ -97,11 +97,11 @@ namespace Neon.Cadence
         /// </summary>
         private struct EmulatedSignal
         {
-            public EmulatedSignal(string queryName, byte[] args)
+            public EmulatedSignal(string signalName, byte[] args)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-                this.SignalName = queryName;
+                this.SignalName = signalName;
                 this.SignalArgs = args;
             }
 
@@ -675,10 +675,9 @@ namespace Neon.Cadence
             var workerId = Interlocked.Increment(ref nextEmulatedWorkerId);
             var worker   = new EmulatedWorker()
             {
-                WorkerId   = workerId,
-                IsWorkflow = request.IsWorkflow,
-                Domain     = request.Domain,
-                TaskList   = request.TaskList
+                WorkerId = workerId,
+                Domain   = request.Domain,
+                TaskList = request.TaskList
             };
 
             using (await emulationMutex.AcquireAsync())
@@ -902,8 +901,8 @@ namespace Neon.Cadence
                 RunId     = Guid.NewGuid().ToString("D"),
                 ContextId = contextId,
                 Args      = request.Args,
-                Domain    = request.Domain,
-                TaskList  = request.Options?.TaskList ?? CadenceClient.DefaultTaskList,
+                Domain    = ResolveDomain(request.Domain),
+                TaskList  = ResolveTaskList(request.Options.TaskList),
                 Name      = request.Workflow,
                 Options   = request.Options,
                 IsGlobal  = true

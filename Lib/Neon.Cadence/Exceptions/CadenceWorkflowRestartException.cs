@@ -27,23 +27,30 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown by <see cref="WorkflowBase.RestartAsync(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, CadenceRetryPolicy)"/>
-    /// to be handled internally by <see cref="WorkflowBase"/> as one of the special case 
+    /// Thrown by <see cref="Workflow.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
+    /// to be handled internally by <see cref="Workflow"/> as one of the special case 
     /// mechanisms for completing a workflow.
     /// </summary>
-    internal class CadenceWorkflowRestartException : Exception
+    /// <remarks>
+    /// <note>
+    /// Workflow entry points must allow this exception to be caught by the
+    /// calling <see cref="CadenceClient"/> so that <see cref="Workflow.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
+    /// will work properly.
+    /// </note>
+    /// </remarks>
+    public class CadenceWorkflowRestartException : Exception
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="args">Optional arguments for the new run.</param>
-        /// <param name="domain">Optional domain for the new run.</param>
-        /// <param name="taskList">Optional task list for the new run.</param>
-        /// <param name="executionToStartTimeout">Optional execution to start timeout for the new run.</param>
-        /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new run.</param>
-        /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new run.</param>
-        /// <param name="startToCloseTimeout">Optional start to close timeout for the new run.</param>
-        /// <param name="retryPolicy">Optional retry policy for the new run.</param>
+        /// <param name="args">Optional arguments for the new execution.</param>
+        /// <param name="domain">Optional domain for the new execution.</param>
+        /// <param name="taskList">Optional task list for the new execution.</param>
+        /// <param name="executionToStartTimeout">Optional execution to start timeout for the new execution.</param>
+        /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new execution.</param>
+        /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
+        /// <param name="startToCloseTimeout">Optional start to close timeout for the new execution.</param>
+        /// <param name="retryPolicy">Optional retry policy for the new execution.</param>
         public CadenceWorkflowRestartException(
             byte[]              args                    = null,
             string              domain                  = null,
@@ -52,7 +59,7 @@ namespace Neon.Cadence
             TimeSpan            scheduleToCloseTimeout  = default,
             TimeSpan            scheduleToStartTimeout  = default,
             TimeSpan            startToCloseTimeout     = default,
-            CadenceRetryPolicy  retryPolicy             = null)
+            RetryOptions  retryPolicy             = null)
 
             : base()
         {
@@ -67,43 +74,43 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the arguments for the next workflow run.
+        /// Returns the arguments for the next workflow execution.
         /// </summary>
         public byte[] Args { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new domain for the next workflow run.
+        /// Optionally specifies the new domain for the next workflow execution.
         /// </summary>
         public string Domain { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new task list for the next workflow run.
+        /// Optionally specifies the new task list for the next workflow execution.
         /// </summary>
         public string TaskList { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new timeout for the next workflow run.
+        /// Optionally specifies the new timeout for the next workflow execution.
         /// </summary>
         public TimeSpan ExecutionStartToCloseTimeout { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new timeout for the next workflow run.
+        /// Optionally specifies the new timeout for the next workflow execution.
         /// </summary>
         public TimeSpan ScheduleToCloseTimeout { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new timeout for the next workflow run.
+        /// Optionally specifies the new timeout for the next workflow execution.
         /// </summary>
         public TimeSpan ScheduleToStartTimeout { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new timeout for the next workflow run.
+        /// Optionally specifies the new timeout for the next workflow execution.
         /// </summary>
         public TimeSpan StartToCloseTimeout { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new retry policy for the next workflow run.
+        /// Optionally specifies the new retry policy for the next workflow execution.
         /// </summary>
-        public CadenceRetryPolicy RetryPolicy { get; private set; } 
+        public RetryOptions RetryPolicy { get; private set; } 
     }
 }

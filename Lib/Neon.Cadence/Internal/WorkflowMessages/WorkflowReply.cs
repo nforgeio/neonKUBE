@@ -52,6 +52,16 @@ namespace Neon.Cadence.Internal
             set => SetLongProperty(PropertyNames.ContextId, value);
         }
 
+        /// <summary>
+        /// For workflow requests related to an executing workflow, this will indicate
+        /// the current history replay state.
+        /// </summary>
+        public InternalReplayStatus ReplayStatus
+        {
+            get => GetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus);
+            set => SetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -69,7 +79,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowReply)target;
 
-            typedTarget.ContextId = this.ContextId;
+            typedTarget.ContextId    = this.ContextId;
+            typedTarget.ReplayStatus = this.ReplayStatus;
         }
     }
 }

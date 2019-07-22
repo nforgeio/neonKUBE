@@ -20,6 +20,7 @@ package main
 import (
 	"flag"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/endpoints"
 	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/server"
@@ -49,7 +50,7 @@ func main() {
 
 	// debug prelaunched
 	if debugPrelaunched {
-		endpoints.DebugPrelaunched = true
+		globals.DebugPrelaunched = true
 	}
 
 	// set the log level and if the program should run in debug mode

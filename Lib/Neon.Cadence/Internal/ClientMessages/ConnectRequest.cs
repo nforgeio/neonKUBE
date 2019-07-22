@@ -79,6 +79,44 @@ namespace Neon.Cadence.Internal
             set => SetTimeSpanProperty(PropertyNames.ClientTimeout, value);
         }
 
+        /// <summary>
+        /// The default Cadence domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
+        /// Indicates whether the Cadence domain should be created if it
+        /// doesn't already exist.
+        /// </summary>
+        public bool CreateDomain
+        {
+            get => GetBoolProperty(PropertyNames.CreateDomain);
+            set => SetBoolProperty(PropertyNames.CreateDomain, value);
+        }
+
+        /// <summary>
+        /// Specifies the number of time the client will attempt to connect
+        /// to the Cadence cluster.
+        /// </summary>
+        public int Retries
+        {
+            get => GetIntProperty(PropertyNames.RetryAttempts);
+            set => SetIntProperty(PropertyNames.RetryAttempts, value);
+        }
+
+        /// <summary>
+        /// Specifies the time to delay before retrying to connect to the cluster.
+        /// </summary>
+        public TimeSpan RetryDelay
+        {
+            get => GetTimeSpanProperty(PropertyNames.RetryDelay);
+            set => SetTimeSpanProperty(PropertyNames.RetryDelay, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -99,6 +137,10 @@ namespace Neon.Cadence.Internal
             typedTarget.Endpoints     = this.Endpoints;
             typedTarget.Identity      = this.Identity;
             typedTarget.ClientTimeout = this.ClientTimeout;
+            typedTarget.Domain        = this.Domain;
+            typedTarget.CreateDomain  = this.CreateDomain;
+            typedTarget.Retries       = this.Retries;
+            typedTarget.RetryDelay    = this.RetryDelay;
         }
     }
 }

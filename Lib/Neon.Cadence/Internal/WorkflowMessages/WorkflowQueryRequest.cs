@@ -51,13 +51,22 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run to be queried.  The latest run
+        /// Identifies the specific workflow execution to be queried.  The latest run
         /// will be queried when this is <c>null</c> or empty.
         /// </summary>
         public string RunId
         {
             get => GetStringProperty(PropertyNames.RunId);
             set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <summary>
@@ -97,6 +106,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
             typedTarget.QueryName  = this.QueryName;
             typedTarget.QueryArgs  = this.QueryArgs;
         }

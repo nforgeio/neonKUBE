@@ -113,6 +113,15 @@ namespace Neon.Cadence.Internal
             set => SetTimeSpanProperty(PropertyNames.ExecutionStartToCloseTimeout, value);
         }
 
+        /// <summary>
+        /// Indicates the current workflow replay state.
+        /// </summary>
+        public InternalReplayStatus ReplayStatus
+        {
+            get => GetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus);
+            set => SetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -138,6 +147,7 @@ namespace Neon.Cadence.Internal
             typedTarget.WorkflowType                 = this.WorkflowType;
             typedTarget.TaskList                     = this.TaskList;
             typedTarget.ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout;
+            typedTarget.ReplayStatus                 = this.ReplayStatus;
         }
     }
 }

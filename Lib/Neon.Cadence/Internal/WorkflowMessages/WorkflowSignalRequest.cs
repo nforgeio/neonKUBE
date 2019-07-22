@@ -28,12 +28,12 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Sends a signal to a running workflow.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.WorkflowSignalRequest)]
-    internal class WorkflowSignalequest : WorkflowRequest
+    internal class WorkflowSignalRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowSignalequest()
+        public WorkflowSignalRequest()
         {
             Type = InternalMessageTypes.WorkflowSignalRequest;
         }
@@ -51,13 +51,22 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run to be cancelled.  The latest run
+        /// Identifies the specific workflow execution to be cancelled.  The latest run
         /// will be cancelled when this is <c>null</c> or empty.
         /// </summary>
         public string RunId
         {
             get => GetStringProperty(PropertyNames.RunId);
             set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <summary>
@@ -81,7 +90,7 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new WorkflowSignalequest();
+            var clone = new WorkflowSignalRequest();
 
             CopyTo(clone);
 
@@ -93,10 +102,11 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (WorkflowSignalequest)target;
+            var typedTarget = (WorkflowSignalRequest)target;
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
+            typedTarget.Domain     = this.Domain;
             typedTarget.SignalName = this.SignalName;
             typedTarget.SignalArgs = this.SignalArgs;
         }
