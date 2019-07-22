@@ -23,7 +23,7 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
     /// Specifies options used when running a local workflow activity.
