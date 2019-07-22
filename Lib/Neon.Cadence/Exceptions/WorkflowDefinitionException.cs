@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SignalMethodAttribute.cs
+// FILE:	    WorkflowDefinitionException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,36 +16,31 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
 
-using Neon.Cadence;
 using Neon.Cadence.Internal;
-using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to identify a workflow interface methods as a signal.
+    /// Thrown when ak workflow interface is not valid.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class SignalMethodAttribute : Attribute
+    public class WorkflowDefinitionException : Exception
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
-        /// <param name="Name">Specifies the Cadence signal name.</param>
-        public SignalMethodAttribute(string Name)
+        public WorkflowDefinitionException()
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(Name));
-
-            this.Name = Name;
         }
 
         /// <summary>
-        /// Returns the signal name. 
+        /// Constructor.
         /// </summary>
-        public string Name { get; private set; }
+        /// <param name="message">The message.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public WorkflowDefinitionException(string message, Exception innerException = null)
+            : base(message, innerException)
+        {
+        }
     }
 }

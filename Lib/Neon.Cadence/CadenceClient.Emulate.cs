@@ -97,11 +97,11 @@ namespace Neon.Cadence
         /// </summary>
         private struct EmulatedSignal
         {
-            public EmulatedSignal(string queryName, byte[] args)
+            public EmulatedSignal(string signalName, byte[] args)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-                this.SignalName = queryName;
+                this.SignalName = signalName;
                 this.SignalArgs = args;
             }
 
@@ -901,8 +901,8 @@ namespace Neon.Cadence
                 RunId     = Guid.NewGuid().ToString("D"),
                 ContextId = contextId,
                 Args      = request.Args,
-                // Domain    = request.Domain,  // $todo(jeff.lill): Will need to get this from the new workflow client context
-                TaskList  = request.Options?.TaskList ?? Settings.DefaultTaskList,
+                Domain    = ResolveDomain(request.Domain),
+                TaskList  = ResolveTaskList(request.Options.TaskList),
                 Name      = request.Workflow,
                 Options   = request.Options,
                 IsGlobal  = true

@@ -49,7 +49,7 @@ namespace Neon.Cadence
         /// <summary>
         /// <para>
         /// Specifies the maximum time the workflow may run from start to finish.
-        /// This will default to a very long time (currently 365 days) when unspecified.
+        /// This will defaults to 24 hours.
         /// </para>
         /// <note>
         /// This overrides the optional corresponding value specified in the
@@ -155,19 +155,14 @@ namespace Neon.Cadence
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
         /// <param name="client">The <see cref="CadenceClient"/>.</param>
-        /// <param name="taskList">The target task list.</param>
-        /// <param name="methodAttribute">An optional <see cref="WorkflowMethodAttribute"/>.</param>
+        /// <param name="taskList">Optionally specifies the target task list.</param>
+        /// <param name="methodAttribute">Optionally specifies a <see cref="WorkflowMethodAttribute"/>.</param>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
-        internal InternalStartWorkflowOptions ToInternal(CadenceClient client, string taskList, WorkflowMethodAttribute methodAttribute)
+        internal InternalStartWorkflowOptions ToInternal(CadenceClient client, string taskList = null, WorkflowMethodAttribute methodAttribute = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            taskList = taskList ?? client.Settings.DefaultTaskList;
-
-            if (string.IsNullOrEmpty(taskList))
-            {
-                throw new ArgumentException("You must specify a task list.");
-            }
+            taskList = client.ResolveTaskList(taskList);
 
             // Merge optional settings from these options and the method attribute.
 
@@ -215,6 +210,24 @@ namespace Neon.Cadence
                 WorkflowIdReusePolicy        = (int)workflowIdReusePolicy,
                 CronSchedule                 = this.CronSchedule,
                 Memo                         = this.Memo
+            };
+        }
+
+        /// <summary>
+        /// Retuurns a shallow clone of the current instance.
+        /// </summary>
+        /// <returns>The cloned <see cref="WorkflowOptions"/>.</returns>
+        public WorkflowOptions Clone()
+        {
+            return new WorkflowOptions()
+            {
+                CronSchedule                 = this.CronSchedule,
+                ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout,
+                Memo                         = this.Memo,
+                RetryOptions                 = this.RetryOptions,
+                TaskStartToCloseTimeout      = this.TaskStartToCloseTimeout,
+                WorkflowId                   = this.WorkflowId,
+                WorkflowIdReusePolicy        = this.WorkflowIdReusePolicy
             };
         }
     }

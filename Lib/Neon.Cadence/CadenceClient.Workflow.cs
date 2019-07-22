@@ -32,7 +32,7 @@ namespace Neon.Cadence
     public partial class CadenceClient
     {
         //---------------------------------------------------------------------
-        // Cadence workflow related operations.
+        // Public Cadence workflow related operations.
 
         /// <summary>
         /// Registers a workflow implementation with Cadence.
@@ -83,13 +83,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="Workflow"/> and tagged by <see cref="AutoRegisterAttribute"/>
-        /// and registers them with Cadence.
+        /// <see cref="IWorkflow"/> and tagged by <see cref="WorkflowAttribute"/> with
+        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
+        /// them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
+        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
         /// derived from <see cref="Workflow"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
@@ -113,32 +114,31 @@ namespace Neon.Cadence
 
             foreach (var type in assembly.GetTypes())
             {
-                var autoRegisterAttribute = type.GetCustomAttribute<AutoRegisterAttribute>();
+                var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
 
-                if (autoRegisterAttribute != null)
+                if (workflowAttribute != null)
                 {
-                    if (type.IsSubclassOf(typeof(Workflow)))
+                    if (type.Implements<IWorkflow>())
                     {
-                        var workflowTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
-
-                        if (!Workflow.Register(this, type, workflowTypeName))
+                        if (workflowAttribute.AutoRegister)
                         {
-                            var reply = (WorkflowRegisterReply)await CallProxyAsync(
-                                new WorkflowRegisterRequest()
-                                {
-                                    Name = workflowTypeName
-                                });
+                            var workflowTypeName = workflowAttribute.TypeName ?? type.FullName;
 
-                            reply.ThrowOnError();
+                            if (!Workflow.Register(this, type, workflowTypeName))
+                            {
+                                var reply = (WorkflowRegisterReply)await CallProxyAsync(
+                                    new WorkflowRegisterRequest()
+                                    {
+                                        Name = workflowTypeName
+                                    });
+
+                                reply.ThrowOnError();
+                            }
                         }
-                    }
-                    else if (type.IsSubclassOf(typeof(Activity)))
-                    {
-                        // Ignore these.
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(Workflow)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(WorkflowAttribute)}] but is not derived from [{nameof(IWorkflow)}].");
                     }
                 }
             }
@@ -156,21 +156,21 @@ namespace Neon.Cadence
         /// This defaults to <b>10K</b> sticky workflows.
         /// </para>
         /// </summary>
-        /// <param name="maxCacheSize">The maximum number of workflows to be cached.</param>
+        /// <param name="cacheMaximumSize">The maximum number of workflows to be cached.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task SetStickyWorkflowCacheSizeAsync(int maxCacheSize)
+        public async Task SetSCacheMaximumSizeAsync(int cacheMaximumSize)
         {
-            Covenant.Requires<ArgumentNullException>(maxCacheSize >= 0);
+            Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0);
 
             var reply = (WorkflowSetCacheSizeReply)await CallProxyAsync(
                 new WorkflowSetCacheSizeRequest()
                 {
-                    Size = maxCacheSize
+                    Size = cacheMaximumSize
                 });
 
             reply.ThrowOnError();
 
-            workflowCacheSize = maxCacheSize;
+            workflowCacheSize = cacheMaximumSize;
         }
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace Neon.Cadence
         /// <param name="workflowType">
         /// Optionally specifies the workflow type by overriding the fully 
         /// qualified <typeparamref name="TWorkflow"/> type name or the name
-        /// specified by a <see cref="AutoRegisterAttribute"/>.
+        /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
@@ -245,7 +245,7 @@ namespace Neon.Cadence
         /// <param name="workflowType">
         /// Optionally specifies the workflow type by overriding the fully 
         /// qualified <typeparamref name="TWorkflow"/> type name or the name
-        /// specified by a <see cref="AutoRegisterAttribute"/>.
+        /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
@@ -253,6 +253,264 @@ namespace Neon.Cadence
             where TWorkflow : IWorkflow
         {
             throw new NotImplementedException();
+        }
+
+        //---------------------------------------------------------------------
+        // Internal workflow related methods that will be available to be called
+        // by dynamically generated workflow stubs.
+
+        /// <summary>
+        /// Starts an external workflow using a specific workflow type name, returning a <see cref="WorkflowExecution"/>
+        /// that can be used to track the workflow and also wait for its result via <see cref="GetWorkflowResultAsync(WorkflowExecution)"/>.
+        /// </summary>
+        /// <param name="workflowTypeName">
+        /// The type name used when registering the workers that will handle this workflow.
+        /// This name will often be the fully qualified name of the workflow type but 
+        /// this may have been customized when the workflow worker was registered.
+        /// </param>
+        /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
+        /// <param name="taskList">Optionally specifies the target task list.  This defaults to the client task list.</param>
+        /// <param name="options">Specifies the workflow options.</param>
+        /// <param name="domain">Optionally specifies the Cadence domain where the workflow will run.  This defaults to the client domain.</param>
+        /// <returns>A <see cref="WorkflowExecution"/> identifying the new running workflow instance.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
+        /// <exception cref="CadenceWorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
+        /// <remarks>
+        /// This method kicks off a new workflow instance and returns after Cadence has
+        /// queued the operation but the method <b>does not</b> wait for the workflow to
+        /// complete.
+        /// </remarks>
+        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+
+            options = options ?? new WorkflowOptions();
+
+            var reply = (WorkflowExecuteReply)await CallProxyAsync(
+                new WorkflowExecuteRequest()
+                {
+                    Workflow = workflowTypeName,
+                    Domain   = domain ?? Settings.DefaultDomain,
+                    Args     = args,
+                    Options  = options.ToInternal(this, taskList)
+                });
+
+            reply.ThrowOnError();
+
+            var execution = reply.Execution;
+
+            return new WorkflowExecution(execution.ID, execution.RunID);
+        }
+
+        /// <summary>
+        /// Returns the current state of a running workflow.
+        /// </summary>
+        /// <param name="execution">Identifies the workflow execution.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>A <see cref="WorkflowDescription"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task<WorkflowDescription> GetWorkflowDescriptionAsync(WorkflowExecution execution, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+
+            var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
+                new WorkflowDescribeExecutionRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Details.ToPublic();
+        }
+
+        /// <summary>
+        /// Returns the result from a workflow execution, blocking until the workflow
+        /// completes if it is still running.
+        /// </summary>
+        /// <param name="execution">Identifies the workflow execution.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+
+            var reply = (WorkflowGetResultReply)await CallProxyAsync(
+                new WorkflowGetResultRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Cancels a workflow if it has not already finished.
+        /// </para>
+        /// <note>
+        /// Workflow cancellation is typically considered to be a normal activity
+        /// and not an error as opposed to workflow termination which will usually
+        /// happen due to an error.
+        /// </note>
+        /// </summary>
+        /// <param name="execution">Identifies the running workflow.</param>
+        /// <param name="domain">Optionally identifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task CancelWorkflowAsync(WorkflowExecution execution, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+
+            var reply = (WorkflowCancelReply)await CallProxyAsync(
+                new WorkflowCancelRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// <para>
+        /// Cancels a workflow if it has not already finished.
+        /// </para>
+        /// <note>
+        /// Workflow termination is typically considered to be due to an error as
+        /// opposed to cancellation which is usually considered as a normal activity.
+        /// </note>
+        /// </summary>
+        /// <param name="execution">Identifies the running workflow.</param>
+        /// <param name="reason">Optionally specifies an error reason string.</param>
+        /// <param name="details">Optionally specifies additional details as a byte array.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+
+            var reply = (WorkflowTerminateReply)await CallProxyAsync(
+                new WorkflowTerminateRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain),
+                    Reason     = reason,
+                    Details    = details
+                });;
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Transmits a signal to a running workflow.
+        /// </summary>
+        /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
+        /// <param name="signalName">Identifies the signal.</param>
+        /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+
+            var reply = (WorkflowSignalReply)await CallProxyAsync(
+                new WorkflowSignalRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    SignalName = signalName,
+                    SignalArgs = signalArgs,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Transmits a signal to a workflow, starting the workflow if it's not currently running.
+        /// </summary>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="signalName">Identifies the signal.</param>
+        /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
+        /// <param name="workflowArgs">Optionally specifies the workflow arguments.</param>
+        /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
+        /// <param name="taskList">Optionally specifies the task list.  This defaults to <b>"default"</b>.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task SignalWorkflowWithStartAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+
+            options = options ?? new WorkflowOptions();
+
+            var reply = (WorkflowSignalWithStartReply)await CallProxyAsync(
+                new WorkflowSignalWithStartRequest()
+                {
+                    WorkflowId   = workflowId,
+                    Options      = options.ToInternal(this, taskList),
+                    SignalName   = signalName,
+                    SignalArgs   = signalArgs,
+                    WorkflowArgs = workflowArgs,
+                    Domain       = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Queries a workflow.
+        /// </summary>
+        /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
+        /// <param name="queryType">Identifies the query.</param>
+        /// <param name="queryArgs">Optionally specifies the query arguments encoded as a byte array.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The query result encoded as a byte array.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType));
+
+            var reply = (WorkflowQueryReply)await CallProxyAsync(
+                new WorkflowQueryRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    QueryName  = queryType,
+                    QueryArgs  = queryArgs,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
     }
 }

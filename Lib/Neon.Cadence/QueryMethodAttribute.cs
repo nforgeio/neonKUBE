@@ -29,7 +29,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Used to identify a workflow interface method as a query.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class QueryMethodAttribute : Attribute
     {
         /// <summary>
