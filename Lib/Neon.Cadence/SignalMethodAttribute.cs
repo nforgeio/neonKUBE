@@ -29,7 +29,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Used to identify a workflow interface methods as a signal.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class SignalMethodAttribute : Attribute
     {
         /// <summary>

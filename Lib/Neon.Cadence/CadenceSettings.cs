@@ -255,12 +255,30 @@ namespace Neon.Cadence
         public bool Emulate { get; set; } = false;
 
         /// <summary>
+        /// <para>
+        /// Optionally specifies the <see cref="IDataConverter"/> implementation used to manage
+        /// serialization of paramaters and results for workflow and activity methods so they
+        /// can be persisted to the Cadence cluster database.  This defaults to a <see cref="JsonDataConverter"/>
+        /// instance which will serialize data as UTF-8 encoded JSON text.
+        /// </para>
+        /// <note>
+        /// This property cannot be deserialized from JSON or YAML input.  You need to
+        /// specify this type explicitly in code to use a custom converter.
+        /// </note>
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public IDataConverter DataConverter { get; set; } = new JsonDataConverter();
+
+        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
         /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and
         /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.2:5000</b>.
         /// This defaults to <c>false.</c>
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugPrelaunched { get; set; } = false;
 
         /// <summary>
@@ -270,6 +288,8 @@ namespace Neon.Cadence
         /// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
         /// <c>false</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugDisableHandshakes { get; set; } = false;
 
         /// <summary>
@@ -277,6 +297,8 @@ namespace Neon.Cadence
         /// useful while debugging the client but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugDisableHeartbeats { get; set; } = false;
 
         /// <summary>
@@ -284,12 +306,16 @@ namespace Neon.Cadence
         /// useful while debugging the client but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugIgnoreTimeouts { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
         /// emulated <b>cadence-proxy</b> for testing purposes.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugIgnoreHeartbeats { get; set; } = false;
 
         /// <summary>
@@ -297,6 +323,8 @@ namespace Neon.Cadence
         /// HTTP requests made to the <b>cadence-proxy</b>.  This defaults to
         /// <b>5 seconds</b>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
     }
 }

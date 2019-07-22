@@ -80,14 +80,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for activity implementations derived from
-        /// <see cref="Activity"/> and tagged by <see cref="AutoRegisterAttribute"/>
+        /// <see cref="IActivity"/> and tagged by <see cref="ActivityAttribute"/>
         /// and registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="AutoRegisterAttribute"/> that are not 
-        /// derived from <see cref="Activity"/>.
+        /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
+        /// derived from <see cref="IActivity"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceActivityWorkerStartedException">
@@ -110,32 +110,31 @@ namespace Neon.Cadence
 
             foreach (var type in assembly.GetTypes())
             {
-                var autoRegisterAttribute = type.GetCustomAttribute<AutoRegisterAttribute>();
+                var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
 
-                if (autoRegisterAttribute != null)
+                if (activityAttribute != null)
                 {
-                    if (type.IsSubclassOf(typeof(Workflow)))
+                    if (type.Implements<IActivity>())
                     {
-                        // Ignore these.
-                    }
-                    else if (type.IsSubclassOf(typeof(Activity)))
-                    {
-                        var activityTypeName = autoRegisterAttribute.TypeName ?? type.FullName;
-
-                        if (!Activity.Register(this, type, activityTypeName))
+                        if (activityAttribute.AutoRegister)
                         {
-                            var reply = (ActivityRegisterReply)await CallProxyAsync(
-                                new ActivityRegisterRequest()
-                                {
-                                    Name = activityTypeName
-                                });
+                            var activityTypeName = activityAttribute.TypeName ?? type.FullName;
 
-                            reply.ThrowOnError();
+                            if (!Activity.Register(this, type, activityTypeName))
+                            {
+                                var reply = (ActivityRegisterReply)await CallProxyAsync(
+                                    new ActivityRegisterRequest()
+                                    {
+                                        Name = activityTypeName
+                                    });
+
+                                reply.ThrowOnError();
+                            }
                         }
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(AutoRegisterAttribute)}] but is not derived from [{nameof(Workflow)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(ActivityAttribute)}] but is not derived from [{nameof(IActivity)}].");
                     }
                 }
             }

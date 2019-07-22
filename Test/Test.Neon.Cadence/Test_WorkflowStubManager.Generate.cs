@@ -46,19 +46,71 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IVoidWorkflow : IWorkflow
+        public interface IWorkflowVoidNoArgs : IWorkflow
         {
             [WorkflowMethod]
-            Task Run();
+            Task RunAsync();
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_VoidWorkflow()
+        public void Generate_WorkflowVoidNoArgs()
         {
-            // We don't support workflow interfaces with generic parameters.
+            var stub = WorkflowStubManager.Create<IWorkflowVoidNoArgs>(client);
 
-            var stub = WorkflowStubManager.Create<IVoidWorkflow>(client);
+            Assert.NotNull(stub);
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowVoidWithArgs : IWorkflow
+        {
+            [WorkflowMethod]
+            Task RunAsync(string arg1, int arg2);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Generate_WorkflowVoidWithArgs()
+        {
+            var stub = WorkflowStubManager.Create<IWorkflowVoidWithArgs>(client);
+
+            Assert.NotNull(stub);
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowResultWithArgs : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<int> RunAsync(string arg1, int arg2);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Generate_WorkflowResultWithArgs()
+        {
+            var stub = WorkflowStubManager.Create<IWorkflowResultWithArgs>(client);
+
+            Assert.NotNull(stub);
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface WorkflowMultipleEntrypoint : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<int> RunOneAsync(string arg1, int arg2);
+
+            [WorkflowMethod]
+            Task<string> RunTwoAsync(Person arg1, List<string> arg2);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Generate_WorkflowMultipleEntrypoint()
+        {
+            var stub = WorkflowStubManager.Create<WorkflowMultipleEntrypoint>(client);
 
             Assert.NotNull(stub);
         }

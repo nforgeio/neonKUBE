@@ -105,5 +105,23 @@ namespace Neon.Cadence.Internal
                 RetryPolicy            = RetryOptions?.ToInternal()
             };
         }
+
+        /// <summary>
+        /// Returns a shallow clone of the current instance.
+        /// </summary>
+        /// <returns>The cloned <see cref="ActivityOptions"/>.</returns>
+        public ActivityOptions Clone()
+        {
+            return new ActivityOptions()
+            {
+                HeartbeatTimeout       = this.HeartbeatTimeout,
+                RetryOptions           = this.RetryOptions,
+                ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,
+                ScheduleToStartTimeout = this.ScheduleToStartTimeout,
+                StartToCloseTimeout    = this.StartToCloseTimeout,
+                TaskList               = this.TaskList,
+                WaitForCancellation    = this.WaitForCancellation
+            };
+        }
     }
 }

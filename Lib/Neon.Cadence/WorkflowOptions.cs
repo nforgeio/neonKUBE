@@ -212,5 +212,23 @@ namespace Neon.Cadence
                 Memo                         = this.Memo
             };
         }
+
+        /// <summary>
+        /// Retuurns a shallow clone of the current instance.
+        /// </summary>
+        /// <returns>The cloned <see cref="WorkflowOptions"/>.</returns>
+        public WorkflowOptions Clone()
+        {
+            return new WorkflowOptions()
+            {
+                CronSchedule                 = this.CronSchedule,
+                ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout,
+                Memo                         = this.Memo,
+                RetryOptions                 = this.RetryOptions,
+                TaskStartToCloseTimeout      = this.TaskStartToCloseTimeout,
+                WorkflowId                   = this.WorkflowId,
+                WorkflowIdReusePolicy        = this.WorkflowIdReusePolicy
+            };
+        }
     }
 }

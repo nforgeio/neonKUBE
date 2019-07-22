@@ -79,19 +79,19 @@ namespace Neon.Cadence.Internal
             public WorkflowMethodKind Kind { get; set; }
 
             /// <summary>
-            /// The signal attributes for signal methods.
+            /// The signal attributes for signal methods
             /// </summary>
-            public SignalMethodAttribute SignalAttribute { get; set; }
+            public SignalMethodAttribute SignalMethodAttribute { get; set; }
 
             /// <summary>
             /// The query attributes for query methods.
             /// </summary>
-            public QueryMethodAttribute QueryAttribute { get; set; }
+            public QueryMethodAttribute QueryMethodAttribute { get; set; }
 
             /// <summary>
             /// The workflow attributes for workflow methods.
             /// </summary>
-            public WorkflowMethodAttribute WorkflowAttribute { get; set; }
+            public WorkflowMethodAttribute WorkflowMethodAttribute { get; set; }
 
             /// <summary>
             /// Indicates whether the workflow result is <see cref="void"/>.
@@ -192,6 +192,9 @@ namespace Neon.Cadence.Internal
                 domain = null;
             }
 
+            var workflowTypeName  = workflowInterface.FullName;
+            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
+
             //-----------------------------------------------------------------
             // Check whether we already have generated a stub class for the interface
             // and return an instance right away.
@@ -263,10 +266,10 @@ namespace Neon.Cadence.Internal
                     details.ReturnType = typeof(void);
                 }
 
-                var signalAttributes   = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
-                var queryAttributes    = method.GetCustomAttributes<QueryMethodAttribute>().ToArray();
-                var workflowAttributes = method.GetCustomAttributes<WorkflowMethodAttribute>().ToArray();
-                var attributeCount     = signalAttributes.Length + queryAttributes.Length + workflowAttributes.Length;
+                var signalMethofAttributes = method.GetCustomAttributes<SignalMethodAttribute>().ToArray();
+                var queryMethodAttributes  = method.GetCustomAttributes<QueryMethodAttribute>().ToArray();
+                var workflowAttributes     = method.GetCustomAttributes<WorkflowMethodAttribute>().ToArray();
+                var attributeCount         = signalMethofAttributes.Length + queryMethodAttributes.Length + workflowAttributes.Length;
 
                 if (attributeCount == 0)
                 {
@@ -277,9 +280,9 @@ namespace Neon.Cadence.Internal
                     throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] may only be tagged with one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
 
-                if (signalAttributes.Length > 0)
+                if (signalMethofAttributes.Length > 0)
                 {
-                    var signalAttribute = signalAttributes.First();
+                    var signalAttribute = signalMethofAttributes.First();
 
                     if (signalNames.Contains(signalAttribute.Name))
                     {
@@ -288,12 +291,12 @@ namespace Neon.Cadence.Internal
 
                     signalNames.Add(signalAttribute.Name);
 
-                    details.Kind            = WorkflowMethodKind.Signal;
-                    details.SignalAttribute = signalAttribute;
+                    details.Kind                  = WorkflowMethodKind.Signal;
+                    details.SignalMethodAttribute = signalAttribute;
                 }
-                else if (queryAttributes.Length > 0)
+                else if (queryMethodAttributes.Length > 0)
                 {
-                    var queryAttribute = queryAttributes.First();
+                    var queryAttribute = queryMethodAttributes.First();
 
                     if (queryTypes.Contains(queryAttribute.Name))
                     {
@@ -302,15 +305,15 @@ namespace Neon.Cadence.Internal
 
                     queryTypes.Add(queryAttribute.Name);
 
-                    details.Kind           = WorkflowMethodKind.Query;
-                    details.QueryAttribute = queryAttribute;
+                    details.Kind                 = WorkflowMethodKind.Query;
+                    details.QueryMethodAttribute = queryAttribute;
                 }
                 else if (workflowAttributes.Length > 0)
                 {
-                    var workflowAttribute = workflowAttributes.First();
+                    var workflowMethodAttribute = workflowAttributes.First();
 
-                    details.Kind              = WorkflowMethodKind.Workflow;
-                    details.WorkflowAttribute = workflowAttribute;
+                    details.Kind                    = WorkflowMethodKind.Workflow;
+                    details.WorkflowMethodAttribute = workflowMethodAttribute;
                 }
                 else
                 {
@@ -364,19 +367,24 @@ namespace Neon.Cadence.Internal
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient     client;");
-            sbSource.AppendLine($"        private string            taskList;");
+            sbSource.AppendLine($"        private IDataConverter    converter;");
+            sbSource.AppendLine($"        private string            workflowTypeName;");
             sbSource.AppendLine($"        private WorkflowOptions   options;");
+            sbSource.AppendLine($"        private string            taskList;");
             sbSource.AppendLine($"        private string            domain;");
+            sbSource.AppendLine($"        private bool              hasStarted;");
 
             // Generate the constructor.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, string taskList, WorkflowOptions options, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, string workflowTypeName, string taskList, WorkflowOptions options, string domain)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client   = client;");
-            sbSource.AppendLine($"            this.taskList = taskList;");
-            sbSource.AppendLine($"            this.options  = options;");
-            sbSource.AppendLine($"            this.domain   = domain;");
+            sbSource.AppendLine($"            this.client           = client;");
+            sbSource.AppendLine($"            this.converter        = client.DataConverter;");
+            sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
+            sbSource.AppendLine($"            this.options          = options ?? new WorkflowOptions();");
+            sbSource.AppendLine($"            this.taskList         = ___ClientProxy.ResolveTaskList(client, taskList);");
+            sbSource.AppendLine($"            this.domain           = ___ClientProxy.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
             // Generate the workflow entry point methods.
@@ -384,7 +392,7 @@ namespace Neon.Cadence.Internal
             foreach (var details in methodToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Workflow))
             {
                 var resultType = CadenceHelper.TypeToCSharp(details.ReturnType);
-                var sbParams = new StringBuilder();
+                var sbParams   = new StringBuilder();
 
                 foreach (var param in details.Method.GetParameters())
                 {
@@ -396,11 +404,55 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
+                sbSource.AppendLine($"            // Configure the workflow.");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            var ___workflowTypeName = this.workflowTypeName;");
+                sbSource.AppendLine($"            var ___options          = this.options.Clone();");
+                sbSource.AppendLine($"            var ___taskList         = this.taskList;");
 
-                sbSource.AppendLine($"            await Task.CompletedTask;");
+                if (details.WorkflowMethodAttribute != null)
+                {
+                    if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.TaskList))
+                    {
+                        sbSource.AppendLine($"            ___taskList = \"{details.WorkflowMethodAttribute.TaskList}\";");
+                    }
+
+                    if (details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
+                    {
+                        sbSource.AppendLine($"            ___options.ExecutionStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds})\";");
+                    }
+
+                    if (details.WorkflowMethodAttribute.TaskStartToCloseTimeoutSeconds > 0)
+                    {
+                        sbSource.AppendLine($"            ___options.TaskStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.TaskList});");
+                    }
+
+                    if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.WorkflowId))
+                    {
+                        sbSource.AppendLine($"            ___options.WorkflowId = \"{details.WorkflowMethodAttribute.WorkflowId}\";");
+                    }
+                }
+
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            // Ensure that this stub instance has not already been started.");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            if (this.hasStarted)");
+                sbSource.AppendLine($"            {{");
+                sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
+                sbSource.AppendLine($"            }}");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            this.hasStarted = true;");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                sbSource.AppendLine($"            var ___execution   = await ___ClientProxy.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___taskList, ___options, this.domain);");
+                sbSource.AppendLine($"            var ___resultBytes = await ___ClientProxy.GetWorkflowResultAsync(this.client, ___execution, this.domain);");
+
                 if (!details.IsVoid)
                 {
-                    sbSource.AppendLine($"            return ({resultType})null;");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            return converter.FromData<{resultType}>(___resultBytes);");
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -478,7 +530,7 @@ namespace Neon.Cadence.Internal
         private static void AppendClientProxy(StringBuilder sbSource)
         {
             sbSource.Append(
-@"        private static class ClientProxy
+@"        private static class ___ClientProxy
         {
             private static MethodInfo   startWorkflowAsync;
             private static MethodInfo   getWorkflowDescriptionAsync;
@@ -488,8 +540,10 @@ namespace Neon.Cadence.Internal
             private static MethodInfo   signalWorkflowAsync;
             private static MethodInfo   signalWorkflowWithStartAsync;
             private static MethodInfo   queryWorkflowAsync;
+            private static MethodInfo   resolveTaskList;
+            private static MethodInfo   resolveDomain;
 
-            static ClientProxy()
+            static ___ClientProxy()
             {
                 var clientType = typeof(CadenceClient);
 
@@ -501,6 +555,8 @@ namespace Neon.Cadence.Internal
                 signalWorkflowAsync          = GetInternalMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 signalWorkflowWithStartAsync = GetInternalMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
                 queryWorkflowAsync           = GetInternalMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                resolveTaskList              = GetInternalMethod(clientType, ""ResolveTaskList"", typeof(string));
+                resolveDomain                = GetInternalMethod(clientType, ""ResolveDomain"", typeof(string));
             }
 
             private static MethodInfo GetInternalMethod(Type type, string name, params Type[] types)
@@ -519,60 +575,82 @@ namespace Neon.Cadence.Internal
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, string taskList, WorkflowOptions options, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, taskList, options, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<WorkflowDescription> GetWorkflowDescriptionAsync(CadenceClient client, WorkflowExecution execution, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 return await (Task<WorkflowDescription>)getWorkflowDescriptionAsync.Invoke(client, new object[] { execution, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> GetWorkflowResultAsync(CadenceClient client, WorkflowExecution execution, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task CancelWorkflowAsync(CadenceClient client, WorkflowExecution execution, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task TerminateWorkflowAsync(CadenceClient client, WorkflowExecution execution, string reason, byte[] details, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalWorkflowAsync(CadenceClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task SignalWorkflowWithStartAsync(CadenceClient client, string workflowId, string signalName, byte[] signalArgs, byte[] workflowArgs, string taskList, WorkflowOptions options, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 await (Task)signalWorkflowWithStartAsync.Invoke(client, new object[] { workflowId, signalName, signalArgs, workflowArgs, taskList, options, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> QueryWorkflowAsync(CadenceClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string domain)
             {
-                Covenant.Requires<ArgumentNullException>(client != null);
                 return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static string ResolveTaskList(CadenceClient client, string taskList)
+            {
+                return (string)resolveTaskList.Invoke(client, new object[] { taskList });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static string ResolveDomain(CadenceClient client, string domain)
+            {
+                return (string)resolveDomain.Invoke(client, new object[] { domain });
             }
         }
 ");
+        }
+
+        /// <summary>
+        /// Returns the C# expression that uses the client data converter to
+        /// serialize workflow method parameters to a byte array.
+        /// </summary>
+        /// <param name="args">The parameters.</param>
+        /// <returns>The C# expression.</returns>
+        private static string SerializeArgsExpression(ParameterInfo[] args)
+        {
+            var sb = new StringBuilder();
+
+            foreach (var arg in args)
+            {
+                sb.AppendWithSeparator(arg.Name, ", ");
+            }
+
+            return $"this.converter.ToData(new object[] {{ {sb} }})";
         }
     }
 }

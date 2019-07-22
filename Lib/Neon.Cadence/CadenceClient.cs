@@ -707,6 +707,8 @@ namespace Neon.Cadence
                 Settings.ProxyTimeoutSeconds = Settings.DebugHttpTimeout.TotalSeconds;
             }
 
+            DataConverter = settings.DataConverter ?? new JsonDataConverter();
+
             // Start the web server that will listen for requests from the associated 
             // [cadence-proxy] process.
 
@@ -995,6 +997,11 @@ namespace Neon.Cadence
         /// Returns the <b>cadence-proxy</b> process or <c>null</c>.s
         /// </summary>
         internal Process ProxyProcess { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="IDataConverter"/> used for workflows and activities managed by the client.
+        /// </summary>
+        public IDataConverter DataConverter { get; private set; }
 
         /// <summary>
         /// Raised when the connection is closed.  You can determine whether the connection

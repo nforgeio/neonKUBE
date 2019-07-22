@@ -30,6 +30,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Used to identify a workflow interface method as a workflow entry point.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class WorkflowMethodAttribute : Attribute
     {
         private string      name;
