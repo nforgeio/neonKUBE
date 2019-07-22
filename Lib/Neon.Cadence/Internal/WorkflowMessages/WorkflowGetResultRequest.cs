@@ -51,7 +51,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the specific workflow run.
+        /// Identifies the specific workflow execution.
         /// </summary>
         public string RunId
         {

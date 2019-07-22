@@ -123,10 +123,12 @@ namespace Neon.Cadence
     /// For situations where you have a lot of workflow and activity classes, it can become
     /// cumbersome to register each implementation class individually (generally because you
     /// forget to register new classes after they've been implemented).  To assist with this,
-    /// you can also tag your workflow and activity classes with <see cref="AutoRegisterAttribute"/>
-    /// and then call <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
-    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an assembly and
-    /// automatically register the tagged implementation classes it finds.
+    /// you can also tag your workflow and activity classes with <see cref="WorkflowAttribute"/>
+    /// or <see cref="ActivityAttribute"/> with <see cref="WorkflowAttribute.AutoRegister"/>
+    /// or <see cref="ActivityAttribute.AutoRegister"/> set to <c>true</c> and then call
+    /// <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
+    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an
+    /// assembly and automatically register the tagged implementation classes it finds.
     /// </para>
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
@@ -234,7 +236,7 @@ namespace Neon.Cadence
     /// Task lists provide an additional way to customize where workflows and activities are executed.
     /// A task list is simply a string used in addition to the domain to indicate which workflows and
     /// activities will be scheduled for execution by workers.  For regular (top-level) workflows,
-    /// you can specify a default task list via <see cref="CadenceSettings.DefaulTaskList"/>.  
+    /// you can specify a default task list via <see cref="CadenceSettings.DefaultTaskList"/>.  
     /// Any non-empty custom string is allowed for task lists.  Child workflow and activity task lists
     /// will default to the parent workflow's task list by default.
     /// </para>
@@ -299,9 +301,9 @@ namespace Neon.Cadence
 
         /// <summary>
         /// The default Cadence timeout used for workflow and activity timeouts that don't
-        /// have Cadence supplied values.  This returns a really long time.
+        /// have Cadence supplied values.
         /// </summary>
-        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromDays(365);
+        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromHours(24);
 
         //---------------------------------------------------------------------
         // Private types
@@ -626,7 +628,7 @@ namespace Neon.Cadence
             {
                 var client = new CadenceClient(settings);
 
-                await client.SetStickyWorkflowCacheSizeAsync(10000);
+                await client.SetSCacheMaximumSizeAsync(10000);
 
                 return client;
             }
@@ -706,6 +708,8 @@ namespace Neon.Cadence
                 Settings.DebugHttpTimeout    = TimeSpan.FromHours(48);
                 Settings.ProxyTimeoutSeconds = Settings.DebugHttpTimeout.TotalSeconds;
             }
+
+            DataConverter = settings.DataConverter ?? new JsonDataConverter();
 
             // Start the web server that will listen for requests from the associated 
             // [cadence-proxy] process.
@@ -997,6 +1001,11 @@ namespace Neon.Cadence
         internal Process ProxyProcess { get; private set; }
 
         /// <summary>
+        /// Returns the <see cref="IDataConverter"/> used for workflows and activities managed by the client.
+        /// </summary>
+        public IDataConverter DataConverter { get; private set; }
+
+        /// <summary>
         /// Raised when the connection is closed.  You can determine whether the connection
         /// was closed normally or due to an error by examining the <see cref="CadenceClientClosedArgs"/>
         /// arguments passed to the handler.
@@ -1055,27 +1064,49 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the Cadence task list to be referenced for an operation.  If <paramref name="taskList"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise <see cref="CadenceSettings.DefaultTaskList"/>
+        /// will be returned.  Note that one of <paramref name="taskList"/> or the default task list
+        /// must be non-empty.
+        /// </summary>
+        /// <param name="taskList">The specific task list to use or null/empty.</param>
+        /// <returns>The task list to be referenced.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default tasklist are both null or empty.</exception>
+        internal string ResolveTaskList(string taskList)
+        {
+            if (!string.IsNullOrEmpty(taskList))
+            {
+                return taskList;
+            }
+            else if (!string.IsNullOrEmpty(Settings.DefaultTaskList))
+            {
+                return Settings.DefaultTaskList;
+            }
+
+            throw new ArgumentNullException($"One of [{nameof(taskList)}] parameter or the client's default task list (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultTaskList)}]) must be non-empty.");
+        }
+
+        /// <summary>
         /// Returns the Cadence domain to be referenced for an operation.  If <paramref name="domain"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise the default domain
+        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="CadenceSettings.DefaultDomain"/>
         /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
         /// be non-empty.
         /// </summary>
         /// <param name="domain">The specific domain to use or null/empty.</param>
         /// <returns>The domain to be referenced.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domains are both null or empty.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domain are both null or empty.</exception>
         internal string ResolveDomain(string domain)
         {
             if (!string.IsNullOrEmpty(domain))
             {
                 return domain;
             }
-
-            if (!string.IsNullOrEmpty(Settings.DefaultDomain))
+            else if (!string.IsNullOrEmpty(Settings.DefaultDomain))
             {
                 return Settings.DefaultDomain;
             }
 
-            throw new ArgumentNullException($"One of [{nameof(domain)}] or the client's default domain must be non-empty.");
+            throw new ArgumentNullException($"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
         }
 
         /// <summary>

@@ -30,6 +30,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Used to identify a workflow interface method as a workflow entry point.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class WorkflowMethodAttribute : Attribute
     {
         private string      name;
@@ -100,7 +101,7 @@ namespace Neon.Cadence
 
             set
             {
-                Contract.Requires<ArgumentException>(value <= 60, $"[TaskStartToCloseTimeoutSeconds={value}] exceeds 60 seconds, the maximum allowed.");
+                Covenant.Requires<ArgumentException>(value <= 60, $"[TaskStartToCloseTimeoutSeconds={value}] exceeds 60 seconds, the maximum allowed.");
 
                 taskStartToCloseTimeoutSeconds = Math.Max(value, 0);
             }

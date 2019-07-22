@@ -182,7 +182,7 @@ namespace Neon.Cadence
         /// Returns the names of the mapped queries.
         /// </summary>
         /// <returns>The query name list.</returns>
-        public List<string> GetQueryNames()
+        public List<string> GetQueryTypes()
         {
             return nameToQueryMethod.Keys.ToList();
         }

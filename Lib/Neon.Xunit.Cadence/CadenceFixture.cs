@@ -53,6 +53,16 @@ namespace Neon.Xunit.Cadence
         private bool                keepConnection;
 
         /// <summary>
+        /// The default domain configured for <see cref="CadenceFixture"/> clients.
+        /// </summary>
+        public const string DefaultDomain = "test-domain";
+
+        /// <summary>
+        /// The default tasklist configured for <see cref="CadenceFixture"/> clients.
+        /// </summary>
+        public const string DefaultTaskList = "test-tasks";
+
+        /// <summary>
         /// Constructs the fixture.
         /// </summary>
         public CadenceFixture()
@@ -73,6 +83,8 @@ namespace Neon.Xunit.Cadence
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/couchbase-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
+        /// <param name="defaultTaskList">Optionally specifies the default task list for the fixture's client.  This defaults to <b>test-tasks</b>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
@@ -108,6 +120,8 @@ namespace Neon.Xunit.Cadence
             string              image           = "nkubeio/cadence-test:latest",
             string              name            = "cadence-test",
             string[]            env             = null,
+            string              defaultDomain   = DefaultDomain,
+            string              defaultTaskList = DefaultTaskList,
             bool                keepConnection  = false,
             bool                keepOpen        = false,
             bool                emulateProxy    = false)
@@ -117,7 +131,7 @@ namespace Neon.Xunit.Cadence
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(settings, image, name, env, keepConnection, keepOpen, emulateProxy);
+                    StartAsComposed(settings, image, name, env, defaultDomain, defaultTaskList, keepConnection, keepOpen, emulateProxy);
                 });
         }
 
@@ -128,6 +142,8 @@ namespace Neon.Xunit.Cadence
         /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-test:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
+        /// <param name="defaultTaskList">Optionally specifies the default task list for the fixture's client.  This defaults to <b>test-tasks</b>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
@@ -152,7 +168,9 @@ namespace Neon.Xunit.Cadence
             string              image           = "nkubeio/cadence-test:latest",
             string              name            = "cadence-test",
             string[]            env             = null,
-            bool                keepConnection  = false, 
+            string              defaultDomain   = DefaultDomain,
+            string              defaultTaskList = DefaultTaskList,
+            bool                keepConnection  = false,
             bool                keepOpen        = false,
             bool                emulateProxy    = false)
         {
@@ -179,13 +197,10 @@ namespace Neon.Xunit.Cadence
 
                 settings = settings ?? new CadenceSettings()
                 {
-                    CreateDomain  = true
+                    CreateDomain    = true,
+                    DefaultDomain   = defaultDomain,
+                    DefaultTaskList = defaultTaskList
                 };
-
-                if (string.IsNullOrEmpty(settings.DefaultDomain))
-                {
-                    settings.DefaultDomain = "test-domain";
-                }
 
                 settings.Servers.Clear();
                 settings.Servers.Add($"http://localhost:{NetworkPorts.Cadence}");
