@@ -131,7 +131,7 @@ namespace Neon.Cadence
     /// will work properly.
     /// </note>
     /// </remarks>
-    public abstract class ActivityBase : IActivityBase, INeonLogger
+    public abstract class ActivityBase : IActivityBase
     {
         //---------------------------------------------------------------------
         // Private types
@@ -458,64 +458,16 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private long?           contextId;      // Will be NULL for local activities.
-        private ActivityTask    cachedInfo;
-
         /// <summary>
         /// Default constructor.
         /// </summary>
         public ActivityBase()
         {
+            this.Activity = new ActivityState(this);
         }
 
-        /// <summary>
-        /// Returns the <see cref="CadenceClient"/> managing this activity.
-        /// </summary>
-        public CadenceClient Client { get; private set; }
-
-        /// <summary>
-        /// Returns <c>true</c> for a local activity execution.
-        /// </summary>
-        public bool IsLocal => !contextId.HasValue;
-
-        /// <summary>
-        /// The internal cancellation token source.
-        /// </summary>
-        internal CancellationTokenSource CancellationTokenSource { get; private set; }
-
-        /// <summary>
-        /// Returns the activity's cancellation token.  Activities can monitor this
-        /// to gracefully handle activity cancellation.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// We recommend that all non-local activities that run for relatively long periods,
-        /// monitor <see cref="CancellationToken"/> for activity cancellation so that they
-        /// can gracefully ternminate including potentially calling <see cref="SendHeartbeatAsync(byte[])"/>
-        /// to checkpoint the current activity state.
-        /// </para>
-        /// <para>
-        /// Cancelled activities should throw a <see cref="TaskCanceledException"/> from
-        /// their <see cref="OnRunAsync(CadenceClient, byte[])"/> method rather than returning 
-        /// a result so that Cadence will reschedule the activity if possible.
-        /// </para>
-        /// </remarks>
-        public CancellationToken CancellationToken { get; private set; }
-
-        /// <summary>
-        /// Returns the additional information about the activity and the workflow
-        /// that invoked it.  Note that this doesn't work for local activities.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
-        public ActivityTask ActivityTask
-        {
-            get
-            {
-                EnsureNotLocal();
-
-                return this.cachedInfo;
-            }
-        }
+        /// <inheritdoc/>
+        public IActivityState Activity { get; private set;  }
 
         /// <summary>
         /// Called internally to initialize the activity.
@@ -527,10 +479,41 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null);
 
             this.Client                  = client;
-            this.contextId               = contextId;
+            this.ContextId               = contextId;
             this.CancellationTokenSource = new CancellationTokenSource();
             this.CancellationToken       = CancellationTokenSource.Token;
         }
+
+        /// <summary>
+        /// Returns the <see cref="CadenceClient"/> managing this activity invocation.
+        /// </summary>
+        internal CadenceClient Client { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="CancellationTokenSource"/> for the activity invocation.
+        /// </summary>
+        internal CancellationTokenSource CancellationTokenSource { get; private set; }
+
+        /// <summary>
+        /// Returns the <see cref="CancellationToken"/> for thge activity invocation.
+        /// </summary>
+        internal CancellationToken CancellationToken { get; private set; }
+
+        /// <summary>
+        /// Returns the context ID for the activity invocation or <c>null</c> for
+        /// local activities.
+        /// </summary>
+        internal long? ContextId { get; private set; }
+
+        /// <summary>
+        /// Indicates whether the activity was executed locally.
+        /// </summary>
+        internal bool IsLocal => !ContextId.HasValue;
+
+        /// <summary>
+        /// Returns additional information about the activity and thr workflow that executed it.
+        /// </summary>
+        internal ActivityTask ActivityTask { get; private set; }
 
         /// <summary>
         /// Called by Cadence to execute an activity.  Derived classes will need to implement
@@ -561,16 +544,16 @@ namespace Neon.Cadence
                 var reply = (ActivityGetInfoReply)(await Client.CallProxyAsync(
                     new ActivityGetInfoRequest()
                     {
-                        ContextId = this.contextId.Value,
+                        ContextId = ContextId.Value,
                     }));
 
                 reply.ThrowOnError();
 
-                cachedInfo = reply.Info.ToPublic();
+                ActivityTask = reply.Info.ToPublic();
 
                 // Track the activity.
 
-                var activityKey = new ActivityKey(client, contextId.Value);
+                var activityKey = new ActivityKey(client, ContextId.Value);
 
                 try
                 {
@@ -596,247 +579,12 @@ namespace Neon.Cadence
         /// is not a local actvity.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
-        private void EnsureNotLocal()
+        internal void EnsureNotLocal()
         {
             if (IsLocal)
             {
                 throw new InvalidOperationException("This operation is not supported for local activity executions.");
             }
-        }
-
-        /// <summary>
-        /// <para>
-        /// Sends a heartbeat with optional details to Cadence.
-        /// </para>
-        /// <note>
-        /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
-        /// </note>
-        /// </summary>
-        /// <param name="details">Optional heartbeart details.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
-        /// <remarks>
-        /// <para>
-        /// Long running activities need to send periodic heartbeats back to
-        /// Cadence to prove that the activity is still alive.  This can also
-        /// be used by activities to implement checkpoints or record other
-        /// details.  This method sends a heartbeat with optional details
-        /// encoded as a byte array.
-        /// </para>
-        /// <note>
-        /// The maximum allowed time period between heartbeats is specified in 
-        /// <see cref="ActivityOptions"/> when activities are executed and it's
-        /// also possible to enable automatic heartbeats sent by the Cadence client.
-        /// </note>
-        /// </remarks>
-        public async Task SendHeartbeatAsync(byte[] details = null)
-        {
-            EnsureNotLocal();
-
-            var reply = (ActivityRecordHeartbeatReply)await Client.CallProxyAsync(
-                new ActivityRecordHeartbeatRequest()
-                {
-                    ContextId = this.contextId.Value,
-                    Details   = details
-                });
-
-            reply.ThrowOnError();
-        }
-
-        /// <summary>
-        /// <para>
-        /// Determines whether the details from the last recorded heartbeat last
-        /// failed attempt exist.
-        /// </para>
-        /// <note>
-        /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
-        /// </note>
-        /// </summary>
-        /// <returns>The details from the last heartbeat or <c>null</c>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
-        public async Task<bool> HasLastHeartbeatDetailsAsync()
-        {
-            EnsureNotLocal();
-
-            var reply = (ActivityHasHeartbeatDetailsReply)await Client.CallProxyAsync(
-                new ActivityHasHeartbeatDetailsRequest()
-                {
-                    ContextId = this.contextId.Value
-                });
-
-            reply.ThrowOnError();
-
-            return reply.HasDetails;
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns the details from the last recorded heartbeat last failed attempt
-        /// at running the activity.
-        /// </para>
-        /// <note>
-        /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
-        /// </note>
-        /// </summary>
-        /// <returns>The details from the last heartbeat or <c>null</c>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
-        public async Task<byte[]> GetLastHeartbeatDetailsAsync()
-        {
-            EnsureNotLocal();
-
-            var reply = (ActivityGetHeartbeatDetailsReply)await Client.CallProxyAsync(
-                new ActivityGetHeartbeatDetailsRequest()
-                {
-                    ContextId = this.contextId.Value
-                });
-
-            reply.ThrowOnError();
-
-            return reply.Details;
-        }
-
-        /// <summary>
-        /// This method may be called within <see cref="RunAsync(byte[])"/> to indicate that the
-        /// activity will be completed externally.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
-        /// <remarks>
-        /// <para>
-        /// This method works by throwing an <see cref="CadenceActivityExternalCompletionException"/> which
-        /// will be caught and handled by the base <see cref="ActivityBase"/> class.  You'll need to allow
-        /// this exception to exit your <see cref="RunAsync(byte[])"/> method for this to work.
-        /// </para>
-        /// <note>
-        /// This method doesn't work for local activities.
-        /// </note>
-        /// </remarks>
-        public async Task CompleteExternallyAsync()
-        {
-            EnsureNotLocal();
-
-            await Task.CompletedTask;
-            throw new CadenceActivityExternalCompletionException();
-        }
-
-        //---------------------------------------------------------------------
-        // Logging implementation
-
-        // $todo(jeff.lill): Implement these.
-        //
-        // Note that these calls are all synchronous.  Perhaps we should consider dumping
-        // the [INeonLogger] implementations in favor of simpler async methods?
-
-        /// <inheritdoc/>
-        public bool IsLogDebugEnabled => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public bool IsLogSInfoEnabled => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public bool IsLogInfoEnabled => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public bool IsLogWarnEnabled => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public bool IsLogErrorEnabled => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public bool IsLogSErrorEnabled => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public bool IsLogCriticalEnabled => throw new NotImplementedException();
-
-        /// <inheritdoc/>
-        public bool IsLogLevelEnabled(LogLevel logLevel)
-        {
-            return false;
-        }
-
-        /// <inheritdoc/>
-        public void LogDebug(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogSInfo(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogInfo(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogWarn(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogSError(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogError(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogCritical(object message, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogDebug(object message, Exception e, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogSInfo(object message, Exception e, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogInfo(object message, Exception e, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogWarn(object message, Exception e, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogError(object message, Exception e, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogSError(object message, Exception e, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogCritical(object message, Exception e, string activityId = null)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, IEnumerable<string> textFields, IEnumerable<double> numFields)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params string[] textFields)
-        {
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params double[] numFields)
-        {
         }
     }
 }

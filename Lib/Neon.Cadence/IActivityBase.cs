@@ -32,5 +32,10 @@ namespace Neon.Cadence
     /// </summary>
     public interface IActivityBase
     {
+        /// <summary>
+        /// Provides information about the executing activity as well as other
+        /// useful functionality.
+        /// </summary>
+        IActivityState Activity { get; }
     }
 }
