@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Workflow.cs
+// FILE:	    WorkflowBase.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class that can be used for Cadence workflow implementations.
     /// </summary>
-    public class Workflow : IWorkflow
+    public class WorkflowBase : IWorkflowBase
     {
         //---------------------------------------------------------------------
         // Private types
@@ -90,7 +90,7 @@ namespace Neon.Cadence
         /// returns the arguments passed such that they'll be recorded in the workflow
         /// history.  This is intended to be executed as a local activity.
         /// </summary>
-        private class VariableActivity : Activity
+        private class VariableActivity : ActivityBase
         {
             protected override Task<byte[]> RunAsync(byte[] args)
             {
@@ -102,8 +102,8 @@ namespace Neon.Cadence
         // Static members
 
         private static object                                   syncLock           = new object();
-        private static INeonLogger                              log                = LogManager.Default.GetLogger<Workflow>();
-        private static Dictionary<WorkflowKey, Workflow>        idToWorkflow       = new Dictionary<WorkflowKey, Workflow>();
+        private static INeonLogger                              log                = LogManager.Default.GetLogger<WorkflowBase>();
+        private static Dictionary<WorkflowKey, WorkflowBase>        idToWorkflow       = new Dictionary<WorkflowKey, WorkflowBase>();
         private static Dictionary<Type, WorkflowMethodMap>      typeToMethodMap    = new Dictionary<Type, WorkflowMethodMap>();
 
         // This dictionary is used to map workflow type names to the target workflow
@@ -150,8 +150,8 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflowType != null);
-            Covenant.Requires<ArgumentException>(workflowType.IsSubclassOf(typeof(Workflow)), $"Type [{workflowType.FullName}] does not derive from [{nameof(Workflow)}]");
-            Covenant.Requires<ArgumentException>(workflowType != typeof(Workflow), $"The base [{nameof(Workflow)}] class cannot be registered.");
+            Covenant.Requires<ArgumentException>(workflowType.IsSubclassOf(typeof(WorkflowBase)), $"Type [{workflowType.FullName}] does not derive from [{nameof(WorkflowBase)}]");
+            Covenant.Requires<ArgumentException>(workflowType != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
 
             workflowTypeName = GetWorkflowTypeKey(client, workflowTypeName);
 
@@ -265,8 +265,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="contextId">The workflow's context ID.</param>
-        /// <returns>The <see cref="Workflow"/> instance or <c>null</c> if the workflow was not found.</returns>
-        private static Workflow GetWorkflow(CadenceClient client, long contextId)
+        /// <returns>The <see cref="WorkflowBase"/> instance or <c>null</c> if the workflow was not found.</returns>
+        private static WorkflowBase GetWorkflow(CadenceClient client, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -294,7 +294,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(request != null);
 
-            Workflow    workflow;
+            WorkflowBase    workflow;
             Type        workflowType;
 
             var contextId   = request.ContextId;

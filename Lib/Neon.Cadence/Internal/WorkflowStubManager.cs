@@ -203,7 +203,7 @@ namespace Neon.Cadence.Internal
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The stub instance.</returns>
         public static TWorkflowInterface Create<TWorkflowInterface>(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
-            where TWorkflowInterface : class, IWorkflow
+            where TWorkflowInterface : class, IWorkflowBase
         {
             var workflowInterface = typeof(TWorkflowInterface);
 

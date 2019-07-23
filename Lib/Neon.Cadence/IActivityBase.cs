@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IActivity.cs
+// FILE:	    IActivityBase.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -30,7 +30,7 @@ namespace Neon.Cadence
     /// <summary>
     /// All application activity interface definitions must derive from this interface.
     /// </summary>
-    public interface IActivity
+    public interface IActivityBase
     {
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IWorkflow.cs
+// FILE:	    IWorkflowBase.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -30,7 +30,7 @@ namespace Neon.Cadence
     /// <summary>
     /// All application workflow interface definitions must derive from this interface.
     /// </summary>
-    public interface IWorkflow
+    public interface IWorkflowBase
     {
     }
 }
