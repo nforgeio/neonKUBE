@@ -51,9 +51,10 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Data()
+        public void DataWithGenericType()
         {
-            // Verify that we can serialize and deserialize various (non-roundtrip) data items.
+            // Verify that we can serialize and deserialize various (non-roundtrip) data items
+            // using the generic FromData() method.
 
             var     converter = new JsonDataConverter();
             byte[]  contents;
@@ -89,9 +90,49 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void RoundTripData()
+        public void DataWithType()
         {
-            // Verify that we can serialize and deserialize various roundtrip data items.
+            // Verify that we can serialize and deserialize various (non-roundtrip) data items
+            // using the non-generic FromData() method.
+
+            var     converter = new JsonDataConverter();
+            byte[]  contents;
+
+            // Serialize NULL.
+
+            contents = converter.ToData(null);
+            Assert.Null(converter.FromData(typeof(object), contents));
+
+            // Serialize a string.
+
+            contents = converter.ToData("foo");
+            Assert.Equal("foo", (string)converter.FromData(typeof(string), contents));
+
+            // Serialize a byte array.
+
+            var items = new int[] { 0, 1, 2, 3, 4 };
+
+            contents = converter.ToData(items);
+            Assert.Equal(items, (int[])converter.FromData(typeof(int[]), contents));
+
+            // Serialize an array of non-roundtrip objects.
+
+            var items2 = new TestData[] { new TestData() { Hello = "World!" }, new TestData() { Hello = "Goodbye!" }, null };
+
+            contents = converter.ToData(items2);
+            items2   = (TestData[])converter.FromData(typeof(TestData[]), contents);
+            Assert.Equal(3, items2.Length);
+            Assert.Equal("World!", items2[0].Hello);
+            Assert.Equal("Goodbye!", items2[1].Hello);
+            Assert.Null(items2[2]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void RoundTripDataWithGeneric()
+        {
+            // Verify that we can serialize and deserialize various roundtrip data items
+            // using the generic converter.
 
             var     converter = new JsonDataConverter();
             byte[]  contents;
@@ -121,6 +162,46 @@ namespace TestCadence
             contents = converter.ToData(bob);
 
             var deserializedBob = converter.FromData<Person>(contents);
+
+            Assert.Equal(bob, deserializedBob);
+            Assert.Equal("bar", (string)deserializedBob.__JObject["foo"]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void RoundTripDataWithType()
+        {
+            // Verify that we can serialize and deserialize various roundtrip data items
+            // using the non-generic converter.
+
+            var     converter = new JsonDataConverter();
+            byte[]  contents;
+
+            // Serialize NULL.
+
+            contents = converter.ToData(null);
+            Assert.Null(converter.FromData<Person>(contents));
+
+            // Serialize a roundtrip item without extra data.
+
+            var bob = new Person()
+            {
+                Name   = "Bob",
+                Age    = 27,
+                Data   = new byte[] { 0, 1, 2, 3, 4 },
+                Gender = Gender.Male
+            };
+
+            contents = converter.ToData(bob);
+            Assert.Equal(bob, (Person)converter.FromData(typeof(Person), contents));
+
+            // Serialize a roundtrip item WITH extra data.
+
+            bob.__JObject.Add("foo", "bar");
+
+            contents = converter.ToData(bob);
+
+            var deserializedBob = (Person)converter.FromData(typeof(Person), contents);
 
             Assert.Equal(bob, deserializedBob);
             Assert.Equal("bar", (string)deserializedBob.__JObject["foo"]);

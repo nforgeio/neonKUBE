@@ -451,20 +451,18 @@ namespace Neon.Cadence
         /// <summary>
         /// Transmits a signal to a workflow, starting the workflow if it's not currently running.
         /// </summary>
-        /// <param name="workflowId">The workflow ID.</param>
         /// <param name="signalName">Identifies the signal.</param>
         /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
-        /// <param name="workflowArgs">Optionally specifies the workflow arguments.</param>
+        /// <param name="startArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
         /// <param name="taskList">Optionally specifies the task list.  This defaults to <b>"default"</b>.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task SignalWorkflowWithStartAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string signalName, byte[] signalArgs = null, byte[] startArgs = null, string taskList = null, WorkflowOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
             options = options ?? new WorkflowOptions();
@@ -472,15 +470,17 @@ namespace Neon.Cadence
             var reply = (WorkflowSignalWithStartReply)await CallProxyAsync(
                 new WorkflowSignalWithStartRequest()
                 {
-                    WorkflowId   = workflowId,
+                    WorkflowId   = options.WorkflowId,
                     Options      = options.ToInternal(this, taskList),
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
-                    WorkflowArgs = workflowArgs,
+                    WorkflowArgs = startArgs,
                     Domain       = ResolveDomain(domain)
                 });
 
             reply.ThrowOnError();
+
+            return reply.Execution.ToPublic();
         }
 
         /// <summary>

@@ -62,6 +62,23 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
+        public object FromData(Type type, byte[] content)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(content != null);
+            Covenant.Requires<ArgumentNullException>(content.Length > 0);
+
+            if (type.Implements<IRoundtripData>())
+            {
+                return RoundtripDataFactory.CreateFrom(type, content);
+            }
+            else
+            {
+                return NeonHelper.JsonDeserialize(type, content, strict: false);
+            }
+        }
+
+        /// <inheritdoc/>
         public object[] FromDataArray(byte[] content, params Type[] valueTypes)
         {
             Covenant.Requires<ArgumentNullException>(content != null);

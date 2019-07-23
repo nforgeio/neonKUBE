@@ -34,12 +34,20 @@ namespace Neon.Cadence
     public interface IDataConverter
     {
         /// <summary>
-        /// Deserializes a single value from a byte array.
+        /// Deserializes a single value from a byte array as the specified generic type parameter.
         /// </summary>
-        /// <typeparam name="T">Specifies the expected type.</typeparam>
+        /// <typeparam name="T">Specifies the result type.</typeparam>
         /// <param name="content">The input bytes.</param>
         /// <returns>The deserialized value.</returns>
         T FromData<T>(byte[] content);
+
+        /// <summary>
+        /// Deserializes a single value from a byte array as the specified type.
+        /// </summary>
+        /// <param name="type">The result type.</param>
+        /// <param name="content">The input bytes.</param>
+        /// <returns>The deserialized value returned as an <see cref="object"/>.</returns>
+        object FromData(Type type, byte[] content);
 
         /// <summary>
         /// Deserializes an array of values from a byte array.
