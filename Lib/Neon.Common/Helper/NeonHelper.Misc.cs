@@ -1698,7 +1698,7 @@ namespace Neon.Common
 
                 foreach (var parameterType in parameterTypes)
                 {
-                    sb.AppendWithSeparator(parameterType.Name, ", ");
+                    sb.AppendWithSeparator(parameterType.FullName, ", ");
                 }
 
                 throw new KeyNotFoundException($"Cannot locate the [{type.FullName}.{name}({sb})] method.");
@@ -1727,7 +1727,7 @@ namespace Neon.Common
 
                 foreach (var parameterType in parameterTypes)
                 {
-                    sb.AppendWithSeparator(parameterType.Name, ", ");
+                    sb.AppendWithSeparator(parameterType.FullName, ", ");
                 }
 
                 throw new KeyNotFoundException($"Cannot locate the [{type.FullName}({sb})] constructor.");
