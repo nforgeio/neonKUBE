@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityState.cs
+// FILE:	    Activity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -30,7 +30,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <inheritdoc/>
-    public class ActivityState : IActivityState
+    public class Activity : IActivity
     {
         private ActivityBase    activity;
 
@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="activity">The parent activity implementation.</param>
-        internal ActivityState(ActivityBase activity)
+        internal Activity(ActivityBase activity)
         {
             Covenant.Requires<ArgumentNullException>(activity != null);
 

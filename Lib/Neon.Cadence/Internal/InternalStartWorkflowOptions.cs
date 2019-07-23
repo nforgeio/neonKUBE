@@ -74,7 +74,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "DecisionTaskStartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(10 * CadenceHelper.NanosecondsPerSecond)]
-        public long TaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
+        public long DecisionTaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
 
         /// <summary>
         /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful

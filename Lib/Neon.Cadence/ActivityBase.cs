@@ -87,7 +87,7 @@ namespace Neon.Cadence
     /// invoke theses using <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>.
     /// </para>
     /// <para>
-    /// <b>local</b> activities simply run on the local worker without needing to
+    /// <b>local</b> activities simply execute on the local worker without needing to
     /// be registered or scheduled by the Cadence cluster.  These are very low overhead
     /// and intended for for simple short running activities (a few seconds).
     /// Workflows invoke local activities using <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>.
@@ -191,12 +191,12 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                               syncLock            = new object();
-        private static INeonLogger                          log                 = LogManager.Default.GetLogger<ActivityBase>();
-        private static Type[]                               noTypeArgs          = new Type[0];
-        private static object[]                             noArgs              = new object[0];
+        private static object                                   syncLock            = new object();
+        private static INeonLogger                              log                 = LogManager.Default.GetLogger<ActivityBase>();
+        private static Type[]                                   noTypeArgs          = new Type[0];
+        private static object[]                                 noArgs              = new object[0];
         private static Dictionary<ActivityKey, ActivityBase>    idToActivity        = new Dictionary<ActivityKey, ActivityBase>();
-        private static Dictionary<Type, ConstructorInfo>    typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
+        private static Dictionary<Type, ConstructorInfo>        typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
 
         // This dictionary is used to map activity type names to the target activity
         // type.  Note that these mappings are scoped to specific cadence client
@@ -463,11 +463,11 @@ namespace Neon.Cadence
         /// </summary>
         public ActivityBase()
         {
-            this.Activity = new ActivityState(this);
+            this.Activity = new Activity(this);
         }
 
         /// <inheritdoc/>
-        public IActivityState Activity { get; private set;  }
+        public IActivity Activity { get; private set;  }
 
         /// <summary>
         /// Called internally to initialize the activity.
@@ -524,7 +524,7 @@ namespace Neon.Cadence
         protected abstract Task<byte[]> RunAsync(byte[] args);
 
         /// <summary>
-        /// Called internally to run the activity.
+        /// Called internally to execute the activity.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="args">The activity arguments.</param>

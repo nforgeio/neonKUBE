@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IActivityBase.cs
+// FILE:	    Workflow.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,24 +18,29 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence
 {
-    /// <summary>
-    /// All application activity interface definitions must derive from this interface.
-    /// </summary>
-    public interface IActivityBase
+    /// <inheritdoc/>
+    public class Workflow : IWorkflow
     {
         /// <summary>
-        /// Provides information about the executing activity as well as other
-        /// useful functionality.
+        /// The default workflow version returned by <see cref="GetVersionAsync(string, int, int)"/> 
+        /// when a version has not been set yet.
         /// </summary>
-        IActivity Activity { get; }
+        public int DefaultVersion = -1;
+
+        /// <inheritdoc/>
+        public CadenceClient Client { get; private set; }
     }
 }

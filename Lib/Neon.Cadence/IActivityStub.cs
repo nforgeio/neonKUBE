@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IActivityBase.cs
+// FILE:	    IActivityStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -28,14 +29,9 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// All application activity interface definitions must derive from this interface.
+    /// Defines the low-level operations for an untyped activty stub.
     /// </summary>
-    public interface IActivityBase
+    public interface IActivityStub
     {
-        /// <summary>
-        /// Provides information about the executing activity as well as other
-        /// useful functionality.
-        /// </summary>
-        IActivity Activity { get; }
     }
 }

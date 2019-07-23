@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IActivityState.cs
+// FILE:	    IActivity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,9 +33,9 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Provides useful information and functionality for activity implementations.
-    /// This will be available as the <see cref="IActivityBase.Activity"/> property.
+    /// This will be available via the <see cref="IActivityBase.Activity"/> property.
     /// </summary>
-    public interface IActivityState
+    public interface IActivity
     {
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this activity.
@@ -53,7 +53,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <remarks>
         /// <para>
-        /// We recommend that all non-local activities that run for relatively long periods,
+        /// We recommend that all non-local activities that execute for relatively long periods,
         /// monitor <see cref="CancellationToken"/> for activity cancellation so that they
         /// can gracefully terminate including potentially calling <see cref="SendHeartbeatAsync(byte[])"/>
         /// to checkpoint the current activity state.

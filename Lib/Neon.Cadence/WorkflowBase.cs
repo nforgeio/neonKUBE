@@ -103,7 +103,7 @@ namespace Neon.Cadence
 
         private static object                                   syncLock           = new object();
         private static INeonLogger                              log                = LogManager.Default.GetLogger<WorkflowBase>();
-        private static Dictionary<WorkflowKey, WorkflowBase>        idToWorkflow       = new Dictionary<WorkflowKey, WorkflowBase>();
+        private static Dictionary<WorkflowKey, WorkflowBase>    idToWorkflow       = new Dictionary<WorkflowKey, WorkflowBase>();
         private static Dictionary<Type, WorkflowMethodMap>      typeToMethodMap    = new Dictionary<Type, WorkflowMethodMap>();
 
         // This dictionary is used to map workflow type names to the target workflow
@@ -115,13 +115,7 @@ namespace Neon.Cadence
         // where CLIENT-ID is the locally unique ID of the client.  This is important,
         // because we'll need to remove entries the for clients when they're disposed.
 
-        private static Dictionary<string, Type>     nameToWorkflowType = new Dictionary<string, Type>();
-
-        /// <summary>
-        /// The default workflow version returned by <see cref="GetVersionAsync(string, int, int)"/> 
-        /// when a version has not been set yet.
-        /// </summary>
-        public int DefaultVersion = -1;
+        private static Dictionary<string, Type>                 nameToWorkflowType = new Dictionary<string, Type>();
 
         /// <summary>
         /// Prepends the Cadence client ID to the workflow type name to generate the
@@ -573,5 +567,14 @@ namespace Neon.Cadence
             }
 #endif
         }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        /// <summary>
+        /// Provides information about the executing workflow as well as other
+        /// useful functionality.
+        /// </summary>
+        public IWorkflow Workflow { get; private set; }
     }
 }

@@ -32,5 +32,10 @@ namespace Neon.Cadence
     /// </summary>
     public interface IWorkflowBase
     {
+        /// <summary>
+        /// Provides information about the executing workflow as well as other
+        /// useful functionality.
+        /// </summary>
+        IWorkflow Workflow { get; }
     }
 }

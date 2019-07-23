@@ -247,7 +247,7 @@ namespace Neon.Cadence
     /// 5 minute segments and then schedules an activity to render each segment.  Now assume that 
     /// we have two kinds of servers, one just a basic general purpose server and the other that
     /// includes high-end GPUs that are required for rendering.  In the simple case, you'd like
-    /// the workflows to run on the regular server and the activites to run on the GPU machines
+    /// the workflows to execute on the regular server and the activites to run on the GPU machines
     /// (because there's no point in wasting any expensive GPU machine resources on the workflow).
     /// </para>
     /// <para>

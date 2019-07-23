@@ -192,6 +192,12 @@ namespace Neon.Cadence
         /// <param name="workflowType">Optionally specifies the workflow type.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
         public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowType = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
@@ -207,6 +213,11 @@ namespace Neon.Cadence
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke.
+        /// </remarks>
         public IWorkflowStub NewUntypedWorkflowStub(string workflowType, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowType));
@@ -216,7 +227,8 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Creates a typed workflow stub connected to a known workflow execution.
-        /// This can be used to signal and query the workflow.
+        /// This can be used to signal and query the workflow via the type-safe
+        /// interface methods.
         /// </summary>
         /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
@@ -228,6 +240,12 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
         public TWorkflow NewWorkflowStub<TWorkflow>(string workflowId, string runId = null, string workflowType = null, string domain = null)
             where TWorkflow : IWorkflowBase
         {
@@ -238,7 +256,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Creates a typed workflow stub that can be used to start as well as 
-        /// query and signal the workflow.
+        /// query and signal the workflow via the type-safe interface methods.
         /// </summary>
         /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
         /// <param name="options">Optionally specifies the workflow options.</param>
@@ -249,6 +267,12 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
         public TWorkflow NewWorkflowStub<TWorkflow>(WorkflowOptions options = null, string workflowType = null, string domain = null)
             where TWorkflow : IWorkflowBase
         {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IActivityBase.cs
+// FILE:	    IExternalWorkflowStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -28,14 +29,29 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// All application activity interface definitions must derive from this interface.
+    /// Supports signalling and cancelling any workflow.  This is useful when an
+    /// external workflow type is not known at compile time or to manage workflows
+    /// written in another language.
     /// </summary>
-    public interface IActivityBase
+    public interface IExternalWorkflowStub
     {
         /// <summary>
-        /// Provides information about the executing activity as well as other
-        /// useful functionality.
+        /// Returns the workflow execution.
         /// </summary>
-        IActivity Activity { get; }
+        WorkflowExecution Execution { get; }
+
+        /// <summary>
+        /// Signals the workflow.
+        /// </summary>
+        /// <param name="signalName">Specifies the signal name.</param>
+        /// <param name="args">Specifies the signal arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        Task Signal(string signalName, params object[] args);
+
+        /// <summary>
+        /// Cancels the workflow.
+        /// </summary>
+        /// <param name="args">Specifies the signal arguments.</param>
+        Task Cancel();
     }
 }
