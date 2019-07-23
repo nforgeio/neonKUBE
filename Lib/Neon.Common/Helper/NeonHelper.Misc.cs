@@ -1675,5 +1675,65 @@ namespace Neon.Common
         public static void PackageReferenceToNeonCommonIsRequired()
         {
         }
+
+        /// <summary>
+        /// Uses reflection to locate a specific public, non-public, instance or static method on a type.
+        /// </summary>
+        /// <param name="type">The target type.</param>
+        /// <param name="name">The method name.</param>
+        /// <param name="parameterTypes">The parameter types.</param>
+        /// <returns>The <see cref="MethodInfo"/>.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the method does not exist.</exception>
+        public static MethodInfo GetMethod(Type type, string name, params Type[] parameterTypes)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(parameterTypes != null);
+
+            var method = type.GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static, null, parameterTypes, null);
+
+            if (method == null)
+            {
+                var sb = new StringBuilder();
+
+                foreach (var parameterType in parameterTypes)
+                {
+                    sb.AppendWithSeparator(parameterType.Name, ", ");
+                }
+
+                throw new KeyNotFoundException($"Cannot locate the [{type.FullName}.{name}({sb})] method.");
+            }
+
+            return method;
+        }
+
+        /// <summary>
+        /// Uses reflection to locate a specific public or non-public constructor for a type.
+        /// </summary>
+        /// <param name="type">The target type.</param>
+        /// <param name="parameterTypes">The parameter types.</param>
+        /// <returns>The <see cref="MethodInfo"/>.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the method does not exist.</exception>
+        public static ConstructorInfo GetConstructor(Type type, params Type[] parameterTypes)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(parameterTypes != null);
+
+            var constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, parameterTypes, null);
+
+            if (constructor == null)
+            {
+                var sb = new StringBuilder();
+
+                foreach (var parameterType in parameterTypes)
+                {
+                    sb.AppendWithSeparator(parameterType.Name, ", ");
+                }
+
+                throw new KeyNotFoundException($"Cannot locate the [{type.FullName}({sb})] constructor.");
+            }
+
+            return constructor;
+        }
     }
 }
