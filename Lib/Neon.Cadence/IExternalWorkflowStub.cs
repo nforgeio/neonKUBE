@@ -51,7 +51,6 @@ namespace Neon.Cadence
         /// <summary>
         /// Cancels the workflow.
         /// </summary>
-        /// <param name="args">Specifies the signal arguments.</param>
         Task Cancel();
     }
 }

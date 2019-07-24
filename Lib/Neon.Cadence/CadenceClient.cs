@@ -76,8 +76,8 @@ namespace Neon.Cadence
     /// indicate that workflows and activities can be executed in the current process.
     /// </para>
     /// <note>
-    /// <b>IMPORTANT:</b> The current .NET Cadence client release supports having one
-    /// client open at a time.  A <see cref="NotSupportedException"/> will be thrown
+    /// <b>IMPORTANT:</b> The current .NET Cadence client release supports having only
+    /// one client open at a time.  A <see cref="NotSupportedException"/> will be thrown
     /// when attempting to connect a second client.  This restriction may be relaxed
     /// for future releases.
     /// </note>
@@ -108,12 +108,18 @@ namespace Neon.Cadence
     /// that Cadence can begin scheduling workflow and activity executions from the current client.
     /// </para>
     /// <para>
-    /// Worflows are implemented by deriving a class from <see cref="WorkflowBase"/> and activities
-    /// are implemented by deriving a class from <see cref="ActivityBase"/>.  These classes
-    /// require the implementation of the <see cref="WorkflowBase.RunAsync(byte[])"/> and
-    /// <see cref="ActivityBase.RunAsync(byte[])"/> methods that actually implement the workflow
-    /// and activity logic.  After establishing a connection ot a Cadence cluster, you'll need
-    /// to call <see cref="CadenceClient.RegisterWorkflowAsync{TWorkflow}(string)"/> and/or
+    /// Workflows are implemented by defining an interface derived from <see cref="IWorkflowBase"/>
+    /// and then writing a class the implements your interface.  Activities are implemented in the
+    /// same way by defining an activity interface that derives from <see cref="IActivityBase"/>
+    /// and then writing a class that implements this interface.  Your workflow interface must
+    /// define at least one entry point method tagged by <see cref="WorkflowMethodAttribute"/>
+    /// and may optionally include signal and query methods tagged by <see cref="SignalMethodAttribute"/>
+    /// and <see cref="QueryMethodAttribute"/>.  Your activity interface must define at least one
+    /// entry point method.
+    /// </para>
+    /// <para>
+    /// After establishing a connection ot a Cadence cluster, you'll need to call 
+    /// <see cref="CadenceClient.RegisterWorkflowAsync{TWorkflow}(string, string)"/> and/or
     /// <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string)"/> to register your
     /// workflow and activity implementations with Cadence.  These calls combined with the
     /// workers described above determine which workflows and activities may be scheduled
@@ -134,108 +140,32 @@ namespace Neon.Cadence
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
     /// the current process implements specific workflow and activity types.  You'll call
     /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
-    /// Cadence domain and tasklist the worker will listen on as well as whether activities,
+    /// Cadence domain and task list the worker will listen on as well as whether activities,
     /// workflows, or both are to be processed.
     /// </para>
     /// <para>
-    /// External or top-level workflows are started by calling <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> 
-    /// or <see cref="StartWorkflowAsync{TWorkflow}(byte[], string, string, WorkflowOptions)"/>, passing the workflow 
-    /// type string, the target Cadence domain along with optional arguments (encoded into a byte array) 
-    /// and optional workflow options.  The workflow type string must be the same one used when calling 
-    /// <see cref="StartWorkflowWorkerAsync(string, string, WorkerOptions)"/>.
-    /// </para>
-    /// <note>
-    /// <b>External workflows</b> are top-level workflows that have no workflow parent.
-    /// This is distinugished from <b>child workflows</b> that are executed within the
-    /// context of another workflow via <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>.
-    /// </note>
-    /// <para>
-    /// <see cref="StartWorkflowAsync(string, byte[], string, string, WorkflowOptions)"/> returns
-    /// immediately after the workflow is submitted to Cadence and the workflow will be scheduled and
-    /// executed independently.  This method returns a <see cref="WorkflowExecution"/> which you'll use
-    /// to identify your running workflow to the methods desribed below.
+    /// You'll generally create stub classes to start and manage workflows and activities.
+    /// These come in various flavors with the most important being typed and untyped stubs.
+    /// Typed stubs are nice because they implement your workflow or activity interface so
+    /// that the C# compiler can provide compile-time type checking.  Untyped stubs provide
+    /// a way to interact with workflows and activities written on other languages or for
+    /// which you don't have source code.
     /// </para>
     /// <para>
-    /// You can monitor the status of an external workflow by polling <see cref="GetWorkflowStateAsync(WorkflowExecution)"/>
-    /// or obtain a workflow result via <see cref="GetWorkflowResultAsync(WorkflowExecution)"/>, which blocks until the 
-    /// workflow completes.
-    /// </para>
-    /// <note>
-    /// Child workflows and activities are started from within a <see cref="WorkflowBase"/> implementation
-    /// via the <see cref="WorkflowBase.CallChildWorkflowAsync{TWorkflow}(byte[], ChildWorkflowOptions, CancellationToken)"/>,
-    /// <see cref="WorkflowBase.CallChildWorkflowAsync(string, byte[], ChildWorkflowOptions, CancellationToken)"/>,
-    /// <see cref="WorkflowBase.CallActivityAsync{TActivity}(byte[], ActivityOptions, CancellationToken)"/>
-    /// <see cref="WorkflowBase.CallActivityAsync(string, byte[], ActivityOptions, CancellationToken)"/>, and
-    /// <see cref="WorkflowBase.CallLocalActivityAsync{TActivity}(byte[], LocalActivityOptions, CancellationToken)"/>
-    /// methods.
-    /// </note>
-    /// <para>
-    /// Workflows can be signalled via <see cref="SignalWorkflowAsync(string, string, byte[], string)"/> or
-    /// <see cref="SignalWorkflowWithStartAsync(string, string, byte[], byte[], string, WorkflowOptions)"/> that starts the
-    /// workflow if its not already running.  You can query running workflows via 
-    /// <see cref="QueryWorkflowAsync(string, string, byte[], string)"/>.
+    /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflow}(string, string, string, string)"/>
+    /// and <see cref="NewWorkflowStub{TWorkflow}(WorkflowOptions, string, string)"/> and external
+    /// untyped stubs via <see cref="NewUntypedWorkflowStub(string, string, string, string)"/> and
+    /// <see cref="NewUntypedWorkflowStub(string, WorkflowOptions, string)"/>.
     /// </para>
     /// <para>
-    /// Workflows can be expicitly closed using <see cref="CancelWorkflowExecution(WorkflowExecution)"/>,
-    /// <see cref="TerminateWorkflowAsync(WorkflowExecution, string, byte[])"/>.
-    /// </para>
-    /// <para><b>Restarting Workflows</b></para>
-    /// <para>
-    /// Long running workflows that are essentially a high-level loop can result in the recording
-    /// of an excessive number of events to its history.  This can result in poor performance
-    /// due to having to replay this history when the workflow has to be rehydrated.  
-    /// </para>
-    /// <para>
-    /// You can avoid this by removing the workflow loop and calling <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
-    /// at the end of your workflow logic.  This causes Cadence to reschedule the workflow
-    /// with a clean history, somewhat similar to what happens for CRON workflows (which are
-    /// rescheduled automatically).  <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
-    /// works by throwing a <see cref="CadenceWorkflowRestartException"/> which will exit
-    /// the workflow method and be caught by the calling <see cref="CadenceClient"/> which
-    /// which then informs Cadence.
-    /// </para>
-    /// <note>
-    /// Workflow entry points must allow the <see cref="CadenceWorkflowRestartException"/> to be caught by the
-    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
-    /// will work properly.
-    /// </note>
-    /// <para><b>External Activity Completion</b></para>
-    /// <para>
-    /// Normally, activities are self-contained and will finish whatever they're doing and then
-    /// simply return.  It's often useful though to be able to have an activity kickoff operations
-    /// on an external system, exit the activity indicating that it's still pending, and then
-    /// have the external system manage the activity heartbeats and report the activity completion.
-    /// </para>
-    /// <para>
-    /// To take advantage of this, you'll need to obtain the opaque activity identifier from
-    /// <see cref="ActivityBase.ActivityTask"/> via its <see cref="ActivityInfo.TaskToken"/> property.
-    /// This is a byte array including enough information for Cadence to identify the specific
-    /// activity.  Your activity should start the external action, passing the task token and
-    /// then call <see cref="ActivityBase.CompleteExternallyAsync()"/> which will thrown a
-    /// <see cref="CadenceActivityExternalCompletionException"/> that will exit the activity 
-    /// and then be handled internally by informing Cadence that the activity will continue
-    /// running.
-    /// </para>
-    /// <note>
-    /// You should not depend on the structure or contents of the task token since this
-    /// may change for future Cadence releases and you must allow the <see cref="CadenceActivityExternalCompletionException"/>
-    /// to be caught by the calling <see cref="CadenceClient"/> so <see cref="ActivityBase.CompleteExternallyAsync()"/>
-    /// will work properly.
-    /// </note>
-    /// <para><b>Arguments and Results</b></para>
-    /// <para>
-    /// The <b>Neon.Cadence</b> library standardizes on having workflow and activity arguments
-    /// and results represented as byte arrays or <c>null</c>.  This is a bit of a simplication
-    /// over the Cadence GOLANG client package, which can accept zero or more typed parameters.
-    /// <b>Neon.Cadence</b> applications will need to encode any arguments or results into byte 
-    /// arrays.  You can use any method to accompilish this, including serializing to JSON via
-    /// the <b>Newtonsoft.Json</b> nuget package.
+    /// Workflows can use their <see cref="Workflow"/> property to create child workflow as
+    /// well as activity stubs.
     /// </para>
     /// <para><b>Task Lists</b></para>
     /// <para>
     /// Task lists provide an additional way to customize where workflows and activities are executed.
     /// A task list is simply a string used in addition to the domain to indicate which workflows and
-    /// activities will be scheduled for execution by workers.  For regular (top-level) workflows,
+    /// activities will be scheduled for execution by workers.  For external workflows,
     /// you can specify a default task list via <see cref="CadenceSettings.DefaultTaskList"/>.  
     /// Any non-empty custom string is allowed for task lists.  Child workflow and activity task lists
     /// will default to the parent workflow's task list by default.
@@ -1071,7 +1001,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="taskList">The specific task list to use or null/empty.</param>
         /// <returns>The task list to be referenced.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default tasklist are both null or empty.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default task list are both null or empty.</exception>
         internal string ResolveTaskList(string taskList)
         {
             if (!string.IsNullOrEmpty(taskList))

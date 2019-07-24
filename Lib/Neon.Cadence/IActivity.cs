@@ -127,7 +127,7 @@ namespace Neon.Cadence
         Task<byte[]> GetLastHeartbeatDetailsAsync();
 
         /// <summary>
-        /// This method may be called within <see cref="RunAsync(byte[])"/> to indicate that the
+        /// This method may be called within the activity entry point to indicate that the
         /// activity will be completed externally.
         /// </summary>
         /// <returns>The tracking <see cref="System.Threading.Tasks.Task"/>.</returns>
@@ -136,7 +136,7 @@ namespace Neon.Cadence
         /// <para>
         /// This method works by throwing an <see cref="CadenceActivityExternalCompletionException"/> which
         /// will be caught and handled by the base <see cref="ActivityBase"/> class.  You'll need to allow
-        /// this exception to exit your <see cref="RunAsync(byte[])"/> method for this to work.
+        /// this exception to exit your entry point method for this to work.
         /// </para>
         /// <note>
         /// This method doesn't work for local activities.

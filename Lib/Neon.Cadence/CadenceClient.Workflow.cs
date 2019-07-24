@@ -285,7 +285,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Starts an external workflow using a specific workflow type name, returning a <see cref="WorkflowExecution"/>
-        /// that can be used to track the workflow and also wait for its result via <see cref="GetWorkflowResultAsync(WorkflowExecution)"/>.
+        /// that can be used to track the workflow and also wait for its result via <see cref="GetWorkflowResultAsync(WorkflowExecution, string)"/>.
         /// </summary>
         /// <param name="workflowTypeName">
         /// The type name used when registering the workers that will handle this workflow.

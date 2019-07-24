@@ -27,15 +27,16 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown by <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
-    /// to be handled internally by <see cref="WorkflowBase"/> as one of the special case 
-    /// mechanisms for completing a workflow.
+    /// Thrown by <see cref="IWorkflow.ContinueAsNew(ContinueAsNewOptions, object[])"/>
+    /// or <see cref="IWorkflow.ContinueAsNew(object[])"/> to be handled internally by
+    /// <see cref="WorkflowBase"/> as one of the special case  mechanisms for completing
+    /// a workflow.
     /// </summary>
     /// <remarks>
     /// <note>
     /// Workflow entry points must allow this exception to be caught by the
-    /// calling <see cref="CadenceClient"/> so that <see cref="WorkflowBase.ContinueAsNew(byte[], string, string, TimeSpan, TimeSpan, TimeSpan, TimeSpan, RetryOptions)"/>
-    /// will work properly.
+    /// calling <see cref="CadenceClient"/> so that the contunue will work 
+    /// properly.
     /// </note>
     /// </remarks>
     public class CadenceWorkflowRestartException : Exception
