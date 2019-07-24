@@ -34,8 +34,8 @@ namespace Neon.Cadence
     {
         /// <summary>
         /// Provides information about the executing activity as well as other
-        /// useful functionality.
+        /// important functionality for activity implementations.
         /// </summary>
-        IActivity Activity { get; }
+        Activity Activity { get; }
     }
 }

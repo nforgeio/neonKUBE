@@ -41,11 +41,11 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers a workflow implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TWorkflowInterface">The <see cref="IWorkflowBase"/> derived interface implementing the workflow.</typeparam>
+        /// <typeparam name="TWorkflow">The <see cref="IWorkflowBase"/> derived class implementing the workflow.</typeparam>
         /// <param name="workflowTypeName">
         /// Optionally specifies a custom workflow type name that will be used 
         /// for identifying the workflow implementation in Cadence.  This defaults
-        /// to the fully qualified <typeparamref name="TWorkflowInterface"/> type name.
+        /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
         /// </param>
         /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -59,15 +59,15 @@ namespace Neon.Cadence
         /// Be sure to register all of your workflow implementations before starting a workflow worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterWorkflowAsync<TWorkflowInterface>(string workflowTypeName = null, string domain = null)
-            where TWorkflowInterface : WorkflowBase
+        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
+            where TWorkflow : WorkflowBase
         {
-            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            CadenceHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
             CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
-                workflowTypeName = workflowTypeName ?? typeof(TWorkflowInterface).FullName;
+                workflowTypeName = workflowTypeName ?? typeof(TWorkflow).FullName;
             }
 
             if (workflowWorkerStarted)
@@ -79,7 +79,7 @@ namespace Neon.Cadence
             // appending the method type separator and method name for workflow
             // methods that specify names.
 
-            if (!WorkflowBase.Register(this, typeof(TWorkflowInterface), workflowTypeName))
+            if (!WorkflowBase.Register(this, typeof(TWorkflow), workflowTypeName))
             {
                 var reply = (WorkflowRegisterReply)await CallProxyAsync(
                     new WorkflowRegisterRequest()
@@ -94,7 +94,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="IWorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
+        /// <see cref="WorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
         /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
         /// them with Cadence.
         /// </summary>
@@ -129,7 +129,7 @@ namespace Neon.Cadence
 
                 if (workflowAttribute != null)
                 {
-                    if (type.Implements<IWorkflowBase>())
+                    if (type.BaseType == typeof(WorkflowBase))
                     {
                         if (workflowAttribute.AutoRegister)
                         {
@@ -149,7 +149,7 @@ namespace Neon.Cadence
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(WorkflowAttribute)}] but is not derived from [{nameof(IWorkflowBase)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(WorkflowAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
                     }
                 }
             }
@@ -258,7 +258,7 @@ namespace Neon.Cadence
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
         public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string workflowType = null, string domain = null)
-            where TWorkflowInterface : IWorkflowBase
+            where TWorkflowInterface : WorkflowBase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
@@ -286,7 +286,7 @@ namespace Neon.Cadence
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
         public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowType = null, string domain = null)
-            where TWorkflowInterface : IWorkflowBase
+            where TWorkflowInterface : WorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 

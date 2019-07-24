@@ -138,9 +138,7 @@ namespace Neon.Cadence
         internal static bool Register(CadenceClient client, Type activityType, string activityTypeName)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.IsSubclassOf(typeof(ActivityBase)), $"Type [{activityType.FullName}] does not derive from [{nameof(ActivityBase)}].");
-            Covenant.Requires<ArgumentException>(activityType != typeof(ActivityBase), $"The base [{nameof(ActivityBase)}] class cannot be registered.");
+            CadenceHelper.ValidateActivityImplementation(activityType);
 
             activityTypeName = GetActivityTypeKey(client, activityTypeName);
 
@@ -369,9 +367,6 @@ namespace Neon.Cadence
             this.Activity = new Activity(this);
         }
 
-        /// <inheritdoc/>
-        public IActivity Activity { get; private set;  }
-
         /// <summary>
         /// Called internally to initialize the activity.
         /// </summary>
@@ -386,6 +381,9 @@ namespace Neon.Cadence
             this.CancellationTokenSource = new CancellationTokenSource();
             this.CancellationToken       = CancellationTokenSource.Token;
         }
+
+        /// <inheritdoc/>
+        public Activity Activity { get; private set;  }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this activity invocation.

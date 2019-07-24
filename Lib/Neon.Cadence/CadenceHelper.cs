@@ -93,6 +93,11 @@ namespace Neon.Cadence
                 throw new ArgumentException($"[{workflowInterface.FullName}] does not derive from [{typeof(IWorkflowBase).FullName}].");
             }
 
+            if (workflowInterface == typeof(IWorkflowBase))
+            {
+                throw new ArgumentException($"The base [{nameof(IWorkflowBase)}] class cannot define a workflow.");
+            }
+
             var workflowNames = new HashSet<string>();
 
             foreach (var method in workflowInterface.GetMethods())
@@ -109,6 +114,57 @@ namespace Neon.Cadence
                 if (workflowNames.Contains(name))
                 {
                     throw new ArgumentException($"Multiple workflow methods are tagged by [WorkflowMethod(name: \"{name}\")].");
+                }
+
+                workflowNames.Add(name);
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the type passed is a valid workflow implementation.
+        /// </summary>
+        /// <param name="workflowType">The type being tested.</param>
+        /// <exception cref="ArgumentException">Thrown when the interface is not valid.</exception>
+        public static void ValidateWorkflowImplementation(Type workflowType)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowType != null);
+
+            if (workflowType.IsInterface)
+            {
+                throw new ArgumentException($"[{workflowType.FullName}] workflow implementation cannot be an interface.");
+            }
+
+            if (!workflowType.IsGenericType)
+            {
+                throw new ArgumentException($"[{workflowType.FullName}] is a generic type.  Workflow implementations may not be generic.");
+            }
+
+            if (!workflowType.Implements<IWorkflowBase>())
+            {
+                throw new ArgumentException($"[{workflowType.FullName}] does not derive from [{typeof(IWorkflowBase).FullName}].");
+            }
+
+            if (workflowType == typeof(WorkflowBase))
+            {
+                throw new ArgumentException($"The base [{nameof(WorkflowBase)}] class cannot be a workflow implementation.");
+            }
+
+            var workflowNames = new HashSet<string>();
+
+            foreach (var method in workflowType.GetMethods())
+            {
+                var workflowMethodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                if (workflowMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = workflowMethodAttribute.Name ?? string.Empty;
+
+                if (workflowNames.Contains(name))
+                {
+                    throw new ArgumentException($"Multiple [{workflowType.FullName}] workflow methods are tagged by [WorkflowMethod(name: \"{name}\")].");
                 }
 
                 workflowNames.Add(name);
@@ -137,6 +193,41 @@ namespace Neon.Cadence
             if (!activityInterface.Implements<IActivityBase>())
             {
                 throw new ArgumentException($"[{activityInterface.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
+            }
+
+            if (activityInterface == typeof(IActivityBase))
+            {
+                throw new ArgumentException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the type passed is a valid activity implementation.
+        /// </summary>
+        /// <param name="activityType">The type being tested.</param>
+        /// <exception cref="ArgumentException">Thrown when the interface is not valid.</exception>
+        public static void ValidateActivityImplementation(Type activityType)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+
+            if (activityType.IsInterface)
+            {
+                throw new ArgumentException($"[{activityType.FullName}] implementation cannot be an interface.");
+            }
+
+            if (!activityType.IsGenericType)
+            {
+                throw new ArgumentException($"[{activityType.FullName}] is a generic type.  Activity implementations may not be generic.");
+            }
+
+            if (!activityType.Implements<IActivityBase>())
+            {
+                throw new ArgumentException($"[{activityType.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
+            }
+
+            if (activityType == typeof(IActivityBase))
+            {
+                throw new ArgumentException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
             }
         }
 
