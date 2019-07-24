@@ -558,7 +558,7 @@ namespace Neon.Cadence
             {
                 var client = new CadenceClient(settings);
 
-                await client.SetSCacheMaximumSizeAsync(10000);
+                await client.SetCacheMaximumSizeAsync(10000);
 
                 return client;
             }

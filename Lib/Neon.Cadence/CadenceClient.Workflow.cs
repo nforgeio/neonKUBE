@@ -158,7 +158,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="cacheMaximumSize">The maximum number of workflows to be cached.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task SetSCacheMaximumSizeAsync(int cacheMaximumSize)
+        public async Task SetCacheMaximumSizeAsync(int cacheMaximumSize)
         {
             Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0);
 
@@ -178,7 +178,7 @@ namespace Neon.Cadence
         /// will be retained as a performance optimization.
         /// </summary>
         /// <returns>The maximum number of cached workflows.</returns>
-        public async Task<int> GetStickyWorkflowCacheSizeAsync()
+        public async Task<int> GetWorkflowCacheSizeAsync()
         {
             return await Task.FromResult(workflowCacheSize);
         }

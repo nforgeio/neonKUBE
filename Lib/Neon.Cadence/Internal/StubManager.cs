@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowStubManager.cs
+// FILE:	    StubManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -39,10 +39,9 @@ using System.IO;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Manages the dynamic generation of workflow stub classes that implement
-    /// workflow interfaces.
+    /// Manages the dynamic generation of workflow and activity stub classes.
     /// </summary>
-    internal static class WorkflowStubManager
+    internal static class StubManager
     {
         //---------------------------------------------------------------------
         // Private types
@@ -113,10 +112,6 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Manages a dynamically generated workflow stub class for a workflow interface.
         /// </summary>
-        /// <remarks>
-        /// This class manages the dyanmic generation and activation of stub classes
-        /// that implement a workflow 
-        /// </remarks>
         private class DynamicWorkflowStub
         {
             private Type                workflowInterface;
@@ -453,7 +448,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.domain    = ___StubHelpers.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
-            // Generate the method that converts the instance into a new [IWorkflowStub].
+            // Generate the method that converts the instance into a new untyped [IWorkflowStub].
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        public IWorkflowStub ToUntyped()");
