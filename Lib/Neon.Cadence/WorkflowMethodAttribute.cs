@@ -47,13 +47,32 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Specifies the name to be used to identify a specific workflow method.  This is optional
+        /// for workflow interfaces that have only one workflow entry point method but is required
+        /// for interfaces with multiple entry points.
+        /// </summary>
+        /// <remarks>
         /// <para>
-        /// Optionally specifies the default workflow type.
+        /// When specified, this name will be combined with the workflow type name when registering
+        /// and starting a workflow.  This will look like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW_TYPENNAME::METHODNAME
+        /// </code>
+        /// <para>
+        /// where <b>WORKFLOW_TYPENAME</b> is either the workflow interface's fully qualified 
+        /// name or the name specified by <see cref="WorkflowAttribute.TypeName"/> and 
+        /// <b>METHOD_NAME</b> is from <see cref="WorkflowMethodAttribute.Name"/>.  This
+        /// is the same convention that the Java client uses.
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed.
+        /// Some implications of this scheme are that we'll need to register multiple workflow
+        /// types for each workflow interface when there are multiple entry points (one per
+        /// method) and that external workflow invocations will need to explicitly specify
+        /// workflow types that include the method name when one is specified to the target
+        /// method.
         /// </note>
-        /// </summary>
+        /// </remarks>
         public string Name
         {
             get => name;
