@@ -39,7 +39,7 @@ namespace Neon.Cadence
         /// name from the optional workflow method name.  This string may not be
         /// embedded in a normal workflow type name.
         /// </summary>
-        public const string WorkflowTypeSeparator = "::";
+        public const string WorkflowMethodSeparator = "::";
 
         /// <summary>
         /// Number of nanoseconds per second (spoiler alert: it's 1 billion).
@@ -63,9 +63,80 @@ namespace Neon.Cadence
         /// <exception cref="ArgumentException">Thrown if the name passed is not valid.</exception>
         public static void ValidateWorkflowTypeName(string name)
         {
-            if (name != null && name.Contains(CadenceHelper.WorkflowTypeSeparator))
+            if (name != null && name.Contains(CadenceHelper.WorkflowMethodSeparator))
             {
-                throw new ArgumentException($"Workflow type names cannot include \"{CadenceHelper.WorkflowTypeSeparator}\".");
+                throw new ArgumentException($"Workflow type names cannot include \"{CadenceHelper.WorkflowMethodSeparator}\".");
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the type passed is a valid workflow interface.
+        /// </summary>
+        /// <param name="workflowInterface">The type being tested.</param>
+        /// <exception cref="ArgumentException">Thrown when the interface is not valid.</exception>
+        public static void ValidateWorkflowInterface(Type workflowInterface)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null);
+
+            if (!workflowInterface.IsInterface)
+            {
+                throw new ArgumentException($"[{workflowInterface.FullName}] is not an interface.");
+            }
+
+            if (!workflowInterface.IsGenericType)
+            {
+                throw new ArgumentException($"[{workflowInterface.FullName}] is a generic type.  Workflow interfaces may not be generic.");
+            }
+
+            if (!workflowInterface.Implements<IWorkflowBase>())
+            {
+                throw new ArgumentException($"[{workflowInterface.FullName}] does not derive from [{typeof(IWorkflowBase).FullName}].");
+            }
+
+            var workflowNames = new HashSet<string>();
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var workflowMethodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                if (workflowMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = workflowMethodAttribute.Name ?? string.Empty;
+
+                if (workflowNames.Contains(name))
+                {
+                    throw new ArgumentException($"Multiple workflow methods are tagged by [WorkflowMethod(name: \"{name}\")].");
+                }
+
+                workflowNames.Add(name);
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the type passed is a valid activity interface.
+        /// </summary>
+        /// <param name="activityInterface">The type being tested.</param>
+        /// <exception cref="ArgumentException">Thrown when the interface is not valid.</exception>
+        public static void ValidateActivityInterface(Type activityInterface)
+        {
+            Covenant.Requires<ArgumentNullException>(activityInterface != null);
+
+            if (!activityInterface.IsInterface)
+            {
+                throw new ArgumentException($"[{activityInterface.FullName}] is not an interface.");
+            }
+
+            if (!activityInterface.IsGenericType)
+            {
+                throw new ArgumentException($"[{activityInterface.FullName}] is a generic type.  Activity interfaces may not be generic.");
+            }
+
+            if (!activityInterface.Implements<IActivityBase>())
+            {
+                throw new ArgumentException($"[{activityInterface.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
             }
         }
 

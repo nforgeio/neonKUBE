@@ -36,7 +36,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the associated workflow type name.
         /// </summary>
-        string WorkflowType { get; }
+        string WorkflowTypeName { get; }
 
         /// <summary>
         /// Returns the associated workflow execution details.

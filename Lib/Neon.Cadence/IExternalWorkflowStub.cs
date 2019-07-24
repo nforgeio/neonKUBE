@@ -30,8 +30,8 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Supports signalling and cancelling any workflow.  This is useful when an
-    /// external workflow type is not known at compile time or to manage workflows
-    /// written in another language.
+    /// external workflow interface type is not known at compile time or to manage 
+    /// workflows written in another language.
     /// </summary>
     public interface IExternalWorkflowStub
     {

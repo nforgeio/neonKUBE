@@ -92,32 +92,42 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public TActivity NewActivityStub<TActivity>(ActivityOptions options = null) where TActivity : IActivityBase
+        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null) where TActivityInterface : IActivityBase
         {
+            CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
+
             throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public TWorkflow NewChildWorkflowStub<TWorkflow>(ChildWorkflowOptions options = null) where TWorkflow : IWorkflowBase
+        public TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null) where TWorkflowInterface : IWorkflowBase
         {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+
             throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public Task<TWorkflow> NewContinueAsNewStub<TWorkflow>(ContinueAsNewOptions options = null) where TWorkflow : IWorkflowBase
+        public Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) where TWorkflowInterface : IWorkflowBase
         {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+
             throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public TWorkflow NewExternalWorkflowStub<TWorkflow>(WorkflowExecution execution, string domain = null) where TWorkflow : IWorkflowBase
+        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null) where TWorkflowInterface : IWorkflowBase
         {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+
             throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
-        public TWorkflow NewExternalWorkflowStub<TWorkflow>(string workflowId, string domain = null) where TWorkflow : IWorkflowBase
+        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null) where TWorkflowInterface : IWorkflowBase
         {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+
             throw new NotImplementedException();
         }
 
@@ -128,8 +138,10 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public TActivity NewLocalActivityStub<TActivity>(ActivityOptions options = null) where TActivity : IActivityBase
+        public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null) where TActivityInterface : IActivityBase
         {
+            CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
+
             throw new NotImplementedException();
         }
 

@@ -62,24 +62,24 @@ namespace Neon.Cadence
         /// Default constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
-        /// <param name="workflowType">The workflow type name.</param>
+        /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="execution">The workflow execution or <c>null</c> if the workflow hasn't been started.</param>
         /// <param name="taskList">Specifies the task list.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <param name="domain">Specifies specifies the domain.</param>
-        internal WorkflowStub(CadenceClient client, string workflowType, WorkflowExecution execution, string taskList, WorkflowOptions options, string domain)
+        internal WorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, string taskList, WorkflowOptions options, string domain)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowType));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
-            this.client       = client;
-            this.WorkflowType = workflowType;
-            this.Execution    = execution;
-            this.taskList     = taskList;
-            this.Options      = options;
-            this.domain       = domain;
+            this.client           = client;
+            this.WorkflowTypeName = workflowTypeName;
+            this.Execution        = execution;
+            this.taskList         = taskList;
+            this.Options          = options;
+            this.domain           = domain;
         }
 
         /// <inheritdoc/>
@@ -89,7 +89,7 @@ namespace Neon.Cadence
         public WorkflowOptions Options { get; internal set; }
 
         /// <inheritdoc/>
-        public string WorkflowType { get; internal set; }
+        public string WorkflowTypeName { get; internal set; }
 
         /// <summary>
         /// Ensures that the workflow has been started.
@@ -98,7 +98,7 @@ namespace Neon.Cadence
         {
             if (Execution == null)
             {
-                throw new InvalidOperationException($"Workflow stub for workflow type name [{WorkflowType}] has not been started.");
+                throw new InvalidOperationException($"Workflow stub for workflow type name [{WorkflowTypeName}] has not been started.");
             }
         }
 
@@ -109,7 +109,7 @@ namespace Neon.Cadence
         {
             if (Execution != null)
             {
-                throw new InvalidOperationException($"Workflow stub for workflow type name [{WorkflowType}] has already been started.");
+                throw new InvalidOperationException($"Workflow stub for workflow type name [{WorkflowTypeName}] has already been started.");
             }
         }
 
@@ -196,7 +196,7 @@ namespace Neon.Cadence
 
             var argBytes = client.DataConverter.ToData(args);
 
-            return await client.StartWorkflowAsync(WorkflowType, argBytes, taskList, Options, domain);
+            return await client.StartWorkflowAsync(WorkflowTypeName, argBytes, taskList, Options, domain);
         }
     }
 }

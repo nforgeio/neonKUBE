@@ -34,14 +34,18 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Public Cadence workflow related operations.
 
+        private void ValidateWorkflowMethods(Type workflowInterface)
+        {
+        }
+
         /// <summary>
         /// Registers a workflow implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived type implementing the workflow.</typeparam>
+        /// <typeparam name="TWorkflowInterface">The <see cref="IWorkflowBase"/> derived interface implementing the workflow.</typeparam>
         /// <param name="workflowTypeName">
         /// Optionally specifies a custom workflow type name that will be used 
         /// for identifying the workflow implementation in Cadence.  This defaults
-        /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
+        /// to the fully qualified <typeparamref name="TWorkflowInterface"/> type name.
         /// </param>
         /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -55,14 +59,15 @@ namespace Neon.Cadence
         /// Be sure to register all of your workflow implementations before starting a workflow worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
-            where TWorkflow : WorkflowBase
+        public async Task RegisterWorkflowAsync<TWorkflowInterface>(string workflowTypeName = null, string domain = null)
+            where TWorkflowInterface : WorkflowBase
         {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
-                workflowTypeName = workflowTypeName ?? typeof(TWorkflow).FullName;
+                workflowTypeName = workflowTypeName ?? typeof(TWorkflowInterface).FullName;
             }
 
             if (workflowWorkerStarted)
@@ -70,7 +75,11 @@ namespace Neon.Cadence
                 throw new CadenceWorkflowWorkerStartedException();
             }
 
-            if (!WorkflowBase.Register(this, typeof(TWorkflow), workflowTypeName))
+            // We need to register a workflow type name for each workflow method,
+            // appending the method type separator and method name for workflow
+            // methods that specify names.
+
+            if (!WorkflowBase.Register(this, typeof(TWorkflowInterface), workflowTypeName))
             {
                 var reply = (WorkflowRegisterReply)await CallProxyAsync(
                     new WorkflowRegisterRequest()
@@ -191,7 +200,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="workflowType">Optionally specifies the workflow type.</param>
+        /// <param name="workflowType">Optionally specifies the workflow type name.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
         /// <remarks>
@@ -211,7 +220,7 @@ namespace Neon.Cadence
         /// Creates an untyped stub that will be used to execute a workflow as well as
         /// query and signal the new workflow.
         /// </summary>
-        /// <param name="workflowType">Specifies workflow type.</param>
+        /// <param name="workflowType">Specifies workflow type name.</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
@@ -232,26 +241,27 @@ namespace Neon.Cadence
         /// This can be used to signal and query the workflow via the type-safe
         /// interface methods.
         /// </summary>
-        /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
+        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
         /// <param name="workflowType">
-        /// Optionally specifies the workflow type by overriding the fully 
-        /// qualified <typeparamref name="TWorkflow"/> type name or the name
+        /// Optionally specifies the workflow type name by overriding the fully 
+        /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
         /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
-        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
         /// workflow.  You'll need to create a new stub for each workflow you wish to
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflow NewWorkflowStub<TWorkflow>(string workflowId, string runId = null, string workflowType = null, string domain = null)
-            where TWorkflow : IWorkflowBase
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string workflowType = null, string domain = null)
+            where TWorkflowInterface : IWorkflowBase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
             throw new NotImplementedException();
         }
@@ -260,24 +270,26 @@ namespace Neon.Cadence
         /// Creates a typed workflow stub that can be used to start as well as 
         /// query and signal the workflow via the type-safe interface methods.
         /// </summary>
-        /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
+        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="workflowType">
-        /// Optionally specifies the workflow type by overriding the fully 
-        /// qualified <typeparamref name="TWorkflow"/> type name or the name
+        /// Optionally specifies the workflow type name by overriding the fully 
+        /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
         /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
-        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
         /// workflow.  You'll need to create a new stub for each workflow you wish to
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflow NewWorkflowStub<TWorkflow>(WorkflowOptions options = null, string workflowType = null, string domain = null)
-            where TWorkflow : IWorkflowBase
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowType = null, string domain = null)
+            where TWorkflowInterface : IWorkflowBase
         {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+
             throw new NotImplementedException();
         }
 

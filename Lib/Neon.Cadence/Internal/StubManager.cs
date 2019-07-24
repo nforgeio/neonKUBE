@@ -125,7 +125,7 @@ namespace Neon.Cadence.Internal
             /// <summary>
             /// Constructor.
             /// </summary>
-            /// <param name="workflowInterface">Specifies the workflow interface type.</param>
+            /// <param name="workflowInterface">Specifies the workflow interface.</param>
             /// <param name="assembly">The assembly holding the generated stub class.</param>
             /// <param name="className">The fully qualified stub class name.</param>
             public DynamicWorkflowStub(Type workflowInterface, Assembly assembly, string className)
@@ -203,8 +203,7 @@ namespace Neon.Cadence.Internal
             var workflowInterface = typeof(TWorkflowInterface);
 
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<WorkflowDefinitionException>(workflowInterface.IsInterface, $"The [{workflowInterface.Name}] is not an interface.");
-            Covenant.Requires<WorkflowDefinitionException>(!workflowInterface.IsGenericType, $"The [{workflowInterface.Name}] interface is generic.  This is not supported.");
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
             options = options ?? new WorkflowOptions();
 
@@ -218,7 +217,7 @@ namespace Neon.Cadence.Internal
 
             //-----------------------------------------------------------------
             // Check whether we already have generated a stub class for the interface
-            // and return an instance right away.
+            // and return a stub instance right away.
 
             DynamicWorkflowStub stub;
 

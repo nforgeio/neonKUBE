@@ -36,11 +36,11 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers an activity implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived type implementing the activity.</typeparam>
+        /// <typeparam name="TActivityInterface">The <see cref="IActivityBase"/> derived interface defining the activity.</typeparam>
         /// <param name="activityTypeName">
         /// Optionally specifies a custom activity type name that will be used 
         /// for identifying the activity implementation in Cadence.  This defaults
-        /// to the fully qualified <typeparamref name="TActivity"/> type name.
+        /// to the fully qualified <typeparamref name="TActivityInterface"/> type name.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
@@ -53,12 +53,14 @@ namespace Neon.Cadence
         /// Be sure to register all of your activity implementations before starting a workflow worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
-            where TActivity : ActivityBase
+        public async Task RegisterActivityAsync<TActivityInterface>(string activityTypeName = null)
+            where TActivityInterface : ActivityBase
         {
+            CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
+
             if (string.IsNullOrEmpty(activityTypeName))
             {
-                activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
+                activityTypeName = activityTypeName ?? typeof(TActivityInterface).FullName;
             }
 
             if (activityWorkerStarted)
@@ -66,7 +68,7 @@ namespace Neon.Cadence
                 throw new CadenceActivityWorkerStartedException();
             }
 
-            if (!ActivityBase.Register(this, typeof(TActivity), activityTypeName))
+            if (!ActivityBase.Register(this, typeof(TActivityInterface), activityTypeName))
             {
                 var reply = (ActivityRegisterReply)await CallProxyAsync(
                     new ActivityRegisterRequest()

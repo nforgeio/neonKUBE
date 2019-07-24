@@ -46,7 +46,7 @@ namespace Neon.Cadence
         /// Creates a client stub that can be used to launch one or more activity instances
         /// via the type-safe interface methods.
         /// </summary>
-        /// <typeparam name="TActivity">The activity interface.</typeparam>
+        /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The new <see cref="IActivityStub"/>.</returns>
         /// <remarks>
@@ -56,12 +56,12 @@ namespace Neon.Cadence
         /// </note>
         /// <para>
         /// Activities launched by the returned stub will be scheduled normally
-        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivity}(ActivityOptions)"/>
+        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivityInterface}(ActivityOptions)"/>
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
-        TActivity NewActivityStub<TActivity>(ActivityOptions options = null)
-            where TActivity : IActivityBase;
+        TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null)
+            where TActivityInterface : IActivityBase;
 
         /// <summary>
         /// Creates a new untyped activity client stub that can be used to launch activities.
@@ -75,7 +75,7 @@ namespace Neon.Cadence
         /// </note>
         /// <para>
         /// Activities launched by the returned stub will be scheduled normally
-        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivity}(ActivityOptions)"/>
+        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivityInterface}(ActivityOptions)"/>
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
@@ -85,7 +85,7 @@ namespace Neon.Cadence
         /// Creates a client stub that can be used to launch one or more local activity 
         /// instances via the type-safe interface methods.
         /// </summary>
-        /// <typeparam name="TActivity">The activity interface.</typeparam>
+        /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="options">Optionally specifies activity options.</param>
         /// <returns>The new <see cref="IActivityStub"/>.</returns>
         /// <remarks>
@@ -115,14 +115,14 @@ namespace Neon.Cadence
         ///     </item>
         /// </list>
         /// </remarks>
-        TActivity NewLocalActivityStub<TActivity>(ActivityOptions options = null)
-            where TActivity : IActivityBase;
+        TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null)
+            where TActivityInterface : IActivityBase;
 
         /// <summary>
         /// Creates a workflow client stub that can be used to launch, signal, and query child
         /// workflows via the type-safe workflow interface methods.
         /// </summary>
-        /// <typeparam name="TWorkflow">The workflow interface.</typeparam>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="options"></param>
         /// <returns>The child workflow stub.</returns>
         /// <remarks>
@@ -131,30 +131,30 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        TWorkflow NewChildWorkflowStub<TWorkflow>(ChildWorkflowOptions options = null)
-            where TWorkflow : IWorkflowBase;
+        TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null)
+            where TWorkflowInterface : IWorkflowBase;
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
         /// existing workflow identified by <see cref="WorkflowExecution"/>.
         /// </summary>
-        /// <typeparam name="TWorkflow">The workflow interface.</typeparam>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="execution">Identifies the workflow execution.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
         /// <returns>The workflow stub.</returns>
-        TWorkflow NewExternalWorkflowStub<TWorkflow>(WorkflowExecution execution, string domain = null)
-            where TWorkflow : IWorkflowBase;
+        TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
+            where TWorkflowInterface : IWorkflowBase;
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
         /// existing workflow identified by workflow ID.
         /// </summary>
-        /// <typeparam name="TWorkflow">The workflow interface.</typeparam>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="workflowId">Identifies the workflow.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
         /// <returns>The workflow stub.</returns>
-        TWorkflow NewExternalWorkflowStub<TWorkflow>(string workflowId, string domain = null)
-            where TWorkflow : IWorkflowBase;
+        TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null)
+            where TWorkflowInterface : IWorkflowBase;
 
         /// <summary>
         /// Creates an untyped child workflow stub that can be used to start, signal, and query
@@ -202,17 +202,17 @@ namespace Neon.Cadence
         /// <summary>
         /// Creates a typed-safe client stub that can be used to continue the workflow as a new run.
         /// </summary>
-        /// <typeparam name="TWorkflow">The workflow interface.</typeparam>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="options">Optionally specifies the new options to use when continuing the workflow.</param>
         /// <returns>The type-safe stub.</returns>
         /// <remarks>
         /// The workflow stub returned is intended just for continuing the workflow by
         /// calling one of the workflow entry point methods tagged by <see cref="WorkflowMethodAttribute"/>.
-        /// Any signal or query methods defined by <typeparamref name="TWorkflow"/> will 
+        /// Any signal or query methods defined by <typeparamref name="TWorkflowInterface"/> will 
         /// throw a <see cref="InvalidOperationException"/> when called.
         /// </remarks>
-        Task<TWorkflow> NewContinueAsNewStub<TWorkflow>(ContinueAsNewOptions options = null)
-            where TWorkflow : IWorkflowBase;
+        Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null)
+            where TWorkflowInterface : IWorkflowBase;
 
         /// <summary>
         /// Continues the current workflow as a new run using the same workflow options.

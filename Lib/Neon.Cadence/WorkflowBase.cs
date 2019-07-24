@@ -133,19 +133,19 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Registers a workflow type.
+        /// Registers a workflow interface.
         /// </summary>
         /// <param name="client">The associated client.</param>
-        /// <param name="workflowType">The workflow type.</param>
+        /// <param name="workflowInterface">The workflow interface.</param>
         /// <param name="workflowTypeName">The name used to identify the implementation.</param>
         /// <returns><c>true</c> if the workflow was already registered.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
-        internal static bool Register(CadenceClient client, Type workflowType, string workflowTypeName)
+        internal static bool Register(CadenceClient client, Type workflowInterface, string workflowTypeName)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
-            Covenant.Requires<ArgumentException>(workflowType.IsSubclassOf(typeof(WorkflowBase)), $"Type [{workflowType.FullName}] does not derive from [{nameof(WorkflowBase)}]");
-            Covenant.Requires<ArgumentException>(workflowType != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null);
+            Covenant.Requires<ArgumentException>(workflowInterface.IsSubclassOf(typeof(WorkflowBase)), $"Type [{workflowInterface.FullName}] does not derive from [{nameof(WorkflowBase)}]");
+            Covenant.Requires<ArgumentException>(workflowInterface != typeof(WorkflowBase), $"The base [{nameof(WorkflowBase)}] class cannot be registered.");
 
             workflowTypeName = GetWorkflowTypeKey(client, workflowTypeName);
 
@@ -153,16 +153,16 @@ namespace Neon.Cadence
             {
                 if (nameToWorkflowType.TryGetValue(workflowTypeName, out var existingEntry))
                 {
-                    if (!object.ReferenceEquals(existingEntry, workflowType))
+                    if (!object.ReferenceEquals(existingEntry, workflowInterface))
                     {
-                        throw new InvalidOperationException($"Conflicting workflow type registration: Workflow type [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
+                        throw new InvalidOperationException($"Conflicting workflow interface registration: Workflow interface [{workflowInterface.FullName}] is already registered for workflow type name [{workflowTypeName}].");
                     }
 
                     return true;
                 }
                 else
                 {
-                    nameToWorkflowType[workflowTypeName] = workflowType;
+                    nameToWorkflowType[workflowTypeName] = workflowInterface;
 
                     return false;
                 }
@@ -170,7 +170,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Removes all type workflow type registrations for a Cadence client (when it's being disposed).
+        /// Removes all type workflow interface registrations for a Cadence client (when it's being disposed).
         /// </summary>
         /// <param name="client">The client being disposed.</param>
         internal static void UnregisterClient(CadenceClient client)
@@ -192,15 +192,15 @@ namespace Neon.Cadence
         /// Returns the .NET type implementing the named Cadence workflow.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
-        /// <param name="workflowType">The Cadence workflow type string.</param>
+        /// <param name="workflowTypeName">The Cadence workflow type name.</param>
         /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
-        private static Type GetWorkflowType(CadenceClient client, string workflowType)
+        private static Type GetWorkflowType(CadenceClient client, string workflowTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentNullException>(workflowTypeName != null);
 
             lock (syncLock)
             {
-                if (nameToWorkflowType.TryGetValue(GetWorkflowTypeKey(client, workflowType), out var type))
+                if (nameToWorkflowType.TryGetValue(GetWorkflowTypeKey(client, workflowTypeName), out var type))
                 {
                     return type;
                 }

@@ -87,7 +87,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The workflow type.
+        /// The workflow type name.
         /// </summary>
         public string WorkflowType
         {

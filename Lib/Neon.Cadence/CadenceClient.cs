@@ -119,8 +119,8 @@ namespace Neon.Cadence
     /// </para>
     /// <para>
     /// After establishing a connection ot a Cadence cluster, you'll need to call 
-    /// <see cref="CadenceClient.RegisterWorkflowAsync{TWorkflow}(string, string)"/> and/or
-    /// <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string)"/> to register your
+    /// <see cref="CadenceClient.RegisterWorkflowAsync{TWorkflowInterface}(string, string)"/> and/or
+    /// <see cref="CadenceClient.RegisterActivityAsync{TActivityInterface}(string)"/> to register your
     /// workflow and activity implementations with Cadence.  These calls combined with the
     /// workers described above determine which workflows and activities may be scheduled
     /// on the current client/process.
@@ -152,8 +152,8 @@ namespace Neon.Cadence
     /// which you don't have source code.
     /// </para>
     /// <para>
-    /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflow}(string, string, string, string)"/>
-    /// and <see cref="NewWorkflowStub{TWorkflow}(WorkflowOptions, string, string)"/> and external
+    /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflowInterface}(string, string, string, string)"/>
+    /// and <see cref="NewWorkflowStub{TWorkflowInterface}(WorkflowOptions, string, string)"/> and external
     /// untyped stubs via <see cref="NewUntypedWorkflowStub(string, string, string, string)"/> and
     /// <see cref="NewUntypedWorkflowStub(string, WorkflowOptions, string)"/>.
     /// </para>

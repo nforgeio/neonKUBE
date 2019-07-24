@@ -32,7 +32,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Maps workflow query and signal names to the methods implementing the queries
-    /// and signals for a given workflow type.
+    /// and signals for a given workflow interface.
     /// </summary>
     internal class WorkflowMethodMap
     {
@@ -42,13 +42,13 @@ namespace Neon.Cadence
         private static INeonLogger Log = LogManager.Default.GetLogger<WorkflowMethodMap>();
 
         /// <summary>
-        /// Constructs a query/signal method map for a workflow type.
+        /// Constructs a query/signal method map for a workflow interface.
         /// </summary>
-        /// <param name="workflowType">The workflow type.</param>
+        /// <param name="workflowInterface">The workflow interface.</param>
         /// <returns>The <see cref="WorkflowMethodMap"/>.</returns>
-        public static WorkflowMethodMap Create(Type workflowType)
+        public static WorkflowMethodMap Create(Type workflowInterface)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null);
 
             // $todo(jeff.lill):
             //
@@ -60,7 +60,7 @@ namespace Neon.Cadence
 
             var map = new WorkflowMethodMap();
 
-            foreach (var method in workflowType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (var method in workflowInterface.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
                 // Signal methods are tagged by [SignalHandler], accept a single byte array parameter,
                 // and returns [Task].
@@ -71,7 +71,7 @@ namespace Neon.Cadence
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't return [void].  It will be ignored.");
+                        Log.LogWarn($"Workflow [{workflowInterface.FullName}.{method.Name}()] signal handler is invalid because it doesn't return [void].  It will be ignored.");
                         continue;
                     }
 
@@ -79,7 +79,7 @@ namespace Neon.Cadence
 
                     if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
                     {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
+                        Log.LogWarn($"Workflow [{workflowInterface.FullName}.{method.Name}()] signal handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
                         continue;
                     }
 
@@ -96,7 +96,7 @@ namespace Neon.Cadence
                 {
                     if (method.ReturnType != typeof(Task<byte[]>))
                     {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't return a byte array.  It will be ignored.");
+                        Log.LogWarn($"Workflow [{workflowInterface.FullName}.{method.Name}()] query handler is invalid because it doesn't return a byte array.  It will be ignored.");
                         continue;
                     }
 
@@ -104,7 +104,7 @@ namespace Neon.Cadence
 
                     if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
                     {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
+                        Log.LogWarn($"Workflow [{workflowInterface.FullName}.{method.Name}()] query handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
                         continue;
                     }
 
