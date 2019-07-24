@@ -49,12 +49,12 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string defaultKubeVersion          = "1.14.1";
+        private const string defaultKubeVersion          = "1.15.0";
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
         private const string defaultHelmVersion          = "2.12.3";
         private const string defaultCalicoVersion        = "3.7";
-        private const string defaultIstioVersion         = "1.1.3";
+        private const string defaultIstioVersion         = "1.2.2";
 
         private string[] supportedDockerVersions
             = new string[]
@@ -124,7 +124,8 @@ namespace Neon.Kube
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" }
+                { "1.14.1", "1.14.1-00" },
+                { "1.15.0", "1.15.0-00" }
             };
 
             ubuntuKubeCtlPackages = new Dictionary<string, string>()
@@ -133,7 +134,8 @@ namespace Neon.Kube
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" }
+                { "1.14.1", "1.14.1-00" },
+                { "1.15.0", "1.15.0-00" }
             };
 
             ubuntuKubeletPackages = new Dictionary<string, string>
@@ -142,7 +144,8 @@ namespace Neon.Kube
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" }
+                { "1.14.1", "1.14.1-00" },
+                { "1.15.0", "1.15.0-00" }
             };
         }
 
