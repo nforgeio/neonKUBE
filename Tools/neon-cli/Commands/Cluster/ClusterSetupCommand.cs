@@ -121,6 +121,7 @@ OPTIONS:
         private ClusterProxy            cluster;
         private KubeSetupInfo           kubeSetupInfo;
         private HttpClient              httpClient;
+        private string                  branch;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -148,6 +149,9 @@ OPTIONS:
                 Console.Error.WriteLine("*** ERROR: [root@CLUSTER-NAME] argument is required.");
                 Program.Exit(1);
             }
+
+
+            branch = commandLine.GetOption("--branch") ?? "master";
 
             var contextName = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster = KubeHelper.Config.GetCluster(contextName.Cluster);
@@ -1385,6 +1389,60 @@ subjects:
 
                             firstMaster.KubectlApply(dashboardYaml);
                         });
+
+
+                    // Setup Kubernetes.
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-setup",
+                        () =>
+                        {
+                            KubeSetup(firstMaster).Wait();
+                        });
+
+
+                    // Install Elasticsearch.
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
+                        () =>
+                        {
+                            InstallElasticSearch(firstMaster).Wait();
+                        });
+
+
+                    // Setup Fluent-Bit.
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
+                        () =>
+                        {
+                            InstallFluentBit(firstMaster).Wait();
+                        });
+
+
+                    // Setup Fluentd.
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
+                        () =>
+                        {
+                            InstallFluentd(firstMaster).Wait();
+                        });
+
+
+                    // Setup Kibana.
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kibana",
+                        () =>
+                        {
+                            InstallKibana(firstMaster).Wait();
+                        });
+
+
+                    // Setup Metricbeat.
+
+                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-metricbeat",
+                        () =>
+                        {
+                            InstallMetricbeat(firstMaster).Wait();
+                        });
                 });
         }
 
@@ -1520,6 +1578,110 @@ helm template install/kubernetes/helm/istio \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
+        }
+
+        /// <summary>
+        /// Installs a Helm chart from the neonKUBE github repository.
+        /// </summary>
+        /// <param name="master"></param>
+        /// <param name="chartName"></param>
+        /// <param name="nameSpace"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        private async Task InstallHelmChartAsync(
+            SshProxy<NodeDefinition> master, 
+            string chartName, 
+            string nameSpace = "default", 
+            int timeout = 300)
+        {
+            using (var client = new HeadendClient())
+            {
+                var zip = await client.GetHelmChartZipAsync(chartName, branch);
+                master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
+            }
+
+            var helmChartScript =
+$@"
+cd /tmp/charts
+unzip {chartName}.zip -d {chartName}
+helm install --namespace {nameSpace} --name {chartName} ./{chartName} --timeout {timeout} --wait
+rm -rf {chartName}*
+";
+            master.SudoCommand(CommandBundle.FromScript(helmChartScript));
+        }
+
+        /// <summary>
+        /// Some initial kubernetes config.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task KubeSetup(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: cluster-setup";
+
+            await InstallHelmChartAsync(master, "cluster-setup", nameSpace: "logging");
+
+            master.Status = "deploy: kube-state-config";
+
+            await InstallHelmChartAsync(master, "kubernetes");
+        }
+
+        /// <summary>
+        /// Installs Elasticsearch
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallElasticSearch(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: elasticsearch";
+
+            await InstallHelmChartAsync(master, "elasticsearch", nameSpace: "logging", timeout: 900);
+
+        }
+
+        /// <summary>
+        /// Installs FluentBit
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallFluentBit(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: fluent-bit";
+
+            await InstallHelmChartAsync(master, "fluent-bit", nameSpace: "logging", timeout: 300);
+
+        }
+
+        /// <summary>
+        /// Installs fluentd
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallFluentd(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: fluentd";
+
+            await InstallHelmChartAsync(master, "fluentd", nameSpace: "logging", timeout: 300);
+        }
+
+        /// <summary>
+        /// Installs Kibana
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallKibana(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: kibana";
+
+            await InstallHelmChartAsync(master, "kibana", nameSpace: "logging", timeout: 300);
+
+        }
+
+        /// <summary>
+        /// Installs metricbeat
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallMetricbeat(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: metricbeat";
+
+            await InstallHelmChartAsync(master, "metricbeat", nameSpace: "logging", timeout: 300);
+
         }
 
         /// <summary>

@@ -35,6 +35,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
+using System.IO.Compression;
 
 namespace Neon.Kube
 {
@@ -81,6 +82,7 @@ namespace Neon.Kube
             };
 
         private JsonClient                      jsonClient;
+        private JsonClient                      gitHubClient;
         private Dictionary<string, string>      ubuntuKubeAdmPackages;
         private Dictionary<string, string>      ubuntuKubeCtlPackages;
         private Dictionary<string, string>      ubuntuKubeletPackages;
@@ -93,6 +95,10 @@ namespace Neon.Kube
             jsonClient = new JsonClient();
             jsonClient.HttpClient.Timeout = TimeSpan.FromSeconds(10);
 
+            gitHubClient = new JsonClient();
+            gitHubClient.BaseAddress = new Uri("https://api.github.com");
+            gitHubClient.DefaultRequestHeaders.UserAgent.ParseAdd("HttpClient");
+            
             // $hack(jeff.lill):
             //
             // We need to manually maintain the Kubernetes version to the
@@ -308,6 +314,53 @@ namespace Neon.Kube
                 UpdateReleaseNotesUrl = null,
                 UpdateUrl             = null
             };
+        }
+
+        /// <summary>
+        /// Gets a helm chart from the NeonKube repository and returns it as a zip file
+        /// </summary>
+        /// <returns></returns>
+        public async Task<byte[]> GetHelmChartZipAsync(string chartName, string branch = "master")
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    await AddGitFilesToZipAsync(zip, $"repos/nforgeio/neonKUBE/contents/Charts/{chartName}?ref={branch}", $"Charts/{chartName}");
+                }
+                return memoryStream.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="zip"></param>
+        /// <param name="directory"></param>
+        /// <param name="baseDirectory"></param>
+        /// <returns></returns>
+        public async Task<ZipArchive> AddGitFilesToZipAsync(ZipArchive zip, string directory, string baseDirectory)
+        {
+            var dirListing = await gitHubClient.GetAsync<dynamic>(directory);
+
+            foreach (var file in dirListing)
+            {
+                if (file.type == "file")
+                {
+                    var fileBytes = zip.CreateEntry(((string)file.path).Replace($"{baseDirectory}/", ""));
+
+                    using (var entryStream = fileBytes.Open())
+                    {
+                        await entryStream.WriteAsync(await gitHubClient.HttpClient.GetByteArrayAsync((string)file.download_url));
+                    }
+                }
+                else if (file.type == "dir")
+                {
+                    await AddGitFilesToZipAsync(zip, (string)file.url, baseDirectory);
+                }
+            }
+
+            return zip;
         }
 
         /// <inheritdoc/>
