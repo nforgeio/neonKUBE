@@ -1206,7 +1206,6 @@ namespace TestCadence
                 Assert.Equal(0, message.ContextId);
                 Assert.Null(message.MutableId);
                 Assert.Null(message.Result);
-                Assert.False(message.Update);
 
                 // Round-trip
 
@@ -1214,12 +1213,10 @@ namespace TestCadence
                 message.ContextId = 666;
                 message.MutableId = "my-mutable";
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
-                message.Update = true;
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-                Assert.True(message.Update);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1232,7 +1229,6 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-                Assert.True(message.Update);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -1243,7 +1239,6 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-                Assert.True(message.Update);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1254,7 +1249,6 @@ namespace TestCadence
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-                Assert.True(message.Update);
             }
         }
 
