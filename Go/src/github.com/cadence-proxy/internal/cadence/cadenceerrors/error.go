@@ -19,6 +19,8 @@ package cadenceerrors
 
 import (
 	"fmt"
+
+	"go.uber.org/cadence"
 )
 
 type (
@@ -43,17 +45,32 @@ func NewCadenceErrorEmpty() *CadenceError {
 // NewCadenceError is the constructor for a CadenceError
 // when supplied parameters
 //
-// param errStr string -> pointer to the error string
+// param err error -> error to set
 //
 // param errorType ...interface{} -> the cadence error type
-func NewCadenceError(errStr string, errType ...CadenceErrorType) *CadenceError {
+func NewCadenceError(err error, errType ...CadenceErrorType) *CadenceError {
 	cadenceError := NewCadenceErrorEmpty()
+	errStr := err.Error()
 	cadenceError.String = &errStr
 
 	if len(errType) > 0 {
 		cadenceError.SetType(errType[0])
 	} else {
-		cadenceError.SetType(Custom)
+		if cadence.IsCanceledError(err) {
+			cadenceError.SetType(Cancelled)
+		} else if cadence.IsCustomError(err) {
+			cadenceError.SetType(Custom)
+		} else if cadence.IsGenericError(err) {
+			cadenceError.SetType(Generic)
+		} else if cadence.IsPanicError(err) {
+			cadenceError.SetType(Panic)
+		} else if cadence.IsTerminatedError(err) {
+			cadenceError.SetType(Terminated)
+		} else if cadence.IsTimeoutError(err) {
+			cadenceError.SetType(Timeout)
+		} else {
+			cadenceError.SetType(Custom)
+		}
 	}
 
 	return cadenceError

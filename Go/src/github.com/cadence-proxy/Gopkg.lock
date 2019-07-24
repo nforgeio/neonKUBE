@@ -319,9 +319,10 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:b243bc103343111fa2dd2bef900727d573c157ed8de28fa496923b79f6d11b08"
+  digest = "1:54021cd2b45428c9076b20e145c5f960eec16ede6265d8f2f43f4b17ca82b703"
   name = "go.uber.org/cadence"
   packages = [
+    ".",
     ".gen/go/cadence",
     ".gen/go/cadence/workflowserviceclient",
     ".gen/go/cadence/workflowservicetest",
@@ -594,6 +595,7 @@
     "github.com/google/uuid",
     "github.com/stretchr/testify/suite",
     "github.com/uber-go/tally",
+    "go.uber.org/cadence",
     "go.uber.org/cadence/.gen/go/cadence/workflowserviceclient",
     "go.uber.org/cadence/.gen/go/shared",
     "go.uber.org/cadence/activity",

@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -216,8 +217,8 @@ func (s *UnitTestSuite) TestInitializeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -230,7 +231,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 	if v, ok := message.(*messages.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -239,7 +240,7 @@ func (s *UnitTestSuite) TestInitializeReply() {
 
 	if v, ok := message.(*messages.InitializeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 func (s *UnitTestSuite) TestConnectRequest() {
@@ -352,8 +353,8 @@ func (s *UnitTestSuite) TestConnectReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -366,7 +367,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 	if v, ok := message.(*messages.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -375,7 +376,7 @@ func (s *UnitTestSuite) TestConnectReply() {
 
 	if v, ok := message.(*messages.ConnectReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -457,8 +458,8 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 
 		v.SetConfigurationEmitMetrics(true)
 		s.True(v.GetConfigurationEmitMetrics())
@@ -492,7 +493,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 
 	if v, ok := message.(*messages.DomainDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
 		s.Equal(cadenceclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
@@ -507,7 +508,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 
 	if v, ok := message.(*messages.DomainDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
 		s.Equal(cadenceclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
@@ -623,8 +624,8 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -637,7 +638,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 
 	if v, ok := message.(*messages.DomainRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -646,7 +647,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 
 	if v, ok := message.(*messages.DomainRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -730,8 +731,8 @@ func (s *UnitTestSuite) TestDomainDeprecateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -744,7 +745,7 @@ func (s *UnitTestSuite) TestDomainDeprecateReply() {
 
 	if v, ok := message.(*messages.DomainDeprecateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -753,7 +754,7 @@ func (s *UnitTestSuite) TestDomainDeprecateReply() {
 
 	if v, ok := message.(*messages.DomainDeprecateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -863,8 +864,8 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -877,7 +878,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 
 	if v, ok := message.(*messages.DomainUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -886,7 +887,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 
 	if v, ok := message.(*messages.DomainUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -955,8 +956,8 @@ func (s *UnitTestSuite) TestTerminateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -969,7 +970,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 	if v, ok := message.(*messages.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -978,7 +979,7 @@ func (s *UnitTestSuite) TestTerminateReply() {
 
 	if v, ok := message.(*messages.TerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1047,8 +1048,8 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1061,7 +1062,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 	if v, ok := message.(*messages.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1070,7 +1071,7 @@ func (s *UnitTestSuite) TestHeartbeatReply() {
 
 	if v, ok := message.(*messages.HeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1146,8 +1147,8 @@ func (s *UnitTestSuite) TestCancelReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 
 		v.SetWasCancelled(true)
 		s.True(v.GetWasCancelled())
@@ -1163,7 +1164,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 
 	if v, ok := message.(*messages.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 		s.True(v.GetWasCancelled())
 	}
 
@@ -1173,7 +1174,7 @@ func (s *UnitTestSuite) TestCancelReply() {
 
 	if v, ok := message.(*messages.CancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 		s.True(v.GetWasCancelled())
 	}
 }
@@ -1202,8 +1203,8 @@ func (s *UnitTestSuite) TestNewWorkerReply() {
 		v.SetWorkerID(int64(666))
 		s.Equal(int64(666), v.GetWorkerID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1217,7 +1218,7 @@ func (s *UnitTestSuite) TestNewWorkerReply() {
 	if v, ok := message.(*messages.NewWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetWorkerID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1227,7 +1228,7 @@ func (s *UnitTestSuite) TestNewWorkerReply() {
 	if v, ok := message.(*messages.NewWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetWorkerID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1360,8 +1361,8 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1374,7 +1375,7 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 
 	if v, ok := message.(*messages.StopWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1383,7 +1384,7 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 
 	if v, ok := message.(*messages.StopWorkerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1448,8 +1449,8 @@ func (s *UnitTestSuite) TestPingReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1462,7 +1463,7 @@ func (s *UnitTestSuite) TestPingReply() {
 
 	if v, ok := message.(*messages.PingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1471,7 +1472,7 @@ func (s *UnitTestSuite) TestPingReply() {
 
 	if v, ok := message.(*messages.PingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1542,8 +1543,8 @@ func (s *UnitTestSuite) TestWorkflowSetCacheSizeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1556,7 +1557,7 @@ func (s *UnitTestSuite) TestWorkflowSetCacheSizeReply() {
 
 	if v, ok := message.(*messages.WorkflowSetCacheSizeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1565,7 +1566,7 @@ func (s *UnitTestSuite) TestWorkflowSetCacheSizeReply() {
 
 	if v, ok := message.(*messages.WorkflowSetCacheSizeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1645,8 +1646,8 @@ func (s *UnitTestSuite) TestWorkflowRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1659,7 +1660,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterReply() {
 
 	if v, ok := message.(*messages.WorkflowRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1668,7 +1669,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterReply() {
 
 	if v, ok := message.(*messages.WorkflowRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1768,8 +1769,8 @@ func (s *UnitTestSuite) TestWorkflowExecuteReply() {
 		s.Equal("foo", v.GetExecution().ID)
 		s.Equal("bar", v.GetExecution().RunID)
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1784,7 +1785,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("foo", v.GetExecution().ID)
 		s.Equal("bar", v.GetExecution().RunID)
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1795,7 +1796,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("foo", v.GetExecution().ID)
 		s.Equal("bar", v.GetExecution().RunID)
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -1935,8 +1936,8 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1951,7 +1952,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1962,7 +1963,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2049,8 +2050,8 @@ func (s *UnitTestSuite) TestWorkflowCancelReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2063,7 +2064,7 @@ func (s *UnitTestSuite) TestWorkflowCancelReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2072,7 +2073,7 @@ func (s *UnitTestSuite) TestWorkflowCancelReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2173,8 +2174,8 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2187,7 +2188,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 
 	if v, ok := message.(*messages.WorkflowTerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2196,7 +2197,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateReply() {
 
 	if v, ok := message.(*messages.WorkflowTerminateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2297,8 +2298,8 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2311,7 +2312,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2320,7 +2321,7 @@ func (s *UnitTestSuite) TestWorkflowSignalReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2444,8 +2445,8 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartReply() {
 		s.Equal("666", v.GetExecution().ID)
 		s.Equal("777", v.GetExecution().RunID)
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2460,7 +2461,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("666", v.GetExecution().ID)
 		s.Equal("777", v.GetExecution().RunID)
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2471,7 +2472,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("666", v.GetExecution().ID)
 		s.Equal("777", v.GetExecution().RunID)
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2495,8 +2496,8 @@ func (s *UnitTestSuite) TestWorkflowCancelChildReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2509,7 +2510,7 @@ func (s *UnitTestSuite) TestWorkflowCancelChildReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2518,7 +2519,7 @@ func (s *UnitTestSuite) TestWorkflowCancelChildReply() {
 
 	if v, ok := message.(*messages.WorkflowCancelChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2672,8 +2673,8 @@ func (s *UnitTestSuite) TestWorkflowQueryReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2687,7 +2688,7 @@ func (s *UnitTestSuite) TestWorkflowQueryReply() {
 	if v, ok := message.(*messages.WorkflowQueryReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2697,7 +2698,7 @@ func (s *UnitTestSuite) TestWorkflowQueryReply() {
 	if v, ok := message.(*messages.WorkflowQueryReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2797,8 +2798,8 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		v.SetResult(result)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2813,7 +2814,7 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(int64(888), v.GetContextID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2824,7 +2825,7 @@ func (s *UnitTestSuite) TestWorkflowMutableReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(888), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2916,8 +2917,8 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		v.SetDetails(&details)
 		s.Equal(cadenceshared.DescribeWorkflowExecutionResponse{}, *v.GetDetails())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2931,7 +2932,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 	if v, ok := message.(*messages.WorkflowDescribeExecutionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceshared.DescribeWorkflowExecutionResponse{}, *v.GetDetails())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2941,7 +2942,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 	if v, ok := message.(*messages.WorkflowDescribeExecutionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceshared.DescribeWorkflowExecutionResponse{}, *v.GetDetails())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -2965,8 +2966,8 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2979,7 +2980,7 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextReply() {
 
 	if v, ok := message.(*messages.WorkflowDisconnectContextReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2988,7 +2989,7 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextReply() {
 
 	if v, ok := message.(*messages.WorkflowDisconnectContextReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3067,8 +3068,8 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildReply() {
 		s.Equal("my-workflow", v.GetExecution().ID)
 		s.Equal("my-run", v.GetExecution().RunID)
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3084,7 +3085,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildReply() {
 		s.Equal(int64(666), v.GetChildID())
 		s.Equal("my-workflow", v.GetExecution().ID)
 		s.Equal("my-run", v.GetExecution().RunID)
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3096,7 +3097,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildReply() {
 		s.Equal(int64(666), v.GetChildID())
 		s.Equal("my-workflow", v.GetExecution().ID)
 		s.Equal("my-run", v.GetExecution().RunID)
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3190,8 +3191,8 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3205,7 +3206,7 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultReply() {
 	if v, ok := message.(*messages.WorkflowGetLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3215,7 +3216,7 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultReply() {
 	if v, ok := message.(*messages.WorkflowGetLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3285,8 +3286,8 @@ func (s *UnitTestSuite) TestWorkflowGetResultReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3300,7 +3301,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultReply() {
 	if v, ok := message.(*messages.WorkflowGetResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3310,7 +3311,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultReply() {
 	if v, ok := message.(*messages.WorkflowGetResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3401,8 +3402,8 @@ func (s *UnitTestSuite) TestWorkflowGetTimeReply() {
 		v.SetTime(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC))
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTime())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3416,7 +3417,7 @@ func (s *UnitTestSuite) TestWorkflowGetTimeReply() {
 	if v, ok := message.(*messages.WorkflowGetTimeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTime())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3426,7 +3427,7 @@ func (s *UnitTestSuite) TestWorkflowGetTimeReply() {
 	if v, ok := message.(*messages.WorkflowGetTimeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTime())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3496,8 +3497,8 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultReply() {
 		v.SetHasResult(true)
 		s.True(v.GetHasResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3511,7 +3512,7 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultReply() {
 	if v, ok := message.(*messages.WorkflowHasLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetHasResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3521,7 +3522,7 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultReply() {
 	if v, ok := message.(*messages.WorkflowHasLastResultReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.True(v.GetHasResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3591,8 +3592,8 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3606,7 +3607,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeReply() {
 	if v, ok := message.(*messages.WorkflowQueryInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3616,7 +3617,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeReply() {
 	if v, ok := message.(*messages.WorkflowQueryInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3707,8 +3708,8 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3721,7 +3722,7 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerReply() {
 
 	if v, ok := message.(*messages.WorkflowSetQueryHandlerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3730,7 +3731,7 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerReply() {
 
 	if v, ok := message.(*messages.WorkflowSetQueryHandlerReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3813,8 +3814,8 @@ func (s *UnitTestSuite) TestWorkflowSignalChildReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3828,7 +3829,7 @@ func (s *UnitTestSuite) TestWorkflowSignalChildReply() {
 	if v, ok := message.(*messages.WorkflowSignalChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3838,7 +3839,7 @@ func (s *UnitTestSuite) TestWorkflowSignalChildReply() {
 	if v, ok := message.(*messages.WorkflowSignalChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -3929,8 +3930,8 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3943,7 +3944,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3952,7 +3953,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4043,8 +4044,8 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4057,7 +4058,7 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalSubscribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4066,7 +4067,7 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeReply() {
 
 	if v, ok := message.(*messages.WorkflowSignalSubscribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4145,8 +4146,8 @@ func (s *UnitTestSuite) TestWorkflowSleepReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4159,7 +4160,7 @@ func (s *UnitTestSuite) TestWorkflowSleepReply() {
 
 	if v, ok := message.(*messages.WorkflowSleepReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4168,7 +4169,7 @@ func (s *UnitTestSuite) TestWorkflowSleepReply() {
 
 	if v, ok := message.(*messages.WorkflowSleepReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4250,8 +4251,8 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4265,7 +4266,7 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 	if v, ok := message.(*messages.WorkflowWaitForChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4275,7 +4276,7 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 	if v, ok := message.(*messages.WorkflowWaitForChildReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4357,8 +4358,8 @@ func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
 		v.SetVersion(int32(20))
 		s.Equal(int32(20), v.GetVersion())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4372,7 +4373,7 @@ func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
 	if v, ok := message.(*messages.WorkflowGetVersionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int32(20), v.GetVersion())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4382,7 +4383,7 @@ func (s *UnitTestSuite) TestWorkflowGetVersionReply() {
 	if v, ok := message.(*messages.WorkflowGetVersionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int32(20), v.GetVersion())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4486,8 +4487,8 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		v.SetResult([]byte{5, 6, 7, 8, 9})
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Generic))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Generic), v.GetError())
 
 		domain := "my-domain"
 		workflowID := "my-workflow"
@@ -4517,7 +4518,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Generic), v.GetError())
 		s.Equal("my-domain", *v.GetDomain())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
@@ -4532,7 +4533,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Generic), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Generic), v.GetError())
 		s.Equal("my-domain", *v.GetDomain())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
@@ -4560,8 +4561,8 @@ func (s *UnitTestSuite) TestActivityCompleteReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4574,7 +4575,7 @@ func (s *UnitTestSuite) TestActivityCompleteReply() {
 
 	if v, ok := message.(*messages.ActivityCompleteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4583,7 +4584,7 @@ func (s *UnitTestSuite) TestActivityCompleteReply() {
 
 	if v, ok := message.(*messages.ActivityCompleteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4611,8 +4612,8 @@ func (s *UnitTestSuite) TestActivityExecuteLocalReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4626,7 +4627,7 @@ func (s *UnitTestSuite) TestActivityExecuteLocalReply() {
 	if v, ok := message.(*messages.ActivityExecuteLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4636,7 +4637,7 @@ func (s *UnitTestSuite) TestActivityExecuteLocalReply() {
 	if v, ok := message.(*messages.ActivityExecuteLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4721,8 +4722,8 @@ func (s *UnitTestSuite) TestActivityExecuteReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4736,7 +4737,7 @@ func (s *UnitTestSuite) TestActivityExecuteReply() {
 	if v, ok := message.(*messages.ActivityExecuteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4746,7 +4747,7 @@ func (s *UnitTestSuite) TestActivityExecuteReply() {
 	if v, ok := message.(*messages.ActivityExecuteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4840,8 +4841,8 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsReply() {
 		v.SetDetails([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4855,7 +4856,7 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityGetHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4865,7 +4866,7 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityGetHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -4942,8 +4943,8 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 		v.SetInfo(&info)
 		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowDomain: "my-domain", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4957,7 +4958,7 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 	if v, ok := message.(*messages.ActivityGetInfoReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowDomain: "my-domain", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4967,7 +4968,7 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 	if v, ok := message.(*messages.ActivityGetInfoReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowDomain: "my-domain", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -5037,8 +5038,8 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsReply() {
 		v.SetHasDetails(true)
 		s.Equal(true, v.GetHasDetails())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5052,7 +5053,7 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityHasHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(true, v.GetHasDetails())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5062,7 +5063,7 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsReply() {
 	if v, ok := message.(*messages.ActivityHasHeartbeatDetailsReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(true, v.GetHasDetails())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -5132,8 +5133,8 @@ func (s *UnitTestSuite) TestActivityInvokeLocalReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5147,7 +5148,7 @@ func (s *UnitTestSuite) TestActivityInvokeLocalReply() {
 	if v, ok := message.(*messages.ActivityInvokeLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5157,7 +5158,7 @@ func (s *UnitTestSuite) TestActivityInvokeLocalReply() {
 	if v, ok := message.(*messages.ActivityInvokeLocalReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -5239,8 +5240,8 @@ func (s *UnitTestSuite) TestActivityInvokeReply() {
 		v.SetResult([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5254,7 +5255,7 @@ func (s *UnitTestSuite) TestActivityInvokeReply() {
 	if v, ok := message.(*messages.ActivityInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5264,7 +5265,7 @@ func (s *UnitTestSuite) TestActivityInvokeReply() {
 	if v, ok := message.(*messages.ActivityInvokeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -5343,8 +5344,8 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5357,7 +5358,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatReply() {
 
 	if v, ok := message.(*messages.ActivityRecordHeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5366,7 +5367,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatReply() {
 
 	if v, ok := message.(*messages.ActivityRecordHeartbeatReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -5471,8 +5472,8 @@ func (s *UnitTestSuite) TestActivityRegisterReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5485,7 +5486,7 @@ func (s *UnitTestSuite) TestActivityRegisterReply() {
 
 	if v, ok := message.(*messages.ActivityRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5494,7 +5495,7 @@ func (s *UnitTestSuite) TestActivityRegisterReply() {
 
 	if v, ok := message.(*messages.ActivityRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -5574,8 +5575,8 @@ func (s *UnitTestSuite) TestActivityStoppingReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetError(cadenceerrors.NewCadenceError("foo"))
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5588,7 +5589,7 @@ func (s *UnitTestSuite) TestActivityStoppingReply() {
 
 	if v, ok := message.(*messages.ActivityStoppingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5597,7 +5598,7 @@ func (s *UnitTestSuite) TestActivityStoppingReply() {
 
 	if v, ok := message.(*messages.ActivityStoppingReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceerrors.NewCadenceError("foo", cadenceerrors.Custom), v.GetError())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}
 }
 
@@ -5684,7 +5685,7 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		v.Properties["Empty"] = &p3
 		v.Properties["Nil"] = nil
 
-		v.SetJSONProperty("Error", cadenceerrors.NewCadenceError("foo"))
+		v.SetJSONProperty("Error", cadenceerrors.NewCadenceError(errors.New("foo")))
 
 		b, err := base64.StdEncoding.DecodeString("c29tZSBkYXRhIHdpdGggACBhbmQg77u/")
 		s.NoError(err)
@@ -5788,11 +5789,11 @@ func (s *UnitTestSuite) TestProxyReply() {
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetError(cadenceerrors.NewCadenceError("MyError"))
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
-		s.Equal("MyError", *v.GetError().String)
+		s.Equal("foo", *v.GetError().String)
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -5809,7 +5810,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 	if v, ok := message.(*messages.ProxyReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
-		s.Equal("MyError", *v.GetError().String)
+		s.Equal("foo", *v.GetError().String)
 	}
 }
 
@@ -5869,12 +5870,12 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetError(cadenceerrors.NewCadenceError("MyError"))
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
 		v.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
-		s.Equal("MyError", *v.GetError().String)
+		s.Equal("foo", *v.GetError().String)
 		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 
 		// serialize the new message
@@ -5892,7 +5893,7 @@ func (s *UnitTestSuite) TestWorkflowReply() {
 	if v, ok := message.(*messages.WorkflowReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
-		s.Equal("MyError", *v.GetError().String)
+		s.Equal("foo", *v.GetError().String)
 		s.Equal(cadenceworkflows.ReplayStatusReplaying, v.GetReplayStatus())
 	}
 }
@@ -5953,14 +5954,14 @@ func (s *UnitTestSuite) TestActivityReply() {
 
 		// Round-trip
 		v.SetRequestID(int64(555))
-		v.SetError(cadenceerrors.NewCadenceError("MyError"))
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
 
 		v.SetActivityContextID(int64(555))
 		s.Equal(int64(555), v.GetActivityContextID())
 
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
-		s.Equal("MyError", *v.GetError().String)
+		s.Equal("foo", *v.GetError().String)
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -5978,7 +5979,7 @@ func (s *UnitTestSuite) TestActivityReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
 		s.Equal(int64(555), v.GetActivityContextID())
-		s.Equal("MyError", *v.GetError().String)
+		s.Equal("foo", *v.GetError().String)
 	}
 }
 

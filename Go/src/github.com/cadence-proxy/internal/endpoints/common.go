@@ -121,7 +121,7 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 		)
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Incorrect Content-Type",
+		logger.Error("Incorrect Content-Type",
 			zap.String("Content Type", r.Header.Get("Content-Type")),
 			zap.String("Expected Content Type", globals.ContentType),
 			zap.Error(err),
@@ -157,7 +157,7 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Null request body", zap.String("Error", err.Error()))
+		logger.Error("Null request body", zap.Error(err))
 		return nil, err
 	}
 
@@ -167,7 +167,7 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	if err != nil {
 
 		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Error deserializing input", zap.Error(err))
+		logger.Error("Error deserializing input", zap.Error(err))
 		return nil, err
 	}
 
