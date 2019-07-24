@@ -58,6 +58,8 @@ namespace Neon.Cadence
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
             where TWorkflow : WorkflowBase
         {
+            CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
+
             if (string.IsNullOrEmpty(workflowTypeName))
             {
                 workflowTypeName = workflowTypeName ?? typeof(TWorkflow).FullName;

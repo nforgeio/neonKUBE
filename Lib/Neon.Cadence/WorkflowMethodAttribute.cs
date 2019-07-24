@@ -85,6 +85,8 @@ namespace Neon.Cadence
                 }
                 else
                 {
+                    CadenceHelper.ValidateWorkflowTypeName(value);
+
                     name = value;
                 }
             }

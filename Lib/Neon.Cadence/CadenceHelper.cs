@@ -35,7 +35,14 @@ namespace Neon.Cadence
     internal static class CadenceHelper
     {
         /// <summary>
-        /// Number of nanoseconds per second.
+        /// The optional separator string used to separate the base workflow type
+        /// name from the optional workflow method name.  This string may not be
+        /// embedded in a normal workflow type name.
+        /// </summary>
+        public const string WorkflowTypeSeparator = "::";
+
+        /// <summary>
+        /// Number of nanoseconds per second (spoiler alert: it's 1 billion).
         /// </summary>
         public const long NanosecondsPerSecond = 1000000000L;
 
@@ -48,6 +55,19 @@ namespace Neon.Cadence
         /// Returns the minimum timespan supported by Cadence.
         /// </summary>
         public static TimeSpan MinTimespan { get; private set; } = TimeSpan.FromTicks(long.MinValue / 100);
+
+        /// <summary>
+        /// Ensures that a workflow type name is valid.
+        /// </summary>
+        /// <param name="name">The workflow type name being checked.</param>
+        /// <exception cref="ArgumentException">Thrown if the name passed is not valid.</exception>
+        public static void ValidateWorkflowTypeName(string name)
+        {
+            if (name != null && name.Contains(CadenceHelper.WorkflowTypeSeparator))
+            {
+                throw new ArgumentException($"Workflow type names cannot include \"{CadenceHelper.WorkflowTypeSeparator}\".");
+            }
+        }
 
         /// <summary>
         /// Ensures that the timespan passed doesn't exceed the minimum or maximum
