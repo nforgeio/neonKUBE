@@ -58,7 +58,7 @@ namespace Neon.Xunit.Cadence
         public const string DefaultDomain = "test-domain";
 
         /// <summary>
-        /// The default tasklist configured for <see cref="CadenceFixture"/> clients.
+        /// The default task list configured for <see cref="CadenceFixture"/> clients.
         /// </summary>
         public const string DefaultTaskList = "test-tasks";
 
@@ -75,7 +75,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], bool, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ITypedWorkflowStub.cs
+// FILE:	    ExternalWorkflowStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,16 +26,24 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
-    /// <summary>
-    /// Internal interface implemented by generated typed workflow stubs.
-    /// </summary>
-    internal interface ITypedWorkflowStub
+    /// <inheritdoc/>
+    public class ExternalWorkflowStub : IExternalWorkflowStub
     {
-        /// <summary>
-        /// Creates an untyped <see cref="IWorkflowStub"/> from a typed stub.
-        /// </summary>
-        IWorkflowStub ToUntyped();
+        /// <inheritdoc/>
+        public WorkflowExecution Execution => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public Task Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public Task Signal(string signalName, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

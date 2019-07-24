@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LocalActivityOptions.cs
+// FILE:	    WorkflowInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -26,38 +27,44 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Specifies options used when running a local workflow activity.
+    /// Returns information about an executing workflow.
     /// </summary>
-    public class LocalActivityOptions
+    public class WorkflowInfo
     {
         /// <summary>
-        /// Default constructor.
+        /// Returns the workflow domain.
         /// </summary>
-        public LocalActivityOptions()
-        {
-        }
+        public string Domain { get; internal set; }
 
         /// <summary>
-        /// Specifies the maximum time the activity can run.
+        /// Returns the workflow ID.
         /// </summary>
-        public TimeSpan ScheduleToCloseTimeout { get; set; }
+        public string WorkflowId { get; internal set; }
 
         /// <summary>
-        /// The activity retry options.
+        /// Returns the workflow's current run ID.
         /// </summary>
-        public RetryOptions RetryOptions { get; set; } = null;
+        public string RunId { get; internal set; }
 
         /// <summary>
-        /// Converts this instance into the corresponding internal object.
+        /// Returns the workflow's workflow type name.
         /// </summary>
-        /// <returns>The equivalent <see cref="InternalLocalActivityOptions"/>.</returns>
-        internal InternalLocalActivityOptions ToInternal()
-        {
-            return new InternalLocalActivityOptions()
-            {
-                ScheduleToCloseTimeoutSeconds = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
-                RetryPolicy                   = RetryOptions?.ToInternal()
-            };
-        }
+        public string WorkflowType { get; internal set; }
+
+        /// <summary>
+        /// Returns the workflow task list.
+        /// </summary>
+        public string TaskList { get; internal set; }
+
+        /// <summary>
+        /// Returns the maximum time the workflow is allowed to run from
+        /// the time the workflow was started until it completed.
+        /// </summary>
+        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
+
+        /// <summary>
+        /// Returns the workflow's child policy.
+        /// </summary>
+        public ChildPolicy ChildPolicy { get; internal set; }
     }
 }

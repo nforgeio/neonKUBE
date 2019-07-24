@@ -108,7 +108,7 @@ namespace Neon.Cadence.Internal
         {
             var executionState = new WorkflowState()
             {
-                Run                 = this.Execution.ToPublic(),
+                Execution                 = this.Execution.ToPublic(),
                 TypeName                = this.WorkflowType.Name,
                 WorkflowCloseStatus = (WorkflowExecutionCloseStatus)this.WorkflowCloseStatus,
                 HistoryLength       = this.HistoryLength,

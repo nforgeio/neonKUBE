@@ -23,7 +23,7 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
     /// Specifies the options to use when executing a child workflow.
@@ -56,7 +56,7 @@ namespace Neon.Cadence.Internal
         public string TaskList { get; set; } = null;
 
         /// <summary>
-        /// Specifies the maximum time the child workflow may run from start
+        /// Specifies the maximum time the child workflow may execute from start
         /// to finish.  This defaults to 24 hours.
         /// </summary>
         public TimeSpan ExecutionStartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;

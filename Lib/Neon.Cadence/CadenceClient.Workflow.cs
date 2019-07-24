@@ -37,7 +37,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers a workflow implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TWorkflow">The <see cref="Workflow"/> derived type implementing the workflow.</typeparam>
+        /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived type implementing the workflow.</typeparam>
         /// <param name="workflowTypeName">
         /// Optionally specifies a custom workflow type name that will be used 
         /// for identifying the workflow implementation in Cadence.  This defaults
@@ -56,7 +56,7 @@ namespace Neon.Cadence
         /// </note>
         /// </remarks>
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
-            where TWorkflow : Workflow
+            where TWorkflow : WorkflowBase
         {
             if (string.IsNullOrEmpty(workflowTypeName))
             {
@@ -68,7 +68,7 @@ namespace Neon.Cadence
                 throw new CadenceWorkflowWorkerStartedException();
             }
 
-            if (!Workflow.Register(this, typeof(TWorkflow), workflowTypeName))
+            if (!WorkflowBase.Register(this, typeof(TWorkflow), workflowTypeName))
             {
                 var reply = (WorkflowRegisterReply)await CallProxyAsync(
                     new WorkflowRegisterRequest()
@@ -83,7 +83,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="IWorkflow"/> and tagged by <see cref="WorkflowAttribute"/> with
+        /// <see cref="IWorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
         /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
         /// them with Cadence.
         /// </summary>
@@ -91,7 +91,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
-        /// derived from <see cref="Workflow"/>.
+        /// derived from <see cref="WorkflowBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceWorkflowWorkerStartedException">
@@ -118,13 +118,13 @@ namespace Neon.Cadence
 
                 if (workflowAttribute != null)
                 {
-                    if (type.Implements<IWorkflow>())
+                    if (type.Implements<IWorkflowBase>())
                     {
                         if (workflowAttribute.AutoRegister)
                         {
                             var workflowTypeName = workflowAttribute.TypeName ?? type.FullName;
 
-                            if (!Workflow.Register(this, type, workflowTypeName))
+                            if (!WorkflowBase.Register(this, type, workflowTypeName))
                             {
                                 var reply = (WorkflowRegisterReply)await CallProxyAsync(
                                     new WorkflowRegisterRequest()
@@ -138,7 +138,7 @@ namespace Neon.Cadence
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(WorkflowAttribute)}] but is not derived from [{nameof(IWorkflow)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(WorkflowAttribute)}] but is not derived from [{nameof(IWorkflowBase)}].");
                     }
                 }
             }
@@ -192,6 +192,12 @@ namespace Neon.Cadence
         /// <param name="workflowType">Optionally specifies the workflow type.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
         public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowType = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
@@ -207,6 +213,11 @@ namespace Neon.Cadence
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke.
+        /// </remarks>
         public IWorkflowStub NewUntypedWorkflowStub(string workflowType, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowType));
@@ -216,7 +227,8 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Creates a typed workflow stub connected to a known workflow execution.
-        /// This can be used to signal and query the workflow.
+        /// This can be used to signal and query the workflow via the type-safe
+        /// interface methods.
         /// </summary>
         /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
@@ -228,8 +240,14 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
         public TWorkflow NewWorkflowStub<TWorkflow>(string workflowId, string runId = null, string workflowType = null, string domain = null)
-            where TWorkflow : IWorkflow
+            where TWorkflow : IWorkflowBase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
 
@@ -238,7 +256,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Creates a typed workflow stub that can be used to start as well as 
-        /// query and signal the workflow.
+        /// query and signal the workflow via the type-safe interface methods.
         /// </summary>
         /// <typeparam name="TWorkflow">Identifies the workflow type.</typeparam>
         /// <param name="options">Optionally specifies the workflow options.</param>
@@ -249,8 +267,14 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflow"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
         public TWorkflow NewWorkflowStub<TWorkflow>(WorkflowOptions options = null, string workflowType = null, string domain = null)
-            where TWorkflow : IWorkflow
+            where TWorkflow : IWorkflowBase
         {
             throw new NotImplementedException();
         }
@@ -261,7 +285,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Starts an external workflow using a specific workflow type name, returning a <see cref="WorkflowExecution"/>
-        /// that can be used to track the workflow and also wait for its result via <see cref="GetWorkflowResultAsync(WorkflowExecution)"/>.
+        /// that can be used to track the workflow and also wait for its result via <see cref="GetWorkflowResultAsync(WorkflowExecution, string)"/>.
         /// </summary>
         /// <param name="workflowTypeName">
         /// The type name used when registering the workers that will handle this workflow.
@@ -451,20 +475,18 @@ namespace Neon.Cadence
         /// <summary>
         /// Transmits a signal to a workflow, starting the workflow if it's not currently running.
         /// </summary>
-        /// <param name="workflowId">The workflow ID.</param>
         /// <param name="signalName">Identifies the signal.</param>
         /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
-        /// <param name="workflowArgs">Optionally specifies the workflow arguments.</param>
+        /// <param name="startArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
         /// <param name="taskList">Optionally specifies the task list.  This defaults to <b>"default"</b>.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task SignalWorkflowWithStartAsync(string workflowId, string signalName, byte[] signalArgs = null, byte[] workflowArgs = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string signalName, byte[] signalArgs = null, byte[] startArgs = null, string taskList = null, WorkflowOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
             options = options ?? new WorkflowOptions();
@@ -472,15 +494,17 @@ namespace Neon.Cadence
             var reply = (WorkflowSignalWithStartReply)await CallProxyAsync(
                 new WorkflowSignalWithStartRequest()
                 {
-                    WorkflowId   = workflowId,
+                    WorkflowId   = options.WorkflowId,
                     Options      = options.ToInternal(this, taskList),
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
-                    WorkflowArgs = workflowArgs,
+                    WorkflowArgs = startArgs,
                     Domain       = ResolveDomain(domain)
                 });
 
             reply.ThrowOnError();
+
+            return reply.Execution.ToPublic();
         }
 
         /// <summary>

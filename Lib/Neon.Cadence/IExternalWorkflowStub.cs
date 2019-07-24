@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ITypedWorkflowStub.cs
+// FILE:	    IExternalWorkflowStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,16 +26,31 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Internal interface implemented by generated typed workflow stubs.
+    /// Supports signalling and cancelling any workflow.  This is useful when an
+    /// external workflow type is not known at compile time or to manage workflows
+    /// written in another language.
     /// </summary>
-    internal interface ITypedWorkflowStub
+    public interface IExternalWorkflowStub
     {
         /// <summary>
-        /// Creates an untyped <see cref="IWorkflowStub"/> from a typed stub.
+        /// Returns the workflow execution.
         /// </summary>
-        IWorkflowStub ToUntyped();
+        WorkflowExecution Execution { get; }
+
+        /// <summary>
+        /// Signals the workflow.
+        /// </summary>
+        /// <param name="signalName">Specifies the signal name.</param>
+        /// <param name="args">Specifies the signal arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        Task Signal(string signalName, params object[] args);
+
+        /// <summary>
+        /// Cancels the workflow.
+        /// </summary>
+        Task Cancel();
     }
 }

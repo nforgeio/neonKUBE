@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ITypedWorkflowStub.cs
+// FILE:	    IWorkflowBase.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,23 +19,23 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Internal interface implemented by generated typed workflow stubs.
+    /// All application workflow interface definitions must derive from this interface.
     /// </summary>
-    internal interface ITypedWorkflowStub
+    public interface IWorkflowBase
     {
         /// <summary>
-        /// Creates an untyped <see cref="IWorkflowStub"/> from a typed stub.
+        /// Provides information about the executing workflow as well as other
+        /// useful functionality.
         /// </summary>
-        IWorkflowStub ToUntyped();
+        IWorkflow Workflow { get; }
     }
 }

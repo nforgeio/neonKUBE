@@ -36,7 +36,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers an activity implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TActivity">The <see cref="Activity"/> derived type implementing the activity.</typeparam>
+        /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived type implementing the activity.</typeparam>
         /// <param name="activityTypeName">
         /// Optionally specifies a custom activity type name that will be used 
         /// for identifying the activity implementation in Cadence.  This defaults
@@ -54,7 +54,7 @@ namespace Neon.Cadence
         /// </note>
         /// </remarks>
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
-            where TActivity : Activity
+            where TActivity : ActivityBase
         {
             if (string.IsNullOrEmpty(activityTypeName))
             {
@@ -66,7 +66,7 @@ namespace Neon.Cadence
                 throw new CadenceActivityWorkerStartedException();
             }
 
-            if (!Activity.Register(this, typeof(TActivity), activityTypeName))
+            if (!ActivityBase.Register(this, typeof(TActivity), activityTypeName))
             {
                 var reply = (ActivityRegisterReply)await CallProxyAsync(
                     new ActivityRegisterRequest()
@@ -80,14 +80,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for activity implementations derived from
-        /// <see cref="IActivity"/> and tagged by <see cref="ActivityAttribute"/> and
+        /// <see cref="IActivityBase"/> and tagged by <see cref="ActivityAttribute"/> and
         /// registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
-        /// derived from <see cref="IActivity"/>.
+        /// derived from <see cref="IActivityBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceActivityWorkerStartedException">
@@ -114,13 +114,13 @@ namespace Neon.Cadence
 
                 if (activityAttribute != null)
                 {
-                    if (type.Implements<IActivity>())
+                    if (type.Implements<IActivityBase>())
                     {
                         if (activityAttribute.AutoRegister)
                         {
                             var activityTypeName = activityAttribute.TypeName ?? type.FullName;
 
-                            if (!Activity.Register(this, type, activityTypeName))
+                            if (!ActivityBase.Register(this, type, activityTypeName))
                             {
                                 var reply = (ActivityRegisterReply)await CallProxyAsync(
                                     new ActivityRegisterRequest()
@@ -134,7 +134,7 @@ namespace Neon.Cadence
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(ActivityAttribute)}] but is not derived from [{nameof(IActivity)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(ActivityAttribute)}] but is not derived from [{nameof(IActivityBase)}].");
                     }
                 }
             }

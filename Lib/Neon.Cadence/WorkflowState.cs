@@ -34,7 +34,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Describes the workflow execution.
         /// </summary>
-        public WorkflowExecution Run { get; internal set; }
+        public WorkflowExecution Execution { get; internal set; }
 
         /// <summary>
         /// Identifies the workflow implementation.
@@ -78,12 +78,13 @@ namespace Neon.Cadence
         public long HistoryLength { get; internal set; }
 
         /// <summary>
-        /// Identifies the domain where the parent workflow is running.
+        /// Identifies the domain where the parent workflow is running
+        /// (or <c>null</c>).
         /// </summary>
         public string ParentDomain { get; internal set; }
 
         /// <summary>
-        /// Identfies the parent workflow.
+        /// Identfies the parent workflow (or <c>null</c>).
         /// </summary>
         public WorkflowExecution ParentExecution { get; internal set; }
 
