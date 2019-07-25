@@ -74,6 +74,8 @@ wwwroot/
 
 /.vs
 /.vs/**
+/.vscode
+/.vscode/**
 
 # Build artifacts: 
 #
@@ -110,3 +112,4 @@ Go/**/test/logs/**
 /Lib/Neon.Cadence2/Resources/cadence-proxy.win.exe.gz
 /Lib/Neon.Cadence2/Resources/cadence-proxy.osx.gz
 /Lib/Neon.Cadence2/Resources/cadence-proxy.linux.gz
+.vscode/settings.json
