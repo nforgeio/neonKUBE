@@ -22,9 +22,10 @@ using System.ComponentModel;
 using Newtonsoft.Json;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
     /// Specifies the options used for executing an activity.

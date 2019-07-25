@@ -46,7 +46,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IErrorGenericWorkflow<T> : IWorkflow
+        public interface IErrorGenericWorkflow<T> : IWorkflowBase
         {
         }
 
@@ -61,7 +61,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorNoEntryPointWorkflow : IWorkflow
+        public interface IErrorNoEntryPointWorkflow : IWorkflowBase
         {
         }
 
@@ -85,7 +85,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public class ErrorNotInterface : Workflow
+        public class ErrorNotInterface : WorkflowBase
         {
             [WorkflowMethod]
             public async Task EntryPoint()
@@ -105,7 +105,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        internal class ErrorNotPublic : Workflow
+        internal class ErrorNotPublic : WorkflowBase
         {
             [WorkflowMethod]
             public async Task EntryPoint()
@@ -125,13 +125,13 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorNonTaskEntryPoint1 : IWorkflow
+        public interface IErrorNonTaskEntryPoint1 : IWorkflowBase
         {
             [WorkflowMethod]
             void EntryPoint();
         }
 
-        public interface IErrorNonTaskEntryPoint2 : IWorkflow
+        public interface IErrorNonTaskEntryPoint2 : IWorkflowBase
         {
             [WorkflowMethod]
             List<int> EntryPoint();
@@ -149,7 +149,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorNonTaskSignal : IWorkflow
+        public interface IErrorNonTaskSignal : IWorkflowBase
         {
             [WorkflowMethod]
             Task EntryPoint();
@@ -169,7 +169,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorDuplicateSignals : IWorkflow
+        public interface IErrorDuplicateSignals : IWorkflowBase
         {
             [WorkflowMethod]
             Task EntryPoint();
@@ -192,7 +192,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorNonTaskQuery : IWorkflow
+        public interface IErrorNonTaskQuery : IWorkflowBase
         {
             [WorkflowMethod]
             Task EntryPoint();
@@ -212,7 +212,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorDuplicateQueries : IWorkflow
+        public interface IErrorDuplicateQueries : IWorkflowBase
         {
             [WorkflowMethod]
             Task EntryPoint();

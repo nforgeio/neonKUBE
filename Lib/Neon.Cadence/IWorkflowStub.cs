@@ -34,6 +34,11 @@ namespace Neon.Cadence
     public interface IWorkflowStub
     {
         /// <summary>
+        /// Returns the associated workflow type name.
+        /// </summary>
+        string WorkflowType { get; }
+
+        /// <summary>
         /// Returns the associated workflow execution details.
         /// </summary>
         WorkflowExecution Execution { get; }
@@ -46,24 +51,22 @@ namespace Neon.Cadence
         /// <summary>
         /// Attempts to cancel the associated workflow.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         Task CancelAsync();
 
         /// <summary>
         /// Attempts to retrieve the associated workflow result.
         /// </summary>
         /// <typeparam name="TResult">The result type.</typeparam>
-        /// <param name="timeout">The maximum time to wait.</param>
         /// <returns>The result.</returns>
-        Task<TResult> GetResultAsync<TResult>(TimeSpan timeout = default);
+        Task<TResult> GetResultAsync<TResult>();
 
         /// <summary>
         /// Attempts to retrieve the associated workflow result.
         /// </summary>
         /// <param name="resultType">Specifies the result type.</param>
-        /// <param name="timeout">The maximum time to wait.</param>
-        /// <returns>The result.</returns>
-        Task<object> GetResultAsync(Type resultType, TimeSpan timeout = default);
+        /// <returns>The result as an <see cref="object"/>.</returns>
+        Task<object> GetResultAsync(Type resultType);
 
         /// <summary>
         /// Queries the associated workflow.

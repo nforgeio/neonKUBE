@@ -1489,7 +1489,7 @@ helm template install/kubernetes/helm/istio-init --name istio-init --set certman
 
 # Verify that all 58 Istio CRDs were committed to the Kubernetes api-server
 
-until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""58"" ]; do
+until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""28"" ]; do
     sleep 1
 done
 
