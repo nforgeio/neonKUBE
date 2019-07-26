@@ -268,7 +268,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IDataConverter DataConverter { get; set; } = new JsonDataConverter();
+        internal IDataConverter DataConverter { get; set; } = new JsonDataConverter();
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will

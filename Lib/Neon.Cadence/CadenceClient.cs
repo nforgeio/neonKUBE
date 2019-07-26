@@ -933,7 +933,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the <see cref="IDataConverter"/> used for workflows and activities managed by the client.
         /// </summary>
-        public IDataConverter DataConverter { get; private set; }
+        internal IDataConverter DataConverter { get; private set; }
 
         /// <summary>
         /// Raised when the connection is closed.  You can determine whether the connection
