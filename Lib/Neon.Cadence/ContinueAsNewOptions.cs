@@ -53,10 +53,10 @@ namespace Neon.Cadence
         public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
-        /// Optionally overrides the current workflow's timeout for the restarted
-        /// workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
+        /// Optionally overrides the current workflow's decision task timeout for 
+        /// the restarted workflow when this value is greater than <see cref="TimeSpan.Zero"/>.
         /// </summary>
-        public TimeSpan NewStartToCloseTimeout { get; set; }
+        public TimeSpan TaskStartToCloseTimeout { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's task list when restarting.
@@ -67,5 +67,10 @@ namespace Neon.Cadence
         /// Optionally overrides the current workflow's domain when restarting.
         /// </summary>
         public string Domain { get; set; }
+
+        /// <summary>
+        /// Optionally overrides the current workflow's retry options when restarting.
+        /// </summary>
+        public RetryOptions RetryOptions { get; set; }
     }
 }

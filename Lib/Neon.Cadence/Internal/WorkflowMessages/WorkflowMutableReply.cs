@@ -27,7 +27,6 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Answers a <see cref="WorkflowMutableRequest"/>.
     /// </summary>
-    [Obsolete("This was replaced by a local activity.")]
     [InternalProxyMessage(InternalMessageTypes.WorkflowMutableReply)]
     internal class WorkflowMutableReply : WorkflowReply
     {

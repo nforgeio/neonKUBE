@@ -75,8 +75,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteChildReply)target;
 
-            typedTarget.ChildId     = this.ChildId;
-            typedTarget.Execution   = this.Execution;
+            typedTarget.ChildId   = this.ChildId;
+            typedTarget.Execution = this.Execution;
         }
     }
 }

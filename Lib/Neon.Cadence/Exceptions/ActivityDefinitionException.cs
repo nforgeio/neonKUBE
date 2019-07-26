@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IWorkflowBase.cs
+// FILE:	    ActivityDefinitionException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,26 +16,31 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
-using Neon.Cadence;
 using Neon.Cadence.Internal;
-using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// All application workflow interface definitions must derive from this interface.
+    /// Thrown when ak activity interface or implementation is not valid.
     /// </summary>
-    public interface IWorkflowBase
+    public class ActivityDefinitionException : Exception
     {
         /// <summary>
-        /// Provides information about the executing workflow as well as other
-        /// important workflow functionality for workflow implementations.
+        /// Default constructor.
         /// </summary>
-        Workflow Workflow { get; set; }
+        public ActivityDefinitionException()
+        {
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public ActivityDefinitionException(string message, Exception innerException = null)
+            : base(message, innerException)
+        {
+        }
     }
 }

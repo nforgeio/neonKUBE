@@ -32,7 +32,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Maps workflow query and signal names to the methods implementing the queries
-    /// and signals for a given workflow type.
+    /// and signals for a given workflow interface.
     /// </summary>
     internal class WorkflowMethodMap
     {
@@ -44,7 +44,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructs a query/signal method map for a workflow type.
         /// </summary>
-        /// <param name="workflowType">The workflow type.</param>
+        /// <param name="workflowType">The workflow interface.</param>
         /// <returns>The <see cref="WorkflowMethodMap"/>.</returns>
         public static WorkflowMethodMap Create(Type workflowType)
         {
