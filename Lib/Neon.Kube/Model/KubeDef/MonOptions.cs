@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EFKOptions.cs
+// FILE:	    MonOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -42,7 +42,7 @@ namespace Neon.Kube
     /// Specifies the options for configuring the cluster integrated
     /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
     /// </summary>
-    public class EFKOptions
+    public class MonOptions
     {
         /// <summary>
         /// Indicates whether the EFK stack is to be enabled for the cluster.  
@@ -52,6 +52,22 @@ namespace Neon.Kube
         [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Elasticsearch options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
+        [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public ElasticsearchOptions Elasticsearch { get; set; } = new ElasticsearchOptions();
+
+        /// <summary>
+        /// Prometheus options
+        /// </summary>
+        [JsonProperty(PropertyName = "Prometheus", Required = Required.Default)]
+        [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
+        [DefaultValue(true)]
+        public PrometheusOptions Prometheus { get; set; } = new PrometheusOptions();
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

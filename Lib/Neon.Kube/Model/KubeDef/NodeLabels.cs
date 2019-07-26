@@ -404,9 +404,27 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalPower", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "pPhysicalPower", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "physicalPower", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
+
+        //---------------------------------------------------------------------
+        // Define the logging related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="StorageSize"/>.
+        /// </summary>
+        public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "mon.elasticsearch";
+
+        /// <summary>
+        /// <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
+        /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
+        [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Elasticsearch { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Ceph Storage Cluster related labels.
@@ -665,6 +683,8 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
+
+                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,    NeonHelper.ToBoolString(Elasticsearch)));
 
                 list.Add(new KeyValuePair<string, object>(LabelCephMON,                 NeonHelper.ToBoolString(CephMON)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 NeonHelper.ToBoolString(CephOSD)));

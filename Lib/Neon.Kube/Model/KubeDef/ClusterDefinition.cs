@@ -254,16 +254,16 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the options to be used for configuring the cluster integrated
-        /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+        /// Elasticsearch/Fluentd/Kibana (Mon) logging stack.
         /// </summary>
-        [JsonProperty(PropertyName = "EFK", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "efk", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Mon", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "mon", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public EFKOptions EFK { get; set; } = new EFKOptions();
+        public MonOptions Mon { get; set; } = new MonOptions();
 
         /// <summary>
         /// Returns the options to be used for configuring the cluster integrated
-        /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+        /// Elasticsearch/Fluentd/Kibana (Mon) logging stack.
         /// </summary>
         [JsonProperty(PropertyName = "Prometheus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
@@ -536,7 +536,7 @@ namespace Neon.Kube
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
             Ceph        = Ceph ?? new CephOptions() { Enabled = false };
-            EFK         = EFK ?? new EFKOptions() { Enabled = false };
+            Mon         = Mon ?? new MonOptions() { Enabled = false };
             Prometheus  = Prometheus ?? new PrometheusOptions() { Enabled = false };
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
@@ -547,7 +547,7 @@ namespace Neon.Kube
             Kubernetes.Validate(this);
             Docker.Validate(this);
             Ceph.Validate(this);
-            EFK.Validate(this);
+            Mon.Validate(this);
             Prometheus.Validate(this);
             Setup.Validate(this);
             Network.Validate(this);
