@@ -29,7 +29,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <para>
@@ -37,11 +37,11 @@ namespace Neon.Cadence
     /// UTF-8 encoded JSON text.
     /// </para>
     /// <note>
-    /// This implementation supports values that implement <see cref="IRoundtripData"/> to make
+    /// This implementation also supports values that implement <see cref="IRoundtripData"/> to make
     /// it easier to manage data schema changes. 
     /// </note>
     /// </summary>
-    public class JsonDataConverter : IDataConverter
+    internal class JsonDataConverter : IDataConverter
     {
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)

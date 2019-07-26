@@ -43,13 +43,13 @@ namespace Neon.Cadence
         /// </summary>
         public const int DefaultVersion = -1;
 
-        private object          syncLock = new object();
-        private WorkflowBase    parentInstance;
-        private long            contextId;
-        private int             pendingOperationCount;
-        private long            nextLocalActivityTypeId;
-        private bool            isDisconnected;
-        private Random          random;
+        private object                  syncLock = new object();
+        private WorkflowBase            parentInstance;
+        private long                    contextId;
+        private int                     pendingOperationCount;
+        private long                    nextLocalActivityTypeId;
+        private bool                    isDisconnected;
+        private Random                  random;
 
         /// <summary>
         /// Constructor.
@@ -170,7 +170,7 @@ namespace Neon.Cadence
         /// <typeparam name="TResult">The operation result type.</typeparam>
         /// <param name="actionAsync">The workflow action function.</param>
         /// <returns>The action result.</returns>
-        private async Task<TResult> Execute<TResult>(Func<Task<TResult>> actionAsync)
+        private async Task<TResult> ExecuteNoParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
             try
             {
@@ -221,7 +221,7 @@ namespace Neon.Cadence
         /// </summary>
         public async Task<DateTime> UtcNowAsync()
         {
-            var reply = await Execute(
+            var reply = await ExecuteNoParallel(
                 async () =>
                 {
                     return (WorkflowGetTimeReply)await Client.CallProxyAsync(
@@ -463,7 +463,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId));
             Covenant.Requires<ArgumentException>(minSupported <= maxSupported);
 
-            var reply = await Execute(
+            var reply = await ExecuteNoParallel(
                 async () =>
                 {
                     return (WorkflowGetVersionReply)await Client.CallProxyAsync(
@@ -560,7 +560,7 @@ namespace Neon.Cadence
                 value = default(T);
             }
 
-            var reply = await Execute(
+            var reply = await ExecuteNoParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -643,7 +643,7 @@ namespace Neon.Cadence
                 value = default(object);
             }
 
-            var reply = await Execute(
+            var reply = await ExecuteNoParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -852,7 +852,7 @@ namespace Neon.Cadence
                 value = default(T);
             }
 
-            var reply = await Execute(
+            var reply = await ExecuteNoParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -922,7 +922,7 @@ namespace Neon.Cadence
                 value = default(object);
             }
 
-            var reply = await Execute(
+            var reply = await ExecuteNoParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -960,11 +960,15 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepAsync(TimeSpan duration)
         {
-            var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
-                new WorkflowSleepRequest()
+            var reply = await ExecuteNoParallel(
+                async () =>
                 {
-                    ContextId = contextId,
-                    Duration = duration
+                    return (WorkflowSleepReply)await Client.CallProxyAsync(
+                        new WorkflowSleepRequest()
+                        {
+                            ContextId = contextId,
+                            Duration  = duration
+                        });
                 });
 
             reply.ThrowOnError();
@@ -1191,6 +1195,115 @@ namespace Neon.Cadence
         public IExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
         {
             throw new NotImplementedException();
+        }
+
+        //---------------------------------------------------------------------
+        // Internal activity related methods used by dynamically generated activity stubs.
+
+        /// <summary>
+        /// Executes an activity with a specific activity type name and waits for it to complete.
+        /// </summary>
+        /// <param name="activityTypeName">Identifies the activity.</param>
+        /// <param name="args">Optionally specifies the activity arguments.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <returns>The activity result encoded as a byte array.</returns>
+        /// <exception cref="CadenceException">
+        /// An exception derived from <see cref="CadenceException"/> will be be thrown 
+        /// if the child workflow did not complete successfully.
+        /// </exception>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        protected async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+
+            options = options ?? new ActivityOptions();
+
+            var reply = (ActivityExecuteReply)await Client.CallProxyAsync(
+                new ActivityExecuteRequest()
+                {
+                    ContextId = contextId,
+                    Activity  = activityTypeName,
+                    Args      = args,
+                    Options   = options.ToInternal()
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return reply.Result;
+        }
+
+        /// <summary>
+        /// Executes a local activity and waits for it to complete.
+        /// </summary>
+        /// <param name="activityType">The activity type.</param>
+        /// <param name="method">The target local activity method.</param>
+        /// <param name="args">Optionally specifies the activity arguments.</param>
+        /// <param name="options">Optionally specifies any local activity options.</param>
+        /// <returns>The activity result encoded as a byte array.</returns>
+        /// <exception cref="CadenceException">
+        /// An exception derived from <see cref="CadenceException"/> will be be thrown 
+        /// if the child workflow did not complete successfully.
+        /// </exception>
+        /// <remarks>
+        /// This method can be used to optimize activities that will complete quickly
+        /// (within seconds).  Rather than scheduling the activity on any worker that
+        /// has registered an implementation for the activity, this method will simply
+        /// instantiate an instance of <paramref name="activityType"/> and call its
+        /// <paramref name="method"/> method.
+        /// </remarks>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        protected async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, MethodInfo method, byte[] args = null, LocalActivityOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentException>(activityType.Implements<IActivityBase>());
+            Covenant.Requires<ArgumentNullException>(method != null);
+
+            options = options ?? new LocalActivityOptions();
+
+            // We need to register the local activity type with a workflow local ID
+            // that we can sent to [cadence-proxy] in the [ActivityExecuteLocalRequest]
+            // such that the proxy can send it back to us in the [ActivityInvokeLocalRequest]
+            // so we'll know which activity type to instantate and run.
+
+            var activityTypeId = Interlocked.Increment(ref nextLocalActivityTypeId);
+
+            lock (syncLock)
+            {
+                IdToLocalActivityType.Add(activityTypeId, activityType);
+            }
+
+            try
+            {
+                var reply = (ActivityExecuteLocalReply)await Client.CallProxyAsync(
+                    new ActivityExecuteLocalRequest()
+                    {
+                        ContextId      = contextId,
+                        ActivityTypeId = activityTypeId,
+                        Args           = args,
+                        Options        = options.ToInternal()
+                    });
+
+                reply.ThrowOnError();
+                UpdateReplay(reply);
+
+                return reply.Result;
+            }
+            finally
+            {
+                // Remove the activity type mapping to prevent memory leaks.
+
+                lock (syncLock)
+                {
+                    IdToLocalActivityType.Remove(activityTypeId);
+                }
+            }
         }
     }
 }

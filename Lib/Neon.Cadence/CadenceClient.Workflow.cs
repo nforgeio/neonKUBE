@@ -290,8 +290,7 @@ namespace Neon.Cadence
         }
 
         //---------------------------------------------------------------------
-        // Internal workflow related methods that will be available to be called
-        // by dynamically generated workflow stubs.
+        // Internal workflow related methods used by dynamically generated workflow stubs.
 
         /// <summary>
         /// Starts an external workflow using a specific workflow type name, returning a <see cref="WorkflowExecution"/>

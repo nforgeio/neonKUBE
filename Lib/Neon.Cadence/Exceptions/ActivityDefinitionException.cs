@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowDefinitionException.cs
+// FILE:	    ActivityDefinitionException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,14 +22,14 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when ak workflow interface or implementation is not valid.
+    /// Thrown when ak activity interface or implementation is not valid.
     /// </summary>
-    public class WorkflowDefinitionException : Exception
+    public class ActivityDefinitionException : Exception
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public WorkflowDefinitionException()
+        public ActivityDefinitionException()
         {
         }
 
@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public WorkflowDefinitionException(string message, Exception innerException = null)
+        public ActivityDefinitionException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }

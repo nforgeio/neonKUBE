@@ -39,7 +39,14 @@ namespace Neon.Cadence
         /// name from the optional workflow method name.  This string may not be
         /// embedded in a normal workflow type name.
         /// </summary>
-        public const string WorkflowMethodSeparator = "::";
+        public const string WorkflowTypeMethodSeparator = "::";
+
+        /// <summary>
+        /// The optional separator string used to separate the base activity type
+        /// name from the optional activity method name.  This string may not be
+        /// embedded in a normal activity type name.
+        /// </summary>
+        public const string ActivityTypeMethodSeparator = "::";
 
         /// <summary>
         /// Number of nanoseconds per second (spoiler alert: it's 1 billion).
@@ -63,9 +70,9 @@ namespace Neon.Cadence
         /// <exception cref="ArgumentException">Thrown if the name passed is not valid.</exception>
         public static void ValidateWorkflowTypeName(string name)
         {
-            if (name != null && name.Contains(CadenceHelper.WorkflowMethodSeparator))
+            if (name != null && name.Contains(CadenceHelper.WorkflowTypeMethodSeparator))
             {
-                throw new ArgumentException($"Workflow type names cannot include \"{CadenceHelper.WorkflowMethodSeparator}\".");
+                throw new ArgumentException($"Workflow type names cannot include: \"{CadenceHelper.WorkflowTypeMethodSeparator}\".");
             }
         }
 
@@ -96,6 +103,11 @@ namespace Neon.Cadence
             if (workflowInterface == typeof(IWorkflowBase))
             {
                 throw new ArgumentException($"The base [{nameof(IWorkflowBase)}] class cannot define a workflow.");
+            }
+
+            if (!workflowInterface.IsPublic && !workflowInterface.IsNestedPublic)
+            {
+                throw new WorkflowDefinitionException($"Workflow interface [{workflowInterface.FullName}] is not public.");
             }
 
             var workflowNames = new HashSet<string>();
@@ -172,6 +184,19 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Ensures that an activity type name is valid.
+        /// </summary>
+        /// <param name="name">The activity type name being checked.</param>
+        /// <exception cref="ArgumentException">Thrown if the name passed is not valid.</exception>
+        public static void ValidateActivityTypeName(string name)
+        {
+            if (name != null && name.Contains(CadenceHelper.ActivityTypeMethodSeparator))
+            {
+                throw new ArgumentException($"Activity type names cannot include: \"{CadenceHelper.ActivityTypeMethodSeparator}\".");
+            }
+        }
+
+        /// <summary>
         /// Ensures that the type passed is a valid activity interface.
         /// </summary>
         /// <param name="activityInterface">The type being tested.</param>
@@ -198,6 +223,11 @@ namespace Neon.Cadence
             if (activityInterface == typeof(IActivityBase))
             {
                 throw new ArgumentException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
+            }
+
+            if (!activityInterface.IsPublic && !activityInterface.IsNestedPublic)
+            {
+                throw new WorkflowDefinitionException($"Activity interface [{activityInterface.FullName}] is not public.");
             }
         }
 
