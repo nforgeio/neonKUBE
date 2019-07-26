@@ -27,8 +27,8 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown by <see cref="IWorkflow.ContinueAsNew(ContinueAsNewOptions, object[])"/>
-    /// or <see cref="IWorkflow.ContinueAsNew(object[])"/> to be handled internally by
+    /// Thrown by <see cref="Workflow.ContinueAsNewAsync(ContinueAsNewOptions, object[])"/>
+    /// or <see cref="Workflow.ContinueAsNewAsync(object[])"/> to be handled internally by
     /// <see cref="WorkflowBase"/> as one of the special case  mechanisms for completing
     /// a workflow.
     /// </summary>
@@ -50,17 +50,17 @@ namespace Neon.Cadence
         /// <param name="executionToStartTimeout">Optional execution to start timeout for the new execution.</param>
         /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new execution.</param>
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
-        /// <param name="startToCloseTimeout">Optional start to close timeout for the new execution.</param>
+        /// <param name="taskStartToCloseTimeout">Optional decision task start to close timeout for the new execution.</param>
         /// <param name="retryPolicy">Optional retry policy for the new execution.</param>
         public CadenceWorkflowRestartException(
-            byte[]              args                    = null,
-            string              domain                  = null,
-            string              taskList                = null,
-            TimeSpan            executionToStartTimeout = default,
-            TimeSpan            scheduleToCloseTimeout  = default,
-            TimeSpan            scheduleToStartTimeout  = default,
-            TimeSpan            startToCloseTimeout     = default,
-            RetryOptions  retryPolicy             = null)
+            byte[]          args                    = null,
+            string          domain                  = null,
+            string          taskList                = null,
+            TimeSpan        executionToStartTimeout = default,
+            TimeSpan        scheduleToCloseTimeout  = default,
+            TimeSpan        scheduleToStartTimeout  = default,
+            TimeSpan        taskStartToCloseTimeout = default,
+            RetryOptions    retryPolicy             = null)
 
             : base()
         {
@@ -70,7 +70,7 @@ namespace Neon.Cadence
             this.ExecutionStartToCloseTimeout = executionToStartTimeout;
             this.ScheduleToStartTimeout       = scheduleToStartTimeout;
             this.ScheduleToCloseTimeout       = scheduleToCloseTimeout;
-            this.StartToCloseTimeout          = startToCloseTimeout;
+            this.TaskStartToCloseTimeout          = taskStartToCloseTimeout;
             this.RetryPolicy                  = retryPolicy;
         }
 
@@ -105,9 +105,9 @@ namespace Neon.Cadence
         public TimeSpan ScheduleToStartTimeout { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new timeout for the next workflow execution.
+        /// Optionally specifies the new decision task timeout for the next workflow execution.
         /// </summary>
-        public TimeSpan StartToCloseTimeout { get; private set; }
+        public TimeSpan TaskStartToCloseTimeout { get; private set; }
 
         /// <summary>
         /// Optionally specifies the new retry policy for the next workflow execution.

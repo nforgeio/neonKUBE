@@ -62,10 +62,11 @@ namespace Neon.Cadence
         Task<TResult> GetResultAsync<TResult>();
 
         /// <summary>
-        /// Attempts to retrieve the associated workflow result.
+        /// Attempts to retrieve the associated workflow result specifying 
+        /// expected result type as a parameter.
         /// </summary>
         /// <param name="resultType">Specifies the result type.</param>
-        /// <returns>The result as an <see cref="object"/>.</returns>
+        /// <returns>The result as a <c>dynamic</c>.</returns>
         Task<object> GetResultAsync(Type resultType);
 
         /// <summary>
@@ -78,12 +79,13 @@ namespace Neon.Cadence
         Task<TResult> QueryAsync<TResult>(string queryType, params object[] args);
 
         /// <summary>
-        ///  Queries the associated workflow.
+        ///  Queries the associated workflow specifying the expected result type as
+        ///  a parameter.
         /// </summary>
         /// <param name="resultType">Specifies the query result type.</param>
         /// <param name="queryType">Specifies the query type.</param>
         /// <param name="args">Specifies the query arguments.</param>
-        /// <returns>The query result.</returns>
+        /// <returns>The query result as a <c>dynamic</c>.</returns>
         Task<object> QueryAsync(Type resultType, string queryType, params object[] args);
 
         /// <summary>

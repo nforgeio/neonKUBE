@@ -41,28 +41,109 @@ namespace Neon.Cadence
         /// The default workflow version returned by <see cref="GetVersionAsync(string, int, int)"/> 
         /// when a version has not been set yet.
         /// </summary>
-        public int DefaultVersion = -1;
+        public const int DefaultVersion = -1;
+
+        private object          syncLock = new object();
+        private WorkflowBase    parentInstance;
+        private long            contextId;
+        private int             pendingOperationCount;
+        private long            nextLocalActivityTypeId;
+        private bool            isDisconnected;
+        private Random          random;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="parentInstance">The parent workflow instance.</param>
+        /// <param name="client">The associated client.</param>
+        /// <param name="contextId">The workflow's context ID.</param>
+        /// <param name="workflowTypeName">The workflow type name.</param>
+        /// <param name="domain">The hosting domain.</param>
+        /// <param name="taskList">The hosting task list.</param>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The current workflow run ID.</param>
+        /// <param name="isReplaying">Indicates whether the workflow is currently replaying from histor.</param>
+        /// <param name="methodMap">Maps the workflow signal and query methods.</param>
+        internal Workflow(
+            WorkflowBase        parentInstance,
+            CadenceClient       client, 
+            long                contextId, 
+            string              workflowTypeName, 
+            string              domain, 
+            string              taskList,
+            string              workflowId, 
+            string              runId, 
+            bool                isReplaying, 
+            WorkflowMethodMap   methodMap)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+
+            this.parentInstance          = parentInstance;
+            this.contextId               = contextId;
+            this.pendingOperationCount   = 0;
+            this.nextLocalActivityTypeId = 0;
+            this.isDisconnected          = false;
+            this.IdToLocalActivityType   = new Dictionary<long, Type>();
+            this.MethodMap               = methodMap;
+            this.Client                  = client;
+            this.IsReplaying             = isReplaying;
+
+            // Initialize the random number generator with a fairly unique
+            // seed for the workflow without consuming entropy to obtain
+            // a cryptographically random number.
+            //
+            // Note that we can use a new seed every time the workflow is
+            // invoked because the actually random numbers returned below
+            // will be recorded and replayed from history.
+
+            var seed = Environment.TickCount;
+
+            seed ^= (int)DateTime.Now.Ticks;
+            seed ^= (int)contextId;
+
+            this.random = new Random(seed);
+
+            // Initialize the workflow information.
+
+            this.WorkflowInfo = new WorkflowInfo()
+            {
+                WorkflowType = workflowTypeName,
+                Domain       = domain,
+                TaskList     = taskList,
+                WorkflowId   = workflowId,
+                RunId        = runId,
+
+                // $todo(jeff.lill): We need to initialize these from somewhere.
+                //
+                // ExecutionStartToCloseTimeout
+                // ChildPolicy 
+            };
+        }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
         /// </summary>
-        public CadenceClient Client { get; private set; }
+        public CadenceClient Client { get; set; }
 
         /// <summary>
         /// Returns information about the running workflow.
         /// </summary>
-        public WorkflowInfo WorkflowInfo => throw new NotImplementedException();
+        public WorkflowInfo WorkflowInfo { get; set; }
 
         /// <summary>
-        /// <para>
-        /// Returns the current workflow time (UTC).
-        /// </para>
-        /// <note>
-        /// This must used instead of calling <see cref="DateTime.UtcNow"/> or any other
-        /// time method to guarantee determinism when a workflow is replayed.
-        /// </note>
+        /// Returns the workflow types method map.
         /// </summary>
-        public DateTime UtcNow => throw new NotImplementedException();
+        internal WorkflowMethodMap MethodMap { get; private set; }
+
+        /// <summary>
+        /// Returns the dictionary mapping the IDs to local activity types.
+        /// </summary>
+        internal Dictionary<long, Type> IdToLocalActivityType { get; private set; }
 
         /// <summary>
         /// <para>
@@ -74,33 +155,143 @@ namespace Neon.Cadence
         /// external things like logging or metric reporting.
         /// </note>
         /// </summary>
-        public bool IsReplaying => throw new NotImplementedException();
+        public bool IsReplaying { get; internal set; }
 
         /// <summary>
         /// Returns the execution information for the current workflow.
         /// </summary>
-        public WorkflowExecution Execution => throw new NotImplementedException();
+        public WorkflowExecution Execution { get; internal set; }
+
+        /// <summary>
+        /// Executes a workflow Cadence related operation, attempting to detect
+        /// when an attempt is made to perform more than one operation in 
+        /// parallel, which will likely break workflow determinism.
+        /// </summary>
+        /// <typeparam name="TResult">The operation result type.</typeparam>
+        /// <param name="actionAsync">The workflow action function.</param>
+        /// <returns>The action result.</returns>
+        private async Task<TResult> Execute<TResult>(Func<Task<TResult>> actionAsync)
+        {
+            try
+            {
+                if (Interlocked.Increment(ref pendingOperationCount) > 0)
+                {
+                    throw new WorkflowParallelOperationException();
+                }
+
+                return await actionAsync();
+            }
+            finally
+            {
+                Interlocked.Decrement(ref pendingOperationCount);
+            }
+        }
+
+        /// <summary>
+        /// Updates the workflow's <see cref="IsReplaying"/> state to match the
+        /// state specified in the reply from cadence-proxy.
+        /// </summary>
+        /// <typeparam name="TReply">The reply message type.</typeparam>
+        /// <param name="reply">The reply message.</param>
+        private void UpdateReplay<TReply>(TReply reply)
+            where TReply : WorkflowReply
+        {
+            switch (reply.ReplayStatus)
+            {
+                case InternalReplayStatus.NotReplaying:
+
+                    IsReplaying = false;
+                    break;
+
+                case InternalReplayStatus.Replaying:
+
+                    IsReplaying = true;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns the current workflow time (UTC).
+        /// </para>
+        /// <note>
+        /// This must used instead of calling <see cref="DateTime.UtcNow"/> or any other
+        /// time method to guarantee determinism when a workflow is replayed.
+        /// </note>
+        /// </summary>
+        public async Task<DateTime> UtcNowAsync()
+        {
+            var reply = await Execute(
+                async () =>
+                {
+                    return (WorkflowGetTimeReply)await Client.CallProxyAsync(
+                        new WorkflowGetTimeRequest()
+                        {
+                            ContextId = contextId
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return reply.Time;
+        }
 
         /// <summary>
         /// Continues the current workflow as a new run using the same workflow options.
         /// </summary>
         /// <param name="args">The new run arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task ContinueAsNew(params object[] args)
+        public async Task ContinueAsNewAsync(params object[] args)
         {
-            throw new NotImplementedException();
+            // This method doesn't currently do any async operations but I'd
+            // like to keep the method signature async just in case this changes
+            // in the future.
+
+            await Task.CompletedTask;
+
+            // We're going to throw a [CadenceWorkflowRestartException] with the
+            // parameters.  This exception will be caught and handled by the 
+            // [WorkflowInvoke()] method which will configure the reply such
+            // that the cadence-proxy will be able to signal Cadence to continue
+            // the workflow with a clean history.
+
+            throw new CadenceWorkflowRestartException(
+                args:       Client.DataConverter.ToData(args),
+                domain:     WorkflowInfo.Domain,
+                taskList:   WorkflowInfo.TaskList);
         }
 
         /// <summary>
         /// Continues the current workflow as a new run allowing the specification of
-        /// new workflow uptions.
+        /// new workflow options.
         /// </summary>
         /// <param name="options">The continuation options.</param>
         /// <param name="args">The new run arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task ContinueAsNew(ContinueAsNewOptions options, params object[] args)
+        public async Task ContinueAsNewAsync(ContinueAsNewOptions options, params object[] args)
         {
-            throw new NotImplementedException();
+            // This method doesn't currently do any async operations but I'd
+            // like to keep the method signature async just in case this changes
+            // in the future.
+
+            await Task.CompletedTask;
+
+            // We're going to throw a [CadenceWorkflowRestartException] with the
+            // parameters.  This exception will be caught and handled by the 
+            // [WorkflowInvoke()] method which will configure the reply such
+            // that the cadence-proxy will be able to signal Cadence to continue
+            // the workflow with a clean history.
+
+            throw new CadenceWorkflowRestartException(
+                args:                       Client.DataConverter.ToData(args),
+                domain:                     WorkflowInfo.Domain,
+                taskList:                   WorkflowInfo.TaskList,
+                executionToStartTimeout:    options.ExecutionStartToCloseTimeout,
+                scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
+                scheduleToStartTimeout:     options.ScheduleToStartTimeout,
+                taskStartToCloseTimeout:    options.TaskStartToCloseTimeout,
+                retryPolicy:                options.RetryOptions);
         }
 
         /// <summary>
@@ -267,21 +458,47 @@ namespace Neon.Cadence
         /// recorded in the history or <b>2</b> if <b>ActivityC</b> was called.
         /// </para>
         /// </remarks>
-        public Task<int> GetVersionAsync(string changeId, int minSupported, int maxSupported)
+        public async Task<int> GetVersionAsync(string changeId, int minSupported, int maxSupported)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId));
+            Covenant.Requires<ArgumentException>(minSupported <= maxSupported);
+
+            var reply = await Execute(
+                async () =>
+                {
+                    return (WorkflowGetVersionReply)await Client.CallProxyAsync(
+                        new WorkflowGetVersionRequest()
+                        {
+                            ContextId    = this.contextId,
+                            ChangeId     = changeId,
+                            MinSupported = minSupported,
+                            MaxSupported = maxSupported
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return reply.Version;
         }
 
         /// <summary>
-        /// Returns the <see cref="WorkflowExecution"/> for a child workflow.
+        /// Returns the <see cref="WorkflowExecution"/> for a child workflow created via
+        /// <see cref="NewChildWorkflowStub{TWorkflowInterface}(ChildWorkflowOptions)"/>
+        /// or <see cref="NewExternalWorkflowStub{TWorkflowInterface}(string, string)"/>.
         /// </summary>
-        /// <param name="childWorkflowStub">
-        /// A child workflow stub created.  This may be a type-safe,
-        /// external, or untyped workflow stub instance.
-        /// </param>
+        /// <param name="stub">The child workflow stub.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
-        public Task<WorkflowExecution> GetWorkflowExecutionAsync(object childWorkflowStub)
+        public async Task<WorkflowExecution> GetWorkflowExecutionAsync(object stub)
         {
+            // $todo(jeff.lill):
+            //
+            // Come back to this one after we've implemented the stubs.  This information
+            // comes back to the .NET side in [WorkflowExecuteChildReply].
+
+            Covenant.Requires<ArgumentNullException>(stub != null);
+
+            await Task.CompletedTask;
             throw new NotImplementedException();
         }
 
@@ -309,6 +526,11 @@ namespace Neon.Cadence
         /// and should avoid throwing exceptions.
         /// </note>
         /// <note>
+        /// The function passed should avoid throwing exceptions.  When an exception
+        /// is thrown, this method will catch it and simply return the default 
+        /// value for <typeparamref name="T"/>.
+        /// </note>
+        /// <note>
         /// <para>
         /// The .NET version of this method currently works a bit differently than
         /// the Java and GOLANG clients which will only call the function once.
@@ -323,18 +545,52 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public Task<T> MutableSideEffectAsync<T>(string id, Func<T> function)
+        public async Task<T> MutableSideEffectAsync<T>(string id, Func<T> function)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
+
+            T value;
+
+            try
+            {
+                value = function();
+            }
+            catch
+            {
+                value = default(T);
+            }
+
+            var reply = await Execute(
+                async () =>
+                {
+                    return (WorkflowMutableReply)await Client.CallProxyAsync(
+                        new WorkflowMutableRequest()
+                        {
+                            ContextId = this.contextId,
+                            MutableId = id,
+                            Result    = Client.DataConverter.ToData(value)
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return Client.DataConverter.FromData<T>(reply.Result);
         }
 
         /// <summary>
+        /// <para>
         /// Calls the specified function and then searches the workflow history
         /// to see if a value was already recorded with the specified <paramref name="id"/>.
         /// If no value has been recorded for the <paramref name="id"/> or the
         /// value returned by the function will be recorded, replacing any existing
         /// value.  If the function value is the same as the history value, then
         /// nothing will be recorded.
+        /// </para>
+        /// <para>
+        /// This version of the method uses a parameter to specify the expected
+        /// result type.
+        /// </para>
         /// </summary>
         /// <param name="id">Identifies the value in the workflow history.</param>
         /// <param name="resultType">Specifies the result type.</param>
@@ -352,6 +608,10 @@ namespace Neon.Cadence
         /// and should avoid throwing exceptions.
         /// </note>
         /// <note>
+        /// The function passed should avoid throwing exceptions.  When an exception
+        /// is thrown, this method will catch it and simply return <c>null</c>.
+        /// </note>
+        /// <note>
         /// <para>
         /// The .NET version of this method currently works a bit differently than
         /// the Java and GOLANG clients which will only call the function once.
@@ -366,10 +626,368 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public Task<object> MutableSideEffectAsync(string id, Type resultType, Func<object> function)
+        public async Task<object> MutableSideEffectAsync(string id, Type resultType, Func<dynamic> function)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
+            Covenant.Requires<ArgumentNullException>(resultType != null);
+            Covenant.Requires<ArgumentNullException>(function != null);
+
+            object value;
+
+            try
+            {
+                value = function();
+            }
+            catch
+            {
+                value = default(object);
+            }
+
+            var reply = await Execute(
+                async () =>
+                {
+                    return (WorkflowMutableReply)await Client.CallProxyAsync(
+                        new WorkflowMutableRequest()
+                        {
+                            ContextId = this.contextId,
+                            MutableId = id,
+                            Result    = Client.DataConverter.ToData(value)
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return Client.DataConverter.FromData(resultType, reply.Result);
         }
+
+        /// <summary>
+        /// <para>
+        /// Returns a replay safe <see cref="Guid"/>.
+        /// </para>
+        /// <note>
+        /// This must be used instead of calling <see cref="Guid.NewGuid"/>
+        /// to guarantee determinism when a workflow is replayed.
+        /// </note>
+        /// </summary>
+        /// <returns>The new <see cref="Guid"/>.</returns>
+        public async Task<Guid> NewGuidAsync()
+        {
+            return await SideEffectAsync(() => Guid.NewGuid());
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns a replay safe random non-negative integer greater than or equal to a minimum value
+        /// less than a maximum value that is greater than or equal to 0.0 and less than 1.0.
+        /// </para>
+        /// <note>
+        /// This must be used instead of something like <see cref="Random"/> to guarantee 
+        /// determinism when a workflow is replayed.
+        /// </note>
+        /// </summary>
+        /// <returns>The next random double between: <c>0  &lt;= value &lt; 1.0</c></returns>
+        /// <remarks>
+        /// <note>
+        /// The internal random number generator is seeded such that workflow instances
+        /// will generally see different sequences of random numbers.
+        /// </note>
+        /// </remarks>
+        public async Task<double> NextRandomDouble()
+        {
+            return await SideEffectAsync(() => random.NextDouble());
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns a replay safe random non-negative random integer.
+        /// </para>
+        /// <note>
+        /// This must be used instead of something like <see cref="Random"/> to guarantee 
+        /// determinism when a workflow is replayed.
+        /// </note>
+        /// </summary>
+        /// <returns>The next random integer greater than or equal to 0</returns>
+        /// <remarks>
+        /// <note>
+        /// The internal random number generator is seeded such that workflow instances
+        /// will generally see different sequences of random numbers.
+        /// </note>
+        /// </remarks>
+        public async Task<int> NextRandomAsync()
+        {
+            return await SideEffectAsync(() => random.Next());
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns a replay safe random non-negative integer less than a maximum value.
+        /// </para>
+        /// <note>
+        /// This must be used instead of something like <see cref="Random"/> to guarantee 
+        /// determinism when a workflow is replayed.
+        /// </note>
+        /// </summary>
+        /// <param name="maxValue">The exclusive upper limit of the value returned.  This cannot be negative.</param>
+        /// <returns>The next random integer between: <c>0  &lt;= value &lt; maxValue</c></returns>
+        /// <remarks>
+        /// <note>
+        /// The internal random number generator is seeded such that workflow instances
+        /// will generally see different sequences of random numbers.
+        /// </note>
+        /// </remarks>
+        public async Task<int> NextRandomAsync(int maxValue)
+        {
+            Covenant.Requires<ArgumentNullException>(maxValue > 0);
+
+            return await SideEffectAsync(() => random.Next(maxValue));
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns a replay safe random non-negative integer greater than or equal to a minimum value
+        /// less than a maximum value.
+        /// </para>
+        /// <note>
+        /// This must be used instead of something like <see cref="Random"/> to guarantee 
+        /// determinism when a workflow is replayed.
+        /// </note>
+        /// </summary>
+        /// <param name="minValue">The inclusive lower limit of the value returned (may be negative).</param>
+        /// <param name="maxValue">The exclusive upper limit of the value returned (may be negative).</param>
+        /// <returns>The next random integer between: <c>0  &lt;= value &lt; maxValue</c>.</returns>
+        /// <remarks>
+        /// <note>
+        /// The internal random number generator is seeded such that workflow instances
+        /// will generally see different sequences of random numbers.
+        /// </note>
+        /// </remarks>
+        public async Task<int> NextRandomAsync(int minValue, int maxValue)
+        {
+            Covenant.Requires<ArgumentNullException>(minValue < maxValue);
+
+            return await SideEffectAsync(() => random.Next(minValue, maxValue));
+        }
+
+        /// <summary>
+        /// <para>
+        /// Returns a replay safe byte array filled with random values.
+        /// </para>
+        /// <note>
+        /// This must be used instead of something like <see cref="Random"/> to guarantee 
+        /// determinism when a workflow is replayed.
+        /// </note>
+        /// </summary>
+        /// <param name="size">The size of the byte array returned (must be positive)..</param>
+        /// <returns>The random bytes.</returns>
+        /// <remarks>
+        /// <note>
+        /// The internal random number generator is seeded such that workflow instances
+        /// will generally see different sequences of random numbers.
+        /// </note>
+        /// </remarks>
+        public async Task<byte[]> NextRandomBytesAsync(int size)
+        {
+            Covenant.Requires<ArgumentNullException>(size > 0);
+
+            return await SideEffectAsync(
+                () =>
+                {
+                    var bytes = new byte[size];
+
+                    random.NextBytes(bytes);
+
+                    return bytes;
+                });
+        }
+
+        /// <summary>
+        /// Calls the specified function and records the value returned in the workflow
+        /// history such that subsequent calls will return the same value.
+        /// </summary>
+        /// <typeparam name="T">Specifies the result type.</typeparam>
+        /// <param name="function">The side effect function.</param>
+        /// <returns>The value returned by the first function call.</returns>
+        /// <remarks>
+        /// <para>
+        /// This is similar to what you could do with a local activity but is
+        /// a bit easier since you don't need to declare the activity and create
+        /// a stub to call it.
+        /// </para>
+        /// <note>
+        /// The function must return within the configured decision task timeout 
+        /// and should avoid throwing exceptions.
+        /// </note>
+        /// <note>
+        /// The function passed should avoid throwing exceptions.  When an exception
+        /// is thrown, this method will catch it and simply return the default 
+        /// value for <typeparamref name="T"/>.
+        /// </note>
+        /// <note>
+        /// <para>
+        /// The .NET version of this method currently works a bit differently than
+        /// the Java and GOLANG clients which will only call the function once.
+        /// The .NET implementation calls the function every time <see cref="SideEffectAsync{T}(Func{T})"/>
+        /// is called but it will ignore the all but the first call's result.
+        /// </para>
+        /// <para>
+        /// This is an artifact of how the .NET client is currently implemented
+        /// and may change in the future.  You should take care not to code your
+        /// application to depend on this behavior (one way or the other).
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public async Task<T> SideEffectAsync<T>(Func<T> function)
+        {
+            Covenant.Requires<ArgumentNullException>(function != null);
+
+            T value;
+
+            try
+            {
+                value = function();
+            }
+            catch
+            {
+                value = default(T);
+            }
+
+            var reply = await Execute(
+                async () =>
+                {
+                    return (WorkflowMutableReply)await Client.CallProxyAsync(
+                        new WorkflowMutableRequest()
+                        {
+                            ContextId = this.contextId,
+                            MutableId = null,
+                            Result    = Client.DataConverter.ToData(value)
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return Client.DataConverter.FromData<T>(reply.Result);
+        }
+
+        /// <summary>
+        /// Calls the specified function and records the value returned in the workflow
+        /// history such that subsequent calls will return the same value.  This version
+        /// specifies the expected result type as a parameter.
+        /// </summary>
+        /// <param name="resultType">Specifies the result type.</param>
+        /// <param name="function">The side effect function.</param>
+        /// <returns>The value returned by the first function call.</returns>
+        /// <remarks>
+        /// <para>
+        /// This is similar to what you could do with a local activity but is
+        /// a bit easier since you don't need to declare the activity and create
+        /// a stub to call it.
+        /// </para>
+        /// <note>
+        /// The function must return within the configured decision task timeout 
+        /// and should avoid throwing exceptions.
+        /// </note>
+        /// <note>
+        /// The function passed should avoid throwing exceptions.  When an exception
+        /// is thrown, this method will catch it and simply return <c>null</c>.
+        /// </note>
+        /// <note>
+        /// <para>
+        /// The .NET version of this method currently works a bit differently than
+        /// the Java and GOLANG clients which will only call the function once.
+        /// The .NET implementation calls the function every time <see cref="SideEffectAsync(Type, Func{object})"/>
+        /// is called but it will ignore the all but the first call's result.
+        /// </para>
+        /// <para>
+        /// This is an artifact of how the .NET client is currently implemented
+        /// and may change in the future.  You should take care not to code your
+        /// application to depend on this behavior (one way or the other).
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public async Task<object> SideEffectAsync(Type resultType, Func<object> function)
+        {
+            Covenant.Requires<ArgumentNullException>(resultType != null);
+            Covenant.Requires<ArgumentNullException>(function != null);
+
+            object value;
+
+            try
+            {
+                value = function();
+            }
+            catch
+            {
+                value = default(object);
+            }
+
+            var reply = await Execute(
+                async () =>
+                {
+                    return (WorkflowMutableReply)await Client.CallProxyAsync(
+                        new WorkflowMutableRequest()
+                        {
+                            ContextId = this.contextId,
+                            MutableId = null,
+                            Result    = Client.DataConverter.ToData(value)
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return Client.DataConverter.FromData(resultType, reply.Result);
+        }
+
+        /// <summary>
+        /// Pauses the workflow for at least the specified interval.
+        /// </summary>
+        /// <param name="duration">The duration to pause.</param>
+        /// <returns>The tracking <see cref="Task"/></returns>
+        /// <remarks>
+        /// <note>
+        /// This must be used instead of calling <see cref="Task.Delay(TimeSpan)"/> or <see cref="Thread.Sleep(TimeSpan)"/>
+        /// to guarantee determinism when a workflow is replayed.
+        /// </note>
+        /// <note>
+        /// Cadence time interval resolution is limited to whole seconds and
+        /// the duration will be rounded up to the nearest second and the 
+        /// workflow may resumed sometime after the requested interval 
+        /// depending on how busy the registered workers are and how long
+        /// it takes to actually wake the workflow.
+        /// </note>
+        /// </remarks>
+        public async Task SleepAsync(TimeSpan duration)
+        {
+            var reply = (WorkflowSleepReply)await Client.CallProxyAsync(
+                new WorkflowSleepRequest()
+                {
+                    ContextId = contextId,
+                    Duration = duration
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+        }
+
+        /// <summary>
+        /// Pauses the workflow until at least the specified time (UTC).
+        /// </summary>
+        /// <param name="time">The wake time.</param>
+        /// <returns>The tracking <see cref="Task"/></returns>
+        public async Task SleepUntilUtcAsync(DateTime time)
+        {
+            var utcNow = await UtcNowAsync();
+
+            if (time > utcNow)
+            {
+                await SleepAsync(time - utcNow);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Stub creation methods
 
         /// <summary>
         /// Creates a client stub that can be used to launch one or more activity instances
@@ -389,7 +1007,8 @@ namespace Neon.Cadence
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
-        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null) where TActivityInterface : IActivityBase
+        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null) 
+            where TActivityInterface : IActivityBase
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
@@ -409,7 +1028,8 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null) where TWorkflowInterface : IWorkflowBase
+        public TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null) 
+            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
@@ -428,7 +1048,8 @@ namespace Neon.Cadence
         /// Any signal or query methods defined by <typeparamref name="TWorkflowInterface"/> will 
         /// throw a <see cref="InvalidOperationException"/> when called.
         /// </remarks>
-        public Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) where TWorkflowInterface : IWorkflowBase
+        public Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
+            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
@@ -443,7 +1064,8 @@ namespace Neon.Cadence
         /// <param name="execution">Identifies the workflow execution.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
         /// <returns>The workflow stub.</returns>
-        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null) where TWorkflowInterface : IWorkflowBase
+        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
+            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
@@ -458,25 +1080,11 @@ namespace Neon.Cadence
         /// <param name="workflowId">Identifies the workflow.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
         /// <returns>The workflow stub.</returns>
-        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null) where TWorkflowInterface : IWorkflowBase
+        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null)
+            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns a replay safe <see cref="Guid"/>.
-        /// </para>
-        /// <note>
-        /// This must be used instead of calling <see cref="Guid.NewGuid"/>
-        /// to guarantee determinism when a workflow is replayed.
-        /// </note>
-        /// </summary>
-        /// <returns>The new <see cref="Guid"/>.</returns>
-        public Task<Guid> NewGuidAsync()
-        {
             throw new NotImplementedException();
         }
 
@@ -514,7 +1122,8 @@ namespace Neon.Cadence
         ///     </item>
         /// </list>
         /// </remarks>
-        public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null) where TActivityInterface : IActivityBase
+        public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null) 
+            where TActivityInterface : IActivityBase
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
@@ -580,187 +1189,6 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
         /// <returns>The <see cref="IExternalWorkflowStub"/>.</returns>
         public IExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns a replay safe random non-negative integer greater than or equal to a minimum value
-        /// less than a maximum value that is greater than or equal to 0.0 and less than 1.0.
-        /// </para>
-        /// <note>
-        /// This must be used instead of something like <see cref="Random"/> to guarantee 
-        /// determinism when a workflow is replayed.
-        /// </note>
-        /// </summary>
-        /// <returns>The next random double between: <c>0  &lt;= value &lt; 1.0</c></returns>
-        /// <remarks>
-        /// <note>
-        /// The random number generator is seeded with a different value for each
-        /// workflow run.
-        /// </note>
-        /// </remarks>
-        public Task<double> NextRandomDouble()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns a replay safe random non-negative random integer.
-        /// </para>
-        /// <note>
-        /// This must be used instead of something like <see cref="Random"/> to guarantee 
-        /// determinism when a workflow is replayed.
-        /// </note>
-        /// </summary>
-        /// <returns>The next random integer greater than or equal to 0</returns>
-        /// <remarks>
-        /// <note>
-        /// The random number generator is seeded with a different value for each
-        /// workflow run.
-        /// </note>
-        /// </remarks>
-        public Task<int> NextRandomAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns a replay safe random non-negative integer less than a maximum value.
-        /// </para>
-        /// <note>
-        /// This must be used instead of something like <see cref="Random"/> to guarantee 
-        /// determinism when a workflow is replayed.
-        /// </note>
-        /// </summary>
-        /// <param name="maxValue">The exclusive upper limit of the value returned.  This cannot be negative.</param>
-        /// <returns>The next random integer between: <c>0  &lt;= value &lt; maxValue</c></returns>
-        /// <remarks>
-        /// <note>
-        /// The random number generator is seeded with a different value for each
-        /// workflow run.
-        /// </note>
-        /// </remarks>
-        public Task<int> NextRandomAsync(int maxValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <para>
-        /// Returns a replay safe random non-negative integer greater than or equal to a minimum value
-        /// less than a maximum value.
-        /// </para>
-        /// <note>
-        /// This must be used instead of something like <see cref="Random"/> to guarantee 
-        /// determinism when a workflow is replayed.
-        /// </note>
-        /// </summary>
-        /// <param name="minValue">The inclusive lower limit of the value returned (may be negative).</param>
-        /// <param name="maxValue">The exclusive upper limit of the value returned (may be negative).</param>
-        /// <returns>The next random integer between: <c>0  &lt;= value &lt; maxValue</c>.</returns>
-        /// <remarks>
-        /// <note>
-        /// The random number generator is seeded with a different value for each
-        /// workflow run.
-        /// </note>
-        /// </remarks>
-        public Task<int> NextRandomAsync(int minValue, int maxValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Calls the specified function and records the value returned in the workflow
-        /// history such that subsequent calls will return the same value.
-        /// </summary>
-        /// <typeparam name="T">Specifies the result type.</typeparam>
-        /// <param name="function">The side effect function.</param>
-        /// <returns>The value returned by the first function call.</returns>
-        /// <remarks>
-        /// <para>
-        /// This is similar to what you could do with a local activity but is
-        /// a bit easier since you don't need to declare the activity and create
-        /// a stub to call it.
-        /// </para>
-        /// <note>
-        /// The function must return within the configured decision task timeout 
-        /// and should avoid throwing exceptions.
-        /// </note>
-        /// <note>
-        /// <para>
-        /// The .NET version of this method currently works a bit differently than
-        /// the Java and GOLANG clients which will only call the function once.
-        /// The .NET implementation calls the function every time <see cref="SideEffectAsync{T}(Func{T})"/>
-        /// is called but it will ignore the all but the first call's result.
-        /// </para>
-        /// <para>
-        /// This is an artifact of how the .NET client is currently implemented
-        /// and may change in the future.  You should take care not to code your
-        /// application to depend on this behavior (one way or the other).
-        /// </para>
-        /// </note>
-        /// </remarks>
-        public Task<T> SideEffectAsync<T>(Func<T> function)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Calls the specified function and records the value returned in the workflow
-        /// history such that subsequent calls will return the same value.
-        /// </summary>
-        /// <param name="resultType">Specifies the result type.</param>
-        /// <param name="function">The side effect function.</param>
-        /// <returns>The value returned by the first function call.</returns>
-        /// <remarks>
-        /// <para>
-        /// This is similar to what you could do with a local activity but is
-        /// a bit easier since you don't need to declare the activity and create
-        /// a stub to call it.
-        /// </para>
-        /// <note>
-        /// The function must return within the configured decision task timeout 
-        /// and should avoid throwing exceptions.
-        /// </note>
-        /// <note>
-        /// <para>
-        /// The .NET version of this method currently works a bit differently than
-        /// the Java and GOLANG clients which will only call the function once.
-        /// The .NET implementation calls the function every time <see cref="SideEffectAsync(Type, Func{object})"/>
-        /// is called but it will ignore the all but the first call's result.
-        /// </para>
-        /// <para>
-        /// This is an artifact of how the .NET client is currently implemented
-        /// and may change in the future.  You should take care not to code your
-        /// application to depend on this behavior (one way or the other).
-        /// </para>
-        /// </note>
-        /// </remarks>
-        public Task<object> SideEffectAsync(Type resultType, Func<object> function)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// <para>
-        /// Pauses the workflow for the specified time span.
-        /// </para>
-        /// <note>
-        /// This must be used instead of calling <see cref="Task.Delay(TimeSpan)"/> or <see cref="Thread.Sleep(TimeSpan)"/>
-        /// to guarantee determinism when a workflow is replayed.
-        /// </note>
-        /// <note>
-        /// Cadence time interval resolution is limited to whole seconds and
-        /// the duration will be rounded up to the nearest second.
-        /// </note>
-        /// </summary>
-        /// <param name="duration">The duration to pause.</param>
-        /// <returns>The tracking <see cref="Task"/></returns>
-        public Task SleepAsync(TimeSpan duration)
         {
             throw new NotImplementedException();
         }

@@ -34,10 +34,6 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Public Cadence workflow related operations.
 
-        private void ValidateWorkflowMethods(Type workflowInterface)
-        {
-        }
-
         /// <summary>
         /// Registers a workflow implementation with Cadence.
         /// </summary>

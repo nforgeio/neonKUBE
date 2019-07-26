@@ -383,7 +383,7 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public Activity Activity { get; private set;  }
+        public Activity Activity { get; set;  }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this activity invocation.

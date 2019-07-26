@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IWorkflowBase.cs
+// FILE:	    WorkflowParallelOperationException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,26 +16,25 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
-using Neon.Cadence;
 using Neon.Cadence.Internal;
-using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// All application workflow interface definitions must derive from this interface.
+    /// Thrown when an operation is requested on an executing workflow while 
+    /// another operation is already pending.  Workflows cannot have multiple
+    /// operations running in parallel because this will likely break 
+    /// workflow determinism.
     /// </summary>
-    public interface IWorkflowBase
+    public class WorkflowParallelOperationException : Exception
     {
         /// <summary>
-        /// Provides information about the executing workflow as well as other
-        /// important workflow functionality for workflow implementations.
+        /// Consutuctor.
         /// </summary>
-        Workflow Workflow { get; set; }
+        public WorkflowParallelOperationException()
+            : base("Workflows cannot perform multiple operations in parallel.")
+        {
+        }
     }
 }

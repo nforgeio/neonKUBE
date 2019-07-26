@@ -62,7 +62,7 @@ namespace Neon.Cadence
         Task<TResult> ExecuteAsync<TResult>(params object[] args);
 
         /// <summary>
-        /// Executes the workflow, specifying the result type as a parameter.
+        /// Executes the workflow, specifying the expected result type as a parameter.
         /// </summary>
         /// <param name="resultType">The result type.</param>
         /// <typeparam name="TResult">The workflow result type.</typeparam>
