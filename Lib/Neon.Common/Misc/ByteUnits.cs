@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ByteUnits.cs
-// CONTRIBUTOR: Jeff Lill
+// CONTRIBUTOR: Jeff Lill, Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,94 +47,121 @@ namespace Neon.Common
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>KB</b></term>
+    ///     <term><b>K</b></term>
     ///     <description>1,000</description>
     /// </item>
     /// <item>
-    ///     <term><b>KiB</b></term>
+    ///     <term><b>Ki</b></term>
     ///     <description>1,024</description>
     /// </item>
     /// <item>
-    ///     <term><b>MB</b></term>
+    ///     <term><b>M</b></term>
     ///     <description>1000000</description>
     /// </item>
     /// <item>
-    ///     <term><b>MiB</b></term>
+    ///     <term><b>Mi</b></term>
     ///     <description>1,048,576</description>
     /// </item>
     /// <item>
-    ///     <term><b>GB</b></term>
+    ///     <term><b>G</b></term>
     ///     <description>1,000,000,000</description>
     /// </item>
     /// <item>
-    ///     <term><b>GiB</b></term>
+    ///     <term><b>Gi</b></term>
     ///     <description>1,073,741,824</description>
     /// </item>
     /// <item>
-    ///     <term><b>TB</b></term>
+    ///     <term><b>T</b></term>
     ///     <description>1,000,000,000,000</description>
     /// </item>
     /// <item>
-    ///     <term><b>TiB</b></term>
+    ///     <term><b>Ti</b></term>
     ///     <description>1,099,511,627,776</description>
+    /// </item>
+    /// <item>
+    ///     <term><b>P</b></term>
+    ///     <description>1,000,000,000,000,000</description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Pi</b></term>
+    ///     <description>1,125,899,906,842,624</description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Ei</b></term>
+    ///     <description>1,000,000,000,000,000,000‬</description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Ei</b></term>
+    ///     <description>1,152,921,504,606,846,976‬</description>
     /// </item>
     /// </list>
     /// </summary>
     public static class ByteUnits
     {
         /// <summary>
+        /// 
+        /// </summary>
+        public const decimal MilliBytes = (decimal)1e-3;
+        
+        /// <summary>
         /// One KB: 1,000
         /// </summary>
-        public const long KiloBytes = 1000;
+        public const decimal KiloBytes = 1000m;
 
         /// <summary>
         /// One MB: 1,000,000
         /// </summary>
-        public const long MegaBytes = KiloBytes * KiloBytes;
+        public const decimal MegaBytes = KiloBytes * KiloBytes;
 
         /// <summary>
         /// One GB: 1,000,000,000
         /// </summary>
-        public const long GigaBytes = MegaBytes * KiloBytes;
+        public const decimal GigaBytes = MegaBytes * KiloBytes;
 
         /// <summary>
         /// The constant 1,000,000,000
         /// </summary>
-        public const long TeraBytes = GigaBytes * KiloBytes;
+        public const decimal TeraBytes = GigaBytes * KiloBytes;
 
-#if ALLOW_PENTA
         /// <summary>
         /// One PB: 1,000,000,000,000
         /// </summary>
-        public const long PentaBytes = TeraBytes * KiloBytes;
-#endif
+        public const decimal PetaBytes = TeraBytes * KiloBytes;
+
+        /// <summary>
+        /// One PB: 1,000,000,000,000,000
+        /// </summary>
+        public const decimal ExaBytes = PetaBytes * KiloBytes;
 
         /// <summary>
         /// One KiB: 1,024 (2^10)
         /// </summary>
-        public const long KibiBytes = 1024;
+        public const decimal KibiBytes = 1024m;
 
         /// <summary>
         /// One MiB: 1,048,576 (2^20)
         /// </summary>
-        public const long MebiBytes = KibiBytes * KibiBytes;
+        public const decimal MebiBytes = KibiBytes * KibiBytes;
 
         /// <summary>
         /// One GiB: 1,073,741,824 (2^30)
         /// </summary>
-        public const long GibiBytes = MebiBytes * KibiBytes;
+        public const decimal GibiBytes = MebiBytes * KibiBytes;
 
         /// <summary>
         /// The constant 1,099,511,627,776 (2^40)
         /// </summary>
-        public const long TebiBytes = GibiBytes * KibiBytes;
+        public const decimal TebiBytes = GibiBytes * KibiBytes;
 
-#if ALLOW_PENTA
         /// <summary>
         /// One PiB: 1,125,899,906,842,624 (2^50)
         /// </summary>
-        public const long PebiBytes = TebiBytes * KibiBytes;
-#endif
+        public const decimal PebiBytes = TebiBytes * KibiBytes;
+
+        /// <summary>
+        /// One PiB: 1,152,921,504,606,846,976‬ (2^60)
+        /// </summary>
+        public const decimal ExbiBytes = PebiBytes * KibiBytes;
 
         /// <summary>
         /// Parses a floating point count string that may include one of the optional
@@ -143,7 +170,7 @@ namespace Neon.Common
         /// <param name="input">The input string.</param>
         /// <param name="value">Returns as the output value.</param>
         /// <returns><b>true</b> on success</returns>
-        public static bool TryParse(string input, out long value)
+        public static bool TryParse(string input, out decimal value)
         {
             value = 0;
 
@@ -152,7 +179,7 @@ namespace Neon.Common
                 return false;
             }
 
-            var units     = 1L;
+            var units     = 1m;
             var unitLabel = string.Empty;
 
             // Extract the units (if present).
@@ -182,7 +209,7 @@ namespace Neon.Common
             }
 
             unitLabel = temp.Trim();
-            unitLabel = unitLabel.ToUpperInvariant();
+            //unitLabel = unitLabel.ToUpperInvariant();
 
             // Map the unit label to a count.
 
@@ -190,24 +217,26 @@ namespace Neon.Common
             {
                 switch (unitLabel)
                 {
+                    case "m":   units = MilliBytes; break;
                     case "B":   units = 1;          break;
                     case "K":   units = KiloBytes;  break;
-                    case "KB":  units = KiloBytes;  break;
-                    case "KIB": units = KibiBytes;  break;
+                    case "Ki":  units = KibiBytes;  break;
+                    case "KiB": units = KibiBytes;  break;
                     case "M":   units = MegaBytes;  break;
-                    case "MB":  units = MegaBytes;  break;
-                    case "MIB": units = MebiBytes;  break;
+                    case "Mi":  units = MebiBytes;  break;
+                    case "MiB": units = MebiBytes;  break;
                     case "G":   units = GigaBytes;  break;
-                    case "GB":  units = GigaBytes;  break;
-                    case "GIB": units = GibiBytes;  break;
+                    case "Gi":  units = GibiBytes;  break;
+                    case "GiB": units = GibiBytes;  break;
                     case "T":   units = TeraBytes;  break;
-                    case "TB":  units = TeraBytes;  break;
-                    case "TIB": units = TebiBytes;  break;
-#if ALLOW_PENTA
-                    case "P":   units = PentaBytes; break;
-                    case "PB":  units = PentaBytes; break;
-                    case "PIB": units = PebiBytes;  break;
-#endif
+                    case "Ti":  units = TebiBytes;  break;
+                    case "TiB": units = TebiBytes;  break;
+                    case "P":   units = PetaBytes;  break;
+                    case "Pi":  units = PebiBytes;  break;
+                    case "PiB": units = PebiBytes;  break;
+                    case "E":   units = ExaBytes;   break;
+                    case "Ei":  units = ExbiBytes;  break;
+                    case "EiB": units = ExbiBytes;  break;
 
                     default:
 
@@ -222,23 +251,23 @@ namespace Neon.Common
                 input = input.Substring(0, input.Length - unitLabel.Length);
             }
 
-            if (!double.TryParse(input.Trim(), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var raw))
+            if (!decimal.TryParse(input.Trim(), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var raw))
             {
                 return false;
             }
 
-            value = (long)(raw * units);
+            value = (decimal)(raw * units);
 
-            return value >= 0.0;
+            return value >= 0.0m;
         }
 
         /// <summary>
-        /// Parses a byte count and returns a <c>long</c>.
+        /// Parses a byte count and returns a <c>decimal</c>.
         /// </summary>
         /// <param name="text">The value being parsed.</param>
         /// <returns>The parsed value.</returns>
         /// <exception cref="FormatException">Thrown if the value cannot be parsed.</exception>
-        public static long Parse(string text)
+        public static decimal Parse(string text)
         {
             if (!TryParse(text, out var value))
             {
@@ -249,11 +278,21 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Converts a byte count to a string using millibyte units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in millibytes.</returns>
+        public static string ToMilliByteString(decimal size)
+        {
+            return $"{ToDoubleString(size, MilliBytes)}m";
+        }
+
+        /// <summary>
         /// Converts a byte count to a string using byte units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in bytes.</returns>
-        public static string ToByteString(long size)
+        public static string ToByteString(decimal size)
         {
             return $"{size}";
         }
@@ -265,118 +304,136 @@ namespace Neon.Common
         /// <param name="size">The byte size.</param>
         /// <param name="units">The units.</param>
         /// <returns>The floating point string.</returns>
-        private static string ToDoubleString(long size, long units)
+        private static string ToDoubleString(decimal size, decimal units)
         {
-            double doubleSize = size;
+            double doubleSize = (double)size;
 
             if (units > 0)
             {
-                doubleSize = (double)doubleSize / units;
+                doubleSize = doubleSize / (double)units;
             }
 
             return doubleSize.ToString("#0.#", CultureInfo.InvariantCulture);
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>KB</b> units.
+        /// Converts a byte count to a string using <b>K</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in KB.</returns>
-        public static string ToKBString(long size)
+        /// <returns>The size in K.</returns>
+        public static string ToKString(decimal size)
         {
-            return $"{ToDoubleString(size, KiloBytes)}KB";
+            return $"{ToDoubleString(size, KiloBytes)}K";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>KiB</b> units.
+        /// Converts a byte count to a string using <b>Ki</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in KiB.</returns>
-        public static string ToKiBString(long size)
+        /// <returns>The size in Ki.</returns>
+        public static string ToKiString(decimal size)
         {
-            return $"{ToDoubleString(size, KibiBytes)}KiB";
+            return $"{ToDoubleString(size, KibiBytes)}Ki";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>MB</b> units.
+        /// Converts a byte count to a string using <b>M</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in MB.</returns>
-        public static string ToMBString(long size)
+        /// <returns>The size in M.</returns>
+        public static string ToMString(decimal size)
         {
-            return $"{ToDoubleString(size, MegaBytes)}MB";
+            return $"{ToDoubleString(size, MegaBytes)}M";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>MiB</b> units.
+        /// Converts a byte count to a string using <b>Mi</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in MiB.</returns>
-        public static string ToMiBString(long size)
+        /// <returns>The size in Mi.</returns>
+        public static string ToMiString(decimal size)
         {
-            return $"{ToDoubleString(size, MebiBytes)}MiB";
+            return $"{ToDoubleString(size, MebiBytes)}Mi";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>GB</b> units.
+        /// Converts a byte count to a string using <b>G</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in GB.</returns>
-        public static string ToGBString(long size)
+        /// <returns>The size in G.</returns>
+        public static string ToGString(decimal size)
         {
-            return $"{ToDoubleString(size, GigaBytes)}GB";
+            return $"{ToDoubleString(size, GigaBytes)}G";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>GiB</b> units.
+        /// Converts a byte count to a string using <b>Gi</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in GiB.</returns>
-        public static string ToGiBString(long size)
+        /// <returns>The size in Gi.</returns>
+        public static string ToGiString(decimal size)
         {
-            return $"{ToDoubleString(size, GibiBytes)}GiB";
+            return $"{ToDoubleString(size, GibiBytes)}Gi";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>TB</b> units.
+        /// Converts a byte count to a string using <b>T</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in TB.</returns>
-        public static string ToTBString(long size)
+        /// <returns>The size in T.</returns>
+        public static string ToTString(decimal size)
         {
-            return $"{ToDoubleString(size, TeraBytes)}TB";
+            return $"{ToDoubleString(size, TeraBytes)}T";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>TiB</b> units.
+        /// Converts a byte count to a string using <b>Ti</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in TiB.</returns>
-        public static string ToTiBString(long size)
+        /// <returns>The size in Ti.</returns>
+        public static string ToTiString(decimal size)
         {
-            return $"{ToDoubleString(size, TebiBytes)}TiB";
-        }
-
-#if ALLOW_PENTA
-        /// <summary>
-        /// Converts a byte count to a string using <b>PB</b> units.
-        /// </summary>
-        /// <param name="size">The size.</param>
-        /// <returns>The size in PB.</returns>
-        public static string ToPBString(long size)
-        {
-            return $"{ToDoubleString(size, PentaBytes)}PB";
+            return $"{ToDoubleString(size, TebiBytes)}Ti";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>PiB</b> units.
+        /// Converts a byte count to a string using <b>P</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in PiB.</returns>
-        public static string ToPiBString(long size)
+        /// <returns>The size in P.</returns>
+        public static string ToPString(decimal size)
         {
-            return $"{ToDoubleString(size, PebiBytes)}PiB";
+            return $"{ToDoubleString(size, PetaBytes)}P";
         }
-#endif
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>Pi</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in Pi.</returns>
+        public static string ToPiString(decimal size)
+        {
+            return $"{ToDoubleString(size, PebiBytes)}Pi";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>E</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in E.</returns>
+        public static string ToEString(decimal size)
+        {
+            return $"{ToDoubleString(size, ExaBytes)}E";
+        }
+
+        /// <summary>
+        /// Converts a byte count to a string using <b>Ei</b> units.
+        /// </summary>
+        /// <param name="size">The size.</param>
+        /// <returns>The size in Ei.</returns>
+        public static string ToEiString(decimal size)
+        {
+            return $"{ToDoubleString(size, ExbiBytes)}Ei";
+        }
     }
 }
