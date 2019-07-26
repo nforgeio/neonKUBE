@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    XenVirtualDrive.cs
-// CONTRIBUTOR: Jeff Lill
+// FILE:	    Test_Headend.cs
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,24 +18,44 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Common;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Neon.Xen
+using Neon.Common;
+using Neon.IO;
+using Neon.Kube;
+using Neon.Kube.Service;
+using Neon.Service;
+using Neon.Xunit;
+using Neon.Xunit.Kube;
+
+using Xunit;
+
+namespace TestKube
 {
-    /// <summary>
-    /// Specifies virtual drive creation parameters.
-    /// </summary>
-    public class XenVirtualDrive
+    public class Test_Headend
     {
         /// <summary>
-        /// The drive size in bytes.
+        /// 
         /// </summary>
-        public decimal Size { get; set; }
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public async void TestGetGitHubZipAsync()
+        {
+            var headendClient = new HeadendClient();
+            var zip = await headendClient.GetHelmChartZipAsync("elasticsearch");
+            Assert.IsType<byte[]>(zip);
+        }
+
     }
 }

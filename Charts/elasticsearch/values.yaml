@@ -162,7 +162,8 @@ clusterHealthCheckParams: "wait_for_status=green&timeout=1s"
 schedulerName: ""
 
 imagePullSecrets: []
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/mon.elasticsearch: "true"
 tolerations: []
 
 # Enabling this will publically expose your Elasticsearch instance.

@@ -276,7 +276,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephOSDDriveSize(ClusterDefinition clusterDefinition)
+        public decimal GetCephOSDDriveSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
@@ -298,7 +298,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephOSDCacheSize(ClusterDefinition clusterDefinition)
+        public decimal GetCephOSDCacheSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
@@ -320,7 +320,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephOSDJournalSize(ClusterDefinition clusterDefinition)
+        public decimal GetCephOSDJournalSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
@@ -342,7 +342,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephMDSCacheSize(ClusterDefinition clusterDefinition)
+        public decimal GetCephMDSCacheSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {

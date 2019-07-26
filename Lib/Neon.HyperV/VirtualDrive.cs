@@ -42,7 +42,7 @@ namespace Neon.HyperV
         /// <summary>
         /// The drive size in bytes.
         /// </summary>
-        public long Size { get; set; }
+        public decimal Size { get; set; }
 
         /// <summary>
         /// Indicates whether a dynamic drive will be created as opposed to a

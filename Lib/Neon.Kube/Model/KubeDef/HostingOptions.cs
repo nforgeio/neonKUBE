@@ -46,8 +46,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string DefaultVmMemory = "4GiB";
-        internal const string DefaultVmDisk   = "64GiB";
+        internal const string DefaultVmMemory = "4Gi";
+        internal const string DefaultVmDisk   = "64Gi";
 
         //---------------------------------------------------------------------
         // Instance members

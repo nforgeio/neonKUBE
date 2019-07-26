@@ -45,6 +45,9 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 
+using k8s;
+using k8s.Models;
+
 namespace NeonCli
 {
     /// <summary>
@@ -121,6 +124,8 @@ OPTIONS:
         private ClusterProxy            cluster;
         private KubeSetupInfo           kubeSetupInfo;
         private HttpClient              httpClient;
+        private Kubernetes              k8sClient;
+        private string                  branch;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -148,6 +153,9 @@ OPTIONS:
                 Console.Error.WriteLine("*** ERROR: [root@CLUSTER-NAME] argument is required.");
                 Program.Exit(1);
             }
+
+
+            branch = commandLine.GetOption("--branch") ?? "master";
 
             var contextName = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster = KubeHelper.Config.GetCluster(contextName.Cluster);
@@ -223,6 +231,10 @@ OPTIONS:
                         cluster.SecureRunOptions = RunOptions.None;
                     }
 
+                    // Connect to existing cluster if it exists.
+
+                    ConnectCluster();
+
                     // Perform the setup operations.
 
                     var controller =
@@ -297,6 +309,10 @@ OPTIONS:
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
                     controller.AddGlobalStep("label nodes", LabelNodes);
+                    if (cluster.Definition.Mon.Enabled)
+                    {
+                        controller.AddGlobalStep("setup monitoring", SetupMonitoring);
+                    }
                     controller.AddGlobalStep("setup ceph", SetupCeph);
 
                     //-----------------------------------------------------------------
@@ -386,56 +402,6 @@ OPTIONS:
 
                     cluster.LogLine(logEndMarker);
 
-                    // Update the kubeconfig.
-
-                    var kubeConfigPath = KubeHelper.KubeConfigPath;
-
-                    if (!File.Exists(kubeConfigPath))
-                    {
-                        File.WriteAllText(kubeConfigPath, kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
-                    }
-                    else
-                    {
-                        // The user already has an existing kubeconfig, so we need
-                        // to merge in the new config.
-
-                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
-                        var existingConfig = KubeHelper.Config;
-
-                        // Remove any existing user, context, and cluster with the same names.
-                        // Note that we're assuming that there's only one of each in the config
-                        // we downloaded from the cluster.
-
-                        var newCluster      = newConfig.Clusters.Single();
-                        var newContext      = newConfig.Contexts.Single();
-                        var newUser         = newConfig.Users.Single();
-                        var existingCluster = existingConfig.GetCluster(newCluster.Name);
-                        var existingContext = existingConfig.GetContext(newContext.Name);
-                        var existingUser    = existingConfig.GetUser(newUser.Name);
-
-                        if (existingConfig != null)
-                        {
-                            existingConfig.Clusters.Remove(existingCluster);
-                        }
-
-                        if (existingContext != null)
-                        {
-                            existingConfig.Contexts.Remove(existingContext);
-                        }
-
-                        if (existingUser != null)
-                        {
-                            existingConfig.Users.Remove(existingUser);
-                        }
-
-                        existingConfig.Clusters.Add(newCluster);
-                        existingConfig.Contexts.Add(newContext);
-                        existingConfig.Users.Add(newUser);
-
-                        existingConfig.CurrentContext = newContext.Name;
-
-                        KubeHelper.SetConfig(existingConfig);
-                    }
                 }
                 catch
                 {
@@ -455,6 +421,24 @@ OPTIONS:
                 }
 
                 Console.WriteLine();
+            }
+        }
+
+        /// <summary>
+        /// Connects to a Kubernetes cluster if it already exists.
+        /// </summary>
+        public void ConnectCluster()
+        {
+            var configFile = Environment.GetEnvironmentVariable("KUBECONFIG").Split(';').Where(s => s.Contains("config")).FirstOrDefault();
+            if (!string.IsNullOrEmpty(configFile) && File.Exists(configFile))
+            {
+                try
+                {
+                    k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: $"root@{cluster.Definition.Name}"));
+                } catch (k8s.Exceptions.KubeConfigException e)
+                {
+                    return;
+                }
             }
         }
 
@@ -696,9 +680,9 @@ OPTIONS:
 
                     for (int i = 0; i < 100; i++)
                     {
-                        sbVolumesScript.AppendLineLinux($"mkdir -p /var/lib/neonkube/volumes/{i}");
-                        sbVolumesScript.AppendLineLinux($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} /var/lib/neonkube/volumes/{i}");
-                        sbVolumesScript.AppendLineLinux($"chmod 770 /var/lib/neonkube/volumes/{i}");
+                        sbVolumesScript.AppendLineLinux($"mkdir -p {KubeConst.LocalVolumePath}/{i}");
+                        sbVolumesScript.AppendLineLinux($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} {KubeConst.LocalVolumePath}/{i}");
+                        sbVolumesScript.AppendLineLinux($"chmod 770 {KubeConst.LocalVolumePath}/{i}");
                     }
 
                     node.SudoCommand(CommandBundle.FromScript(sbVolumesScript));
@@ -1201,6 +1185,65 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     }
                 });
 
+
+            firstMaster.InvokeIdempotentAction("setup/workstation",
+                () =>
+                {
+                    // Update the kubeconfig.
+
+                    var kubeConfigPath = KubeHelper.KubeConfigPath;
+
+                    if (!File.Exists(kubeConfigPath))
+                    {
+                        File.WriteAllText(kubeConfigPath, kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                    }
+                    else
+                    {
+                        // The user already has an existing kubeconfig, so we need
+                        // to merge in the new config.
+
+                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                        var existingConfig = KubeHelper.Config;
+
+                        // Remove any existing user, context, and cluster with the same names.
+                        // Note that we're assuming that there's only one of each in the config
+                        // we downloaded from the cluster.
+
+                        var newCluster = newConfig.Clusters.Single();
+                        var newContext = newConfig.Contexts.Single();
+                        var newUser = newConfig.Users.Single();
+                        var existingCluster = existingConfig.GetCluster(newCluster.Name);
+                        var existingContext = existingConfig.GetContext(newContext.Name);
+                        var existingUser = existingConfig.GetUser(newUser.Name);
+
+                        if (existingConfig != null)
+                        {
+                            existingConfig.Clusters.Remove(existingCluster);
+                        }
+
+                        if (existingContext != null)
+                        {
+                            existingConfig.Contexts.Remove(existingContext);
+                        }
+
+                        if (existingUser != null)
+                        {
+                            existingConfig.Users.Remove(existingUser);
+                        }
+
+                        existingConfig.Clusters.Add(newCluster);
+                        existingConfig.Contexts.Add(newContext);
+                        existingConfig.Users.Add(newUser);
+
+                        existingConfig.CurrentContext = newContext.Name;
+
+                        KubeHelper.SetConfig(existingConfig);
+                    }
+
+                    ConnectCluster();
+
+                });
+
             //-----------------------------------------------------------------
             // Configure the cluster.
 
@@ -1385,6 +1428,7 @@ subjects:
 
                             firstMaster.KubectlApply(dashboardYaml);
                         });
+
                 });
         }
 
@@ -1520,6 +1564,264 @@ helm template install/kubernetes/helm/istio \
     | kubectl apply -f -
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
+        }
+
+        /// <summary>
+        /// Initializes the EFK stack and other logging services.
+        /// </summary>
+        private void SetupMonitoring()
+        {
+            var firstMaster = cluster.FirstMaster;
+
+            // Setup Kubernetes.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-setup",
+                () =>
+                {
+                    KubeSetup(firstMaster).Wait();
+                });
+
+
+            // Install Elasticsearch.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
+                () =>
+                {
+                    InstallElasticSearch(firstMaster).Wait();
+                });
+
+
+            // Setup Fluent-Bit.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
+                () =>
+                {
+                    InstallFluentBit(firstMaster).Wait();
+                });
+
+
+            // Setup Fluentd.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
+                () =>
+                {
+                    InstallFluentd(firstMaster).Wait();
+                });
+
+
+            // Setup Kibana.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kibana",
+                () =>
+                {
+                    InstallKibana(firstMaster).Wait();
+                });
+
+
+            // Setup Metricbeat.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-metricbeat",
+                () =>
+                {
+                    InstallMetricbeat(firstMaster).Wait();
+                });
+        }
+
+        /// <summary>
+        /// Installs a Helm chart from the neonKUBE github repository.
+        /// </summary>
+        /// <param name="master"></param>
+        /// <param name="chartName"></param>
+        /// <param name="nameSpace"></param>
+        /// <param name="timeout"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        private async Task InstallHelmChartAsync(
+            SshProxy<NodeDefinition> master, 
+            string chartName, 
+            string nameSpace = "default", 
+            int timeout = 300,
+            List<KeyValuePair<string, string>> values = null)
+        {
+            using (var client = new HeadendClient())
+            {
+                var zip = await client.GetHelmChartZipAsync(chartName, branch);
+                master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
+            }
+
+            var valueOverrides = "";
+
+            if (values != null)
+            {
+                foreach (var value in values)
+                {
+                    valueOverrides += $"--set {value.Key}={value.Value} \\\n";
+                }
+            }
+
+            var helmChartScript =
+$@"#!/bin/bash
+cd /tmp/charts
+unzip {chartName}.zip -d {chartName}
+helm install --namespace {nameSpace} --name {chartName} {valueOverrides} ./{chartName} --timeout {timeout} --wait
+rm -rf {chartName}*
+";
+            master.SudoCommand(CommandBundle.FromScript(helmChartScript));
+        }
+
+        /// <summary>
+        /// Some initial kubernetes config.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task KubeSetup(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: cluster-setup";
+
+            await InstallHelmChartAsync(master, "cluster-setup", nameSpace: "logging");
+
+            master.Status = "deploy: kube-state-config";
+
+            await InstallHelmChartAsync(master, "kubernetes");
+        }
+
+        /// <summary>
+        /// Installs Elasticsearch
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallElasticSearch(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: elasticsearch";
+
+            var i = 0;
+            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Elasticsearch == true))
+            {
+                var volume = new V1PersistentVolume()
+                {
+                    ApiVersion = "v1",
+                    Kind = "PersistentVolume",
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = $"elasticsearch-data-{i}",
+                        Labels = new Dictionary<string, string>()
+                        {
+                            ["elasticsearch"] = "default"
+                        }
+                    },
+                    Spec = new V1PersistentVolumeSpec()
+                    {
+                        Capacity = new Dictionary<string, ResourceQuantity>()
+                        {
+                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Elasticsearch.DiskSize) }
+                        },
+                        AccessModes = new List<string>() { "ReadWriteOnce" },
+                        PersistentVolumeReclaimPolicy = "Retain",
+                        StorageClassName = "local-storage",
+                        Local = new V1LocalVolumeSource()
+                        {
+                            Path = $"{KubeConst.LocalVolumePath}/99"
+                        },
+                        NodeAffinity = new V1VolumeNodeAffinity()
+                        {
+                            Required = new V1NodeSelector()
+                            {
+                                NodeSelectorTerms = new List<V1NodeSelectorTerm>()
+                                {
+                                    new V1NodeSelectorTerm()
+                                    {
+                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
+                                        {
+                                            new V1NodeSelectorRequirement()
+                                            {
+                                                Key = "kubernetes.io/hostname",
+                                                OperatorProperty = "In",
+                                                Values = new List<string>() { $"{n.Name}" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                };
+
+                k8sClient.CreatePersistentVolume(volume);
+                i++;
+            }
+
+            var values = new List<KeyValuePair<string, string>>();
+
+            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
+            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+
+            if (cluster.Definition.Mon.Elasticsearch.Resources != null)
+            {
+                if (cluster.Definition.Mon.Elasticsearch.Resources.Limits != null)
+                {
+                    foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
+                    {
+                        values.Add(new KeyValuePair<string, string>($"resources.limits.{r.Key}", r.Value.ToString()));
+                    }
+                }
+
+                if (cluster.Definition.Mon.Elasticsearch.Resources.Requests != null)
+                {
+                    foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
+                    {
+                        values.Add(new KeyValuePair<string, string>($"resources.requests.{r.Key}", r.Value.ToString()));
+                    }
+                }
+            }
+
+            await InstallHelmChartAsync(master, "elasticsearch", nameSpace: "logging", timeout: 900, values: values);
+
+        }
+
+        /// <summary>
+        /// Installs FluentBit
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallFluentBit(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: fluent-bit";
+
+            await InstallHelmChartAsync(master, "fluent-bit", nameSpace: "logging", timeout: 300);
+
+        }
+
+        /// <summary>
+        /// Installs fluentd
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallFluentd(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: fluentd";
+
+            await InstallHelmChartAsync(master, "fluentd", nameSpace: "logging", timeout: 300);
+        }
+
+        /// <summary>
+        /// Installs Kibana
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallKibana(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: kibana";
+
+            await InstallHelmChartAsync(master, "kibana", nameSpace: "logging", timeout: 300);
+
+        }
+
+        /// <summary>
+        /// Installs metricbeat
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallMetricbeat(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: metricbeat";
+
+            await InstallHelmChartAsync(master, "metricbeat", nameSpace: "logging", timeout: 300);
+
         }
 
         /// <summary>

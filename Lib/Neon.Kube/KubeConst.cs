@@ -215,5 +215,23 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         public const int ContainerGID = 1000;
+
+        /// <summary>
+        /// <para>
+        /// The default name for the local <see cref="k8s.Models.V1StorageClass"/>
+        /// </para>
+        /// </summary>
+        public const string LocalStorageClassName = "local-storage";
+
+        /// <summary>
+        /// <para>
+        /// The default path for the <see cref="LocalStorageClassName"/>
+        /// </para>
+        /// <note>
+        /// This is temporary, once Kubernetes supports dynamic provisioning of local storage volumes, we'll use
+        /// that instead.
+        /// </note>
+        /// </summary>
+        public const string LocalVolumePath = "/var/lib/neonkube/volumes";
     }
 }

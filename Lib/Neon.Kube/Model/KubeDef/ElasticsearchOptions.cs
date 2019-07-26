@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusOptions.cs
+// FILE:	    ElasticsearchOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,19 +41,28 @@ using k8s.Models;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the options for configuring the cluster integrated Prometheus 
-    /// metrics stack: <a href="https://prometheus.io/">https://prometheus.io/</a>
+    /// Specifies the options for configuring the cluster integrated Elasticsearch 
+    /// metrics stack: <a href="https://Elastic.co/">https://Elastic.co/</a>
     /// </summary>
-    public class PrometheusOptions
+    public class ElasticsearchOptions
     {
         /// <summary>
-        /// Indicates whether Prometheus metrics are to be enabled for the cluster.  
+        /// Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
         /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
         [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
+        /// This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DiskSize", Required = Required.Default)]
+        [YamlMember(Alias = "diskSize", ApplyNamingConventions = false)]
+        [DefaultValue("1Gi")]
+        public string DiskSize { get; set; } = "1Gi";
 
         /// <summary>
         /// Compute Resources required by Elasticsearch.
