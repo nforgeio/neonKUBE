@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.CodeGen;
+using Neon.ModelGen;
 using Neon.Common;
 using Neon.Kube;
 
@@ -134,7 +134,7 @@ style design conventions.  See this GitHub issue for more information:
                 }
             }
 
-            var settings = new CodeGeneratorSettings(targets.ToArray())
+            var settings = new ModelGeneratorSettings(targets.ToArray())
             {
                 SourceNamespace       = commandLine.GetOption("--source-namespace"),
                 TargetNamespace       = commandLine.GetOption("--target-namespace"),
@@ -158,9 +158,9 @@ style design conventions.  See this GitHub issue for more information:
                 }
             }
 
-            var assembly      = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
-            var codeGenerator = new CodeGenerator(settings);
-            var output        = codeGenerator.Generate(assembly);
+            var assembly       = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
+            var modelGenerator = new ModelGenerator(settings);
+            var output         = modelGenerator.Generate(assembly);
 
             if (output.HasErrors)
             {

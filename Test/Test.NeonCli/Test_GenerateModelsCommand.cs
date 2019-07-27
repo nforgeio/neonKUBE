@@ -24,7 +24,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.CodeGen;
+using Neon.ModelGen;
 using Neon.Common;
 using Neon.Kube;
 using Neon.IO;
@@ -83,7 +83,7 @@ namespace Test.NeonCli
     /// <summary>
     /// Test helpers.
     /// </summary>
-    internal static class CodeGenTestHelper
+    internal static class ModelGenTestHelper
     {
         /// <summary>
         /// Adds the assembly references required to compile the generated code.
@@ -120,7 +120,7 @@ namespace Test.NeonCli
 
                     var sourceCode = result.OutputText;
 
-                    CodeGenerator.Compile(sourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+                    ModelGenerator.Compile(sourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
                     Assert.Contains("class Class1", sourceCode);
                     Assert.Contains("class Class2", sourceCode);
@@ -148,7 +148,7 @@ namespace Test.NeonCli
 
                     var sourceCode = result.OutputText;
 
-                    CodeGenerator.Compile(sourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+                    ModelGenerator.Compile(sourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
                     Assert.Contains("class Class1", sourceCode);
                     Assert.DoesNotContain("class Class2", sourceCode);
@@ -176,7 +176,7 @@ namespace Test.NeonCli
 
                     var sourceCode = result.OutputText;
 
-                    CodeGenerator.Compile(sourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+                    ModelGenerator.Compile(sourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
                     Assert.DoesNotContain("class Class1", sourceCode);
                     Assert.Contains("class Class2", sourceCode);
@@ -204,7 +204,7 @@ namespace Test.NeonCli
 
                     var sourceCode = result.OutputText;
 
-                    CodeGenerator.Compile(sourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+                    ModelGenerator.Compile(sourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
                     Assert.Contains("class Class1", sourceCode);
                     Assert.Contains("class Class2", sourceCode);
@@ -232,7 +232,7 @@ namespace Test.NeonCli
 
                     var sourceCode = result.OutputText;
 
-                    CodeGenerator.Compile(sourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+                    ModelGenerator.Compile(sourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
                     Assert.Contains("class Class1", sourceCode);
                     Assert.Contains("class Class2", sourceCode);
@@ -260,7 +260,7 @@ namespace Test.NeonCli
 
                     var sourceCode = result.OutputText;
 
-                    CodeGenerator.Compile(sourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+                    ModelGenerator.Compile(sourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
                     Assert.DoesNotContain("class Class1", sourceCode);
                     Assert.DoesNotContain("class Class2", sourceCode);
@@ -288,7 +288,7 @@ namespace Test.NeonCli
 
                     var sourceCode = result.OutputText;
 
-                    CodeGenerator.Compile(sourceCode, "test-assembly", references => CodeGenTestHelper.ReferenceHandler(references));
+                    ModelGenerator.Compile(sourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
 
                     Assert.Contains("class Class1", sourceCode);
                     Assert.Contains("class Class2", sourceCode);

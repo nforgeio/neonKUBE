@@ -1668,7 +1668,7 @@ namespace Neon.Common
         /// The method does nothing.
         /// </para>
         /// <note>
-        /// A call to this is currently included by <b>Neon.CodeGen</b> to ensure that
+        /// A call to this is currently included by <b>Neon.ModelGen</b> to ensure that
         /// the enclosing project references <b>Neon.Common</b>.
         /// </note>
         /// </summary>

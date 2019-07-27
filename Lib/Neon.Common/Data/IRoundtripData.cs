@@ -37,7 +37,7 @@ using Neon.Diagnostics;
 namespace Neon.Data
 {
     /// <summary>
-    /// Used by the <b>Neon.CodeGen</b> assembly to indicate that a class
+    /// Used by the <b>Neon.ModelGen</b> assembly to indicate that a class
     /// was generated as a round-trip data model.
     /// </summary>
     public interface IRoundtripData
