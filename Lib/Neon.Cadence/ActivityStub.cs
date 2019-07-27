@@ -29,7 +29,24 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <inheritdoc/>
-    public class ActivityStub : IActivityStub
+    internal class ActivityStub : IActivityStub
     {
+        /// <inheritdoc/>
+        public Task ExecuteAsync(string activityTypeName, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public Task<TResult> ExecuteAsync<TResult>(string activityTypeName, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public Task<object> ExecuteAsync(Type activityType, string activityTypeName, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

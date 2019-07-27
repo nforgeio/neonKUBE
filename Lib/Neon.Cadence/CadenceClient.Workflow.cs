@@ -216,18 +216,37 @@ namespace Neon.Cadence
         /// Creates an untyped stub that will be used to execute a workflow as well as
         /// query and signal the new workflow.
         /// </summary>
-        /// <param name="workflowType">Specifies workflow type name.</param>
+        /// <param name="workflowTypeName">Specifies workflow type name (see the remarks).</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
         /// <remarks>
+        /// <para>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
         /// workflow.  You'll need to create a new stub for each workflow you wish to
         /// invoke.
+        /// </para>
+        /// <para>
+        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
+        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
+        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.TypeName"/>.
+        /// </para>
+        /// <para>
+        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
+        /// look like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPE-NAME::METHOD-NAME
+        /// </code>
+        /// <para>
+        /// You'll need to use this format when calling workflows using external untyped stubs or 
+        /// from other languages.  The Java Cadence client works the same way.
+        /// </para>
         /// </remarks>
-        public IWorkflowStub NewUntypedWorkflowStub(string workflowType, WorkflowOptions options = null, string domain = null)
+        public IWorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowType));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
 
             throw new NotImplementedException();
         }

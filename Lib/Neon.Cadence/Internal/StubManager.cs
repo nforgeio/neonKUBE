@@ -194,7 +194,7 @@ namespace Neon.Cadence.Internal
 
             if (stub != null)
             {
-                return (TWorkflowInterface)stub.Create(client, workflowTypeName, taskList, options, domain);
+                return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, taskList, options, domain);
             }
 
             //-----------------------------------------------------------------
@@ -356,7 +356,7 @@ namespace Neon.Cadence.Internal
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient         client;");
-            sbSource.AppendLine($"        private IDataConverter        converter;");
+            sbSource.AppendLine($"        private IDataConverter        dataConverter;");
             sbSource.AppendLine($"        private string                workflowTypeName;");
             sbSource.AppendLine($"        private WorkflowOptions       options;");
             sbSource.AppendLine($"        private ChildWorkflowOptions  childOptions;");
@@ -367,10 +367,10 @@ namespace Neon.Cadence.Internal
             // Generate the constructor used to start an external workflow.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, string workflowTypeName, string taskList, WorkflowOptions options, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, string taskList, WorkflowOptions options, string domain)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
-            sbSource.AppendLine($"            this.converter        = client.DataConverter;");
+            sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
             sbSource.AppendLine($"            this.options          = options ?? new WorkflowOptions();");
             sbSource.AppendLine($"            this.taskList         = ___StubHelpers.ResolveTaskList(client, taskList);");
@@ -380,10 +380,10 @@ namespace Neon.Cadence.Internal
             // Generate the constructor used to start a child workflow.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, string workflowTypeName, ChildWorkflowOptions options)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, ChildWorkflowOptions options)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
-            sbSource.AppendLine($"            this.converter        = client.DataConverter;");
+            sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
             sbSource.AppendLine($"            this.childOptions     = options ?? new ChildWorkflowOptions();");
             sbSource.AppendLine($"            this.taskList         = ___StubHelpers.ResolveTaskList(client, this.childOptions.TaskList);");
@@ -393,12 +393,12 @@ namespace Neon.Cadence.Internal
             // Generate the constructor used to attach to an existing workflow.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, WorkflowExecution execution, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, WorkflowExecution execution, string domain)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client    = client;");
-            sbSource.AppendLine($"            this.converter = client.DataConverter;");
-            sbSource.AppendLine($"            this.execution = execution;");
-            sbSource.AppendLine($"            this.domain    = ___StubHelpers.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.client        = client;");
+            sbSource.AppendLine($"            this.dataConverter = dataConverter;");
+            sbSource.AppendLine($"            this.execution     = execution;");
+            sbSource.AppendLine($"            this.domain        = ___StubHelpers.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
             // Generate the method that converts the instance into a new untyped [IWorkflowStub].
@@ -408,6 +408,11 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            return ___StubHelpers.NewWorkflowStub(client, workflowTypeName, execution, taskList, options, domain);");
             sbSource.AppendLine($"        }}");
+
+            // Generate the properties.
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public Workflow Workflow {{ get; set; }}");
 
             // Generate the workflow entry point methods.
 
@@ -497,7 +502,7 @@ namespace Neon.Cadence.Internal
                 if (!details.IsVoid)
                 {
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            return converter.FromData<{resultType}>(___resultBytes);");
+                    sbSource.AppendLine($"            return dataConverter.FromData<{resultType}>(___resultBytes);");
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -558,7 +563,7 @@ namespace Neon.Cadence.Internal
                 if (!details.IsVoid)
                 {
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            return converter.FromData<{resultType}>(___resultBytes);");
+                    sbSource.AppendLine($"            return dataConverter.FromData<{resultType}>(___resultBytes);");
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -626,7 +631,7 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            return (TWorkflowInterface)stub.Create(client, workflowTypeName, taskList, options, domain);
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, taskList, options, domain);
         }
 
         /// <summary>
@@ -768,7 +773,7 @@ namespace Neon.Cadence.Internal
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient         client;");
-            sbSource.AppendLine($"        private IDataConverter        converter;");
+            sbSource.AppendLine($"        private IDataConverter        dataConverter;");
             sbSource.AppendLine($"        private IWorkflowBase         workflow;");
             sbSource.AppendLine($"        private string                activityTypeName;");
             sbSource.AppendLine($"        private ActivityOptions       options;");
@@ -777,10 +782,10 @@ namespace Neon.Cadence.Internal
             // Generate the constructor used to execute an activity.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IWorkflowBase workflow, string activityTypeName, string ActivityOptions options, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflow, string activityTypeName, string ActivityOptions options, string domain)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
-            sbSource.AppendLine($"            this.converter        = client.DataConverter;");
+            sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflow         = workflow;");
             sbSource.AppendLine($"            this.activityTypeName = activityTypeName;");
             sbSource.AppendLine($"            this.options          = options ?? new ActivityOptions();");
@@ -884,7 +889,7 @@ namespace Neon.Cadence.Internal
                 if (!details.IsVoid)
                 {
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            return converter.FromData<{resultType}>(___resultBytes);");
+                    sbSource.AppendLine($"            return dataConverter.FromData<{resultType}>(___resultBytes);");
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -1063,15 +1068,15 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options)
+            public static async Task<byte[]> ExecuteActivityAsync(Workflow workflow, string activityTypeName, byte[] args, ActivityOptions options)
             {
-                return await (Task<byte[]>)executeActivityAsync.Invoke(activityTypeName, args, options);
+                return await (Task<byte[]>)executeActivityAsync.Invoke(workflow, new object[] { activityTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> ExecuteLocalActivityAsync(Type, MethodInfo, byte[] args, LocalActivityOptions options)
+            public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, MethodInfo method, byte[] args, LocalActivityOptions options)
             {
-                return await (Task<byte[]>)executeActivityAsync.Invoke(args, options);
+                return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, method, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1084,7 +1089,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Returns the C# expression that uses the client data converter to
+        /// Returns the C# expression that uses the stub's data converter to
         /// serialize workflow method parameters to a byte array.
         /// </summary>
         /// <param name="args">The parameters.</param>
@@ -1098,7 +1103,7 @@ namespace Neon.Cadence.Internal
                 sb.AppendWithSeparator(arg.Name, ", ");
             }
 
-            return $"this.converter.ToData(new object[] {{ {sb} }})";
+            return $"this.dataConverter.ToData(new object[] {{ {sb} }})";
         }
 
         /// <summary>

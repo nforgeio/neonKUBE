@@ -90,7 +90,7 @@ namespace Neon.Cadence
                 throw new ArgumentException($"[{workflowInterface.FullName}] is not an interface.");
             }
 
-            if (!workflowInterface.IsGenericType)
+            if (workflowInterface.IsGenericType)
             {
                 throw new ArgumentException($"[{workflowInterface.FullName}] is a generic type.  Workflow interfaces may not be generic.");
             }
