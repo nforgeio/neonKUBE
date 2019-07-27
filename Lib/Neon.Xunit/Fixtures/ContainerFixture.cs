@@ -261,6 +261,9 @@ namespace Neon.Xunit
 
             dockerArgs.Add("--detach");
 
+            dockerArgs.Add("--platform");
+            dockerArgs.Add("linux");
+
             if (!string.IsNullOrEmpty(name))
             {
                 dockerArgs.Add("--name");

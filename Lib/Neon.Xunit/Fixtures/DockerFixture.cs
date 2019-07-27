@@ -837,6 +837,9 @@ namespace Neon.Xunit
             extraArgs.Add("--name");
             extraArgs.Add(name);
 
+            extraArgs.Add("--platform");
+            extraArgs.Add("linux");
+
             if (env != null)
             {
                 foreach (var variable in env)
@@ -1088,6 +1091,9 @@ namespace Neon.Xunit
 
             extraArgs.Add("--name");
             extraArgs.Add(name);
+
+            extraArgs.Add("--platform");
+            extraArgs.Add("linux");
 
             extraArgs.Add("--detach");
 
