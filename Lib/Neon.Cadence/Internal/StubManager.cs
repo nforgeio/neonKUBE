@@ -353,8 +353,15 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
 
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        //-----------------------------------------------------------------");
+            sbSource.AppendLine($"        // Private types");
+            sbSource.AppendLine();
             AppendStubHelper(sbSource);    // Generate a private static [___StubHelper] class. 
 
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        //-----------------------------------------------------------------");
+            sbSource.AppendLine($"        // Implementation");
             sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient         client;");
             sbSource.AppendLine($"        private IDataConverter        dataConverter;");
@@ -711,7 +718,7 @@ namespace Neon.Cadence.Internal
 
                 var details = new ActivityMethodDetails()
                 {
-                    ActivityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>(),
+                    ActivityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>() ?? new ActivityMethodAttribute() { Name = string.Empty },
                     Method                  = method
                 };
 
@@ -772,12 +779,19 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
 
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        //-----------------------------------------------------------------");
+            sbSource.AppendLine($"        // Private types");
+            sbSource.AppendLine();
             AppendStubHelper(sbSource);    // Generate a private static [___StubHelper] class. 
 
             sbSource.AppendLine();
+            sbSource.AppendLine($"        //-----------------------------------------------------------------");
+            sbSource.AppendLine($"        // Implementation");
+            sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient         client;");
             sbSource.AppendLine($"        private IDataConverter        dataConverter;");
-            sbSource.AppendLine($"        private IWorkflowBase         workflow;");
+            sbSource.AppendLine($"        private IWorkflowBase         workflowBase;");
             sbSource.AppendLine($"        private string                activityTypeName;");
             sbSource.AppendLine($"        private ActivityOptions       options;");
             sbSource.AppendLine($"        private string                domain;");
@@ -785,24 +799,21 @@ namespace Neon.Cadence.Internal
             // Generate the constructor used to execute an activity.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflow, string activityTypeName, string ActivityOptions options, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflowBase, string activityTypeName, ActivityOptions options, string domain)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
-            sbSource.AppendLine($"            this.workflow         = workflow;");
+            sbSource.AppendLine($"            this.workflowBase     = workflowBase;");
             sbSource.AppendLine($"            this.activityTypeName = activityTypeName;");
             sbSource.AppendLine($"            this.options          = options ?? new ActivityOptions();");
             sbSource.AppendLine($"            this.options.TaskList = ___StubHelpers.ResolveTaskList(client, options.TaskList);");
             sbSource.AppendLine($"            this.domain           = ___StubHelpers.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
-            // Generate the method that converts the instance into a new untyped [IActivityStub].
+            // Generate the properties.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public IActivityStub ToUntyped()");
-            sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            return ___StubHelpers.NewActivityStub(client, activityTypeName, execution, taskList, options, domain);");
-            sbSource.AppendLine($"        }}");
+            sbSource.AppendLine($"        public Activity Activity {{ get; set; }}");
 
             // Generate the activity methods.
 
@@ -883,11 +894,11 @@ namespace Neon.Cadence.Internal
                     }
                 }
 
+                sbSource.AppendLine();
                 sbSource.AppendLine($"            // Execute the activity.");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                sbSource.AppendLine($"            this.execution     = await ___StubHelpers.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___taskList, ___options, this.domain);");
-                sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+                sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.ExecuteActivityAsync(this.workflowBase.Workflow, ___activityTypeName, ___argBytes, this.options);");
 
                 if (!details.IsVoid)
                 {
@@ -964,11 +975,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Generates the static <b>___StubHelpers</b> class that exposes the internal
-        /// <see cref="CadenceClient"/> and other methods and constructors required by
-        /// workflow stubs.  The generated class will use reflection to access these methods.
+        /// Generates the static <b>___StubHelpers</b> class that exposes internal methods
+        /// and constructors from <see cref="CadenceClient"/> and other types that are
+        /// required by generated workflow and activity stubs.  The generated class uses
+        /// reflection to gain access these members.
         /// </summary>
-        /// <param name="sbSource">The C# source code being generated.</param>
+        /// <param name="sbSource">The builder used to generated C# source.</param>
         private static void AppendStubHelper(StringBuilder sbSource)
         {
             sbSource.Append(
@@ -984,9 +996,9 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
             private static MethodInfo       resolveTaskList;                // from: CadenceClient
             private static MethodInfo       resolveDomain;                  // from: CadenceClient
+            private static ConstructorInfo  newWorkflowStub;                // from: CadenceClient
             private static MethodInfo       executeActivityAsync;           // from: Workflow
             private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
-            private static ConstructorInfo  newWorkflowStub;                // from: WorkflowStub
 
             static ___StubHelpers()
             {
@@ -1003,11 +1015,10 @@ namespace Neon.Cadence.Internal
                 queryWorkflowAsync           = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 resolveTaskList              = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
                 resolveDomain                = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
-
-                executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
-                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
-
                 newWorkflowStub              = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(string), typeof(WorkflowOptions), typeof(string));
+
+                executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions), typeof(string));
+                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(string), typeof(byte[]), typeof(LocalActivityOptions));
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1071,6 +1082,12 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
+            public static WorkflowStub NewWorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, string taskList, WorkflowOptions options, string domain)
+            {
+                return (WorkflowStub)newWorkflowStub.Invoke(new object[] { client, workflowTypeName, execution, taskList, options, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
             public static async Task<byte[]> ExecuteActivityAsync(Workflow workflow, string activityTypeName, byte[] args, ActivityOptions options)
             {
                 return await (Task<byte[]>)executeActivityAsync.Invoke(workflow, new object[] { activityTypeName, args, options });
@@ -1080,12 +1097,6 @@ namespace Neon.Cadence.Internal
             public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, MethodInfo method, byte[] args, LocalActivityOptions options)
             {
                 return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, method, args, options });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowStub NewWorkflowStub(CadenceClient client, string workflowType, WorkflowExecution execution, string taskList, WorkflowOptions options, string domain)
-            {
-                return (WorkflowStub)newWorkflowStub.Invoke(new object[] { client, workflowType, execution, taskList, options, domain });
             }
         }
 ");

@@ -46,7 +46,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IWorkflowEntryVoidNoArgs : IWorkflowBase
+        public interface IActivityEntryVoidNoArgs : IActivityBase
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -54,16 +54,16 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowEntryVoidNoArgs()
+        public void Generate_ActivityEntryVoidNoArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryVoidNoArgs>(client);
+            var stub = StubManager.CreateActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowEntryVoidWithArgs : IWorkflowBase
+        public interface IActivityEntryVoidWithArgs : IActivityBase
         {
             [WorkflowMethod]
             Task RunAsync(string arg1, int arg2);
@@ -71,16 +71,25 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowEntryVoidWithArgs()
+        public void Generate_ActivityEntryVoidWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryVoidWithArgs>(client);
+            var stub = StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow());
+
+            Assert.NotNull(stub);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Generate_ActivityEntryVoidWithOptions()
+        {
+            var stub = StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow(), options: new ActivityOptions(), domain: "my-domain");
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowEntryResultWithArgs : IWorkflowBase
+        public interface IActivityEntryResultWithArgs : IActivityBase
         {
             [WorkflowMethod]
             Task<int> RunAsync(string arg1, int arg2);
@@ -88,25 +97,16 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowResultWithArgs()
+        public void Generate_ActivityResultWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryResultWithArgs>(client);
-
-            Assert.NotNull(stub);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowResultWithOptions()
-        {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryResultWithArgs>(client, taskList: "my-tasklist", options: new WorkflowOptions(), domain: "my-domain");
+            var stub = StubManager.CreateActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSignalNoArgs : IWorkflowBase
+        public interface IActivitySignalNoArgs : IActivityBase
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -117,16 +117,16 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowSignalNoArgs()
+        public void Generate_ActivitySignalNoArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowSignalNoArgs>(client);
+            var stub = StubManager.CreateActivityStub<IActivitySignalNoArgs>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSignalWithArgs : IWorkflowBase
+        public interface IActivitySignalWithArgs : IActivityBase
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -137,16 +137,16 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowSignalWithArgs()
+        public void Generate_ActivitySignalWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowSignalWithArgs>(client);
+            var stub = StubManager.CreateActivityStub<IActivitySignalWithArgs>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowQueryVoidNoArgs : IWorkflowBase
+        public interface IActivityQueryVoidNoArgs : IActivityBase
         {
             [WorkflowMethod]
             Task RunOneAsync();
@@ -157,16 +157,16 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowQueryVoidNoArgs()
+        public void Generate_ActivityQueryVoidNoArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryVoidNoArgs>(client);
+            var stub = StubManager.CreateActivityStub<IActivityQueryVoidNoArgs>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowQueryVoidWithArgs : IWorkflowBase
+        public interface IActivityQueryVoidWithArgs : IActivityBase
         {
             [WorkflowMethod]
             Task RunOneAsync();
@@ -177,16 +177,16 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowQueryVoidWithArgs()
+        public void Generate_ActivityQueryVoidWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryVoidWithArgs>(client);
+            var stub = StubManager.CreateActivityStub<IActivityQueryVoidWithArgs>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowQueryResultWithArgs : IWorkflowBase
+        public interface IActivityQueryResultWithArgs : IActivityBase
         {
             [WorkflowMethod]
             Task RunOneAsync();
@@ -197,16 +197,16 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowQueryResultWithArgs()
+        public void Generate_ActivityQueryResultWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryResultWithArgs>(client);
+            var stub = StubManager.CreateActivityStub<IActivityQueryResultWithArgs>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowMultiMethods : IWorkflowBase
+        public interface IActivityMultiMethods : IActivityBase
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -238,9 +238,9 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowMultiMethods()
+        public void Generate_ActivityMultiMethods()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowMultiMethods>(client);
+            var stub = StubManager.CreateActivityStub<IActivityMultiMethods>(client, new DummyWorkflow());
 
             Assert.NotNull(stub);
         }

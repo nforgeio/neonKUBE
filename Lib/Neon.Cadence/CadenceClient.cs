@@ -974,15 +974,15 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the .NET type implementing the named Cadence activity.
         /// </summary>
-        /// <param name="activityType">The Cadence activity type string.</param>
+        /// <param name="activityTypeName">The Cadence activity type name.</param>
         /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
-        internal Type GetActivityType(string activityType)
+        internal Type GetActivityType(string activityTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityTypeName != null);
 
             lock (syncLock)
             {
-                if (activityTypes.TryGetValue(activityType, out var type))
+                if (activityTypes.TryGetValue(activityTypeName, out var type))
                 {
                     return type;
                 }

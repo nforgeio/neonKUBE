@@ -170,7 +170,7 @@ namespace Neon.Cadence
         /// <typeparam name="TResult">The operation result type.</typeparam>
         /// <param name="actionAsync">The workflow action function.</param>
         /// <returns>The action result.</returns>
-        private async Task<TResult> ExecuteNoParallel<TResult>(Func<Task<TResult>> actionAsync)
+        private async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
             try
             {
@@ -221,7 +221,7 @@ namespace Neon.Cadence
         /// </summary>
         public async Task<DateTime> UtcNowAsync()
         {
-            var reply = await ExecuteNoParallel(
+            var reply = await ExecuteNonParallel(
                 async () =>
                 {
                     return (WorkflowGetTimeReply)await Client.CallProxyAsync(
@@ -463,7 +463,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId));
             Covenant.Requires<ArgumentException>(minSupported <= maxSupported);
 
-            var reply = await ExecuteNoParallel(
+            var reply = await ExecuteNonParallel(
                 async () =>
                 {
                     return (WorkflowGetVersionReply)await Client.CallProxyAsync(
@@ -560,7 +560,7 @@ namespace Neon.Cadence
                 value = default(T);
             }
 
-            var reply = await ExecuteNoParallel(
+            var reply = await ExecuteNonParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -643,7 +643,7 @@ namespace Neon.Cadence
                 value = default(object);
             }
 
-            var reply = await ExecuteNoParallel(
+            var reply = await ExecuteNonParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -852,7 +852,7 @@ namespace Neon.Cadence
                 value = default(T);
             }
 
-            var reply = await ExecuteNoParallel(
+            var reply = await ExecuteNonParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -922,7 +922,7 @@ namespace Neon.Cadence
                 value = default(object);
             }
 
-            var reply = await ExecuteNoParallel(
+            var reply = await ExecuteNonParallel(
                 async () =>
                 {
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
@@ -960,7 +960,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepAsync(TimeSpan duration)
         {
-            var reply = await ExecuteNoParallel(
+            var reply = await ExecuteNonParallel(
                 async () =>
                 {
                     return (WorkflowSleepReply)await Client.CallProxyAsync(
@@ -988,6 +988,80 @@ namespace Neon.Cadence
             {
                 await SleepAsync(time - utcNow);
             }
+        }
+
+        /// <summary>
+        /// Executes a workflow activity.  This is called from generated activity stubs.
+        /// </summary>
+        /// <param name="activityTypeName">The activity type name.</param>
+        /// <param name="args">The activity arguments encoded as a byte array.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="domain">Optionally specifies the activity domain.</param>
+        /// <returns>The activity result encoded as a byte array</returns>
+        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(args != null);
+
+            options          = options ?? new ActivityOptions();
+            options.TaskList = Client.ResolveTaskList(options.TaskList);
+
+            var reply = await ExecuteNonParallel(
+                async () =>
+                    {
+                        return (ActivityExecuteReply)await Client.CallProxyAsync(
+                            new ActivityExecuteRequest()
+                            {
+                                Activity = activityTypeName,
+                                Args = args,
+                                Options = options.ToInternal(),
+                                ContextId = contextId
+                            });
+                    });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return reply.Result;
+        }
+
+        /// <summary>
+        /// Executes a local workflow activity.  This is called from generated activity stubs.
+        /// </summary>
+        /// <param name="activityTypeName">The activity type name.</param>
+        /// <param name="args">The activity arguments encoded as a byte array.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <returns>The activity result encoded as a byte array</returns>
+        internal async Task<byte[]> ExecuteLocalActivityAsync(string activityTypeName, byte[] args, LocalActivityOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(args != null);
+
+#if !TODO
+            // We need to do some work here to handle multiple activity methods.
+
+            throw new NotImplementedException();
+#else
+            options = options ?? new LocalActivityOptions(;
+
+            var reply = await ExecuteNonParallel(
+                async () =>
+                    {
+                        return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
+                            new ActivityExecuteLocalRequest()
+                            {
+                                Activity  = activityTypeName,
+                                Args      = args,
+                                Options   = options.ToInternal(),
+                                ContextId = contextId
+                            });
+                    });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return reply.Result;
+#endif
         }
 
         //---------------------------------------------------------------------
@@ -1234,7 +1308,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
+        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
@@ -1278,7 +1352,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        protected async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, MethodInfo method, byte[] args = null, LocalActivityOptions options = null)
+        internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, MethodInfo method, byte[] args = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentException>(activityType.Implements<IActivityBase>());

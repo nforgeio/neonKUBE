@@ -48,7 +48,6 @@ namespace Neon.Cadence.Internal
         private Assembly            assembly;
         private Type                stubType;
         private ConstructorInfo     executeConstructor;
-        private MethodInfo          toUntyped;
 
         /// <summary>
         /// Constructor.
@@ -65,12 +64,11 @@ namespace Neon.Cadence.Internal
             // Fetch the stub type and reflect the required constructors and methods.
 
             this.stubType           = assembly.GetType(className);
-            this.executeConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(string), typeof(ActivityOptions), typeof(string));
-            this.toUntyped          = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
+            this.executeConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(string), typeof(ActivityOptions), typeof(string));
         }
 
         /// <summary>
-        /// Creates a activity stub instance suitable for executing an activity.
+        /// Creates a activity stub instance suitable for executing a non-local activity.
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>
@@ -80,16 +78,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain)
         {
-            return executeConstructor.Invoke(new object[] { client, workflow, activityTypeName, options, domain });
-        }
-
-        /// <summary>
-        /// Creates a new untyped <see cref="IActivityStub"/> from the dynamic stub.
-        /// </summary>
-        /// <returns>The new <see cref="IActivityStub"/>.</returns>
-        public IActivityStub ToUntyped()
-        {
-            return (IActivityStub)toUntyped.Invoke(this, Type.EmptyTypes);
+            return executeConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options, domain });
         }
     }
 }
