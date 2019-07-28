@@ -1683,7 +1683,7 @@ namespace Neon.Common
         /// <param name="name">The method name.</param>
         /// <param name="parameterTypes">The parameter types.</param>
         /// <returns>The <see cref="MethodInfo"/>.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the method does not exist.</exception>
+        /// <exception cref="MissingMethodException">Thrown if the method does not exist.</exception>
         public static MethodInfo GetMethod(Type type, string name, params Type[] parameterTypes)
         {
             Covenant.Requires<ArgumentNullException>(type != null);
@@ -1701,7 +1701,7 @@ namespace Neon.Common
                     sb.AppendWithSeparator(parameterType.FullName, ", ");
                 }
 
-                throw new KeyNotFoundException($"Cannot locate the [{type.FullName}.{name}({sb})] method.");
+                throw new MissingMethodException($"Cannot locate the [{type.FullName}.{name}({sb})] method.");
             }
 
             return method;
@@ -1713,7 +1713,7 @@ namespace Neon.Common
         /// <param name="type">The target type.</param>
         /// <param name="parameterTypes">The parameter types.</param>
         /// <returns>The <see cref="MethodInfo"/>.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the method does not exist.</exception>
+        /// <exception cref="MissingMethodException">Thrown if the method does not exist.</exception>
         public static ConstructorInfo GetConstructor(Type type, params Type[] parameterTypes)
         {
             Covenant.Requires<ArgumentNullException>(type != null);
@@ -1730,7 +1730,7 @@ namespace Neon.Common
                     sb.AppendWithSeparator(parameterType.FullName, ", ");
                 }
 
-                throw new KeyNotFoundException($"Cannot locate the [{type.FullName}({sb})] constructor.");
+                throw new MissingMethodException($"Cannot locate the [{type.FullName}({sb})] constructor.");
             }
 
             return constructor;
