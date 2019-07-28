@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_WorkflowStubManager.cs
+// FILE:        Test_StubManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -42,13 +42,13 @@ using Newtonsoft.Json.Linq;
 
 namespace TestCadence
 {
-    public partial class Test_WorkflowStubManager : IClassFixture<CadenceFixture>, IDisposable
+    public partial class Test_StubManager : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture      fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
-        public Test_WorkflowStubManager(CadenceFixture fixture)
+        public Test_StubManager(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_WorkflowStubManager.Generate.cs
+// FILE:        Test_StubManager.WorkflowGenerate.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -42,7 +42,7 @@ using Newtonsoft.Json.Linq;
 
 namespace TestCadence
 {
-    public partial class Test_WorkflowStubManager
+    public partial class Test_StubManager
     {
         //---------------------------------------------------------------------
 

@@ -159,6 +159,7 @@ namespace Neon.Cadence.Internal
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The stub instance.</returns>
+        /// <exception cref="WorkflowInterfaceException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
         public static TWorkflowInterface CreateWorkflowStub<TWorkflowInterface>(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
             where TWorkflowInterface : class, IWorkflowBase
         {
@@ -225,7 +226,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
@@ -234,7 +235,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = typeof(void);
@@ -247,11 +248,11 @@ namespace Neon.Cadence.Internal
 
                 if (attributeCount == 0)
                 {
-                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
+                    throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
                 else if (attributeCount > 1)
                 {
-                    throw new WorkflowDefinitionException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] may only be tagged with one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
+                    throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] may only be tagged with one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
 
                 if (signalMethodAttributes.Length > 0)
@@ -260,12 +261,12 @@ namespace Neon.Cadence.Internal
 
                     if (method.ReturnType.IsGenericType || method.ReturnType != typeof(Task))
                     {
-                        throw new WorkflowDefinitionException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        throw new WorkflowInterfaceException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
                     }
 
                     if (signalNames.Contains(signalAttribute.Name))
                     {
-                        throw new WorkflowDefinitionException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowInterfaceException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     signalNames.Add(signalAttribute.Name);
@@ -279,12 +280,12 @@ namespace Neon.Cadence.Internal
 
                     if (method.ReturnType != typeof(Task) && method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new WorkflowDefinitionException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        throw new WorkflowInterfaceException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
                     }
 
                     if (queryTypes.Contains(queryAttribute.Name))
                     {
-                        throw new WorkflowDefinitionException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowInterfaceException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     queryTypes.Add(queryAttribute.Name);
@@ -298,7 +299,7 @@ namespace Neon.Cadence.Internal
 
                     if (method.ReturnType != typeof(Task) && method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new WorkflowDefinitionException($"Workflow entry point method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        throw new WorkflowInterfaceException($"Workflow entry point method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
                     }
 
                     details.Kind                    = WorkflowMethodKind.Workflow;
@@ -314,7 +315,7 @@ namespace Neon.Cadence.Internal
 
             if (methodSignatureToDetails.Values.Count(d => d.Kind == WorkflowMethodKind.Workflow) == 0)
             {
-                throw new WorkflowDefinitionException($"Workflow interface[{workflowInterface.FullName}] does not define a [WorkflowMethod].");
+                throw new WorkflowInterfaceException($"Workflow interface[{workflowInterface.FullName}] does not define a [WorkflowMethod].");
             }
 
             // Generate C# source code that implements the stub.  Note that stub classes will
@@ -643,9 +644,11 @@ namespace Neon.Cadence.Internal
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub instance.</returns>
+        /// <exception cref="ActivityInterfaceException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
         public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, ActivityOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(workflow != null);
 
             var activityInterface = typeof(TActivityInterface);
 
@@ -695,14 +698,14 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new ActivityDefinitionException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
                 }
                 else
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        throw new ActivityDefinitionException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
                 }
 
@@ -716,7 +719,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new ActivityDefinitionException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
@@ -725,7 +728,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        throw new ActivityDefinitionException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = typeof(void);

@@ -416,13 +416,12 @@ namespace Neon.Cadence
         /// </summary>
         internal ActivityTask ActivityTask { get; private set; }
 
-        /// <summary>
-        /// Called by Cadence to execute an activity.  Derived classes will need to implement
-        /// their activity logic here.
-        /// </summary>
-        /// <param name="args">The activity arguments encoded into a byte array or <c>null</c>.</param>
-        /// <returns>The activity result encoded as a byte array or <c>null</c>.</returns>
-        protected abstract Task<byte[]> RunAsync(byte[] args);
+        private async Task<byte[]> RunAsync(byte[] args)
+        {
+            // $debug(jeff.lill): DELETE THIS METHOD!
+
+            return await Task.FromResult(new byte[0]);
+        }
 
         /// <summary>
         /// Called internally to execute the activity.
