@@ -1001,8 +1001,8 @@ namespace Neon.Cadence.Internal
                 resolveTaskList              = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
                 resolveDomain                = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
 
-                executeActivityAsync         = NeonHelper.GetMethod(clientType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
-                executeLocalActivityAsync    = NeonHelper.GetMethod(clientType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
+                executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
+                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
 
                 newWorkflowStub              = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(string), typeof(WorkflowOptions), typeof(string));
             }

@@ -97,26 +97,6 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowMultiEntry : IWorkflowBase
-        {
-            [WorkflowMethod]
-            Task<int> RunOneAsync(string arg1, int arg2);
-
-            [WorkflowMethod]
-            Task<string> RunTwoAsync(Person arg1, List<string> arg2);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowMultiEntry()
-        {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowMultiEntry>(client);
-
-            Assert.NotNull(stub);
-        }
-
-        //---------------------------------------------------------------------
-
         public interface IWorkflowSignalNoArgs : IWorkflowBase
         {
             [WorkflowMethod]
@@ -222,10 +202,10 @@ namespace TestCadence
             [WorkflowMethod]
             Task RunAsync();
 
-            [WorkflowMethod]
+            [WorkflowMethod(Name = "one")]
             Task<int> RunAsync(string arg1);
 
-            [WorkflowMethod]
+            [WorkflowMethod(Name = "two")]
             Task<int> RunAsync(string arg1, string arg2);
 
             [QueryMethod("my-query1")]
