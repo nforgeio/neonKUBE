@@ -85,26 +85,6 @@ func (request *WorkflowMutableRequest) SetResult(value []byte) {
 	request.SetBytesProperty("Result", value)
 }
 
-// GetUpdate gets a WorkflowMutableRequest's Update value
-// from its properties map. Indicates whether the value should
-// be updated in the cadence server history.
-//
-// returns bool -> bool indicating the WorkflowMutableRequest's
-// update value
-func (request *WorkflowMutableRequest) GetUpdate() bool {
-	return request.GetBoolProperty("Update")
-}
-
-// SetUpdate sets an WorkflowMutableRequest's Update value
-// in its properties map. Indicates whether the value should
-// be updated in the cadence server history.
-//
-// param value bool -> bool indicating the WorkflowMutableRequest's
-// update value
-func (request *WorkflowMutableRequest) SetUpdate(value bool) {
-	request.SetBoolProperty("Update", value)
-}
-
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -123,6 +103,5 @@ func (request *WorkflowMutableRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowMutableRequest); ok {
 		v.SetMutableID(request.GetMutableID())
 		v.SetResult(request.GetResult())
-		v.SetUpdate(request.GetUpdate())
 	}
 }
