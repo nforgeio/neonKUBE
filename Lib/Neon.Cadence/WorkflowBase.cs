@@ -626,11 +626,11 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Type activityType;
+                    Workflow.LocalActivityAction activityAction;
 
                     lock (syncLock)
                     {
-                        if (!workflow.Workflow.IdToLocalActivityType.TryGetValue(request.ActivityTypeId, out activityType))
+                        if (!workflow.Workflow.IdToLocalActivityAction.TryGetValue(request.ActivityTypeId, out activityAction))
                         {
                             return new ActivityInvokeLocalReply()
                             {
@@ -640,7 +640,7 @@ namespace Neon.Cadence
                     }
 
                     var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
-                    var activity   = ActivityBase.Create(client, activityType, null);
+                    var activity   = ActivityBase.Create(client, activityAction.ActivityType, activityAction.ActivityMethod, null);
                     var result     = await activity.OnRunAsync(client, request.Args);
 
                     return new ActivityInvokeLocalReply()

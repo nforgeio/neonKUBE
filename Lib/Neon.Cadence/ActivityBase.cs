@@ -195,12 +195,14 @@ namespace Neon.Cadence
         /// Constructs an activity instance with the specified type.
         /// </summary>
         /// <param name="client">The associated client.</param>
-        /// <param name="activityType">The activity type.</param>
+        /// <param name="activityType">The target activity type.</param>
+        /// <param name="activityMethod">The target activity method.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create( CadenceClient client, Type activityType,long? contextId)
+        internal static ActivityBase Create(CadenceClient client, Type activityType, MethodInfo activityMethod, long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityMethod != null);
 
             ConstructorInfo constructor;
 
@@ -230,12 +232,14 @@ namespace Neon.Cadence
         /// Constructs an activity instance with the specified activity type name.
         /// </summary>
         /// <param name="client">The associated client.</param>
-        /// <param name="activityTypeName">The activity type name.</param>
+        /// <param name="activityTypeName">The target activity type name.</param>
+        /// <param name="activityMethod">The target activity method.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(CadenceClient client, string activityTypeName, long? contextId)
+        internal static ActivityBase Create(CadenceClient client, string activityTypeName, MethodInfo activityMethod, long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(activityTypeName != null);
+            Covenant.Requires<ArgumentNullException>(activityMethod != null);
             Covenant.Requires<ArgumentNullException>(client != null);
 
             ConstructInfo constructInfo;
@@ -359,12 +363,26 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
+        private Type            activityType;
+        private MethodInfo      activityMethod;
+        private IDataConverter  dataConverter;
+
         /// <summary>
-        /// Default constructor.
+        /// Constructor.
         /// </summary>
-        public ActivityBase()
+        /// <param name="activityType">Specifies the target activity type.</param>
+        /// <param name="activityMethod">Specifies the target activity method.</param>
+        /// <param name="dataConverter">Specifies the data converter to be used for parameter and result serilization.</param>
+        public ActivityBase(Type activityType, MethodInfo activityMethod, IDataConverter dataConverter)
         {
-            this.Activity = new Activity(this);
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Covenant.Requires<ArgumentNullException>(dataConverter != null);
+
+            this.activityType   = activityType;
+            this.activityMethod = activityMethod;
+            this.dataConverter  = dataConverter;
+            this.Activity       = new Activity(this);
         }
 
         /// <summary>
@@ -416,18 +434,37 @@ namespace Neon.Cadence
         /// </summary>
         internal ActivityTask ActivityTask { get; private set; }
 
-        private async Task<byte[]> RunAsync(byte[] args)
+        /// <summary>
+        /// Executes the target activity method.
+        /// </summary>
+        /// <param name="argBytes">The encoded activity arguments.</param>
+        /// <returns>The encoded activity results.</returns>
+        private async Task<byte[]> RunAsync(byte[] argBytes)
         {
-            // $debug(jeff.lill): DELETE THIS METHOD!
+            var     args   = dataConverter.FromDataArray(argBytes);
+            object  result = null;
 
-            return await Task.FromResult(new byte[0]);
+            if (activityMethod.ReturnType == typeof(Task))
+            {
+                // The activity method returns [Task] (effectively void).
+
+                await (Task)activityMethod.Invoke(this, args);
+            }
+            else
+            {
+                // The activity method returns [Task<T>] (an actual result).
+
+                result = await (Task<object>)activityMethod.Invoke(this, args);
+            }
+
+            return dataConverter.ToData(result);
         }
 
         /// <summary>
         /// Called internally to execute the activity.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
-        /// <param name="args">The activity arguments.</param>
+        /// <param name="args">The encoded activity arguments.</param>
         /// <returns>Thye activity results.</returns>
         internal async Task<byte[]> OnRunAsync(CadenceClient client, byte[] args)
         {

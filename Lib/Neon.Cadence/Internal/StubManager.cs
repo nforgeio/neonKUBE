@@ -792,11 +792,14 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private CadenceClient         client;");
             sbSource.AppendLine($"        private IDataConverter        dataConverter;");
             sbSource.AppendLine($"        private IWorkflowBase         workflowBase;");
+            sbSource.AppendLine($"        private bool                  isLocal;");
             sbSource.AppendLine($"        private string                activityTypeName;");
             sbSource.AppendLine($"        private ActivityOptions       options;");
             sbSource.AppendLine($"        private string                domain;");
+            sbSource.AppendLine($"        private Type                  activityType;");
+            sbSource.AppendLine($"        private LocalActivityOptions  localOptions;");
 
-            // Generate the constructor used to execute an activity.
+            // Generate the constructor for regular (non-local) activity stubs.
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflowBase, string activityTypeName, ActivityOptions options, string domain)");
@@ -804,10 +807,23 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflowBase     = workflowBase;");
+            sbSource.AppendLine($"            this.isLocal          = false;");
             sbSource.AppendLine($"            this.activityTypeName = activityTypeName;");
             sbSource.AppendLine($"            this.options          = options ?? new ActivityOptions();");
-            sbSource.AppendLine($"            this.options.TaskList = ___StubHelpers.ResolveTaskList(client, options.TaskList);");
             sbSource.AppendLine($"            this.domain           = ___StubHelpers.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"        }}");
+
+            // Generate the constructor for local activity stubs.
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflowBase, Type activityType, LocalActivityOptions localOptions)");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            this.client           = client;");
+            sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
+            sbSource.AppendLine($"            this.workflowBase     = workflowBase;");
+            sbSource.AppendLine($"            this.isLocal          = true;");
+            sbSource.AppendLine($"            this.activityType     = activityType;");
+            sbSource.AppendLine($"            this.localoptions     = localOptions ?? new LocalActivityOptions();");
             sbSource.AppendLine($"        }}");
 
             // Generate the properties.
@@ -832,73 +848,92 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            // Configure the activity.");
+                sbSource.AppendLine($"            byte[]    ___argBytes;");
+                sbSource.AppendLine($"            byte[]    ___resultBytes;");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"            if (!isLocal)");
+                sbSource.AppendLine($"            {{");
+                sbSource.AppendLine($"                // Configure the regular activity call.");
                 sbSource.AppendLine();
 
                 if (string.IsNullOrEmpty(details.ActivityMethodAttribute.Name))
                 {
-                    sbSource.AppendLine($"            var ___activityTypeName = this.activityTypeName;");
+                    sbSource.AppendLine($"                var ___activityTypeName = this.activityTypeName;");
                 }
                 else
                 {
-                    sbSource.AppendLine($"            var ___activityTypeName = $\"{{this.workflowTypeName}}::{details.ActivityMethodAttribute.Name}\";");
+                    sbSource.AppendLine($"                var ___activityTypeName = $\"{{this.activityTypeName}}::{details.ActivityMethodAttribute.Name}\";");
                 }
 
-                sbSource.AppendLine($"            var ___options          = this.options.Clone();");
+                sbSource.AppendLine($"                var ___options          = this.options.Clone();");
 
                 if (details.ActivityMethodAttribute != null)
                 {
                     if (!string.IsNullOrEmpty(details.ActivityMethodAttribute.TaskList))
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (string.IsNullOrEmpty(___options.TaskList))");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___taskList = {StringLiteral(details.ActivityMethodAttribute.TaskList)};");
-                        sbSource.AppendLine($"            }}");
+                        sbSource.AppendLine($"                if (string.IsNullOrEmpty(___options.TaskList))");
+                        sbSource.AppendLine($"                {{");
+                        sbSource.AppendLine($"                    ___taskList = {StringLiteral(details.ActivityMethodAttribute.TaskList)};");
+                        sbSource.AppendLine($"                }}");
                     }
 
                     if (details.ActivityMethodAttribute.HeartbeatTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (___options.HeartbeatTimeout <= TimeSpan.Zero))");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.HeartbeatTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.HeartbeatTimeoutSeconds});");
-                        sbSource.AppendLine($"            }}");
+                        sbSource.AppendLine($"                if (___options.HeartbeatTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                {{");
+                        sbSource.AppendLine($"                    ___options.HeartbeatTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.HeartbeatTimeoutSeconds});");
+                        sbSource.AppendLine($"                }}");
                     }
 
                     if (details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (___options.ScheduleToCloseTimeout <= TimeSpan.Zero))");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.ScheduleToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds});");
-                        sbSource.AppendLine($"            }}");
+                        sbSource.AppendLine($"                if (___options.ScheduleToCloseTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                {{");
+                        sbSource.AppendLine($"                    ___options.ScheduleToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds});");
+                        sbSource.AppendLine($"                }}");
                     }
 
                     if (details.ActivityMethodAttribute.ScheduleToStartTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (___options.ScheduleToStartTimeout <= TimeSpan.Zero))");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.ScheduleToStartTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToStartTimeoutSeconds});");
-                        sbSource.AppendLine($"            }}");
+                        sbSource.AppendLine($"                if (___options.ScheduleToStartTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                {{");
+                        sbSource.AppendLine($"                    ___options.ScheduleToStartTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToStartTimeoutSeconds});");
+                        sbSource.AppendLine($"                }}");
                     }
 
                     if (details.ActivityMethodAttribute.StartToCloseTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (___options.StartToCloseTimeout <= TimeSpan.Zero))");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.StartToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.StartToCloseTimeoutSeconds});");
-                        sbSource.AppendLine($"            }}");
+                        sbSource.AppendLine($"                if (___options.StartToCloseTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                {{");
+                        sbSource.AppendLine($"                    ___options.StartToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.StartToCloseTimeoutSeconds});");
+                        sbSource.AppendLine($"                }}");
                     }
                 }
 
                 sbSource.AppendLine();
-                sbSource.AppendLine($"            // Execute the activity.");
+                sbSource.AppendLine($"                // Execute the activity.");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.ExecuteActivityAsync(this.workflowBase.Workflow, ___activityTypeName, ___argBytes, this.options);");
+                sbSource.AppendLine($"                ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteActivityAsync(this.workflowBase.Workflow, ___activityTypeName, ___argBytes, this.options);");
+                sbSource.AppendLine($"            }}");
+                sbSource.AppendLine($"            else");
+                sbSource.AppendLine($"            {{");
+                sbSource.AppendLine($"                // Configure the local activity.");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"                if (___localOptions.ScheduleToCloseTimeout <= TimeSpan.Zero))");
+                sbSource.AppendLine($"                {{");
+                sbSource.AppendLine($"                    ___localOptions.ScheduleToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds});");
+                sbSource.AppendLine($"                }}");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"                // Execute the local activity.");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteLocalActivityAsync(this.workflowBase.Workflow, ___activityTypeName, ___argBytes, this.localOptions);");
+                sbSource.AppendLine($"            }}");
 
                 if (!details.IsVoid)
                 {
@@ -1018,7 +1053,7 @@ namespace Neon.Cadence.Internal
                 newWorkflowStub              = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(string), typeof(WorkflowOptions), typeof(string));
 
                 executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions), typeof(string));
-                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(string), typeof(byte[]), typeof(LocalActivityOptions));
+                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
