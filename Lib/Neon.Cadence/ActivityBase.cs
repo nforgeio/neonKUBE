@@ -78,43 +78,51 @@ namespace Neon.Cadence
             }
         }
 
-        private struct ConstructInfo
+        /// <summary>
+        /// Used for mapping an activity type name to its underlying type, constructor
+        /// and entry point method.
+        /// </summary>
+        private struct ActivityInvokeInfo
         {
             /// <summary>
             /// The activity type.
             /// </summary>
-            public Type Type { get; set; }
+            public Type ActivityType { get; set; }
             
             /// <summary>
             /// The activity constructor.
             /// </summary>
             public ConstructorInfo Constructor { get; set; }
+
+            /// <summary>
+            /// The activity entry point method.
+            /// </summary>
+            public MethodInfo ActivityMethod { get; set; }
         }
 
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                   syncLock            = new object();
-        private static INeonLogger                              log                 = LogManager.Default.GetLogger<ActivityBase>();
-        private static Type[]                                   noTypeArgs          = new Type[0];
-        private static object[]                                 noArgs              = new object[0];
-        private static Dictionary<ActivityKey, ActivityBase>    idToActivity        = new Dictionary<ActivityKey, ActivityBase>();
-        private static Dictionary<Type, ConstructorInfo>        typeToConstructor   = new Dictionary<Type, ConstructorInfo>();
+        private static object                                   syncLock         = new object();
+        private static INeonLogger                              log              = LogManager.Default.GetLogger<ActivityBase>();
+        private static Type[]                                   noTypeArgs       = new Type[0];
+        private static object[]                                 noArgs           = new object[0];
+        private static Dictionary<ActivityKey, ActivityBase>    idToActivity     = new Dictionary<ActivityKey, ActivityBase>();
 
         // This dictionary is used to map activity type names to the target activity
-        // type.  Note that these mappings are scoped to specific cadence client
-        // instances by prefixing the type name with:
+        // type, constructor, and entry point method.  Note that these mappings are 
+        // scoped to specific cadence client instances by prefixing the type name with:
         //
         //      CLIENT-ID::
         //
         // where CLIENT-ID is the locally unique ID of the client.  This is important,
         // because we'll need to remove the entries for clients when they're disposed.
 
-        private static Dictionary<string, ConstructInfo>        nameToConstructInfo = new Dictionary<string, ConstructInfo>();
+        private static Dictionary<string, ActivityInvokeInfo>   nameToInvokeInfo = new Dictionary<string, ActivityInvokeInfo>();
 
         /// <summary>
         /// Prepends the Cadence client ID to the workflow type name to generate the
-        /// key used to dereference the <see cref="nameToConstructInfo"/> dictionary.
+        /// key used to dereference the <see cref="nameToInvokeInfo"/> dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="activityTypeName">The activity type name.</param>
@@ -142,21 +150,21 @@ namespace Neon.Cadence
 
             activityTypeName = GetActivityTypeKey(client, activityTypeName);
 
-            var constructInfo = new ConstructInfo();
+            var constructInfo = new ActivityInvokeInfo();
 
-            constructInfo.Type        = activityType;
-            constructInfo.Constructor = constructInfo.Type.GetConstructor(noTypeArgs);
+            constructInfo.ActivityType        = activityType;
+            constructInfo.Constructor = constructInfo.ActivityType.GetConstructor(noTypeArgs);
 
             if (constructInfo.Constructor == null)
             {
-                throw new ArgumentException($"Activity type [{constructInfo.Type.FullName}] does not have a default constructor.");
+                throw new ArgumentException($"Activity type [{constructInfo.ActivityType.FullName}] does not have a default constructor.");
             }
 
             lock (syncLock)
             {
-                if (nameToConstructInfo.TryGetValue(activityTypeName, out var existingEntry))
+                if (nameToInvokeInfo.TryGetValue(activityTypeName, out var existingEntry))
                 {
-                    if (!object.ReferenceEquals(existingEntry.Type, constructInfo.Type))
+                    if (!object.ReferenceEquals(existingEntry.ActivityType, constructInfo.ActivityType))
                     {
                         throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for workflow type name [{activityTypeName}].");
                     }
@@ -165,7 +173,7 @@ namespace Neon.Cadence
                 }
                 else
                 {
-                    nameToConstructInfo[activityTypeName] = constructInfo;
+                    nameToInvokeInfo[activityTypeName] = constructInfo;
 
                     return false;
                 }
@@ -184,77 +192,119 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                foreach (var key in nameToConstructInfo.Keys.Where(key => key.StartsWith(prefix)).ToList())
+                foreach (var key in nameToInvokeInfo.Keys.Where(key => key.StartsWith(prefix)).ToList())
                 {
-                    nameToConstructInfo.Remove(key);
+                    nameToInvokeInfo.Remove(key);
                 }
             }
         }
 
         /// <summary>
-        /// Constructs an activity instance with the specified type.
+        /// Returns the <see cref="ActivityInvokeInfo"/> for any activity type and activity type name.
         /// </summary>
-        /// <param name="client">The associated client.</param>
-        /// <param name="activityType">The target activity type.</param>
-        /// <param name="activityMethod">The target activity method.</param>
-        /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
-        /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(CadenceClient client, Type activityType, MethodInfo activityMethod, long? contextId)
+        /// <param name="activityType">The targetr activity type.</param>
+        /// <param name="activityTypeName">The target activity type name.</param>
+        /// <returns>The <see cref="ActivityInvokeInfo"/>.</returns>
+        private static ActivityInvokeInfo GetActivityInvokeInfo(Type activityType, string activityTypeName)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
-            ConstructorInfo constructor;
+            var info = new ActivityInvokeInfo();
 
-            lock (syncLock)
+            // Locate the constructor.
+
+            info.Constructor = activityType.GetConstructor(noTypeArgs);
+
+            if (info.Constructor == null)
             {
-                if (!typeToConstructor.TryGetValue(activityType, out constructor))
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
+            }
+
+            // Locate the target method.  Note that the activity type name will be
+            // formatted like:
+            //
+            //      CLIENT-ID::TYPE-NAME
+            // or   CLIENT-ID::TYPE-NAME::METHOD-NAME
+
+            var activityTypeNameParts = activityTypeName.Split(CadenceHelper.ActivityTypeMethodSeparator.ToCharArray(), 3);
+            var activityMethodName    = (string)null;
+
+            Covenant.Assert(activityTypeNameParts.Length >= 2);
+
+            if (activityTypeNameParts.Length > 2)
+            {
+                activityMethodName = activityTypeNameParts[2];
+            }
+
+            if (string.IsNullOrEmpty(activityMethodName))
+            {
+                activityMethodName = null;
+            }
+
+            foreach (var method in activityType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (activityMethodAttribute == null)
                 {
-                    constructor = activityType.GetConstructor(noTypeArgs);
+                    continue;
+                }
 
-                    if (constructor == null)
-                    {
-                        throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
-                    }
+                var name = activityMethodAttribute.Name;
 
-                    typeToConstructor.Add(activityType, constructor);
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = null;
+                }
+
+                if (name == activityMethodName)
+                {
+                    info.ActivityMethod = method;
+                    break;
                 }
             }
 
-            var activity = (ActivityBase)constructor.Invoke(noArgs);
+            if (info.ActivityMethod == null)
+            {
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have an entry point method tagged with [ActivityMethod(Name = \"{activityMethodName}\")].");
+            }
 
-            activity.Initialize(client, contextId);
+            return info;
+        }
+
+        /// <summary>
+        /// Constructs an activity instance suitable for executing a local activity.
+        /// </summary>
+        /// <param name="client">The associated client.</param>
+        /// <param name="invokeInfo">The activity invocation information.</param>
+        /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
+        /// <returns>The constructed activity.</returns>
+        private static ActivityBase Create(CadenceClient client, ActivityInvokeInfo invokeInfo, long? contextId)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            var activity = (ActivityBase)(invokeInfo.Constructor.Invoke(noArgs));
+
+            activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
 
             return activity;
         }
 
         /// <summary>
-        /// Constructs an activity instance with the specified activity type name.
+        /// Constructs an activity instance suitable for executing a normal (non-local) activity.
         /// </summary>
         /// <param name="client">The associated client.</param>
-        /// <param name="activityTypeName">The target activity type name.</param>
-        /// <param name="activityMethod">The target activity method.</param>
+        /// <param name="activityAction">The target activity action.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(CadenceClient client, string activityTypeName, MethodInfo activityMethod, long? contextId)
+        internal static ActivityBase Create(CadenceClient client, LocalActivityAction activityAction, long? contextId)
         {
-            Covenant.Requires<ArgumentNullException>(activityTypeName != null);
-            Covenant.Requires<ArgumentNullException>(activityMethod != null);
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            ConstructInfo constructInfo;
+            var activity = (ActivityBase)(activityAction.ActivityConstructor.Invoke(noArgs));
 
-            lock (syncLock)
-            {
-                if (!nameToConstructInfo.TryGetValue(GetActivityTypeKey(client, activityTypeName), out constructInfo))
-                {
-                    throw new ArgumentException($"No activty type is registered for [{activityTypeName}].");
-                }
-            }
-
-            var activity = (ActivityBase)constructInfo.Constructor.Invoke(noArgs);
-
-            activity.Initialize(client, contextId);
+            activity.Initialize(client, activityAction.ActivityType, activityAction.ActivityMethod, client.DataConverter, contextId);
 
             return activity;
         }
@@ -300,7 +350,17 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(CadenceClient client, ActivityInvokeRequest request)
         {
-            var activity = Create(client, request.Activity, request.ContextId);
+            ActivityInvokeInfo  invokeInfo;
+
+            lock (syncLock)
+            {
+                if (!nameToInvokeInfo.TryGetValue(request.Activity, out invokeInfo))
+                {
+                    throw new KeyNotFoundException($"Cannot resolve [activityTypeName = {request.Activity}] to a registered activity type and activity method.");
+                }
+            }
+
+            var activity = Create(client, invokeInfo, request.ContextId);
 
             try
             {
@@ -368,33 +428,31 @@ namespace Neon.Cadence
         private IDataConverter  dataConverter;
 
         /// <summary>
-        /// Constructor.
+        /// Default protected constructor.
         /// </summary>
-        /// <param name="activityType">Specifies the target activity type.</param>
-        /// <param name="activityMethod">Specifies the target activity method.</param>
-        /// <param name="dataConverter">Specifies the data converter to be used for parameter and result serilization.</param>
-        public ActivityBase(Type activityType, MethodInfo activityMethod, IDataConverter dataConverter)
+        protected ActivityBase()
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentNullException>(activityMethod != null);
-            Covenant.Requires<ArgumentNullException>(dataConverter != null);
-
-            this.activityType   = activityType;
-            this.activityMethod = activityMethod;
-            this.dataConverter  = dataConverter;
-            this.Activity       = new Activity(this);
         }
 
         /// <summary>
         /// Called internally to initialize the activity.
         /// </summary>
         /// <param name="client">The associated client.</param>
+        /// <param name="activityType">Specifies the target activity type.</param>
+        /// <param name="activityMethod">Specifies the target activity method.</param>
+        /// <param name="dataConverter">Specifies the data converter to be used for parameter and result serilization.</param>
         /// <param name="contextId">The activity's context ID or <c>null</c> for local activities.</param>
-        internal void Initialize(CadenceClient client, long? contextId)
+        internal void Initialize(CadenceClient client, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Covenant.Requires<ArgumentNullException>(dataConverter != null);
 
             this.Client                  = client;
+            this.activityType            = activityType;
+            this.activityMethod          = activityMethod;
+            this.dataConverter           = dataConverter;
             this.ContextId               = contextId;
             this.CancellationTokenSource = new CancellationTokenSource();
             this.CancellationToken       = CancellationTokenSource.Token;

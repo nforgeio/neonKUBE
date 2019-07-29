@@ -37,29 +37,6 @@ namespace Neon.Cadence
     /// </summary>
     public class Workflow
     {
-        //---------------------------------------------------------------------
-        // Local types
-
-        /// <summary>
-        /// Holds information about the activity type to be instantiated and the
-        /// method to be called when a local activity is invoked.
-        /// </summary>
-        internal class LocalActivityAction
-        {
-            /// <summary>
-            /// The target activity type.
-            /// </summary>
-            public Type ActivityType { get; set; }
-
-            /// <summary>
-            /// The target activity method.
-            /// </summary>
-            public MethodInfo ActivityMethod { get; set; }
-        }
-        
-        //---------------------------------------------------------------------
-        // Implementation
-
         /// <summary>
         /// The default workflow version returned by <see cref="GetVersionAsync(string, int, int)"/> 
         /// when a version has not been set yet.
@@ -70,7 +47,7 @@ namespace Neon.Cadence
         private WorkflowBase            parentInstance;
         private long                    contextId;
         private int                     pendingOperationCount;
-        private long                    nextLocalActivityTypeId;
+        private long                    nextLocalActivityActionId;
         private bool                    isDisconnected;
         private Random                  random;
 
@@ -109,7 +86,7 @@ namespace Neon.Cadence
             this.parentInstance          = parentInstance;
             this.contextId               = contextId;
             this.pendingOperationCount   = 0;
-            this.nextLocalActivityTypeId = 0;
+            this.nextLocalActivityActionId = 0;
             this.isDisconnected          = false;
             this.IdToLocalActivityAction = new Dictionary<long, LocalActivityAction>();
             this.MethodMap               = methodMap;
@@ -1049,45 +1026,6 @@ namespace Neon.Cadence
             return reply.Result;
         }
 
-        /// <summary>
-        /// Executes a local workflow activity.  This is called from generated activity stubs.
-        /// </summary>
-        /// <param name="activityTypeName">The activity type name.</param>
-        /// <param name="args">The activity arguments encoded as a byte array.</param>
-        /// <param name="options">Optionally specifies the activity options.</param>
-        /// <returns>The activity result encoded as a byte array</returns>
-        internal async Task<byte[]> ExecuteLocalActivityAsync(string activityTypeName, byte[] args, LocalActivityOptions options = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
-            Covenant.Requires<ArgumentNullException>(args != null);
-
-#if !TODO
-            // We need to do some work here to handle multiple activity methods.
-
-            throw new NotImplementedException();
-#else
-            options = options ?? new LocalActivityOptions(;
-
-            var reply = await ExecuteNonParallel(
-                async () =>
-                    {
-                        return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
-                            new ActivityExecuteLocalRequest()
-                            {
-                                Activity  = activityTypeName,
-                                Args      = args,
-                                Options   = options.ToInternal(),
-                                ContextId = contextId
-                            });
-                    });
-
-            reply.ThrowOnError();
-            UpdateReplay(reply);
-
-            return reply.Result;
-#endif
-        }
-
         //---------------------------------------------------------------------
         // Stub creation methods
 
@@ -1357,6 +1295,7 @@ namespace Neon.Cadence
         /// Executes a local activity and waits for it to complete.
         /// </summary>
         /// <param name="activityType">The activity type.</param>
+        /// <param name="activityConstructor">The activity constructor.</param>
         /// <param name="activityMethod">The target local activity method.</param>
         /// <param name="args">Optionally specifies the activity arguments.</param>
         /// <param name="options">Optionally specifies any local activity options.</param>
@@ -1376,51 +1315,40 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
+        internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentException>(activityType.Implements<IActivityBase>());
+            Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
 
             options = options ?? new LocalActivityOptions();
-
-            // $todo(jeff.lill):
-            //
-            // The way I'm managing this local activity mapping can result bit of
-            // extra memory consumption for long running workflows that repeatedly 
-            // execute local activities because we're creating a new table mapping
-            // for each local activity execution rather than reusing table entries
-            // that map to the same activity type and method.
-            //
-            // This isn't a huge issue, since all of these executions are also being
-            // recorded to the workflow history and developers have been advised to
-            // "continue workflows as new" to prevent histories from growing without
-            // bounds.
-            //
-            // I'm going to leave this note here as a reminder to a future me that
-            // there's a potential optimization here.
 
             // We need to register the local activity type with a workflow local ID
             // that we can send to [cadence-proxy] in the [ActivityExecuteLocalRequest]
             // such that the proxy can send it back to us in the [ActivityInvokeLocalRequest]
             // so we'll know which activity type to instantate and run.
 
-            var activityTypeId = Interlocked.Increment(ref nextLocalActivityTypeId);
+            var activityActionId = Interlocked.Increment(ref nextLocalActivityActionId);
 
             lock (syncLock)
             {
-                IdToLocalActivityAction.Add(activityTypeId, new LocalActivityAction() { ActivityType = activityType, ActivityMethod = activityMethod });
+                IdToLocalActivityAction.Add(activityActionId, new LocalActivityAction(activityType, activityConstructor, activityMethod));
             }
 
             try
             {
-                var reply = (ActivityExecuteLocalReply)await Client.CallProxyAsync(
-                    new ActivityExecuteLocalRequest()
+                var reply = await ExecuteNonParallel(
+                    async () =>
                     {
-                        ContextId      = contextId,
-                        ActivityTypeId = activityTypeId,
-                        Args           = args,
-                        Options        = options.ToInternal()
+                        return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
+                            new ActivityExecuteLocalRequest()
+                            {
+                                ContextId = contextId,
+                                ActivityTypeId = activityActionId,
+                                Args = args,
+                                Options = options.ToInternal()
+                            });
                     });
 
                 reply.ThrowOnError();
@@ -1430,11 +1358,11 @@ namespace Neon.Cadence
             }
             finally
             {
-                // Remove the activity type mapping to prevent memory leaks.
+                // Remove the activity type mapping to avoid memory leaks.
 
                 lock (syncLock)
                 {
-                    IdToLocalActivityAction.Remove(activityTypeId);
+                    IdToLocalActivityAction.Remove(activityActionId);
                 }
             }
         }

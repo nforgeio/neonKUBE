@@ -626,7 +626,7 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Workflow.LocalActivityAction activityAction;
+                    LocalActivityAction activityAction;
 
                     lock (syncLock)
                     {
@@ -640,7 +640,7 @@ namespace Neon.Cadence
                     }
 
                     var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
-                    var activity   = ActivityBase.Create(client, activityAction.ActivityType, activityAction.ActivityMethod, null);
+                    var activity   = ActivityBase.Create(client, activityAction, null);
                     var result     = await activity.OnRunAsync(client, request.Args);
 
                     return new ActivityInvokeLocalReply()
