@@ -34,8 +34,8 @@ namespace Neon.Cadence
     {
         /// <summary>
         /// Provides information about the executing workflow as well as other
-        /// useful functionality.
+        /// important workflow functionality for workflow implementations.
         /// </summary>
-        IWorkflow Workflow { get; }
+        Workflow Workflow { get; set; }
     }
 }

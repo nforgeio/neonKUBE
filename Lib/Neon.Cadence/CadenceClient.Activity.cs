@@ -36,7 +36,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers an activity implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived type implementing the activity.</typeparam>
+        /// <typeparam name="TActivity">The <see cref="IActivityBase"/> derived class implementing the activity.</typeparam>
         /// <param name="activityTypeName">
         /// Optionally specifies a custom activity type name that will be used 
         /// for identifying the activity implementation in Cadence.  This defaults
@@ -56,6 +56,8 @@ namespace Neon.Cadence
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
             where TActivity : ActivityBase
         {
+            CadenceHelper.ValidateActivityImplementation(typeof(TActivity));
+
             if (string.IsNullOrEmpty(activityTypeName))
             {
                 activityTypeName = activityTypeName ?? typeof(TActivity).FullName;

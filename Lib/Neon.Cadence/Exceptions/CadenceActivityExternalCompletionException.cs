@@ -28,7 +28,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Thrown by activities that need to wait for an external event before the activity
-    /// is considered to be complete.  These activities will call <see cref="IActivity.CompleteExternallyAsync()"/> 
+    /// is considered to be complete.  These activities will call <see cref="Activity.CompleteExternallyAsync()"/> 
     /// within their entry point method which will throw this internal exception, exiting 
     /// the entry point method.  This exception will be caught by the <see cref="ActivityBase"/>
     /// class and used to signal Cadence that the activity will be completed externally via
@@ -37,7 +37,7 @@ namespace Neon.Cadence
     /// <remarks>
     /// <note>
     /// Activity entry points must allow this exception to be caught by the
-    /// calling <see cref="CadenceClient"/> so that <see cref="IActivity.CompleteExternallyAsync()"/>
+    /// calling <see cref="CadenceClient"/> so that <see cref="Activity.CompleteExternallyAsync()"/>
     /// will work properly.
     /// </note>
     /// </remarks>

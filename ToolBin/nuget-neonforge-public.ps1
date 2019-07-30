@@ -54,7 +54,6 @@ function Publish
 # Update the project versions first.
 
 SetVersion Neon.Cadence
-SetVersion Neon.CodeGen
 SetVersion Neon.Common
 SetVersion Neon.Couchbase
 SetVersion Neon.Cryptography
@@ -70,6 +69,7 @@ SetVersion Neon.Kube.HyperVLocal
 SetVersion Neon.Kube.Machine
 SetVersion Neon.Kube.Service
 SetVersion Neon.Kube.XenServer
+SetVersion Neon.ModelGen
 SetVersion Neon.Nats
 SetVersion Neon.SSH.NET
 SetVersion Neon.Web
@@ -82,7 +82,6 @@ SetVersion Neon.Xunit.Kube
 # Build and publish the projects.
 
 Publish Neon.Cadence
-Publish Neon.CodeGen
 Publish Neon.Common
 Publish Neon.Couchbase
 Publish Neon.Cryptography
@@ -98,6 +97,7 @@ Publish Neon.Kube.HyperVLocal
 Publish Neon.Kube.Machine
 Publish Neon.Kube.Service
 Publish Neon.Kube.XenServer
+Publish Neon.ModelGen
 Publish Neon.Nats
 Publish Neon.SSH.NET
 Publish Neon.Web

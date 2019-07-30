@@ -45,9 +45,6 @@ namespace TestKube
 {
     public class Test_Headend
     {
-        /// <summary>
-        /// 
-        /// </summary>
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public async void TestGetGitHubZipAsync()

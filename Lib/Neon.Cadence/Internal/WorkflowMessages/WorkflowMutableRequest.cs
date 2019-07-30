@@ -27,7 +27,6 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
-    [Obsolete("This was replaced by a local activity.")]
     [InternalProxyMessage(InternalMessageTypes.WorkflowMutableRequest)]
     internal class WorkflowMutableRequest : WorkflowRequest
     {
@@ -60,16 +59,6 @@ namespace Neon.Cadence.Internal
             set => SetBytesProperty(PropertyNames.Result, value);
         }
 
-        /// <summary>
-        /// Indicates that the value should be persisted to the workflow
-        /// history if it doesn't already exist or the value has changed.
-        /// </summary>
-        public bool Update
-        {
-            get => GetBoolProperty(PropertyNames.Update);
-            set => SetBoolProperty(PropertyNames.Update, value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -89,7 +78,6 @@ namespace Neon.Cadence.Internal
 
             typedTarget.MutableId = this.MutableId;
             typedTarget.Result    = this.Result;
-        typedTarget.Update = this.Update;
         }
     }
 }

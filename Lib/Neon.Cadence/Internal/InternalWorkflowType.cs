@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Identifies a workflow type.
+    /// <b>INTERNAL USE ONLY:</b> Identifies a workflow type name.
     /// </summary>
     internal class InternalWorkflowType
     {

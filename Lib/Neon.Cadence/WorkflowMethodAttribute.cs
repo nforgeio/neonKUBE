@@ -47,13 +47,32 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Specifies the name to be used to identify a specific workflow method.  This is optional
+        /// for workflow interfaces that have only one workflow entry point method but is required
+        /// for interfaces with multiple entry points.
+        /// </summary>
+        /// <remarks>
         /// <para>
-        /// Optionally specifies the default workflow type.
+        /// When specified, this name will be combined with the workflow type name when registering
+        /// and executing a workflow started via the method.  This will look like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW_TYPENNAME::METHODNAME
+        /// </code>
+        /// <para>
+        /// where <b>WORKFLOW_TYPENAME</b> is either the workflow interface's fully qualified 
+        /// name or the name specified by <see cref="WorkflowAttribute.TypeName"/> and 
+        /// <b>METHOD_NAME</b> is from <see cref="WorkflowMethodAttribute.Name"/>.  This
+        /// is the same convention implemented by the Java client.
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed.
+        /// Some implications of this scheme are that we'll need to register multiple workflow
+        /// types for each workflow interface when there are multiple entry points (one per
+        /// method) and that external workflow invocations will need to explicitly specify
+        /// workflow types that include the method name when one is specified to the target
+        /// method.
         /// </note>
-        /// </summary>
+        /// </remarks>
         public string Name
         {
             get => name;
@@ -66,6 +85,8 @@ namespace Neon.Cadence
                 }
                 else
                 {
+                    CadenceHelper.ValidateWorkflowTypeName(value);
+
                     name = value;
                 }
             }
@@ -73,10 +94,11 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the default maximum workflow execution time.
+        /// Optionally specifies the maximum workflow execution time.
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed.
+        /// This can be overridden when the workflow is executed using
+        /// <see cref="WorkflowOptions"/>,
         /// </note>
         /// </summary>
         public int ExecutionStartToCloseTimeoutSeconds
@@ -87,12 +109,13 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the default maximum execution time for
-        /// an individual workflow task.  This defaults to 10 seconds and
-        /// may be a maximum of 60 seconds.
+        /// Optionally specifies the maximum execution time for
+        /// an individual workflow task.  The maximum possible duration
+        /// is <b>60 seconds</b>.
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed.
+        /// This can be overridden when the workflow is executed using
+        /// <see cref="WorkflowOptions"/>,
         /// </note>
         /// </summary>
         public int TaskStartToCloseTimeoutSeconds
@@ -109,10 +132,11 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the default target task list.
+        /// Optionally specifies the target task list.
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed.
+        /// This can be overridden when the workflow is executed using
+        /// <see cref="WorkflowOptions"/>,
         /// </note>
         /// </summary>
         public string TaskList
@@ -134,10 +158,11 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the default workflow ID.
+        /// Optionally specifies the workflow ID.
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed.
+        /// This can be overridden when the workflow is executed using
+        /// <see cref="WorkflowOptions"/>,
         /// </note>
         /// </summary>
         public string WorkflowId
@@ -159,12 +184,11 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Specifies the default workflow ID reuse policy.  This defaults
-        /// to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>
-        /// when not initialized.
+        /// Specifies the workflow ID reuse policy.
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed.
+        /// This can be overridden when the workflow is executed using
+        /// <see cref="WorkflowOptions"/>,
         /// </note>
         /// </summary>
         public WorkflowIdReusePolicy? WorkflowIdReusePolicy { get; set; }

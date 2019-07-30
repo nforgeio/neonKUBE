@@ -39,7 +39,7 @@ namespace Neon.Data
 {
     /// <summary>
     /// Serialization related helpers used by the code generated
-    /// by the <b>Neon.CodeGen</b> library.
+    /// by the <b>Neon.ModelGen</b> library.
     /// </summary>
     public static class RoundtripDataHelper
     {

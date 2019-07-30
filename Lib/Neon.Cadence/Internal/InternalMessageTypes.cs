@@ -345,13 +345,11 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Implements the standard Cadence <i>side effect</i> behavior
         /// by including the mutable result being set.
         /// </summary>
-        [Obsolete("This was replaced by a local activity.")]
         WorkflowMutableRequest = 132,
 
         /// <summary>
         /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowMutableRequest"/> message.
         /// </summary>
-        [Obsolete("This was replaced by a local activity.")]
         WorkflowMutableReply = 133,
 
         /// <summary>

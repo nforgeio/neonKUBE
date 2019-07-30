@@ -56,7 +56,7 @@ namespace TestCadence
         {
             // We don't support workflow interfaces with generic parameters.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorGenericWorkflow<int>>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorGenericWorkflow<int>>(client));
         }
 
         //---------------------------------------------------------------------
@@ -71,7 +71,7 @@ namespace TestCadence
         {
             // Workflows need to have at least one entry point.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorNoEntryPointWorkflow>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorNoEntryPointWorkflow>(client));
         }
 
         [Fact]
@@ -80,12 +80,12 @@ namespace TestCadence
         {
             // A non-NULL client is required.
 
-            Assert.Throws<ArgumentNullException>(() => WorkflowStubManager.Create<IErrorNoEntryPointWorkflow>(null));
+            Assert.Throws<ArgumentNullException>(() => StubManager.CreateWorkflowStub<IErrorNoEntryPointWorkflow>(null));
         }
 
         //---------------------------------------------------------------------
 
-        public class ErrorNotInterface : WorkflowBase
+        public class IErrorNotInterface : WorkflowBase
         {
             [WorkflowMethod]
             public async Task EntryPoint()
@@ -100,12 +100,12 @@ namespace TestCadence
         {
             // Only workflow interfaces are allowed.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<ErrorNotInterface>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorNotInterface>(client));
         }
 
         //---------------------------------------------------------------------
 
-        internal class ErrorNotPublic : WorkflowBase
+        internal class IErrorNotPublic : WorkflowBase
         {
             [WorkflowMethod]
             public async Task EntryPoint()
@@ -120,7 +120,7 @@ namespace TestCadence
         {
             // Workflow interfaces must be public.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<ErrorNotPublic>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorNotPublic>(client));
         }
 
         //---------------------------------------------------------------------
@@ -143,8 +143,8 @@ namespace TestCadence
         {
             // Workflow entry points methods need to return a Task.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorNonTaskEntryPoint1>(client));
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorNonTaskEntryPoint2>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorNonTaskEntryPoint1>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorNonTaskEntryPoint2>(client));
         }
 
         //---------------------------------------------------------------------
@@ -164,7 +164,49 @@ namespace TestCadence
         {
             // Workflow signal methods need to return a Task.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorNonTaskSignal>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorNonTaskSignal>(client));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IDuplicateDefaultEntryPoints : IWorkflowBase
+        {
+            [WorkflowMethod]
+            Task EntryPoint1();
+
+            [WorkflowMethod]
+            Task EntryPoint2();
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Error_DuplicateDuplicateDefaultEntryPoints()
+        {
+            // Verify that we detect duplicate entrypoint methods
+            // with the default name.
+
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IDuplicateDefaultEntryPoints>(client));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IDuplicateEntryPoints : IWorkflowBase
+        {
+            [WorkflowMethod(Name = "duplicate")]
+            Task EntryPoint1();
+
+            [WorkflowMethod(Name = "duplicate")]
+            Task EntryPoint2();
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Error_DuplicateDuplicateEntryPoints()
+        {
+            // Verify that we detect duplicate entrypoint methods
+            // with explicit name.
+
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IDuplicateEntryPoints>(client));
         }
 
         //---------------------------------------------------------------------
@@ -187,7 +229,7 @@ namespace TestCadence
         {
             // Verify that we detect duplicate signal names.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorDuplicateSignals>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorDuplicateSignals>(client));
         }
 
         //---------------------------------------------------------------------
@@ -207,7 +249,7 @@ namespace TestCadence
         {
             // Workflow query methods need to return a Task.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorNonTaskQuery>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorNonTaskQuery>(client));
         }
 
         //---------------------------------------------------------------------
@@ -230,7 +272,7 @@ namespace TestCadence
         {
             // Verify that we detect duplicate query names.
 
-            Assert.Throws<WorkflowDefinitionException>(() => WorkflowStubManager.Create<IErrorDuplicateQueries>(client));
+            Assert.Throws<WorkflowDefinitionException>(() => StubManager.CreateWorkflowStub<IErrorDuplicateQueries>(client));
         }
     }
 }

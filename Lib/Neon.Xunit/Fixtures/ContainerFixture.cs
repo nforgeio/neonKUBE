@@ -181,7 +181,7 @@ namespace Neon.Xunit
             this.containerArgs = containerArgs;
             this.env           = env;
             this.noRemove      = noRemove;
-            this.keepOpen      = true;
+            this.keepOpen      = keepOpen;
 
             StartContainer();
         }
@@ -260,6 +260,9 @@ namespace Neon.Xunit
             }
 
             dockerArgs.Add("--detach");
+
+            dockerArgs.Add("--platform");
+            dockerArgs.Add("linux");
 
             if (!string.IsNullOrEmpty(name))
             {

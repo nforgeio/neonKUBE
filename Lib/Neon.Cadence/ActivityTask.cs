@@ -37,7 +37,7 @@ namespace Neon.Cadence
         public byte[] TaskToken { get; internal set; }
 
         /// <summary>
-        /// The parent workflow type.
+        /// The parent workflow type name.
         /// </summary>
         public string WorkflowTypeName { get; internal set; }
 

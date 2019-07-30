@@ -56,7 +56,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowEntryVoidNoArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowEntryVoidNoArgs>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryVoidNoArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -73,7 +73,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowEntryVoidWithArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowEntryVoidWithArgs>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryVoidWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -90,27 +90,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowResultWithArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowEntryResultWithArgs>(client);
-
-            Assert.NotNull(stub);
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IWorkflowMultiEntry : IWorkflowBase
-        {
-            [WorkflowMethod]
-            Task<int> RunOneAsync(string arg1, int arg2);
-
-            [WorkflowMethod]
-            Task<string> RunTwoAsync(Person arg1, List<string> arg2);
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_WorkflowMultiEntry()
-        {
-            var stub = WorkflowStubManager.Create<IWorkflowMultiEntry>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryResultWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -130,7 +110,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowSignalNoArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowSignalNoArgs>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowSignalNoArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -150,7 +130,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowSignalWithArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowSignalWithArgs>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowSignalWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -170,7 +150,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowQueryVoidNoArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowQueryVoidNoArgs>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryVoidNoArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -190,7 +170,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowQueryVoidWithArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowQueryVoidWithArgs>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryVoidWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -210,7 +190,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowQueryResultWithArgs()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowQueryResultWithArgs>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryResultWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -222,10 +202,10 @@ namespace TestCadence
             [WorkflowMethod]
             Task RunAsync();
 
-            [WorkflowMethod]
+            [WorkflowMethod(Name = "one")]
             Task<int> RunAsync(string arg1);
 
-            [WorkflowMethod]
+            [WorkflowMethod(Name = "two")]
             Task<int> RunAsync(string arg1, string arg2);
 
             [QueryMethod("my-query1")]
@@ -251,7 +231,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowMultiMethods()
         {
-            var stub = WorkflowStubManager.Create<IWorkflowMultiMethods>(client);
+            var stub = StubManager.CreateWorkflowStub<IWorkflowMultiMethods>(client);
 
             Assert.NotNull(stub);
         }
