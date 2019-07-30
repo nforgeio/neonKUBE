@@ -76,10 +76,15 @@ namespace Neon.Cadence.Internal
         /// <param name="workflow">The parent workflow.</param>
         /// <param name="activityTypeName">Specifies the activity type name.</param>
         /// <param name="options">Specifies the <see cref="ActivityOptions"/>.</param>
-        /// <param name="domain">Specifies the target domain.</param>
+        /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain)
+        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain = null)
         {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(options != null);
+
             return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityTypeName, options, domain });
         }
 
@@ -88,11 +93,12 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>
+        /// <param name="activityType">The activity implementation type.</param>
         /// <param name="options">Specifies the <see cref="LocalActivityOptions"/>.</param>
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
-        public object CreateLocal(CadenceClient client, Workflow workflow, LocalActivityOptions options)
+        public object CreateLocal(CadenceClient client, Workflow workflow, Type activityType, LocalActivityOptions options)
         {
-            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityInterface, options });
+            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityType, options });
         }
     }
 }

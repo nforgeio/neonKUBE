@@ -1153,14 +1153,16 @@ namespace Neon.Cadence.Internal
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>
+        /// <param name="activityTypeName">The activity type name.</param>
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub instance.</returns>
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
-        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, ActivityOptions options = null, string domain = null)
+        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, string activityTypeName, ActivityOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
             options = options ?? new ActivityOptions();
 
@@ -1171,7 +1173,7 @@ namespace Neon.Cadence.Internal
 
             var stub = GetActivityStub<TActivityInterface>();
 
-            return (TActivityInterface)stub.Create(client, workflow.Workflow, typeof(TActivityInterface).FullName, options, domain);
+            return (TActivityInterface)stub.Create(client, workflow.Workflow, activityTypeName, options);
         }
 
         /// <summary>
@@ -1196,7 +1198,7 @@ namespace Neon.Cadence.Internal
 
             var stub = GetActivityStub<TActivityInterface>();
 
-            return (TActivityInterface)stub.CreateLocal(client, activityType, workflow.Workflow, options ?? new LocalActivityOptions());
+            return (TActivityInterface)stub.CreateLocal(client, workflow.Workflow, activityType, options ?? new LocalActivityOptions());
         }
 
         /// <summary>
