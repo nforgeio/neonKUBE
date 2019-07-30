@@ -54,6 +54,8 @@ rbdMirroring:
 #    mgr:
 resources: {}
 
+nodes: []
+
 storage: # cluster level storage configuration and selection
   useAllNodes: true
   useAllDevices: false
