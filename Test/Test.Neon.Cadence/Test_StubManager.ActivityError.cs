@@ -44,11 +44,6 @@ namespace TestCadence
 {
     public partial class Test_StubManager
     {
-        public class DummyWorkflow : IWorkflowBase
-        {
-            public Workflow Workflow { get; set; }
-        }
-
         //---------------------------------------------------------------------
 
         public interface IErrorGenericActivity<T> : IActivityBase

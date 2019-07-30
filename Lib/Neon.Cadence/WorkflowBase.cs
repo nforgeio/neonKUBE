@@ -389,7 +389,7 @@ namespace Neon.Cadence
             workflow = (IWorkflowBase)Activator.CreateInstance(registration.WorkflowType);
             workflow.Workflow = 
                 new Workflow(
-                    parentInstance:     (WorkflowBase)workflow,
+                    parent:     (WorkflowBase)workflow,
                     client:             client, 
                     contextId:          contextId,
                     workflowTypeName:   request.WorkflowType,

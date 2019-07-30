@@ -59,5 +59,18 @@ namespace Neon.Cadence
                 RetryPolicy                   = RetryOptions?.ToInternal()
             };
         }
+
+        /// <summary>
+        /// Returns a shallow copy of the instance.
+        /// </summary>
+        /// <returns>The cloned <see cref="LocalActivityOptions"/>.</returns>
+        public LocalActivityOptions Clone()
+        {
+            return new LocalActivityOptions()
+            {
+                ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,
+                RetryOptions           = this.RetryOptions
+            };
+        }
     }
 }

@@ -44,7 +44,6 @@ namespace Neon.Cadence
         public const int DefaultVersion = -1;
 
         private object                  syncLock = new object();
-        private WorkflowBase            parentInstance;
         private long                    contextId;
         private int                     pendingOperationCount;
         private long                    nextLocalActivityActionId;
@@ -54,7 +53,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="parentInstance">The parent workflow instance.</param>
+        /// <param name="parent">The parent workflow instance.</param>
         /// <param name="client">The associated client.</param>
         /// <param name="contextId">The workflow's context ID.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
@@ -65,7 +64,7 @@ namespace Neon.Cadence
         /// <param name="isReplaying">Indicates whether the workflow is currently replaying from histor.</param>
         /// <param name="methodMap">Maps the workflow signal and query methods.</param>
         internal Workflow(
-            WorkflowBase        parentInstance,
+            WorkflowBase        parent,
             CadenceClient       client, 
             long                contextId, 
             string              workflowTypeName, 
@@ -83,15 +82,15 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
 
-            this.parentInstance          = parentInstance;
-            this.contextId               = contextId;
-            this.pendingOperationCount   = 0;
+            this.Parent                    = parent;
+            this.contextId                 = contextId;
+            this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
-            this.isDisconnected          = false;
-            this.IdToLocalActivityAction = new Dictionary<long, LocalActivityAction>();
-            this.MethodMap               = methodMap;
-            this.Client                  = client;
-            this.IsReplaying             = isReplaying;
+            this.isDisconnected            = false;
+            this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
+            this.MethodMap                 = methodMap;
+            this.Client                    = client;
+            this.IsReplaying               = isReplaying;
 
             // Initialize the random number generator with a fairly unique
             // seed for the workflow without consuming entropy to obtain
@@ -124,6 +123,11 @@ namespace Neon.Cadence
                 // ChildPolicy 
             };
         }
+
+        /// <summary>
+        /// Returns the parent <see cref="IWorkflowBase"/> implementation.
+        /// </summary>
+        internal IWorkflowBase Parent { get; private set; }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
@@ -1322,6 +1326,11 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
 
+            var d = new Dictionary<string, MethodInfo>()
+            {
+                { "xxx", (MethodInfo)null }
+            };
+
             options = options ?? new LocalActivityOptions();
 
             // We need to register the local activity type with a workflow local ID
@@ -1344,10 +1353,10 @@ namespace Neon.Cadence
                         return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
                             new ActivityExecuteLocalRequest()
                             {
-                                ContextId = contextId,
+                                ContextId      = contextId,
                                 ActivityTypeId = activityActionId,
-                                Args = args,
-                                Options = options.ToInternal()
+                                Args           = args,
+                                Options        = options.ToInternal()
                             });
                     });
 

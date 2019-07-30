@@ -353,7 +353,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
 
-            sbSource.AppendLine();
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Private types");
             sbSource.AppendLine();
@@ -779,7 +778,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
 
-            sbSource.AppendLine();
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Private types");
             sbSource.AppendLine();
@@ -789,15 +787,17 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Implementation");
             sbSource.AppendLine();
-            sbSource.AppendLine($"        private CadenceClient         client;");
-            sbSource.AppendLine($"        private IDataConverter        dataConverter;");
-            sbSource.AppendLine($"        private IWorkflowBase         workflowBase;");
-            sbSource.AppendLine($"        private bool                  isLocal;");
-            sbSource.AppendLine($"        private string                activityTypeName;");
-            sbSource.AppendLine($"        private ActivityOptions       options;");
-            sbSource.AppendLine($"        private string                domain;");
-            sbSource.AppendLine($"        private Type                  activityType;");
-            sbSource.AppendLine($"        private LocalActivityOptions  localOptions;");
+            sbSource.AppendLine($"        private CadenceClient                     client;");
+            sbSource.AppendLine($"        private IDataConverter                    dataConverter;");
+            sbSource.AppendLine($"        private IWorkflowBase                     workflowBase;");
+            sbSource.AppendLine($"        private bool                              isLocal;");
+            sbSource.AppendLine($"        private string                            activityTypeName;");
+            sbSource.AppendLine($"        private ActivityOptions                   options;");
+            sbSource.AppendLine($"        private string                            domain;");
+            sbSource.AppendLine($"        private Type                              activityType;");
+            sbSource.AppendLine($"        private ConstructorInfo                   activityConstructor;");
+            sbSource.AppendLine($"        private LocalActivityOptions              localOptions;");
+            sbSource.AppendLine($"        private Dictionary<string, MethodInfo>    nameToMethod;");
 
             // Generate the constructor for regular (non-local) activity stubs.
 
@@ -818,12 +818,32 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflowBase, Type activityType, LocalActivityOptions localOptions)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client           = client;");
-            sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
-            sbSource.AppendLine($"            this.workflowBase     = workflowBase;");
-            sbSource.AppendLine($"            this.isLocal          = true;");
-            sbSource.AppendLine($"            this.activityType     = activityType;");
-            sbSource.AppendLine($"            this.localoptions     = localOptions ?? new LocalActivityOptions();");
+            sbSource.AppendLine($"            this.client              = client;");
+            sbSource.AppendLine($"            this.dataConverter       = dataConverter;");
+            sbSource.AppendLine($"            this.workflowBase        = workflowBase;");
+            sbSource.AppendLine($"            this.isLocal             = true;");
+            sbSource.AppendLine($"            this.activityType        = activityType;");
+            sbSource.AppendLine($"            this.activityConstructor = activityType.GetConstructor(Type.EmptyTypes);");
+            sbSource.AppendLine($"            this.localOptions        = localOptions ?? new LocalActivityOptions();");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"            if (this.activityConstructor == null)");
+            sbSource.AppendLine($"            {{");
+            sbSource.AppendLine($"                throw new ArgumentException(\"Activity type [{{activityType.FullName}}] does not have a public default constructor.\");");
+            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"            this.nameToMethod = new Dictionary<string, MethodInfo>();");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"            foreach (var method in activityType.GetMethods(BindingFlags.Public | BindingFlags.Instance))");
+            sbSource.AppendLine($"            {{");
+            sbSource.AppendLine($"                var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"                if (activityMethodAttribute == null)");
+            sbSource.AppendLine($"                {{");
+            sbSource.AppendLine($"                    continue;");
+            sbSource.AppendLine($"                }}");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"                nameToMethod.Add(activityMethodAttribute.Name ?? string.Empty, method);");
+            sbSource.AppendLine($"            }}");
             sbSource.AppendLine($"        }}");
 
             // Generate the properties.
@@ -848,7 +868,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            byte[]    ___argBytes;");
+                sbSource.AppendLine($"            byte[]    ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                 sbSource.AppendLine($"            byte[]    ___resultBytes;");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            if (!isLocal)");
@@ -881,7 +901,7 @@ namespace Neon.Cadence.Internal
                     if (details.ActivityMethodAttribute.HeartbeatTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"                if (___options.HeartbeatTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                if (___options.HeartbeatTimeout <= TimeSpan.Zero)");
                         sbSource.AppendLine($"                {{");
                         sbSource.AppendLine($"                    ___options.HeartbeatTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.HeartbeatTimeoutSeconds});");
                         sbSource.AppendLine($"                }}");
@@ -890,7 +910,7 @@ namespace Neon.Cadence.Internal
                     if (details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"                if (___options.ScheduleToCloseTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                if (___options.ScheduleToCloseTimeout <= TimeSpan.Zero)");
                         sbSource.AppendLine($"                {{");
                         sbSource.AppendLine($"                    ___options.ScheduleToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds});");
                         sbSource.AppendLine($"                }}");
@@ -899,7 +919,7 @@ namespace Neon.Cadence.Internal
                     if (details.ActivityMethodAttribute.ScheduleToStartTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"                if (___options.ScheduleToStartTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                if (___options.ScheduleToStartTimeout <= TimeSpan.Zero)");
                         sbSource.AppendLine($"                {{");
                         sbSource.AppendLine($"                    ___options.ScheduleToStartTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToStartTimeoutSeconds});");
                         sbSource.AppendLine($"                }}");
@@ -908,7 +928,7 @@ namespace Neon.Cadence.Internal
                     if (details.ActivityMethodAttribute.StartToCloseTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"                if (___options.StartToCloseTimeout <= TimeSpan.Zero))");
+                        sbSource.AppendLine($"                if (___options.StartToCloseTimeout <= TimeSpan.Zero)");
                         sbSource.AppendLine($"                {{");
                         sbSource.AppendLine($"                    ___options.StartToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.StartToCloseTimeoutSeconds});");
                         sbSource.AppendLine($"                }}");
@@ -918,21 +938,32 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"                // Execute the activity.");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
                 sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteActivityAsync(this.workflowBase.Workflow, ___activityTypeName, ___argBytes, this.options);");
                 sbSource.AppendLine($"            }}");
                 sbSource.AppendLine($"            else");
                 sbSource.AppendLine($"            {{");
-                sbSource.AppendLine($"                // Configure the local activity.");
+                sbSource.AppendLine($"                // Configure the local activity options.");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                if (___localOptions.ScheduleToCloseTimeout <= TimeSpan.Zero))");
-                sbSource.AppendLine($"                {{");
-                sbSource.AppendLine($"                    ___localOptions.ScheduleToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds});");
-                sbSource.AppendLine($"                }}");
+                sbSource.AppendLine($"                var ___localOptions = this.localOptions.Clone();");
+
+                if (details.ActivityMethodAttribute.StartToCloseTimeoutSeconds > 0)
+                {
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"                if (___localOptions.if (details.ActivityMethodAttribute.StartToCloseTimeoutSeconds > 0) <= TimeSpan.Zero)");
+                    sbSource.AppendLine($"                {{");
+                    sbSource.AppendLine($"                    ___localOptions.ScheduleToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds});");
+                    sbSource.AppendLine($"                }}");
+                }
+
                 sbSource.AppendLine();
                 sbSource.AppendLine($"                // Execute the local activity.");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteLocalActivityAsync(this.workflowBase.Workflow, ___activityTypeName, ___argBytes, this.localOptions);");
+                sbSource.AppendLine($"                if (!nameToMethod.TryGetValue(\"{details.ActivityMethodAttribute.Name ?? string.Empty}\", out var ___activityMethod))");
+                sbSource.AppendLine($"                {{");
+                sbSource.AppendLine($"                    throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have an activity method named [\\\"{details.ActivityMethodAttribute.Name ?? string.Empty}\\\"].\");");
+                sbSource.AppendLine($"                }}");
+                sbSource.AppendLine();
+                sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteLocalActivityAsync(this.workflowBase.Workflow, this.activityType, this.activityConstructor, ___activityMethod, ___argBytes, ___localOptions);");
                 sbSource.AppendLine($"            }}");
 
                 if (!details.IsVoid)
@@ -1053,7 +1084,7 @@ namespace Neon.Cadence.Internal
                 newWorkflowStub              = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(string), typeof(WorkflowOptions), typeof(string));
 
                 executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions), typeof(string));
-                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
+                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Workflow), typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1129,9 +1160,9 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, MethodInfo method, byte[] args, LocalActivityOptions options)
+            public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, ConstructorInfo constructor, MethodInfo method, byte[] args, LocalActivityOptions options)
             {
-                return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, method, args, options });
+                return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, constructor, method, args, options });
             }
         }
 ");

@@ -44,7 +44,37 @@ namespace TestCadence
 {
     public partial class Test_StubManager : IClassFixture<CadenceFixture>, IDisposable
     {
-        CadenceFixture      fixture;
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Used when testing activity stub code generation.  This fakes up just
+        /// enough of a workflow so that stubs can be generated.
+        /// </summary>
+        public class DummyWorkflow : IWorkflowBase
+        {
+            public DummyWorkflow()
+            {
+                this.Workflow = new Workflow(
+                    parent:     new WorkflowBase(),
+                    client:             new CadenceClient(),
+                    contextId:          1,
+                    workflowTypeName:   typeof(DummyWorkflow).FullName,
+                    domain:             "my-domain",
+                    taskList:           "my-tasklist",
+                    workflowId:         "my-workflow-id",
+                    runId:              "my-run-id",
+                    isReplaying:        false,
+                    methodMap:          null);
+            }
+
+            public Workflow Workflow { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        CadenceFixture fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 

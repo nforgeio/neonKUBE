@@ -596,6 +596,13 @@ namespace Neon.Cadence
         private bool                            activityWorkerStarted;
 
         /// <summary>
+        /// Used for unit testing only.
+        /// </summary>
+        internal CadenceClient()
+        {
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>

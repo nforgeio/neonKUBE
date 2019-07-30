@@ -78,7 +78,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain)
         {
-            return executeConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options, domain });
+            return executeConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityTypeName, options, domain });
         }
     }
 }
