@@ -47,7 +47,8 @@ namespace Neon.Cadence.Internal
         private string              className;
         private Assembly            assembly;
         private Type                stubType;
-        private ConstructorInfo     executeConstructor;
+        private ConstructorInfo     normalConstructor;
+        private ConstructorInfo     localConstructor;
 
         /// <summary>
         /// Constructor.
@@ -63,12 +64,13 @@ namespace Neon.Cadence.Internal
 
             // Fetch the stub type and reflect the required constructors and methods.
 
-            this.stubType           = assembly.GetType(className);
-            this.executeConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(string), typeof(ActivityOptions), typeof(string));
+            this.stubType          = assembly.GetType(className);
+            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(string), typeof(ActivityOptions), typeof(string));
+            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(Type), typeof(LocalActivityOptions));
         }
 
         /// <summary>
-        /// Creates a activity stub instance suitable for executing a non-local activity.
+        /// Creates a normal (non-local) activity stub instance suitable for executing a non-local activity.
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>
@@ -78,7 +80,19 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain)
         {
-            return executeConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityTypeName, options, domain });
+            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityTypeName, options, domain });
+        }
+
+        /// <summary>
+        /// Creates a local activity stub instance suitable for executing a non-local activity.
+        /// </summary>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="workflow">The parent workflow.</param>
+        /// <param name="options">Specifies the <see cref="LocalActivityOptions"/>.</param>
+        /// <returns>The activity stub as an <see cref="object"/>.</returns>
+        public object CreateLocal(CadenceClient client, Workflow workflow, LocalActivityOptions options)
+        {
+            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityInterface, options });
         }
     }
 }

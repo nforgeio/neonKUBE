@@ -151,6 +151,134 @@ namespace Neon.Cadence.Internal
         private static Dictionary<Type, DynamicActivityStub> activityInterfaceToStub = new Dictionary<Type, DynamicActivityStub>();
 
         /// <summary>
+        /// Generates the static <b>___StubHelpers</b> class that exposes internal methods
+        /// and constructors from <see cref="CadenceClient"/> and other types that are
+        /// required by generated workflow and activity stubs.  The generated class uses
+        /// reflection to gain access these members.
+        /// </summary>
+        /// <param name="sbSource">The builder used to generated C# source.</param>
+        private static void AppendStubHelper(StringBuilder sbSource)
+        {
+            sbSource.Append(
+@"        private static class ___StubHelpers
+        {
+            private static MethodInfo       startWorkflowAsync;             // from: CadenceClient
+            private static MethodInfo       getWorkflowDescriptionAsync;    // from: CadenceClient
+            private static MethodInfo       getWorkflowResultAsync;         // from: CadenceClient
+            private static MethodInfo       cancelWorkflowAsync;            // from: CadenceClient
+            private static MethodInfo       terminateWorkflowAsync;         // from: CadenceClient
+            private static MethodInfo       signalWorkflowAsync;            // from: CadenceClient
+            private static MethodInfo       signalWorkflowWithStartAsync;   // from: CadenceClient
+            private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
+            private static MethodInfo       resolveTaskList;                // from: CadenceClient
+            private static MethodInfo       resolveDomain;                  // from: CadenceClient
+            private static ConstructorInfo  newWorkflowStub;                // from: CadenceClient
+            private static MethodInfo       executeActivityAsync;           // from: Workflow
+            private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
+
+            static ___StubHelpers()
+            {
+                var clientType   = typeof(CadenceClient);
+                var workflowType = typeof(Workflow);
+
+                startWorkflowAsync           = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
+                getWorkflowDescriptionAsync  = NeonHelper.GetMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
+                getWorkflowResultAsync       = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
+                cancelWorkflowAsync          = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
+                terminateWorkflowAsync       = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                signalWorkflowAsync          = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                signalWorkflowWithStartAsync = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(byte[]), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
+                queryWorkflowAsync           = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                resolveTaskList              = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
+                resolveDomain                = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
+                newWorkflowStub              = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(string), typeof(WorkflowOptions), typeof(string));
+
+                executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions), typeof(string));
+                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, string taskList, WorkflowOptions options, string domain)
+            {
+                return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, taskList, options, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<WorkflowDescription> GetWorkflowDescriptionAsync(CadenceClient client, WorkflowExecution execution, string domain)
+            {
+                return await (Task<WorkflowDescription>)getWorkflowDescriptionAsync.Invoke(client, new object[] { execution, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> GetWorkflowResultAsync(CadenceClient client, WorkflowExecution execution, string domain)
+            {
+                return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task CancelWorkflowAsync(CadenceClient client, WorkflowExecution execution, string domain)
+            {
+                await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task TerminateWorkflowAsync(CadenceClient client, WorkflowExecution execution, string reason, byte[] details, string domain)
+            {
+                await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task SignalWorkflowAsync(CadenceClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string domain)
+            {
+                await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task SignalWorkflowWithStartAsync(CadenceClient client, string workflowId, string signalName, byte[] signalArgs, byte[] workflowArgs, string taskList, WorkflowOptions options, string domain)
+            {
+                await (Task)signalWorkflowWithStartAsync.Invoke(client, new object[] { workflowId, signalName, signalArgs, workflowArgs, taskList, options, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> QueryWorkflowAsync(CadenceClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string domain)
+            {
+                return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static string ResolveTaskList(CadenceClient client, string taskList)
+            {
+                return (string)resolveTaskList.Invoke(client, new object[] { taskList });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static string ResolveDomain(CadenceClient client, string domain)
+            {
+                return (string)resolveDomain.Invoke(client, new object[] { domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static WorkflowStub NewWorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, string taskList, WorkflowOptions options, string domain)
+            {
+                return (WorkflowStub)newWorkflowStub.Invoke(new object[] { client, workflowTypeName, execution, taskList, options, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> ExecuteActivityAsync(Workflow workflow, string activityTypeName, byte[] args, ActivityOptions options)
+            {
+                return await (Task<byte[]>)executeActivityAsync.Invoke(workflow, new object[] { activityTypeName, args, options });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, ConstructorInfo constructor, MethodInfo method, byte[] args, LocalActivityOptions options)
+            {
+                return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, constructor, method, args, options });
+            }
+        }
+");
+        }
+
+        /// <summary>
         /// Creates a dynamically generated stub for the specified workflow interface.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
@@ -159,7 +287,7 @@ namespace Neon.Cadence.Internal
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The stub instance.</returns>
-        /// <exception cref="WorkflowInterfaceException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
+        /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
         public static TWorkflowInterface CreateWorkflowStub<TWorkflowInterface>(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
             where TWorkflowInterface : class, IWorkflowBase
         {
@@ -226,7 +354,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
@@ -235,7 +363,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = typeof(void);
@@ -248,11 +376,11 @@ namespace Neon.Cadence.Internal
 
                 if (attributeCount == 0)
                 {
-                    throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
+                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must have one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
                 else if (attributeCount > 1)
                 {
-                    throw new WorkflowInterfaceException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] may only be tagged with one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
+                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] may only be tagged with one of these attributes: [SignalMethod], [QueryMethod], or [WorkflowMethod]");
                 }
 
                 if (signalMethodAttributes.Length > 0)
@@ -261,12 +389,12 @@ namespace Neon.Cadence.Internal
 
                     if (method.ReturnType.IsGenericType || method.ReturnType != typeof(Task))
                     {
-                        throw new WorkflowInterfaceException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
                     }
 
                     if (signalNames.Contains(signalAttribute.Name))
                     {
-                        throw new WorkflowInterfaceException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] specifies [SignalMethod(Name = {signalAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     signalNames.Add(signalAttribute.Name);
@@ -280,12 +408,12 @@ namespace Neon.Cadence.Internal
 
                     if (method.ReturnType != typeof(Task) && method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new WorkflowInterfaceException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
                     }
 
                     if (queryTypes.Contains(queryAttribute.Name))
                     {
-                        throw new WorkflowInterfaceException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
+                        throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] specifies [QueryMethod(Name = {queryAttribute.Name})] which conflicts with another signal method.");
                     }
 
                     queryTypes.Add(queryAttribute.Name);
@@ -299,7 +427,7 @@ namespace Neon.Cadence.Internal
 
                     if (method.ReturnType != typeof(Task) && method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new WorkflowInterfaceException($"Workflow entry point method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        throw new WorkflowTypeException($"Workflow entry point method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
                     }
 
                     details.Kind                    = WorkflowMethodKind.Workflow;
@@ -315,7 +443,7 @@ namespace Neon.Cadence.Internal
 
             if (methodSignatureToDetails.Values.Count(d => d.Kind == WorkflowMethodKind.Workflow) == 0)
             {
-                throw new WorkflowInterfaceException($"Workflow interface[{workflowInterface.FullName}] does not define a [WorkflowMethod].");
+                throw new WorkflowTypeException($"Workflow interface[{workflowInterface.FullName}] does not define a [WorkflowMethod].");
             }
 
             // Generate C# source code that implements the stub.  Note that stub classes will
@@ -642,51 +770,30 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Creates a dynamically generated normal (non-local) activity stub for the specified activity interface.
+        /// Returns a <see cref="DynamicActivityStub"/> wrapping the specified activity interface,
+        /// dynamically generating the required type if required.
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
-        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
-        /// <param name="workflow">The parent workflow.</param>
-        /// <param name="options">Optionally specifies the activity options.</param>
-        /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub instance.</returns>
-        /// <exception cref="ActivityInterfaceException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
-        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, ActivityOptions options = null, string domain = null)
+        /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
+        public static DynamicActivityStub GetActivityStub<TActivityInterface>()
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflow != null);
-
             var activityInterface = typeof(TActivityInterface);
-
-            CadenceHelper.ValidateActivityInterface(activityInterface);
-
-            options = options ?? new ActivityOptions();
-
-            if (string.IsNullOrEmpty(domain))
-            {
-                domain = null;
-            }
-
             var activityTypeName  = activityInterface.FullName;
             var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
 
             //-----------------------------------------------------------------
             // Check whether we already have generated a stub class for the interface
-            // and return a stub instance right away.
+            // and return the stub instance right away.
 
             DynamicActivityStub stub;
 
             lock (syncLock)
             {
-                if (!activityInterfaceToStub.TryGetValue(activityInterface, out stub))
+                if (activityInterfaceToStub.TryGetValue(activityInterface, out stub))
                 {
-                    stub = null;
+                    return stub;
                 }
-            }
-
-            if (stub != null)
-            {
-                return (TActivityInterface)stub.Create(client, workflow.Workflow, activityTypeName, options, domain);
             }
 
             //-----------------------------------------------------------------
@@ -704,14 +811,14 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
                 }
                 else
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
                 }
 
@@ -725,7 +832,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType.BaseType != typeof(Task))
                     {
-                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
@@ -734,7 +841,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (method.ReturnType != typeof(Task))
                     {
-                        throw new ActivityInterfaceException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     details.ReturnType = typeof(void);
@@ -828,7 +935,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"            if (this.activityConstructor == null)");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new ArgumentException(\"Activity type [{{activityType.FullName}}] does not have a public default constructor.\");");
+            sbSource.AppendLine($"                throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have a public default constructor.\");");
             sbSource.AppendLine($"            }}");
             sbSource.AppendLine();
             sbSource.AppendLine($"            this.nameToMethod = new Dictionary<string, MethodInfo>();");
@@ -1037,135 +1144,59 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            return (TActivityInterface)stub.Create(client, workflow.Workflow, activityTypeName, options, domain);
+            return stub;
         }
 
         /// <summary>
-        /// Generates the static <b>___StubHelpers</b> class that exposes internal methods
-        /// and constructors from <see cref="CadenceClient"/> and other types that are
-        /// required by generated workflow and activity stubs.  The generated class uses
-        /// reflection to gain access these members.
+        /// Creates a dynamically generated normal (non-local) activity stub for the specified activity interface.
         /// </summary>
-        /// <param name="sbSource">The builder used to generated C# source.</param>
-        private static void AppendStubHelper(StringBuilder sbSource)
+        /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="workflow">The parent workflow.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="domain">Optionally specifies the target domain.</param>
+        /// <returns>The activity stub instance.</returns>
+        /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
+        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, ActivityOptions options = null, string domain = null)
         {
-            sbSource.Append(
-@"        private static class ___StubHelpers
-        {
-            private static MethodInfo       startWorkflowAsync;             // from: CadenceClient
-            private static MethodInfo       getWorkflowDescriptionAsync;    // from: CadenceClient
-            private static MethodInfo       getWorkflowResultAsync;         // from: CadenceClient
-            private static MethodInfo       cancelWorkflowAsync;            // from: CadenceClient
-            private static MethodInfo       terminateWorkflowAsync;         // from: CadenceClient
-            private static MethodInfo       signalWorkflowAsync;            // from: CadenceClient
-            private static MethodInfo       signalWorkflowWithStartAsync;   // from: CadenceClient
-            private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
-            private static MethodInfo       resolveTaskList;                // from: CadenceClient
-            private static MethodInfo       resolveDomain;                  // from: CadenceClient
-            private static ConstructorInfo  newWorkflowStub;                // from: CadenceClient
-            private static MethodInfo       executeActivityAsync;           // from: Workflow
-            private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(workflow != null);
 
-            static ___StubHelpers()
+            options = options ?? new ActivityOptions();
+
+            if (string.IsNullOrEmpty(domain))
             {
-                var clientType   = typeof(CadenceClient);
-                var workflowType = typeof(Workflow);
-
-                startWorkflowAsync           = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
-                getWorkflowDescriptionAsync  = NeonHelper.GetMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
-                getWorkflowResultAsync       = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
-                cancelWorkflowAsync          = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
-                terminateWorkflowAsync       = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                signalWorkflowAsync          = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                signalWorkflowWithStartAsync = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(byte[]), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
-                queryWorkflowAsync           = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                resolveTaskList              = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
-                resolveDomain                = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
-                newWorkflowStub              = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(string), typeof(WorkflowOptions), typeof(string));
-
-                executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions), typeof(string));
-                executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
+                domain = null;
             }
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, string taskList, WorkflowOptions options, string domain)
-            {
-                return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, taskList, options, domain });
-            }
+            var stub = GetActivityStub<TActivityInterface>();
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<WorkflowDescription> GetWorkflowDescriptionAsync(CadenceClient client, WorkflowExecution execution, string domain)
-            {
-                return await (Task<WorkflowDescription>)getWorkflowDescriptionAsync.Invoke(client, new object[] { execution, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> GetWorkflowResultAsync(CadenceClient client, WorkflowExecution execution, string domain)
-            {
-                return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task CancelWorkflowAsync(CadenceClient client, WorkflowExecution execution, string domain)
-            {
-                await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task TerminateWorkflowAsync(CadenceClient client, WorkflowExecution execution, string reason, byte[] details, string domain)
-            {
-                await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task SignalWorkflowAsync(CadenceClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string domain)
-            {
-                await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task SignalWorkflowWithStartAsync(CadenceClient client, string workflowId, string signalName, byte[] signalArgs, byte[] workflowArgs, string taskList, WorkflowOptions options, string domain)
-            {
-                await (Task)signalWorkflowWithStartAsync.Invoke(client, new object[] { workflowId, signalName, signalArgs, workflowArgs, taskList, options, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> QueryWorkflowAsync(CadenceClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string domain)
-            {
-                return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static string ResolveTaskList(CadenceClient client, string taskList)
-            {
-                return (string)resolveTaskList.Invoke(client, new object[] { taskList });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static string ResolveDomain(CadenceClient client, string domain)
-            {
-                return (string)resolveDomain.Invoke(client, new object[] { domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowStub NewWorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, string taskList, WorkflowOptions options, string domain)
-            {
-                return (WorkflowStub)newWorkflowStub.Invoke(new object[] { client, workflowTypeName, execution, taskList, options, domain });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> ExecuteActivityAsync(Workflow workflow, string activityTypeName, byte[] args, ActivityOptions options)
-            {
-                return await (Task<byte[]>)executeActivityAsync.Invoke(workflow, new object[] { activityTypeName, args, options });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> ExecuteLocalActivityAsync(Workflow workflow, Type activityType, ConstructorInfo constructor, MethodInfo method, byte[] args, LocalActivityOptions options)
-            {
-                return await (Task<byte[]>)executeLocalActivityAsync.Invoke(workflow, new object[] { activityType, constructor, method, args, options });
-            }
+            return (TActivityInterface)stub.Create(client, workflow.Workflow, typeof(TActivityInterface).FullName, options, domain);
         }
-");
+
+        /// <summary>
+        /// Creates a dynamically generated local activity stub for the specified activity interface.
+        /// </summary>
+        /// <typeparam name="TActivityInterface">The activity interface type.</typeparam>
+        /// <typeparam name="TActivityImplementation">The activity implementation.</typeparam>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="workflow">The parent workflow.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <returns>The activity stub instance.</returns>
+        /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
+        public static TActivityInterface CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(CadenceClient client, IWorkflowBase workflow, LocalActivityOptions options = null)
+            where TActivityImplementation : IActivityBase
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(workflow != null);
+
+            var activityType = typeof(TActivityImplementation);
+
+            CadenceHelper.ValidateActivityImplementation(activityType);
+
+            var stub = GetActivityStub<TActivityInterface>();
+
+            return (TActivityInterface)stub.CreateLocal(client, activityType, workflow.Workflow, options ?? new LocalActivityOptions());
         }
 
         /// <summary>
