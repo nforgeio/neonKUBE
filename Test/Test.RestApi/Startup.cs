@@ -39,18 +39,11 @@ namespace Test.RestApi
                 app.UseDeveloperExceptionPage();
             }
 
-#if UPGRADE_NETCORE_PREVIEW_6
             app.UseRouting();
             app.UseEndpoints(routes =>
             {
                 routes.MapControllers();
             });
-#else
-            app.UseRouting(routes =>
-            {
-                routes.MapControllers();
-            });
-#endif
 
             app.UseAuthorization();
         }

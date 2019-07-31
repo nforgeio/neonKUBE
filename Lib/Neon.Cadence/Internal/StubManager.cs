@@ -1164,6 +1164,8 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(workflow != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
+            CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
+
             options = options ?? new ActivityOptions();
 
             if (string.IsNullOrEmpty(domain))
@@ -1187,13 +1189,14 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity stub instance.</returns>
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
         public static TActivityInterface CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(CadenceClient client, IWorkflowBase workflow, LocalActivityOptions options = null)
-            where TActivityImplementation : IActivityBase
+            where TActivityImplementation : IActivityBase, TActivityInterface
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflow != null);
 
             var activityType = typeof(TActivityImplementation);
 
+            CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
             var stub = GetActivityStub<TActivityInterface>();

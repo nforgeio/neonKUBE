@@ -73,7 +73,8 @@ namespace Test.Neon.Web
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseRouting(routes =>
+            app.UseRouting();
+            app.UseEndpoints(routes =>
             {
                 routes.MapControllers();
             });
