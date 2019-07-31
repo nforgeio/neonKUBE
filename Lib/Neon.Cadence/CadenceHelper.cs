@@ -67,12 +67,12 @@ namespace Neon.Cadence
         /// Ensures that a workflow type name is valid.
         /// </summary>
         /// <param name="name">The workflow type name being checked.</param>
-        /// <exception cref="WorkflowDefinitionException">Thrown if the name passed is not valid.</exception>
+        /// <exception cref="WorkflowTypeException">Thrown if the name passed is not valid.</exception>
         public static void ValidateWorkflowTypeName(string name)
         {
             if (name != null && name.Contains(CadenceHelper.WorkflowTypeMethodSeparator))
             {
-                throw new WorkflowDefinitionException($"Workflow type names cannot include: \"{CadenceHelper.WorkflowTypeMethodSeparator}\".");
+                throw new WorkflowTypeException($"Workflow type names cannot include: \"{CadenceHelper.WorkflowTypeMethodSeparator}\".");
             }
         }
 
@@ -80,29 +80,29 @@ namespace Neon.Cadence
         /// Ensures that the type passed is a valid workflow interface.
         /// </summary>
         /// <param name="workflowInterface">The type being tested.</param>
-        /// <exception cref="ActivityDefinitionException">Thrown when the interface is not valid.</exception>
+        /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateWorkflowInterface(Type workflowInterface)
         {
             Covenant.Requires<ArgumentNullException>(workflowInterface != null);
 
             if (!workflowInterface.IsInterface)
             {
-                throw new WorkflowDefinitionException($"[{workflowInterface.FullName}] is not an interface.");
+                throw new WorkflowTypeException($"[{workflowInterface.FullName}] is not an interface.");
             }
 
             if (workflowInterface.IsGenericType)
             {
-                throw new WorkflowDefinitionException($"[{workflowInterface.FullName}] is a generic type.  Workflow interfaces may not be generic.");
+                throw new WorkflowTypeException($"[{workflowInterface.FullName}] has generic type parameters.  Workflow interfaces may not be generic.");
             }
 
             if (workflowInterface == typeof(IWorkflowBase))
             {
-                throw new WorkflowDefinitionException($"The base [{nameof(IWorkflowBase)}] interface cannot be used to define a workflow.");
+                throw new WorkflowTypeException($"The base [{nameof(IWorkflowBase)}] interface cannot be used to define a workflow.");
             }
 
             if (!workflowInterface.IsPublic && !workflowInterface.IsNestedPublic)
             {
-                throw new WorkflowDefinitionException($"Workflow interface [{workflowInterface.FullName}] is not public.");
+                throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] is not public.");
             }
 
             var workflowNames = new HashSet<string>();
@@ -120,7 +120,7 @@ namespace Neon.Cadence
 
                 if (workflowNames.Contains(name))
                 {
-                    throw new WorkflowDefinitionException($"Multiple workflow methods are tagged by [WorkflowMethod(name: \"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple workflow methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
                 }
 
                 workflowNames.Add(name);
@@ -131,29 +131,29 @@ namespace Neon.Cadence
         /// Ensures that the type passed is a valid workflow implementation.
         /// </summary>
         /// <param name="workflowType">The type being tested.</param>
-        /// <exception cref="WorkflowDefinitionException">Thrown when the interface is not valid.</exception>
+        /// <exception cref="WorkflowTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateWorkflowImplementation(Type workflowType)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null);
 
             if (workflowType.IsInterface)
             {
-                throw new WorkflowDefinitionException($"[{workflowType.FullName}] workflow implementation cannot be an interface.");
+                throw new WorkflowTypeException($"[{workflowType.FullName}] workflow implementation cannot be an interface.");
             }
 
             if (!workflowType.IsGenericType)
             {
-                throw new WorkflowDefinitionException($"[{workflowType.FullName}] is a generic type.  Workflow implementations may not be generic.");
+                throw new WorkflowTypeException($"[{workflowType.FullName}] has generic type parameters.  Workflow implementations may not be generic.");
             }
 
             if (!workflowType.Implements<IWorkflowBase>())
             {
-                throw new WorkflowDefinitionException($"[{workflowType.FullName}] does not derive from [{typeof(IWorkflowBase).FullName}].");
+                throw new WorkflowTypeException($"[{workflowType.FullName}] does not derive from [{typeof(IWorkflowBase).FullName}].");
             }
 
             if (workflowType == typeof(WorkflowBase))
             {
-                throw new WorkflowDefinitionException($"The base [{nameof(WorkflowBase)}] class cannot be a workflow implementation.");
+                throw new WorkflowTypeException($"The base [{nameof(WorkflowBase)}] class cannot be a workflow implementation.");
             }
 
             var workflowNames = new HashSet<string>();
@@ -171,7 +171,7 @@ namespace Neon.Cadence
 
                 if (workflowNames.Contains(name))
                 {
-                    throw new WorkflowDefinitionException($"Multiple [{workflowType.FullName}] workflow methods are tagged by [WorkflowMethod(name: \"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple [{workflowType.FullName}] workflow methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
                 }
 
                 workflowNames.Add(name);
@@ -182,12 +182,12 @@ namespace Neon.Cadence
         /// Ensures that an activity type name is valid.
         /// </summary>
         /// <param name="name">The activity type name being checked.</param>
-        /// <exception cref="ActivityDefinitionException">Thrown if the name passed is not valid.</exception>
+        /// <exception cref="ActivityTypeException">Thrown if the name passed is not valid.</exception>
         public static void ValidateActivityTypeName(string name)
         {
             if (name != null && name.Contains(CadenceHelper.ActivityTypeMethodSeparator))
             {
-                throw new ActivityDefinitionException($"Activity type names cannot include: \"{CadenceHelper.ActivityTypeMethodSeparator}\".");
+                throw new ActivityTypeException($"Activity type names cannot include: \"{CadenceHelper.ActivityTypeMethodSeparator}\".");
             }
         }
 
@@ -195,34 +195,55 @@ namespace Neon.Cadence
         /// Ensures that the type passed is a valid activity interface.
         /// </summary>
         /// <param name="activityInterface">The type being tested.</param>
-        /// <exception cref="ActivityDefinitionException">Thrown when the interface is not valid.</exception>
+        /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateActivityInterface(Type activityInterface)
         {
             Covenant.Requires<ArgumentNullException>(activityInterface != null);
 
             if (!activityInterface.IsInterface)
             {
-                throw new ActivityDefinitionException($"[{activityInterface.FullName}] is not an interface.");
+                throw new ActivityTypeException($"[{activityInterface.FullName}] is not an interface.");
             }
 
-            if (!activityInterface.IsGenericType)
+            if (activityInterface.IsGenericType)
             {
-                throw new ActivityDefinitionException($"[{activityInterface.FullName}] is a generic type.  Activity interfaces may not be generic.");
+                throw new ActivityTypeException($"[{activityInterface.FullName}] has generic type parameters.  Activity interfaces may not be generic.");
             }
 
             if (!activityInterface.Implements<IActivityBase>())
             {
-                throw new ActivityDefinitionException($"[{activityInterface.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
+                throw new ActivityTypeException($"[{activityInterface.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
             }
 
             if (activityInterface == typeof(IActivityBase))
             {
-                throw new ActivityDefinitionException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
+                throw new ActivityTypeException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
             }
 
             if (!activityInterface.IsPublic && !activityInterface.IsNestedPublic)
             {
-                throw new ActivityDefinitionException($"Activity interface [{activityInterface.FullName}] is not public.");
+                throw new ActivityTypeException($"Activity interface [{activityInterface.FullName}] is not public.");
+            }
+
+            var activityNames = new HashSet<string>();
+
+            foreach (var method in activityInterface.GetMethods())
+            {
+                var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (activityMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = activityMethodAttribute.Name ?? string.Empty;
+
+                if (activityNames.Contains(name))
+                {
+                    throw new ActivityTypeException($"Multiple [{activityInterface.FullName}] activity methods are tagged by [ActivityMethod(Name = \"{name}\")].");
+                }
+
+                activityNames.Add(name);
             }
         }
 
@@ -230,29 +251,50 @@ namespace Neon.Cadence
         /// Ensures that the type passed is a valid activity implementation.
         /// </summary>
         /// <param name="activityType">The type being tested.</param>
-        /// <exception cref="ActivityDefinitionException">Thrown when the interface is not valid.</exception>
+        /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateActivityImplementation(Type activityType)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
 
             if (activityType.IsInterface)
             {
-                throw new ActivityDefinitionException($"[{activityType.FullName}] implementation cannot be an interface.");
+                throw new ActivityTypeException($"[{activityType.FullName}] implementation cannot be an interface.");
             }
 
-            if (!activityType.IsGenericType)
+            if (activityType.IsGenericType)
             {
-                throw new ActivityDefinitionException($"[{activityType.FullName}] is a generic type.  Activity implementations may not be generic.");
+                throw new ActivityTypeException($"[{activityType.FullName}] has generic type parameters.  Activity implementations may not be generic.");
             }
 
             if (!activityType.Implements<IActivityBase>())
             {
-                throw new ActivityDefinitionException($"[{activityType.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
+                throw new ActivityTypeException($"[{activityType.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
             }
 
             if (activityType == typeof(IActivityBase))
             {
-                throw new ActivityDefinitionException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
+                throw new ActivityTypeException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
+            }
+
+            var activityNames = new HashSet<string>();
+
+            foreach (var method in activityType.GetMethods())
+            {
+                var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (activityMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = activityMethodAttribute.Name ?? string.Empty;
+
+                if (activityNames.Contains(name))
+                {
+                    throw new ActivityTypeException($"Multiple [{activityType.FullName}] activity methods are tagged by [ActivityMethod(Name = \"{name}\")].");
+                }
+
+                activityNames.Add(name);
             }
         }
 

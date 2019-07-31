@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ActivityDefinitionException.cs
+// FILE:	    ActivityTypeException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,12 +24,12 @@ namespace Neon.Cadence
     /// <summary>
     /// Thrown when ak activity interface or implementation is not valid.
     /// </summary>
-    public class ActivityDefinitionException : Exception
+    public class ActivityTypeException : Exception
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ActivityDefinitionException()
+        public ActivityTypeException()
         {
         }
 
@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public ActivityDefinitionException(string message, Exception innerException = null)
+        public ActivityTypeException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }

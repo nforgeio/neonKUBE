@@ -191,12 +191,12 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Creates an untyped stub connected to a known workflow execution.  This can be
-        /// used to query, signal, or retrieve the result for a workflow.
+        /// Creates an untyped stub that can be used to execute, query, and signal a new workflow
+        /// specified using a generic type parameter.
         /// </summary>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="workflowType">Optionally specifies the workflow type name.</param>
+        /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
         /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
         /// <remarks>
@@ -205,7 +205,7 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowType = null, string domain = null)
+        public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowTypeName = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
 
@@ -213,8 +213,8 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Creates an untyped stub that will be used to execute a workflow as well as
-        /// query and signal the new workflow.
+        /// Creates an untyped stub that can be used to execute, query, and signal a new workflow
+        /// specified using an explicit type parameter.
         /// </summary>
         /// <param name="workflowTypeName">Specifies workflow type name (see the remarks).</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
@@ -244,7 +244,7 @@ namespace Neon.Cadence
         /// from other languages.  The Java Cadence client works the same way.
         /// </para>
         /// </remarks>
-        public IWorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null, string domain = null)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
 
@@ -259,7 +259,7 @@ namespace Neon.Cadence
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="workflowType">
+        /// <param name="workflowTypeName">
         /// Optionally specifies the workflow type name by overriding the fully 
         /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
         /// specified by a <see cref="WorkflowAttribute"/>.
@@ -272,7 +272,7 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string workflowType = null, string domain = null)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string workflowTypeName = null, string domain = null)
             where TWorkflowInterface : WorkflowBase
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
@@ -287,7 +287,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="options">Optionally specifies the workflow options.</param>
-        /// <param name="workflowType">
+        /// <param name="workflowTypeName">
         /// Optionally specifies the workflow type name by overriding the fully 
         /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
         /// specified by a <see cref="WorkflowAttribute"/>.
@@ -300,7 +300,7 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowType = null, string domain = null)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null, string domain = null)
             where TWorkflowInterface : WorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));

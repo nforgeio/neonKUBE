@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_WorkflowStubManager.cs
+// FILE:        Test_StubManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -42,13 +42,43 @@ using Newtonsoft.Json.Linq;
 
 namespace TestCadence
 {
-    public partial class Test_WorkflowStubManager : IClassFixture<CadenceFixture>, IDisposable
+    public partial class Test_StubManager : IClassFixture<CadenceFixture>, IDisposable
     {
-        CadenceFixture      fixture;
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Used when testing activity stub code generation.  This fakes up just
+        /// enough of a workflow so that stubs can be generated.
+        /// </summary>
+        public class DummyWorkflow : IWorkflowBase
+        {
+            public DummyWorkflow()
+            {
+                this.Workflow = new Workflow(
+                    parent:     new WorkflowBase(),
+                    client:             new CadenceClient(),
+                    contextId:          1,
+                    workflowTypeName:   typeof(DummyWorkflow).FullName,
+                    domain:             "my-domain",
+                    taskList:           "my-tasklist",
+                    workflowId:         "my-workflow-id",
+                    runId:              "my-run-id",
+                    isReplaying:        false,
+                    methodMap:          null);
+            }
+
+            public Workflow Workflow { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        CadenceFixture fixture;
         CadenceClient       client;
         HttpClient          proxyClient;
 
-        public Test_WorkflowStubManager(CadenceFixture fixture)
+        public Test_StubManager(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {
