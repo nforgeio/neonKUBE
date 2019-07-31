@@ -810,7 +810,7 @@ namespace Neon.Cadence
 
             closingConnection = true;
 
-            if (!Settings.DebugDisableHandshakes)
+            if (Settings != null && !Settings.DebugDisableHandshakes)
             {
                 try
                 {
