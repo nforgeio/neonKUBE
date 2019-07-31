@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rook-ceph-operator
+  labels:
+    operator: rook
+    storage-backend: ceph
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rook-ceph-operator
+  template:
+    metadata:
+      labels:
+        app: rook-ceph-operator
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+{{- if .Values.annotations }}
+      annotations:
+{{ toYaml .Values.annotations | indent 8 }}
+{{- end }}
+    spec:
+      containers:
+      - name: rook-ceph-operator
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args: ["ceph", "operator"]
+        env:
+        - name: ROOK_CURRENT_NAMESPACE_ONLY
+          value: "true"
+        # CSI enablement
+        - name: ROOK_CSI_ENABLE_CEPHFS
+          value: "true"
+        - name: ROOK_CSI_CEPH_IMAGE
+          value: "quay.io/cephcsi/cephcsi:canary"
+        - name: ROOK_CSI_ENABLE_RBD
+          value: "true"
+        - name: ROOK_CSI_REGISTRAR_IMAGE
+          value: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0"
+        - name: ROOK_CSI_PROVISIONER_IMAGE
+          value: "quay.io/k8scsi/csi-provisioner:v1.2.0"
+        - name: ROOK_CSI_SNAPSHOTTER_IMAGE
+          value: "quay.io/k8scsi/csi-snapshotter:v1.1.0"
+        - name: ROOK_CSI_ATTACHER_IMAGE
+          value: "quay.io/k8scsi/csi-attacher:v1.1.1"
+{{- if not .Values.rbacEnable }}
+        - name: RBAC_ENABLED
+          value: "false"
+{{- end }}
+{{- if .Values.agent }}
+{{- if .Values.agent.toleration }}
+        - name: AGENT_TOLERATION
+          value: {{ .Values.agent.toleration }}
+{{- end }}
+{{- if .Values.agent.tolerationKey }}
+        - name: AGENT_TOLERATION_KEY
+          value: {{ .Values.agent.tolerationKey }}
+{{- end }}
+{{- if .Values.agent.mountSecurityMode }}
+        - name: AGENT_MOUNT_SECURITY_MODE
+          value: {{ .Values.agent.mountSecurityMode }}
+{{- end }}
+{{- if .Values.agent.flexVolumeDirPath }}
+        - name: FLEXVOLUME_DIR_PATH
+          value: {{ .Values.agent.flexVolumeDirPath }}
+{{- end }}
+{{- if .Values.agent.libModulesDirPath }}
+        - name: LIB_MODULES_DIR_PATH
+          value: {{ .Values.agent.libModulesDirPath }}
+{{- end }}
+{{- if .Values.agent.mounts }}
+        - name: AGENT_MOUNTS
+          value: {{ .Values.agent.mounts }}
+{{- end }}
+{{- end }}
+{{- if .Values.discover }}
+{{- if .Values.discover.toleration }}
+        - name: DISCOVER_TOLERATION
+          value: {{ .Values.discover.toleration }}
+{{- end }}
+{{- if .Values.discover.tolerationKey }}
+        - name: DISCOVER_TOLERATION_KEY
+          value: {{ .Values.discover.tolerationKey }}
+{{- end }}
+{{- end }}
+{{- if .Values.hostpathRequiresPrivileged }}
+        - name: ROOK_HOSTPATH_REQUIRES_PRIVILEGED
+          value: {{ .Values.hostpathRequiresPrivileged }}
+{{- end }}
+        - name: ROOK_LOG_LEVEL
+          value: {{ .Values.logLevel }}
+        - name: ROOK_ENABLE_SELINUX_RELABELING
+          value: {{ .Values.enableSelinuxRelabeling | quote }}
+{{- if .Values.disableDeviceHotplug }}
+        - name: ROOK_DISABLE_DEVICE_HOTPLUG
+          value: {{ .Values.disableDeviceHotplug }}
+{{- end }}
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+{{- if .Values.cephStatusCheckInterval }}
+        - name: ROOK_CEPH_STATUS_CHECK_INTERVAL
+          value: {{ .Values.cephStatusCheckInterval }}
+{{- end }}
+{{- if .Values.mon }}
+{{- if .Values.mon.healthCheckInterval }}
+        - name: ROOK_MON_HEALTHCHECK_INTERVAL
+          value: {{ .Values.mon.healthCheckInterval }}
+{{- end }}
+{{- if .Values.mon.monOutTimeout }}
+        - name: ROOK_MON_OUT_TIMEOUT
+          value: {{ .Values.mon.monOutTimeout }}
+{{- end }}
+{{- end }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+{{- end }}
+{{- if .Values.rbacEnable }}
+      serviceAccountName: rook-ceph-system
+{{- end }}
