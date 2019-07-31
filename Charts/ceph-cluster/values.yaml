@@ -12,8 +12,8 @@ image:
 dataDirHostPath: /var/lib/rook
 
 mon:
-    count: 3
-    allowMultiplePerNode: true
+  count: 1
+  allowMultiplePerNode: true
 # enable the ceph dashboard for viewing cluster status
 dashboard:
   enabled: true
