@@ -47,8 +47,8 @@ namespace Neon.Cadence.Internal
         private string              className;
         private Assembly            assembly;
         private Type                stubType;
-        private ConstructorInfo     executeConstructor;
-        private MethodInfo          toUntyped;
+        private ConstructorInfo     normalConstructor;
+        private ConstructorInfo     localConstructor;
 
         /// <summary>
         /// Constructor.
@@ -64,32 +64,41 @@ namespace Neon.Cadence.Internal
 
             // Fetch the stub type and reflect the required constructors and methods.
 
-            this.stubType           = assembly.GetType(className);
-            this.executeConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(string), typeof(ActivityOptions), typeof(string));
-            this.toUntyped          = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
+            this.stubType          = assembly.GetType(className);
+            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(string), typeof(ActivityOptions), typeof(string));
+            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(Type), typeof(LocalActivityOptions));
         }
 
         /// <summary>
-        /// Creates a activity stub instance suitable for executing an activity.
+        /// Creates a normal (non-local) activity stub instance suitable for executing a non-local activity.
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>
         /// <param name="activityTypeName">Specifies the activity type name.</param>
         /// <param name="options">Specifies the <see cref="ActivityOptions"/>.</param>
-        /// <param name="domain">Specifies the target domain.</param>
+        /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain)
+        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain = null)
         {
-            return executeConstructor.Invoke(new object[] { client, workflow, activityTypeName, options, domain });
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(options != null);
+
+            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityTypeName, options, domain });
         }
 
         /// <summary>
-        /// Creates a new untyped <see cref="IActivityStub"/> from the dynamic stub.
+        /// Creates a local activity stub instance suitable for executing a non-local activity.
         /// </summary>
-        /// <returns>The new <see cref="IActivityStub"/>.</returns>
-        public IActivityStub ToUntyped()
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="workflow">The parent workflow.</param>
+        /// <param name="activityType">The activity implementation type.</param>
+        /// <param name="options">Specifies the <see cref="LocalActivityOptions"/>.</param>
+        /// <returns>The activity stub as an <see cref="object"/>.</returns>
+        public object CreateLocal(CadenceClient client, Workflow workflow, Type activityType, LocalActivityOptions options)
         {
-            return (IActivityStub)toUntyped.Invoke(this, Type.EmptyTypes);
+            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityType, options });
         }
     }
 }
