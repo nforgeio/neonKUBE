@@ -250,10 +250,10 @@ namespace TestModelGen.UxAspNet
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(
-                options =>
+            services
+                .AddMvc(options =>
                 {
-                    options.EnableEndpointRouting = true;
+                    options.EnableEndpointRouting = false;
                 })
                 .AddNeon();
         }
