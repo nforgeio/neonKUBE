@@ -8,11 +8,6 @@
 # where the operator needs to manage the cluster. The resources above that section do not be created again.
 ###################################################################################################################
 
-# Namespace where the operator and other rook resources are created
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: rook-ceph
 ---
 # The CRD declarations
 apiVersion: apiextensions.k8s.io/v1beta1
