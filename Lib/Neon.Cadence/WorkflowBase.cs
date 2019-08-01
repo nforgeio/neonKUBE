@@ -41,7 +41,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class that can be used for Cadence workflow implementations.
     /// </summary>
-    public class WorkflowBase : IWorkflowBase
+    public class WorkflowBase
     {
         //---------------------------------------------------------------------
         // Private types
@@ -118,9 +118,9 @@ namespace Neon.Cadence
 
         private static object                                           syncLock               = new object();
         private static INeonLogger                                      log                    = LogManager.Default.GetLogger<WorkflowBase>();
-        private static Dictionary<WorkflowInstanceKey, IWorkflowBase>   idToWorkflow           = new Dictionary<WorkflowInstanceKey, IWorkflowBase>();
+        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow           = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
         private static Dictionary<string, WorkflowRegistration>         typeNameToRegistration = new Dictionary<string, WorkflowRegistration>();
-        private static byte[]                                           emptyBytes            = new byte[0];
+        private static byte[]                                           emptyBytes             = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -322,7 +322,7 @@ namespace Neon.Cadence
         /// <param name="client">The Cadence client.</param>
         /// <param name="contextId">The workflow's context ID.</param>
         /// <returns>The <see cref="WorkflowBase"/> instance or <c>null</c> if the workflow was not found.</returns>
-        private static IWorkflowBase GetWorkflow(CadenceClient client, long contextId)
+        private static WorkflowBase GetWorkflow(CadenceClient client, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -351,7 +351,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified);
 
-            IWorkflowBase           workflow;
+            WorkflowBase            workflow;
             WorkflowRegistration    registration;
 
             var contextId   = request.ContextId;
@@ -386,7 +386,7 @@ namespace Neon.Cadence
                 }
             }
 
-            workflow = (IWorkflowBase)Activator.CreateInstance(registration.WorkflowType);
+            workflow = (WorkflowBase)Activator.CreateInstance(registration.WorkflowType);
             workflow.Workflow = 
                 new Workflow(
                     parent:     (WorkflowBase)workflow,

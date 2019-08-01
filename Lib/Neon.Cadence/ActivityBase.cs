@@ -34,7 +34,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class for all application Cadence activity implementations.
     /// </summary>
-    public abstract class ActivityBase : IActivityBase
+    public abstract class ActivityBase
     {
         //---------------------------------------------------------------------
         // Private types
@@ -50,7 +50,7 @@ namespace Neon.Cadence
 
             public ActivityKey(CadenceClient client, long contextId)
             {
-                this.clientId = client.ClientId;
+                this.clientId  = client.ClientId;
                 this.contextId = contextId;
             }
 

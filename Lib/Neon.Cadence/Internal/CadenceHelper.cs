@@ -214,11 +214,6 @@ namespace Neon.Cadence.Internal
                 throw new WorkflowTypeException($"[{workflowInterface.FullName}] has generic type parameters.  Workflow interfaces may not be generic.");
             }
 
-            if (workflowInterface == typeof(IWorkflowBase))
-            {
-                throw new WorkflowTypeException($"The base [{nameof(IWorkflowBase)}] interface cannot be used to define a workflow.");
-            }
-
             if (!workflowInterface.IsPublic && !workflowInterface.IsNestedPublic)
             {
                 throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] is not public.");
@@ -270,9 +265,9 @@ namespace Neon.Cadence.Internal
                 throw new WorkflowTypeException($"[{workflowType.FullName}] has generic type parameters.  Workflow implementations may not be generic.");
             }
 
-            if (!workflowType.Implements<IWorkflowBase>())
+            if (workflowType.BaseType != typeof(WorkflowBase))
             {
-                throw new WorkflowTypeException($"[{workflowType.FullName}] does not derive from [{typeof(IWorkflowBase).FullName}].");
+                throw new WorkflowTypeException($"[{workflowType.FullName}] does not inherit [{typeof(WorkflowBase).FullName}].");
             }
 
             if (workflowType == typeof(WorkflowBase))
@@ -334,16 +329,6 @@ namespace Neon.Cadence.Internal
                 throw new ActivityTypeException($"[{activityInterface.FullName}] has generic type parameters.  Activity interfaces may not be generic.");
             }
 
-            if (!activityInterface.Implements<IActivityBase>())
-            {
-                throw new ActivityTypeException($"[{activityInterface.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
-            }
-
-            if (activityInterface == typeof(IActivityBase))
-            {
-                throw new ActivityTypeException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
-            }
-
             if (!activityInterface.IsPublic && !activityInterface.IsNestedPublic)
             {
                 throw new ActivityTypeException($"Activity interface [{activityInterface.FullName}] is not public.");
@@ -364,10 +349,15 @@ namespace Neon.Cadence.Internal
 
                 if (activityNames.Contains(name))
                 {
-                    throw new ActivityTypeException($"Multiple [{activityInterface.FullName}] activity methods are tagged by [ActivityMethod(Name = \"{name}\")].");
+                    throw new ActivityTypeException($"Multiple [{activityInterface.FullName}] activity methods are tagged by [ActivityMethod(Name = \"{name}x\")].");
                 }
 
                 activityNames.Add(name);
+            }
+
+            if (activityNames.Count == 0)
+            {
+                throw new ActivityTypeException($"Activity interface [{activityInterface.FullName}] does not define any methods tagged with [ActivityMethod].");
             }
         }
 
@@ -390,14 +380,14 @@ namespace Neon.Cadence.Internal
                 throw new ActivityTypeException($"[{activityType.FullName}] has generic type parameters.  Activity implementations may not be generic.");
             }
 
-            if (!activityType.Implements<IActivityBase>())
+            if (activityType.BaseType != typeof(ActivityBase))
             {
-                throw new ActivityTypeException($"[{activityType.FullName}] does not derive from [{typeof(IActivityBase).FullName}].");
+                throw new ActivityTypeException($"[{activityType.FullName}] does not inherit [{typeof(ActivityBase).FullName}].");
             }
 
-            if (activityType == typeof(IActivityBase))
+            if (activityType == typeof(ActivityBase))
             {
-                throw new ActivityTypeException($"[{nameof(IActivityBase)}] cannot be used to define an activity.");
+                throw new ActivityTypeException($"[{nameof(ActivityBase)}] cannot be used to define an activity.");
             }
 
             var activityNames = new HashSet<string>();

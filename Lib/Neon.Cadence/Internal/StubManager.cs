@@ -289,7 +289,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The stub instance.</returns>
         /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
         public static TWorkflowInterface CreateWorkflowStub<TWorkflowInterface>(CadenceClient client, string taskList = null, WorkflowOptions options = null, string domain = null)
-            where TWorkflowInterface : class, IWorkflowBase
+            where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -898,7 +898,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        private CadenceClient                     client;");
             sbSource.AppendLine($"        private IDataConverter                    dataConverter;");
-            sbSource.AppendLine($"        private IWorkflowBase                     workflowBase;");
+            sbSource.AppendLine($"        private WorkflowBase                      workflowBase;");
             sbSource.AppendLine($"        private bool                              isLocal;");
             sbSource.AppendLine($"        private string                            activityTypeName;");
             sbSource.AppendLine($"        private ActivityOptions                   options;");
@@ -911,7 +911,7 @@ namespace Neon.Cadence.Internal
             // Generate the constructor for regular (non-local) activity stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflowBase, string activityTypeName, ActivityOptions options, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, WorkflowBase workflowBase, string activityTypeName, ActivityOptions options, string domain)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
@@ -925,7 +925,7 @@ namespace Neon.Cadence.Internal
             // Generate the constructor for local activity stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, IWorkflowBase workflowBase, Type activityType, LocalActivityOptions localOptions)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, WorkflowBase workflowBase, Type activityType, LocalActivityOptions localOptions)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client              = client;");
             sbSource.AppendLine($"            this.dataConverter       = dataConverter;");
@@ -1159,7 +1159,7 @@ namespace Neon.Cadence.Internal
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub instance.</returns>
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
-        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, ActivityOptions options = null, string domain = null)
+        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, WorkflowBase workflow, ActivityOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflow != null);
@@ -1193,8 +1193,8 @@ namespace Neon.Cadence.Internal
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The activity stub instance.</returns>
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
-        public static TActivityInterface CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(CadenceClient client, IWorkflowBase workflow, LocalActivityOptions options = null)
-            where TActivityImplementation : IActivityBase, TActivityInterface
+        public static TActivityInterface CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(CadenceClient client, WorkflowBase workflow, LocalActivityOptions options = null)
+            where TActivityImplementation : TActivityInterface
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflow != null);

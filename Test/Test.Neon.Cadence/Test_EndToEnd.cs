@@ -89,7 +89,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IBasicWorkflow : IWorkflowBase
+        public interface IBasicWorkflow
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);

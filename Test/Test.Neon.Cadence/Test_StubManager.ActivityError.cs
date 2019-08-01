@@ -46,7 +46,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IErrorGenericActivity<T> : IActivityBase
+        public interface IErrorGenericActivity<T>
         {
             [ActivityMethod]
             Task DoIt();
@@ -63,7 +63,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorNoEntryPointActivity : IActivityBase
+        public interface IErrorNoEntryPointActivity
         {
         }
 
@@ -73,7 +73,7 @@ namespace TestCadence
         {
             // Activities need to have at least one entry point.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointWorkflow>(client, new DummyWorkflow()));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointActivity>(client, new DummyWorkflow()));
         }
 
         [Fact]
@@ -82,12 +82,12 @@ namespace TestCadence
         {
             // A non-NULL client is required.
 
-            Assert.Throws<ArgumentNullException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointWorkflow>(null, new DummyWorkflow()));
+            Assert.Throws<ArgumentNullException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointActivity>(null, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
 
-        public class IErrorNotInterfaceActivity : ActivityBase
+        public class IErrorNotInterfaceActivity
         {
             [ActivityMethod]
             public async Task EntryPoint()
@@ -107,7 +107,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        internal class IErrorNotPublicActivity : ActivityBase
+        internal class IErrorNotPublicActivity
         {
             [ActivityMethod]
             public async Task EntryPoint()
@@ -127,13 +127,13 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IErrorNonTaskEntryPoint1Activity : IActivityBase
+        public interface IErrorNonTaskEntryPoint1Activity
         {
             [ActivityMethod]
             void EntryPoint();
         }
 
-        public interface IErrorNonTaskEntryPoint2Activity : IActivityBase
+        public interface IErrorNonTaskEntryPoint2Activity
         {
             [ActivityMethod]
             List<int> EntryPoint();
@@ -150,7 +150,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IDuplicateDefaultEntryPointsActivity : IActivityBase
+        public interface IDuplicateDefaultEntryPointsActivity
         {
             [ActivityMethod]
             Task EntryPoint1();
@@ -171,7 +171,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IDuplicateEntryPointsActivity : IActivityBase
+        public interface IDuplicateEntryPointsActivity
         {
             [ActivityMethod(Name = "duplicate")]
             Task EntryPoint1();

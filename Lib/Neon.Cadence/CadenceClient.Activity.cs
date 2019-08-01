@@ -37,7 +37,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Registers an activity implementation with Cadence.
         /// </summary>
-        /// <typeparam name="TActivity">The <see cref="IActivityBase"/> derived class implementing the activity.</typeparam>
+        /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived class implementing the activity.</typeparam>
         /// <param name="activityTypeName">
         /// Optionally specifies a custom activity type name that will be used 
         /// for identifying the activity implementation in Cadence.  This defaults
@@ -85,14 +85,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Scans the assembly passed looking for activity implementations derived from
-        /// <see cref="IActivityBase"/> and tagged by <see cref="ActivityAttribute"/> and
+        /// <see cref="ActivityBase"/> and tagged by <see cref="ActivityAttribute"/> and
         /// registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
-        /// derived from <see cref="IActivityBase"/>.
+        /// derived from <see cref="ActivityBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceActivityWorkerStartedException">
@@ -119,7 +119,7 @@ namespace Neon.Cadence
 
                 if (activityAttribute != null)
                 {
-                    if (type.Implements<IActivityBase>())
+                    if (type.BaseType != typeof(ActivityBase))
                     {
                         if (activityAttribute.AutoRegister)
                         {
@@ -139,7 +139,7 @@ namespace Neon.Cadence
                     }
                     else
                     {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(ActivityAttribute)}] but is not derived from [{nameof(IActivityBase)}].");
+                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(ActivityAttribute)}] but does not inherit [{nameof(ActivityBase)}].");
                     }
                 }
             }

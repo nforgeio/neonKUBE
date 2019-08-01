@@ -28,8 +28,8 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Use this to tag activitt implementations that inherit from
-    /// <see cref="IActivityBase"/> to customize the how the activity is
+    /// Use this to tag activity implementations that inherit from
+    /// <see cref="ActivityBase"/> to customize the how the activity is
     /// registered.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]

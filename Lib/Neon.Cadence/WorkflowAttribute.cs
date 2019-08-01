@@ -29,7 +29,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Use this to tag workflow implementations that inherit from
-    /// <see cref="IWorkflowBase"/> to customize the how the workflow is
+    /// <see cref="WorkflowBase"/> to customize the how the workflow is
     /// registered.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]

@@ -108,14 +108,16 @@ namespace Neon.Cadence
     /// that Cadence can begin scheduling workflow and activity executions from the current client.
     /// </para>
     /// <para>
-    /// Workflows are implemented by defining an interface derived from <see cref="IWorkflowBase"/>
-    /// and then writing a class the implements your interface.  Activities are implemented in the
-    /// same way by defining an activity interface that derives from <see cref="IActivityBase"/>
-    /// and then writing a class that implements this interface.  Your workflow interface must
-    /// define at least one entry point method tagged by <see cref="WorkflowMethodAttribute"/>
-    /// and may optionally include signal and query methods tagged by <see cref="SignalMethodAttribute"/>
-    /// and <see cref="QueryMethodAttribute"/>.  Your activity interface must define at least one
-    /// entry point method.
+    /// Workflows are implemented by defining an interface describing the workflow methods
+    /// and then writing a class the implements your interface and also inherits <see cref="WorkflowBase"/>.  
+    /// Your workflow interface  must define at least one entry point method tagged by <see cref="WorkflowMethodAttribute"/> and
+    /// may optionally include signal and query methods  tagged by <see cref="SignalMethodAttribute"/> 
+    /// and <see cref="QueryMethodAttribute"/>.
+    /// </para>
+    /// <para>
+    /// Activities are implemented in the same way by defining an activity interface and then writing a class
+    /// that implements this  interface. and inherits <see cref="ActivityBase"/>.  Your activity interface
+    /// must define at least one entry point method.
     /// </para>
     /// <para>
     /// After establishing a connection ot a Cadence cluster, you'll need to call 
