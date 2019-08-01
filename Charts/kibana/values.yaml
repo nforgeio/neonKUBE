@@ -1,7 +1,7 @@
 ---
 
-elasticsearchURL: "" # "http://elasticsearch-master.logging:9200"
-elasticsearchHosts: "http://elasticsearch-master.logging:9200"
+elasticsearchURL: "" # "http://elasticsearch-master.monitoring:9200"
+elasticsearchHosts: "http://elasticsearch-master.monitoring:9200"
 
 replicas: 1
 

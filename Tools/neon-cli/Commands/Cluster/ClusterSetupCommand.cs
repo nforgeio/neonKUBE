@@ -1578,7 +1578,7 @@ $@" \
         }
 
         /// <summary>
-        /// Initializes the EFK stack and other logging services.
+        /// Initializes the EFK stack and other monitoring services.
         /// </summary>
         private void SetupMonitoring()
         {
@@ -1591,6 +1591,8 @@ $@" \
                 {
                     KubeSetup(firstMaster).Wait();
                 });
+
+            // Install Etcd operator to the monitoring namespace
 
 
             // Install Elasticsearch.
@@ -1694,7 +1696,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: cluster-setup";
 
-            await InstallHelmChartAsync(master, "cluster-setup", @namespace: "logging");
+            await InstallHelmChartAsync(master, "cluster-setup", @namespace: "monitoring");
 
             master.Status = "deploy: kube-state-config";
 
@@ -1790,7 +1792,7 @@ rm -rf {chartName}*
                 }
             }
 
-            await InstallHelmChartAsync(master, "elasticsearch", @namespace: "logging", timeout: 900, values: values);
+            await InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 900, values: values);
 
         }
 
@@ -1802,7 +1804,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluent-bit";
 
-            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "monitoring", timeout: 300);
 
         }
 
@@ -1814,7 +1816,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            await InstallHelmChartAsync(master, "fluentd", @namespace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "fluentd", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
@@ -1825,7 +1827,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            await InstallHelmChartAsync(master, "kibana", @namespace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "kibana", @namespace: "monitoring", timeout: 300);
 
         }
 
@@ -1837,7 +1839,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: metricbeat";
 
-            await InstallHelmChartAsync(master, "metricbeat", @namespace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "metricbeat", @namespace: "monitoring", timeout: 300);
 
         }
 

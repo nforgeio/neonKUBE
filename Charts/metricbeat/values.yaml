@@ -17,17 +17,17 @@ daemonset:
   hostNetwork: true
   dnsPolicy: ClusterFirstWithHostNet
   config:
-    logging:
+    monitoring:
       level: debug
     metricbeat.config:
       modules:
         path: ${path.config}/modules.d/*.yml
         reload.enabled: false
-    setup.kibana.host: "kibana-kibana.logging:5601"
+    setup.kibana.host: "kibana-kibana.monitoring:5601"
     processors:
     - add_cloud_metadata:
     output.elasticsearch:
-      hosts: ["http://elasticsearch-master.logging:9200"]
+      hosts: ["http://elasticsearch-master.monitoring:9200"]
       index: "metricbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
     setup.template:
       name: 'metricbeat'
@@ -100,7 +100,7 @@ deployment:
       modules:
         path: ${path.config}/modules.d/*.yml
         reload.enabled: false
-    setup.kibana.host: "kibana-kibana.logging:5601"
+    setup.kibana.host: "kibana-kibana.monitoring:5601"
     setup.template:
       name: 'metricbeat'
       pattern: 'metricbeat-*'
@@ -109,7 +109,7 @@ deployment:
     processors:
     - add_cloud_metadata:
     output.elasticsearch:
-      hosts: ["http://elasticsearch-master.logging:9200"]
+      hosts: ["http://elasticsearch-master.monitoring:9200"]
       index: "metricbeat-%{[agent.version]}-%{+yyyy.MM.dd}"
   # If overrideConfig is not empty, metricbeat chart's default config won't be used at all.
   overrideConfig: {}
