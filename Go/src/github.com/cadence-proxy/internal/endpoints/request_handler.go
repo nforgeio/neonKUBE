@@ -1509,7 +1509,10 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	setReplayStatus(ctx, reply)
 
 	// pause the current workflow for the specified duration
-	err := workflow.Sleep(ctx, request.GetDuration())
+	var result interface{}
+	future := workflow.NewTimer(ctx, request.GetDuration())
+	// send ACK here
+	err := future.Get(ctx, &result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err, cadenceerrors.Cancelled))
 
