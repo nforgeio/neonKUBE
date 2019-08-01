@@ -82,30 +82,30 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public bool IsDebugEnabled => log.IsDebugEnabled;
+        public bool IsLogDebugEnabled => log.IsLogDebugEnabled;
 
         /// <inheritdoc/>
-        public bool IsSInfoEnabled => log.IsSInfoEnabled;
+        public bool IsLogSInfoEnabled => log.IsLogSInfoEnabled;
 
         /// <inheritdoc/>
-        public bool IsInfoEnabled => log.IsInfoEnabled;
+        public bool IsLogInfoEnabled => log.IsLogInfoEnabled;
 
         /// <inheritdoc/>
-        public bool IsWarnEnabled => log.IsWarnEnabled;
+        public bool IsLogWarnEnabled => log.IsLogWarnEnabled;
 
         /// <inheritdoc/>
-        public bool IsErrorEnabled => log.IsErrorEnabled;
+        public bool IsLogErrorEnabled => log.IsLogErrorEnabled;
 
         /// <inheritdoc/>
-        public bool IsSErrorEnabled => log.IsSErrorEnabled;
+        public bool IsLogSErrorEnabled => log.IsLogSErrorEnabled;
 
         /// <inheritdoc/>
-        public bool IsCriticalEnabled => log.IsCriticalEnabled;
+        public bool IsLogCriticalEnabled => log.IsLogCriticalEnabled;
 
         /// <inheritdoc/>
-        public bool IsEnabled(LogLevel logLevel)
+        public bool IsLogLevelEnabled(LogLevel logLevel)
         {
-            return log.IsEnabled(logLevel);
+            return log.IsLogLevelEnabled(logLevel);
         }
 
         /// <inheritdoc/>

@@ -183,7 +183,7 @@ namespace Neon.Kube
 
                 if (string.IsNullOrEmpty(node.Labels.StorageSize))
                 {
-                    node.Labels.StorageSize = ByteUnits.ToGiBString(node.GetVmDisk(cluster.Definition));
+                    node.Labels.StorageSize = ByteUnits.ToGiString(node.GetVmDisk(cluster.Definition));
                 }
             }
 

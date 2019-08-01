@@ -106,12 +106,12 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns an <see cref="HttpClient"/> suitable for querying the service.
         /// </summary>
-        public HttpClient HttpClient => JsonClient.HttpClient;
+        public HttpClient HttpClient => JsonClient?.HttpClient;
 
         /// <summary>
         /// Returns the base URI for the running service.
         /// </summary>
-        public Uri BaseAddress => JsonClient.BaseAddress;
+        public Uri BaseAddress => JsonClient?.BaseAddress;
 
         /// <summary>
         /// Returns the service's <see cref="IWebHost"/>.

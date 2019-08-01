@@ -17,11 +17,17 @@
     <DocumentationFile>bin\Debug\neon.xml</DocumentationFile>
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\neon.xml</DocumentationFile>
     <OutputPath>bin\Release</OutputPath>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,17 +48,18 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Windows.Compatibility" Version="2.0.1" />
+    <PackageReference Include="KubernetesClient" Version="1.5.25" />
+    <PackageReference Include="Microsoft.Windows.Compatibility" Version="3.0.0-preview7.19362.9" />
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageReference Include="System.Security.Principal.Windows" Version="4.5.1" />
+    <PackageReference Include="System.Security.Principal.Windows" Version="4.6.0-preview7.19362.9" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="YamlDotNet" Version="6.0.0" />
+    <PackageReference Include="YamlDotNet" Version="6.1.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Lib\Neon.CodeGen\Neon.CodeGen.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />

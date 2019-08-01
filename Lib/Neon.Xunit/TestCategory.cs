@@ -45,9 +45,9 @@ namespace Neon.Xunit
         public const string NeonCadence = "Neon.Cadence";
 
         /// <summary>
-        /// Identifies <b>Neon.CodeGen</b> tests.
+        /// Identifies <b>Neon.ModelGen</b> tests.
         /// </summary>
-        public const string NeonCodeGen = "Neon.CodeGen";
+        public const string NeonModelGen = "Neon.ModelGen";
 
         /// <summary>
         /// Identifies <b>Neon.Common</b> tests.
@@ -83,5 +83,10 @@ namespace Neon.Xunit
         /// Identifies <b>neon-xunit</b> tests.
         /// </summary>
         public const string NeonXunit = "neon-xunit";
+
+        /// <summary>
+        /// Identifies <b>Neon.Web</b> tests.
+        /// </summary>
+        public const string NeonWeb = "Neon.Web";
     }
 }

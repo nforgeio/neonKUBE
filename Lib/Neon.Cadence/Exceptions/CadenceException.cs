@@ -31,7 +31,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message">The message.</param>
+        /// <param name="message">Optionally specifies message.</param>
         /// <param name="innerException">Optionally specifies the inner exception.</param>
         public CadenceException(string message = null, Exception innerException = null)
             : base(message, innerException)
@@ -43,7 +43,7 @@ namespace Neon.Cadence
         /// exception or <c>null</c> when the exception does not map to an
         /// error string.
         /// </summary>
-        internal virtual string CadenceError => "unknown";
+        internal virtual string CadenceError => null;
 
         /// <summary>
         /// Returns the Cadence error type.

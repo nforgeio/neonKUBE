@@ -36,6 +36,6 @@ namespace Neon.Xen
         /// <summary>
         /// The drive size in bytes.
         /// </summary>
-        public long Size { get; set; }
+        public decimal Size { get; set; }
     }
 }

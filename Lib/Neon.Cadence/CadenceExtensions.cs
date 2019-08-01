@@ -18,34 +18,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
-using Neon.Common;
-using Neon.Diagnostics;
-using Neon.IO;
-using Neon.Net;
-using Neon.Tasks;
-
+using Neon.Cadence;
 using Neon.Cadence.Internal;
+using Neon.Common;
 
 namespace Neon.Cadence
 {
@@ -67,17 +49,30 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(request != null);
 
-            var bytes   = request.Serialize();
-            var content = new ByteArrayContent(bytes);
-
-            content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
-
-            var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+            if (client == null)
             {
-                Content = content
-            };
+                throw new TaskCanceledException();
+            }
 
-            return await client.SendAsync(httpRequest);
+            var stream = request.SerializeAsStream();
+
+            try
+            {
+                var content = new StreamContent(stream);
+
+                content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+                {
+                    Content = content
+                };
+
+                return await client.SendAsync(httpRequest);
+            }
+            finally
+            {
+                MemoryStreamPool.Free(stream);
+            }
         }
 
         /// <summary>
@@ -107,17 +102,25 @@ namespace Neon.Cadence
 
             reply.RequestId = request.RequestId;
 
-            var bytes   = reply.Serialize();
-            var content = new ByteArrayContent(bytes);
+            var stream = reply.SerializeAsStream();
 
-            content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
-
-            var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+            try
             {
-                Content = content
-            };
+                var content = new StreamContent(stream);
 
-            return await client.SendAsync(httpRequest);
+                content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
+
+                var httpRequest = new HttpRequestMessage(HttpMethod.Put, "/")
+                {
+                    Content = content
+                };
+
+                return await client.SendAsync(httpRequest);
+            }
+            finally
+            {
+                MemoryStreamPool.Free(stream);
+            }
         }
     }
 }

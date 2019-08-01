@@ -46,12 +46,12 @@ namespace Neon.Kube
     public class CephOptions
     {
         private const string    defaultRelease             = "mimic";
-        private const string    defaultOSDDriveSize        = "16GiB";
-        private const string    defaultOSDCacheSize        = "256MiB";
-        private const string    defaultOSDJournalSize      = "1GiB";
-        private const string    defaultOSDObjectSizeMax    = "5GiB";
+        private const string    defaultOSDDriveSize        = "16Gi";
+        private const string    defaultOSDCacheSize        = "256Mi";
+        private const string    defaultOSDJournalSize      = "1Gi";
+        private const string    defaultOSDObjectSizeMax    = "5Gi";
         private const int       defaultOSDPlacementGroups  = 100;
-        private const string    defaultMDSCacheSize        = "64MiB";
+        private const string    defaultMDSCacheSize        = "64Mi";
         private const string    defaultVolumePluginPackage = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-volume-plugin_latest.deb";
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Neon.Kube
         /// <para>
         /// Specifies the default size of the Ceph OSD drives created for cloud and
         /// hypervisor based environments (<see cref="ByteUnits"/>).  This can be 
-        /// overridden  for specific nodes.  This defaults to <b>16GiB</b>.
+        /// overridden  for specific nodes.  This defaults to <b>16Gi</b>.
         /// </para>
         /// <note>
         /// The default may be too small for production environments
@@ -128,7 +128,7 @@ namespace Neon.Kube
         /// <para>
         /// Specifies the default amount of RAM to allocate to Ceph OSD processes for 
         /// caching (<see cref="ByteUnits"/>).  his can be overridden for specific nodes. 
-        /// This defaults to <b>256MiB</b>.
+        /// This defaults to <b>256Mi</b>.
         /// </para>
         /// <note>
         /// <para>
@@ -154,7 +154,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Specifies the default size to allocate for the OSD journals  (<see cref="ByteUnits"/>).  
-        /// This  can be overridden for specific nodes.  This defaults to <b>1GiB</b>.
+        /// This  can be overridden for specific nodes.  This defaults to <b>1Gi</b>.
         /// </para>
         /// <note>
         /// The default may be too small for production environments
@@ -167,7 +167,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the maximum size of a Ceph RADOS object in bytes (<see cref="ByteUnits"/>).  
-        /// This can be overridden for specific nodes.  This defaults to <b>5GiB</b>.
+        /// This can be overridden for specific nodes.  This defaults to <b>5Gi</b>.
         /// </summary>
         [JsonProperty(PropertyName = "OSDObjectSizeMax", Required = Required.Default)]
         [YamlMember(Alias = "osdObjectSizeMax", ApplyNamingConventions = false)]
@@ -208,7 +208,7 @@ namespace Neon.Kube
         /// <para>
         /// Specifies the default amount of RAM to allocate to Ceph MDS processes for 
         /// caching (<see cref="ByteUnits"/>). This can be overridden for specific nodes. 
-        /// This defaults to <b>64MiB</b>.
+        /// This defaults to <b>64Mi</b>.
         /// </para>
         /// <note>
         /// <para>
@@ -260,6 +260,7 @@ namespace Neon.Kube
             var cephMONCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMON);
             var cephOSDCount = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
             var cephMDSCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
+            var cephMGRCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMGR);
 
             if (cephMONCount == 0)
             {
@@ -298,7 +299,7 @@ namespace Neon.Kube
                 }
             }
 
-            if (cephMONCount == 0)
+            if (cephMDSCount == 0)
             {
                 // No Ceph MDS nodes are explicitly assigned so we're going to provision
                 // these on the Ceph Monitor servers.
@@ -306,6 +307,17 @@ namespace Neon.Kube
                 foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMON))
                 {
                     node.Labels.CephMDS = true;
+                }
+            }
+
+            if (cephMGRCount == 0)
+            {
+                // No Ceph MGR nodes are explicitly assigned so we're going to provision
+                // these on the Ceph Monitor servers.
+
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMON))
+                {
+                    node.Labels.CephMGR = true;
                 }
             }
 
@@ -330,27 +342,27 @@ namespace Neon.Kube
 
             if (ClusterDefinition.ValidateSize(OSDDriveSize, this.GetType(), nameof(OSDDriveSize)) < ByteUnits.GibiBytes)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1GiB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1Gi].");
             }
 
             if (ClusterDefinition.ValidateSize(OSDCacheSize, this.GetType(), nameof(OSDCacheSize)) < 64 * ByteUnits.MebiBytes)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [64MiB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [64Mi].");
             }
 
             if (ClusterDefinition.ValidateSize(OSDJournalSize, this.GetType(), nameof(OSDJournalSize)) < 64 * ByteUnits.MebiBytes)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [64MiB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [64Mi].");
             }
 
             if (ClusterDefinition.ValidateSize(OSDObjectSizeMax, this.GetType(), nameof(OSDObjectSizeMax)) < 64 * ByteUnits.MebiBytes)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [64MiB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [64Mi].");
             }
 
             if (ClusterDefinition.ValidateSize(MDSCacheSize, this.GetType(), nameof(MDSCacheSize)) < 64 * ByteUnits.MebiBytes)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [64MiB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [64Mi].");
             }
 
             if (cephMONCount == 0)
@@ -367,6 +379,11 @@ namespace Neon.Kube
             {
                 throw new ClusterDefinitionException($"Ceph storage cluster requires at least one MDS (metadata) node.");
             }
+
+            //if (cephMGRCount == 0)
+            //{
+            //    throw new ClusterDefinitionException($"Ceph storage cluster requires at least one MDS (metadata) node.");
+            //}
 
             if (OSDReplicaCount == 0)
             {

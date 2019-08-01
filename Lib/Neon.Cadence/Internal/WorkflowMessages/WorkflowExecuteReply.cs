@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -32,26 +25,26 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="WorkflowExecuteRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowExecuteRequest"/>
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteReply)]
-    internal class WorkflowExecuteReply : ProxyReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteReply)]
+    internal class WorkflowExecuteReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
         public WorkflowExecuteReply()
         {
-            Type = MessageTypes.WorkflowExecuteReply;
+            Type = InternalMessageTypes.WorkflowExecuteReply;
         }
 
         /// <summary>
-        /// Returns the workflow's <b>TaskStartToCloseTimeout</b>.
+        /// Returns details identifying the workflow execution.
         /// </summary>
-        public TimeSpan DecisionTimeout
+        public InternalWorkflowExecution Execution
         {
-            get => GetTimeSpanProperty("DecisionTimeout");
-            set => SetTimeSpanProperty("DecisionTimeout", value);
+            get => GetJsonProperty<InternalWorkflowExecution>(PropertyNames.Execution);
+            set => SetJsonProperty<InternalWorkflowExecution>(PropertyNames.Execution, value);
         }
 
         /// <inheritdoc/>
@@ -71,7 +64,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteReply)target;
 
-            typedTarget.DecisionTimeout = this.DecisionTimeout;
+            typedTarget.Execution = this.Execution;
         }
     }
 }

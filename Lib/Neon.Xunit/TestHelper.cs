@@ -20,12 +20,14 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Kube.Service;
 using Neon.Xunit;
 
 using Xunit;
@@ -108,7 +110,7 @@ namespace Neon.Xunit
             // This is a simple but stupid order n^2 algorithm which will blow
             // up for larger lists.
 
-            var expectedCount   = expected.Count();
+            var expectedCount = expected.Count();
             var collectionCount = collection.Count();
 
             if (expectedCount != collectionCount)
@@ -174,7 +176,7 @@ namespace Neon.Xunit
             // This is a simple but stupid order n^2 algorithm which will blow
             // up for larger lists.
 
-            var expectedCount   = expected.Count();
+            var expectedCount = expected.Count();
             var collectionCount = collection.Count();
 
             if (expectedCount != collectionCount)
@@ -234,7 +236,7 @@ namespace Neon.Xunit
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(dictionary != null);
 
-            var expectedCount   = expected.Count();
+            var expectedCount = expected.Count();
             var dictionaryCount = dictionary.Count();
 
             if (expectedCount != dictionaryCount)
@@ -299,7 +301,7 @@ namespace Neon.Xunit
             Covenant.Requires<ArgumentNullException>(dictionary != null);
             Covenant.Requires<ArgumentNullException>(comparer != null);
 
-            var expectedCount   = expected.Count();
+            var expectedCount = expected.Count();
             var dictionaryCount = dictionary.Count();
 
             if (expectedCount != dictionaryCount)
@@ -371,6 +373,243 @@ namespace Neon.Xunit
             }
 
             Assert.Equal(expected, actual);
+        }
+
+        /// <summary>
+        /// Verifies that an action throws a <typeparamref name="TException"/> or an
+        /// <see cref="AggregateException"/> that contains <typeparamref name="TException"/>.
+        /// </summary>
+        /// <typeparam name="TException">The required exception type.</typeparam>
+        /// <param name="action">The test action.</param>
+        public static void AssertThrows<TException>(Action action)
+            where TException : Exception
+        {
+            Covenant.Requires<ArgumentNullException>(action != null);
+
+            try
+            {
+                action();
+                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   (no exception thrown)");
+            }
+            catch (Exception e)
+            {
+                if (e is TException || e.Contains<TException>())
+                {
+                    return;
+                }
+
+                Assert.True(false, $"Expected: {nameof(TException)}\r\nActual:   {e.GetType().Name}");
+            }
+        }
+
+        /// <summary>
+        /// Verifies that an asynchronous action throws a <typeparamref name="TException"/> or an
+        /// <see cref="AggregateException"/> that contains <typeparamref name="TException"/>.
+        /// </summary>
+        /// <typeparam name="TException">The required exception type.</typeparam>
+        /// <param name="action">The test action.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async static Task AssertThrowsAsync<TException>(Func<Task> action)
+            where TException : Exception
+        {
+            Covenant.Requires<ArgumentNullException>(action != null);
+
+            try
+            {
+                await action();
+                Assert.True(false, $"Expected: {typeof(TException).FullName}\r\nActual:   (no exception thrown)");
+            }
+            catch (Exception e)
+            {
+                if (e is TException || e.Contains<TException>())
+                {
+                    return;
+                }
+
+                Assert.True(false, $"Expected: {typeof(TException).FullName}\r\nActual:   {e.GetType().Name}");
+            }
+        }
+
+        /// <summary>
+        /// Used to run a <see cref="TestFixture"/> outside of a unit test.
+        /// </summary>
+        /// <typeparam name="T">Specifies the test type.</typeparam>
+        /// <param name="args">
+        /// Optional parameters that will be passed to the constructor after the
+        /// fixture parameter.  Note that the number of parameters and their types
+        /// must match the constructor parameters after the fixture one.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// This is often used to run a <see cref="KubeService"/> using <see cref="KubeServiceFixture{TService}"/>
+        /// or a collection of <see cref="KubeService"/> instances for debugging purposes using a combination
+        /// of a <see cref="ComposedFixture"/> with <see cref="KubeServiceFixture{TService}"/> sub-fixtures.
+        /// But, this can also be used for any <see cref="ITestFixture"/> implementation.
+        /// </para>
+        /// <para>
+        /// You'll need to implement a test class that derives from a <see cref="IClassFixture{TFixture}"/>
+        /// implementation and optionally implements <see cref="IDisposable"/>.  You'll pass
+        /// your test type as <typeparamref name="T"/>.  Your test class must include a public
+        /// constructor that accepts a single parameter with the test fixture type and
+        /// a public method with no parameters called <c>public void Run()</c>.
+        /// </para>
+        /// <para>
+        /// This will look something like:
+        /// </para>
+        /// <code language="C#">
+        /// public class MyTestRunner : IClassFixture&lt;ComposedFixture&gt;
+        /// {
+        ///     private ComposedFixture                     composedFixture;
+        ///     private NatsFixture                         natsFixture;
+        ///     private KubeServiceFixture&lt;QueueService&gt;    queueServiceFixture;
+        /// 
+        ///     public MyTestRunner(ComposedFixture fixture)
+        ///     {
+        ///         this.composedFixture = fixture;
+        /// 
+        ///         composedFixture.Start(
+        ///             () =>
+        ///             {
+        ///                 composedFixture.AddFixture("nats", new NatsFixture(),
+        ///                     natsFixture =>
+        ///                     {
+        ///                        natsFixture.StartAsComposed();
+        ///                     });
+        /// 
+        ///                 composedFixture.AddServiceFixture("queue-service", new KubeServiceFixture&lt;QueueService&gt;(), () => CreateQueueService());
+        ///             });
+        /// 
+        ///         this.natsFixture         = (NatsFixture)composedFixture["nats"];
+        ///         this.queueServiceFixture = (KubeServiceFixture&lt;QueueService&gt;)composedFixture["queue-service"];
+        ///     }
+        ///     
+        ///     public void Run()
+        ///     {
+        ///         // The runner will stop when this method returns.  You can
+        ///         // also use this as an opportunity to perform any initialization.
+        ///         // For this example, we're just going to spin slowly forever.
+        ///         
+        ///         while (true)
+        ///         {
+        ///             System.Threading.Thread.Sleep(10000);
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// <para>
+        /// This method performs these steps:
+        /// </para>
+        /// <list type="number">
+        ///     <item>
+        ///     Perform a runtime check to verify that <typeparamref name="T"/> has a public constructor
+        ///     that accepts a single parameter of type <typeparamref name="T"/> as well as any additional
+        ///     parameters.
+        ///     </item>
+        ///     <item>
+        ///     Perform a runtime check to ensure that <typeparamref name="T"/> has a <c>public void Run()</c>
+        ///     method.
+        ///     </item>
+        ///     <item>
+        ///     Instantiate an instance of the test fixture specified by <see cref="IClassFixture{TFixture}"/>.
+        ///     </item>
+        ///     <item>
+        ///     Instantiate an instance of <typeparamref name="T"/>, passing the test fixture just created
+        ///     as the parameter.
+        ///     </item>
+        ///     <item>
+        ///     Call the <c>Run()</c> method and wait for it to return.
+        ///     </item>
+        ///     <item>
+        ///     Dispose the test fixture.
+        ///     </item>
+        ///     <item>
+        ///     Call <see cref="IDisposable.Dispose"/>, if implemented by the test class.
+        ///     </item>
+        ///     <item>
+        ///     The method returns.
+        ///     </item>
+        /// </list>
+        /// </remarks>
+        public static void RunFixture<T>(params object[] args)
+            where T : class
+        {
+            // Verify that the test class has the required constructor and Run() method.
+
+            var testType         = typeof(T);
+            var classFixtureType = testType.GetInterfaces().SingleOrDefault(t => t.Name.StartsWith("IClassFixture"));
+
+            if (classFixtureType == null || classFixtureType.GenericTypeArguments.Length != 1)
+            {
+                throw new ArgumentException($"Test type [{testType.Name}] does not derive from an [IClassFixture<ITestFixture>].");
+            }
+
+            var fixtureType = classFixtureType.GenericTypeArguments.First();
+            var constructor = (ConstructorInfo)null;
+
+            foreach (var constructorInfo in testType.GetConstructors())
+            {
+                var parameters = constructorInfo.GetParameters();
+
+                if (parameters.Length == 1 + args.Length)
+                {
+                    if (parameters.First().ParameterType == fixtureType)
+                    {
+                        constructor = constructorInfo;
+                        break;
+                    }
+                }
+            }
+
+            if (constructor == null)
+            {
+                throw new ArgumentException($"Test type [{testType.Name}] is missing a public constructor accepting a single [{fixtureType.Name}] paramweter.");
+            }
+
+            var runMethod = testType.GetMethod("Run", new Type[] { });
+
+            if (runMethod == null)
+            {
+                throw new ArgumentException($"Test type [{testType.Name}] is missing a [public void Run()] method.");
+            }
+
+            // Construct the test fixture.
+
+            var fixture = Activator.CreateInstance(fixtureType);
+            T   test    = null;
+
+            try
+            {
+                // Construct the test class and call it's [Run()] method.
+
+                var parameters = new object[1 + args.Length];
+
+                parameters[0] = fixture;
+
+                for (int i = 0; i < args.Length; i++)
+                {
+                    parameters[i + 1] = args[i];
+                }
+
+                test = (T)constructor.Invoke(parameters);
+
+                runMethod.Invoke(test, null);
+            }
+            finally
+            {
+                var fixtureDisposable = fixture as IDisposable;
+
+                if (fixtureDisposable != null)
+                {
+                    fixtureDisposable.Dispose();
+                }
+
+                var testDisposable = test as IDisposable;
+
+                if (testDisposable != null)
+                {
+                    testDisposable.Dispose();
+                }
+            }
         }
     }
 }

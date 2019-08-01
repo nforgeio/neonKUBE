@@ -165,6 +165,30 @@ namespace Neon.Kube
         public const int KubeDashboardProxyPort = 1060;
 
         /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Kibana dashboard for the current cluster.
+        /// </summary>
+        public const int KibanaDashboardProxyPort = 5601;
+
+        /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Prometheus dashboard for the current cluster.
+        /// </summary>
+        public const int PrometheusDashboardProxyPort = 9090;
+
+        /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Kiali dashboard for the current cluster.
+        /// </summary>
+        public const int KialiDashboardProxyPort = 20001;
+
+        /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Grafana dashboard for the current cluster.
+        /// </summary>
+        public const int GrafanaDashboardProxyPort = 3000;
+
+        /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
         public const string SysAdminUser = "sysadmin";
@@ -215,5 +239,23 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         public const int ContainerGID = 1000;
+
+        /// <summary>
+        /// <para>
+        /// The default name for the local <see cref="k8s.Models.V1StorageClass"/>
+        /// </para>
+        /// </summary>
+        public const string LocalStorageClassName = "local-storage";
+
+        /// <summary>
+        /// <para>
+        /// The default path for the <see cref="LocalStorageClassName"/>
+        /// </para>
+        /// <note>
+        /// This is temporary, once Kubernetes supports dynamic provisioning of local storage volumes, we'll use
+        /// that instead.
+        /// </note>
+        /// </summary>
+        public const string LocalVolumePath = "/var/lib/neonkube/volumes";
     }
 }

@@ -254,7 +254,7 @@ ARGUMENTS:
 
                             Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
 
-                            if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) <= File.GetLastWriteTimeUtc(sourcePath))
+                            if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) > File.GetLastWriteTimeUtc(sourcePath))
                             {
                                 Console.WriteLine($"File [{targetPath}] is up to date.");
                                 Program.Exit(0);
@@ -291,7 +291,7 @@ ARGUMENTS:
 
                             Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
 
-                            if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) <= File.GetLastWriteTimeUtc(sourcePath))
+                            if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) > File.GetLastWriteTimeUtc(sourcePath))
                             {
                                 Console.WriteLine($"File [{targetPath}] is up to date.");
                                 Program.Exit(0);

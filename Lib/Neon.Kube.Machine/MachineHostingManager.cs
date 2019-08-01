@@ -215,7 +215,7 @@ namespace Neon.Kube
                 {
                     if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
                     {
-                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiBString(deviceSize);
+                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiString(deviceSize);
                         break;
                     }
                 }

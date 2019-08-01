@@ -178,25 +178,25 @@ namespace Neon.Web
         }
 
         /// <inheritdoc/>
-        public bool IsDebugEnabled => GetLogger().IsDebugEnabled;
+        public bool IsLogDebugEnabled => GetLogger().IsLogDebugEnabled;
 
         /// <inheritdoc/>
-        public bool IsSInfoEnabled => GetLogger().IsSInfoEnabled;
+        public bool IsLogSInfoEnabled => GetLogger().IsLogSInfoEnabled;
 
         /// <inheritdoc/>
-        public bool IsInfoEnabled => GetLogger().IsInfoEnabled;
+        public bool IsLogInfoEnabled => GetLogger().IsLogInfoEnabled;
 
         /// <inheritdoc/>
-        public bool IsWarnEnabled => GetLogger().IsWarnEnabled;
+        public bool IsLogWarnEnabled => GetLogger().IsLogWarnEnabled;
 
         /// <inheritdoc/>
-        public bool IsErrorEnabled => GetLogger().IsErrorEnabled;
+        public bool IsLogErrorEnabled => GetLogger().IsLogErrorEnabled;
 
         /// <inheritdoc/>
-        public bool IsSErrorEnabled => GetLogger().IsSErrorEnabled;
+        public bool IsLogSErrorEnabled => GetLogger().IsLogSErrorEnabled;
 
         /// <inheritdoc/>
-        public bool IsCriticalEnabled => GetLogger().IsCriticalEnabled;
+        public bool IsLogCriticalEnabled => GetLogger().IsLogCriticalEnabled;
 
         /// <inheritdoc/>
         public void Critical(object message, string activityId = null)
@@ -283,9 +283,9 @@ namespace Neon.Web
         }
 
         /// <inheritdoc/>
-        public bool IsEnabled(LogLevel logLevel)
+        public bool IsLogLevelEnabled(LogLevel logLevel)
         {
-            return GetLogger().IsEnabled(logLevel);
+            return GetLogger().IsLogLevelEnabled(logLevel);
         }
 
         /// <inheritdoc/>

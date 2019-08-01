@@ -27,7 +27,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.CodeGen;
+using Neon.ModelGen;
 using Neon.Common;
 
 using Newtonsoft.Json;
@@ -47,6 +47,21 @@ namespace Test.Neon.Models.Definitions
         string ChildProperty { get; set; }
     }
 
+    public enum Gender
+    {
+        [EnumMember(Value = "unspecified")]
+        Unspecified = 0,
+
+        [EnumMember(Value = "male")]
+        Male = 1,
+
+        [EnumMember(Value = "female")]
+        Female = 2,
+
+        [EnumMember(Value = "other")]
+        Other = 3
+    }
+
     [Persistable]
     public interface Person
     {
@@ -54,6 +69,7 @@ namespace Test.Neon.Models.Definitions
         int Id { get; set; }
         string Name { get; set; }
         int Age { get; set; }
+        Gender Gender { get; set; }
         byte[] Data { get; set; }
     }
 
@@ -84,6 +100,24 @@ namespace Test.Neon.Models.Definitions
         string Name { get; set; }
         [JsonProperty(PropertyName = "my-age")]
         int Age { get; set; }
+        [JsonProperty(PropertyName = "my-gender")]
+        Gender Gender { get; set; }
+        [JsonProperty(PropertyName = "my-data")]
+        byte[] Data { get; set; }
+    }
+
+    [DataModel(Name = "nonpersistable-person")]
+    public interface NonPersistablePerson
+    {
+        [PersistableKey]
+        [JsonProperty(PropertyName = "my-id")]
+        int Id { get; set; }
+        [JsonProperty(PropertyName = "my-name")]
+        string Name { get; set; }
+        [JsonProperty(PropertyName = "my-age")]
+        int Age { get; set; }
+        [JsonProperty(PropertyName = "my-gender")]
+        Gender Gender { get; set; }
         [JsonProperty(PropertyName = "my-data")]
         byte[] Data { get; set; }
     }
@@ -120,7 +154,11 @@ namespace Test.Neon.Models.Definitions
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        Person CreatePerson(int id, string name, int age);
+        Person CreatePerson(int id, string name, int age, Gender gender);
+
+        [HttpGet]
+        [Route("nonpersistable-person/{id}/{name}/{age}")]
+        NonPersistablePerson CreateNonPersisablePerson(int id, string name, int age, Gender gender);
 
         [HttpPut]
         Person IncrementAge([FromBody] Person person);
@@ -193,7 +231,6 @@ namespace Test.Neon.Models.Definitions
         Person[] GetPersonArray([FromBody] Person[] value);
     }
 
-
     [ServiceModel]
     [Route("/TestUxAspNetFixture")]
     public interface TestUxAspNetFixtureController
@@ -218,7 +255,7 @@ namespace Test.Neon.Models.Definitions
 
         [HttpGet]
         [Route("person/{id}/{name}/{age}")]
-        Person CreatePerson(int id, string name, int age);
+        Person CreatePerson(int id, string name, int age, Gender gender);
 
         [HttpPut]
         Person IncrementAge([FromBody] Person person);
@@ -304,5 +341,49 @@ namespace Test.Neon.Models.Definitions
         [HttpGet]
         [Route]
         void Hello();
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [Target("Default")]
+    [ServiceModel(name: "Composed", group: "User")]
+    [Route("/api/v1/user")]
+    public interface ComposedUserController
+    {
+        [HttpGet]
+        [Route("{id}")]
+        string Get(int id);
+
+        [HttpGet]
+        string[] List();
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [Target("Default")]
+    [ServiceModel(name: "Composed", group: "Delivery")]
+    [Route("/api/v1/delivery")]
+    public interface ComposedDeliveryController
+    {
+        [HttpGet]
+        [Route("{id}")]
+        string Get(int id);
+
+        [HttpGet]
+        string[] List();
+    }
+
+    /// <summary>
+    /// Used for testing a service client composed of multiple controllers.
+    /// </summary>
+    [Target("Default")]
+    [ServiceModel(name: "Composed")]
+    [Route("/api/v1")]
+    public interface ComposedController
+    {
+        [HttpGet]
+        string GetVersion();
     }
 }

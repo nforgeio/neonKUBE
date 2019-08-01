@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.CodeGen;
+using Neon.ModelGen;
 using Neon.Common;
 using Neon.Kube;
 
@@ -78,6 +78,11 @@ OPTIONS:
                                   names.  Any input models that are not tagged
                                   with these target will not be generated.
 
+    --debug-allow-stepinto      - Indicates that generated class methods will
+                                  not include the [DebuggerStepThrough]
+                                  attribute allowing the debugger to step
+                                  into the generated methods.
+
 REMARKS:
 
 This command is used to generate enhanced JSON based data models and
@@ -97,7 +102,7 @@ style design conventions.  See this GitHub issue for more information:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets" }; }
+            get { return new string[] { "--source-namespace", "--target-namespace", "--persisted", "--ux", "--no-services", "--targets", "--debug-allow-stepinto" }; }
         }
 
         /// <inheritdoc/>
@@ -129,12 +134,13 @@ style design conventions.  See this GitHub issue for more information:
                 }
             }
 
-            var settings = new CodeGeneratorSettings(targets.ToArray())
+            var settings = new ModelGeneratorSettings(targets.ToArray())
             {
-                SourceNamespace  = commandLine.GetOption("--source-namespace"),
-                TargetNamespace  = commandLine.GetOption("--target-namespace"),
-                Persisted        = commandLine.HasOption("--persisted"),
-                NoServiceClients = commandLine.HasOption("--no-services")
+                SourceNamespace       = commandLine.GetOption("--source-namespace"),
+                TargetNamespace       = commandLine.GetOption("--target-namespace"),
+                Persisted             = commandLine.HasOption("--persisted"),
+                NoServiceClients      = commandLine.HasOption("--no-services"),
+                AllowDebuggerStepInto = commandLine.HasOption("--debug-allow-stepinto")
             };
 
             var ux = commandLine.GetOption("--ux");
@@ -152,9 +158,9 @@ style design conventions.  See this GitHub issue for more information:
                 }
             }
 
-            var assembly      = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
-            var codeGenerator = new CodeGenerator(settings);
-            var output        = codeGenerator.Generate(assembly);
+            var assembly       = Assembly.LoadFile(Path.GetFullPath(assemblyPath));
+            var modelGenerator = new ModelGenerator(settings);
+            var output         = modelGenerator.Generate(assembly);
 
             if (output.HasErrors)
             {
@@ -168,6 +174,12 @@ style design conventions.  See this GitHub issue for more information:
 
             if (!string.IsNullOrEmpty(outputPath))
             {
+                // Ensure that all of the parent folders exist.
+
+                var folderPath = Path.GetDirectoryName(outputPath);
+
+                Directory.CreateDirectory(folderPath);
+
                 // Don't write the output file if its contents are already
                 // the same as the generated output.  This will help reduce
                 // wear on SSDs and also make things a tiny bit easier for

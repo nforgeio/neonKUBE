@@ -35,6 +35,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
+using System.IO.Compression;
 
 namespace Neon.Kube
 {
@@ -49,12 +50,12 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string defaultKubeVersion          = "1.14.1";
+        private const string defaultKubeVersion          = "1.15.0";
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
         private const string defaultHelmVersion          = "2.12.3";
-        private const string defaultCalicoVersion        = "3.3";
-        private const string defaultIstioVersion         = "1.1.3";
+        private const string defaultCalicoVersion        = "3.7";
+        private const string defaultIstioVersion         = "1.2.2";
 
         private string[] supportedDockerVersions
             = new string[]
@@ -81,6 +82,7 @@ namespace Neon.Kube
             };
 
         private JsonClient                      jsonClient;
+        private JsonClient                      gitHubClient;
         private Dictionary<string, string>      ubuntuKubeAdmPackages;
         private Dictionary<string, string>      ubuntuKubeCtlPackages;
         private Dictionary<string, string>      ubuntuKubeletPackages;
@@ -93,6 +95,10 @@ namespace Neon.Kube
             jsonClient = new JsonClient();
             jsonClient.HttpClient.Timeout = TimeSpan.FromSeconds(10);
 
+            gitHubClient = new JsonClient();
+            gitHubClient.BaseAddress = new Uri("https://api.github.com");
+            gitHubClient.DefaultRequestHeaders.UserAgent.ParseAdd("HttpClient");
+            
             // $hack(jeff.lill):
             //
             // We need to manually maintain the Kubernetes version to the
@@ -124,7 +130,8 @@ namespace Neon.Kube
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" }
+                { "1.14.1", "1.14.1-00" },
+                { "1.15.0", "1.15.0-00" }
             };
 
             ubuntuKubeCtlPackages = new Dictionary<string, string>()
@@ -133,7 +140,8 @@ namespace Neon.Kube
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" }
+                { "1.14.1", "1.14.1-00" },
+                { "1.15.0", "1.15.0-00" }
             };
 
             ubuntuKubeletPackages = new Dictionary<string, string>
@@ -142,7 +150,8 @@ namespace Neon.Kube
                 { "1.13.1", "1.13.1-00" },
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" }
+                { "1.14.1", "1.14.1-00" },
+                { "1.15.0", "1.15.0-00" }
             };
         }
 
@@ -264,7 +273,7 @@ namespace Neon.Kube
                 // we do decide to allow for custom CNIs, we'll need to figure this out.
 
                 CalicoRbacYamlUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
-                CalicoSetupYamlUri          = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/kubernetes-datastore/calico-networking/1.7/calico.yaml",
+                CalicoSetupYamlUri          = $"https://docs.projectcalico.org/v{calicoVersion}/manifests/calico.yaml",
 
                 IstioLinuxUri               = $"https://github.com/istio/istio/releases/download/{istioVersion}/istio-{istioVersion}-linux.tar.gz"
             };
@@ -305,6 +314,53 @@ namespace Neon.Kube
                 UpdateReleaseNotesUrl = null,
                 UpdateUrl             = null
             };
+        }
+
+        /// <summary>
+        /// Gets a helm chart from the NeonKube repository and returns it as a zip file
+        /// </summary>
+        /// <returns></returns>
+        public async Task<byte[]> GetHelmChartZipAsync(string chartName, string branch = "master")
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    await AddGitFilesToZipAsync(zip, $"repos/nforgeio/neonKUBE/contents/Charts/{chartName}?ref={branch}", $"Charts/{chartName}");
+                }
+                return memoryStream.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="zip"></param>
+        /// <param name="directory"></param>
+        /// <param name="baseDirectory"></param>
+        /// <returns></returns>
+        public async Task<ZipArchive> AddGitFilesToZipAsync(ZipArchive zip, string directory, string baseDirectory)
+        {
+            var dirListing = await gitHubClient.GetAsync<dynamic>(directory);
+
+            foreach (var file in dirListing)
+            {
+                if (file.type == "file")
+                {
+                    var fileBytes = zip.CreateEntry(((string)file.path).Replace($"{baseDirectory}/", ""));
+
+                    using (var entryStream = fileBytes.Open())
+                    {
+                        await entryStream.WriteAsync(await gitHubClient.HttpClient.GetByteArrayAsync((string)file.download_url));
+                    }
+                }
+                else if (file.type == "dir")
+                {
+                    await AddGitFilesToZipAsync(zip, (string)file.url, baseDirectory);
+                }
+            }
+
+            return zip;
         }
 
         /// <inheritdoc/>

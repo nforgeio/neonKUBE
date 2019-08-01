@@ -404,9 +404,27 @@ namespace Neon.Kube
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalPower", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "pPhysicalPower", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "physicalPower", ApplyNamingConventions = false)]
         [DefaultValue("")]
         public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
+
+        //---------------------------------------------------------------------
+        // Define the logging related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="StorageSize"/>.
+        /// </summary>
+        public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "mon.elasticsearch";
+
+        /// <summary>
+        /// <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
+        /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
+        [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Elasticsearch { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Ceph Storage Cluster related labels.
@@ -430,6 +448,11 @@ namespace Neon.Kube
         /// Reserved label name for <see cref="CephMDS"/>.
         /// </summary>
         public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + "ceph.mds";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephMGR"/>.
+        /// </summary>
+        public const string LabelCephMGR = ClusterDefinition.ReservedLabelPrefix + "ceph.mgr";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDDriveSize"/>.
@@ -525,6 +548,17 @@ namespace Neon.Kube
         [YamlMember(Alias = "cephMDS", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CephMDS { get; set; } = false;
+
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.mgr</b> [<c>bool</c>]: Indicates that a Ceph MGR 
+        /// (manager server) will be deployed to this node if <see cref="CephOptions.Enabled"/> 
+        /// is <c>true</c>.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephMGR", Required = Required.Default)]
+        [YamlMember(Alias = "cephMGR", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool CephMGR { get; set; } = false;
 
         /// <summary>
         /// <b>io.neonkube.ceph.drivesize</b> [<c>int</c>]: Specifies the size in bytes
@@ -666,10 +700,13 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
 
+                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,    NeonHelper.ToBoolString(Elasticsearch)));
+
                 list.Add(new KeyValuePair<string, object>(LabelCephMON,                 NeonHelper.ToBoolString(CephMON)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 NeonHelper.ToBoolString(CephOSD)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
                 list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 NeonHelper.ToBoolString(CephMDS)));
+                list.Add(new KeyValuePair<string, object>(LabelCephMGR,                 NeonHelper.ToBoolString(CephMGR)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDriveSize,        CephOSDDriveSize));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDCacheSize,        CephOSDCacheSize));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDJournalSize,      CephOSDJournalSize));

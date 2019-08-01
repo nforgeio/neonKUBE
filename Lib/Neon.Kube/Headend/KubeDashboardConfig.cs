@@ -67,6 +67,10 @@ namespace Neon.Kube
 
                     return (Version: "1.10.1", ConfigYaml: DashboardYaml_1_10_1);
 
+                case "1.15.0":
+
+                    return (Version: "1.10.1", ConfigYaml: DashboardYaml_1_10_1);
+
                 default:
 
                     throw new NotSupportedException($"No known dashboard that's compatible with Kubernetes [{kubernetesVersion}].");

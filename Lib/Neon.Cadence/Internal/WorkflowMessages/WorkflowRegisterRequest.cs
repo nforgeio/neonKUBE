@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -32,29 +25,38 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>library --> proxy:</b> Registers a workflow handler by name.
+    /// <b>client --> proxy:</b> Registers a workflow handler by name.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowRegisterRequest)]
-    internal class WorkflowRegisterRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.WorkflowRegisterRequest)]
+    internal class WorkflowRegisterRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
         public WorkflowRegisterRequest()
         {
-            Type = MessageTypes.WorkflowRegisterRequest;
+            Type = InternalMessageTypes.WorkflowRegisterRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowRegisterReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowRegisterReply;
 
         /// <summary>
         /// Identifies the workflow implementation.
         /// </summary>
         public string Name
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
+        }
+
+        /// <summary>
+        /// Identifies the target workflow.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <inheritdoc/>
@@ -74,7 +76,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowRegisterRequest)target;
 
-            typedTarget.Name = this.Name;
+            typedTarget.Name   = this.Name;
+            typedTarget.Domain = this.Domain;
         }
     }
 }

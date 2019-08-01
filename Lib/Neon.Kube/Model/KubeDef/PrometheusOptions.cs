@@ -36,6 +36,8 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
+using k8s.Models;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -52,6 +54,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "enabled", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Compute Resources required by Elasticsearch.
+        /// </summary>
+        [JsonProperty(PropertyName = "Resources", Required = Required.Default)]
+        [YamlMember(Alias = "resources", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public V1ResourceRequirements Resources { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

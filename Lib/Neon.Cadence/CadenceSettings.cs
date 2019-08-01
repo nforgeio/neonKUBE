@@ -43,15 +43,6 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Specifies the connection mode.  User applications should use
-        /// the default: <see cref="ConnectionMode.Normal"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "mode", ApplyNamingConventions = false)]
-        [DefaultValue(ConnectionMode.Normal)]
-        public ConnectionMode Mode { get; set; } = ConnectionMode.Normal;
-
-        /// <summary>
         /// One or more Couchbase server URIs.
         /// </summary>
         /// <remarks>
@@ -63,7 +54,7 @@ namespace Neon.Cadence
         [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "servers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Uri> Servers { get; set; } = new List<Uri>();
+        public List<string> Servers { get; set; } = new List<string>();
 
         /// <summary>
         /// Optionally specifies the port where the client will listen for traffic from the 
@@ -76,6 +67,67 @@ namespace Neon.Cadence
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
+        /// Specifies the default Cadence domain for this client.  This defaults to <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Specifying a default domain can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single domain (which is pretty common).
+        /// </para>
+        /// <para>
+        /// The default domain can be overridden for individual method calls by passing a value as the optional <b>domain</b>
+        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
+        /// the <b>domain</b> parameters.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string DefaultDomain { get; set; }
+
+        /// <summary>
+        /// Optionally create the <see cref="DefaultDomain"/> if it doesn't already exist.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CreateDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "createDomain", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool CreateDomain { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the default Cadence task list for this client.  This defaults to <b>null</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Specifying a default task list can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single task list (which is pretty common).
+        /// </para>
+        /// <para>
+        /// The default task list can be overridden for individual method calls by passing a value as the optional <b>taskList</b>
+        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
+        /// the <b>TASKlIST</b> parameters.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultTaskList", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultTaskList", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string DefaultTaskList { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the maximum time the client should wait for synchronous 
+        /// operations to complete.  This defaults to <b>45 seconds</b> when not set.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClientTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clientTimeout", ApplyNamingConventions = false)]
+        [DefaultValue(45.0)]
+        public double ClientTimeoutSeconds { get; set; } = 45.0;
+
+        /// <summary>
+        /// Returns <see cref="ClientTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ClientTimeout => TimeSpan.FromSeconds(ClientTimeoutSeconds);
+
+        /// <summary>
         /// Optionally identifies the client application establishing the connection so that
         /// Cadence may include this in its logs and metrics.  This defaults to <b>"unknown"</b>.
         /// </summary>
@@ -85,6 +137,20 @@ namespace Neon.Cadence
         public string ClientIdentity { get; set; } = "unknown";
 
         /// <summary>
+        /// <para>
+        /// The Cadence cluster security token.  This defaults to <c>null</c>.
+        /// </para>
+        /// <note>
+        /// This is not currently supported by the .NET Cadence client and should be
+        /// left alone for now.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "SecurityToken", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "securityToken", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string SecurityToken { get; set; } = null;
+        
+        /// <summary>
         /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
         /// to indicate that it has received a proxy request message by returning an
         /// OK response.  The proxy will be considered to be unhealthy when this 
@@ -92,19 +158,52 @@ namespace Neon.Cadence
         /// </summary>
         [JsonProperty(PropertyName = "ProxyTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "proxyTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public TimeSpan ProxyTimeout { get; set; } = default;
+        [DefaultValue(5.0)]
+        public double ProxyTimeoutSeconds { get; set; } = 5.0;
+
+        /// <summary>
+        /// Returns <see cref="ProxyTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ProxyTimeout => TimeSpan.FromSeconds(ProxyTimeoutSeconds);
 
         /// <summary>
         /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
         /// to gracefully close its Cadence cluster connection and terminate.  The proxy
         /// will be forceably killed when this time is exceeded.  This defaults to
-        /// <b>30 seconds</b>.
+        /// <b>10 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TerminateTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "terminateTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public TimeSpan TerminateTimeout { get; set; } = default;
+        [DefaultValue(0.0)]
+        public double TerminateTimeoutSeconds { get; set; } = 10.0;
+
+        /// <summary>
+        /// Returns <see cref="TerminateTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan TerminateTimeout => TimeSpan.FromSeconds(Math.Max(TerminateTimeoutSeconds, 0));
+
+        /// <summary>
+        /// Specifies the number of times to retry connecting to the Cadence cluster.  This defaults
+        /// to <b>3</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ConnectRetries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "connectRetries", ApplyNamingConventions = false)]
+        [DefaultValue(3)]
+        public int ConnectRetries { get; set; } = 3;
+
+        /// <summary>
+        /// Specifies the number of seconds to delay between cluster connection attempts.
+        /// This defaults to <b>5.0 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ConnectRetryDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "connectRetryDelaySeconds", ApplyNamingConventions = false)]
+        [DefaultValue(5.0)]
+        public double ConnectRetryDelaySeconds { get; set; } = 5.0;
+
+        /// <summary>
+        /// Returns <see cref="ConnectRetryDelaySeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ConnectRetryDelay => TimeSpan.FromSeconds(Math.Max(ConnectRetryDelaySeconds, 0));
 
         /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
@@ -140,12 +239,46 @@ namespace Neon.Cadence
         public bool Debug { get; set; } = false;
 
         /// <summary>
+        /// <note>
+        /// <b>IMPORTANT:</b> Eventually, we'd like to implement a high-fidelity in-memory emulation
+        /// mode for user based unit testing but the library isn't there yet.  We don't recommend
+        /// that you enable emulation at this time.
+        /// </note>
+        /// <para>
+        /// Optionally specifies that a local in-memory Cadence emulation should be started
+        /// for unit testing.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "Emulate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "emulate", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Emulate { get; set; } = false;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the <see cref="IDataConverter"/> implementation used to manage
+        /// serialization of paramaters and results for workflow and activity methods so they
+        /// can be persisted to the Cadence cluster database.  This defaults to a <see cref="JsonDataConverter"/>
+        /// instance which will serialize data as UTF-8 encoded JSON text.
+        /// </para>
+        /// <note>
+        /// This property cannot be deserialized from JSON or YAML input.  You need to
+        /// specify this type explicitly in code to use a custom converter.
+        /// </note>
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        internal IDataConverter DataConverter { get; set; } = new JsonDataConverter();
+
+        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
         /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and
         /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.2:5000</b>.
         /// This defaults to <c>false.</c>
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugPrelaunched { get; set; } = false;
 
         /// <summary>
@@ -155,34 +288,34 @@ namespace Neon.Cadence
         /// with the <b>cadence-proxy</b> for debugging purposes.  This defaults to
         /// <c>false</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugDisableHandshakes { get; set; } = false;
 
         /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Optionally specifies that the real <b>cadence-proxy</b>
-        /// should not be started and a partially implemented local emulation should be started 
-        /// in its place.  This is used internally for low-level testing and should never be 
-        /// enabled for production (because it won't work).
-        /// </summary>
-        internal bool DebugEmulateProxy { get; set; } = false;
-
-        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
-        /// useful while debugging the library but should never be set for production.
+        /// useful while debugging the client but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugDisableHeartbeats { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
-        /// useful while debugging the library but should never be set for production.
+        /// useful while debugging the client but should never be set for production.
         /// This defaults to <c>false</c>.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugIgnoreTimeouts { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
         /// emulated <b>cadence-proxy</b> for testing purposes.
         /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
         internal bool DebugIgnoreHeartbeats { get; set; } = false;
 
         /// <summary>
@@ -190,6 +323,8 @@ namespace Neon.Cadence
         /// HTTP requests made to the <b>cadence-proxy</b>.  This defaults to
         /// <b>5 seconds</b>.
         /// </summary>
-        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        [JsonIgnore]
+        [YamlIgnore]
+        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
     }
 }

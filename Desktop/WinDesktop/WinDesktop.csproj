@@ -179,6 +179,10 @@
       <Project>{c23307a1-4e5a-4b83-a8eb-90de334868c6}</Project>
       <Name>Neon.Kube</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.SSH.NET\Neon.SSH.NET.csproj">
+      <Project>{123530fe-5f4c-4129-97a8-2246df8b583e}</Project>
+      <Name>Neon.SSH.NET</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.XenServer\Neon.XenServer.csproj">
       <Project>{1a6c061d-83fd-4b53-8e96-80a1546c8f4b}</Project>
       <Name>Neon.XenServer</Name>
@@ -186,13 +190,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection">
-      <Version>3.0.0-preview3.19153.1</Version>
+      <Version>3.0.0-preview7.19362.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions">
-      <Version>3.0.0-preview3.19153.1</Version>
+      <Version>3.0.0-preview7.19362.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Primitives">
-      <Version>3.0.0-preview3.19153.1</Version>
+      <Version>3.0.0-preview7.19362.4</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Net.Http.Server">
       <Version>1.1.4</Version>
@@ -204,13 +208,10 @@
       <Version>2.0.3</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.1</Version>
+      <Version>12.0.2</Version>
     </PackageReference>
     <PackageReference Include="SharpZipLib">
       <Version>1.1.0</Version>
-    </PackageReference>
-    <PackageReference Include="SSH.NET">
-      <Version>2016.1.0</Version>
     </PackageReference>
     <PackageReference Include="System.AppContext">
       <Version>4.3.0</Version>
@@ -228,7 +229,7 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.DiagnosticSource">
-      <Version>4.6.0-preview3.19128.7</Version>
+      <Version>4.6.0-preview7.19362.9</Version>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.Tools">
       <Version>4.3.0</Version>
@@ -261,7 +262,7 @@
       <Version>4.3.4</Version>
     </PackageReference>
     <PackageReference Include="System.Net.Primitives">
-      <Version>4.3.0</Version>
+      <Version>4.3.1</Version>
     </PackageReference>
     <PackageReference Include="System.Net.Sockets">
       <Version>4.3.0</Version>
@@ -285,7 +286,7 @@
       <Version>4.3.1</Version>
     </PackageReference>
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
-      <Version>4.6.0-preview3.19128.7</Version>
+      <Version>4.6.0-preview7.19362.9</Version>
     </PackageReference>
     <PackageReference Include="System.Runtime.Extensions">
       <Version>4.3.1</Version>
@@ -315,7 +316,7 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="System.Text.RegularExpressions">
-      <Version>4.3.0</Version>
+      <Version>4.3.1</Version>
     </PackageReference>
     <PackageReference Include="System.Threading">
       <Version>4.3.0</Version>
@@ -333,7 +334,7 @@
       <Version>4.3.0</Version>
     </PackageReference>
     <PackageReference Include="YamlDotNet">
-      <Version>6.0.0</Version>
+      <Version>6.1.2</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -24,7 +24,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.CodeGen;
+using Neon.ModelGen;
 using Neon.Common;
 using Neon.Data;
 
@@ -140,7 +140,7 @@ namespace Neon.Xunit
             // methods will be validated against the generated service client.  In rare
             // situations, it may be useful to have service controller endpoint that are
             // not covered by the generated clients.  In these situations, you may
-            // tag these methods with [Neon.Common.CodeGen.NoValidation] and the those
+            // tag these methods with [Neon.Common.ModelGen.NoValidation] and the those
             // methods will be ignored.
 
             var controllerMethods = new Dictionary<string, MethodInfo>();

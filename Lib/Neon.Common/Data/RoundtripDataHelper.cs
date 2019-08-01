@@ -39,7 +39,7 @@ namespace Neon.Data
 {
     /// <summary>
     /// Serialization related helpers used by the code generated
-    /// by the <b>Neon.CodeGen</b> library.
+    /// by the <b>Neon.ModelGen</b> library.
     /// </summary>
     public static class RoundtripDataHelper
     {
@@ -47,16 +47,19 @@ namespace Neon.Data
         private static bool                             persistablesInitialzed;
 
         /// <summary>
-        /// Error message used when <see cref="object.GetHashCode()"/> is called on
+        /// The error message used when <see cref="object.GetHashCode()"/> is called on
         /// a generated data model that has bo properties tagged with [HashSource].
         /// </summary>
         public const string NoHashPropertiesError = "At least one data model property must be tagged by [HashSourceAttribute].";
 
         /// <summary>
-        /// Returns the Json serializer.
+        /// Returns the Json global serializer.
         /// </summary>
         public static JsonSerializer Serializer { get; private set; }
 
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
         static RoundtripDataHelper()
         {
             settings = new JsonSerializerSettings()
@@ -89,7 +92,7 @@ namespace Neon.Data
                 return;
             }
 
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (var assembly in AppDomain.CurrentDomain.GetUserAssemblies())
             {
                 foreach (var type in assembly.GetTypes())
                 {

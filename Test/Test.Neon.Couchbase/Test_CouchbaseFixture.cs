@@ -21,15 +21,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Http.Headers;
 
 using Couchbase;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.Net;
 using Neon.Xunit;
 using Neon.Xunit.Couchbase;
 
 using Xunit;
+
+using Newtonsoft.Json;
 
 namespace TestCouchbase
 {
@@ -40,6 +44,7 @@ namespace TestCouchbase
     {
         private CouchbaseFixture    couchbase;
         private NeonBucket          bucket;
+        private JsonClient          jsonClient;
 
         public Test_CouchbaseFixture(CouchbaseFixture couchbase)
         {
@@ -48,6 +53,12 @@ namespace TestCouchbase
             couchbase.Start();
 
             bucket = couchbase.Bucket;
+
+            jsonClient = new JsonClient();
+            jsonClient.BaseAddress = new Uri("http://localhost:8094");
+            jsonClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                                                                                        "Basic",
+                                                                                        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"Administrator:password")));
         }
 
         /// <summary>
@@ -113,6 +124,39 @@ namespace TestCouchbase
 
             Assert.True((bool)index.GetValue("is_primary"));
             Assert.Equal("#primary", (string)index.GetValue("name"));
+
+            // Create a fts index and verify.
+
+            var ftsIndex = new Dictionary<string, object>();
+
+            ftsIndex.Add("type", "fulltext-index");
+            ftsIndex.Add("name", "test");
+            ftsIndex.Add("sourceType", "couchbase");
+            ftsIndex.Add("sourceName", "test");
+
+            await jsonClient.PutAsync("/api/index/test", JsonConvert.SerializeObject(ftsIndex));
+
+            ftsIndex = new Dictionary<string, object>();
+
+            ftsIndex.Add("type", "fulltext-index");
+            ftsIndex.Add("name", "test123");
+            ftsIndex.Add("sourceType", "couchbase");
+            ftsIndex.Add("sourceName", "test");
+
+            await jsonClient.PutAsync("/api/index/test123", JsonConvert.SerializeObject(ftsIndex));
+
+            var ftsIndexes = jsonClient.GetAsync<dynamic>("/api/index").Result.indexDefs;
+
+            Assert.True(((JObject)ftsIndexes.indexDefs).Count == 2);
+
+            // Clear the database and then verify that only the
+            // recreated primary index exists.
+
+            couchbase.Clear();
+
+            ftsIndexes = jsonClient.GetAsync<dynamic>("/api/index").Result.indexDefs;
+
+            Assert.True(((JObject)ftsIndexes.indexDefs).Count == 0);
         }
     }
 }

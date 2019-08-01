@@ -7053,28 +7053,28 @@
             <summary>Provides access to the git information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirty">
-            <summary>IsDirty: true</summary>
+            <summary>IsDirty: false</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirtyString">
-            <summary>IsDirtyString: true</summary>
+            <summary>IsDirtyString: false</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: jeff</summary>
+            <summary>Branch: cadence</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 9ddd8542</summary>
+            <summary>Commit: a925d70d</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 9ddd85422a21277aafc527ee4a1b15320a5fed93</summary>
+            <summary>Sha: a925d70d4c861cf13ab7c21191032d4bc06d07f8</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 243</summary>
+            <summary>Commits on top of base version: 49</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: 0.4.5-alpha-243-g9ddd8542</summary>
+            <summary>Tag: 0.5.2-alpha-49-ga925d70d</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: 0.4.5-alpha</summary>
+            <summary>Base tag: 0.5.2-alpha</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
@@ -7083,10 +7083,10 @@
             <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
-            <summary>Minor: 4</summary>
+            <summary>Minor: 5</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
-            <summary>Patch: 5</summary>
+            <summary>Patch: 2</summary>
         </member>
         <member name="T:ThisAssembly.Git.SemVer">
             <summary>Provides access to SemVer information for the current assembly.</summary>
@@ -7095,10 +7095,10 @@
             <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
-            <summary>Minor: 4</summary>
+            <summary>Minor: 5</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 248</summary>
+            <summary>Patch: 51</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>

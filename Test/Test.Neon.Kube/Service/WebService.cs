@@ -153,7 +153,7 @@ namespace TestKubeService
 
             webHost = new WebHostBuilder()
                 .UseStartup<WebServiceStartup>()
-                .UseKestrel(options => options.Listen(Description.Address, endpoint.Port))
+                .UseKestrel(options => options.Listen(IPAddress.Any, endpoint.Port))
                 .ConfigureServices(services => services.AddSingleton(typeof(WebService), this))
                 .Build();
 

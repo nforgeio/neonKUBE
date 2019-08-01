@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -34,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Base class for all proxy requests.
     /// </summary>
-    [ProxyMessage(MessageTypes.Unspecified)]
+    [InternalProxyMessage(InternalMessageTypes.Unspecified)]
     internal class ProxyReply : ProxyMessage
     {
         /// <summary>
@@ -49,8 +42,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public long RequestId
         {
-            get => GetLongProperty("RequestId");
-            set => SetLongProperty("RequestId", value);
+            get => GetLongProperty(PropertyNames.RequestId);
+            set => SetLongProperty(PropertyNames.RequestId, value);
         }
 
         /// <summary>
@@ -58,8 +51,8 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public CadenceError Error
         {
-            get => GetJsonProperty<CadenceError>("Error");
-            set => SetJsonProperty<CadenceError>("Error", value);
+            get => GetJsonProperty<CadenceError>(PropertyNames.Error);
+            set => SetJsonProperty<CadenceError>(PropertyNames.Error, value);
         }
 
         /// <inheritdoc/>

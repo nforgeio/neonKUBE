@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -32,38 +25,101 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Invokes a workflow instance.
+    /// <b>proxy --> client:</b> Invokes a workflow instance.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeRequest)]
-    internal class WorkflowInvokeRequest : WorkflowContextRequest
+    [InternalProxyMessage(InternalMessageTypes.WorkflowInvokeRequest)]
+    internal class WorkflowInvokeRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
         public WorkflowInvokeRequest()
         {
-            Type = MessageTypes.WorkflowInvokeRequest;
+            Type = InternalMessageTypes.WorkflowInvokeRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowInvokeReply;
 
         /// <summary>
         /// Identifies the workflow implementation to be started.
         /// </summary>
         public string Name
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
         }
 
         /// <summary>
-        /// The workflow arguments dictionary (or <c>null</c>).
+        /// The workflow arguments encoded into a byte array (or <c>null</c>).
         /// </summary>
-        public Dictionary<string, object> Args
+        public byte[] Args
         {
-            get => GetJsonProperty<Dictionary<string, object>>("Args");
-            set => SetJsonProperty<Dictionary<string, object>>("Args", value);
+            get => GetBytesProperty(PropertyNames.Args);
+            set => SetBytesProperty(PropertyNames.Args, value);
+        }
+
+        /// <summary>
+        /// The domain hosting the workflow.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
+        }
+
+        /// <summary>
+        /// The original workflow ID.
+        /// </summary>
+        public string WorkflowId
+        {
+            get => GetStringProperty(PropertyNames.WorkflowId);
+            set => SetStringProperty(PropertyNames.WorkflowId, value);
+        }
+
+        /// <summary>
+        /// The workflow run ID.
+        /// </summary>
+        public string RunId
+        {
+            get => GetStringProperty(PropertyNames.RunId);
+            set => SetStringProperty(PropertyNames.RunId, value);
+        }
+
+        /// <summary>
+        /// The workflow type name.
+        /// </summary>
+        public string WorkflowType
+        {
+            get => GetStringProperty(PropertyNames.WorkflowType);
+            set => SetStringProperty(PropertyNames.WorkflowType, value);
+        }
+
+        /// <summary>
+        /// The task list where the workflow is executing.
+        /// </summary>
+        public string TaskList
+        {
+            get => GetStringProperty(PropertyNames.TaskList);
+            set => SetStringProperty(PropertyNames.TaskList, value);
+        }
+
+        /// <summary>
+        /// The maximum duration the workflow is allowed to run.
+        /// </summary>
+        public TimeSpan ExecutionStartToCloseTimeout
+        {
+            get => GetTimeSpanProperty(PropertyNames.ExecutionStartToCloseTimeout);
+            set => SetTimeSpanProperty(PropertyNames.ExecutionStartToCloseTimeout, value);
+        }
+
+        /// <summary>
+        /// Indicates the current workflow replay state.
+        /// </summary>
+        public InternalReplayStatus ReplayStatus
+        {
+            get => GetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus);
+            set => SetEnumProperty<InternalReplayStatus>(PropertyNames.ReplayStatus, value);
         }
 
         /// <inheritdoc/>
@@ -83,19 +139,15 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowInvokeRequest)target;
 
-            typedTarget.Name = this.Name;
-
-            if (this.Args != null)
-            {
-                var clonedArgs = new Dictionary<string, object>();
-
-                foreach (var arg in this.Args)
-                {
-                    clonedArgs.Add(arg.Key, arg.Value);
-                }
-
-                typedTarget.Args = clonedArgs;
-            }
+            typedTarget.Name                         = this.Name;
+            typedTarget.Args                         = this.Args;
+            typedTarget.Domain                       = this.Domain;
+            typedTarget.WorkflowId                   = this.WorkflowId;
+            typedTarget.RunId                        = this.RunId;
+            typedTarget.WorkflowType                 = this.WorkflowType;
+            typedTarget.TaskList                     = this.TaskList;
+            typedTarget.ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout;
+            typedTarget.ReplayStatus                 = this.ReplayStatus;
         }
     }
 }

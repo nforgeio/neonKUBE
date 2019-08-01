@@ -43,18 +43,19 @@ Exports an extended Kubernetes context to standard output.
 
 USAGE:
 
-    neon login export [ USER@CLUSTER[/NAMESPACE] ]
+    neon login export --context=USER@CLUSTER[/NAMESPACE] ] [PATH]
 
 ARGUMENTS:
 
     USER@CLUSTER[/NAMESPACE]    - Kubernetes user, cluster and optional namespace
+    PATH                        - Optional output file (defaults to STDOUT)
 
 REMARKS:
 
     The output includes the Kubernetes context information along
     with additional neonKUBE extensions.  This is intended to be
     used for distributing a context to other cluster operators
-    who can use the [neon login import] command to add the context
+    who will use the [neon login import] command to add the context
     to their workstation.
 ";
 
@@ -62,6 +63,12 @@ REMARKS:
         public override string[] Words
         {
             get { return new string[] { "login", "export" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--force", "--context" }; }
         }
 
         /// <inheritdoc/>
@@ -75,7 +82,8 @@ REMARKS:
         {
             KubeContextName contextName = null;
 
-            var rawName = commandLine.Arguments.FirstOrDefault();
+            var path    = commandLine.Arguments.FirstOrDefault();
+            var rawName = commandLine.GetOption("--context");
 
             if (rawName != null)
             {
@@ -93,6 +101,13 @@ REMARKS:
             }
 
             var context = KubeHelper.Config.GetContext(contextName);
+
+            if (context == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: Context [{contextName}] not found.");
+                Program.Exit(1);
+            }
+
             var cluster = KubeHelper.Config.GetCluster(context.Properties.Cluster);
             var user    = KubeHelper.Config.GetUser(context.Properties.User);
 
@@ -118,7 +133,14 @@ REMARKS:
 
             var yaml = NeonHelper.YamlSerialize(login);
 
-            Console.WriteLine(yaml);
+            if (path == null)
+            {
+                Console.WriteLine(yaml);
+            }
+            else
+            {
+                File.WriteAllText(path, yaml);
+            }
         }
     }
 }

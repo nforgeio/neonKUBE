@@ -173,7 +173,7 @@ namespace Neon.Tasks
         /// <summary>
         /// Waits until the event is signalled.
         /// </summary>
-        public Task WaitAsync()
+        public NonDisposableTask WaitAsync()
         {
             lock (syncLock)
             {
@@ -185,14 +185,14 @@ namespace Neon.Tasks
                 if (isSignalled)
                 {
                     isSignalled = false;
-                    return cachedCompletedTask;
+                    return new NonDisposableTask(cachedCompletedTask);
                 }
                 else
                 {
                     var tcs = new TaskCompletionSource<bool>();
 
                     waitingTasks.Enqueue(tcs);
-                    return tcs.Task;
+                    return new NonDisposableTask(tcs.Task);
                 }
             }
         }

@@ -57,6 +57,10 @@ namespace Neon.Common
 
                     settings.MissingMemberHandling = MissingMemberHandling.Ignore;
 
+                    // Allow cyclic data.
+
+                    settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+
                     // Serialize dates as UTC like: 2012-07-27T18:51:45.534Z
                     //
                     // The nice thing about this is that Couchbase and other NoSQL database will
@@ -88,6 +92,10 @@ namespace Neon.Common
                     // Treat missing members as errors for strict parsing.
 
                     settings.MissingMemberHandling = MissingMemberHandling.Error;
+
+                    // Allow cyclic data.
+
+                    settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 
                     // Serialize dates as UTC like: 2012-07-27T18:51:45.534Z
                     //
@@ -159,6 +167,22 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Serializes an object to UTF-8 encoded JSON bytes.
+        /// </summary>
+        /// <param name="value">The value to be serialized.</param>
+        /// <param name="format">Output formatting option (defaults to <see cref="Formatting.None"/>).</param>
+        /// <returns>The UTF-8 encoded JSON bytes.</returns>
+        /// <remarks>
+        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
+        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// entirely custom settings.
+        /// </remarks>
+        public static byte[] JsonSerializeToBytes(object value, Formatting format = Formatting.None)
+        {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, format, JsonRelaxedSerializerSettings.Value));
+        }
+
+        /// <summary>
         /// Deserializes JSON text, optionally requiring strict mapping of input properties to the target type.
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
@@ -172,9 +196,28 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(string json, bool strict = false)
         {
-            var type = typeof(T);
+            Covenant.Requires<ArgumentNullException>(json != null);
 
             return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
+        }
+
+        /// <summary>
+        /// Deserializes UITF-8 encoded JSON bytes, optionally requiring strict mapping of input properties to the target type.
+        /// </summary>
+        /// <typeparam name="T">The desired output type.</typeparam>
+        /// <param name="jsonBytes">The UTF-8 encoded JSON bytes.</param>
+        /// <param name="strict">Optionally require that all input properties map to <typeparamref name="T"/> properties.</param>
+        /// <returns>The parsed <typeparamref name="T"/>.</returns>
+        /// <remarks>
+        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
+        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// entirely custom settings.
+        /// </remarks>
+        public static T JsonDeserialize<T>(byte[] jsonBytes, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(jsonBytes != null);
+
+            return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(jsonBytes), strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>
@@ -192,8 +235,29 @@ namespace Neon.Common
         public static object JsonDeserialize(Type type, string json, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(json != null);
 
             return JsonConvert.DeserializeObject(json, type, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
+        }
+
+        /// <summary>
+        /// Non-generic method that deserializes UTF-8 encoded JSON bytes, optionally requiring strict mapping of input properties to the target type.
+        /// </summary>
+        /// <param name="type">The target type.</param>
+        /// <param name="jsonBytes">The UTF-8 encoded JSON bytes.</param>
+        /// <param name="strict">Optionally require that all input properties map to <paramref name="type"/> properties.</param>
+        /// <returns>The parsed <c>object</c>.</returns>
+        /// <remarks>
+        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
+        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// entirely custom settings.
+        /// </remarks>
+        public static object JsonDeserialize(Type type, byte[] jsonBytes, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(jsonBytes != null);
+
+            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(jsonBytes), type, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>
@@ -211,6 +275,23 @@ namespace Neon.Common
         public static string JsonSerialize(object value, JsonSerializerSettings settings, Formatting format = Formatting.None)
         {
             return JsonConvert.SerializeObject(value, format, settings ?? JsonRelaxedSerializerSettings.Value);
+        }
+
+        /// <summary>
+        /// Serializes an object to UTF-8 encoded JSON bytes using custom settings.
+        /// </summary>
+        /// <param name="value">The value to be serialized.</param>
+        /// <param name="format">Output formatting option (defaults to <see cref="Formatting.None"/>).</param>
+        /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonStrictSerializerSettings"/>.</param>
+        /// <returns>The ITF-8 encoded JSON bytes.</returns>
+        /// <remarks>
+        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
+        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// entirely custom settings.
+        /// </remarks>
+        public static byte[] JsonSerializeToBytes(object value, JsonSerializerSettings settings, Formatting format = Formatting.None)
+        {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(value, format, settings ?? JsonRelaxedSerializerSettings.Value));
         }
 
         /// <summary>

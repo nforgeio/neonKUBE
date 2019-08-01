@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -32,17 +25,17 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Answers a <see cref="WorkflowInvokeRequest"/>
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowInvokeRequest"/>
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowInvokeReply)]
-    internal class WorkflowInvokeReply : ProxyReply
+    [InternalProxyMessage(InternalMessageTypes.WorkflowInvokeReply)]
+    internal class WorkflowInvokeReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
         public WorkflowInvokeReply()
         {
-            Type = MessageTypes.WorkflowInvokeReply;
+            Type = InternalMessageTypes.WorkflowInvokeReply;
         }
 
         /// <summary>
@@ -50,8 +43,89 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public byte[] Result
         {
-            get => GetBytesProperty("Result");
-            set => SetBytesProperty("Result", value);
+            get => GetBytesProperty(PropertyNames.Result);
+            set => SetBytesProperty(PropertyNames.Result, value);
+        }
+
+        /// <summary>
+        /// Indicates whether the workflow should be exited and then restarted,
+        /// with an empty history.  This is useful for very long running looping
+        /// workflows that would otherwise end up with very long task histories.
+        /// </summary>
+        public bool ContinueAsNew
+        {
+            get => GetBoolProperty(PropertyNames.ContinueAsNew);
+            set => SetBoolProperty(PropertyNames.ContinueAsNew, value);
+        }
+
+        /// <summary>
+        /// Specifies the arguments to use for the new workflow when 
+        /// <see cref="ContinueAsNew"/> is <c>true</c>.
+        /// </summary>
+        public byte[] ContinueAsNewArgs
+        {
+            get => GetBytesProperty(PropertyNames.ContinueAsNewArgs);
+            set => SetBytesProperty(PropertyNames.ContinueAsNewArgs, value);
+        }
+
+        /// <summary>
+        /// Optionally overrides the current workflow's timeout for the restarted
+        /// workflow when this value is greater than zero.
+        /// </summary>
+        public long ContinueAsNewExecutionStartToCloseTimeout
+        {
+            get => GetLongProperty(PropertyNames.ContinueAsNewExecutionStartToCloseTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewExecutionStartToCloseTimeout, value);
+        }
+
+        /// <summary>
+        /// Optionally overrides the current workflow's timeout for the restarted
+        /// workflow when this value is greater than zero.
+        /// </summary>
+        public long ContinueAsNewScheduleToCloseTimeout
+        {
+            get => GetLongProperty(PropertyNames.ContinueAsNewScheduleToCloseTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewScheduleToCloseTimeout, value);
+        }
+
+        /// <summary>
+        /// Optionally overrides the current workflow's timeout for the restarted
+        /// workflow when this value is greater than zero.
+        /// </summary>
+        public long ContinueAsNewScheduleToStartTimeout
+        {
+            get => GetLongProperty(PropertyNames.ContinueAsNewScheduleToStartTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewScheduleToStartTimeout, value);
+        }
+
+        /// <summary>
+        /// Optionally overrides the current workflow's timeout for the restarted
+        /// workflow when this value is greater than zero.
+        /// </summary>
+        public long ContinueAsNewStartToCloseTimeout
+        {
+            get => GetLongProperty(PropertyNames.ContinueAsNewStartToCloseTimeout);
+            set => SetLongProperty(PropertyNames.ContinueAsNewStartToCloseTimeout, value);
+        }
+
+        /// <summary>
+        /// Optionally overrides the current workflow's task list for the restarted
+        /// workflow when this value is not <c>null</c>.
+        /// </summary>
+        public string ContinueAsNewTaskList
+        {
+            get => GetStringProperty(PropertyNames.ContinueAsNewTaskList);
+            set => SetStringProperty(PropertyNames.ContinueAsNewTaskList, value);
+        }
+
+        /// <summary>
+        /// Optionally overrides the current workflow's domain for the restarted
+        /// workflow when this value is not <c>null</c>.
+        /// </summary>
+        public string ContinueAsNewDomain
+        {
+            get => GetStringProperty(PropertyNames.ContinueAsNewDomain);
+            set => SetStringProperty(PropertyNames.ContinueAsNewDomain, value);
         }
 
         /// <inheritdoc/>
@@ -70,6 +144,16 @@ namespace Neon.Cadence.Internal
             base.CopyTo(target);
 
             var typedTarget = (WorkflowInvokeReply)target;
+
+            typedTarget.Result                                    = this.Result;
+            typedTarget.ContinueAsNew                             = this.ContinueAsNew;
+            typedTarget.ContinueAsNewArgs                         = this.ContinueAsNewArgs;
+            typedTarget.ContinueAsNewExecutionStartToCloseTimeout = this.ContinueAsNewExecutionStartToCloseTimeout;
+            typedTarget.ContinueAsNewTaskList                     = this.ContinueAsNewTaskList;
+            typedTarget.ContinueAsNewDomain                       = this.ContinueAsNewDomain;
+            typedTarget.ContinueAsNewScheduleToCloseTimeout       = this.ContinueAsNewScheduleToCloseTimeout;
+            typedTarget.ContinueAsNewScheduleToStartTimeout       = this.ContinueAsNewScheduleToStartTimeout;
+            typedTarget.ContinueAsNewStartToCloseTimeout          = this.ContinueAsNewStartToCloseTimeout;
         }
     }
 }

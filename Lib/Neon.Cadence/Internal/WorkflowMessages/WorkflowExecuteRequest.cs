@@ -18,13 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 using Neon.Cadence;
 using Neon.Common;
@@ -32,56 +25,56 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> library:</b> Starts a workflow execution.
+    /// <b>proxy --> client:</b> Starts a workflow execution.
     /// </summary>
-    [ProxyMessage(MessageTypes.WorkflowExecuteRequest)]
-    internal class WorkflowExecuteRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.WorkflowExecuteRequest)]
+    internal class WorkflowExecuteRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
         public WorkflowExecuteRequest()
         {
-            Type = MessageTypes.WorkflowExecuteRequest;
+            Type = InternalMessageTypes.WorkflowExecuteRequest;
         }
 
         /// <inheritdoc/>
-        public override MessageTypes ReplyType => MessageTypes.WorkflowExecuteReply;
-
-        /// <summary>
-        /// Identifies the target domain where the workflow will run.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty("Domain");
-            set => SetStringProperty("Domain", value);
-        }
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowExecuteReply;
 
         /// <summary>
         /// Identifies the workflow implementation to be started.
         /// </summary>
-        public string Name
+        public string Workflow
         {
-            get => GetStringProperty("Name");
-            set => SetStringProperty("Name", value);
+            get => GetStringProperty(PropertyNames.Workflow);
+            set => SetStringProperty(PropertyNames.Workflow, value);
         }
 
         /// <summary>
-        /// The workflow arguments dictionary (or <c>null</c>).
+        /// Optionally specifies the workflow arguments encoded as a byte array.
         /// </summary>
-        public Dictionary<string, object> Args
+        public byte[] Args
         {
-            get => GetJsonProperty<Dictionary<string, object>>("Args");
-            set => SetJsonProperty<Dictionary<string, object>>("Args", value);
+            get => GetBytesProperty(PropertyNames.Args);
+            set => SetBytesProperty(PropertyNames.Args, value);
         }
 
         /// <summary>
-        /// The workflow start options.
+        /// Optionally specifies the workflow start options.
         /// </summary>
-        public StartWorkflowOptions Options
+        public InternalStartWorkflowOptions Options
         {
-            get => GetJsonProperty<StartWorkflowOptions>("Options");
-            set => SetJsonProperty<StartWorkflowOptions>("Options", value);
+            get => GetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options);
+            set => SetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options, value);
+        }
+
+        /// <summary>
+        /// Specifies the Cadence domain where the workflow will run.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value);
         }
 
         /// <inheritdoc/>
@@ -101,21 +94,10 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteRequest)target;
 
-            typedTarget.Domain  = this.Domain;
-            typedTarget.Name    = this.Name;
-            typedTarget.Options = this.Options;
-
-            if (this.Args != null)
-            {
-                var clonedArgs = new Dictionary<string, object>();
-
-                foreach (var arg in this.Args)
-                {
-                    clonedArgs.Add(arg.Key, arg.Value);
-                }
-
-                typedTarget.Args = clonedArgs;
-            }
+            typedTarget.Args     = this.Args;
+            typedTarget.Workflow = this.Workflow;
+            typedTarget.Options  = this.Options;
+            typedTarget.Domain   = this.Domain;
         }
     }
 }

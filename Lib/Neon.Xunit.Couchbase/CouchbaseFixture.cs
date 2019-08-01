@@ -228,6 +228,13 @@ namespace Neon.Xunit.Couchbase
                 Settings = settings;
                 Username = username;
                 Password = password;
+
+                jsonClient             = new JsonClient();
+                jsonClient.BaseAddress = new Uri("http://localhost:8094");
+                jsonClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue(
+                        "Basic",
+                        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{username}:{password}")));
             }
 
             ConnectBucket();
@@ -252,6 +259,11 @@ namespace Neon.Xunit.Couchbase
         /// Returns the Couchbase password.
         /// </summary>
         public string Password { get; private set; }
+
+        /// <summary>
+        /// Returns the JsonClient.
+        /// </summary>
+        public JsonClient jsonClient { get; private set; }
 
         /// <summary>
         /// Establishes the bucket connection and waits until the Couchbase container is ready
@@ -325,6 +337,9 @@ namespace Neon.Xunit.Couchbase
                                 var query = new QueryRequest($"select meta({bucket.Name}).id, {bucket.Name}.* from {bucket.Name}");
 
                                 await bucket.QuerySafeAsync<dynamic>(query);
+
+                                await bucket.ListIndexesAsync();
+
                                 queryReady = true;
                             }
                         }
@@ -383,7 +398,19 @@ namespace Neon.Xunit.Couchbase
         {
             CheckDisposed();
 
-            // Drop all bucket indexes except for the primary index (if present).
+            // Remove any full-text indexes.
+
+            var fullTextIndexes = jsonClient.GetAsync<dynamic>("/api/index").Result.indexDefs;
+
+            if (fullTextIndexes != null)
+            {
+                foreach (var _index in fullTextIndexes.indexDefs)
+                {
+                    jsonClient.DeleteAsync($"/api/index/{_index.Name}").Wait();
+                }
+            }
+
+            // Remove all bucket indexes except for the primary index (if present).
 
             var existingIndexes = Bucket.ListIndexesAsync().Result;
 

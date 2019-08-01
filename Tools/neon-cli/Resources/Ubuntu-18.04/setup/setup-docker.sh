@@ -97,6 +97,22 @@ gdebi --non-interactive /tmp/docker.deb
 rm /tmp/docker.deb
 
 #--------------------------------------------------------------------------
+# Setup the Docker config file.
+
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
+chmod 664 /etc/docker/daemon.json
+
+#--------------------------------------------------------------------------
 # Create a drop-in Docker systemd unit file that has our custom options.
 
 cat <<EOF > /etc/systemd/system/docker.service
