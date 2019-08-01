@@ -1,0 +1,34 @@
+apiVersion: "etcd.database.coreos.com/v1beta2"
+kind: "EtcdCluster"
+metadata:
+  name: "example-etcd-cluster"
+  ## Adding this annotation make this cluster managed by clusterwide operators
+  ## namespaced operators ignore it
+  # annotations:
+  #   etcd.database.coreos.com/scope: clusterwide
+spec:
+  size: 3
+  version: "3.2.13"
+  pod:
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: neonkube.io/prometheus
+              operator: In
+              values:
+              - "true"
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "2379"
+    persistentVolumeClaimSpec:
+      storageClassName: "local-storage"
+      accessModes:
+      - ReadWriteOnce
+      selector:
+        matchLabels:
+          etcd: monitoring
+      resources:
+        requests:
+          storage: 1Gi
