@@ -22,6 +22,18 @@ The easiest way to to accomplish this is visit the Docker package repo at:
 3. Upload the files to S3 and **MAKE THEM PUBLIC**: https://s3-us-west-2.amazonaws.com/neonforge/kube/FILENAME.deb
 4. Update the headend services (or simulated services for now) to include a Docker version to URL mapping.
 
+### Nuget API Key
+
+You'll need an API key installed on your machine to publish the neonKUBE nuget packages.  You may also need to regenerate the key from time to time since they have a one year lifespan.
+
+1. Login into **nuget.org** with your Microsoft account: [here](https://www.nuget.org/users/account/LogOn?returnUrl=%2F)
+2. You'll generally want to click **Manage** and then **Regenerate** the **publish** key.
+3. Click **Copy** to copy the new key into the clipboard.
+4. Install the API via:
+  ```
+  nuget setapikey YOUR-KEY
+  ```
+
 ## Check for new Kubernetes releases:
 
 1. Check the official release notes: [here](https://github.com/kubernetes/kubernetes/releases)
