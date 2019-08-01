@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -58,9 +59,11 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateActivityImplementation(typeof(TActivity));
 
+            var activityType = typeof(TActivity);
+
             if (string.IsNullOrEmpty(activityTypeName))
             {
-                activityTypeName = activityTypeName ?? typeof(TActivity).FullName;
+                activityTypeName = activityTypeName ?? CadenceHelper.GetActivityTypeName(activityType);
             }
 
             if (activityWorkerStarted)
@@ -110,7 +113,7 @@ namespace Neon.Cadence
                 throw new CadenceActivityWorkerStartedException();
             }
 
-            foreach (var type in assembly.GetTypes())
+            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
             {
                 var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
 
@@ -120,7 +123,7 @@ namespace Neon.Cadence
                     {
                         if (activityAttribute.AutoRegister)
                         {
-                            var activityTypeName = activityAttribute.TypeName ?? type.FullName;
+                            var activityTypeName = CadenceHelper.GetActivityTypeName(type, activityAttribute);
 
                             if (!ActivityBase.Register(this, type, activityTypeName))
                             {

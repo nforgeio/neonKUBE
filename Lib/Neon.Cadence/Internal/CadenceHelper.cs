@@ -21,13 +21,12 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Reflection;
-using Microsoft.CodeAnalysis;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// Cadence helper methods and constants.
@@ -74,6 +73,126 @@ namespace Neon.Cadence
             {
                 throw new WorkflowTypeException($"Workflow type names cannot include: \"{CadenceHelper.WorkflowTypeMethodSeparator}\".");
             }
+        }
+
+        /// <summary>
+        /// Returns the Cadence workflow type name to be used for a workflow interface or
+        /// implementation class.
+        /// </summary>
+        /// <param name="workflowType">The workflow interface or implementation type.</param>
+        /// <param name="workflowAttribute">Optionally specifies the <see cref="WorkflowAttribute"/>.</param>
+        /// <returns>The type name.</returns>
+        /// <remarks>
+        /// <para>
+        /// If <paramref name="workflowAttribute"/> is passed and <see cref="WorkflowAttribute.TypeName"/>
+        /// is not <c>null</c> or empty, then the name specified in the attribute is returned.
+        /// </para>
+        /// <para>
+        /// Otherwise, for workflow implementations we'll return the fully qualified class name.
+        /// For workflow interfaces, we'll return the fully qualified interface name but 
+        /// <b>we'll strip any leading "I"</b> from the interface name as a huristic in an
+        /// attempt to ensure that the workflow type name for the interface matches that for
+        /// the workflow implementation.
+        /// </para>
+        /// <para>
+        /// For situations where this huristic won't work, you'll need to specify the same
+        /// workflow type name in the <see cref="WorkflowAttribute"/> for both the workflow
+        /// interface and implementation.
+        /// </para>
+        /// </remarks>
+        public static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute = null)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowType != null);
+
+            if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.TypeName))
+            {
+                return workflowAttribute.TypeName;
+            }
+
+            var fullName = workflowType.FullName;
+
+            if (workflowType.IsInterface)
+            {
+                CadenceHelper.ValidateWorkflowInterface(workflowType);
+
+                var name = workflowType.Name;
+
+                if (name.StartsWith("I"))
+                {
+                    fullName  = fullName.Substring(0, fullName.Length - name.Length);
+                    fullName += name.Substring(1);
+                }
+            }
+            else
+            {
+                CadenceHelper.ValidateWorkflowImplementation(workflowType);
+            }
+
+            // .NET uses "+" for nested type names.  We'll to convert these to "."
+            // because "+" is a bit weird.
+
+            return fullName.Replace('+', '.');
+        }
+
+        /// <summary>
+        /// Returns the Cadence activity type name to be used for an acvtivity interface or
+        /// implementation class.
+        /// </summary>
+        /// <param name="activityType">The activity interface or implementation type.</param>
+        /// <param name="activityAttribute">Optionally specifies the <see cref="ActivityAttribute"/>.</param>
+        /// <returns>The type name.</returns>
+        /// <remarks>
+        /// <para>
+        /// If <paramref name="activityAttribute"/> is passed and <see cref="ActivityAttribute.TypeName"/>
+        /// is not <c>null</c> or empty, then the name specified in the attribute is returned.
+        /// </para>
+        /// <para>
+        /// Otherwise, for activity implementations we'll return the fully qualified class name.
+        /// For activity interfaces, we'll return the fully qualified interface name but 
+        /// <b>we'll strip any leading "I"</b> from the interface name as a huristic in an
+        /// attempt to ensure that the activity type name for the interface matches that for
+        /// the activity implementation.
+        /// </para>
+        /// <para>
+        /// For situations where this huristic won't work, you'll need to specify the same
+        /// activity type name in the <see cref="ActivityAttribute"/> for both the activity
+        /// interface and implementation.
+        /// </para>
+        /// </remarks>
+        public static string GetActivityTypeName(Type activityType, ActivityAttribute activityAttribute = null)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+
+            if (activityAttribute != null && !string.IsNullOrEmpty(activityAttribute.TypeName))
+            {
+                return activityAttribute.TypeName;
+            }
+
+            var fullName = activityType.FullName;
+
+            if (activityType.IsInterface)
+            {
+                CadenceHelper.ValidateActivityInterface(activityType);
+
+                var name = activityType.Name;
+
+                if (name.StartsWith("I"))
+                {
+                    fullName  = fullName.Substring(0, fullName.Length - name.Length);
+                    fullName += name.Substring(1);
+                }
+            }
+            else
+            {
+                CadenceHelper.ValidateActivityImplementation(activityType);
+
+                fullName = activityType.FullName;
+            }
+
+            // .NET uses "+" for nested type names.  We'll to convert these to "."
+            // because "+" is a bit weird.
+
+            return fullName.Replace('+', '.');
         }
 
         /// <summary>
@@ -141,7 +260,12 @@ namespace Neon.Cadence
                 throw new WorkflowTypeException($"[{workflowType.FullName}] workflow implementation cannot be an interface.");
             }
 
-            if (!workflowType.IsGenericType)
+            if (workflowType.IsValueType)
+            {
+                throw new WorkflowTypeException($"[{workflowType.FullName}] workflow implementation cannot be a struct.");
+            }
+
+            if (workflowType.IsGenericType)
             {
                 throw new WorkflowTypeException($"[{workflowType.FullName}] has generic type parameters.  Workflow implementations may not be generic.");
             }

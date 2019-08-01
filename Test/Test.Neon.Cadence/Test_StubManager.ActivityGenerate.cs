@@ -64,7 +64,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidNoArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidNoArgs, ActivityEntryVoidNoArgs>(client, new DummyWorkflow()));
         }
 
@@ -88,7 +88,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow()));
         }
 
@@ -96,7 +96,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidWithOptions()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow(), "my-activity", options: new ActivityOptions(), domain: "my-domain"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow(), options: new ActivityOptions(), domain: "my-domain"));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow(), options: new LocalActivityOptions()));
         }
 
@@ -120,7 +120,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityResultWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryResultWithArgs, ActivityEntryResultWithArgs>(client, new DummyWorkflow()));
         }
 
@@ -152,7 +152,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivitySignalNoArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivitySignalNoArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivitySignalNoArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivitySignalNoArgs, ActivitySignalNoArgs>(client, new DummyWorkflow()));
         }
 
@@ -184,7 +184,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivitySignalWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivitySignalWithArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivitySignalWithArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivitySignalWithArgs, ActivitySignalWithArgs>(client, new DummyWorkflow()));
         }
 
@@ -216,7 +216,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityQueryVoidNoArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryVoidNoArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryVoidNoArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityQueryVoidNoArgs, ActivityQueryVoidNoArgs>(client, new DummyWorkflow()));
         }
 
@@ -248,7 +248,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityQueryVoidWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryVoidWithArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryVoidWithArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityQueryVoidWithArgs, ActivityQueryVoidWithArgs>(client, new DummyWorkflow()));
         }
 
@@ -280,7 +280,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityQueryResultWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryResultWithArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryResultWithArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityQueryResultWithArgs, ActivityQueryResultWithArgs>(client, new DummyWorkflow()));
         }
 
@@ -368,7 +368,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityMultiMethods()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityMultiMethods>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityMultiMethods>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityMultiMethods, ActivityMultiMethods>(client, new DummyWorkflow()));
         }
     }

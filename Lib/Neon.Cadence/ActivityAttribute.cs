@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
@@ -44,7 +45,7 @@ namespace Neon.Cadence
         /// </param>
         public ActivityAttribute(string typeName = null)
         {
-            Covenant.Requires<ArgumentException>(typeName == null || typeName.Length > 0, $"[{nameof(typeName)}] cannot be empty.");
+            CadenceHelper.ValidateActivityTypeName(typeName);
 
             this.TypeName = typeName;
         }
@@ -60,6 +61,6 @@ namespace Neon.Cadence
         /// automatically register the tagged activity implementation for the specified assembly.
         /// This defaults to <c>false</c>
         /// </summary>
-        public bool AutoRegister { get; private set; } = false;
+        public bool AutoRegister { get; set; } = false;
     }
 }

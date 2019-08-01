@@ -136,6 +136,21 @@ namespace Neon.Cadence
     /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an
     /// assembly and automatically register the tagged implementation classes it finds.
     /// </para>
+    /// <note>
+    /// <para>
+    /// The .NET client uses a simple huristic to try to ensure that the default workflow and activity
+    /// type names applied when the <see cref="WorkflowAttribute.TypeName"/> and <see cref="ActivityAttribute.TypeName"/>
+    /// properties are not set for the interface and implementation classes.  If the interface
+    /// name starts with an "I", the "I" will be stripped out before generating the fully qualified
+    /// type name.  This handles the common C# convention where interface names started with an "I"
+    /// and the implementing class uses the same name as the interface, but without the "I".
+    /// </para>
+    /// <para>
+    /// If this huristic doesn't work, you'll need to explicitly specify the same type name in
+    /// the <see cref="WorkflowAttribute"/> or <see cref="ActivityAttribute"/> tagging your 
+    /// interface and class definitions.
+    /// </para>
+    /// </note>
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
     /// the current process implements specific workflow and activity types.  You'll call

@@ -58,7 +58,7 @@ namespace TestCadence
         {
             // We don't support activity interfaces with generic parameters.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorGenericActivity<int>>(client, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorGenericActivity<int>>(client, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
@@ -73,7 +73,7 @@ namespace TestCadence
         {
             // Activities need to have at least one entry point.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointWorkflow>(client, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointWorkflow>(client, new DummyWorkflow()));
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace TestCadence
         {
             // A non-NULL client is required.
 
-            Assert.Throws<ArgumentNullException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointWorkflow>(null, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ArgumentNullException>(() => StubManager.CreateActivityStub<IErrorNoEntryPointWorkflow>(null, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
@@ -102,7 +102,7 @@ namespace TestCadence
         {
             // Only activity interfaces are allowed.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNotInterfaceActivity>(client, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNotInterfaceActivity>(client, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
@@ -122,7 +122,7 @@ namespace TestCadence
         {
             // Activity interfaces must be public.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNotPublicActivity>(client, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNotPublicActivity>(client, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
@@ -145,7 +145,7 @@ namespace TestCadence
         {
             // Activity entry points methods need to return a Task.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNonTaskEntryPoint1Activity>(client, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IErrorNonTaskEntryPoint1Activity>(client, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
@@ -166,7 +166,7 @@ namespace TestCadence
             // Verify that we detect duplicate entrypoint methods
             // with the default name.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IDuplicateDefaultEntryPointsActivity>(client, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IDuplicateDefaultEntryPointsActivity>(client, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
@@ -187,7 +187,7 @@ namespace TestCadence
             // Verify that we detect duplicate entrypoint methods
             // with explicit names.
 
-            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IDuplicateEntryPointsActivity>(client, new DummyWorkflow(), "my-activity"));
+            Assert.Throws<ActivityTypeException>(() => StubManager.CreateActivityStub<IDuplicateEntryPointsActivity>(client, new DummyWorkflow()));
         }
     }
 }

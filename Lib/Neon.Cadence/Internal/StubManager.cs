@@ -294,6 +294,7 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(client != null);
 
             var workflowInterface = typeof(TWorkflowInterface);
+            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
@@ -304,8 +305,7 @@ namespace Neon.Cadence.Internal
                 domain = null;
             }
 
-            var workflowTypeName  = workflowInterface.FullName;
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
+            var workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
 
             //-----------------------------------------------------------------
             // Check whether we already have generated a stub class for the interface
@@ -475,6 +475,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Cadence;");
+            sbSource.AppendLine($"using Neon.Cadence.Internal;");
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");
@@ -704,7 +705,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"        }}");
             }
 
-            // Close out the stub class definition.
+            // Close out the stub class and namespace.
 
             sbSource.AppendLine($"    }}");
             sbSource.AppendLine($"}}");
@@ -879,6 +880,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Cadence;");
+            sbSource.AppendLine($"using Neon.Cadence.Internal;");
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");
@@ -1082,7 +1084,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"        }}");
             }
 
-            // Close out the stub class definition.
+            // Close out the stub class and namespace.
 
             sbSource.AppendLine($"    }}");
             sbSource.AppendLine($"}}");
@@ -1153,18 +1155,21 @@ namespace Neon.Cadence.Internal
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>
-        /// <param name="activityTypeName">The activity type name.</param>
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub instance.</returns>
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
-        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, string activityTypeName, ActivityOptions options = null, string domain = null)
+        public static TActivityInterface CreateActivityStub<TActivityInterface>(CadenceClient client, IWorkflowBase workflow, ActivityOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflow != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
-            CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
+            var activityInterface = typeof(TActivityInterface);
+            var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
+
+            CadenceHelper.ValidateActivityInterface(activityInterface);
+
+            var activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
 
             options = options ?? new ActivityOptions();
 

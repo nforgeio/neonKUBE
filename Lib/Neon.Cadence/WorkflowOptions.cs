@@ -167,9 +167,9 @@ namespace Neon.Cadence
 
             // Merge optional settings from these options and the method attribute.
 
-            var decisionTaskStartToCloseTimeout      = TimeSpan.FromSeconds(10);
-            var executionStartToCloseTimeout = CadenceClient.DefaultTimeout;
-            var workflowIdReusePolicy        = global::Neon.Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+            var decisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(10);
+            var executionStartToCloseTimeout    = CadenceClient.DefaultTimeout;
+            var workflowIdReusePolicy           = global::Neon.Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
 
             if (methodAttribute != null)
             {
