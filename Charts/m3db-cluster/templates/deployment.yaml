@@ -10,21 +10,21 @@ spec:
   - name: group1
     numInstances: 1
     nodeAffinityTerms:
-    - key: failure-domain.beta.kubernetes.io/zone
+    - key: neonkube.io/physical.faultdomain
       values:
-      - <zone-a>
+      - worker-0
   - name: group2
     numInstances: 1
     nodeAffinityTerms:
-    - key: failure-domain.beta.kubernetes.io/zone
+    - key: neonkube.io/physical.faultdomain
       values:
-      - <zone-b>
+      - worker-1
   - name: group3
     numInstances: 1
     nodeAffinityTerms:
-    - key: failure-domain.beta.kubernetes.io/zone
+    - key: neonkube.io/physical.faultdomain
       values:
-      - <zone-c>
+      - worker-2
   etcdEndpoints:
   - http://etcd-0.monitoring:2379
   - http://etcd-1.monitoring:2379
@@ -40,7 +40,7 @@ spec:
     spec:
       accessModes:
       - ReadWriteOnce
-      storageClass: "local-storage"
+      storageClassName: "local-storage"
       selector:
         matchLabels:
           m3db: default
