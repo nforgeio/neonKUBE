@@ -398,18 +398,7 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
-
-	// try and cancel the operation
-	var wasCancelled bool
-	if cancel := Cancellables.Get(targetID); cancel != nil {
-		wasCancelled = true
-		cancel()
-		defer func() {
-			_ = Cancellables.Remove(targetID)
-		}()
-	}
-
-	buildReply(reply, nil, wasCancelled)
+	buildReply(reply, nil, true)
 
 	return reply
 }
