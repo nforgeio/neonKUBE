@@ -80,7 +80,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-    Build v0.5.8 -goVersion 1.12.6 -uiVersion 3.3.1 -latest
+    Build v0.5.9 -goVersion 1.12.6 -uiVersion 3.3.1 -latest
 }
 
-Build v0.5.9 -goVersion 1.12.6 -uiVersion 3.3.1 -latest
+Build v0.6.1 -goVersion 1.12.7 -uiVersion 3.3.1 -latest

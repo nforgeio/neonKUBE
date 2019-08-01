@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>Neon.Xunit.Kube</RootNamespace>
     <PackageId>Neon.Xunit.Kube</PackageId>
-    <Version>0.5.4-alpha</Version>
+    <Version>0.5.5-alpha</Version>
     <Authors>Jeff Lill</Authors>
     <Product>neonKUBE</Product>
     <Description>neonKUBE Xunit testing helpers.</Description>
