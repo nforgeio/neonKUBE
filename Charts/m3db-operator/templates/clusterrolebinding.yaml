@@ -11,4 +11,4 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: m3db-operator
-  namespace: default
+  namespace: monitoring
