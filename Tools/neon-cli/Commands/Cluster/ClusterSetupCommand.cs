@@ -313,7 +313,7 @@ OPTIONS:
                     {
                         controller.AddGlobalStep("setup monitoring", SetupMonitoring);
                     }
-                    controller.AddGlobalStep("setup ceph", SetupCeph);
+                    //controller.AddGlobalStep("setup ceph", SetupCeph);
 
                     //-----------------------------------------------------------------
                     // Verify the cluster.
@@ -1632,14 +1632,14 @@ helm template install/kubernetes/helm/istio \
         /// </summary>
         /// <param name="master"></param>
         /// <param name="chartName"></param>
-        /// <param name="nameSpace"></param>
+        /// <param name="namespace"></param>
         /// <param name="timeout"></param>
         /// <param name="values"></param>
         /// <returns></returns>
         private async Task InstallHelmChartAsync(
             SshProxy<NodeDefinition> master, 
             string chartName, 
-            string nameSpace = "default", 
+            string @namespace = "default", 
             int timeout = 300,
             List<KeyValuePair<string, string>> values = null)
         {
@@ -1662,8 +1662,14 @@ helm template install/kubernetes/helm/istio \
             var helmChartScript =
 $@"#!/bin/bash
 cd /tmp/charts
+
+until [ -f {chartName}.zip ]
+do
+  sleep 1
+done
+
 unzip {chartName}.zip -d {chartName}
-helm install --namespace {nameSpace} --name {chartName} {valueOverrides} ./{chartName} --timeout {timeout} --wait
+helm install --namespace {@namespace} --name {chartName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} --wait
 rm -rf {chartName}*
 ";
             master.SudoCommand(CommandBundle.FromScript(helmChartScript));
@@ -1677,7 +1683,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: cluster-setup";
 
-            await InstallHelmChartAsync(master, "cluster-setup", nameSpace: "logging");
+            await InstallHelmChartAsync(master, "cluster-setup", @namespace: "logging");
 
             master.Status = "deploy: kube-state-config";
 
@@ -1744,7 +1750,7 @@ rm -rf {chartName}*
                     },
                 };
 
-                k8sClient.CreatePersistentVolume(volume);
+                await k8sClient.CreatePersistentVolumeAsync(volume);
                 i++;
             }
 
@@ -1773,7 +1779,7 @@ rm -rf {chartName}*
                 }
             }
 
-            await InstallHelmChartAsync(master, "elasticsearch", nameSpace: "logging", timeout: 900, values: values);
+            await InstallHelmChartAsync(master, "elasticsearch", @namespace: "logging", timeout: 900, values: values);
 
         }
 
@@ -1785,7 +1791,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluent-bit";
 
-            await InstallHelmChartAsync(master, "fluent-bit", nameSpace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "logging", timeout: 300);
 
         }
 
@@ -1797,7 +1803,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            await InstallHelmChartAsync(master, "fluentd", nameSpace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "fluentd", @namespace: "logging", timeout: 300);
         }
 
         /// <summary>
@@ -1808,7 +1814,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            await InstallHelmChartAsync(master, "kibana", nameSpace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "kibana", @namespace: "logging", timeout: 300);
 
         }
 
@@ -1820,7 +1826,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: metricbeat";
 
-            await InstallHelmChartAsync(master, "metricbeat", nameSpace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "metricbeat", @namespace: "logging", timeout: 300);
 
         }
 
@@ -1903,7 +1909,129 @@ rm -rf {chartName}*
         /// </summary>
         private void SetupCeph()
         {
-            // $todo(jeff.lill): Implement this
+            // Install Ceph.
+
+            var firstMaster = cluster.FirstMaster;
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph",
+                () =>
+                {
+                    InstallHelmChartAsync(firstMaster, chartName: "rook-ceph", @namespace: "rook-ceph", timeout: 300).Wait();
+                });
+
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph-cluster",
+                () =>
+                {
+                    var deviceName = "";
+
+                    switch (cluster.Definition.Hosting.Environment)
+                    {
+                        case HostingEnvironments.HyperVLocal:
+                            deviceName = "sdb";
+                            break;
+                        case HostingEnvironments.XenServer:
+                            deviceName = "xvdb";
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+
+                    var values = new List<KeyValuePair<string, string>>();
+                    var i = 0;
+
+                    foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true))
+                    {
+                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].name", n.Name));
+                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].devices[0].name", deviceName));
+                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].config.storeType", "bluestore"));
+                        i++;
+                    }
+
+                    values.Add(new KeyValuePair<string, string>("mon.count", cluster.Definition.Nodes.Count(n => n.Labels.CephMON).ToString()));
+
+                    InstallHelmChartAsync(firstMaster, chartName: "ceph-cluster", @namespace: "rook-ceph", timeout: 300, values: values).Wait();
+
+                    while ((k8sClient.ListNamespacedPodAsync("rook-ceph", labelSelector: "app=rook-ceph-osd")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true).Count())
+                    {
+                        Thread.Sleep(1000);
+                    }
+                });
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph-pool",
+                () =>
+                {
+                    InstallHelmChartAsync(firstMaster, chartName: "ceph-pool", @namespace: "rook-ceph", timeout: 300).Wait();
+                });
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph-storageclass",
+                () =>
+                {
+                    var values = new List<KeyValuePair<string, string>>();
+
+                    var monitors = "";
+                    for (int i = 0; i < cluster.Definition.Nodes.Count(n => n.Labels.CephMON); i++)
+                    {
+                        monitors += $"rook-ceph-mon-{(char)('a' + i)}.rook-ceph:6789";
+                        if (i != cluster.Definition.Nodes.Count(n => n.Labels.CephMON) - 1)
+                        {
+                            monitors += ",";
+                        }
+                    }
+
+                    values.Add(new KeyValuePair<string, string>($"monitors", monitors));
+
+                    InstallHelmChartAsync(firstMaster, chartName: "ceph-storageclass", @namespace: "rook-ceph", timeout: 300, values: values).Wait();
+                });
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph-rbd",
+                () => 
+                {
+                    var command = new string[] { "/bin/bash", "-c", $"ceph -c /var/lib/rook/rook-ceph/rook-ceph.config auth get-or-create-key client.kubernetes mon \"allow profile rbd\" osd \"profile rbd pool=rbd\"" };
+                    var pod = k8sClient.ListNamespacedPod("rook-ceph", labelSelector: "app=rook-ceph-operator").Items.FirstOrDefault();
+                    var response = KubeHelper.ExecInPod(k8sClient, pod, "rook-ceph", command).Result;
+                    Thread.Sleep(1000);
+                });
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph-rbd-auth",
+                () =>
+                {
+                    var pod = k8sClient.ListNamespacedPod("rook-ceph", labelSelector: "app=rook-ceph-operator").Items.FirstOrDefault();
+
+                    var command = new string[] { "ceph", "auth", "get-key", "client.admin" };
+
+                    var adminPass = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubeHelper.ExecInPod(k8sClient, pod, "rook-ceph", command).Result));
+
+                    command = new string[] { "ceph", "auth", "get-key", "client.kubernetes" };
+                    var kubernetesPass = Convert.ToBase64String(Encoding.UTF8.GetBytes(KubeHelper.ExecInPod(k8sClient, pod, "rook-ceph", command).Result));
+
+                    var monitors = "";
+                    for (int i = 0; i < cluster.Definition.Nodes.Count(n => n.Labels.CephMON); i++)
+                    {
+                        monitors += $"rook-ceph-mon-{(char) ('a' + i)}.rook-ceph:6789";
+                        if (i != cluster.Definition.Nodes.Count(n => n.Labels.CephMON) - 1)
+                        {
+                            monitors += ",";
+                        }
+                    }
+
+                    var secret = new V1Secret()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = "csi-rbd-secret",
+                            NamespaceProperty = "default",
+                        },
+                        Data = new Dictionary<string, byte[]>
+                        {
+                            ["admin"] = Encoding.ASCII.GetBytes(adminPass),
+                            ["kubernetes"] = Encoding.ASCII.GetBytes(kubernetesPass),
+                            ["monitors"] = Encoding.ASCII.GetBytes(monitors)
+                        }
+                    };
+
+                    k8sClient.CreateNamespacedSecretAsync(secret, "default").Wait();
+                });
         }
 
         /// <summary>

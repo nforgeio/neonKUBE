@@ -260,6 +260,7 @@ namespace Neon.Kube
             var cephMONCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMON);
             var cephOSDCount = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
             var cephMDSCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
+            var cephMGRCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMGR);
 
             if (cephMONCount == 0)
             {
@@ -298,7 +299,7 @@ namespace Neon.Kube
                 }
             }
 
-            if (cephMONCount == 0)
+            if (cephMDSCount == 0)
             {
                 // No Ceph MDS nodes are explicitly assigned so we're going to provision
                 // these on the Ceph Monitor servers.
@@ -306,6 +307,17 @@ namespace Neon.Kube
                 foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMON))
                 {
                     node.Labels.CephMDS = true;
+                }
+            }
+
+            if (cephMGRCount == 0)
+            {
+                // No Ceph MGR nodes are explicitly assigned so we're going to provision
+                // these on the Ceph Monitor servers.
+
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMON))
+                {
+                    node.Labels.CephMGR = true;
                 }
             }
 
@@ -367,6 +379,11 @@ namespace Neon.Kube
             {
                 throw new ClusterDefinitionException($"Ceph storage cluster requires at least one MDS (metadata) node.");
             }
+
+            //if (cephMGRCount == 0)
+            //{
+            //    throw new ClusterDefinitionException($"Ceph storage cluster requires at least one MDS (metadata) node.");
+            //}
 
             if (OSDReplicaCount == 0)
             {

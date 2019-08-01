@@ -450,6 +450,11 @@ namespace Neon.Kube
         public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + "ceph.mds";
 
         /// <summary>
+        /// Reserved label name for <see cref="CephMGR"/>.
+        /// </summary>
+        public const string LabelCephMGR = ClusterDefinition.ReservedLabelPrefix + "ceph.mgr";
+
+        /// <summary>
         /// Reserved label name for <see cref="CephOSDDriveSize"/>.
         /// </summary>
         public const string LabelCephOSDDriveSize = ClusterDefinition.ReservedLabelPrefix + "ceph.osd_drivesize";
@@ -543,6 +548,17 @@ namespace Neon.Kube
         [YamlMember(Alias = "cephMDS", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CephMDS { get; set; } = false;
+
+
+        /// <summary>
+        /// <b>io.neonkube.ceph.mgr</b> [<c>bool</c>]: Indicates that a Ceph MGR 
+        /// (manager server) will be deployed to this node if <see cref="CephOptions.Enabled"/> 
+        /// is <c>true</c>.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephMGR", Required = Required.Default)]
+        [YamlMember(Alias = "cephMGR", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool CephMGR { get; set; } = false;
 
         /// <summary>
         /// <b>io.neonkube.ceph.drivesize</b> [<c>int</c>]: Specifies the size in bytes
@@ -690,6 +706,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 NeonHelper.ToBoolString(CephOSD)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
                 list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 NeonHelper.ToBoolString(CephMDS)));
+                list.Add(new KeyValuePair<string, object>(LabelCephMGR,                 NeonHelper.ToBoolString(CephMGR)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDriveSize,        CephOSDDriveSize));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDCacheSize,        CephOSDCacheSize));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDJournalSize,      CephOSDJournalSize));
