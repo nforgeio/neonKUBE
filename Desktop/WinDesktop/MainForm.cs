@@ -74,6 +74,7 @@ namespace WinDesktop
         private RemoteOperation     remoteOperation;
         private Stack<NotifyState>  notifyStack;
         private List<ReverseProxy>  proxies;
+        private List<PortForward>   portForwards;
         private KubeConfigContext   proxiedContext;
 
         /// <summary>
@@ -112,6 +113,7 @@ namespace WinDesktop
             // Initialize the client state.
 
             proxies = new List<ReverseProxy>();
+            portForwards = new List<PortForward>();
             Headend = new HeadendClient();
             KubeHelper.LoadClientConfig();
         }
@@ -543,6 +545,26 @@ namespace WinDesktop
         }
 
         /// <summary>
+        /// Stops any running reverse proxies.
+        /// </summary>
+        private void StopPortForwards()
+        {
+            InvokeOnUIThread(
+                () =>
+                {
+                    lock (Program.SyncLock)
+                    {
+                        foreach (var proxy in portForwards)
+                        {
+                            proxy.Dispose();
+                        }
+
+                        portForwards.Clear();
+                    }
+                });
+        }
+
+        /// <summary>
         /// Updates the running proxies to match the current cluster 
         /// (if there is one).  This may only be called on the UI thread.
         /// </summary>
@@ -556,6 +578,7 @@ namespace WinDesktop
             if (KubeHelper.CurrentContext == null)
             {
                 StopProxies();
+                StopPortForwards();
             }
             else
             {
@@ -577,6 +600,7 @@ namespace WinDesktop
                 }
 
                 StopProxies();
+                StopPortForwards();
 
                 if (KubeHelper.CurrentContext == null)
                 {
@@ -702,10 +726,50 @@ namespace WinDesktop
 
                     proxies.Add(kubeDashboardProxy);
 
+                    var kibanaDashboardProxy =
+                        new PortForward(
+                            serviceName: "kibana-kibana",
+                            localPort: KubeConst.KibanaDashboardProxyPort,
+                            remotePort: KubeConst.KibanaDashboardProxyPort,
+                            @namespace: "logging");
+
+                    portForwards.Add(kibanaDashboardProxy);
+
+                    var prometheusDashboardProxy =
+                        new PortForward(
+                            serviceName: "prometheus",
+                            localPort: KubeConst.PrometheusDashboardProxyPort,
+                            remotePort: KubeConst.PrometheusDashboardProxyPort,
+                            @namespace: "istio-system");
+
+                    portForwards.Add(prometheusDashboardProxy);
+
+                    var kialiDashboardProxy =
+                        new PortForward(
+                            serviceName: "kiali",
+                            localPort: KubeConst.KialiDashboardProxyPort,
+                            remotePort: KubeConst.KialiDashboardProxyPort,
+                            @namespace: "istio-system");
+
+                    portForwards.Add(kialiDashboardProxy);
+
+                    var grafanaDashboardProxy =
+                        new PortForward(
+                            serviceName: "grafana",
+                            localPort: KubeConst.GrafanaDashboardProxyPort,
+                            remotePort: KubeConst.GrafanaDashboardProxyPort,
+                            @namespace: "istio-system");
+
+                    portForwards.Add(grafanaDashboardProxy);
+
                     //-------------------------------------------------------------
                     // Remember which cluster context we're proxying.
 
                     proxiedContext = KubeHelper.CurrentContext;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
                 }
                 finally
                 {
@@ -719,6 +783,7 @@ namespace WinDesktop
             }
         }
 
+        
         //---------------------------------------------------------------------
         // These methods are called by [DesktopService] (and perhaps from some
         // other places):
@@ -959,6 +1024,10 @@ namespace WinDesktop
                 var dashboardsMenu = new MenuItem("Dashboard") { Enabled = loggedIn && !operationInProgress };
 
                 dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.MenuItems.Add(new MenuItem("Kiali", OnKialiDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.MenuItems.Add(new MenuItem("Grafana", OnGrafanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
 
 #if TODO
                 var addedDashboardSeparator = false;
@@ -1175,23 +1244,13 @@ namespace WinDesktop
         }
 
         /// <summary>
-        /// Handles the <b>Ceph Dashboard</b> command.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The arguments.</param>
-        private void OnCephDashboardCommand(object sender, EventArgs args)
-        {
-            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-
-        /// <summary>
         /// Handles the <b>Kibana Dashboard</b> command.
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="args">The arguments.</param>
         private void OnKibanaDashboardCommand(object sender, EventArgs args)
         {
-            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.KibanaDashboardProxyPort}/");
         }
 
         /// <summary>
@@ -1200,6 +1259,36 @@ namespace WinDesktop
         /// <param name="sender">The sender.</param>
         /// <param name="args">The arguments.</param>
         private void OnPrometheusDashboardCommand(object sender, EventArgs args)
+        {
+            NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.PrometheusDashboardProxyPort}/");
+        }
+
+        /// <summary>
+        /// Handles the <b>Kiali Dashboard</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnKialiDashboardCommand(object sender, EventArgs args)
+        {
+            NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.KialiDashboardProxyPort}/");
+        }
+
+        /// <summary>
+        /// Handles the <b>Grafana Dashboard</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnGrafanaDashboardCommand(object sender, EventArgs args)
+        {
+            NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.GrafanaDashboardProxyPort}/");
+        }
+
+        /// <summary>
+        /// Handles the <b>Ceph Dashboard</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        private void OnCephDashboardCommand(object sender, EventArgs args)
         {
             MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
@@ -1213,6 +1302,7 @@ namespace WinDesktop
         {
             StopNotifyAnimation(force: true);
             notifyIcon.Visible = false;
+            StopPortForwards();
             DesktopService.Stop();
 
             Environment.Exit(0);

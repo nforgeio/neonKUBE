@@ -44,6 +44,8 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Windows;
 using Neon.Cryptography;
+using k8s;
+using k8s.Models;
 
 namespace Neon.Kube
 {
@@ -1327,6 +1329,43 @@ namespace Neon.Kube
         public static ExecuteResponse Kubectl(params object[] args)
         {
             return NeonHelper.ExecuteCapture("kubectl", args);
+        }
+
+        /// <summary>
+        /// Executes a <b>kubectl port-forward</b> command on the local workstation.
+        /// </summary>
+        /// <param name="serviceName"></param>
+        /// <param name="remotePort"></param>
+        /// <param name="localPort"></param>
+        /// <param name="namespace"></param>
+        /// <param name="process"></param>
+        /// <returns>The <see cref="ExecuteResponse"/>.</returns>
+        public static void PortForward(string serviceName, int remotePort, int localPort, string @namespace, Process process)
+        {
+            var args = new string[] { "--namespace", @namespace, "port-forward", $"svc/{serviceName}", $"{localPort}:{remotePort}" };
+            Task.Run(() => NeonHelper.ExecuteAsync("kubectl", args: args, process: process));
+        }
+
+        /// <summary>
+        /// Executes a command in a k8s pod.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="pod"></param>
+        /// <param name="namespace"></param>
+        /// <param name="command"></param>
+        /// <returns></returns>
+        public async static Task<string> ExecInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
+        {
+            var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
+
+            var demux = new StreamDemuxer(webSocket);
+            demux.Start();
+
+            var buff = new byte[4096];
+            var stream = demux.GetStream(1, 1);
+            var read = stream.Read(buff, 0, 4096);
+            var str = System.Text.Encoding.Default.GetString(buff.Where(b => b != 0).ToArray());
+            return str;
         }
 
         /// <summary>

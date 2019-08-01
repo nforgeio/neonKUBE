@@ -108,6 +108,46 @@ namespace Neon.Kube
         public int KubeDashboardProxyPort { get; set; } = KubeConst.KubeDashboardProxyPort;
 
         /// <summary>
+        /// The local network port used for proxying requests to
+        /// the Kibanarnetes dashboard for the current cluster.  This 
+        /// defaults to <see cref="KubeConst.KibanaDashboardProxyPort"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "KibanaDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KibanaDashboardProxyPort", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.KibanaDashboardProxyPort)]
+        public int KibanaDashboardProxyPort { get; set; } = KubeConst.KibanaDashboardProxyPort;
+
+        /// <summary>
+        /// The local network port used for proxying requests to
+        /// the Prometheusrnetes dashboard for the current cluster.  This 
+        /// defaults to <see cref="KubeConst.PrometheusDashboardProxyPort"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "PrometheusDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "PrometheusDashboardProxyPort", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.PrometheusDashboardProxyPort)]
+        public int PrometheusDashboardProxyPort { get; set; } = KubeConst.PrometheusDashboardProxyPort;
+
+        /// <summary>
+        /// The local network port used for proxying requests to
+        /// the Kialirnetes dashboard for the current cluster.  This 
+        /// defaults to <see cref="KubeConst.KialiDashboardProxyPort"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "KialiDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "KialiDashboardProxyPort", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.KialiDashboardProxyPort)]
+        public int KialiDashboardProxyPort { get; set; } = KubeConst.KialiDashboardProxyPort;
+
+        /// <summary>
+        /// The local network port used for proxying requests to
+        /// the Grafanarnetes dashboard for the current cluster.  This 
+        /// defaults to <see cref="KubeConst.GrafanaDashboardProxyPort"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "GrafanaDashboardProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "GrafanaDashboardProxyPort", ApplyNamingConventions = false)]
+        [DefaultValue(KubeConst.GrafanaDashboardProxyPort)]
+        public int GrafanaDashboardProxyPort { get; set; } = KubeConst.GrafanaDashboardProxyPort;
+
+        /// <summary>
         /// Ensures that the state is valid.
         /// </summary>
         public void Validate()

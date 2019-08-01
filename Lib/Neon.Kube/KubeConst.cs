@@ -165,6 +165,30 @@ namespace Neon.Kube
         public const int KubeDashboardProxyPort = 1060;
 
         /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Kibana dashboard for the current cluster.
+        /// </summary>
+        public const int KibanaDashboardProxyPort = 5601;
+
+        /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Prometheus dashboard for the current cluster.
+        /// </summary>
+        public const int PrometheusDashboardProxyPort = 9090;
+
+        /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Kiali dashboard for the current cluster.
+        /// </summary>
+        public const int KialiDashboardProxyPort = 20001;
+
+        /// <summary>
+        /// The default local network port used for proxying requests to
+        /// the Grafana dashboard for the current cluster.
+        /// </summary>
+        public const int GrafanaDashboardProxyPort = 3000;
+
+        /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
         public const string SysAdminUser = "sysadmin";
