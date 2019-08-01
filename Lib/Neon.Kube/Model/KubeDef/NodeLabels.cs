@@ -412,19 +412,34 @@ namespace Neon.Kube
         // Define the logging related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageSize"/>.
+        /// Reserved label name for <see cref="Elasticsearch"/>.
         /// </summary>
         public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "mon.elasticsearch";
 
         /// <summary>
+        /// Reserved label name for <see cref="Prometheus"/>.
+        /// </summary>
+        public const string LabelPrometheus = ClusterDefinition.ReservedLabelPrefix + "mon.prometheus";
+
+        /// <summary>
         /// <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
         /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
-        /// This defaults to <c>true</c>.
+        /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
         [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Elasticsearch { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neonkube.mon.prometheus.enabled</b> [<c>bool</c>]: Indicates that Prometheus 
+        /// will be deployed to this node if <see cref="PrometheusOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Prometheus", Required = Required.Default)]
+        [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Prometheus { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Ceph Storage Cluster related labels.
@@ -700,7 +715,9 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
 
-                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,    NeonHelper.ToBoolString(Elasticsearch)));
+                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,           NeonHelper.ToBoolString(Elasticsearch)));
+
+                list.Add(new KeyValuePair<string, object>(LabelPrometheus,              NeonHelper.ToBoolString(Prometheus)));
 
                 list.Add(new KeyValuePair<string, object>(LabelCephMON,                 NeonHelper.ToBoolString(CephMON)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 NeonHelper.ToBoolString(CephOSD)));

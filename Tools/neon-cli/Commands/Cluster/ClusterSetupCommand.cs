@@ -1592,8 +1592,21 @@ $@" \
                     KubeSetup(firstMaster).Wait();
                 });
 
-            // Install Etcd operator to the monitoring namespace
+            // Install an Etcd cluster to the monitoring namespace
 
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-etcd",
+                () =>
+                {
+                    InstallEtcd(firstMaster).Wait();
+                });
+
+            // Install an M3DB cluster to the monitoring namespace
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-m3db",
+                () =>
+                {
+                    InstallM3db(firstMaster).Wait();
+                });
 
             // Install Elasticsearch.
 
@@ -1701,6 +1714,165 @@ rm -rf {chartName}*
             master.Status = "deploy: kube-state-config";
 
             await InstallHelmChartAsync(master, "kubernetes");
+        }
+
+        /// <summary>
+        /// Installs an Etcd cluster to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallEtcd(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: etcd";
+
+            await InstallHelmChartAsync(master, "etcd-operator", @namespace: "monitoring");
+
+            var i = 0;
+            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Prometheus == true))
+            {
+                var volume = new V1PersistentVolume()
+                {
+                    ApiVersion = "v1",
+                    Kind = "PersistentVolume",
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = $"etcd-data-{i}",
+                        Labels = new Dictionary<string, string>()
+                        {
+                            ["etcd"] = "monitoring"
+                        }
+                    },
+                    Spec = new V1PersistentVolumeSpec()
+                    {
+                        Capacity = new Dictionary<string, ResourceQuantity>()
+                        {
+                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Prometheus.EtcdDiskSize) }
+                        },
+                        AccessModes = new List<string>() { "ReadWriteOnce" },
+                        PersistentVolumeReclaimPolicy = "Retain",
+                        StorageClassName = "local-storage",
+                        Local = new V1LocalVolumeSource()
+                        {
+                            Path = $"{KubeConst.LocalVolumePath}/98"
+                        },
+                        NodeAffinity = new V1VolumeNodeAffinity()
+                        {
+                            Required = new V1NodeSelector()
+                            {
+                                NodeSelectorTerms = new List<V1NodeSelectorTerm>()
+                                {
+                                    new V1NodeSelectorTerm()
+                                    {
+                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
+                                        {
+                                            new V1NodeSelectorRequirement()
+                                            {
+                                                Key = "kubernetes.io/hostname",
+                                                OperatorProperty = "In",
+                                                Values = new List<string>() { $"{n.Name}" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                };
+
+                await k8sClient.CreatePersistentVolumeAsync(volume);
+                i++;
+            }
+
+            master.Status = "deploy: etcd-cluster";
+
+            await InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring");
+        }
+
+        /// <summary>
+        /// Installs an m3db cluster to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallM3db(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: m3db";
+
+            //await InstallHelmChartAsync(master, "m3db-operator", @namespace: "monitoring");
+
+            var i = 0;
+            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Prometheus == true))
+            {
+                var volume = new V1PersistentVolume()
+                {
+                    ApiVersion = "v1",
+                    Kind = "PersistentVolume",
+                    Metadata = new V1ObjectMeta()
+                    {
+                        Name = $"m3db-data-{i}",
+                        Labels = new Dictionary<string, string>()
+                        {
+                            ["m3db"] = "default"
+                        }
+                    },
+                    Spec = new V1PersistentVolumeSpec()
+                    {
+                        Capacity = new Dictionary<string, ResourceQuantity>()
+                        {
+                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Prometheus.M3dbDiskSize) }
+                        },
+                        AccessModes = new List<string>() { "ReadWriteOnce" },
+                        PersistentVolumeReclaimPolicy = "Retain",
+                        StorageClassName = "local-storage",
+                        Local = new V1LocalVolumeSource()
+                        {
+                            Path = $"{KubeConst.LocalVolumePath}/97"
+                        },
+                        NodeAffinity = new V1VolumeNodeAffinity()
+                        {
+                            Required = new V1NodeSelector()
+                            {
+                                NodeSelectorTerms = new List<V1NodeSelectorTerm>()
+                                {
+                                    new V1NodeSelectorTerm()
+                                    {
+                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
+                                        {
+                                            new V1NodeSelectorRequirement()
+                                            {
+                                                Key = "kubernetes.io/hostname",
+                                                OperatorProperty = "In",
+                                                Values = new List<string>() { $"{n.Name}" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                };
+
+                await k8sClient.CreatePersistentVolumeAsync(volume);
+                i++;
+            }
+
+            master.Status = "deploy: m3db-cluster";
+
+            await InstallHelmChartAsync(master, "m3db-cluster", @namespace: "monitoring");
+        }
+
+        /// <summary>
+        /// Installs an Prometheus cluster to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallPrometheus(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: etcd";
+
+            await InstallHelmChartAsync(master, "prometheus-operator", @namespace: "monitoring");
+
+            
+
+            master.Status = "deploy: etcd-cluster";
+
+            await InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring");
         }
 
         /// <summary>

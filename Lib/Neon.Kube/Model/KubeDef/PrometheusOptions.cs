@@ -64,6 +64,24 @@ namespace Neon.Kube
         public V1ResourceRequirements Resources { get; set; } = null;
 
         /// <summary>
+        /// Indicates whether Prometheus metrics are to be enabled for the cluster.  
+        /// This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "M3dbDiskSize", Required = Required.Default)]
+        [YamlMember(Alias = "m3dbDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue("1Gi")]
+        public string M3dbDiskSize { get; set; } = "1Gi";
+
+        /// <summary>
+        /// Indicates whether Prometheus metrics are to be enabled for the cluster.  
+        /// This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "EtcdDiskSize", Required = Required.Default)]
+        [YamlMember(Alias = "etcdDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue("1Gi")]
+        public string EtcdDiskSize { get; set; } = "1Gi";
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
