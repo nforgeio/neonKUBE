@@ -365,6 +365,13 @@ namespace Neon.Cadence
                     reply = await OnInvokeLocalActivity(client, (ActivityInvokeLocalRequest)request);
                     break;
 
+                case InternalMessageTypes.WorkflowFutureReadyRequest:
+
+                    // $todo(jeff.lill): We need to actually implement this.
+
+                    reply = new WorkflowFutureReadyReply();
+                    break;
+
                 default:
 
                     throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
