@@ -41,7 +41,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class that can be used for Cadence workflow implementations.
     /// </summary>
-    public class WorkflowBase : IWorkflowBase
+    public class WorkflowBase
     {
         //---------------------------------------------------------------------
         // Private types
@@ -116,11 +116,10 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                           syncLock               = new object();
-        private static INeonLogger                                      log                    = LogManager.Default.GetLogger<WorkflowBase>();
-        private static Dictionary<WorkflowInstanceKey, IWorkflowBase>   idToWorkflow           = new Dictionary<WorkflowInstanceKey, IWorkflowBase>();
-        private static Dictionary<string, WorkflowRegistration>         typeNameToRegistration = new Dictionary<string, WorkflowRegistration>();
-        private static byte[]                                           emptyBytes            = new byte[0];
+        private static object                                           syncLock     = new object();
+        private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
+        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
+        private static byte[]                                           emptyBytes   = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -142,29 +141,19 @@ namespace Neon.Cadence
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
         /// <summary>
-        /// Prepends the Cadence client ID to the workflow type name to generate the
-        /// key used to dereference the <see cref="typeNameToRegistration"/> dictionary.
+        /// Prepends the Cadence client ID to the workflow type name as well as the optional
+        /// workflow method name to generate the key used to dereference the <see cref="nameToRegistration"/> 
+        /// dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <param name="workflowMethod">
-        /// Optionally identifies the workflow (entry point) method name.  
-        /// <paramref name="workflowTypeName"/> will be assumed to already
-        /// include the method component then this is <c>null</c>.
-        /// </param>
-        /// <returns>The prepended type name.</returns>
-        private static string GetWorkflowTypeKey(CadenceClient client, string workflowTypeName, MethodInfo workflowMethod = null)
+        /// <param name="workflowMethodAttribute">The workflow method attribute. </param>
+        /// <returns>The workflow registration key.</returns>
+        private static string GetWorkflowTypeKey(CadenceClient client, string workflowTypeName, WorkflowMethodAttribute workflowMethodAttribute)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflowTypeName != null);
-            Covenant.Requires<ArgumentNullException>(workflowMethod != null);
-
-            if (workflowMethod == null)
-            {
-                return $"{client.ClientId}::{workflowTypeName}";
-            }
-
-            var workflowMethodAttribute = workflowMethod.GetCustomAttribute<WorkflowMethodAttribute>();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(workflowMethodAttribute != null);
 
             if (string.IsNullOrEmpty(workflowMethodAttribute.Name))
             {
@@ -177,32 +166,80 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Strips the leading client ID from the workflow type key passed
+        /// and returns the type name actually registered with Cadence.
+        /// </summary>
+        /// <param name="workflowTypeKey">The workflow type key.</param>
+        /// <returns>The Cadence workflow type name.</returns>
+        private static string GetWorkflowTypeNameFromKey(string workflowTypeKey)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeKey));
+
+            var separatorPos = workflowTypeKey.IndexOf(CadenceHelper.WorkflowTypeMethodSeparator);
+
+            Covenant.Assert(separatorPos >= 0);
+
+            return workflowTypeKey.Substring(separatorPos + CadenceHelper.WorkflowTypeMethodSeparator.Length);
+        }
+
+        /// <summary>
         /// Registers a workflow implementation.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="workflowType">The workflow implementation type.</param>
         /// <param name="workflowTypeName">The name used to identify the implementation.</param>
-        /// <returns><c>true</c> if the workflow was already registered.</returns>
+        /// <param name="domain">Specifies the target domain.</param>
         /// <exception cref="InvalidOperationException">Thrown if a different workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
-        internal static bool Register(CadenceClient client, Type workflowType, string workflowTypeName)
+        internal static async Task RegisterAsync(CadenceClient client, Type workflowType, string workflowTypeName, string domain)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             CadenceHelper.ValidateWorkflowImplementation(workflowType);
-
-            // We need to register each workflow method defined for the workflow.
 
             var methodMap = WorkflowMethodMap.Create(workflowType);
 
+            // We need to register each workflow method that implements a workflow interface method
+            // with the same signature that that was tagged by [WorkflowMethod].
+            //
+            // First, we'll create a dictionary that maps method signatures from any inherited
+            // interfaces that are tagged by [WorkflowMethod] to the attribute.
+
+            var methodSignatureToAttribute = new Dictionary<string, WorkflowMethodAttribute>();
+
+            foreach (var interfaceType in workflowType.GetInterfaces())
+            {
+                foreach (var method in interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    var workflowMethodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                    if (workflowMethodAttribute == null)
+                    {
+                        continue;
+                    }
+
+                    var signature = method.ToString();
+
+                    if (methodSignatureToAttribute.ContainsKey(signature))
+                    {
+                        throw new NotSupportedException($"Workflow type [{workflowType.FullName}] cannot implement the [{signature}] method from two different interfaces.");
+                    }
+
+                    methodSignatureToAttribute.Add(signature, workflowMethodAttribute);
+                }
+            }
+
+            // Next, we need to register the workflow methods that implement the
+            // workflow interface.
+
             foreach (var method in workflowType.GetMethods())
             {
-                var workflowMethodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
-
-                if (workflowMethodAttribute == null)
+                if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var workflowMethodAttribute))
                 {
                     continue;
                 }
 
-                workflowTypeName = GetWorkflowTypeKey(client, workflowTypeName, method);
+                var workflowTypeKey   = GetWorkflowTypeKey(client, workflowTypeName, workflowMethodAttribute);
+                var alreadyRegistered = false;
 
                 lock (syncLock)
                 {
@@ -213,22 +250,41 @@ namespace Neon.Cadence
                             throw new InvalidOperationException($"Conflicting workflow interface registration: Workflow interface [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
                         }
 
-                        return true;
+                        alreadyRegistered = true;
                     }
                     else
                     {
-                        nameToRegistration[workflowTypeName] =
+                        var methodParameters     = method.GetParameters();
+                        var methodParameterTypes = new Type[methodParameters.Length];
+
+                        for (int i = 0; i < methodParameters.Length; i++)
+                        {
+                            methodParameterTypes[i] = methodParameters[i].ParameterType;
+                        }
+
+                        nameToRegistration[workflowTypeKey] =
                             new WorkflowRegistration()
                             {
-                                WorkflowType = workflowType,
-                                WorkflowMethod   = method,
-                                MethodMap    = methodMap
+                                WorkflowType                 = workflowType,
+                                WorkflowMethod               = method,
+                                WorkflowMethodParameterTypes = methodParameterTypes,
+                                MethodMap                    = methodMap
                             };
                     }
                 }
-            }
 
-            return false;
+                if (!alreadyRegistered)
+                {
+                    var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
+                        new WorkflowRegisterRequest()
+                        {
+                            Name   = GetWorkflowTypeNameFromKey(workflowTypeKey),
+                            Domain = client.ResolveDomain(domain)
+                        });
+
+                    reply.ThrowOnError();
+                }
+            }
         }
 
         /// <summary>
@@ -258,11 +314,12 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowRegistration"/> or <c>null</c> if the type was not found.</returns>
         private static WorkflowRegistration GetWorkflowRegistration(CadenceClient client, string workflowTypeName)
         {
+            Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflowTypeName != null);
 
             lock (syncLock)
             {
-                if (nameToRegistration.TryGetValue(GetWorkflowTypeKey(client, workflowTypeName), out var registration))
+                if (nameToRegistration.TryGetValue($"{client.ClientId}::{workflowTypeName}", out var registration))
                 {
                     return registration;
                 }
@@ -322,7 +379,7 @@ namespace Neon.Cadence
         /// <param name="client">The Cadence client.</param>
         /// <param name="contextId">The workflow's context ID.</param>
         /// <returns>The <see cref="WorkflowBase"/> instance or <c>null</c> if the workflow was not found.</returns>
-        private static IWorkflowBase GetWorkflow(CadenceClient client, long contextId)
+        private static WorkflowBase GetWorkflow(CadenceClient client, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -342,7 +399,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Handles workflow invocation.
         /// </summary>
-        /// <param name="client">The associated cadence client.</param>
+        /// <param name="client">The associated Cadence client.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowInvokeReply> OnInvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
@@ -351,7 +408,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified);
 
-            IWorkflowBase           workflow;
+            WorkflowBase            workflow;
             WorkflowRegistration    registration;
 
             var contextId   = request.ContextId;
@@ -361,10 +418,14 @@ namespace Neon.Cadence
             {
                 if (request.ReplayStatus != InternalReplayStatus.Unspecified)
                 {
+#if TODO
+                    // $todo(jeff.lill): Restore this code once Jack sets the status.
+
                     return new WorkflowInvokeReply()
                     {
-                        Error = new CadenceError($"[{nameof(WorkflowInvokeRequest)}] did not specify Workflow type name [Type={request.WorkflowType}] is not registered for this worker.")
+                        Error = new CadenceError($"[{nameof(WorkflowInvokeRequest)}]: [{nameof(request.ReplayStatus)}] cannot be [{nameof(InternalReplayStatus.Unspecified)}]..")
                     };
+#endif
                 }
 
                 if (idToWorkflow.TryGetValue(workflowKey, out workflow))
@@ -386,7 +447,7 @@ namespace Neon.Cadence
                 }
             }
 
-            workflow = (IWorkflowBase)Activator.CreateInstance(registration.WorkflowType);
+            workflow = (WorkflowBase)Activator.CreateInstance(registration.WorkflowType);
             workflow.Workflow = 
                 new Workflow(
                     parent:     (WorkflowBase)workflow,
@@ -463,8 +524,7 @@ namespace Neon.Cadence
                 {
                     // Method returns: Task
 
-                    await (Task<object>)workflowMethod.Invoke(workflow, args);
-                    serializedResult = emptyBytes;
+                    await (Task)workflowMethod.Invoke(workflow, args);
                 }
 
                 return new WorkflowInvokeReply()

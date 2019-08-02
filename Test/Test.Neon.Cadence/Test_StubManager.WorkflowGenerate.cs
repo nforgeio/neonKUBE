@@ -46,7 +46,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IWorkflowEntryVoidNoArgs : IWorkflowBase
+        public interface IWorkflowEntryVoidNoArgs
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -63,7 +63,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowEntryVoidWithArgs : IWorkflowBase
+        public interface IWorkflowEntryVoidWithArgs
         {
             [WorkflowMethod]
             Task RunAsync(string arg1, int arg2);
@@ -80,7 +80,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowEntryResultWithArgs : IWorkflowBase
+        public interface IWorkflowEntryResultWithArgs
         {
             [WorkflowMethod]
             Task<int> RunAsync(string arg1, int arg2);
@@ -106,7 +106,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSignalNoArgs : IWorkflowBase
+        public interface IWorkflowSignalNoArgs
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -126,7 +126,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSignalWithArgs : IWorkflowBase
+        public interface IWorkflowSignalWithArgs
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -146,7 +146,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowQueryVoidNoArgs : IWorkflowBase
+        public interface IWorkflowQueryVoidNoArgs
         {
             [WorkflowMethod]
             Task RunOneAsync();
@@ -166,7 +166,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowQueryVoidWithArgs : IWorkflowBase
+        public interface IWorkflowQueryVoidWithArgs
         {
             [WorkflowMethod]
             Task RunOneAsync();
@@ -186,7 +186,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowQueryResultWithArgs : IWorkflowBase
+        public interface IWorkflowQueryResultWithArgs
         {
             [WorkflowMethod]
             Task RunOneAsync();
@@ -206,7 +206,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowMultiMethods : IWorkflowBase
+        public interface IWorkflowMultiMethods
         {
             [WorkflowMethod]
             Task RunAsync();

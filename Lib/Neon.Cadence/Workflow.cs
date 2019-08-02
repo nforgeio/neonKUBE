@@ -33,7 +33,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Provides useful information and functionality for workflow implementations.
-    /// This will be available via the <see cref="IWorkflowBase.Workflow"/> property.
+    /// This will be available via the <see cref="WorkflowBase.Workflow"/> property.
     /// </summary>
     public class Workflow
     {
@@ -125,9 +125,9 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the parent <see cref="IWorkflowBase"/> implementation.
+        /// Returns the parent <see cref="WorkflowBase"/> implementation.
         /// </summary>
-        internal IWorkflowBase Parent { get; private set; }
+        internal WorkflowBase Parent { get; private set; }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
@@ -1052,7 +1052,6 @@ namespace Neon.Cadence
         /// </para>
         /// </remarks>
         public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null) 
-            where TActivityInterface : IActivityBase
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
@@ -1073,7 +1072,6 @@ namespace Neon.Cadence
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
         public TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null) 
-            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
@@ -1093,7 +1091,6 @@ namespace Neon.Cadence
         /// throw a <see cref="InvalidOperationException"/> when called.
         /// </remarks>
         public Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
-            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
@@ -1109,7 +1106,6 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
         /// <returns>The workflow stub.</returns>
         public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
-            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
@@ -1125,7 +1121,6 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
         /// <returns>The workflow stub.</returns>
         public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null)
-            where TWorkflowInterface : IWorkflowBase
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
@@ -1167,7 +1162,6 @@ namespace Neon.Cadence
         /// </list>
         /// </remarks>
         public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null) 
-            where TActivityInterface : IActivityBase
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
@@ -1322,7 +1316,7 @@ namespace Neon.Cadence
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.Implements<IActivityBase>());
+            Covenant.Requires<ArgumentException>(activityType.Implements<ActivityBase>());
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
 

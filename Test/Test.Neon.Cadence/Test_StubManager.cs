@@ -51,7 +51,7 @@ namespace TestCadence
         /// Used when testing activity stub code generation.  This fakes up just
         /// enough of a workflow so that stubs can be generated.
         /// </summary>
-        public class DummyWorkflow : IWorkflowBase
+        public class DummyWorkflow : WorkflowBase
         {
             public DummyWorkflow()
             {
@@ -67,8 +67,6 @@ namespace TestCadence
                     isReplaying:        false,
                     methodMap:          null);
             }
-
-            public Workflow Workflow { get; set; }
         }
 
         //---------------------------------------------------------------------

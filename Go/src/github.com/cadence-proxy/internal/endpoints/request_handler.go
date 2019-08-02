@@ -30,6 +30,7 @@ import (
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
+	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/worker"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
@@ -1071,11 +1072,6 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	// the equals function for workflow.MutableSideEffect
 	equals := func(a, b interface{}) bool {
 
-		// do not update if update is false
-		if !request.GetUpdate() {
-			return true
-		}
-
 		// check if the results are *cadencerrors.CadenceError
 		if v, ok := a.(*cadenceerrors.CadenceError); ok {
 			if _v, _ok := b.(*cadenceerrors.CadenceError); _ok {
@@ -1098,31 +1094,22 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 		return false
 	}
 
-	// TODO: JACK -- CADENCE CLIENT BUG
-	// https://stackoverflow.com/questions/56658582/mutablesideeffect-panics-when-setting-second-value
-	// https://github.com/uber-go/cadence-client/issues/763
-	//
-	// This is the workaround.  Here's our tracking bug:
-	// https://github.com/nforgeio/neonKUBE/issues/562
-	//
-	// FYI: This is deprecated and will never be called now.
-	err := workflow.Sleep(ctx, time.Second)
-	if err != nil {
-		buildReply(reply, cadenceerrors.NewCadenceError(err))
+	// MutableSideEffect/SideEffect calls
+	var value encoded.Value
+	if mutableID := request.GetMutableID(); mutableID != nil {
+		value = workflow.MutableSideEffect(ctx,
+			*mutableID,
+			mutableFunc,
+			equals,
+		)
 
-		return reply
+	} else {
+		value = workflow.SideEffect(ctx, mutableFunc)
 	}
-
-	// execute the cadence server MutableSideEffect call
-	sideEffectValue := workflow.MutableSideEffect(ctx,
-		*request.GetMutableID(),
-		mutableFunc,
-		equals,
-	)
 
 	// extract the result
 	var result []byte
-	err = sideEffectValue.Get(&result)
+	err := value.Get(&result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
 

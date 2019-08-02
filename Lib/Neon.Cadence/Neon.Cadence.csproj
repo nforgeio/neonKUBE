@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cadence</RootNamespace>
-    <Version>0.5.4-alpha</Version>
+    <Version>0.5.5-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill, John C Burns</Authors>
     <Description>.NET client for Uber Cadence.</Description>
@@ -62,7 +62,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.0-beta1-final" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>

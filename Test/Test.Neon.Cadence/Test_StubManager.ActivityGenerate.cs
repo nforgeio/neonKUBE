@@ -46,9 +46,9 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IActivityEntryVoidNoArgs : IActivityBase
+        public interface IActivityEntryVoidNoArgs
         {
-            [WorkflowMethod]
+            [ActivityMethod]
             Task RunAsync();
         }
 
@@ -64,15 +64,15 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidNoArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidNoArgs, ActivityEntryVoidNoArgs>(client, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
 
-        public interface IActivityEntryVoidWithArgs : IActivityBase
+        public interface IActivityEntryVoidWithArgs
         {
-            [WorkflowMethod]
+            [ActivityMethod]
             Task RunAsync(string arg1, int arg2);
         }
 
@@ -88,7 +88,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow()));
         }
 
@@ -96,15 +96,15 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidWithOptions()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow(), "my-activity", options: new ActivityOptions(), domain: "my-domain"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow(), options: new ActivityOptions(), domain: "my-domain"));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow(), options: new LocalActivityOptions()));
         }
 
         //---------------------------------------------------------------------
 
-        public interface IActivityEntryResultWithArgs : IActivityBase
+        public interface IActivityEntryResultWithArgs
         {
-            [WorkflowMethod]
+            [ActivityMethod]
             Task<int> RunAsync(string arg1, int arg2);
         }
 
@@ -120,200 +120,22 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityResultWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryResultWithArgs, ActivityEntryResultWithArgs>(client, new DummyWorkflow()));
         }
 
         //---------------------------------------------------------------------
 
-        public interface IActivitySignalNoArgs : IActivityBase
+        public interface IActivityMultiMethods
         {
-            [WorkflowMethod]
+            [ActivityMethod]
             Task RunAsync();
 
-            [SignalMethod("my-signal")]
-            Task SignalAsync();
-        }
-
-        public class ActivitySignalNoArgs : ActivityBase, IActivitySignalNoArgs
-        {
-            public async Task RunAsync()
-            {
-                await Task.CompletedTask;
-            }
-
-            public async Task SignalAsync()
-            {
-                await Task.CompletedTask;
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_ActivitySignalNoArgs()
-        {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivitySignalNoArgs>(client, new DummyWorkflow(), "my-activity"));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivitySignalNoArgs, ActivitySignalNoArgs>(client, new DummyWorkflow()));
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IActivitySignalWithArgs : IActivityBase
-        {
-            [WorkflowMethod]
-            Task RunAsync();
-
-            [QueryMethod("my-signal")]
-            Task SignalAsync(string arg1, int arg2);
-        }
-
-        public class ActivitySignalWithArgs : ActivityBase, IActivitySignalWithArgs
-        {
-            public async Task RunAsync()
-            {
-                await Task.CompletedTask;
-            }
-
-            public async Task SignalAsync(string arg1, int arg2)
-            {
-                await Task.CompletedTask;
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_ActivitySignalWithArgs()
-        {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivitySignalWithArgs>(client, new DummyWorkflow(), "my-activity"));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivitySignalWithArgs, ActivitySignalWithArgs>(client, new DummyWorkflow()));
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IActivityQueryVoidNoArgs : IActivityBase
-        {
-            [WorkflowMethod]
-            Task RunOneAsync();
-
-            [QueryMethod("my-query")]
-            Task QueryAsync();
-        }
-
-        public class ActivityQueryVoidNoArgs : ActivityBase, IActivityQueryVoidNoArgs
-        {
-            public async Task RunOneAsync()
-            {
-                await Task.CompletedTask;
-            }
-
-            public async Task QueryAsync()
-            {
-                await Task.CompletedTask;
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_ActivityQueryVoidNoArgs()
-        {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryVoidNoArgs>(client, new DummyWorkflow(), "my-activity"));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityQueryVoidNoArgs, ActivityQueryVoidNoArgs>(client, new DummyWorkflow()));
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IActivityQueryVoidWithArgs : IActivityBase
-        {
-            [WorkflowMethod]
-            Task RunOneAsync();
-
-            [QueryMethod("my-query")]
-            Task QueryAsync(string arg1, bool arg2);
-        }
-
-        public class ActivityQueryVoidWithArgs : ActivityBase, IActivityQueryVoidWithArgs
-        {
-            public async Task RunOneAsync()
-            {
-                await Task.CompletedTask;
-            }
-
-            public async Task QueryAsync(string arg1, bool arg2)
-            {
-                await Task.CompletedTask;
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_ActivityQueryVoidWithArgs()
-        {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryVoidWithArgs>(client, new DummyWorkflow(), "my-activity"));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityQueryVoidWithArgs, ActivityQueryVoidWithArgs>(client, new DummyWorkflow()));
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IActivityQueryResultWithArgs : IActivityBase
-        {
-            [WorkflowMethod]
-            Task RunOneAsync();
-
-            [QueryMethod("my-query")]
-            Task<string> QueryAsync(string arg1, bool arg2);
-        }
-
-        public class ActivityQueryResultWithArgs : ActivityBase, IActivityQueryResultWithArgs
-        {
-            public async Task RunOneAsync()
-            {
-                await Task.CompletedTask;
-            }
-
-            public async Task<string> QueryAsync(string arg1, bool arg2)
-            {
-                return await Task.FromResult("hello world!");
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Generate_ActivityQueryResultWithArgs()
-        {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityQueryResultWithArgs>(client, new DummyWorkflow(), "my-activity"));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityQueryResultWithArgs, ActivityQueryResultWithArgs>(client, new DummyWorkflow()));
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IActivityMultiMethods : IActivityBase
-        {
-            [WorkflowMethod]
-            Task RunAsync();
-
-            [WorkflowMethod(Name = "one")]
+            [ActivityMethod(Name = "one")]
             Task<int> RunAsync(string arg1);
 
-            [WorkflowMethod(Name = "two")]
+            [ActivityMethod(Name = "two")]
             Task<int> RunAsync(string arg1, string arg2);
-
-            [QueryMethod("my-query1")]
-            Task<string> QueryAsync();
-
-            [QueryMethod("my-query2")]
-            Task<string> QueryAsync(string arg1);
-
-            [QueryMethod("my-query3")]
-            Task<string> QueryAsync(string arg1, string arg2);
-
-            [QueryMethod("my-signal1")]
-            Task<string> SignalAsync();
-
-            [QueryMethod("my-signal2")]
-            Task<string> SignalAsync(string arg1);
-
-            [QueryMethod("my-signal3")]
-            Task<string> SignalAsync(string arg1, string arg2);
         }
 
         public class ActivityMultiMethods : ActivityBase, IActivityMultiMethods
@@ -332,43 +154,13 @@ namespace TestCadence
             {
                 return await Task.FromResult(2);
             }
-
-            public async Task<string> QueryAsync()
-            {
-                return await Task.FromResult("my-query1");
-            }
-
-            public async Task<string> QueryAsync(string arg1)
-            {
-                return await Task.FromResult("my-query2");
-            }
-
-            public async Task<string> QueryAsync(string arg1, string arg2)
-            {
-                return await Task.FromResult("my-query3");
-            }
-
-            public async Task<string> SignalAsync()
-            {
-                return await Task.FromResult("my-signal11");
-            }
-
-            public async Task<string> SignalAsync(string arg1)
-            {
-                return await Task.FromResult("my-signal2");
-            }
-
-            public async Task<string> SignalAsync(string arg1, string arg2)
-            {
-                return await Task.FromResult("my-signal3");
-            }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityMultiMethods()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityMultiMethods>(client, new DummyWorkflow(), "my-activity"));
+            Assert.NotNull(StubManager.CreateActivityStub<IActivityMultiMethods>(client, new DummyWorkflow()));
             Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityMultiMethods, ActivityMultiMethods>(client, new DummyWorkflow()));
         }
     }

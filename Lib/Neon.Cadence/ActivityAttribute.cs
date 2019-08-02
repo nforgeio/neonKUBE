@@ -22,13 +22,14 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Use this to tag activitt implementations that inherit from
-    /// <see cref="IActivityBase"/> to customize the how the activity is
+    /// Use this to tag activity implementations that inherit from
+    /// <see cref="ActivityBase"/> to customize the how the activity is
     /// registered.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
@@ -44,7 +45,7 @@ namespace Neon.Cadence
         /// </param>
         public ActivityAttribute(string typeName = null)
         {
-            Covenant.Requires<ArgumentException>(typeName == null || typeName.Length > 0, $"[{nameof(typeName)}] cannot be empty.");
+            CadenceHelper.ValidateActivityTypeName(typeName);
 
             this.TypeName = typeName;
         }
@@ -56,10 +57,10 @@ namespace Neon.Cadence
         public string TypeName { get; private set; } = null;
 
         /// <summary>
-        /// Indicates that <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> will
+        /// Indicates that <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly, string)"/> will
         /// automatically register the tagged activity implementation for the specified assembly.
         /// This defaults to <c>false</c>
         /// </summary>
-        public bool AutoRegister { get; private set; } = false;
+        public bool AutoRegister { get; set; } = false;
     }
 }
