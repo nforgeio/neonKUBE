@@ -91,11 +91,6 @@ var (
 	// cadence-client operations
 	Operations = new(operationsMap)
 
-	// Cancellables is a map of golang cancel functions to requestID,
-	// used to track cancellable operations sent from the Neon.Cadence
-	// client
-	Cancellables = new(cancellablesMap)
-
 	// httpClient is the HTTP client used to send requests
 	// to the Neon.Cadence client
 	httpClient = http.Client{}
