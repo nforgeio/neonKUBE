@@ -763,9 +763,9 @@ namespace Neon.Cadence
 
                     foreach (var serverUri in settings.Servers)
                     {
-                        var uri = new Uri(serverUri);
+                        var uri = new Uri(serverUri, UriKind.Absolute);
 
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{NetworkPorts.Cadence}", ",");
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
                     }
 
                     var connectRequest = 
