@@ -49,11 +49,11 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if another workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
         /// <exception cref="CadenceWorkflowWorkerStartedException">
         /// Thrown if a workflow worker has already been started for the client.  You must
-        /// register activity workflow implementations before starting workers.
+        /// register workflow implementations before starting workers.
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your workflow implementations before starting a workflow worker.
+        /// Be sure to register all of your workflow implementations before starting workers.
         /// </note>
         /// </remarks>
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
@@ -62,6 +62,11 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
             CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
 
+            if (workflowWorkerStarted)
+            {
+                throw new CadenceWorkflowWorkerStartedException();
+            }
+
             var workflowType = typeof(TWorkflow);
 
             if (string.IsNullOrEmpty(workflowTypeName))
@@ -69,26 +74,7 @@ namespace Neon.Cadence
                 workflowTypeName = workflowTypeName ?? CadenceHelper.GetWorkflowTypeName(workflowType);
             }
 
-            if (workflowWorkerStarted)
-            {
-                throw new CadenceWorkflowWorkerStartedException();
-            }
-
-            // We need to register a workflow type name for each workflow method,
-            // appending the method type separator and method name for workflow
-            // methods that specify names.
-
-            if (!WorkflowBase.Register(this, typeof(TWorkflow), workflowTypeName))
-            {
-                var reply = (WorkflowRegisterReply)await CallProxyAsync(
-                    new WorkflowRegisterRequest()
-                    {
-                        Name   = workflowTypeName,
-                        Domain = ResolveDomain(domain)
-                    });
-
-                reply.ThrowOnError();
-            }
+            await WorkflowBase.RegisterAsync(this, typeof(TWorkflow), workflowTypeName, ResolveDomain(domain));
         }
 
         /// <summary>
@@ -98,6 +84,7 @@ namespace Neon.Cadence
         /// them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
+        /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
@@ -106,21 +93,16 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="CadenceWorkflowWorkerStartedException">
         /// Thrown if a workflow worker has already been started for the client.  You must
-        /// register activity workflow implementations before starting workers.
+        /// register workflow implementations before starting workers.
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your workflow implementations before starting a workflow worker.
+        /// Be sure to register all of your workflow implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly)
+        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
-
-            if (workflowWorkerStarted)
-            {
-                throw new CadenceWorkflowWorkerStartedException();
-            }
 
             foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
             {
@@ -134,16 +116,7 @@ namespace Neon.Cadence
                         {
                             var workflowTypeName = CadenceHelper.GetWorkflowTypeName(type, workflowAttribute);
 
-                            if (!WorkflowBase.Register(this, type, workflowTypeName))
-                            {
-                                var reply = (WorkflowRegisterReply)await CallProxyAsync(
-                                    new WorkflowRegisterRequest()
-                                    {
-                                        Name = workflowTypeName
-                                    });
-
-                                reply.ThrowOnError();
-                            }
+                            await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
                         }
                     }
                     else
@@ -510,8 +483,8 @@ namespace Neon.Cadence
         /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
         /// <param name="startArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
-        /// <param name="taskList">Optionally specifies the task list.  This defaults to <b>"default"</b>.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="taskList">Optionally overrides the <see cref="CadenceClient"/> default task list.</param>
+        /// <param name="domain">Optionally overrides the <see cref="CadenceClient"/> default domain.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>

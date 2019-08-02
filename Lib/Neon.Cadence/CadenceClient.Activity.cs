@@ -43,6 +43,7 @@ namespace Neon.Cadence
         /// for identifying the activity implementation in Cadence.  This defaults
         /// to the fully qualified <typeparamref name="TActivity"/> type name.
         /// </param>
+        /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         /// <exception cref="CadenceActivityWorkerStartedException">
@@ -51,13 +52,19 @@ namespace Neon.Cadence
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your activity implementations before starting a workflow worker.
+        /// Be sure to register all of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null)
+        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string domain = null)
             where TActivity : ActivityBase
         {
             CadenceHelper.ValidateActivityImplementation(typeof(TActivity));
+            CadenceHelper.ValidateActivityTypeName(activityTypeName);
+
+            if (activityWorkerStarted)
+            {
+                throw new CadenceActivityWorkerStartedException();
+            }
 
             var activityType = typeof(TActivity);
 
@@ -66,21 +73,7 @@ namespace Neon.Cadence
                 activityTypeName = activityTypeName ?? CadenceHelper.GetActivityTypeName(activityType);
             }
 
-            if (activityWorkerStarted)
-            {
-                throw new CadenceActivityWorkerStartedException();
-            }
-
-            if (!ActivityBase.Register(this, typeof(TActivity), activityTypeName))
-            {
-                var reply = (ActivityRegisterReply)await CallProxyAsync(
-                    new ActivityRegisterRequest()
-                    {
-                        Name = activityTypeName
-                    });
-
-                reply.ThrowOnError();
-            }            
+            await ActivityBase.RegisterAsync(this, typeof(TActivity), activityTypeName, ResolveDomain(domain));
         }
 
         /// <summary>
@@ -89,6 +82,7 @@ namespace Neon.Cadence
         /// registers them with Cadence.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
+        /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
@@ -101,10 +95,10 @@ namespace Neon.Cadence
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your activity implementations before starting a workflow worker.
+        /// Be sure to register all of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly)
+        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
 
@@ -125,16 +119,7 @@ namespace Neon.Cadence
                         {
                             var activityTypeName = CadenceHelper.GetActivityTypeName(type, activityAttribute);
 
-                            if (!ActivityBase.Register(this, type, activityTypeName))
-                            {
-                                var reply = (ActivityRegisterReply)await CallProxyAsync(
-                                    new ActivityRegisterRequest()
-                                    {
-                                        Name = activityTypeName
-                                    });
-
-                                reply.ThrowOnError();
-                            }
+                            await WorkflowBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
                         }
                     }
                     else

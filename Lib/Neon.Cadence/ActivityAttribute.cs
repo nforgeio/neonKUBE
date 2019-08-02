@@ -57,7 +57,7 @@ namespace Neon.Cadence
         public string TypeName { get; private set; } = null;
 
         /// <summary>
-        /// Indicates that <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> will
+        /// Indicates that <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly, string)"/> will
         /// automatically register the tagged activity implementation for the specified assembly.
         /// This defaults to <c>false</c>
         /// </summary>

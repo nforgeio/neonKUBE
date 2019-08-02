@@ -72,10 +72,11 @@ namespace TestCadence
 
             // Auto register the test workflow and activity implementations.
 
-            var assembly = Assembly.GetExecutingAssembly();
+            client.RegisterAssembly(Assembly.GetExecutingAssembly()).Wait();
 
-            client.RegisterAssemblyWorkflowsAsync(assembly).Wait();
-            client.RegisterAssemblyActivitiesAsync(assembly).Wait();
+            // Start the worker.
+
+            client.StartWorkerAsync().Wait();
         }
 
         public void Dispose()
