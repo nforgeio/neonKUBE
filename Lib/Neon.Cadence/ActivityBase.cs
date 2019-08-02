@@ -82,7 +82,7 @@ namespace Neon.Cadence
         /// Used for mapping an activity type name to its underlying type, constructor
         /// and entry point method.
         /// </summary>
-        private struct ActivityInvokeInfo
+        private struct ActivityRegistration
         {
             /// <summary>
             /// The activity type.
@@ -92,12 +92,17 @@ namespace Neon.Cadence
             /// <summary>
             /// The activity constructor.
             /// </summary>
-            public ConstructorInfo Constructor { get; set; }
+            public ConstructorInfo ActivityConstructor { get; set; }
 
             /// <summary>
             /// The activity entry point method.
             /// </summary>
             public MethodInfo ActivityMethod { get; set; }
+
+            /// <summary>
+            /// The activity method parameter types.
+            /// </summary>
+            public Type[] ActivityMethodParamaterTypes { get; set; }
         }
 
         //---------------------------------------------------------------------
@@ -107,6 +112,7 @@ namespace Neon.Cadence
         private static INeonLogger                              log          = LogManager.Default.GetLogger<ActivityBase>();
         private static object[]                                 noArgs       = new object[0];
         private static Dictionary<ActivityKey, ActivityBase>    idToActivity = new Dictionary<ActivityKey, ActivityBase>();
+        private static byte[]                                   emptyBytes   = new byte[0];
 
         // This dictionary is used to map activity type names to the target activity
         // type, constructor, and entry point method.  Note that these mappings are 
@@ -125,12 +131,12 @@ namespace Neon.Cadence
         //      1::my-activity                  -- clientId = 1, activity type name = my-activity
         //      1::my-activity::my-entrypoint   -- clientId = 1, activity type name = my-activity, entrypoint = my-entrypoint
 
-        private static Dictionary<string, ActivityInvokeInfo>   nameToInvokeInfo = new Dictionary<string, ActivityInvokeInfo>();
+        private static Dictionary<string, ActivityRegistration>   nameToRegistration = new Dictionary<string, ActivityRegistration>();
 
         /// <summary>
         /// Prepends the Cadence client ID to the activity type name and optional
         /// activity method name to generate the key used to dereference the 
-        /// <see cref="nameToInvokeInfo"/> dictionary.
+        /// <see cref="nameToRegistration"/> dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="activityTypeName">The activity type name.</param>
@@ -152,38 +158,24 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the string used to register an activity type and method with Cadence.
+        /// Strips the leading client ID from the activity type key passed
+        /// and returns the type name actually registered with Cadence.
         /// </summary>
-        /// <param name="activityTypeName">The activity type name.</param>
-        /// <param name="activityMethod">
-        /// Optionally identifies the activity (entry point) method.  
-        /// <paramref name="activityMethod"/> will be assumed to already
-        /// include the method component when this is <c>null</c>.
-        /// </param>
-        /// <returns>The Cadence activity registration string.</returns>
-        private static string GetActivityRegistrationKey(string activityTypeName, MethodInfo activityMethod = null)
+        /// <param name="activityTypeKey">The activity type key.</param>
+        /// <returns>The Cadence workflow type name.</returns>
+        private static string GetActivityTypeNameFromKey(string activityTypeKey)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeKey));
 
-            if (activityMethod == null)
-            {
-                return activityTypeName;
-            }
+            var separatorPos = activityTypeKey.IndexOf(CadenceHelper.ActivityTypeMethodSeparator);
 
-            var activityMethodAttribute = activityMethod.GetCustomAttribute<ActivityMethodAttribute>();
+            Covenant.Assert(separatorPos >= 0);
 
-            if (string.IsNullOrEmpty(activityMethodAttribute.Name))
-            {
-                return activityTypeName;
-            }
-            else
-            {
-                return $"{activityTypeName}::{activityMethodAttribute.Name}";
-            }
+            return activityTypeKey.Substring(separatorPos + CadenceHelper.ActivityTypeMethodSeparator.Length);
         }
 
         /// <summary>
-        /// Registers an activity type.x
+        /// Registers an activity type.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="activityType">The activity type.</param>
@@ -197,14 +189,11 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
-            var constructInfo = new ActivityInvokeInfo();
+            var constructor = activityType.GetConstructor(Type.EmptyTypes);
 
-            constructInfo.ActivityType = activityType;
-            constructInfo.Constructor  = constructInfo.ActivityType.GetConstructor(Type.EmptyTypes);
-
-            if (constructInfo.Constructor == null)
+            if (constructor == null)
             {
-                throw new ArgumentException($"Activity type [{constructInfo.ActivityType.FullName}] does not have a default constructor.");
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
             }
 
             // We need to register each activity method that implements an activity interface method
@@ -252,18 +241,33 @@ namespace Neon.Cadence
 
                 lock (syncLock)
                 {
-                    if (nameToInvokeInfo.TryGetValue(activityTypeKey, out var existingEntry))
+                    if (nameToRegistration.TryGetValue(activityTypeKey, out var registration))
                     {
-                        if (!object.ReferenceEquals(existingEntry.ActivityType, constructInfo.ActivityType))
+                        if (!object.ReferenceEquals(registration.ActivityType, registration.ActivityType))
                         {
-                            throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for workflow type name [{activityTypeKey}].");
+                            throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for activity type name [{activityTypeKey}].");
                         }
 
                         alreadyRegistered = true;
                     }
                     else
                     {
-                        nameToInvokeInfo[activityTypeKey] = constructInfo;
+                        var methodParameters     = method.GetParameters();
+                        var methodParameterTypes = new Type[methodParameters.Length];
+
+                        for (int i = 0; i < methodParameters.Length; i++)
+                        {
+                            methodParameterTypes[i] = methodParameters[i].ParameterType;
+                        }
+
+                        nameToRegistration[activityTypeKey] =
+                            new ActivityRegistration()
+                            {
+                                ActivityType                 = activityType,
+                                ActivityConstructor          = constructor,
+                                ActivityMethod               = method,
+                                ActivityMethodParamaterTypes = methodParameterTypes
+                            };
                     }
                 }
 
@@ -272,7 +276,7 @@ namespace Neon.Cadence
                     var reply = (ActivityRegisterReply)await client.CallProxyAsync(
                         new ActivityRegisterRequest()
                         {
-                            Name   = activityTypeName,
+                            Name   = GetActivityTypeNameFromKey(activityTypeKey),
                             Domain = client.ResolveDomain(domain)
                         });
 
@@ -293,31 +297,31 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                foreach (var key in nameToInvokeInfo.Keys.Where(key => key.StartsWith(prefix)).ToList())
+                foreach (var key in nameToRegistration.Keys.Where(key => key.StartsWith(prefix)).ToList())
                 {
-                    nameToInvokeInfo.Remove(key);
+                    nameToRegistration.Remove(key);
                 }
             }
         }
 
         /// <summary>
-        /// Returns the <see cref="ActivityInvokeInfo"/> for any activity type and activity type name.
+        /// Returns the <see cref="ActivityRegistration"/> for any activity type and activity type name.
         /// </summary>
         /// <param name="activityType">The targetr activity type.</param>
         /// <param name="activityTypeName">The target activity type name.</param>
-        /// <returns>The <see cref="ActivityInvokeInfo"/>.</returns>
-        private static ActivityInvokeInfo GetActivityInvokeInfo(Type activityType, string activityTypeName)
+        /// <returns>The <see cref="ActivityRegistration"/>.</returns>
+        private static ActivityRegistration GetActivityInvokeInfo(Type activityType, string activityTypeName)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
-            var info = new ActivityInvokeInfo();
+            var info = new ActivityRegistration();
 
             // Locate the constructor.
 
-            info.Constructor = activityType.GetConstructor(Type.EmptyTypes);
+            info.ActivityConstructor = activityType.GetConstructor(Type.EmptyTypes);
 
-            if (info.Constructor == null)
+            if (info.ActivityConstructor == null)
             {
                 throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
             }
@@ -381,11 +385,11 @@ namespace Neon.Cadence
         /// <param name="invokeInfo">The activity invocation information.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        private static ActivityBase Create(CadenceClient client, ActivityInvokeInfo invokeInfo, long? contextId)
+        private static ActivityBase Create(CadenceClient client, ActivityRegistration invokeInfo, long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            var activity = (ActivityBase)(invokeInfo.Constructor.Invoke(noArgs));
+            var activity = (ActivityBase)(invokeInfo.ActivityConstructor.Invoke(noArgs));
 
             activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
 
@@ -451,11 +455,11 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(CadenceClient client, ActivityInvokeRequest request)
         {
-            ActivityInvokeInfo  invokeInfo;
+            ActivityRegistration  invokeInfo;
 
             lock (syncLock)
             {
-                if (!nameToInvokeInfo.TryGetValue(request.Activity, out invokeInfo))
+                if (!nameToRegistration.TryGetValue(request.Activity, out invokeInfo))
                 {
                     throw new KeyNotFoundException($"Cannot resolve [activityTypeName = {request.Activity}] to a registered activity type and activity method.");
                 }
@@ -596,12 +600,13 @@ namespace Neon.Cadence
         /// <summary>
         /// Executes the target activity method.
         /// </summary>
+        /// <param name="client">The associated Cadence client.</param>
         /// <param name="argBytes">The encoded activity arguments.</param>
         /// <returns>The encoded activity results.</returns>
-        private async Task<byte[]> RunAsync(byte[] argBytes)
+        private async Task<byte[]> RunAsync(CadenceClient client, byte[] argBytes)
         {
-            var     args   = dataConverter.FromDataArray(argBytes);
-            object  result = null;
+            var args             = dataConverter.FromDataArray(argBytes);
+            var serializedResult = emptyBytes;
 
             if (activityMethod.ReturnType == typeof(Task))
             {
@@ -613,10 +618,12 @@ namespace Neon.Cadence
             {
                 // The activity method returns [Task<T>] (an actual result).
 
-                result = await (Task<object>)activityMethod.Invoke(this, args);
+                var result = await (Task<object>)activityMethod.Invoke(this, args);
+
+                serializedResult = client.DataConverter.ToData(result);
             }
 
-            return dataConverter.ToData(result);
+            return serializedResult;
         }
 
         /// <summary>
@@ -631,7 +638,7 @@ namespace Neon.Cadence
 
             if (IsLocal)
             {
-                return await RunAsync(args);
+                return await RunAsync(client, args);
             }
             else
             {
@@ -658,7 +665,7 @@ namespace Neon.Cadence
                         idToActivity[activityKey] = this;
                     }
 
-                    return await RunAsync(args);
+                    return await RunAsync(client, args);
                 }
                 finally
                 {

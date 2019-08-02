@@ -122,7 +122,7 @@ namespace Neon.Cadence
     /// <para>
     /// After establishing a connection ot a Cadence cluster, you'll need to call 
     /// <see cref="CadenceClient.RegisterWorkflowAsync{TWorkflowInterface}(string, string)"/> and/or
-    /// <see cref="CadenceClient.RegisterActivityAsync{TActivityInterface}(string)"/> to register your
+    /// <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string, string)"/> to register your
     /// workflow and activity implementations with Cadence.  These calls combined with the
     /// workers described above determine which workflows and activities may be scheduled
     /// on the current client/process.
@@ -134,8 +134,8 @@ namespace Neon.Cadence
     /// you can also tag your workflow and activity classes with <see cref="WorkflowAttribute"/>
     /// or <see cref="ActivityAttribute"/> with <see cref="WorkflowAttribute.AutoRegister"/>
     /// or <see cref="ActivityAttribute.AutoRegister"/> set to <c>true</c> and then call
-    /// <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
-    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an
+    /// <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> and/or
+    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly, string)"/> to scan an
     /// assembly and automatically register the tagged implementation classes it finds.
     /// </para>
     /// <note>

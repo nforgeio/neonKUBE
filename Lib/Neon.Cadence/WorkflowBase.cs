@@ -116,11 +116,10 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                           syncLock               = new object();
-        private static INeonLogger                                      log                    = LogManager.Default.GetLogger<WorkflowBase>();
-        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow           = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
-        private static Dictionary<string, WorkflowRegistration>         typeNameToRegistration = new Dictionary<string, WorkflowRegistration>();
-        private static byte[]                                           emptyBytes             = new byte[0];
+        private static object                                           syncLock     = new object();
+        private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
+        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
+        private static byte[]                                           emptyBytes   = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -143,7 +142,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Prepends the Cadence client ID to the workflow type name as well as the optional
-        /// workflow method name to generate the key used to dereference the <see cref="typeNameToRegistration"/> 
+        /// workflow method name to generate the key used to dereference the <see cref="nameToRegistration"/> 
         /// dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
@@ -167,34 +166,20 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the string used to register a workflow type and method with Cadence.
+        /// Strips the leading client ID from the workflow type key passed
+        /// and returns the type name actually registered with Cadence.
         /// </summary>
-        /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <param name="workflowMethod">
-        /// Optionally identifies the workflow (entry point) method.  
-        /// <paramref name="workflowMethod"/> will be assumed to already
-        /// include the method component when this is <c>null</c>.
-        /// </param>
-        /// <returns>The Cadence workflow registration string.</returns>
-        private static string GetWorkflowRegistrationKey(string workflowTypeName, MethodInfo workflowMethod = null)
+        /// <param name="workflowTypeKey">The workflow type key.</param>
+        /// <returns>The Cadence workflow type name.</returns>
+        private static string GetWorkflowTypeNameFromKey(string workflowTypeKey)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeKey));
 
-            if (workflowMethod == null)
-            {
-                return workflowTypeName;
-            }
+            var separatorPos = workflowTypeKey.IndexOf(CadenceHelper.WorkflowTypeMethodSeparator);
 
-            var workflowMethodAttribute = workflowMethod.GetCustomAttribute<WorkflowMethodAttribute>();
+            Covenant.Assert(separatorPos >= 0);
 
-            if (string.IsNullOrEmpty(workflowMethodAttribute.Name))
-            {
-                return workflowTypeName;
-            }
-            else
-            {
-                return $"{workflowTypeName}::{workflowMethodAttribute.Name}";
-            }
+            return workflowTypeKey.Substring(separatorPos + CadenceHelper.WorkflowTypeMethodSeparator.Length);
         }
 
         /// <summary>
@@ -269,12 +254,21 @@ namespace Neon.Cadence
                     }
                     else
                     {
-                        nameToRegistration[workflowTypeName] =
+                        var methodParameters     = method.GetParameters();
+                        var methodParameterTypes = new Type[methodParameters.Length];
+
+                        for (int i = 0; i < methodParameters.Length; i++)
+                        {
+                            methodParameterTypes[i] = methodParameters[i].ParameterType;
+                        }
+
+                        nameToRegistration[workflowTypeKey] =
                             new WorkflowRegistration()
                             {
-                                WorkflowType   = workflowType,
-                                WorkflowMethod = method,
-                                MethodMap      = methodMap
+                                WorkflowType                 = workflowType,
+                                WorkflowMethod               = method,
+                                WorkflowMethodParameterTypes = methodParameterTypes,
+                                MethodMap                    = methodMap
                             };
                     }
                 }
@@ -284,7 +278,7 @@ namespace Neon.Cadence
                     var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
                         new WorkflowRegisterRequest()
                         {
-                            Name   = GetWorkflowRegistrationKey(workflowTypeName, method),
+                            Name   = GetWorkflowTypeNameFromKey(workflowTypeKey),
                             Domain = client.ResolveDomain(domain)
                         });
 
@@ -405,7 +399,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Handles workflow invocation.
         /// </summary>
-        /// <param name="client">The associated cadence client.</param>
+        /// <param name="client">The associated Cadence client.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowInvokeReply> OnInvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
@@ -530,8 +524,7 @@ namespace Neon.Cadence
                 {
                     // Method returns: Task
 
-                    await (Task<object>)workflowMethod.Invoke(workflow, args);
-                    serializedResult = emptyBytes;
+                    await (Task)workflowMethod.Invoke(workflow, args);
                 }
 
                 return new WorkflowInvokeReply()

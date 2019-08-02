@@ -119,7 +119,7 @@ namespace Neon.Cadence
                         {
                             var activityTypeName = CadenceHelper.GetActivityTypeName(type, activityAttribute);
 
-                            await WorkflowBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
+                            await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
                         }
                     }
                     else
