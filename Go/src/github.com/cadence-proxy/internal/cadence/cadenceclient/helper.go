@@ -442,7 +442,7 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 	n := 30
 	var err error
 	var workflowRun client.WorkflowRun
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 
 	// start the workflow, but put in a loop
 	// to check if the domain has been detected yet
@@ -492,7 +492,7 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID, domain string) (client.WorkflowRun, error) {
 
 	// get the workflow execution
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	workflowRun := workflowClient.GetWorkflow(ctx, workflowID, runID)
 
 	// $debug(jack.burns)
@@ -520,7 +520,7 @@ func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID, 
 func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runID, domain string) error {
 
 	// cancel the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.CancelWorkflow(ctx, workflowID, runID)
 	if err != nil {
 
@@ -563,7 +563,7 @@ func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runI
 func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, runID, domain, reason string, details []byte) error {
 
 	// terminate the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.TerminateWorkflow(ctx,
 		workflowID,
 		runID,
@@ -617,7 +617,7 @@ func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, r
 func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflowID, domain, signalName string, signalArg []byte, opts client.StartWorkflowOptions, workflow string, args ...interface{}) (*workflow.Execution, error) {
 
 	// signal the workflow to start
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	workflowExecution, err := workflowClient.SignalWithStartWorkflow(ctx,
 		workflowID,
 		signalName,
@@ -661,7 +661,7 @@ func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflo
 func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workflowID, runID, domain string) (*cadenceshared.DescribeWorkflowExecutionResponse, error) {
 
 	// descibe the workflow execution
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	response, err := workflowClient.DescribeWorkflowExecution(ctx, workflowID, runID)
 	if err != nil {
 
@@ -703,7 +703,7 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runID, domain, signalName string, arg interface{}) error {
 
 	// signal the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.SignalWorkflow(ctx,
 		workflowID,
 		runID,
@@ -746,7 +746,7 @@ func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runI
 func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID, domain, queryType string, args ...interface{}) (encoded.Value, error) {
 
 	// query the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	value, err := workflowClient.QueryWorkflow(ctx, workflowID, runID, queryType, args...)
 	if err != nil {
 
@@ -786,7 +786,7 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 	}
 
 	// query the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.CompleteActivity(ctx, taskToken, result, e)
 	if err != nil {
 
@@ -829,7 +829,7 @@ func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, wo
 	}
 
 	// query the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.CompleteActivityByID(ctx, domain, workflowID, runID, activityID, result, e)
 	if err != nil {
 
@@ -862,7 +862,7 @@ func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, wo
 func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskToken []byte, domain string, details ...interface{}) error {
 
 	// query the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.RecordActivityHeartbeat(ctx, taskToken, details)
 	if err != nil {
 
@@ -895,7 +895,7 @@ func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskTok
 func (helper *ClientHelper) RecordActivityHeartbeatByID(ctx context.Context, domain, workflowID, runID, activityID string, details ...interface{}) error {
 
 	// query the workflow
-	workflowClient := helper.WorkflowClients.Get(domain)
+	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.RecordActivityHeartbeatByID(ctx, domain, workflowID, runID, activityID, details)
 	if err != nil {
 
