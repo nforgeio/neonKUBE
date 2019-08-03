@@ -264,6 +264,12 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.WorkflowGetVersionRequest:
 		message = NewWorkflowGetVersionRequest()
 
+	// WorkflowFutureReady
+	case messagetypes.WorkflowFutureReadyReply:
+		message = NewWorkflowFutureReadyReply()
+	case messagetypes.WorkflowFutureReadyRequest:
+		message = NewWorkflowFutureReadyRequest()
+
 	// --------------------------------------------------------------------------
 	// Activity messages
 

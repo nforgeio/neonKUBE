@@ -74,6 +74,12 @@ func handleIProxyReply(reply messages.IProxyReply) error {
 			err = handleWorkflowQueryInvokeReply(v)
 		}
 
+	// WorkflowFutureReadyReply
+	case messagetypes.WorkflowFutureReadyReply:
+		if v, ok := reply.(*messages.WorkflowFutureReadyReply); ok {
+			err = handleWorkflowFutureReadyReply(v)
+		}
+
 	// -------------------------------------------------------------------------
 	// Activity message types
 
@@ -291,6 +297,39 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) er
 
 	// set the reply
 	err := op.SendChannel(reply.GetResult(), reply.GetError())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply) error {
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("WorkflowFutureReadyReply Received", zap.Int("ProccessId", os.Getpid()))
+
+	// remove the WorkflowContext from the map
+	// and remove the Operation from the map
+	requestID := reply.GetRequestID()
+	defer Operations.Remove(requestID)
+
+	// get the Operation corresponding the the reply
+	op := Operations.Get(requestID)
+	if op == nil {
+		return globals.ErrEntityNotExist
+	}
+
+	// $debug(jack.burns): DELETE THIS!
+	contextID := op.GetContextID()
+	logger.Debug("Settling Future ACK",
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
+	// set the reply
+	err := op.SendChannel(true, nil)
 	if err != nil {
 		return err
 	}
