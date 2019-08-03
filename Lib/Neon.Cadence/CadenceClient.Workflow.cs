@@ -385,14 +385,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Cancels a workflow if it has not already finished.
-        /// </para>
-        /// <note>
-        /// Workflow cancellation is typically considered to be a normal activity
-        /// and not an error as opposed to workflow termination which will usually
-        /// happen due to an error.
-        /// </note>
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="domain">Optionally identifies the domain.  This defaults to the client domain.</param>
@@ -416,13 +409,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Cancels a workflow if it has not already finished.
-        /// </para>
-        /// <note>
-        /// Workflow termination is typically considered to be due to an error as
-        /// opposed to cancellation which is usually considered as a normal activity.
-        /// </note>
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>

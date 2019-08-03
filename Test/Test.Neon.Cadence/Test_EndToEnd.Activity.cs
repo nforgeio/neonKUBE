@@ -43,5 +43,49 @@ namespace TestCadence
     public partial class Test_EndToEnd
     {
         //---------------------------------------------------------------------
+
+        public interface IActivityBasic
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        public class ActivityBasic : ActivityBase, IActivityBasic
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
+        public interface IActivityWorkflowBasic
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowBasic : WorkflowBase, IActivityWorkflowBasic
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                var stub = Workflow.NewActivityStub<IActivityBasic>();
+
+                return await stub.HelloAsync(name);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Test_Activity_Basic()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter, calls a similarly simple activity and results
+            // a result.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowBasic>();
+
+            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
     }
 }

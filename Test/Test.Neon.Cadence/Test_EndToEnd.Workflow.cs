@@ -44,14 +44,14 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IBasicWorkflow
+        public interface IWorkflowBasic
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
         }
 
         [Workflow(AutoRegister = true)]
-        public class BasicWorkflow : WorkflowBase, IBasicWorkflow
+        public class WorkflowBasic : WorkflowBase, IWorkflowBasic
         {
             public async Task<string> HelloAsync(string name)
             {
@@ -63,7 +63,10 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Test_Workflow_Basic()
         {
-            var stub = client.NewWorkflowStub<IBasicWorkflow>();
+            // Verify that we can call a simple workflow that accepts a
+            // parameter and results a result.
+
+            var stub = client.NewWorkflowStub<IWorkflowBasic>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
