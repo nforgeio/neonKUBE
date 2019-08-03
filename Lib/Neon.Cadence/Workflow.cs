@@ -995,41 +995,6 @@ namespace Neon.Cadence
             }
         }
 
-        /// <summary>
-        /// Executes a workflow activity.  This is called from generated activity stubs.
-        /// </summary>
-        /// <param name="activityTypeName">The activity type name.</param>
-        /// <param name="args">The activity arguments encoded as a byte array.</param>
-        /// <param name="options">Optionally specifies the activity options.</param>
-        /// <param name="domain">Optionally specifies the activity domain.</param>
-        /// <returns>The activity result encoded as a byte array</returns>
-        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options = null, string domain = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
-            Covenant.Requires<ArgumentNullException>(args != null);
-
-            options          = options ?? new ActivityOptions();
-            options.TaskList = Client.ResolveTaskList(options.TaskList);
-
-            var reply = await ExecuteNonParallel(
-                async () =>
-                    {
-                        return (ActivityExecuteReply)await Client.CallProxyAsync(
-                            new ActivityExecuteRequest()
-                            {
-                                Activity = activityTypeName,
-                                Args = args,
-                                Options = options.ToInternal(),
-                                ContextId = contextId
-                            });
-                    });
-
-            reply.ThrowOnError();
-            UpdateReplay(reply);
-
-            return reply.Result;
-        }
-
         //---------------------------------------------------------------------
         // Stub creation methods
 
@@ -1039,6 +1004,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="domain">Optionally overrides the parent workflow's domain.</param>
         /// <returns>The new <see cref="IActivityStub"/>.</returns>
         /// <remarks>
         /// <note>
@@ -1051,11 +1017,11 @@ namespace Neon.Cadence
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
-        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null) 
+        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null, string domain = null) 
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
-            throw new NotImplementedException();
+            return StubManager.CreateActivityStub<TActivityInterface>(Client, this, options, domain);
         }
 
         /// <summary>
@@ -1063,7 +1029,7 @@ namespace Neon.Cadence
         /// workflows via the type-safe workflow interface methods.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <param name="options"></param>
+        /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The child workflow stub.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -1259,6 +1225,7 @@ namespace Neon.Cadence
         /// <param name="activityTypeName">Identifies the activity.</param>
         /// <param name="args">Optionally specifies the activity arguments.</param>
         /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="domain">Optionally overrides the parent workflow's domain.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="CadenceException">
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
@@ -1268,7 +1235,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
+        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
@@ -1280,7 +1247,8 @@ namespace Neon.Cadence
                     ContextId = contextId,
                     Activity  = activityTypeName,
                     Args      = args,
-                    Options   = options.ToInternal()
+                    Options   = options.ToInternal(),
+                    Domain    = domain
                 });
 
             reply.ThrowOnError();

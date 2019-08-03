@@ -65,8 +65,8 @@ namespace Neon.Cadence.Internal
             // Fetch the stub type and reflect the required constructors and methods.
 
             this.stubType          = assembly.GetType(className);
-            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(string), typeof(ActivityOptions), typeof(string));
-            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(WorkflowBase), typeof(Type), typeof(LocalActivityOptions));
+            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions), typeof(string));
+            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(Type), typeof(LocalActivityOptions));
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
             Covenant.Requires<ArgumentNullException>(options != null);
 
-            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityTypeName, options, domain });
+            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options, domain });
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object CreateLocal(CadenceClient client, Workflow workflow, Type activityType, LocalActivityOptions options)
         {
-            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow.Parent, activityType, options });
+            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityType, options });
         }
     }
 }

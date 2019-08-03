@@ -180,6 +180,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
+                Assert.Null(message.Domain);
 
                 // Round-trip
 
@@ -195,6 +196,7 @@ namespace TestCadence
                     WaitForCancellation    = true,
                     RetryPolicy            = new InternalRetryPolicy() { MaximumInterval = 5 }
                 };
+                message.Domain = "my-domain";
 
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
@@ -207,6 +209,7 @@ namespace TestCadence
                 Assert.True(message.Options.WaitForCancellation);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -225,6 +228,7 @@ namespace TestCadence
                 Assert.True(message.Options.WaitForCancellation);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -241,6 +245,7 @@ namespace TestCadence
                 Assert.True(message.Options.WaitForCancellation);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -257,6 +262,7 @@ namespace TestCadence
                 Assert.True(message.Options.WaitForCancellation);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
             }
         }
 
