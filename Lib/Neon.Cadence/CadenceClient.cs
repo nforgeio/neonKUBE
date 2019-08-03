@@ -763,9 +763,9 @@ namespace Neon.Cadence
 
                     foreach (var serverUri in settings.Servers)
                     {
-                        var uri = new Uri(serverUri);
+                        var uri = new Uri(serverUri, UriKind.Absolute);
 
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{NetworkPorts.Cadence}", ",");
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
                     }
 
                     var connectRequest = 
@@ -1144,6 +1144,7 @@ namespace Neon.Cadence
                     case InternalMessageTypes.WorkflowSignalInvokeRequest:
                     case InternalMessageTypes.WorkflowQueryInvokeRequest:
                     case InternalMessageTypes.ActivityInvokeLocalRequest:
+                    case InternalMessageTypes.WorkflowFutureReadyRequest:
 
                         await WorkflowBase.OnProxyRequestAsync(this, request);
                         break;

@@ -398,18 +398,7 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
-
-	// try and cancel the operation
-	var wasCancelled bool
-	if cancel := Cancellables.Get(targetID); cancel != nil {
-		wasCancelled = true
-		cancel()
-		defer func() {
-			_ = Cancellables.Remove(targetID)
-		}()
-	}
-
-	buildReply(reply, nil, wasCancelled)
+	buildReply(reply, nil, true)
 
 	return reply
 }
@@ -1520,7 +1509,10 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	setReplayStatus(ctx, reply)
 
 	// pause the current workflow for the specified duration
-	err := workflow.Sleep(ctx, request.GetDuration())
+	var result interface{}
+	future := workflow.NewTimer(ctx, request.GetDuration())
+	// send ACK here
+	err := future.Get(ctx, &result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err, cadenceerrors.Cancelled))
 

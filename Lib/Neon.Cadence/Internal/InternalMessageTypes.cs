@@ -475,14 +475,17 @@ namespace Neon.Cadence.Internal
         WorkflowCancelChildReply = 155,
 
         /// <summary>
-        /// <b>UNUSED:</b> Available message ID.
+        /// <b>client --> proxy:</b> Sent for workflow operations that are implemented in GOLANG as futures 
+        /// and may be executed in parallel.  <b>cadence-proxy</b> will send this message after it has 
+        /// submitted the operation to Cadence but before the future actually completes.  The .NET client 
+        /// uses this as an indication that another Cadence operation may be started.
         /// </summary>
-        UNUSED_2 = 156,
+        WorkflowFutureReadyRequest = 156,
 
         /// <summary>
-        /// <b>UNUSED:</b> Available message ID..
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowFutureReadyRequest"/> message.
         /// </summary>
-        UNUSED_3 = 157,
+        WorkflowFutureReadyReply = 157,
 
         /// <summary>
         /// <b>client --> proxy:</b> Registers a query handler by name.
