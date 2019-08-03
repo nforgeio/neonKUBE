@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_Messages.cs
+// FILE:        Test_EndToEnd.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,7 +40,7 @@ using Xunit;
 
 namespace TestCadence
 {
-    public class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
+    public partial class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
         CadenceFixture  fixture;
         CadenceClient   client;
@@ -86,32 +86,6 @@ namespace TestCadence
                 proxyClient.Dispose();
                 proxyClient = null;
             }
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IBasicWorkflow
-        {
-            [WorkflowMethod]
-            Task<string> HelloAsync(string name);
-        }
-
-        [Workflow(AutoRegister = true)]
-        public class BasicWorkflow : WorkflowBase, IBasicWorkflow
-        {
-            public async Task<string> HelloAsync(string name)
-            {
-                return await Task.FromResult($"Hello {name}!");
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Test_Workflow_Basic()
-        {
-            var stub = client.NewWorkflowStub<IBasicWorkflow>();
-
-            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
     }
 }

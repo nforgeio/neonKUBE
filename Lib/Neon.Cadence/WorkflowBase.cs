@@ -522,8 +522,22 @@ namespace Neon.Cadence
                 if (resultType.IsGenericType)
                 {
                     // Method returns: Task<T>
+                    //
+                    // Handling this will be a bit tricky because the result type is a
+                    // Task<T> and we need to await it and then get the result as an
+                    // object so we can serialize it.  I would have liked to cast the
+                    // invoke result to Task<object> and simply await it, but that throws
+                    // an InvalidCastException.
+                    //
+                    // The workaround is to cast the invoke result to just Task (which 
+                    // Task<T> derives from) and then extract the result via reflection.
 
-                    var result = await (Task<object>)workflowMethod.Invoke(workflow, args);
+                    var task = (Task)workflowMethod.Invoke(workflow, args);
+
+                    await task;
+
+                    var property = resultType.GetProperty("Result", BindingFlags.Public | BindingFlags.Instance);
+                    var result   = property.GetValue(task);
 
                     serializedResult = client.DataConverter.ToData(result);
                 }

@@ -48,10 +48,10 @@ namespace Neon.Cadence.Internal
         /// The ID of the original operation what has been submitted to Cadence
         /// and who's future has been returned.
         /// </summary>
-        public string FutureOperationId
+        public long FutureOperationId
         {
-            get => GetStringProperty(PropertyNames.FutureOperationId);
-            set => SetStringProperty(PropertyNames.FutureOperationId, value);
+            get => GetLongProperty(PropertyNames.FutureOperationId);
+            set => SetLongProperty(PropertyNames.FutureOperationId, value);
         }
 
         /// <inheritdoc/>
