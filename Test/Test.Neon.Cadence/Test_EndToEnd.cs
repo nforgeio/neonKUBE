@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_StubManager.cs
+// FILE:        Test_Messages.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,52 +38,30 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-using Test.Neon.Models;
-using Newtonsoft.Json.Linq;
-
 namespace TestCadence
 {
-    public partial class Test_StubManager : IClassFixture<CadenceFixture>, IDisposable
+    public class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
-        //---------------------------------------------------------------------
-        // Local types
+        CadenceFixture  fixture;
+        CadenceClient   client;
+        HttpClient      proxyClient;
 
-        /// <summary>
-        /// Used when testing activity stub code generation.  This fakes up just
-        /// enough of a workflow so that stubs can be generated.
-        /// </summary>
-        public class DummyWorkflow : WorkflowBase
-        {
-            public DummyWorkflow()
-            {
-                this.Workflow = new Workflow(
-                    parent:     new WorkflowBase(),
-                    client:             new CadenceClient(),
-                    contextId:          1,
-                    workflowTypeName:   typeof(DummyWorkflow).FullName,
-                    domain:             "my-domain",
-                    taskList:           "my-tasklist",
-                    workflowId:         "my-workflow-id",
-                    runId:              "my-run-id",
-                    isReplaying:        false,
-                    methodMap:          null);
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
-        CadenceFixture fixture;
-        CadenceClient       client;
-        HttpClient          proxyClient;
-
-        public Test_StubManager(CadenceFixture fixture)
+        public Test_EndToEnd(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {
                 DefaultDomain   = CadenceFixture.DefaultDomain,
                 DefaultTaskList = CadenceFixture.DefaultTaskList,
+                CreateDomain    = true,
                 Debug           = true,
+
+                //--------------------------------
+                // $debug(jeff.lill): DELETE THIS!
+                Emulate                = false,
+                DebugPrelaunched       = false,
+                DebugDisableHandshakes = false,
+                DebugDisableHeartbeats = false,
+                //--------------------------------
             };
 
             fixture.Start(settings, keepConnection: true);
@@ -90,6 +69,14 @@ namespace TestCadence
             this.fixture     = fixture;
             this.client      = fixture.Connection;
             this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+
+            // Auto register the test workflow and activity implementations.
+
+            client.RegisterAssembly(Assembly.GetExecutingAssembly()).Wait();
+
+            // Start the worker.
+
+            client.StartWorkerAsync().Wait();
         }
 
         public void Dispose()
@@ -99,6 +86,32 @@ namespace TestCadence
                 proxyClient.Dispose();
                 proxyClient = null;
             }
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IBasicWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class BasicWorkflow : WorkflowBase, IBasicWorkflow
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Test_Workflow_Basic()
+        {
+            var stub = client.NewWorkflowStub<IBasicWorkflow>();
+
+            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
     }
 }

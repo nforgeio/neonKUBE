@@ -33,6 +33,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using ICSharpCode.SharpZipLib.Zip;
+using k8s.Exceptions;
+
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -435,7 +437,8 @@ OPTIONS:
                 try
                 {
                     k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: $"root@{cluster.Definition.Name}"));
-                } catch (k8s.Exceptions.KubeConfigException e)
+                }
+                catch (KubeConfigException)
                 {
                     return;
                 }
@@ -968,7 +971,7 @@ networking:
 
                             if (pEnd == -1)
                             {
-                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\", "");
+                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
                             else
                             {

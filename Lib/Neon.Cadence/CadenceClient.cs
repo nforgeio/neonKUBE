@@ -108,19 +108,21 @@ namespace Neon.Cadence
     /// that Cadence can begin scheduling workflow and activity executions from the current client.
     /// </para>
     /// <para>
-    /// Workflows are implemented by defining an interface derived from <see cref="IWorkflowBase"/>
-    /// and then writing a class the implements your interface.  Activities are implemented in the
-    /// same way by defining an activity interface that derives from <see cref="IActivityBase"/>
-    /// and then writing a class that implements this interface.  Your workflow interface must
-    /// define at least one entry point method tagged by <see cref="WorkflowMethodAttribute"/>
-    /// and may optionally include signal and query methods tagged by <see cref="SignalMethodAttribute"/>
-    /// and <see cref="QueryMethodAttribute"/>.  Your activity interface must define at least one
-    /// entry point method.
+    /// Workflows are implemented by defining an interface describing the workflow methods
+    /// and then writing a class the implements your interface and also inherits <see cref="WorkflowBase"/>.  
+    /// Your workflow interface  must define at least one entry point method tagged by <see cref="WorkflowMethodAttribute"/> and
+    /// may optionally include signal and query methods  tagged by <see cref="SignalMethodAttribute"/> 
+    /// and <see cref="QueryMethodAttribute"/>.
+    /// </para>
+    /// <para>
+    /// Activities are implemented in the same way by defining an activity interface and then writing a class
+    /// that implements this  interface. and inherits <see cref="ActivityBase"/>.  Your activity interface
+    /// must define at least one entry point method.
     /// </para>
     /// <para>
     /// After establishing a connection ot a Cadence cluster, you'll need to call 
     /// <see cref="CadenceClient.RegisterWorkflowAsync{TWorkflowInterface}(string, string)"/> and/or
-    /// <see cref="CadenceClient.RegisterActivityAsync{TActivityInterface}(string)"/> to register your
+    /// <see cref="CadenceClient.RegisterActivityAsync{TActivity}(string, string)"/> to register your
     /// workflow and activity implementations with Cadence.  These calls combined with the
     /// workers described above determine which workflows and activities may be scheduled
     /// on the current client/process.
@@ -132,10 +134,25 @@ namespace Neon.Cadence
     /// you can also tag your workflow and activity classes with <see cref="WorkflowAttribute"/>
     /// or <see cref="ActivityAttribute"/> with <see cref="WorkflowAttribute.AutoRegister"/>
     /// or <see cref="ActivityAttribute.AutoRegister"/> set to <c>true</c> and then call
-    /// <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> and/or
-    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly)"/> to scan an
+    /// <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> and/or
+    /// <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly, string)"/> to scan an
     /// assembly and automatically register the tagged implementation classes it finds.
     /// </para>
+    /// <note>
+    /// <para>
+    /// The .NET client uses a simple huristic to try to ensure that the default workflow and activity
+    /// type names applied when the <see cref="WorkflowAttribute.TypeName"/> and <see cref="ActivityAttribute.TypeName"/>
+    /// properties are not set for the interface and implementation classes.  If the interface
+    /// name starts with an "I", the "I" will be stripped out before generating the fully qualified
+    /// type name.  This handles the common C# convention where interface names started with an "I"
+    /// and the implementing class uses the same name as the interface, but without the "I".
+    /// </para>
+    /// <para>
+    /// If this huristic doesn't work, you'll need to explicitly specify the same type name in
+    /// the <see cref="WorkflowAttribute"/> or <see cref="ActivityAttribute"/> tagging your 
+    /// interface and class definitions.
+    /// </para>
+    /// </note>
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Cadence that 
     /// the current process implements specific workflow and activity types.  You'll call
@@ -746,9 +763,9 @@ namespace Neon.Cadence
 
                     foreach (var serverUri in settings.Servers)
                     {
-                        var uri = new Uri(serverUri);
+                        var uri = new Uri(serverUri, UriKind.Absolute);
 
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{NetworkPorts.Cadence}", ",");
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
                     }
 
                     var connectRequest = 
@@ -1127,6 +1144,7 @@ namespace Neon.Cadence
                     case InternalMessageTypes.WorkflowSignalInvokeRequest:
                     case InternalMessageTypes.WorkflowQueryInvokeRequest:
                     case InternalMessageTypes.ActivityInvokeLocalRequest:
+                    case InternalMessageTypes.WorkflowFutureReadyRequest:
 
                         await WorkflowBase.OnProxyRequestAsync(this, request);
                         break;

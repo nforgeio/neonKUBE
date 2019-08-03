@@ -22,13 +22,14 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
     /// Use this to tag workflow implementations that inherit from
-    /// <see cref="IWorkflowBase"/> to customize the how the workflow is
+    /// <see cref="WorkflowBase"/> to customize the how the workflow is
     /// registered.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
@@ -44,7 +45,7 @@ namespace Neon.Cadence
         /// </param>
         public WorkflowAttribute(string typeName = null)
         {
-            Covenant.Requires<ArgumentException>(typeName == null || typeName.Length > 0, $"[{nameof(typeName)}] cannot be empty.");
+            CadenceHelper.ValidateWorkflowTypeName(typeName);
 
             this.TypeName = typeName;
         }
@@ -56,10 +57,10 @@ namespace Neon.Cadence
         public string TypeName { get; private set; } = null;
 
         /// <summary>
-        /// Indicates that <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly)"/> will
+        /// Indicates that <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> will
         /// automatically register the tagged workflow implementation for the specified assembly.
         /// This defaults to <c>false</c>
         /// </summary>
-        public bool AutoRegister { get; private set; } = false;
+        public bool AutoRegister { get; set; } = false;
     }
 }

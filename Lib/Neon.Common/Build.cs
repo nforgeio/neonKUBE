@@ -46,7 +46,7 @@ namespace Neon
         /// <summary>
         /// The released product version.
         /// </summary>
-        public const string ProductVersion = "0.5.4-alpha";
+        public const string ProductVersion = "0.5.5-alpha";
 
         /// <summary>
         /// The product license.

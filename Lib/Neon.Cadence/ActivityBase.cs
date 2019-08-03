@@ -34,7 +34,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Base class for all application Cadence activity implementations.
     /// </summary>
-    public abstract class ActivityBase : IActivityBase
+    public abstract class ActivityBase
     {
         //---------------------------------------------------------------------
         // Private types
@@ -50,7 +50,7 @@ namespace Neon.Cadence
 
             public ActivityKey(CadenceClient client, long contextId)
             {
-                this.clientId = client.ClientId;
+                this.clientId  = client.ClientId;
                 this.contextId = contextId;
             }
 
@@ -82,7 +82,7 @@ namespace Neon.Cadence
         /// Used for mapping an activity type name to its underlying type, constructor
         /// and entry point method.
         /// </summary>
-        private struct ActivityInvokeInfo
+        private struct ActivityRegistration
         {
             /// <summary>
             /// The activity type.
@@ -92,22 +92,27 @@ namespace Neon.Cadence
             /// <summary>
             /// The activity constructor.
             /// </summary>
-            public ConstructorInfo Constructor { get; set; }
+            public ConstructorInfo ActivityConstructor { get; set; }
 
             /// <summary>
             /// The activity entry point method.
             /// </summary>
             public MethodInfo ActivityMethod { get; set; }
+
+            /// <summary>
+            /// The activity method parameter types.
+            /// </summary>
+            public Type[] ActivityMethodParamaterTypes { get; set; }
         }
 
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                   syncLock         = new object();
-        private static INeonLogger                              log              = LogManager.Default.GetLogger<ActivityBase>();
-        private static Type[]                                   noTypeArgs       = new Type[0];
-        private static object[]                                 noArgs           = new object[0];
-        private static Dictionary<ActivityKey, ActivityBase>    idToActivity     = new Dictionary<ActivityKey, ActivityBase>();
+        private static object                                   syncLock     = new object();
+        private static INeonLogger                              log          = LogManager.Default.GetLogger<ActivityBase>();
+        private static object[]                                 noArgs       = new object[0];
+        private static Dictionary<ActivityKey, ActivityBase>    idToActivity = new Dictionary<ActivityKey, ActivityBase>();
+        private static byte[]                                   emptyBytes   = new byte[0];
 
         // This dictionary is used to map activity type names to the target activity
         // type, constructor, and entry point method.  Note that these mappings are 
@@ -117,22 +122,56 @@ namespace Neon.Cadence
         //
         // where CLIENT-ID is the locally unique ID of the client.  This is important,
         // because we'll need to remove the entries for clients when they're disposed.
+        //
+        // Activity type names may also include a second "::" separator with the
+        // activity methof name appended afterwards to handle activity interfaces
+        // that have multiple methods.  So, valid activity registrations
+        // may looks like:
+        // 
+        //      1::my-activity                  -- clientId = 1, activity type name = my-activity
+        //      1::my-activity::my-entrypoint   -- clientId = 1, activity type name = my-activity, entrypoint = my-entrypoint
 
-        private static Dictionary<string, ActivityInvokeInfo>   nameToInvokeInfo = new Dictionary<string, ActivityInvokeInfo>();
+        private static Dictionary<string, ActivityRegistration>   nameToRegistration = new Dictionary<string, ActivityRegistration>();
 
         /// <summary>
-        /// Prepends the Cadence client ID to the workflow type name to generate the
-        /// key used to dereference the <see cref="nameToInvokeInfo"/> dictionary.
+        /// Prepends the Cadence client ID to the activity type name and optional
+        /// activity method name to generate the key used to dereference the 
+        /// <see cref="nameToRegistration"/> dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="activityTypeName">The activity type name.</param>
-        /// <returns>The prepended type name.</returns>
-        private static string GetActivityTypeKey(CadenceClient client, string activityTypeName)
+        /// <param name="activityMethodAttribute">The activity method attribute. </param>
+        /// <returns>The prepended activity registration key.</returns>
+        private static string GetActivityTypeKey(CadenceClient client, string activityTypeName, ActivityMethodAttribute activityMethodAttribute)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(activityTypeName != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
-            return $"{client.ClientId}::{activityTypeName}";
+            if (string.IsNullOrEmpty(activityMethodAttribute.Name))
+            {
+                return $"{client.ClientId}::{activityTypeName}";
+            }
+            else
+            {
+                return $"{client.ClientId}::{activityTypeName}::{activityMethodAttribute.Name}";
+            }
+        }
+
+        /// <summary>
+        /// Strips the leading client ID from the activity type key passed
+        /// and returns the type name actually registered with Cadence.
+        /// </summary>
+        /// <param name="activityTypeKey">The activity type key.</param>
+        /// <returns>The Cadence workflow type name.</returns>
+        private static string GetActivityTypeNameFromKey(string activityTypeKey)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeKey));
+
+            var separatorPos = activityTypeKey.IndexOf(CadenceHelper.ActivityTypeMethodSeparator);
+
+            Covenant.Assert(separatorPos >= 0);
+
+            return activityTypeKey.Substring(separatorPos + CadenceHelper.ActivityTypeMethodSeparator.Length);
         }
 
         /// <summary>
@@ -141,41 +180,107 @@ namespace Neon.Cadence
         /// <param name="client">The associated client.</param>
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityTypeName">The name used to identify the implementation.</param>
+        /// <param name="domain">Specifies the target domain.</param>
         /// <returns><c>true</c> if the activity was already registered.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        internal static bool Register(CadenceClient client, Type activityType, string activityTypeName)
+        internal async static Task RegisterAsync(CadenceClient client, Type activityType, string activityTypeName, string domain)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
-            activityTypeName = GetActivityTypeKey(client, activityTypeName);
+            var constructor = activityType.GetConstructor(Type.EmptyTypes);
 
-            var constructInfo = new ActivityInvokeInfo();
-
-            constructInfo.ActivityType        = activityType;
-            constructInfo.Constructor = constructInfo.ActivityType.GetConstructor(noTypeArgs);
-
-            if (constructInfo.Constructor == null)
+            if (constructor == null)
             {
-                throw new ArgumentException($"Activity type [{constructInfo.ActivityType.FullName}] does not have a default constructor.");
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
             }
 
-            lock (syncLock)
+            // We need to register each activity method that implements an activity interface method
+            // with the same signature that that was tagged by [ActivityMethod].
+            //
+            // First, we'll create a dictionary that maps method signatures from any inherited
+            // interfaces that are tagged by [ActivityMethod] to the attribute.
+
+            var methodSignatureToAttribute = new Dictionary<string, ActivityMethodAttribute>();
+
+            foreach (var interfaceType in activityType.GetInterfaces())
             {
-                if (nameToInvokeInfo.TryGetValue(activityTypeName, out var existingEntry))
+                foreach (var method in interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
                 {
-                    if (!object.ReferenceEquals(existingEntry.ActivityType, constructInfo.ActivityType))
+                    var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                    if (activityMethodAttribute == null)
                     {
-                        throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for workflow type name [{activityTypeName}].");
+                        continue;
                     }
 
-                    return true;
-                }
-                else
-                {
-                    nameToInvokeInfo[activityTypeName] = constructInfo;
+                    var signature = method.ToString();
 
-                    return false;
+                    if (methodSignatureToAttribute.ContainsKey(signature))
+                    {
+                        throw new NotSupportedException($"Activity type [{activityType.FullName}] cannot implement the [{signature}] method from two different interfaces.");
+                    }
+
+                    methodSignatureToAttribute.Add(signature, activityMethodAttribute);
+                }
+            }
+
+            // Next, we need to register the activity methods that implement the
+            // activity interface.
+
+            foreach (var method in activityType.GetMethods())
+            {
+                if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var activityMethodAttribute))
+                {
+                    continue;
+                }
+
+                var activityTypeKey   = GetActivityTypeKey(client, activityTypeName, activityMethodAttribute);
+                var alreadyRegistered = false;
+
+                lock (syncLock)
+                {
+                    if (nameToRegistration.TryGetValue(activityTypeKey, out var registration))
+                    {
+                        if (!object.ReferenceEquals(registration.ActivityType, registration.ActivityType))
+                        {
+                            throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for activity type name [{activityTypeKey}].");
+                        }
+
+                        alreadyRegistered = true;
+                    }
+                    else
+                    {
+                        var methodParameters     = method.GetParameters();
+                        var methodParameterTypes = new Type[methodParameters.Length];
+
+                        for (int i = 0; i < methodParameters.Length; i++)
+                        {
+                            methodParameterTypes[i] = methodParameters[i].ParameterType;
+                        }
+
+                        nameToRegistration[activityTypeKey] =
+                            new ActivityRegistration()
+                            {
+                                ActivityType                 = activityType,
+                                ActivityConstructor          = constructor,
+                                ActivityMethod               = method,
+                                ActivityMethodParamaterTypes = methodParameterTypes
+                            };
+                    }
+                }
+
+                if (!alreadyRegistered)
+                {
+                    var reply = (ActivityRegisterReply)await client.CallProxyAsync(
+                        new ActivityRegisterRequest()
+                        {
+                            Name   = GetActivityTypeNameFromKey(activityTypeKey),
+                            Domain = client.ResolveDomain(domain)
+                        });
+
+                    reply.ThrowOnError();
                 }
             }
         }
@@ -192,31 +297,31 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                foreach (var key in nameToInvokeInfo.Keys.Where(key => key.StartsWith(prefix)).ToList())
+                foreach (var key in nameToRegistration.Keys.Where(key => key.StartsWith(prefix)).ToList())
                 {
-                    nameToInvokeInfo.Remove(key);
+                    nameToRegistration.Remove(key);
                 }
             }
         }
 
         /// <summary>
-        /// Returns the <see cref="ActivityInvokeInfo"/> for any activity type and activity type name.
+        /// Returns the <see cref="ActivityRegistration"/> for any activity type and activity type name.
         /// </summary>
         /// <param name="activityType">The targetr activity type.</param>
         /// <param name="activityTypeName">The target activity type name.</param>
-        /// <returns>The <see cref="ActivityInvokeInfo"/>.</returns>
-        private static ActivityInvokeInfo GetActivityInvokeInfo(Type activityType, string activityTypeName)
+        /// <returns>The <see cref="ActivityRegistration"/>.</returns>
+        private static ActivityRegistration GetActivityInvokeInfo(Type activityType, string activityTypeName)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
-            var info = new ActivityInvokeInfo();
+            var info = new ActivityRegistration();
 
             // Locate the constructor.
 
-            info.Constructor = activityType.GetConstructor(noTypeArgs);
+            info.ActivityConstructor = activityType.GetConstructor(Type.EmptyTypes);
 
-            if (info.Constructor == null)
+            if (info.ActivityConstructor == null)
             {
                 throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
             }
@@ -280,11 +385,11 @@ namespace Neon.Cadence
         /// <param name="invokeInfo">The activity invocation information.</param>
         /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
         /// <returns>The constructed activity.</returns>
-        private static ActivityBase Create(CadenceClient client, ActivityInvokeInfo invokeInfo, long? contextId)
+        private static ActivityBase Create(CadenceClient client, ActivityRegistration invokeInfo, long? contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
-            var activity = (ActivityBase)(invokeInfo.Constructor.Invoke(noArgs));
+            var activity = (ActivityBase)(invokeInfo.ActivityConstructor.Invoke(noArgs));
 
             activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
 
@@ -350,11 +455,11 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(CadenceClient client, ActivityInvokeRequest request)
         {
-            ActivityInvokeInfo  invokeInfo;
+            ActivityRegistration  invokeInfo;
 
             lock (syncLock)
             {
-                if (!nameToInvokeInfo.TryGetValue(request.Activity, out invokeInfo))
+                if (!nameToRegistration.TryGetValue(request.Activity, out invokeInfo))
                 {
                     throw new KeyNotFoundException($"Cannot resolve [activityTypeName = {request.Activity}] to a registered activity type and activity method.");
                 }
@@ -495,12 +600,13 @@ namespace Neon.Cadence
         /// <summary>
         /// Executes the target activity method.
         /// </summary>
+        /// <param name="client">The associated Cadence client.</param>
         /// <param name="argBytes">The encoded activity arguments.</param>
         /// <returns>The encoded activity results.</returns>
-        private async Task<byte[]> RunAsync(byte[] argBytes)
+        private async Task<byte[]> RunAsync(CadenceClient client, byte[] argBytes)
         {
-            var     args   = dataConverter.FromDataArray(argBytes);
-            object  result = null;
+            var args             = dataConverter.FromDataArray(argBytes);
+            var serializedResult = emptyBytes;
 
             if (activityMethod.ReturnType == typeof(Task))
             {
@@ -512,10 +618,12 @@ namespace Neon.Cadence
             {
                 // The activity method returns [Task<T>] (an actual result).
 
-                result = await (Task<object>)activityMethod.Invoke(this, args);
+                var result = await (Task<object>)activityMethod.Invoke(this, args);
+
+                serializedResult = client.DataConverter.ToData(result);
             }
 
-            return dataConverter.ToData(result);
+            return serializedResult;
         }
 
         /// <summary>
@@ -530,7 +638,7 @@ namespace Neon.Cadence
 
             if (IsLocal)
             {
-                return await RunAsync(args);
+                return await RunAsync(client, args);
             }
             else
             {
@@ -557,7 +665,7 @@ namespace Neon.Cadence
                         idToActivity[activityKey] = this;
                     }
 
-                    return await RunAsync(args);
+                    return await RunAsync(client, args);
                 }
                 finally
                 {

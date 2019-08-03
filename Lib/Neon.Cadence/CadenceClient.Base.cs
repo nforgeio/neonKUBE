@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -49,10 +50,44 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Signals Cadence that the application is capable of executing activities for a specific
+        /// Scans the assembly passed looking for workflow and activity implementations 
+        /// derived from and registers them with Cadence.  This is equivalent to calling
+        /// <see cref="RegisterAssemblyWorkflowsAsync(Assembly, string)"/> and
+        /// <see cref="RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
+        /// </summary>
+        /// <param name="assembly">The target assembly.</param>
+        /// <param name="domain">Optionally overrides the default client domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TypeLoadException">
+        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
+        /// derived from <see cref="WorkflowBase"/> or for types tagged by <see cref="ActivityAttribute"/>
+        /// that are now derived from <see cref="ActivityBase"/>.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
+        /// <exception cref="CadenceActivityWorkerStartedException">
+        /// Thrown if an activity worker has already been started for the client.  You must
+        /// register activity implementations before starting workers.
+        /// </exception>
+        /// <exception cref="CadenceWorkflowWorkerStartedException">
+        /// Thrown if a workflow worker has already been started for the client.  You must
+        /// register workflow implementations before starting workers.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// Be sure to register all of your workflow implementations before starting workers.
+        /// </note>
+        /// </remarks>
+        public async Task RegisterAssembly(Assembly assembly, string domain = null)
+        {
+            await RegisterAssemblyWorkflowsAsync(assembly, domain);
+            await RegisterAssemblyActivitiesAsync(assembly, domain);
+        }
+
+        /// <summary>
+        /// Signals Cadence that the application is capable of executing workflows and/or activities for a specific
         /// domain and task list.
         /// </summary>
-        /// <param name="taskList">Optionally specifies the target task list (defaults to <b>"default"</b>).</param>
+        /// <param name="taskList">Optionally overrides the default <see cref="CadenceClient"/> task list.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
@@ -86,11 +121,11 @@ namespace Neon.Cadence
         /// are made.
         /// </note>
         /// </remarks>
-        private async Task<Worker> StartWorkerAsync(string taskList = "default", WorkerOptions options = null, string domain = null)
+        public async Task<Worker> StartWorkerAsync(string taskList = null, WorkerOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
-
-            options = options ?? new WorkerOptions();
+            taskList = ResolveTaskList(taskList);
+            options  = options ?? new WorkerOptions();
+            domain   = ResolveDomain(domain);
 
             WorkerMode  mode = options.Mode;
             Worker      worker;

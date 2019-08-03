@@ -71,6 +71,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");
         public static PropertyNameUtf8 Execution { get; private set; }                                 = new PropertyNameUtf8("Execution");
         public static PropertyNameUtf8 ExecutionStartToCloseTimeout { get; private set; }              = new PropertyNameUtf8("ExecutionStartToCloseTimeout");
+        public static PropertyNameUtf8 FutureOperationId { get; private set; }                         = new PropertyNameUtf8("FutureOperationId");
         public static PropertyNameUtf8 HasDetails { get; private set; }                                = new PropertyNameUtf8("HasDetails");
         public static PropertyNameUtf8 HasResult { get; private set; }                                 = new PropertyNameUtf8("HasResult");
         public static PropertyNameUtf8 Identity { get; private set; }                                  = new PropertyNameUtf8("Identity");

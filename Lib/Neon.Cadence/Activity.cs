@@ -31,7 +31,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Provides useful information and functionality for workflow implementations.
-    /// This will be available via the <see cref="IWorkflowBase.Workflow"/> property.
+    /// This will be available via the <see cref="WorkflowBase.Workflow"/> property.
     /// </summary>
     public class Activity
     {
