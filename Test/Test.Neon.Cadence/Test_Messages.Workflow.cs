@@ -3353,25 +3353,25 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ContextId);
-                Assert.Null(message.FutureOperationId);
+                Assert.Equal(0, message.FutureOperationId);
 
                 // Round-trip
 
                 message.RequestId = 555;
                 message.ContextId = 666;
-                message.FutureOperationId = "777";
-                Assert.Equal("777", message.FutureOperationId);
+                message.FutureOperationId = 777;
+                Assert.Equal(777, message.FutureOperationId);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
-                Assert.Equal("777", message.FutureOperationId);
+                Assert.Equal(777, message.FutureOperationId);
 
                 message = ProxyMessage.Deserialize<WorkflowFutureReadyRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
-                Assert.Equal("777", message.FutureOperationId);
+                Assert.Equal(777, message.FutureOperationId);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -3379,7 +3379,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
-                Assert.Equal("777", message.FutureOperationId);
+                Assert.Equal(777, message.FutureOperationId);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -3387,7 +3387,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
-                Assert.Equal("777", message.FutureOperationId);
+                Assert.Equal(777, message.FutureOperationId);
             }
         }
 
