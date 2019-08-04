@@ -257,7 +257,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowType.IsValueType)
             {
-                throw new WorkflowTypeException($"[{workflowType.FullName}] workflow implementation cannot be a struct.");
+                throw new ActivityTypeException($"[{workflowType.FullName}] is a [struct].  Workflows must be implemented as a [class].");
             }
 
             if (workflowType.IsGenericType)
@@ -373,6 +373,11 @@ namespace Neon.Cadence.Internal
             if (activityType.IsInterface)
             {
                 throw new ActivityTypeException($"[{activityType.FullName}] implementation cannot be an interface.");
+            }
+
+            if (activityType.IsValueType)
+            {
+                throw new ActivityTypeException($"[{activityType.FullName}] is a [struct].  Activities must be implemented as a [class].");
             }
 
             if (activityType.IsGenericType)

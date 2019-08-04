@@ -28,7 +28,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Use this to tag workflow implementations that inherit from
+    /// Used to tag workflow implementations that inherit from
     /// <see cref="WorkflowBase"/> to customize the how the workflow is
     /// registered.
     /// </summary>

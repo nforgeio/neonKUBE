@@ -28,7 +28,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Use this to tag activity implementations that inherit from
+    /// Used to tag activity implementations that inherit from
     /// <see cref="ActivityBase"/> to customize the how the activity is
     /// registered.
     /// </summary>

@@ -1017,7 +1017,7 @@ namespace Neon.Cadence
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
-        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null, string domain = null) 
+        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null, string domain = null)
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
@@ -1127,7 +1127,7 @@ namespace Neon.Cadence
         ///     </item>
         /// </list>
         /// </remarks>
-        public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null) 
+        public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null)
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
