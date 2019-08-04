@@ -44,14 +44,51 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IWorkflowBasic
+        private static bool workflowTests_WorkflowWithNoResultCalled;
+
+        public interface IWorkflowWithNoResult
+        {
+            [WorkflowMethod]
+            Task RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowWithNoResult : WorkflowBase, IWorkflowWithNoResult
+        {
+            public async Task RunAsync()
+            {
+                workflowTests_WorkflowWithNoResultCalled = true;
+
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_WithNoResult()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter and results a result.
+
+            workflowTests_WorkflowWithNoResultCalled = false;
+
+            var stub = client.NewWorkflowStub<IWorkflowWithNoResult>();
+
+            await stub.RunAsync();
+
+            Assert.True(workflowTests_WorkflowWithNoResultCalled);
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowWithResult
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowBasic : WorkflowBase, IWorkflowBasic
+        public class WorkflowWithResult : WorkflowBase, IWorkflowWithResult
         {
             public async Task<string> HelloAsync(string name)
             {
@@ -61,12 +98,12 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Test_Workflow_Basic()
+        public async Task Workflow_WithResult()
         {
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
 
-            var stub = client.NewWorkflowStub<IWorkflowBasic>();
+            var stub = client.NewWorkflowStub<IWorkflowWithResult>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }

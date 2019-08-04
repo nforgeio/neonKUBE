@@ -44,14 +44,74 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IActivityBasic
+        private static bool activityTests_ActivityWithNoResultCalled;
+        private static bool activityTests_WorkflowWithNoResultCalled;
+
+        public interface IActivityWithNoResult
+        {
+            [ActivityMethod]
+            Task RunAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityWithNoResult : ActivityBase, IActivityWithNoResult
+        {
+            public async Task RunAsync()
+            {
+                activityTests_ActivityWithNoResultCalled = true;
+
+                await Task.CompletedTask;
+            }
+        }
+
+        public interface IActivityWorkflowWithNoResult
+        {
+            [WorkflowMethod]
+            Task RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowWithNoResult : WorkflowBase, IActivityWorkflowWithNoResult
+        {
+            public async Task RunAsync()
+            {
+                activityTests_WorkflowWithNoResultCalled = true;
+
+                var stub = Workflow.NewActivityStub<IActivityWithNoResult>();
+
+                await stub.RunAsync();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_WithNoResult()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter, calls a similarly simple activity and results
+            // a result.
+
+            activityTests_ActivityWithNoResultCalled = false;
+            activityTests_WorkflowWithNoResultCalled = false;
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithNoResult>();
+
+            await stub.RunAsync();
+
+            Assert.True(activityTests_WorkflowWithNoResultCalled);
+            Assert.True(activityTests_ActivityWithNoResultCalled);
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IActivityWithResult
         {
             [ActivityMethod]
             Task<string> HelloAsync(string name);
         }
 
         [Activity(AutoRegister = true)]
-        public class ActivityBasic : ActivityBase, IActivityBasic
+        public class ActivityWithResult : ActivityBase, IActivityWithResult
         {
             public async Task<string> HelloAsync(string name)
             {
@@ -59,18 +119,18 @@ namespace TestCadence
             }
         }
 
-        public interface IActivityWorkflowBasic
+        public interface IActivityWorkflowWithResult
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
         }
 
         [Workflow(AutoRegister = true)]
-        public class ActivityWorkflowBasic : WorkflowBase, IActivityWorkflowBasic
+        public class ActivityWorkflowWithResult : WorkflowBase, IActivityWorkflowWithResult
         {
             public async Task<string> HelloAsync(string name)
             {
-                var stub = Workflow.NewActivityStub<IActivityBasic>();
+                var stub = Workflow.NewActivityStub<IActivityWithResult>();
 
                 return await stub.HelloAsync(name);
             }
@@ -78,13 +138,59 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Test_Activity_Basic()
+        public async Task Activity_WithResult()
         {
             // Verify that we can call a simple workflow that accepts a
-            // parameter, calls a similarly simple activity and results
+            // parameter, calls a similarly simple activity that returns
             // a result.
 
-            var stub = client.NewWorkflowStub<IActivityWorkflowBasic>();
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithResult>();
+
+            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface ILocalActivityWithResult
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        public class LocalActivityWithResult : ActivityBase, IActivityWithResult
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
+        public interface ILocalActivityWorkflowWithResult
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class LocalActivityWorkflowWithResult : WorkflowBase, IActivityWorkflowWithResult
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                var stub = Workflow.NewLocalActivityStub<ILocalActivityWithResult>();
+
+                return await stub.HelloAsync(name);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task LocalActivity_WithResult()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter, calls a similarly simple local activity that
+            // returns a result.
+
+            var stub = client.NewWorkflowStub<ILocalActivityWorkflowWithResult>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
