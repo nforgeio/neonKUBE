@@ -1296,9 +1296,10 @@ namespace Neon.Cadence
             {
                 // We should never see an exception under normal circumstances.
                 // Either a requestID somehow got reused (which should never 
-                // happen) or the HTTP request to the [cadence-proxy] failed
+                // happen) the HTTP request to the [cadence-proxy] failed
                 // to be transmitted, timed out, or the proxy returned an
-                // error status code.
+                // error status code, or maybe the client was closed out from
+                // under us.
                 //
                 // We're going to save the exception to [pendingException]
                 // and signal the background thread to close the connection.

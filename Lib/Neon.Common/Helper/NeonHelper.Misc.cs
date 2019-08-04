@@ -1741,7 +1741,7 @@ namespace Neon.Common
         /// an <see cref="object"/>.  This is handy for situations where the task
         /// result type is unknown at compile time.
         /// </summary>
-        /// <param name="task">The <see cref="Task{Task}"/>.</param>
+        /// <param name="task">The <see cref="Task{T}"/>.</param>
         /// <returns>The task result.</returns>
         public async static Task<object> GetTaskResultAsObjectAsync(Task task)
         {

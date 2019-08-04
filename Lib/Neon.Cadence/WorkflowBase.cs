@@ -457,7 +457,7 @@ namespace Neon.Cadence
             workflow = (WorkflowBase)Activator.CreateInstance(registration.WorkflowType);
             workflow.Workflow = 
                 new Workflow(
-                    parent:     (WorkflowBase)workflow,
+                    parent:             (WorkflowBase)workflow,
                     client:             client, 
                     contextId:          contextId,
                     workflowTypeName:   request.WorkflowType,
@@ -521,29 +521,15 @@ namespace Neon.Cadence
 
                 if (resultType.IsGenericType)
                 {
-                    // Method returns: Task<T>
-                    //
-                    // Handling this will be a bit tricky because the result type is a
-                    // Task<T> and we need to await it and then get the result as an
-                    // object so we can serialize it.  I would have liked to cast the
-                    // invoke result to Task<object> and simply await it, but that throws
-                    // an InvalidCastException.
-                    //
-                    // The workaround is to cast the invoke result to just Task (which 
-                    // Task<T> derives from) and then extract the result via reflection.
+                    // Workflow method returns: Task<T>
 
-                    var task = (Task)workflowMethod.Invoke(workflow, args);
-
-                    await task;
-
-                    var property = resultType.GetProperty("Result", BindingFlags.Public | BindingFlags.Instance);
-                    var result   = property.GetValue(task);
+                    var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)workflowMethod.Invoke(workflow, args));
 
                     serializedResult = client.DataConverter.ToData(result);
                 }
                 else
                 {
-                    // Method returns: Task
+                    // Workflow method returns: Task
 
                     await (Task)workflowMethod.Invoke(workflow, args);
                 }
@@ -722,7 +708,7 @@ namespace Neon.Cadence
 
                     var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
                     var activity   = ActivityBase.Create(client, activityAction, null);
-                    var result     = await activity.OnRunAsync(client, request.Args);
+                    var result     = await activity.OnInvokeAsync(client, request.Args);
 
                     return new ActivityInvokeLocalReply()
                     {

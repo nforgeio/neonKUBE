@@ -108,21 +108,11 @@ namespace Neon.Cadence
             {
                 var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
 
-                if (workflowAttribute != null)
+                if (workflowAttribute != null && workflowAttribute.AutoRegister)
                 {
-                    if (type.BaseType == typeof(WorkflowBase))
-                    {
-                        if (workflowAttribute.AutoRegister)
-                        {
-                            var workflowTypeName = CadenceHelper.GetWorkflowTypeName(type, workflowAttribute);
+                    var workflowTypeName = CadenceHelper.GetWorkflowTypeName(type, workflowAttribute);
 
-                            await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
-                        }
-                    }
-                    else
-                    {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(WorkflowAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
-                    }
+                    await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
                 }
             }
         }

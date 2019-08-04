@@ -111,21 +111,11 @@ namespace Neon.Cadence
             {
                 var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
 
-                if (activityAttribute != null)
+                if (activityAttribute != null && activityAttribute.AutoRegister)
                 {
-                    if (type.BaseType != typeof(ActivityBase))
-                    {
-                        if (activityAttribute.AutoRegister)
-                        {
-                            var activityTypeName = CadenceHelper.GetActivityTypeName(type, activityAttribute);
+                    var activityTypeName = CadenceHelper.GetActivityTypeName(type, activityAttribute);
 
-                            await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
-                        }
-                    }
-                    else
-                    {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(ActivityAttribute)}] but does not inherit [{nameof(ActivityBase)}].");
-                    }
+                    await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
                 }
             }
         }

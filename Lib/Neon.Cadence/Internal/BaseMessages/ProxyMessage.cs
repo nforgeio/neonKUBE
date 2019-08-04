@@ -277,7 +277,7 @@ namespace Neon.Cadence.Internal
                 }
                 catch (Exception e)
                 {
-                    throw new FormatException("Message deserialzation failed", e);
+                    throw new FormatException("Message deserialization failed", e);
                 }
 
                 var result = message as TMessage;

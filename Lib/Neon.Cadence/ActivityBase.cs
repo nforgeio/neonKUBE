@@ -135,19 +135,19 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Prepends the Cadence client ID to the activity type name and optional
-        /// activity method name to generate the key used to dereference the 
+        /// activity method attribute name to generate the key used to dereference the 
         /// <see cref="nameToRegistration"/> dictionary.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="activityTypeName">The activity type name.</param>
-        /// <param name="activityMethodAttribute">The activity method attribute. </param>
+        /// <param name="activityMethodAttribute">Optionally specifies the activity method attribute. </param>
         /// <returns>The prepended activity registration key.</returns>
-        private static string GetActivityTypeKey(CadenceClient client, string activityTypeName, ActivityMethodAttribute activityMethodAttribute)
+        private static string GetActivityTypeKey(CadenceClient client, string activityTypeName, ActivityMethodAttribute activityMethodAttribute = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
-            if (string.IsNullOrEmpty(activityMethodAttribute.Name))
+            if (string.IsNullOrEmpty(activityMethodAttribute?.Name))
             {
                 return $"{client.ClientId}::{activityTypeName}";
             }
@@ -459,7 +459,7 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                if (!nameToRegistration.TryGetValue(request.Activity, out invokeInfo))
+                if (!nameToRegistration.TryGetValue(GetActivityTypeKey(client, request.Activity), out invokeInfo))
                 {
                     throw new KeyNotFoundException($"Cannot resolve [activityTypeName = {request.Activity}] to a registered activity type and activity method.");
                 }
@@ -469,7 +469,7 @@ namespace Neon.Cadence
 
             try
             {
-                var result = await activity.OnRunAsync(client, request.Args);
+                var result = await activity.OnInvokeAsync(client, request.Args);
 
                 return new ActivityInvokeReply()
                 {
@@ -555,6 +555,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(dataConverter != null);
 
             this.Client                  = client;
+            this.Activity                = new Activity(this);
             this.activityType            = activityType;
             this.activityMethod          = activityMethod;
             this.dataConverter           = dataConverter;
@@ -603,24 +604,33 @@ namespace Neon.Cadence
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="argBytes">The encoded activity arguments.</param>
         /// <returns>The encoded activity results.</returns>
-        private async Task<byte[]> RunAsync(CadenceClient client, byte[] argBytes)
+        private async Task<byte[]> InvokeAsync(CadenceClient client, byte[] argBytes)
         {
-            var args             = dataConverter.FromDataArray(argBytes);
+            var parameters     = activityMethod.GetParameters();
+            var parameterTypes = new Type[parameters.Length];
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                parameterTypes[i] = parameters[i].ParameterType;
+            }
+
+            var resultType       = activityMethod.ReturnType;
+            var args             = dataConverter.FromDataArray(argBytes, parameterTypes);
             var serializedResult = emptyBytes;
 
-            if (activityMethod.ReturnType == typeof(Task))
+            if (resultType.IsGenericType)
             {
-                // The activity method returns [Task] (effectively void).
+                // Activity method returns: Task<T>
 
-                await (Task)activityMethod.Invoke(this, args);
+                var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)activityMethod.Invoke(this, args));
+
+                serializedResult = client.DataConverter.ToData(result);
             }
             else
             {
-                // The activity method returns [Task<T>] (an actual result).
+                // Activity method returns: Task
 
-                var result = await (Task<object>)activityMethod.Invoke(this, args);
-
-                serializedResult = client.DataConverter.ToData(result);
+                await (Task)activityMethod.Invoke(this, args);
             }
 
             return serializedResult;
@@ -632,13 +642,13 @@ namespace Neon.Cadence
         /// <param name="client">The Cadence client.</param>
         /// <param name="args">The encoded activity arguments.</param>
         /// <returns>Thye activity results.</returns>
-        internal async Task<byte[]> OnRunAsync(CadenceClient client, byte[] args)
+        internal async Task<byte[]> OnInvokeAsync(CadenceClient client, byte[] args)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
             if (IsLocal)
             {
-                return await RunAsync(client, args);
+                return await InvokeAsync(client, args);
             }
             else
             {
@@ -665,7 +675,7 @@ namespace Neon.Cadence
                         idToActivity[activityKey] = this;
                     }
 
-                    return await RunAsync(client, args);
+                    return await InvokeAsync(client, args);
                 }
                 finally
                 {

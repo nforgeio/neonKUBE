@@ -60,23 +60,30 @@ namespace TestCadence
                 Emulate                = false,
                 DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
-                DebugDisableHeartbeats = false,
+                DebugDisableHeartbeats = true,
                 //--------------------------------
             };
 
-            fixture.Start(settings, keepConnection: true);
+            if (fixture.Start(settings, keepConnection: true) == TestFixtureStatus.Started)
+            {
+                this.fixture     = fixture;
+                this.client      = fixture.Connection;
+                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
 
-            this.fixture     = fixture;
-            this.client      = fixture.Connection;
-            this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+                // Auto register the test workflow and activity implementations.
 
-            // Auto register the test workflow and activity implementations.
+                client.RegisterAssembly(Assembly.GetExecutingAssembly()).Wait();
 
-            client.RegisterAssembly(Assembly.GetExecutingAssembly()).Wait();
+                // Start the worker.
 
-            // Start the worker.
-
-            client.StartWorkerAsync().Wait();
+                client.StartWorkerAsync().Wait();
+            }
+            else
+            {
+                this.fixture     = fixture;
+                this.client      = fixture.Connection;
+                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+            }
         }
 
         public void Dispose()

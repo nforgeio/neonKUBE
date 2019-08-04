@@ -35,28 +35,28 @@ namespace Neon.Cadence
     /// </summary>
     public class Activity
     {
-        private ActivityBase    activity;
+        private ActivityBase    parent;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="activity">The parent activity implementation.</param>
-        internal Activity(ActivityBase activity)
+        /// <param name="parent">The parent activity implementation.</param>
+        internal Activity(ActivityBase parent)
         {
-            Covenant.Requires<ArgumentNullException>(activity != null);
+            Covenant.Requires<ArgumentNullException>(parent != null);
 
-            this.activity = activity;
+            this.parent = parent;
         }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this activity.
         /// </summary>
-        public CadenceClient Client => activity.Client;
+        public CadenceClient Client => parent.Client;
 
         /// <summary>
         /// Returns <c>true</c> for a local activity execution.
         /// </summary>
-        public bool IsLocal => activity.IsLocal;
+        public bool IsLocal => parent.IsLocal;
 
         /// <summary>
         /// Returns the activity's cancellation token.  Activities can monitor this
@@ -75,14 +75,14 @@ namespace Neon.Cadence
         /// reschedule the activity if necessary.
         /// </para>
         /// </remarks>
-        public CancellationToken CancellationToken => activity.CancellationToken;
+        public CancellationToken CancellationToken => parent.CancellationToken;
 
         /// <summary>
         /// Returns the additional information about the activity and the workflow
         /// that invoked it.  Note that this doesn't work for local activities.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
-        public ActivityTask Task => activity.ActivityTask;
+        public ActivityTask Task => parent.ActivityTask;
 
         /// <summary>
         /// <para>
@@ -111,12 +111,12 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SendHeartbeatAsync(byte[] details = null)
         {
-            activity.EnsureNotLocal();
+            parent.EnsureNotLocal();
 
             var reply = (ActivityRecordHeartbeatReply)await Client.CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {
-                    ContextId = activity.ContextId.Value,
+                    ContextId = parent.ContextId.Value,
                     Details   = details
                 });
 
@@ -136,12 +136,12 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<bool> HasLastHeartbeatDetailsAsync()
         {
-            activity.EnsureNotLocal();
+            parent.EnsureNotLocal();
 
             var reply = (ActivityHasHeartbeatDetailsReply)await Client.CallProxyAsync(
                 new ActivityHasHeartbeatDetailsRequest()
                 {
-                    ContextId = activity.ContextId.Value
+                    ContextId = parent.ContextId.Value
                 });
 
             reply.ThrowOnError();
@@ -162,12 +162,12 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<byte[]> GetLastHeartbeatDetailsAsync()
         {
-            activity.EnsureNotLocal();
+            parent.EnsureNotLocal();
 
             var reply = (ActivityGetHeartbeatDetailsReply)await Client.CallProxyAsync(
                 new ActivityGetHeartbeatDetailsRequest()
                 {
-                    ContextId = activity.ContextId.Value
+                    ContextId = parent.ContextId.Value
                 });
 
             reply.ThrowOnError();
@@ -193,7 +193,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task CompleteExternallyAsync()
         {
-            activity.EnsureNotLocal();
+            parent.EnsureNotLocal();
 
             await global::System.Threading.Tasks.Task.CompletedTask;
             throw new CadenceActivityExternalCompletionException();

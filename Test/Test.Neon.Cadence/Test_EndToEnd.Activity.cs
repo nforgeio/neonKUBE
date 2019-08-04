@@ -50,6 +50,7 @@ namespace TestCadence
             Task<string> HelloAsync(string name);
         }
 
+        [Activity(AutoRegister = true)]
         public class ActivityBasic : ActivityBase, IActivityBasic
         {
             public async Task<string> HelloAsync(string name)
