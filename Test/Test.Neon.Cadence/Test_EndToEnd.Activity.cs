@@ -182,6 +182,7 @@ namespace TestCadence
             }
         }
 
+#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task LocalActivity_WithResult()
@@ -194,5 +195,6 @@ namespace TestCadence
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
+#endif
     }
 }
