@@ -767,7 +767,7 @@ namespace Neon.Cadence
                         {
                             Endpoints     = sbEndpoints.ToString(),
                             Identity      = settings.ClientIdentity,
-                            ClientTimeout = TimeSpan.FromSeconds(60),
+                            ClientTimeout = TimeSpan.FromSeconds(30),
                             Domain        = settings.DefaultDomain,
                             CreateDomain  = settings.CreateDomain
                         };

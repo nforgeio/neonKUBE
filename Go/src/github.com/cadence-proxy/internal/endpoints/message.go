@@ -20,10 +20,18 @@ package endpoints
 import (
 	"fmt"
 	"net/http"
+	"sync"
 
 	"go.uber.org/zap"
 
 	"github.com/cadence-proxy/internal/messages"
+)
+
+var (
+
+	// Mutex lock to keep race conditions from happening
+	// when terminating the cadence-proxy
+	terminateMu sync.Mutex
 )
 
 // MessageHandler accepts an http.PUT requests and parses the
@@ -87,13 +95,17 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 	defer func() {
 
 		// close the responseChan
+		close(responseChan)
+
 		// check to see if terminate is true, if it is then gracefully
 		// shut down the server instance by sending a truth bool value
 		// to the instance's ShutdownChannel
-		close(responseChan)
+		terminateMu.Lock()
 		if terminate {
 			Instance.ShutdownChannel <- true
+			terminate = false
 		}
+		terminateMu.Unlock()
 	}()
 
 	// switch on message interface type (IProxyRequest/IProxyReply)
