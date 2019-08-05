@@ -919,7 +919,6 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
-                Assert.Equal(TimeSpan.Zero, message.ScheduleToStartTimeout);
 
                 // Round-trip
 
@@ -930,7 +929,6 @@ namespace TestCadence
                     ScheduleToCloseTimeoutSeconds = 1000,
                     RetryPolicy = new InternalRetryPolicy() { MaximumInterval = 5 }
                 };
-                message.ScheduleToStartTimeout = TimeSpan.FromSeconds(120);
 
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
@@ -938,7 +936,6 @@ namespace TestCadence
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeoutSeconds);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -951,7 +948,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -962,7 +958,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -972,7 +967,6 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
             }
         }
 

@@ -1245,15 +1245,37 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
             options = options ?? new ActivityOptions();
+            options = options.Clone();
+
+            if (options.HeartbeatTimeout <= TimeSpan.Zero)
+            {
+                options.HeartbeatTimeout = Client.Settings.ActivityHeartbeatTimeout;
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToStartTimeout = Client.Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.StartToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
+            }
 
             var reply = (ActivityExecuteReply)await Client.CallProxyAsync(
                 new ActivityExecuteRequest()
                 {
-                    ContextId = contextId,
-                    Activity  = activityTypeName,
-                    Args      = args,
-                    Options   = options.ToInternal(),
-                    Domain    = domain
+                    ContextId              = contextId,
+                    Activity               = activityTypeName,
+                    Args                   = args,
+                    Options                = options.ToInternal(),
+                    Domain                 = domain,
+                    ScheduleToStartTimeout = options.ScheduleToStartTimeout
                 });
 
             reply.ThrowOnError();
@@ -1293,12 +1315,13 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
 
-            var d = new Dictionary<string, MethodInfo>()
-            {
-                { "xxx", (MethodInfo)null }
-            };
-
             options = options ?? new LocalActivityOptions();
+            options = options.Clone();
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
+            }
 
             // We need to register the local activity type with a workflow local ID
             // that we can send to [cadence-proxy] in the [ActivityExecuteLocalRequest]
@@ -1323,7 +1346,7 @@ namespace Neon.Cadence
                                 ContextId      = contextId,
                                 ActivityTypeId = activityActionId,
                                 Args           = args,
-                                Options        = options.ToInternal()
+                                Options        = options.ToInternal(),
                             });
                     });
 

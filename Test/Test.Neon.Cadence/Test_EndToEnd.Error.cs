@@ -62,27 +62,6 @@ namespace TestCadence
             }
         }
 
-        [Fact(Skip = "Too slow!")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Error_Workflow_NotRegistered()
-        {
-            // Verify that we get a reasonable error when we try calling
-            // an unregistered workflow.
-
-            var stub = client.NewWorkflowStub<IWorkflowNotRegistered>();
-
-            try
-            {
-                await stub.RunAsync();
-                Assert.True(false, "Exception expected.");
-            }
-            catch (CadenceException e)
-            {
-                Assert.IsNotType<CadenceTimeoutException>(e);
-                Assert.DoesNotContain("message:timeout", e.Message);
-            }
-        }
-
         //---------------------------------------------------------------------
 
         public interface IActivityNotRegistered
@@ -127,21 +106,6 @@ namespace TestCadence
                     return await Task.FromResult(e);
                 }
             }
-        }
-
-        [Fact(Skip = "To slow!")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Error_Activity_NotRegistered()
-        {
-            // Verify that we get a reasonable error when we try calling
-            // an unregistered workflow.
-
-            var stub = client.NewWorkflowStub<IWorkflowCallsUnregisteredActivity>();
-            var e    = await stub.RunAsync();
-
-            Assert.True(e != null, "Exception expected.");
-            Assert.IsNotType<CadenceTimeoutException>(e);
-            Assert.DoesNotContain("message:timeout", e.Message);
         }
     }
 }
