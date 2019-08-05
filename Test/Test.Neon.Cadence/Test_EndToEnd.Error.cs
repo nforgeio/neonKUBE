@@ -62,7 +62,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Too slow!")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Error_Workflow_NotRegistered()
         {
@@ -129,7 +129,7 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Fact(Skip = "To slow!")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Error_Activity_NotRegistered()
         {

@@ -192,7 +192,6 @@ namespace Neon.Cadence.Internal
                 resolveTaskList              = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
                 resolveDomain                = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
                 newWorkflowStub              = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(string), typeof(WorkflowOptions), typeof(string));
-
                 executeActivityAsync         = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions), typeof(string));
                 executeLocalActivityAsync    = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
             }
@@ -545,11 +544,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            return ___StubHelpers.NewWorkflowStub(client, workflowTypeName, execution, taskList, options, domain);");
             sbSource.AppendLine($"        }}");
 
-            // Generate the properties.
-
-            sbSource.AppendLine();
-            sbSource.AppendLine($"        public Workflow Workflow {{ get; set; }}");
-
             // Generate the workflow entry point methods.
 
             foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Workflow))
@@ -638,7 +632,7 @@ namespace Neon.Cadence.Internal
                 if (!details.IsVoid)
                 {
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            return dataConverter.FromData<{resultType}>(___resultBytes);");
+                    sbSource.AppendLine($"            return this.dataConverter.FromData<{resultType}>(___resultBytes);");
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -649,7 +643,7 @@ namespace Neon.Cadence.Internal
             foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Signal))
             {
                 var sbParams = new StringBuilder();
-
+                
                 foreach (var param in details.Method.GetParameters())
                 {
                     sbParams.AppendWithSeparator($"{CadenceHelper.TypeToCSharp(param.ParameterType)} {param.Name}", ", ");
@@ -699,7 +693,7 @@ namespace Neon.Cadence.Internal
                 if (!details.IsVoid)
                 {
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            return dataConverter.FromData<{resultType}>(___resultBytes);");
+                    sbSource.AppendLine($"            return this.dataConverter.FromData<{resultType}>(___resultBytes);");
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -942,23 +936,18 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"            this.nameToMethod = new Dictionary<string, MethodInfo>();");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            foreach (var method in activityType.GetMethods(BindingFlags.Public | BindingFlags.Instance))");
+            sbSource.AppendLine($"            foreach (var ___method in activityType.GetMethods(BindingFlags.Public | BindingFlags.Instance))");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();");
+            sbSource.AppendLine($"                var ___activityMethodAttribute = ___method.GetCustomAttribute<ActivityMethodAttribute>();");
             sbSource.AppendLine();
-            sbSource.AppendLine($"                if (activityMethodAttribute == null)");
+            sbSource.AppendLine($"                if (___activityMethodAttribute == null)");
             sbSource.AppendLine($"                {{");
             sbSource.AppendLine($"                    continue;");
             sbSource.AppendLine($"                }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"                nameToMethod.Add(activityMethodAttribute.Name ?? string.Empty, method);");
+            sbSource.AppendLine($"                this.nameToMethod.Add(___activityMethodAttribute.Name ?? string.Empty, ___method);");
             sbSource.AppendLine($"            }}");
             sbSource.AppendLine($"        }}");
-
-            // Generate the properties.
-
-            sbSource.AppendLine();
-            sbSource.AppendLine($"        public Activity Activity {{ get; set; }}");
 
             // Generate the activity methods.
 
@@ -1067,9 +1056,9 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"                // Execute the local activity.");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                if (!nameToMethod.TryGetValue(\"{details.ActivityMethodAttribute.Name ?? string.Empty}\", out var ___activityMethod))");
+                sbSource.AppendLine($"                if (!this.nameToMethod.TryGetValue(\"{details.ActivityMethodAttribute.Name ?? string.Empty}\", out var ___activityMethod))");
                 sbSource.AppendLine($"                {{");
-                sbSource.AppendLine($"                    throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have an activity method named [\\\"{details.ActivityMethodAttribute.Name ?? string.Empty}\\\"].\");");
+                sbSource.AppendLine($"                    throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have an activity method named [\\\"{details.ActivityMethodAttribute.Name ?? string.Empty}\\\"].  Be sure your activity method is tagged by [ActivityMethod].\");");
                 sbSource.AppendLine($"                }}");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteLocalActivityAsync(this.workflow, this.activityType, this.activityConstructor, ___activityMethod, ___argBytes, ___localOptions);");
@@ -1078,7 +1067,7 @@ namespace Neon.Cadence.Internal
                 if (!details.IsVoid)
                 {
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            return dataConverter.FromData<{resultType}>(___resultBytes);");
+                    sbSource.AppendLine($"            return this.dataConverter.FromData<{resultType}>(___resultBytes);");
                 }
 
                 sbSource.AppendLine($"        }}");

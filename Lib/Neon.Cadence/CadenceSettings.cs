@@ -35,6 +35,8 @@ namespace Neon.Cadence
     /// </summary>
     public class CadenceSettings
     {
+        private const double defaultTimeoutSeconds = 24 * 3600;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -204,6 +206,92 @@ namespace Neon.Cadence
         /// Returns <see cref="ConnectRetryDelaySeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
         internal TimeSpan ConnectRetryDelay => TimeSpan.FromSeconds(Math.Max(ConnectRetryDelaySeconds, 0));
+
+        /// <summary>
+        /// Specifies the default maximum workflow execution time.  This defaults to <b>24 hours</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "WorkflowExecutionStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowExecutionStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(defaultTimeoutSeconds)]
+        public double WorkflowExecutionStartToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+
+        /// <summary>
+        /// Returns <see cref="WorkflowExecutionStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan WorkflowExecutionStartToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowExecutionStartToCloseTimeoutSeconds, 0));
+
+        /// <summary>
+        /// Specifies the default maximum time a workflow can wait betweem being scheduled
+        /// and actually begin executing.  This defaults to <c>24 hours</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "WorkflowScheduleToStartTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowScheduleToStartTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(defaultTimeoutSeconds)]
+        public double WorkflowScheduleToStartTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+
+        /// <summary>
+        /// Returns <see cref="WorkflowScheduleToStartTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan WorkflowScheduleToStartTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowScheduleToStartTimeoutSeconds, 0));
+
+        /// <summary>
+        /// Specifies the default maximum time a workflow decision task may execute.
+        /// This must be with the range of <b>1 &lt; value &lt;= 60</b> seconds.
+        /// This defaults to <b>10 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "WorkflowTaskStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowTaskStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(10.0)]
+        public double WorkflowTaskStartToCloseTimeoutSeconds { get; set; } = 10.0;
+
+        /// <summary>
+        /// Returns <see cref="WorkflowTaskStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan WorkflowTaskStartToCloseTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowTaskStartToCloseTimeoutSeconds, 1), 60));
+
+        /// <summary>
+        /// Specifies the default maximum time an activity is allowed to wait after being
+        /// scheduled until it's actually scheduled to execute on a worker.  This defaults
+        /// to <b>24 hours</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ActivityScheduleToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "activityScheduleToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(defaultTimeoutSeconds)]
+        public double ActivityScheduleToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+
+        /// <summary>
+        /// Returns <see cref="ActivityScheduleToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ActivityScheduleToCloseTimeout => TimeSpan.FromSeconds(Math.Max(ActivityScheduleToCloseTimeoutSeconds, 0));
+
+        /// <summary>
+        /// Specifies the default maximum time an activity may run after being started.
+        /// This defaults to <b>24</b> hours.
+        /// </summary>
+        [JsonProperty(PropertyName = "ActivityStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "activityStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(defaultTimeoutSeconds)]
+        public double ActivityStartToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+
+        /// <summary>
+        /// Returns <see cref="ActivityStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ActivityStartToCloseTimeout => TimeSpan.FromSeconds(Math.Max(ActivityStartToCloseTimeoutSeconds, 0));
+
+        /// <summary>
+        /// Specifies the default maximum allowed between activity heartbeats.  Activities that
+        /// don't submit heartbeats within the time will be considered to be unhealthy and will
+        /// be terminated.  This defaults to <b>60 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ActivityHeartbeatTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "activityHeartbeatTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(60.0)]
+        public double ActivityHeartbeatTimeoutSeconds { get; set; } = 60.0;
+
+        /// <summary>
+        /// Returns <see cref="ActivityHeartbeatTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ActivityHeartbeatTimeout => TimeSpan.FromSeconds(Math.Max(ActivityHeartbeatTimeoutSeconds, 0));
 
         /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 

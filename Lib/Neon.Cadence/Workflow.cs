@@ -179,7 +179,7 @@ namespace Neon.Cadence
         {
             try
             {
-                if (Interlocked.Increment(ref pendingOperationCount) > 0)
+                if (Interlocked.Increment(ref pendingOperationCount) > 1)
                 {
                     throw new WorkflowParallelOperationException();
                 }
@@ -1013,7 +1013,8 @@ namespace Neon.Cadence
         /// </note>
         /// <para>
         /// Activities launched by the returned stub will be scheduled normally
-        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivityInterface}(ActivityOptions)"/>
+        /// by Cadence to executed on one of the worker nodes.  Use 
+        /// <see cref="NewLocalActivityStub{TActivityInterface, TActivityImplementation}(LocalActivityOptions)"/>
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
@@ -1098,6 +1099,7 @@ namespace Neon.Cadence
         /// instances via the type-safe interface methods.
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
+        /// <typeparam name="TActivityImplementation">The activity implementation.</typeparam>
         /// <param name="options">Optionally specifies activity options.</param>
         /// <returns>The new <see cref="IActivityStub"/>.</returns>
         /// <remarks>
@@ -1127,11 +1129,13 @@ namespace Neon.Cadence
         ///     </item>
         /// </list>
         /// </remarks>
-        public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null)
+        public TActivityInterface NewLocalActivityStub<TActivityInterface, TActivityImplementation>(LocalActivityOptions options = null)
+            where TActivityInterface : class
+            where TActivityImplementation : TActivityInterface
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
-            throw new NotImplementedException();
+            return StubManager.CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
 
         /// <summary>
@@ -1146,7 +1150,8 @@ namespace Neon.Cadence
         /// </note>
         /// <para>
         /// Activities launched by the returned stub will be scheduled normally
-        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivityInterface}(ActivityOptions)"/>
+        /// by Cadence to executed on one of the worker nodes.  Use
+        /// <see cref="NewLocalActivityStub{TActivityInterface, TActivityImplementation}(LocalActivityOptions)"/>
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
@@ -1284,7 +1289,7 @@ namespace Neon.Cadence
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.Implements<ActivityBase>());
+            Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase));
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
 
