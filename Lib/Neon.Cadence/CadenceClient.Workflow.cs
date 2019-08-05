@@ -308,7 +308,7 @@ namespace Neon.Cadence
 
             if (!options.ExecutionStartToCloseTimeout.HasValue)
             {
-                options.ExecutionStartToCloseTimeout = Settings.WorkflowExecutionStartToCloseTimeout;
+                options.ExecutionStartToCloseTimeout = Settings.WorkflowScheduleToCloseTimeout;
             }
 
             if (!options.ScheduleToStartTimeout.HasValue)
