@@ -63,7 +63,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
-        /// This defaults to <see cref="CadenceSettings.TaskStartToCloseTimeoutSeconds"/>.
+        /// This defaults to <see cref="CadenceSettings.WorkflowTaskStartToCloseTimeout"/>.
         /// </summary>
         public TimeSpan TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 

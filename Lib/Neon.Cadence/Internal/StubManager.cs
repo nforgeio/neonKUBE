@@ -596,6 +596,15 @@ namespace Neon.Cadence.Internal
                         sbSource.AppendLine($"            }}");
                     }
 
+                    if (details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                    {
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            if (__options.ScheduleToStartTimeoutSeconds <= TimeSpan.Zero)");
+                        sbSource.AppendLine($"            {{");
+                        sbSource.AppendLine($"                ___options.ScheduleToStartTimeoutSeconds = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds});");
+                        sbSource.AppendLine($"            }}");
+                    }
+
                     if (details.WorkflowMethodAttribute.TaskStartToCloseTimeoutSeconds > 0)
                     {
                         sbSource.AppendLine();
