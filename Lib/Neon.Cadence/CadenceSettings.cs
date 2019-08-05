@@ -210,15 +210,15 @@ namespace Neon.Cadence
         /// <summary>
         /// Specifies the default maximum workflow execution time.  This defaults to <b>24 hours</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowExecutionStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowExecutionStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowScheduleToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowScheduleToCloseTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(defaultTimeoutSeconds)]
-        public double WorkflowExecutionStartToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+        public double WorkflowScheduleToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
 
         /// <summary>
-        /// Returns <see cref="WorkflowExecutionStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowScheduleToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowExecutionStartToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowExecutionStartToCloseTimeoutSeconds, 0));
+        internal TimeSpan WorkflowScheduleToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowScheduleToCloseTimeoutSeconds, 0));
 
         /// <summary>
         /// Specifies the default maximum time a workflow can wait betweem being scheduled

@@ -183,7 +183,6 @@ namespace TestCadence
                 Assert.Null(message.Workflow);
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
-                Assert.Equal(TimeSpan.Zero, message.ScheduleToStartTimeout);
 
                 // Round-trip
 
@@ -193,7 +192,6 @@ namespace TestCadence
                 message.Workflow = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("100s").Ticks };
-                message.ScheduleToStartTimeout = TimeSpan.FromSeconds(120);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-domain", message.Domain);
@@ -201,7 +199,6 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
                 Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -216,7 +213,6 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
                 Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -229,7 +225,6 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
                 Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -242,7 +237,6 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
                 Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
             }
         }
 

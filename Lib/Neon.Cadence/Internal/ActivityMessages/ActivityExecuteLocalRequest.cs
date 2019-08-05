@@ -61,16 +61,6 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Specifies the maximum time the workflow will wait after being scheduled
-        /// until it is executed to a worker.
-        /// </summary>
-        public TimeSpan ScheduleToStartTimeout
-        {
-            get => GetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout);
-            set => SetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout, value);
-        }
-
-        /// <summary>
         /// The local activity start options.
         /// </summary>
         public InternalLocalActivityOptions Options
@@ -96,10 +86,9 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityExecuteLocalRequest)target;
 
-            typedTarget.ActivityTypeId         = this.ActivityTypeId;
-            typedTarget.Args                   = this.Args;
-            typedTarget.Options                = this.Options;
-            typedTarget.ScheduleToStartTimeout = this.ScheduleToStartTimeout;
+            typedTarget.ActivityTypeId = this.ActivityTypeId;
+            typedTarget.Args           = this.Args;
+            typedTarget.Options        = this.Options;
         }
     }
 }

@@ -57,7 +57,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Specifies the maximum time the child workflow may execute from start
-        /// to finish.  This defaults to <see cref="CadenceSettings.WorkflowExecutionStartToCloseTimeoutSeconds"/>.
+        /// to finish.  This defaults to <see cref="CadenceSettings.WorkflowScheduleToCloseTimeoutSeconds"/>.
         /// </summary>
         public TimeSpan ExecutionStartToCloseTimeout { get; set; } = TimeSpan.Zero;
 
