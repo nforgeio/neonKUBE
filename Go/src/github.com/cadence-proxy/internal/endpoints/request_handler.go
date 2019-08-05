@@ -1578,6 +1578,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	// set cancellation on the context
 	// execute the child workflow
 	ctx = workflow.WithChildOptions(ctx, opts)
+	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx,
 		*request.GetWorkflow(),
@@ -2126,6 +2127,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	opts := request.GetOptions()
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), *opts)
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
+	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
 
 	// Send ACk
