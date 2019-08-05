@@ -70,6 +70,16 @@ namespace Neon.Cadence.Internal
             set => SetJsonProperty<InternalChildWorkflowOptions>(PropertyNames.Options, value);
         }
 
+        /// <summary>
+        /// Specifies the maximum time the workflow will wait after being scheduled
+        /// until it is executed to a worker.
+        /// </summary>
+        public TimeSpan ScheduleToStartTimeout
+        {
+            get => GetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout);
+            set => SetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -87,9 +97,10 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowExecuteChildRequest)target;
 
-            typedTarget.Workflow    = this.Workflow;
-            typedTarget.Args        = this.Args;
-            typedTarget.Options     = this.Options;
+            typedTarget.Workflow               = this.Workflow;
+            typedTarget.Args                   = this.Args;
+            typedTarget.Options                = this.Options;
+            typedTarget.ScheduleToStartTimeout = this.ScheduleToStartTimeout;
         }
     }
 }

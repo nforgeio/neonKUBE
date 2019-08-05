@@ -57,13 +57,13 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Specifies the maximum time the child workflow may execute from start
-        /// to finish.  This defaults to 24 hours.
+        /// to finish.  This defaults to <see cref="CadenceSettings.WorkflowExecutionStartToCloseTimeoutSeconds"/>.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
+        public TimeSpan ExecutionStartToCloseTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
-        /// This defaults to <b>10 seconds</b>.
+        /// This defaults to <see cref="CadenceSettings.WorkflowTaskStartToCloseTimeout"/>.
         /// </summary>
         public TimeSpan TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 

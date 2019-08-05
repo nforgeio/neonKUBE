@@ -246,12 +246,6 @@ namespace Neon.Cadence
         /// </summary>
         private const int debugClientPort = 5001;
 
-        /// <summary>
-        /// The default Cadence timeout used for workflow and activity timeouts that don't
-        /// have Cadence supplied values.
-        /// </summary>
-        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromHours(24);
-
         //---------------------------------------------------------------------
         // Private types
 

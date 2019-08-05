@@ -304,6 +304,22 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
 
             options = options ?? new WorkflowOptions();
+            options = options.Clone();
+
+            if (!options.ExecutionStartToCloseTimeout.HasValue)
+            {
+                options.ExecutionStartToCloseTimeout = Settings.WorkflowExecutionStartToCloseTimeout;
+            }
+
+            if (!options.ScheduleToStartTimeout.HasValue)
+            {
+                options.ScheduleToStartTimeout = Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (!options.TaskStartToCloseTimeout.HasValue)
+            {
+                options.TaskStartToCloseTimeout = Settings.WorkflowTaskStartToCloseTimeout;
+            }
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()

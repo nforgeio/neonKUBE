@@ -48,7 +48,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Specifies the maximum time the workflow may execute from start to finish.
+        /// Optionally specifies the maximum time the workflow may execute from start to finish.
         /// This will defaults to 24 hours.
         /// </para>
         /// <note>
@@ -60,12 +60,18 @@ namespace Neon.Cadence
         public TimeSpan? ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
+        /// Optionally specifies the default maximum time a workflow can wait betweem being scheduled
+        /// and actually begin executing.  This defaults to <c>24 hours</c>.
+        /// </summary>
+        public TimeSpan? ScheduleToStartTimeout { get; set; }
+
+        /// <summary>
         /// Optionally specifies the time out for processing decision task from the time the worker
         /// pulled a task.  If a decision task is not completed within this interval, it will be retried 
         /// as specified by the retry policy.   This defaults to <b>10 seconds</b> when not specified.
         /// The maximum timeout is <b>60 seconds</b>.
         /// </summary>
-        public TimeSpan? DecisionTaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan? TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// <para>
@@ -167,9 +173,9 @@ namespace Neon.Cadence
 
             // Merge optional settings from these options and the method attribute.
 
-            var decisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(10);
-            var executionStartToCloseTimeout    = CadenceClient.DefaultTimeout;
-            var workflowIdReusePolicy           = global::Neon.Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+            var taskStartToCloseTimeout      = TimeSpan.FromSeconds(10);
+            var executionStartToCloseTimeout = client.Settings.WorkflowExecutionStartToCloseTimeout;
+            var workflowIdReusePolicy        = global::Neon.Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
 
             if (methodAttribute != null)
             {
@@ -185,9 +191,9 @@ namespace Neon.Cadence
                     }
                 }
 
-                if (!DecisionTaskStartToCloseTimeout.HasValue && methodAttribute.TaskStartToCloseTimeoutSeconds > 0)
+                if (!TaskStartToCloseTimeout.HasValue && methodAttribute.TaskStartToCloseTimeoutSeconds > 0)
                 {
-                    decisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.TaskStartToCloseTimeoutSeconds);
+                    taskStartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.TaskStartToCloseTimeoutSeconds);
                 }
 
                 if (!ExecutionStartToCloseTimeout.HasValue && methodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
@@ -205,7 +211,7 @@ namespace Neon.Cadence
             {
                 ID                              = this.WorkflowId,
                 TaskList                        = taskList,
-                DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(decisionTaskStartToCloseTimeout),
+                DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(taskStartToCloseTimeout),
                 ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(executionStartToCloseTimeout),
                 RetryPolicy                     = this.RetryOptions?.ToInternal(),
                 WorkflowIdReusePolicy           = (int)workflowIdReusePolicy,
@@ -222,13 +228,13 @@ namespace Neon.Cadence
         {
             return new WorkflowOptions()
             {
-                CronSchedule                    = this.CronSchedule,
-                ExecutionStartToCloseTimeout    = this.ExecutionStartToCloseTimeout,
-                Memo                            = this.Memo,
-                RetryOptions                    = this.RetryOptions,
-                DecisionTaskStartToCloseTimeout = this.DecisionTaskStartToCloseTimeout,
-                WorkflowId                      = this.WorkflowId,
-                WorkflowIdReusePolicy           = this.WorkflowIdReusePolicy
+                CronSchedule                 = this.CronSchedule,
+                ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout,
+                Memo                         = this.Memo,
+                RetryOptions                 = this.RetryOptions,
+                TaskStartToCloseTimeout      = this.TaskStartToCloseTimeout,
+                WorkflowId                   = this.WorkflowId,
+                WorkflowIdReusePolicy        = this.WorkflowIdReusePolicy
             };
         }
     }

@@ -157,8 +157,9 @@ namespace TestCadence
             Task<string> HelloAsync(string name);
         }
 
-        public class LocalActivityWithResult : ActivityBase, IActivityWithResult
+        public class LocalActivityWithResult : ActivityBase, ILocalActivityWithResult
         {
+            [ActivityMethod]
             public async Task<string> HelloAsync(string name)
             {
                 return await Task.FromResult($"Hello {name}!");
@@ -176,13 +177,12 @@ namespace TestCadence
         {
             public async Task<string> HelloAsync(string name)
             {
-                var stub = Workflow.NewLocalActivityStub<ILocalActivityWithResult>();
+                var stub = Workflow.NewLocalActivityStub<ILocalActivityWithResult, LocalActivityWithResult>();
 
                 return await stub.HelloAsync(name);
             }
         }
 
-#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task LocalActivity_WithResult()
@@ -195,6 +195,5 @@ namespace TestCadence
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
-#endif
     }
 }
