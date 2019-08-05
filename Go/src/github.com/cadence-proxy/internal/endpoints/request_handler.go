@@ -2125,6 +2125,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// and set the activity options on the context
 	opts := request.GetOptions()
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), *opts)
+	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
 	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
 
 	// Send ACk
