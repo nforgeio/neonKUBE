@@ -26,9 +26,7 @@ spec:
       values:
       - worker-2
   etcdEndpoints:
-  - http://etcd-0.monitoring:2379
-  - http://etcd-1.monitoring:2379
-  - http://etcd-2.monitoring:2379
+  - http://m3db-etcd-client.monitoring:2379
   podIdentityConfig:
     sources: []
   namespaces:

@@ -1,7 +1,7 @@
 apiVersion: "etcd.database.coreos.com/v1beta2"
 kind: "EtcdCluster"
 metadata:
-  name: "example-etcd-cluster"
+  name: "m3db-etcd"
   ## Adding this annotation make this cluster managed by clusterwide operators
   ## namespaced operators ignore it
   # annotations:
@@ -10,15 +10,6 @@ spec:
   size: 3
   version: "3.2.13"
   pod:
-    affinity:
-      podAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: neonkube.io/prometheus
-              operator: In
-              values:
-              - "true"
     annotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "2379"
