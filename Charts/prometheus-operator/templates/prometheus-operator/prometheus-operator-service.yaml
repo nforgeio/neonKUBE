@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/name: prometheus-operator
     app.kubernetes.io/version: v0.31.1
   name: prometheus-operator
-  namespace: default
+  namespace: monitoring
 spec:
   clusterIP: None
   ports:

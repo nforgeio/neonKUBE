@@ -14,7 +14,7 @@ spec:
       team: frontend
   alerting:
     alertmanagers:
-    - namespace: default
+    - namespace: monitoring
       name: alertmanager
       port: web
   remoteRead:
