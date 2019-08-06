@@ -39,7 +39,7 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Base class that can be used for Cadence workflow implementations.
+    /// Base class that must be inherited for all workflow implementations.
     /// </summary>
     public class WorkflowBase
     {

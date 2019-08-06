@@ -292,6 +292,7 @@ namespace Neon.Cadence.Internal
                 if (@interface.Implements<IWorkflow>())
                 {
                     workflowInterfaces.Add(@interface);
+                    ValidateWorkflowInterface(@interface);
                 }
             }
 
@@ -414,6 +415,7 @@ namespace Neon.Cadence.Internal
             {
                 if (@interface.Implements<IActivity>())
                 {
+                    ValidateActivityInterface(@interface);
                     activityInterfaces.Add(@interface);
                 }
             }

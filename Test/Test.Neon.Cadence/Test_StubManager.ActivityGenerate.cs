@@ -46,7 +46,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IActivityEntryVoidNoArgs
+        public interface IActivityEntryVoidNoArgs : IActivity
         {
             [ActivityMethod]
             Task RunAsync();
@@ -70,7 +70,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IActivityEntryVoidWithArgs
+        public interface IActivityEntryVoidWithArgs : IActivity
         {
             [ActivityMethod]
             Task RunAsync(string arg1, int arg2);
@@ -102,7 +102,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IActivityEntryResultWithArgs
+        public interface IActivityEntryResultWithArgs : IActivity
         {
             [ActivityMethod]
             Task<int> RunAsync(string arg1, int arg2);
@@ -126,7 +126,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IActivityMultiMethods
+        public interface IActivityMultiMethods : IActivity
         {
             [ActivityMethod]
             Task RunAsync();
