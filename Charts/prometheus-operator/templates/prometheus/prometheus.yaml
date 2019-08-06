@@ -18,7 +18,7 @@ spec:
       name: alertmanager
       port: web
   remoteRead:
-    url: m3coordinator-persistent-cluster.monitoring:7201/api/v1/prom/remote/read
-    readRecent: true
+    - url: m3coordinator-persistent-cluster.monitoring:7201/api/v1/prom/remote/read
+      readRecent: true
   remoteWrite:
-    url: m3coordinator-persistent-cluster.monitoring:7201/api/v1/prom/remote/write
+    - url: m3coordinator-persistent-cluster.monitoring:7201/api/v1/prom/remote/write
