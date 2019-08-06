@@ -13,6 +13,11 @@ spec:
     annotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "2379"
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 9000
+      # The FSGroup is needed to let the etcd container access mounted volumes
+      fsGroup: 9000
     persistentVolumeClaimSpec:
       storageClassName: "local-storage"
       accessModes:
