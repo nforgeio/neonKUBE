@@ -356,7 +356,7 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 	default:
 
 		// $debug(jack.burns): DELETE THIS!
-		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
+		err := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
 		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
 
 		// set the reply
@@ -828,7 +828,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
@@ -1822,7 +1822,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
@@ -2044,7 +2044,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
@@ -2391,7 +2391,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
