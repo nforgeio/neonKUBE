@@ -10,14 +10,26 @@ spec:
   size: 3
   version: "3.2.13"
   pod:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: neonkube.io/mon.etcd
+                operator: In
+                values:
+                - "true"
+            topologyKey: kubernetes.io/hostname
     annotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "2379"
     securityContext:
       runAsNonRoot: true
-      runAsUser: 9000
+      runAsUser: 1000
       # The FSGroup is needed to let the etcd container access mounted volumes
-      fsGroup: 9000
+      fsGroup: 1000
     persistentVolumeClaimSpec:
       storageClassName: "local-storage"
       accessModes:
