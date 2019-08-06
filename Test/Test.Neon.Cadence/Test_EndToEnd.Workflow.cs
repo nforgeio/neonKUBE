@@ -46,7 +46,7 @@ namespace TestCadence
 
         private static bool workflowTests_WorkflowWithNoResultCalled;
 
-        public interface IWorkflowWithNoResult
+        public interface IWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -81,7 +81,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowWithResult
+        public interface IWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
@@ -110,7 +110,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowUtcNow
+        public interface IWorkflowUtcNow : IWorkflow
         {
             [WorkflowMethod]
             Task<DateTime> GetUtcNowAsync();
@@ -141,7 +141,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSleep
+        public interface IWorkflowSleep : IWorkflow
         {
             [WorkflowMethod]
             Task<List<DateTime>> SleepAsync(TimeSpan time);
@@ -179,7 +179,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSleepUntil
+        public interface IWorkflowSleepUntil : IWorkflow
         {
             [WorkflowMethod]
             Task SleepUntilUtcAsync(DateTime wakeTimeUtc);
@@ -225,7 +225,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowStubExecTwice
+        public interface IWorkflowStubExecTwice : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -255,7 +255,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowMultiEntrypoints
+        public interface IWorkflowMultiEntrypoints : IWorkflow
         {
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloAsync(string name);
@@ -295,7 +295,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowBlankEntrypointConflict
+        public interface IWorkflowBlankEntrypointConflict : IWorkflow
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);

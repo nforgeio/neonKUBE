@@ -64,7 +64,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IActivityNotRegistered
+        public interface IActivityNotRegistered : IActivity
         {
             [ActivityMethod]
             Task<string> HelloAsync(string name);
@@ -82,7 +82,7 @@ namespace TestCadence
             }
         }
 
-        public interface IWorkflowCallsUnregisteredActivity
+        public interface IWorkflowCallsUnregisteredActivity : IWorkflow
         {
             [WorkflowMethod]
             Task<Exception> RunAsync();
