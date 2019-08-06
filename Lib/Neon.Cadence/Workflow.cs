@@ -985,6 +985,14 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="time">The wake time.</param>
         /// <returns>The tracking <see cref="Task"/></returns>
+        /// <remarks>
+        /// <note>
+        /// Cadence timers have a resolution of only one second at this time
+        /// and due to processing delays, it's very possible that the workflow
+        /// will wake several seconds later than scheduled.  You should not
+        /// depend on time resolutions less than around 10 seconds.
+        /// </note>
+        /// </remarks>
         public async Task SleepUntilUtcAsync(DateTime time)
         {
             var utcNow = await UtcNowAsync();

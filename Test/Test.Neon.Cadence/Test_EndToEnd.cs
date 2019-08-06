@@ -44,8 +44,8 @@ namespace TestCadence
     {
         const int maxWaitSeconds = 5;
 
-        private static readonly TimeSpan allowedVariation = TimeSpan.FromMilliseconds(1000);
-        private static readonly TimeSpan workflowTimeout = TimeSpan.FromSeconds(20);
+        private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
 
         CadenceFixture  fixture;
         CadenceClient   client;
