@@ -944,7 +944,7 @@ namespace Neon.Cadence
         public Uri ProxyUri => new Uri($"http://{address}:{proxyPort}");
 
         /// <summary>
-        /// Returns the <b>cadence-proxy</b> process or <c>null</c>.s
+        /// Returns the <b>cadence-proxy</b> process or <c>null</c>.
         /// </summary>
         internal Process ProxyProcess { get; private set; }
 
