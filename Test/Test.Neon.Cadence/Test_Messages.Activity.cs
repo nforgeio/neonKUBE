@@ -926,14 +926,14 @@ namespace TestCadence
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalLocalActivityOptions()
                 {
-                    ScheduleToCloseTimeoutSeconds = 1000,
+                    ScheduleToCloseTimeout = 1000,
                     RetryPolicy = new InternalRetryPolicy() { MaximumInterval = 5 }
                 };
 
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal(1000, message.Options.ScheduleToCloseTimeoutSeconds);
+                Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
 

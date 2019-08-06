@@ -55,8 +55,8 @@ namespace Neon.Cadence
         {
             return new InternalLocalActivityOptions()
             {
-                ScheduleToCloseTimeoutSeconds = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
-                RetryPolicy                   = RetryOptions?.ToInternal()
+                ScheduleToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
+                RetryPolicy            = RetryOptions?.ToInternal()
             };
         }
 
