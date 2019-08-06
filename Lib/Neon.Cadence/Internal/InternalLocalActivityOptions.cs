@@ -41,9 +41,9 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Specifies the maximum time the activity can run.
         /// </summary>
-        [JsonProperty(PropertyName = "ScheduleToCloseTimeoutSeconds", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ScheduleToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(0)]
-        public long ScheduleToCloseTimeoutSeconds { get; set; }
+        public long ScheduleToCloseTimeout { get; set; }
 
         /// <summary>
         /// The activity retry policy.
