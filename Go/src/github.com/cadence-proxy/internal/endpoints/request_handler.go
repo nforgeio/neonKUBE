@@ -61,7 +61,7 @@ func handleIProxyRequest(request messages.IProxyRequest) error {
 		if r := recover(); r != nil {
 			reply = createReplyMessage(request)
 			buildReply(reply, cadenceerrors.NewCadenceError(
-				fmt.Errorf("recovered from panic when processing message type: %s, RequestId: %d\n%s",
+				fmt.Errorf("Panic while handling: %s, RequestId: %d.\n%s",
 					request.GetType().String(),
 					request.GetRequestID(), string(debug.Stack()))),
 			)
@@ -1512,22 +1512,8 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	var result interface{}
 	future := workflow.NewTimer(ctx, request.GetDuration())
 
-	// send ACK here
-	// create the WorkflowFutureReadyRequest
-	requestID := NextRequestID()
-	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-	workflowFutureReadyRequest.SetRequestID(requestID)
-	workflowFutureReadyRequest.SetContextID(contextID)
-	workflowFutureReadyRequest.SetFutureOperationID(request.GetRequestID())
-
-	// create the Operation for this request and add it to the operations map
-	op := NewOperation(requestID, workflowFutureReadyRequest)
-	op.SetChannel(make(chan interface{}))
-	op.SetContextID(contextID)
-	Operations.Add(requestID, op)
-
-	// send the request
-	go sendMessage(workflowFutureReadyRequest)
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID())
 	<-op.GetChannel()
 
 	// wait for the future to be unblocked
@@ -1585,22 +1571,8 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 		request.GetArgs(),
 	)
 
-	// Send ACk
-	// create the WorkflowFutureReadyRequest
-	requestID := NextRequestID()
-	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-	workflowFutureReadyRequest.SetRequestID(requestID)
-	workflowFutureReadyRequest.SetContextID(contextID)
-	workflowFutureReadyRequest.SetFutureOperationID(request.GetRequestID())
-
-	// create the Operation for this request and add it to the operations map
-	op := NewOperation(requestID, workflowFutureReadyRequest)
-	op.SetChannel(make(chan interface{}))
-	op.SetContextID(contextID)
-	Operations.Add(requestID, op)
-
-	// send the request
-	go sendMessage(workflowFutureReadyRequest)
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID())
 	<-op.GetChannel()
 
 	// create the new ChildContext
@@ -1714,22 +1686,8 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		request.GetSignalArgs(),
 	)
 
-	// Send ACk
-	// create the WorkflowFutureReadyRequest
-	requestID := NextRequestID()
-	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-	workflowFutureReadyRequest.SetRequestID(requestID)
-	workflowFutureReadyRequest.SetContextID(contextID)
-	workflowFutureReadyRequest.SetFutureOperationID(request.GetRequestID())
-
-	// create the Operation for this request and add it to the operations map
-	op := NewOperation(requestID, workflowFutureReadyRequest)
-	op.SetChannel(make(chan interface{}))
-	op.SetContextID(contextID)
-	Operations.Add(requestID, op)
-
-	// send the request
-	go sendMessage(workflowFutureReadyRequest)
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID())
 	<-op.GetChannel()
 
 	// wait on the future
@@ -2130,22 +2088,8 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
 
-	// Send ACk
-	// create the WorkflowFutureReadyRequest
-	requestID := NextRequestID()
-	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-	workflowFutureReadyRequest.SetRequestID(requestID)
-	workflowFutureReadyRequest.SetContextID(contextID)
-	workflowFutureReadyRequest.SetFutureOperationID(request.GetRequestID())
-
-	// create the Operation for this request and add it to the operations map
-	op := NewOperation(requestID, workflowFutureReadyRequest)
-	op.SetChannel(make(chan interface{}))
-	op.SetContextID(contextID)
-	Operations.Add(requestID, op)
-
-	// send the request
-	go sendMessage(workflowFutureReadyRequest)
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID())
 	<-op.GetChannel()
 
 	// execute the activity
@@ -2462,22 +2406,8 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
 	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args)
 
-	// Send ACk
-	// create the WorkflowFutureReadyRequest
-	requestID := NextRequestID()
-	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-	workflowFutureReadyRequest.SetRequestID(requestID)
-	workflowFutureReadyRequest.SetContextID(contextID)
-	workflowFutureReadyRequest.SetFutureOperationID(request.GetRequestID())
-
-	// create the Operation for this request and add it to the operations map
-	op := NewOperation(requestID, workflowFutureReadyRequest)
-	op.SetChannel(make(chan interface{}))
-	op.SetContextID(contextID)
-	Operations.Add(requestID, op)
-
-	// send the request
-	go sendMessage(workflowFutureReadyRequest)
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID())
 	<-op.GetChannel()
 
 	// wait for the future to be unblocked
