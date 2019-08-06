@@ -89,6 +89,7 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ProxyRequest)target;
 
+            typedTarget.ClientId      = this.ClientId;
             typedTarget.RequestId     = this.RequestId;
             typedTarget.IsCancellable = this.IsCancellable;
         }

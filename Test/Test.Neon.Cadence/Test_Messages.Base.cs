@@ -128,11 +128,13 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.False(message.IsCancellable);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
                 Assert.Equal(555, message.RequestId);
                 message.IsCancellable = true;
@@ -143,6 +145,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<ProxyRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.True(message.IsCancellable);
             }
@@ -210,12 +213,15 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ContextId);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 message.ContextId = 666;
                 Assert.Equal(666, message.ContextId);
@@ -226,6 +232,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
             }
@@ -296,14 +303,17 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ContextId);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.ContextId = 666;
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
 
                 stream.SetLength(0);
@@ -312,6 +322,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
             }
