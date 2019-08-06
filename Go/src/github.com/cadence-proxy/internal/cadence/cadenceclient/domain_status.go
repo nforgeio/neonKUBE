@@ -23,7 +23,8 @@ type DomainStatus int
 
 const (
 
-	// DomainStatusUnspecified
+	// DomainStatusUnspecified indicates that no DomainStatus
+	// has been set (specified)
 	DomainStatusUnspecified DomainStatus = 0
 
 	// DomainStatusRegistered indicates that the domain is registered and active.
