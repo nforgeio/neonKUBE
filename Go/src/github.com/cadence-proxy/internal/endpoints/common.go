@@ -279,6 +279,27 @@ func sendMessage(message messages.IProxyMessage) {
 	}()
 }
 
+func sendFutureACK(contextID int64, operationID int64) *Operation {
+
+	// create the WorkflowFutureReadyRequest
+	requestID := NextRequestID()
+	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
+	workflowFutureReadyRequest.SetRequestID(requestID)
+	workflowFutureReadyRequest.SetContextID(contextID)
+	workflowFutureReadyRequest.SetFutureOperationID(operationID)
+
+	// create the Operation for this request and add it to the operations map
+	op := NewOperation(requestID, workflowFutureReadyRequest)
+	op.SetChannel(make(chan interface{}))
+	op.SetContextID(contextID)
+	Operations.Add(requestID, op)
+
+	// send the request
+	go sendMessage(workflowFutureReadyRequest)
+
+	return op
+}
+
 func isCanceledErr(err interface{}) bool {
 	var errStr string
 	if v, ok := err.(*cadenceerrors.CadenceError); ok {
