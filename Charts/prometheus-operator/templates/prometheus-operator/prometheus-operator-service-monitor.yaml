@@ -1,6 +1,8 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
+  annotations:
+    "helm.sh/hook": "post-install"
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
