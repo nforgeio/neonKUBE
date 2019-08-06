@@ -17,10 +17,10 @@ spec:
           podAffinityTerm:
             labelSelector:
               matchExpressions:
-              - key: neonkube.io/mon.etcd
+              - key: etcd_cluster
                 operator: In
                 values:
-                - "true"
+                - etcd-m3db
             topologyKey: kubernetes.io/hostname
     annotations:
       prometheus.io/scrape: "true"
