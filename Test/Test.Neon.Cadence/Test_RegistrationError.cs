@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_StubManager.cs
+// FILE:        Test_RegistrationError.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,59 +38,47 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-using Test.Neon.Models;
-using Newtonsoft.Json.Linq;
-
 namespace TestCadence
 {
-    public partial class Test_StubManager : IClassFixture<CadenceFixture>, IDisposable
+    public partial class Test_RegistrationError : IClassFixture<CadenceFixture>, IDisposable
     {
-        //---------------------------------------------------------------------
-        // Local types
-
-        /// <summary>
-        /// Used when testing activity stub code generation.  This fakes up just
-        /// enough of a workflow so that stubs can be generated.
-        /// </summary>
-        public class DummyWorkflow : WorkflowBase
-        {
-            public DummyWorkflow()
-            {
-                this.Workflow = new Workflow(
-                    parent:     new WorkflowBase(),
-                    client:             new CadenceClient(),
-                    contextId:          1,
-                    workflowTypeName:   typeof(DummyWorkflow).FullName,
-                    domain:             "my-domain",
-                    taskList:           "my-tasklist",
-                    workflowId:         "my-workflow-id",
-                    runId:              "my-run-id",
-                    isReplaying:        false,
-                    methodMap:          null);
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private CadenceFixture  fixture;
         private CadenceClient   client;
         private HttpClient      proxyClient;
 
-        public Test_StubManager(CadenceFixture fixture)
+        public Test_RegistrationError(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {
                 DefaultDomain   = CadenceFixture.DefaultDomain,
                 DefaultTaskList = CadenceFixture.DefaultTaskList,
+                CreateDomain    = true,
                 Debug           = true,
+
+                //--------------------------------
+                // $debug(jeff.lill): DELETE THIS!
+                Emulate                = false,
+                DebugPrelaunched       = false,
+                DebugDisableHandshakes = false,
+                DebugDisableHeartbeats = true,
+                //--------------------------------
             };
 
-            fixture.Start(settings, keepConnection: true);
+            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            {
+                this.fixture     = fixture;
+                this.client      = fixture.Connection;
+                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
 
-            this.fixture     = fixture;
-            this.client      = fixture.Connection;
-            this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+                // NOTE: We're not auto-registering workflows and activities or starting
+                //       workers for these unit tests.
+            }
+            else
+            {
+                this.fixture     = fixture;
+                this.client      = fixture.Connection;
+                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+            }
         }
 
         public void Dispose()

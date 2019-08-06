@@ -62,7 +62,7 @@ namespace Neon.Cadence
         /// </code>
         /// <para>
         /// where <b>WORKFLOW_TYPENAME</b> is either the workflow interface's fully qualified 
-        /// name or the name specified by <see cref="WorkflowAttribute.TypeName"/> and 
+        /// name or the name specified by <see cref="WorkflowAttribute.Name"/> and 
         /// <b>METHOD_NAME</b> is from <see cref="WorkflowMethodAttribute.Name"/>.  This
         /// is the same convention implemented by the Java client.
         /// </para>

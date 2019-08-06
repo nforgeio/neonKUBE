@@ -196,7 +196,7 @@ namespace Neon.Cadence
         /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
         /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
         /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.TypeName"/>.
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
         /// </para>
         /// <para>
         /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will

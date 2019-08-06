@@ -84,7 +84,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The type name.</returns>
         /// <remarks>
         /// <para>
-        /// If <paramref name="workflowAttribute"/> is passed and <see cref="WorkflowAttribute.TypeName"/>
+        /// If <paramref name="workflowAttribute"/> is passed and <see cref="WorkflowAttribute.Name"/>
         /// is not <c>null</c> or empty, then the name specified in the attribute is returned.
         /// </para>
         /// <para>
@@ -104,9 +104,9 @@ namespace Neon.Cadence.Internal
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null);
 
-            if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.TypeName))
+            if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.Name))
             {
-                return workflowAttribute.TypeName;
+                return workflowAttribute.Name;
             }
 
             var fullName = workflowType.FullName;
@@ -224,6 +224,8 @@ namespace Neon.Cadence.Internal
                 throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] is not public.");
             }
 
+            // Validate the entrypoint method names.
+
             var workflowNames = new HashSet<string>();
 
             foreach (var method in workflowInterface.GetMethods())
@@ -248,6 +250,52 @@ namespace Neon.Cadence.Internal
             if (workflowNames.Count == 0)
             {
                 throw new ActivityTypeException($"Workflow interface [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
+            }
+
+            // Validate the signal method names.
+
+            var signalNames = new HashSet<string>();
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var signalMethodAttribute = method.GetCustomAttribute<SignalMethodAttribute>();
+
+                if (signalMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = signalMethodAttribute.Name ?? string.Empty;
+
+                if (signalNames.Contains(name))
+                {
+                    throw new WorkflowTypeException($"Multiple signal methods are tagged by [SignalMethod(name:\"{name}\")].");
+                }
+
+                signalNames.Add(name);
+            }
+
+            // Validate the signal method names.
+
+            var queryNames = new HashSet<string>();
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var queryMethodAttribute = method.GetCustomAttribute<QueryMethodAttribute>();
+
+                if (queryMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = queryMethodAttribute.Name ?? string.Empty;
+
+                if (queryNames.Contains(name))
+                {
+                    throw new WorkflowTypeException($"Multiple query methods are tagged by [QueryMethod(name:\"{name}\")].");
+                }
+
+                queryNames.Add(name);
             }
         }
 

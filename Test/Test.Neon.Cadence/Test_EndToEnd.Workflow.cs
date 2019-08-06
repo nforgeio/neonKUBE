@@ -293,42 +293,6 @@ namespace TestCadence
 
             Assert.Equal("Goodbye Jeff!", await stub2.GoodbyeAsync("Jeff"));
         }
-
-        //---------------------------------------------------------------------
-
-        public interface IWorkflowBlankEntrypointConflict : IWorkflow
-        {
-            [WorkflowMethod]
-            Task<string> HelloAsync(string name);
-
-            [WorkflowMethod]
-            Task<string> GoodbyeAsync(string name);
-        }
-
-        [Workflow(AutoRegister = false)]
-        public class WorkflowBlankEntrypointConflict : WorkflowBase, IWorkflowBlankEntrypointConflict
-        {
-            public async Task<string> HelloAsync(string name)
-            {
-                return await Task.FromResult($"Hello {name}!");
-            }
-
-            public async Task<string> GoodbyeAsync(string name)
-            {
-                return await Task.FromResult($"Goodbye {name}!");
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_BlankEntrypointConflict()
-        {
-            // Verify that the client detects workflows that have multiple
-            // entrypoints that conflict because they have the same (blank)
-            // name.
-
-            await Assert.ThrowsAsync<WorkflowTypeException>(async() => await client.RegisterWorkflowAsync<WorkflowBlankEntrypointConflict>());
-        }
     }
 }
 
