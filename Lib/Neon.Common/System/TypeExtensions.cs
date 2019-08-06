@@ -35,16 +35,43 @@ namespace System
         /// Determines whether a <see cref="System.Type"/> implements a specific interface.
         /// </summary>
         /// <typeparam name="TInterface">The required interface type.</typeparam>
-        /// <param name="type">The type beinbg tested.</param>
+        /// <param name="type">The type being tested.</param>
         /// <returns><c>true</c> if <paramref name="type"/> implements <paramref name="type"/>.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <typeparamref name="TInterface"/> is not an <c>interface</c>.</exception>
         public static bool Implements<TInterface>(this Type type)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentException>(typeof(TInterface).IsInterface, $"Type [{nameof(TInterface)}] is not an interface.");
+            return Implements(type, typeof(TInterface));
+        }
 
-            return type.GetInterfaces().Contains(typeof(TInterface));
+        /// <summary>
+        /// Determines whether a <see cref="System.Type"/> implements a specific interface.
+        /// </summary>
+        /// <param name="type">The type being tested.</param>
+        /// <param name="interfaceType">The interface type.</param>
+        /// <returns><c>true</c> if <paramref name="type"/> implements <paramref name="type"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if either of <paramref name="type"/> or <paramref name="interfaceType"/> are <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="interfaceType"/> is not an <c>interface</c>.</exception>
+        public static bool Implements(Type type, Type interfaceType)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(interfaceType != null);
+            Covenant.Requires<ArgumentException>(interfaceType.IsInterface, $"Type [{interfaceType.FullName}] is not an interface.");
+
+            foreach (var @interface in type.GetInterfaces())
+            {
+                if (@interface == interfaceType)
+                {
+                    return true;
+                }
+
+                if (Implements(@interface, interfaceType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
