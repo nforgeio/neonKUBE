@@ -1,7 +1,7 @@
 apiVersion: operator.m3db.io/v1alpha1
 kind: M3DBCluster
 metadata:
-  name: persistent-cluster
+  name: m3db-prometheus
 spec:
   image: quay.io/m3db/m3dbnode:latest
   replicationFactor: 3
@@ -26,7 +26,7 @@ spec:
       values:
       - worker-2
   etcdEndpoints:
-  - http://m3db-etcd-client.monitoring:2379
+  - http://etcd-m3db-client.monitoring:2379
   podIdentityConfig:
     sources: []
   namespaces:

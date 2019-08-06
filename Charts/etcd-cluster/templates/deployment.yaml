@@ -1,7 +1,7 @@
 apiVersion: "etcd.database.coreos.com/v1beta2"
 kind: "EtcdCluster"
 metadata:
-  name: "m3db-etcd"
+  name: "etcd-m3db"
   ## Adding this annotation make this cluster managed by clusterwide operators
   ## namespaced operators ignore it
   # annotations:
