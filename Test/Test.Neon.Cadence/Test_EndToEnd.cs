@@ -69,7 +69,7 @@ namespace TestCadence
                 //--------------------------------
             };
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: true) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
                 this.client      = fixture.Connection;
