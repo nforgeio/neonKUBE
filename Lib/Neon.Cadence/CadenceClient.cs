@@ -141,7 +141,7 @@ namespace Neon.Cadence
     /// <note>
     /// <para>
     /// The .NET client uses a simple huristic to try to ensure that the default workflow and activity
-    /// type names applied when the <see cref="WorkflowAttribute.TypeName"/> and <see cref="ActivityAttribute.TypeName"/>
+    /// type names applied when the <see cref="WorkflowAttribute.Name"/> and <see cref="ActivityAttribute.TypeName"/>
     /// properties are not set for the interface and implementation classes.  If the interface
     /// name starts with an "I", the "I" will be stripped out before generating the fully qualified
     /// type name.  This handles the common C# convention where interface names started with an "I"
@@ -400,7 +400,8 @@ namespace Neon.Cadence
         private static readonly INeonLogger log             = LogManager.Default.GetLogger<CadenceClient>();
         private static bool                 proxyWritten    = false;
         private static long                 nextClientId    = 0;
-        private static bool                 clientConnected = false;
+        private static int                  clientCount     = 0;
+        private static Process              proxyProcess    = null;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -555,16 +556,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(settings != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
 
-            lock (staticSyncLock)
-            {
-                if (clientConnected)
-                {
-                    throw new NotSupportedException($"Only a single [{nameof(CadenceClient)}] may be connected at a time for the current release.");
-                }
-
-                clientConnected = true;
-            }
-
             try
             {
                 var client = new CadenceClient(settings);
@@ -577,7 +568,7 @@ namespace Neon.Cadence
             {
                 lock (staticSyncLock)
                 {
-                    clientConnected = false;
+                    clientCount++;
                 }
 
                 throw;
@@ -688,9 +679,12 @@ namespace Neon.Cadence
 
             if (!settings.Emulate)
             {
-                if (!Settings.DebugPrelaunched)
+                lock (staticSyncLock)
                 {
-                    ProxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                    if (!Settings.DebugPrelaunched && proxyProcess == null)
+                    {
+                        proxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                    }
                 }
             }
             else
@@ -839,37 +833,49 @@ namespace Neon.Cadence
                         worker.Dispose();
                     }
 
-                    // Signal the proxy that it should exit gracefully and then
-                    // allow it [Settings.TerminateTimeout] to actually exit
-                    // before killing it.
+                    // Signal the proxy to disconnect.
 
-                    try
-                    {
-                        CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
-                    }
-                    catch
-                    {
-                        // Ignoring these.
-                    }
+                    CallProxyAsync(new DisconnectRequest()).Wait();
 
-                    if (ProxyProcess != null && !ProxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
-                    {
-                        log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
-                        ProxyProcess.Kill();
-                    }
+                    // Terminate the proxy if there are no remaining connections.
 
-                    ProxyProcess = null;
+                    lock (staticSyncLock)
+                    {
+                        clientCount--;
+
+                        if (clientCount < 0)
+                        {
+                            throw new InvalidOperationException("Client reference count underflow.");
+                        }
+
+                        if (clientCount == 0)
+                        {
+                            // Signal the proxy that it should exit gracefully and then
+                            // allow it [Settings.TerminateTimeout] to actually exit
+                            // before killing it.
+
+                            try
+                            {
+                                CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
+                            }
+                            catch
+                            {
+                                // Ignoring these.
+                            }
+
+                            if (proxyProcess != null && !proxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
+                            {
+                                log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
+                                proxyProcess.Kill();
+                            }
+
+                            proxyProcess = null;
+                        }
+                    }
                 }
                 catch
                 {
                     // Ignoring this.
-                }
-                finally
-                {
-                    lock (staticSyncLock)
-                    {
-                        clientConnected = false;
-                    }
                 }
             }
 
@@ -942,11 +948,6 @@ namespace Neon.Cadence
         /// Returns the URI the associated <b>cadence-proxy</b> instance is listening on.
         /// </summary>
         public Uri ProxyUri => new Uri($"http://{address}:{proxyPort}");
-
-        /// <summary>
-        /// Returns the <b>cadence-proxy</b> process or <c>null</c>.s
-        /// </summary>
-        internal Process ProxyProcess { get; private set; }
 
         /// <summary>
         /// Returns the <see cref="IDataConverter"/> used for workflows and activities managed by the client.

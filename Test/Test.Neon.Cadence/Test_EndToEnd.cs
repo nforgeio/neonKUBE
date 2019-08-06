@@ -42,14 +42,14 @@ namespace TestCadence
 {
     public partial class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
-        const int maxWaitSeconds = 5;
+        private const int maxWaitSeconds = 5;
 
         private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
 
-        CadenceFixture  fixture;
-        CadenceClient   client;
-        HttpClient      proxyClient;
+        private CadenceFixture  fixture;
+        private CadenceClient   client;
+        private HttpClient      proxyClient;
 
         public Test_EndToEnd(CadenceFixture fixture)
         {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SignalMethodAttribute.cs
+// FILE:	    IActivity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,7 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
+
+using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -27,25 +28,9 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to identify a workflow interface methods as a signal.
+    /// All activity interfaces must derive from this interface.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class SignalMethodAttribute : Attribute
+    public interface IActivity
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="name">Specifies the Cadence signal name.</param>
-        public SignalMethodAttribute(string name)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-
-            this.Name = name;
-        }
-
-        /// <summary>
-        /// Returns the signal name. 
-        /// </summary>
-        public string Name { get; private set; }
     }
 }

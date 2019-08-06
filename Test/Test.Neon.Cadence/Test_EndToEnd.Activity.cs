@@ -47,7 +47,7 @@ namespace TestCadence
         private static bool activityTests_ActivityWithNoResultCalled;
         private static bool activityTests_WorkflowWithNoResultCalled;
 
-        public interface IActivityWithNoResult
+        public interface IActivityWithNoResult : IActivity
         {
             [ActivityMethod]
             Task RunAsync();
@@ -64,7 +64,7 @@ namespace TestCadence
             }
         }
 
-        public interface IActivityWorkflowWithNoResult
+        public interface IActivityWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -104,7 +104,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IActivityWithResult
+        public interface IActivityWithResult : IActivity
         {
             [ActivityMethod]
             Task<string> HelloAsync(string name);
@@ -119,7 +119,7 @@ namespace TestCadence
             }
         }
 
-        public interface IActivityWorkflowWithResult
+        public interface IActivityWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
@@ -151,7 +151,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface ILocalActivityWithResult
+        public interface ILocalActivityWithResult : IActivity
         {
             [ActivityMethod]
             Task<string> HelloAsync(string name);
@@ -166,7 +166,7 @@ namespace TestCadence
             }
         }
 
-        public interface ILocalActivityWorkflowWithResult
+        public interface ILocalActivityWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);

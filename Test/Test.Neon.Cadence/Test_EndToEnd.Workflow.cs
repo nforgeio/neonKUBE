@@ -46,7 +46,7 @@ namespace TestCadence
 
         private static bool workflowTests_WorkflowWithNoResultCalled;
 
-        public interface IWorkflowWithNoResult
+        public interface IWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -81,7 +81,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowWithResult
+        public interface IWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
@@ -110,7 +110,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowUtcNow
+        public interface IWorkflowUtcNow : IWorkflow
         {
             [WorkflowMethod]
             Task<DateTime> GetUtcNowAsync();
@@ -141,7 +141,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSleep
+        public interface IWorkflowSleep : IWorkflow
         {
             [WorkflowMethod]
             Task<List<DateTime>> SleepAsync(TimeSpan time);
@@ -158,6 +158,7 @@ namespace TestCadence
                 await Workflow.SleepAsync(sleepTime);
                 times.Add(await Workflow.UtcNowAsync());
                 await Workflow.SleepAsync(sleepTime);
+                times.Add(await Workflow.UtcNowAsync());
 
                 return times;
             }
@@ -170,16 +171,16 @@ namespace TestCadence
             // Verify: Workflow.SleepAsync(). 
 
             var stub      = client.NewWorkflowStub<IWorkflowSleep>();
-            var sleepTime = TimeSpan.FromMilliseconds(1000);
+            var sleepTime = TimeSpan.FromSeconds(1);
             var times     = await stub.SleepAsync(sleepTime);
 
-            Assert.True(times[1] > times[0]);
-            Assert.True(times[1] - times[0] - sleepTime < allowedVariation);
+            Assert.True(times[1] - times[0] >= sleepTime);
+            Assert.True(times[2] - times[1] >= sleepTime);
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSleepUntil
+        public interface IWorkflowSleepUntil : IWorkflow
         {
             [WorkflowMethod]
             Task SleepUntilUtcAsync(DateTime wakeTimeUtc);
@@ -204,28 +205,28 @@ namespace TestCadence
             // wake time in the future.
 
             var startUtcNow = DateTime.UtcNow;
-            var wakeTimeUtc = startUtcNow + TimeSpan.FromSeconds(10);
+            var sleepTime   = TimeSpan.FromSeconds(5);
+            var wakeTimeUtc = startUtcNow + sleepTime;
 
             await stub.SleepUntilUtcAsync(wakeTimeUtc);
 
-            var endUtcNow = DateTime.UtcNow;
-
-            Assert.True(endUtcNow >= wakeTimeUtc);
-            Assert.True(endUtcNow - wakeTimeUtc < allowedVariation);
+            Assert.True(DateTime.UtcNow - startUtcNow >= sleepTime);
 
             // Verify that scheduling a sleep time in the past is
             // essentially a NOP.
 
             stub = client.NewWorkflowStub<IWorkflowSleepUntil>();
 
-            await stub.SleepUntilUtcAsync(endUtcNow - TimeSpan.FromDays(1));
+            startUtcNow = DateTime.UtcNow;
 
-            Assert.True(DateTime.UtcNow - endUtcNow < TimeSpan.FromSeconds(2));
+            await stub.SleepUntilUtcAsync(startUtcNow - TimeSpan.FromDays(1));
+
+            Assert.True(DateTime.UtcNow - startUtcNow < TimeSpan.FromSeconds(1));
         }
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowStubExecTwice
+        public interface IWorkflowStubExecTwice : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
@@ -255,7 +256,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowMultiEntrypoints
+        public interface IWorkflowMultiEntrypoints : IWorkflow
         {
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloAsync(string name);
@@ -292,43 +293,6 @@ namespace TestCadence
 
             Assert.Equal("Goodbye Jeff!", await stub2.GoodbyeAsync("Jeff"));
         }
-
-        //---------------------------------------------------------------------
-
-        public interface IWorkflowBlankEntrypointConflict
-        {
-            [WorkflowMethod]
-            Task<string> HelloAsync(string name);
-
-            [WorkflowMethod]
-            Task<string> GoodbyeAsync(string name);
-        }
-
-        [Workflow(AutoRegister = true)]
-        public class WorkflowBlankEntrypointConflict : WorkflowBase, IWorkflowBlankEntrypointConflict
-        {
-            public async Task<string> HelloAsync(string name)
-            {
-                return await Task.FromResult($"Hello {name}!");
-            }
-
-            public async Task<string> GoodbyeAsync(string name)
-            {
-                return await Task.FromResult($"Goodbye {name}!");
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Workflow_BlankEntrypointConflict()
-        {
-            // Verify that the client detects workflows that have multiple
-            // entrypoints that conflict because they have the same (blank)
-            // name.
-
-            var stub = client.NewWorkflowStub<IWorkflowBlankEntrypointConflict>();
-
-            Assert.Throws<WorkflowTypeException>(() => client.NewWorkflowStub<IWorkflowBlankEntrypointConflict>());
-        }
     }
 }
+

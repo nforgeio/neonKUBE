@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SignalMethodAttribute.cs
+// FILE:	    DisconnectReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,34 +18,40 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Used to identify a workflow interface methods as a signal.
+    /// <b>proxy --> client:</b> Answers a <see cref="DisconnectRequest"/>.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class SignalMethodAttribute : Attribute
+    [InternalProxyMessage(InternalMessageTypes.DisconnectReply)]
+    internal class DisconnectReply : ProxyReply
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
-        /// <param name="name">Specifies the Cadence signal name.</param>
-        public SignalMethodAttribute(string name)
+        public DisconnectReply()
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-
-            this.Name = name;
+            Type = InternalMessageTypes.DisconnectReply;
         }
 
-        /// <summary>
-        /// Returns the signal name. 
-        /// </summary>
-        public string Name { get; private set; }
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new DisconnectReply();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }

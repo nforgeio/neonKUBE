@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SignalMethodAttribute.cs
+// FILE:	    DisconnectRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,34 +18,45 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+// $todo(jeff.lill): Investegate adding metrics details.
+
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Used to identify a workflow interface methods as a signal.
+    /// <b>client --> proxy:</b> Requests that the proxy disconnect from a Cadence cluster.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class SignalMethodAttribute : Attribute
+    [InternalProxyMessage(InternalMessageTypes.DisconnectRequest)]
+    internal class DisconnectRequest : ProxyRequest
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
-        /// <param name="name">Specifies the Cadence signal name.</param>
-        public SignalMethodAttribute(string name)
+        public DisconnectRequest()
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-
-            this.Name = name;
+            Type = InternalMessageTypes.DisconnectRequest;
         }
 
-        /// <summary>
-        /// Returns the signal name. 
-        /// </summary>
-        public string Name { get; private set; }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DisconnectReply;
+
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new DisconnectRequest();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }

@@ -32,7 +32,7 @@ using Neon.Diagnostics;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Base class for all application Cadence activity implementations.
+    /// Base class that must be inherited by all implementations.
     /// </summary>
     public abstract class ActivityBase
     {

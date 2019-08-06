@@ -193,8 +193,8 @@ namespace TestCadence
 
                 // Round-trip
 
-                message.RequestId = 555;
                 message.ClientId = 444;
+                message.RequestId = 555;
                 message.Endpoints = "1.1.1.1:555,2.2.2.2:5555";
                 message.Identity = "my-identity";
                 message.ClientTimeout = TimeSpan.FromSeconds(30);
@@ -1623,6 +1623,109 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<DomainDeprecateReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DisconnectRequest()
+        {
+            DisconnectRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DisconnectRequest();
+
+                Assert.Equal(InternalMessageTypes.DisconnectReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DisconnectRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DisconnectRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the connection's web server and verify.
+
+                message = EchoToClient(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
+    
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DisconnectReply()
+        {
+            DisconnectReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DisconnectReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DisconnectReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.RequestId = 555;
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DisconnectReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
 
