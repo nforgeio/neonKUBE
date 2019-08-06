@@ -45,6 +45,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Args { get; private set; }                                      = new PropertyNameUtf8("Args");
         public static PropertyNameUtf8 ChangeId { get; private set; }                                  = new PropertyNameUtf8("ChangeId");
         public static PropertyNameUtf8 ChildId { get; private set; }                                   = new PropertyNameUtf8("ChildId");
+        public static PropertyNameUtf8 ClientId { get; private set; }                                  = new PropertyNameUtf8("ClientId");
         public static PropertyNameUtf8 ClientTimeout { get; private set; }                             = new PropertyNameUtf8("ClientTimeout");
         public static PropertyNameUtf8 ConfigurationEmitMetrics { get; private set; }                  = new PropertyNameUtf8("ConfigurationEmitMetrics");
         public static PropertyNameUtf8 ConfigurationRetentionDays { get; private set; }                = new PropertyNameUtf8("ConfigurationRetentionDays");

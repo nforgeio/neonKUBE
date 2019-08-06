@@ -1211,6 +1211,8 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal async Task<ProxyReply> CallProxyAsync(ProxyRequest request, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
+            request.ClientId = this.ClientId;
+
             try
             {
                 var requestId = Interlocked.Increment(ref this.nextRequestId);

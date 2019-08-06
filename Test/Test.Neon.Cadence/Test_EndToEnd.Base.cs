@@ -209,6 +209,18 @@ namespace TestCadence
             Assert.Same(workflowWorker1, workflowWorker2);
             Assert.Equal(2, workflowWorker2.RefCount);
 
+            Assert.Same(workflowWorker1, workflowWorker2);
+            Assert.Equal(2, workflowWorker2.RefCount);
+
+            var worker1 = await client.StartWorkerAsync("tasks2");
+
+            Assert.Equal(1, worker1.RefCount);
+
+            var worker2 = await client.StartWorkerAsync("tasks2");
+
+            Assert.Same(worker1, worker2);
+            Assert.Equal(2, worker2.RefCount);
+
             // Verify the dispose/refcount behavior.
 
             activityWorker2.Dispose();
