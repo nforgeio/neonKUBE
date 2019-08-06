@@ -50,6 +50,9 @@ func NewCadenceErrorEmpty() *CadenceError {
 // param errorType ...interface{} -> the cadence error type
 func NewCadenceError(err error, errType ...CadenceErrorType) *CadenceError {
 	cadenceError := NewCadenceErrorEmpty()
+	if err == nil {
+		return nil
+	}
 	errStr := err.Error()
 	cadenceError.String = &errStr
 

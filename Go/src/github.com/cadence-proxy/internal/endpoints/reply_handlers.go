@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		reply_handler.go
+// FILE:		reply_handlers.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,95 +29,7 @@ import (
 	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
-
-// -------------------------------------------------------------------------
-// IProxyReply message type handlers
-
-func handleIProxyReply(reply messages.IProxyReply) error {
-
-	// error to catch any exceptions thrown in the
-	// switch block
-	var err error
-
-	// handle the messages individually based on their message type
-	switch reply.GetType() {
-
-	// -------------------------------------------------------------------------
-	// client message types
-
-	// TerminateReply
-	case messagetypes.TerminateReply:
-		if v, ok := reply.(*messages.TerminateReply); ok {
-			err = handleTerminateReply(v)
-		}
-
-	// -------------------------------------------------------------------------
-	// Workflow message types
-
-	// WorkflowInvokeReply
-	case messagetypes.WorkflowInvokeReply:
-		if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
-			err = handleWorkflowInvokeReply(v)
-		}
-
-	// WorkflowSignalInvokeReply
-	case messagetypes.WorkflowSignalInvokeReply:
-		if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
-			err = handleWorkflowSignalInvokeReply(v)
-		}
-
-	// WorkflowQueryInvokeReply
-	case messagetypes.WorkflowQueryInvokeReply:
-		if v, ok := reply.(*messages.WorkflowQueryInvokeReply); ok {
-			err = handleWorkflowQueryInvokeReply(v)
-		}
-
-	// WorkflowFutureReadyReply
-	case messagetypes.WorkflowFutureReadyReply:
-		if v, ok := reply.(*messages.WorkflowFutureReadyReply); ok {
-			err = handleWorkflowFutureReadyReply(v)
-		}
-
-	// -------------------------------------------------------------------------
-	// Activity message types
-
-	// ActivityInvokeReply
-	case messagetypes.ActivityInvokeReply:
-		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
-			err = handleActivityInvokeReply(v)
-		}
-
-	// ActivityStoppingReply
-	case messagetypes.ActivityStoppingReply:
-		if v, ok := reply.(*messages.ActivityStoppingReply); ok {
-			err = handleActivityStoppingReply(v)
-		}
-
-	// ActivityInvokeLocalReply
-	case messagetypes.ActivityInvokeLocalReply:
-		if v, ok := reply.(*messages.ActivityInvokeLocalReply); ok {
-			err = handleActivityInvokeLocalReply(v)
-		}
-
-	// Undefined message type
-	default:
-
-		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
-	}
-
-	// catch any exceptions returned in
-	// the switch block
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 // -------------------------------------------------------------------------
 // ProxyReply handlers
