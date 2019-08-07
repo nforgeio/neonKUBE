@@ -5853,6 +5853,7 @@ func (s *UnitTestSuite) TestProxyRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(messagetypes.Unspecified, v.GetReplyType())
 		s.False(v.GetIsCancellable())
+		s.Equal(int64(0), v.GetClientID())
 
 		// Round-trip
 
@@ -5861,6 +5862,9 @@ func (s *UnitTestSuite) TestProxyRequest() {
 
 		v.SetIsCancellable(true)
 		s.True(v.GetIsCancellable())
+
+		v.SetClientID(int64(666))
+		s.Equal(int64(666), v.GetClientID())
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -5878,6 +5882,7 @@ func (s *UnitTestSuite) TestProxyRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(messagetypes.Unspecified, v.GetReplyType())
 		s.True(v.GetIsCancellable())
+		s.Equal(int64(666), v.GetClientID())
 	}
 }
 

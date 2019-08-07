@@ -20,7 +20,6 @@ package endpoints
 import (
 	"net/http"
 	"sync"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -41,10 +40,6 @@ var (
 	// logger for all endpoints to utilize
 	logger *zap.Logger
 
-	// Instance is a pointer to the server instance of the current server that the
-	// cadence-proxy is listening on.  This gets set in main.go
-	Instance *server.Instance
-
 	// httpClient is the HTTP client used to send requests
 	// to the Neon.Cadence client
 	httpClient = http.Client{}
@@ -59,14 +54,9 @@ var (
 	// indicates the server continues to run
 	terminate bool
 
-	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
-	// a request has been received by the cadence-proxy
-	cadenceClientTimeout time.Duration = time.Minute
-
-	// ClientHelper is a global variable that holds this cadence-proxy's instance
-	// of the ClientHelper that will be used to create domain and workflow clients
-	// that communicate with the cadence server
-	clientHelper = cadenceclient.NewClientHelper()
+	// Instance is a pointer to the server instance of the current server that the
+	// cadence-proxy is listening on.  This gets set in main.go
+	Instance *server.Instance
 
 	// ActivityContexts maps a int64 ContextId to the cadence
 	// Activity Context passed to the cadence Activity functions.

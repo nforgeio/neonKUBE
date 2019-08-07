@@ -47,9 +47,8 @@ func SetLogger(logLevel string, debugMode bool) {
 	case true:
 
 		// set the log level
-		atom.SetLevel(zap.DebugLevel)
-
 		// configure the logger
+		atom.SetLevel(zap.DebugLevel)
 		encoderCfg = zap.NewDevelopmentEncoderConfig()
 
 	default:

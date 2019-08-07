@@ -76,6 +76,7 @@ type (
 		Builder         *WorkflowClientBuilder
 		DomainClient    client.DomainClient
 		WorkflowClients *WorkflowClientsMap
+		ClientTimeout   time.Duration
 	}
 
 	// clientConfiguration contains configuration details for
@@ -156,6 +157,24 @@ func (helper *ClientHelper) GetClientOptions() *client.Options {
 // in ClientHelper.Config
 func (helper *ClientHelper) SetClientOptions(value *client.Options) {
 	helper.Config.clientOptions = value
+}
+
+// GetClientTimeout gets the ClientTimeout from a ClientHelper instance.
+// specifies the amount of time in seconds a reply has to be sent after
+// a request has been received by the cadence-proxy.
+//
+// returns time.Duration -> time.Duration for the ClientTimeout
+func (helper *ClientHelper) GetClientTimeout() time.Duration {
+	return helper.ClientTimeout
+}
+
+// SetClientTimeout sets the ClientTimeout for a ClientHelper instance.
+// specifies the amount of time in seconds a reply has to be sent after
+// a request has been received by the cadence-proxy.
+//
+// param value time.Duration -> time.Duration for the ClientTimeout
+func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
+	helper.ClientTimeout = value
 }
 
 // SetupServiceConfig configures a ClientHelper's workflowserviceclient.Interface

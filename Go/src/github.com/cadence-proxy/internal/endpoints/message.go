@@ -188,10 +188,9 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	// check for a cadence server connection.
 	// if it exists, then enter switch block to handle the
 	// specified request type
-	if err = verifyClientHelper(request, clientHelper); err != nil {
+	if err = verifyClientHelper(request, Clients.Get(request.GetClientID())); err != nil {
 		reply = createReplyMessage(request)
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 	} else {
 
 		// create a context for every request
