@@ -399,11 +399,11 @@ namespace TestCadence
                 CronSchedule = "0/1 * * * *"
             };
 
+            // Start the CRON workflow and wait for the result from the first run.  
+
             var stub = client.NewWorkflowStub<ICronWorkflow>(options);
 
             _ = stub.RunAsync();
-
-            // Start the CRON workflow and wait for the result from the first run.  
 
             NeonHelper.WaitFor(() => CronActivity.CronCalls.Count >= 1, timeout: TimeSpan.FromMinutes(1.5));
 
