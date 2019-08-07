@@ -59,5 +59,11 @@ namespace TestCadence
         /// </note>
         /// </summary>
         public const bool KeepCadenceServerOpen = true;     // $debug(jeff.lill): Set this back to FALSE.
+
+        /// <summary>
+        /// Used by <see cref="SlowFactAttribute"/> to control whether slow tests
+        /// are executed or not.
+        /// </summary>
+        public static bool RunSlowTests { get; set; } = false;
     }
 }

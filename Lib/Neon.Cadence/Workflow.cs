@@ -1003,6 +1003,54 @@ namespace Neon.Cadence
             }
         }
 
+        /// <summary>
+        /// Determines whether a previous run of the current CRON workflow completed
+        /// and returned a result.
+        /// </summary>
+        /// <returns><c>true</c> if the a previous CRON workflow run returned a result.</returns>
+        public async Task<bool> IsSetLastCompletionResultAsync()
+        {
+            var reply = await ExecuteNonParallel(
+                async () =>
+                {
+                    return (WorkflowHasLastResultReply)await Client.CallProxyAsync(
+                        new WorkflowHasLastResultRequest()
+                        {
+                            ContextId = contextId
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return reply.HasResult;
+        }
+
+        /// <summary>
+        /// Returns the result of the last run of the current CRON workflow or
+        /// <c>null</c>.  This is useful  for CRON workflows that would like to
+        /// pass information from from one workflow run to the next.
+        /// </summary>
+        /// <typeparam name="TResult">The expected result type.</typeparam>
+        /// <returns>The previous run result as bytes or <c>null</c>.</returns>
+        public async Task<TResult> GetLastCompletionResultAsync<TResult>()
+        {
+            var reply = await ExecuteNonParallel(
+                async () =>
+                {
+                    return (WorkflowGetLastLastReply)await Client.CallProxyAsync(
+                        new WorkflowGetLastResultRequest()
+                        {
+                            ContextId = contextId
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return Client.DataConverter.FromData<TResult>(reply.Result);
+        }
+
         //---------------------------------------------------------------------
         // Stub creation methods
 

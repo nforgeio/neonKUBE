@@ -195,5 +195,56 @@ namespace TestCadence
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IActivityMultipleStubCalls : IActivity
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityMultipleStubCalls : ActivityBase, IActivityMultipleStubCalls
+        {
+            [ActivityMethod]
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
+        public interface IActivityWorkflowMultipleStubCalls : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<List<string>> RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowMultipleStubCalls : WorkflowBase, IActivityWorkflowMultipleStubCalls
+        {
+            public async Task<List<string>> RunAsync()
+            {
+                var stub = Workflow.NewActivityStub<IActivityMultipleStubCalls>();
+                var list = new List<string>();
+
+                list.Add(await stub.HelloAsync("Jack"));
+                list.Add(await stub.HelloAsync("Jill"));
+
+                return list;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_MultipleStubCalls()
+        {
+            // Verify that we can reuse an activity stub to make multiple calls.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowMultipleStubCalls>();
+            var list = await stub.RunAsync();
+
+            Assert.Equal(new List<string>() { "Hello Jack!", "Hello Jill!" }, list);
+        }
     }
 }
