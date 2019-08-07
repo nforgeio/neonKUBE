@@ -139,9 +139,8 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	}
 
 	// add the new ClientHelper to the Clients map
-	_ = Clients.Add(cadenceclient.NextClientID(), clientHelper)
-
 	// build reply
+	_ = Clients.Add(cadenceclient.NextClientID(), clientHelper)
 	buildReply(reply, nil)
 
 	return reply
