@@ -737,10 +737,10 @@ namespace WinDesktop
 
                     var prometheusDashboardProxy =
                         new PortForward(
-                            serviceName: "prometheus",
+                            serviceName: "prometheus-operated",
                             localPort: KubeConst.PrometheusDashboardProxyPort,
                             remotePort: KubeConst.PrometheusDashboardProxyPort,
-                            @namespace: "istio-system");
+                            @namespace: "monitoring");
 
                     portForwards.Add(prometheusDashboardProxy);
 
@@ -757,8 +757,9 @@ namespace WinDesktop
                         new PortForward(
                             serviceName: "grafana",
                             localPort: KubeConst.GrafanaDashboardProxyPort,
-                            remotePort: KubeConst.GrafanaDashboardProxyPort,
-                            @namespace: "istio-system");
+                            remotePort: 80,
+                            @namespace: "monitoring");
+
 
                     portForwards.Add(grafanaDashboardProxy);
 
