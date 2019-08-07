@@ -7,24 +7,7 @@ spec:
   replicationFactor: 3
   numberOfShards: 256
   isolationGroups:
-  - name: group1
-    numInstances: 1
-    nodeAffinityTerms:
-    - key: neonkube.io/physical.faultdomain
-      values:
-      - worker-0
-  - name: group2
-    numInstances: 1
-    nodeAffinityTerms:
-    - key: neonkube.io/physical.faultdomain
-      values:
-      - worker-1
-  - name: group3
-    numInstances: 1
-    nodeAffinityTerms:
-    - key: neonkube.io/physical.faultdomain
-      values:
-      - worker-2
+  {{- toYaml .Values.isolationGroups | nindent 2 }}
   etcdEndpoints:
   - http://etcd-m3db-client.monitoring:2379
   podIdentityConfig:
@@ -46,6 +29,6 @@ spec:
           m3db: default
       resources:
         requests:
-          storage: 1Gi
+          storage: {{ .Values.resources.requests.storage }}
         limits:
-          storage: 1Gi
+          storage: {{ .Values.resources.limits.storage }}
