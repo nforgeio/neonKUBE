@@ -164,6 +164,16 @@ const (
 	/// </summary>
 	DomainDeprecateReply MessageType = 24
 
+	/// <summary>
+	///  <b>client --> proxy:</b> Sent to have the proxy disconnect from a Cadence cluster.
+	/// </summary>
+	DisconnectRequest MessageType = 25
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DisconnectRequest"/> message.
+	/// </summary>
+	DisconnectReply MessageType = 26
+
 	//---------------------------------------------------------------------
 	// Workflow messages
 	//
@@ -637,6 +647,10 @@ func (m MessageType) String() string {
 		return "ConnectRequest"
 	case ConnectReply:
 		return "ConnectReply"
+	case DisconnectRequest:
+		return "DisconnectRequest"
+	case DisconnectReply:
+		return "DisconnectReply"
 	case TerminateRequest:
 		return "TerminateRequest"
 	case TerminateReply:

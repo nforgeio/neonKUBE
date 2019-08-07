@@ -30,6 +30,8 @@ import (
 	"go.uber.org/yarpc"
 	"go.uber.org/yarpc/transport/tchannel"
 	"go.uber.org/zap"
+
+	globals "github.com/cadence-proxy/internal"
 )
 
 const (
@@ -174,4 +176,17 @@ func (b *WorkflowClientBuilder) build() error {
 	}
 
 	return nil
+}
+
+func (b *WorkflowClientBuilder) destroy() error {
+	if b.dispatcher == nil {
+		return globals.ErrEntityNotExist
+	}
+
+	// $debug(jack.burns): DELETE THIS!
+	b.Logger.Info("Removing outbound transport channel/RPC dispatcher outbound",
+		zap.String("ServiceName", _cadenceFrontendService),
+		zap.String("HostPort", b.hostPort))
+
+	return b.dispatcher.Stop()
 }

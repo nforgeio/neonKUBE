@@ -71,6 +71,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 			buildConnectReply(v, cadenceError)
 		}
 
+	// ConnectReply
+	case messagetypes.DisconnectReply:
+		if v, ok := reply.(*messages.DisconnectReply); ok {
+			buildDisconnectReply(v, cadenceError)
+		}
+
 	// DomainDescribeReply
 	case messagetypes.DomainDescribeReply:
 		if v, ok := reply.(*messages.DomainDescribeReply); ok {
@@ -347,6 +353,10 @@ func buildCancelReply(reply *messages.CancelReply, cadenceError *cadenceerrors.C
 }
 
 func buildConnectReply(reply *messages.ConnectReply, cadenceError *cadenceerrors.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildDisconnectReply(reply *messages.DisconnectReply, cadenceError *cadenceerrors.CadenceError) {
 	reply.SetError(cadenceError)
 }
 

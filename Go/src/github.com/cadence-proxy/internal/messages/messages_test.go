@@ -380,6 +380,104 @@ func (s *UnitTestSuite) TestConnectReply() {
 	}
 }
 
+func (s *UnitTestSuite) TestDisconnectRequest() {
+
+	var message messages.IProxyMessage = messages.NewDisconnectRequest()
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(messagetypes.DisconnectReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int64(0), v.GetClientID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetClientID(int64(666))
+		s.Equal(int64(666), v.GetClientID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetClientID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetClientID())
+	}
+}
+
+func (s *UnitTestSuite) TestDisconnectReply() {
+	var message messages.IProxyMessage = messages.NewDisconnectReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+}
+
 func (s *UnitTestSuite) TestDomainDescribeRequest() {
 
 	var message messages.IProxyMessage = messages.NewDomainDescribeRequest()

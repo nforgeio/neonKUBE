@@ -147,6 +147,45 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	return reply
 }
 
+func handleDisconnectRequest(requestCtx context.Context, request *messages.DisconnectRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	clientID := request.GetClientID()
+	logger.Debug("DisconnectRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ClientId", clientID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
+	// new DisconnectReply
+	reply := createReplyMessage(request)
+
+	// destroy the client
+	if err := Clients.Get(clientID).DestroyClient(); err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Could not disconnect cadence client.",
+			zap.Int64("ClientID", clientID),
+			zap.Error(err),
+		)
+		buildReply(reply, cadenceerrors.NewCadenceError(err))
+
+		return reply
+	}
+
+	// remove the client from Clients map
+	// return reply
+	_ = Clients.Remove(clientID)
+	buildReply(reply, nil)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Successfully removed client.",
+		zap.Int64("ClientID", clientID),
+	)
+
+	return reply
+}
+
 func handleHeartbeatRequest(requestCtx context.Context, request *messages.HeartbeatRequest) messages.IProxyReply {
 
 	// $debug(jack.burns): DELETE THIS!
@@ -450,6 +489,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetRequestID(requestID)
 		workflowInvokeRequest.SetContextID(contextID)
 		workflowInvokeRequest.SetArgs(input)
+		workflowInvokeRequest.SetClientID(request.GetClientID())
 
 		// get the WorkflowInfo (Domain, WorkflowID, RunID, WorkflowType,
 		// TaskList, ExecutionStartToCloseTimeout)
@@ -920,6 +960,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		workflowSignalInvokeRequest.SetContextID(contextID)
 		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
 		workflowSignalInvokeRequest.SetSignalName(signalName)
+		workflowSignalInvokeRequest.SetClientID(request.GetClientID())
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowSignalInvokeRequest)
@@ -984,7 +1025,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			if err != nil {
 				logger.Error("Error In Workflow Context", zap.Error(err))
 			}
-
 			if done {
 				return
 			}
@@ -1200,7 +1240,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	future := workflow.NewTimer(ctx, request.GetDuration())
 
 	// Send ACK
-	op := sendFutureACK(contextID, request.GetRequestID())
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
 	<-op.GetChannel()
 
 	// wait for the future to be unblocked
@@ -1259,7 +1299,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	)
 
 	// Send ACK
-	op := sendFutureACK(contextID, request.GetRequestID())
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
 	<-op.GetChannel()
 
 	// create the new ChildContext
@@ -1374,7 +1414,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	)
 
 	// Send ACK
-	op := sendFutureACK(contextID, request.GetRequestID())
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
 	<-op.GetChannel()
 
 	// wait on the future
@@ -1462,6 +1502,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		workflowQueryInvokeRequest.SetContextID(contextID)
 		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
 		workflowQueryInvokeRequest.SetQueryName(queryName)
+		workflowQueryInvokeRequest.SetClientID(request.GetClientID())
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowQueryInvokeRequest)
@@ -1658,6 +1699,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		activityInvokeRequest.SetArgs(input)
 		activityInvokeRequest.SetContextID(contextID)
 		activityInvokeRequest.SetActivity(request.GetName())
+		activityInvokeRequest.SetClientID(request.GetClientID())
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, activityInvokeRequest)
@@ -1681,6 +1723,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			activityStoppingRequest.SetRequestID(requestID)
 			activityStoppingRequest.SetActivityID(request.GetName())
 			activityStoppingRequest.SetContextID(contextID)
+			activityStoppingRequest.SetClientID(request.GetClientID())
 
 			// create the Operation for this request and add it to the operations map
 			stoppingReplyChan := make(chan interface{})
@@ -1777,7 +1820,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
 
 	// Send ACK
-	op := sendFutureACK(contextID, request.GetRequestID())
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
 	<-op.GetChannel()
 
 	// execute the activity
@@ -2033,6 +2076,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		activityInvokeLocalRequest.SetArgs(input)
 		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
 		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
+		activityInvokeLocalRequest.SetClientID(request.GetClientID())
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, activityInvokeLocalRequest)
@@ -2095,7 +2139,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args)
 
 	// Send ACK
-	op := sendFutureACK(contextID, request.GetRequestID())
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
 	<-op.GetChannel()
 
 	// wait for the future to be unblocked

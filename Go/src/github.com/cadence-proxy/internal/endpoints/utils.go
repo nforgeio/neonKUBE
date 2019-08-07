@@ -219,7 +219,7 @@ func sendMessage(message messages.IProxyMessage) {
 	}()
 }
 
-func sendFutureACK(contextID int64, operationID int64) *Operation {
+func sendFutureACK(contextID, operationID, clientID int64) *Operation {
 
 	// create the WorkflowFutureReadyRequest
 	requestID := NextRequestID()
@@ -227,6 +227,7 @@ func sendFutureACK(contextID int64, operationID int64) *Operation {
 	workflowFutureReadyRequest.SetRequestID(requestID)
 	workflowFutureReadyRequest.SetContextID(contextID)
 	workflowFutureReadyRequest.SetFutureOperationID(operationID)
+	workflowFutureReadyRequest.SetClientID(clientID)
 
 	// create the Operation for this request and add it to the operations map
 	op := NewOperation(requestID, workflowFutureReadyRequest)

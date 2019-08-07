@@ -226,6 +226,12 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handleConnectRequest(ctx, v)
 			}
 
+		// DisconnectRequest
+		case messagetypes.DisconnectRequest:
+			if v, ok := request.(*messages.DisconnectRequest); ok {
+				reply = handleDisconnectRequest(ctx, v)
+			}
+
 		// DomainDescribeRequest
 		case messagetypes.DomainDescribeRequest:
 			if v, ok := request.(*messages.DomainDescribeRequest); ok {

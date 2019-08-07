@@ -199,10 +199,8 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 		return nil
 	}
 
-	// set the logger to global logger
-	helper.Logger = zap.L()
-
 	// Configure the ClientHelper.Builder
+	helper.Logger = zap.L()
 	helper.Builder = NewBuilder(helper.Logger).
 		SetHostPort(helper.Config.hostPort).
 		SetClientOptions(helper.Config.clientOptions).
@@ -301,6 +299,12 @@ func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, 
 	}
 
 	return nil
+}
+
+// DestroyClient stops the Dispatcher, shutting down all inbounds, outbounds, and transports.
+// This function returns after everything has been stopped.
+func (helper *ClientHelper) DestroyClient() error {
+	return helper.Builder.destroy()
 }
 
 // StartWorker starts a workflow worker and activity worker based on configured options.
