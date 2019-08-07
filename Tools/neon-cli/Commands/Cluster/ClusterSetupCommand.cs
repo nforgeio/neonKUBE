@@ -1897,7 +1897,29 @@ rm -rf {chartName}*
 
             master.Status = "deploy: m3db-cluster";
 
-            await InstallHelmChartAsync(master, "m3db-cluster", @namespace: "monitoring");
+            var values = new List<KeyValuePair<string, string>>();
+            i = 0;
+
+            foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true))
+            {
+                var args = new string[] { "label", "nodes", "--overwrite", n.Name, $"neonkube.io/m3db.faultdomain={i}" };
+                await NeonHelper.ExecuteAsync("kubectl", args);
+                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].name", $"faultdomain-{i}"));
+                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].numInstances", "1"));
+                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].nodeAffinityTerms[0].key", "neonkube.io/m3db.faultdomain"));
+                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].nodeAffinityTerms[0].values[0]", i.ToString()));
+                i++;
+            }
+
+            if (cluster.Definition.Nodes.Count(l => l.Labels.Prometheus == true) <= 3)
+            {
+                values.Add(new KeyValuePair<string, string>($"replicationFactor", cluster.Definition.Nodes.Count(l => l.Labels.Prometheus == true).ToString()));
+            } else
+            {
+                values.Add(new KeyValuePair<string, string>($"replicationFactor", 3));
+            }
+
+            await InstallHelmChartAsync(master, "m3db-cluster", @namespace: "monitoring", values: values);
 
             while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "operator.m3db.io/cluster=m3db-prometheus")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true).Count())
             {

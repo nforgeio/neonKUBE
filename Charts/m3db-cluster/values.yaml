@@ -9,3 +9,5 @@ resources:
     storage: 1Gi
   limits:
     storage: 1Gi
+
+replicationFactor: 1

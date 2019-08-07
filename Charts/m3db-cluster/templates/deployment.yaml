@@ -4,7 +4,7 @@ metadata:
   name: m3db-prometheus
 spec:
   image: quay.io/m3db/m3dbnode:latest
-  replicationFactor: 3
+  replicationFactor:  {{ .Values.replicationFactor }}
   numberOfShards: 256
   isolationGroups:
   {{- toYaml .Values.isolationGroups | nindent 2 }}
