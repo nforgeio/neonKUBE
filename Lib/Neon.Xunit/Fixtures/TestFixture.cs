@@ -231,6 +231,10 @@ namespace Neon.Xunit
                 InAction = true;
                 action?.Invoke();
             }
+            catch
+            {
+                throw;
+            }
             finally
             {
                 InAction  = false;

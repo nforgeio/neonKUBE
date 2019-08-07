@@ -122,7 +122,7 @@ namespace Neon.Cadence
         [JsonProperty(PropertyName = "ClientTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clientTimeout", ApplyNamingConventions = false)]
         [DefaultValue(45.0)]
-        public double ClientTimeoutSeconds { get; set; } = 45.0;
+        public double ClientTimeoutSeconds { get; set; } = 60.0;
 
         /// <summary>
         /// Returns <see cref="ClientTimeoutSeconds"/> as a <see cref="TimeSpan"/>.

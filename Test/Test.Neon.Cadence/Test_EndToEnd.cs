@@ -72,7 +72,7 @@ namespace TestCadence
             if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
-                this.client      = fixture.Connection;
+                this.client      = fixture.Client;
                 this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
 
                 // Auto register the test workflow and activity implementations.
@@ -86,7 +86,7 @@ namespace TestCadence
             else
             {
                 this.fixture     = fixture;
-                this.client      = fixture.Connection;
+                this.client      = fixture.Client;
                 this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
             }
         }

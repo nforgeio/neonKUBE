@@ -50,6 +50,7 @@ namespace Neon.Xunit.Cadence
     {
         private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Cadence to start.
         private CadenceSettings     settings;
+        private CadenceClient       client;
         private bool                keepConnection;
 
         /// <summary>
@@ -110,7 +111,7 @@ namespace Neon.Xunit.Cadence
         /// <b>default</b> Cadence domain by default (unless another is specified).
         /// </note>
         /// <note>
-        /// A fresh Cadence client <see cref="Connection"/> will be established every time this
+        /// A fresh Cadence client <see cref="Client"/> will be established every time this
         /// fixture is started, regardless of whether the fixture has already been started.  This
         /// ensures that each unit test will start with a client in the default state.
         /// </note>
@@ -158,7 +159,7 @@ namespace Neon.Xunit.Cadence
         /// </param>
         /// <remarks>
         /// <note>
-        /// A fresh Cadence client <see cref="Connection"/> will be established every time this
+        /// A fresh Cadence client <see cref="Client"/> will be established every time this
         /// fixture is started, regardless of whether the fixture has already been started.  This
         /// ensures that each unit test will start with a client in the default state.
         /// </note>
@@ -212,11 +213,11 @@ namespace Neon.Xunit.Cadence
 
                 // Establish the Cadence connection.
 
-                Connection = CadenceClient.ConnectAsync(settings).Result;
+                Client = CadenceClient.ConnectAsync(settings).Result;
 
-                ConnectionClient = new HttpClient()
+                HttpClient = new HttpClient()
                 {
-                    BaseAddress = Connection.ListenUri
+                    BaseAddress = Client.ListenUri
                 };
             }
         }
@@ -224,17 +225,30 @@ namespace Neon.Xunit.Cadence
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> to be used to interact with Cadence.
         /// </summary>
-        public CadenceClient Connection { get; private set; }
+        public CadenceClient Client
+        {
+            get
+            {
+                if (client == null)
+                {
+                    throw new Exception("Cadence client could not be connected to the Cadence cluster.");
+                }
+
+                return client;
+            }
+
+            set => client = value;
+        }
 
         /// <summary>
-        /// Returns a <see cref="HttpClient"/> suitable for submitting requests to the
-        /// <see cref="ConnectionClient"/> instance web server.
+        /// Returns a <see cref="System.Net.Http.HttpClient"/> suitable for submitting requests to the
+        /// <see cref="HttpClient"/> instance web server.
         /// </summary>
-        public HttpClient ConnectionClient { get; private set; }
+        public HttpClient HttpClient { get; private set; }
 
         /// <summary>
         /// <para>
-        /// Returns a <see cref="HttpClient"/> suitable for submitting requests to the
+        /// Returns a <see cref="System.Net.Http.HttpClient"/> suitable for submitting requests to the
         /// associated <b>cadence-proxy</b> process.
         /// </para>
         /// <note>
@@ -252,11 +266,11 @@ namespace Neon.Xunit.Cadence
         {
             // Disconnect.
 
-            Connection.Dispose();
-            Connection = null;
+            Client.Dispose();
+            Client = null;
 
-            ConnectionClient.Dispose();
-            ConnectionClient = null;
+            HttpClient.Dispose();
+            HttpClient = null;
 
             // Restart the Cadence container.
 
@@ -264,11 +278,11 @@ namespace Neon.Xunit.Cadence
 
             // Reconnect.
 
-            Connection = CadenceClient.ConnectAsync(settings).Result;
+            Client = CadenceClient.ConnectAsync(settings).Result;
 
-            ConnectionClient = new HttpClient()
+            HttpClient = new HttpClient()
             {
-                BaseAddress = Connection.ListenUri
+                BaseAddress = Client.ListenUri
             };
         }
 
@@ -279,16 +293,16 @@ namespace Neon.Xunit.Cadence
         /// </summary>
         public override void Reset()
         {
-            if (Connection != null)
+            if (Client != null)
             {
-                Connection.Dispose();
-                Connection = null;
+                Client.Dispose();
+                Client = null;
             }
 
-            if (ConnectionClient != null)
+            if (HttpClient != null)
             {
-                ConnectionClient.Dispose();
-                ConnectionClient = null;
+                HttpClient.Dispose();
+                HttpClient = null;
             }
 
             if (ProxyClient != null)
@@ -315,25 +329,25 @@ namespace Neon.Xunit.Cadence
 
             // Close any existing connection related objects.
 
-            if (Connection != null)
+            if (Client != null)
             {
-                Connection.Dispose();
-                Connection = null;
+                Client.Dispose();
+                Client = null;
             }
 
-            if (ConnectionClient != null)
+            if (HttpClient != null)
             {
-                ConnectionClient.Dispose();
-                ConnectionClient = null;
+                HttpClient.Dispose();
+                HttpClient = null;
             }
 
             // Establish fresh connections.
 
-            Connection = CadenceClient.ConnectAsync(settings).Result;
+            Client = CadenceClient.ConnectAsync(settings).Result;
 
-            ConnectionClient = new HttpClient()
+            HttpClient = new HttpClient()
             {
-                BaseAddress = Connection.ListenUri
+                BaseAddress = Client.ListenUri
             };
         }
     }
