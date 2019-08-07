@@ -64,10 +64,9 @@ namespace Neon.Cadence
         /// <param name="client">The associated client.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="execution">The workflow execution or <c>null</c> if the workflow hasn't been started.</param>
-        /// <param name="taskList">Specifies the task list.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <param name="domain">Specifies specifies the domain.</param>
-        internal WorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, string taskList, WorkflowOptions options, string domain)
+        internal WorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options, string domain)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
@@ -77,7 +76,6 @@ namespace Neon.Cadence
             this.client           = client;
             this.WorkflowTypeName = workflowTypeName;
             this.Execution        = execution;
-            this.taskList         = taskList;
             this.Options          = options;
             this.domain           = domain;
         }

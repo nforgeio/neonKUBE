@@ -15,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Comment this to enable slow tests.
-#define SKIP_SLOW_TESTS
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -47,11 +44,7 @@ namespace TestCadence
 {
     public partial class Test_EndToEnd
     {
-#if SKIP_SLOW_TESTS
-        [Fact(Skip = "Slow: Enable for full tests")]
-#else
-        [Fact]
-#endif
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Ping()
         {
@@ -76,11 +69,7 @@ namespace TestCadence
             Console.WriteLine($"Transactions/sec: {tps}");
         }
 
-#if SKIP_SLOW_TESTS
-        [Fact(Skip = "Slow: Enable for full tests")]
-#else
-        [Fact]
-#endif
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void PingAttack()
         {

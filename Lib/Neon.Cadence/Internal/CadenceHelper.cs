@@ -470,11 +470,11 @@ namespace Neon.Cadence.Internal
 
             if (activityInterfaces.Count == 0)
             {
-                throw new WorkflowTypeException($"Workflow type [{activityType.FullName}] does not implement an interface that derives from [{typeof(IActivity).FullName}].");
+                throw new ActivityTypeException($"Workflow type [{activityType.FullName}] does not implement an interface that derives from [{typeof(IActivity).FullName}].");
             }
             else if (activityInterfaces.Count > 1)
             {
-                throw new WorkflowTypeException($"Workflow type [{activityType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IActivity).FullName}].  This is not supported.");
+                throw new ActivityTypeException($"Workflow type [{activityType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IActivity).FullName}].  This is not supported.");
             }
 
             var activityNames = new HashSet<string>();

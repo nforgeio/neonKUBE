@@ -293,6 +293,132 @@ namespace TestCadence
 
             Assert.Equal("Goodbye Jeff!", await stub2.GoodbyeAsync("Jeff"));
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowMultipleStubCalls : IWorkflow
+        {
+            [WorkflowMethod]
+            Task RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowMultipleStubCalls : WorkflowBase, IWorkflowMultipleStubCalls
+        {
+            public async Task RunAsync()
+            {
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_MultipleStubCalls()
+        {
+            // Verify that we CANNOT reuse a workflow stub to make multiple calls.
+
+            var stub = client.NewWorkflowStub<IWorkflowMultipleStubCalls>();
+
+            await stub.RunAsync();                                                                      // This call should work.
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.RunAsync());     // This call should fail.
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface ICronActivity : IActivity
+        {
+            [ActivityMethod]
+            Task RunAsync(int callNumber);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class CronActivity : ActivityBase, ICronActivity
+        {
+            public static List<int> CronCalls = new List<int>();
+
+            [ActivityMethod]
+            public async Task RunAsync(int callNumber)
+            {
+                CronCalls.Add(callNumber);
+                await Task.CompletedTask;
+            }
+        }
+
+        public interface ICronWorkflow : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<int> RunAsync();
+        }
+
+        /// <summary>
+        /// This workflow is designed to be deployed as a CRON workflow and will call 
+        /// the <see cref="CronActivity"/> to record test information about each CRON
+        /// workflow run.
+        /// </summary>
+        [Workflow(AutoRegister = true)]
+        public class CronWorkflow : WorkflowBase, ICronWorkflow
+        {
+            public async Task<int> RunAsync()
+            {
+                // We're going to exercise HasPreviousResult() and GetPreviousResult() by recording
+                // and incrementing the current run number and then passing it CronActivity which
+                // will add it to the [CronCalls] list which the unit test will verify.
+
+                var activity   = Workflow.NewActivityStub<ICronActivity>();
+                var callNumber = 0;
+
+                if (await Workflow.IsSetLastCompletionResultAsync())
+                {
+                    callNumber = await Workflow.GetLastCompletionResultAsync<int>();
+                }
+
+                callNumber++;
+
+                await activity.RunAsync(callNumber);
+
+                return await Task.FromResult(callNumber);
+            }
+        }
+
+        [SlowFact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Workflow_Cron()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            // Start a CRON workflow on a 1 minute interval that updates the [cronCalls] list 
+            // every time the workflow is invoked.  We'll wait for the first invocation and then
+            // wait to verify that we've see at least 3 invocations and that each invocation 
+            // propertly incremented the call number.
+
+            CronActivity.CronCalls.Clear();     // Clear this to reset any old test state.
+
+            var options = new WorkflowOptions()
+            {
+                WorkflowId   = "cron-workflow",
+                CronSchedule = "0/1 * * * *"
+            };
+
+            var stub = client.NewWorkflowStub<ICronWorkflow>(options);
+
+            _ = stub.RunAsync();
+
+            // Start the CRON workflow and wait for the result from the first run.  
+
+            NeonHelper.WaitFor(() => CronActivity.CronCalls.Count >= 1, timeout: TimeSpan.FromMinutes(1.5));
+
+            Assert.Equal(1, CronActivity.CronCalls[0]);
+
+            // Wait up to 2.5 minutes more for at least two more runs.
+
+            NeonHelper.WaitFor(() => CronActivity.CronCalls.Count >= 3, timeout: TimeSpan.FromMinutes(2.5));
+
+            // Verify that the run numbers look good.
+
+            for (int i = 1; i <= 3; i++)
+            {
+                Assert.Equal(CronActivity.CronCalls[i - 1], i);
+            }
+       }
     }
 }
-

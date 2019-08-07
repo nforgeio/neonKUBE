@@ -47,6 +47,12 @@ namespace Neon.Cadence
         public string WorkflowId { get; set; } = null;
 
         /// <summary>
+        /// Optionally specifies the target task list overriding the default client task list
+        /// and/or a task list specified by <see cref="WorkflowMethodAttribute.TaskList"/>.
+        /// </summary>
+        public string TaskList { get; set; } = null;
+
+        /// <summary>
         /// <para>
         /// Optionally specifies the maximum time the workflow may execute from start to finish.
         /// This will defaults to 24 hours.
@@ -162,20 +168,18 @@ namespace Neon.Cadence
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
         /// </summary>
         /// <param name="client">The <see cref="CadenceClient"/>.</param>
-        /// <param name="taskList">Optionally specifies the target task list.</param>
         /// <param name="methodAttribute">Optionally specifies a <see cref="WorkflowMethodAttribute"/>.</param>
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
-        internal InternalStartWorkflowOptions ToInternal(CadenceClient client, string taskList = null, WorkflowMethodAttribute methodAttribute = null)
+        internal InternalStartWorkflowOptions ToInternal(CadenceClient client, WorkflowMethodAttribute methodAttribute = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
-
-            taskList = client.ResolveTaskList(taskList);
 
             // Merge optional settings from these options and the method attribute.
 
             var taskStartToCloseTimeout      = TimeSpan.FromSeconds(10);
             var executionStartToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
             var workflowIdReusePolicy        = global::Neon.Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+            var taskList                     = this.TaskList;
 
             if (methodAttribute != null)
             {

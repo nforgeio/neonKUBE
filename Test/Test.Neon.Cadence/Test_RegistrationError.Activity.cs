@@ -133,5 +133,43 @@ namespace TestCadence
 
             await Assert.ThrowsAsync<ActivityTypeException>(async () => await client.RegisterActivityAsync<ActivityNoEntrypoint>());
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IActivityMultiInterface1 : IActivity
+        {
+            [ActivityMethod]
+            Task Run1Async();
+        }
+
+        public interface IActivityMultiInterface2 : IActivity
+        {
+            [ActivityMethod]
+            Task Run2Async();
+        }
+
+        [Activity(AutoRegister = false)]
+        public class ActivityMultiInterface : ActivityBase, IActivityMultiInterface1, IActivityMultiInterface2
+        {
+            public async Task Run1Async()
+            {
+                await Task.CompletedTask;
+            }
+
+            public async Task Run2Async()
+            {
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_MultipleInterfaces()
+        {
+            // Verify that the client detects activity implementations
+            // that implement more than one IActivity interface.
+
+            await Assert.ThrowsAsync<ActivityTypeException>(async () => await client.RegisterActivityAsync<ActivityMultiInterface>());
+        }
     }
 }

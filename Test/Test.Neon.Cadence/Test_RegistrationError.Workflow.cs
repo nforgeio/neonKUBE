@@ -219,5 +219,43 @@ namespace TestCadence
 
             await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<WorkflowDuplicateQuery>());
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowMultiInterface1 : IWorkflow
+        {
+            [WorkflowMethod]
+            Task Run1Async();
+        }
+
+        public interface IWorkflowMultiInterface2 : IWorkflow
+        {
+            [WorkflowMethod]
+            Task Run2Async();
+        }
+
+        [Workflow(AutoRegister = false)]
+        public class WorkflowMultiInterface : WorkflowBase, IWorkflowMultiInterface1, IWorkflowMultiInterface2
+        {
+            public async Task Run1Async()
+            {
+                await Task.CompletedTask;
+            }
+
+            public async Task Run2Async()
+            {
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_MultipleInterfaces()
+        {
+            // Verify that the client detects workflow implementations
+            // that implement more than one IWorkflow interface.
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<WorkflowMultiInterface>());
+        }
     }
 }

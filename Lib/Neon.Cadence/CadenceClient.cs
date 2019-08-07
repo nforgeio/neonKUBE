@@ -835,6 +835,18 @@ namespace Neon.Cadence
 
                     // Signal the proxy to disconnect.
 
+// $todo(jeff.lill):
+//
+// We need to restore this line sending the DisconnectRequest, but it's
+// currently causing some exceptions.  The problem is that the disconnect
+// looks like it's stopping the workers which is causing activities to be
+// stopped, but by the time we reply to these stop messages, the cadence-proxy
+// has already closed the HTTP service for the connection (and perhaps terminated).
+//
+// Commenting this line code, will avoid this, and frankly we could probably
+// ship with this disabled.
+
+#if TODO
                     CallProxyAsync(new DisconnectRequest()).Wait();
 
                     // Terminate the proxy if there are no remaining connections.
@@ -872,6 +884,7 @@ namespace Neon.Cadence
                             proxyProcess = null;
                         }
                     }
+#endif
                 }
                 catch
                 {

@@ -66,7 +66,7 @@ namespace Neon.Cadence.Internal
             // Fetch the stub type and reflect the required constructors and methods.
 
             this.stubType         = assembly.GetType(className);
-            this.startConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(string), typeof(WorkflowOptions), typeof(string));
+            this.startConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions), typeof(string));
             this.childConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(ChildWorkflowOptions));
             this.toUntyped        = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
         }
@@ -77,13 +77,12 @@ namespace Neon.Cadence.Internal
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="dataConverter">The data converter.</param>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="taskList">Specifies the target task list.</param>
         /// <param name="options">Specifies the <see cref="WorkflowOptions"/>.</param>
         /// <param name="domain">Specifies the target domain.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, string taskList, WorkflowOptions options, string domain)
+        public object Create(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options, string domain)
         {
-            return startConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, taskList, options, domain });
+            return startConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options, domain });
         }
 
         /// <summary>

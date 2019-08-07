@@ -158,7 +158,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Creates an untyped stub that can be used to execute, query, and signal a new workflow
-        /// specified using a generic type parameter.
+        /// specified using raw bytes.
         /// </summary>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
@@ -271,7 +271,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
-            return StubManager.CreateWorkflowStub<TWorkflowInterface>(this);
+            return StubManager.CreateWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName, domain: domain);
         }
 
         //---------------------------------------------------------------------
@@ -321,13 +321,18 @@ namespace Neon.Cadence
                 options.TaskStartToCloseTimeout = Settings.WorkflowTaskStartToCloseTimeout;
             }
 
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                options.TaskList = Settings.DefaultTaskList;
+            }
+
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
                 {
                     Workflow = workflowTypeName,
                     Domain   = domain ?? Settings.DefaultDomain,
                     Args     = args,
-                    Options  = options.ToInternal(this, taskList)
+                    Options  = options.ToInternal(this)
                 });
 
             reply.ThrowOnError();
@@ -492,7 +497,7 @@ namespace Neon.Cadence
                 new WorkflowSignalWithStartRequest()
                 {
                     WorkflowId   = options.WorkflowId,
-                    Options      = options.ToInternal(this, taskList),
+                    Options      = options.ToInternal(this),
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
                     WorkflowArgs = startArgs,

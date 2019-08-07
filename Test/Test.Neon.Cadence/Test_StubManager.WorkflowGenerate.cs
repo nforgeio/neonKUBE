@@ -99,7 +99,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowResultWithOptions()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryResultWithArgs>(client, taskList: "my-tasklist", options: new WorkflowOptions(), domain: "my-domain");
+            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new WorkflowOptions() { TaskList = "my-tasklist" } , domain: "my-domain");
 
             Assert.NotNull(stub);
         }
