@@ -434,7 +434,7 @@ OPTIONS:
             {
                 try
                 {
-                    k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: $"root@{cluster.Definition.Name}"));
+                    k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
                 } catch (k8s.Exceptions.KubeConfigException e)
                 {
                     return;
@@ -1546,7 +1546,8 @@ helm template install/kubernetes/helm/istio \
     --set global.proxy.accessLogFile=/dev/stdout \
     --set kiali.enabled=true \
     --set tracing.enabled=true \
-    --set grafana.enabled=true \
+    --set grafana.enabled=false \
+    --set prometheus.enabled=false \
     --set certmanager.enabled=true \
     --set certmanager.email=mailbox@donotuseexample.com \
 	--set gateways.istio-egressgateway.enabled=true \
@@ -1606,6 +1607,22 @@ $@" \
                 () =>
                 {
                     InstallM3db(firstMaster).Wait();
+                });
+
+            // Install an Prometheus cluster to the monitoring namespace
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-prometheus",
+                () =>
+                {
+                    InstallPrometheus(firstMaster).Wait();
+                });
+
+            // Install Grafana to the monitoring namespace
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-grafana",
+                () =>
+                {
+                    InstallGrafana(firstMaster).Wait();
                 });
 
             // Install Elasticsearch.
@@ -1694,11 +1711,15 @@ do
   sleep 1
 done
 
+#rm -rf {chartName}
+
 unzip {chartName}.zip -d {chartName}
 helm install --namespace {@namespace} --name {chartName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} --wait
 rm -rf {chartName}*
 ";
+
             master.SudoCommand(CommandBundle.FromScript(helmChartScript));
+
         }
 
         /// <summary>
@@ -1726,6 +1747,8 @@ rm -rf {chartName}*
 
             await InstallHelmChartAsync(master, "etcd-operator", @namespace: "monitoring");
 
+            master.Status = "setup: etcd-m3db-volumes";
+
             var i = 0;
             foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Prometheus == true))
             {
@@ -1744,9 +1767,9 @@ rm -rf {chartName}*
                     Spec = new V1PersistentVolumeSpec()
                     {
                         Capacity = new Dictionary<string, ResourceQuantity>()
-                        {
-                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Prometheus.EtcdDiskSize) }
-                        },
+                    {
+                        { "storage", new ResourceQuantity(cluster.Definition.Mon.Prometheus.EtcdDiskSize) }
+                    },
                         AccessModes = new List<string>() { "ReadWriteOnce" },
                         PersistentVolumeReclaimPolicy = "Retain",
                         StorageClassName = "local-storage",
@@ -1759,32 +1782,44 @@ rm -rf {chartName}*
                             Required = new V1NodeSelector()
                             {
                                 NodeSelectorTerms = new List<V1NodeSelectorTerm>()
+                            {
+                                new V1NodeSelectorTerm()
                                 {
-                                    new V1NodeSelectorTerm()
+                                    MatchExpressions = new List<V1NodeSelectorRequirement>()
                                     {
-                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
+                                        new V1NodeSelectorRequirement()
                                         {
-                                            new V1NodeSelectorRequirement()
-                                            {
-                                                Key = "kubernetes.io/hostname",
-                                                OperatorProperty = "In",
-                                                Values = new List<string>() { $"{n.Name}" }
-                                            }
+                                            Key = "kubernetes.io/hostname",
+                                            OperatorProperty = "In",
+                                            Values = new List<string>() { $"{n.Name}" }
                                         }
                                     }
                                 }
+                            }
                             }
                         }
                     },
                 };
 
-                await k8sClient.CreatePersistentVolumeAsync(volume);
+                try
+                {
+                    await k8sClient.CreatePersistentVolumeAsync(volume);
+                }
+                catch
+                {
+                    Thread.Sleep(1000);
+                }
                 i++;
             }
 
             master.Status = "deploy: etcd-cluster";
 
             await InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring");
+
+            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "etcd_cluster=etcd-m3db")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true).Count())
+            {
+                Thread.Sleep(1000);
+            }
         }
 
         /// <summary>
@@ -1795,7 +1830,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: m3db";
 
-            //await InstallHelmChartAsync(master, "m3db-operator", @namespace: "monitoring");
+            await InstallHelmChartAsync(master, "m3db-operator", @namespace: "monitoring");
 
             var i = 0;
             foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Prometheus == true))
@@ -1849,13 +1884,25 @@ rm -rf {chartName}*
                     },
                 };
 
-                await k8sClient.CreatePersistentVolumeAsync(volume);
+                try
+                {
+                    await k8sClient.CreatePersistentVolumeAsync(volume);
+                }
+                catch
+                {
+                    Thread.Sleep(1000);
+                }
                 i++;
             }
 
             master.Status = "deploy: m3db-cluster";
 
             await InstallHelmChartAsync(master, "m3db-cluster", @namespace: "monitoring");
+
+            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "operator.m3db.io/cluster=m3db-prometheus")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true).Count())
+            {
+                Thread.Sleep(1000);
+            }
         }
 
         /// <summary>
@@ -1864,15 +1911,23 @@ rm -rf {chartName}*
         /// <param name="master"></param>
         private async Task InstallPrometheus(SshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: etcd";
+            master.Status = "deploy: prometheus";
 
             await InstallHelmChartAsync(master, "prometheus-operator", @namespace: "monitoring");
 
-            
+            await InstallHelmChartAsync(master, "istio-prometheus", @namespace: "monitoring");
+        }
 
-            master.Status = "deploy: etcd-cluster";
+        /// <summary>
+        /// Installs Grafana to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallGrafana(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: grafana";
 
-            await InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring");
+            await InstallHelmChartAsync(master, "grafana", @namespace: "monitoring");
+
         }
 
         /// <summary>
