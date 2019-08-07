@@ -7,18 +7,27 @@ metadata:
   labels:
     prometheus: prometheus
 spec:
-  replicas: 2
+  replicas: 1
+  resources:
+    requests:
+      memory: 200Mi
+      cpu: 250m
+    limits:
+      memory: 500Mi
+      cpu: 500m
   serviceAccountName: prometheus
   serviceMonitorSelector:
-    matchLabels:
-      team: frontend
+    any: true
+  serviceMonitorNamespaceSelector:
+    any: true
+  secrets: [ istio.prometheus ]
   alerting:
     alertmanagers:
     - namespace: monitoring
       name: alertmanager
       port: web
   remoteRead:
-    - url: m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/read
+    - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/read"
       readRecent: true
   remoteWrite:
-    - url: m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/write
+    - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/write"

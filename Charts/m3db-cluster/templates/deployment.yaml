@@ -30,8 +30,10 @@ spec:
   podIdentityConfig:
     sources: []
   namespaces:
-    - name: metrics-10s:2d
+    - name: default
       preset: 10s:2d
+    - name: metrics-10s:2d
+      preset: 1m:40d
   dataDirVolumeClaimTemplate:
     metadata:
       name: m3db-data
