@@ -1684,7 +1684,7 @@ $@" \
             string chartName, 
             string @namespace = "default", 
             int timeout = 300,
-            List<KeyValuePair<string, string>> values = null)
+            List<KeyValuePair<string, object>> values = null)
         {
             using (var client = new HeadendClient())
             {
@@ -1698,7 +1698,16 @@ $@" \
             {
                 foreach (var value in values)
                 {
-                    valueOverrides += $"--set {value.Key}={value.Value} \\\n";
+                    switch (value.Value.GetType().Name)
+                    {
+                        case nameof(String):
+                            valueOverrides += $"--set-string {value.Key}={value.Value} \\\n";
+                            break;
+                        case nameof(Int32):
+                            valueOverrides += $"--set {value.Key}={value.Value} \\\n";
+                            break;
+                    }
+                    
                 }
             }
 
@@ -1897,26 +1906,26 @@ rm -rf {chartName}*
 
             master.Status = "deploy: m3db-cluster";
 
-            var values = new List<KeyValuePair<string, string>>();
+            var values = new List<KeyValuePair<string, object>>();
             i = 0;
 
             foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true))
             {
                 var args = new string[] { "label", "nodes", "--overwrite", n.Name, $"neonkube.io/m3db.faultdomain={i}" };
                 await NeonHelper.ExecuteAsync("kubectl", args);
-                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].name", $"faultdomain-{i}"));
-                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].numInstances", "1"));
-                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].nodeAffinityTerms[0].key", "neonkube.io/m3db.faultdomain"));
-                values.Add(new KeyValuePair<string, string>($"isolationGroups[{i}].nodeAffinityTerms[0].values[0]", i.ToString()));
+                values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].name", $"faultdomain-{i}"));
+                values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].numInstances", 1));
+                values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].nodeAffinityTerms[0].key", "neonkube.io/m3db.faultdomain"));
+                values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].nodeAffinityTerms[0].values[0]", i.ToString()));
                 i++;
             }
 
             if (cluster.Definition.Nodes.Count(l => l.Labels.Prometheus == true) <= 3)
             {
-                values.Add(new KeyValuePair<string, string>($"replicationFactor", cluster.Definition.Nodes.Count(l => l.Labels.Prometheus == true).ToString()));
+                values.Add(new KeyValuePair<string, object>($"replicationFactor", cluster.Definition.Nodes.Count(l => l.Labels.Prometheus == true).ToString()));
             } else
             {
-                values.Add(new KeyValuePair<string, string>($"replicationFactor", 3));
+                values.Add(new KeyValuePair<string, object>($"replicationFactor", 3));
             }
 
             await InstallHelmChartAsync(master, "m3db-cluster", @namespace: "monitoring", values: values);
@@ -2016,11 +2025,11 @@ rm -rf {chartName}*
                 i++;
             }
 
-            var values = new List<KeyValuePair<string, string>>();
+            var values = new List<KeyValuePair<string, object>>();
 
-            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
-            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
-            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+            values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
+            values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+            values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
 
             if (cluster.Definition.Mon.Elasticsearch.Resources != null)
             {
@@ -2028,7 +2037,7 @@ rm -rf {chartName}*
                 {
                     foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
                     {
-                        values.Add(new KeyValuePair<string, string>($"resources.limits.{r.Key}", r.Value.ToString()));
+                        values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
                     }
                 }
 
@@ -2036,7 +2045,7 @@ rm -rf {chartName}*
                 {
                     foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
                     {
-                        values.Add(new KeyValuePair<string, string>($"resources.requests.{r.Key}", r.Value.ToString()));
+                        values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
                     }
                 }
             }
@@ -2199,18 +2208,18 @@ rm -rf {chartName}*
                             throw new NotImplementedException();
                     }
 
-                    var values = new List<KeyValuePair<string, string>>();
+                    var values = new List<KeyValuePair<string, object>>();
                     var i = 0;
 
                     foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true))
                     {
-                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].name", n.Name));
-                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].devices[0].name", deviceName));
-                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].config.storeType", "bluestore"));
+                        values.Add(new KeyValuePair<string, object>($"nodes[{i}].name", n.Name));
+                        values.Add(new KeyValuePair<string, object>($"nodes[{i}].devices[0].name", deviceName));
+                        values.Add(new KeyValuePair<string, object>($"nodes[{i}].config.storeType", "bluestore"));
                         i++;
                     }
 
-                    values.Add(new KeyValuePair<string, string>("mon.count", cluster.Definition.Nodes.Count(n => n.Labels.CephMON).ToString()));
+                    values.Add(new KeyValuePair<string, object>("mon.count", cluster.Definition.Nodes.Count(n => n.Labels.CephMON).ToString()));
 
                     InstallHelmChartAsync(firstMaster, chartName: "ceph-cluster", @namespace: "rook-ceph", timeout: 300, values: values).Wait();
 
@@ -2229,7 +2238,7 @@ rm -rf {chartName}*
             firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph-storageclass",
                 () =>
                 {
-                    var values = new List<KeyValuePair<string, string>>();
+                    var values = new List<KeyValuePair<string, object>>();
 
                     var monitors = "";
                     for (int i = 0; i < cluster.Definition.Nodes.Count(n => n.Labels.CephMON); i++)
@@ -2241,7 +2250,7 @@ rm -rf {chartName}*
                         }
                     }
 
-                    values.Add(new KeyValuePair<string, string>($"monitors", monitors));
+                    values.Add(new KeyValuePair<string, object>($"monitors", monitors));
 
                     InstallHelmChartAsync(firstMaster, chartName: "ceph-storageclass", @namespace: "rook-ceph", timeout: 300, values: values).Wait();
                 });
