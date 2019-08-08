@@ -287,7 +287,6 @@ namespace Neon.Cadence
         /// this may have been customized when the workflow worker was registered.
         /// </param>
         /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
-        /// <param name="taskList">Optionally specifies the target task list.  This defaults to the client task list.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <param name="domain">Optionally specifies the Cadence domain where the workflow will run.  This defaults to the client domain.</param>
         /// <returns>A <see cref="WorkflowExecution"/> identifying the new running workflow instance.</returns>
@@ -299,7 +298,7 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args = null, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
 

@@ -181,7 +181,8 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
-                // Start the fixture
+                // Start the fixture.
+
                 base.StartAsComposed(name, image,
                     new string[]
                     {

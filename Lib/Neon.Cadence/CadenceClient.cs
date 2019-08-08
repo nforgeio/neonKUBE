@@ -395,13 +395,14 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly object      staticSyncLock  = new object();
-        private static readonly Assembly    thisAssembly    = Assembly.GetExecutingAssembly();
-        private static readonly INeonLogger log             = LogManager.Default.GetLogger<CadenceClient>();
-        private static bool                 proxyWritten    = false;
-        private static long                 nextClientId    = 0;
-        private static int                  clientCount     = 0;
-        private static Process              proxyProcess    = null;
+        private static readonly object      staticSyncLock   = new object();
+        private static readonly Assembly    thisAssembly     = Assembly.GetExecutingAssembly();
+        private static readonly INeonLogger log              = LogManager.Default.GetLogger<CadenceClient>();
+        private static bool                 proxyWritten     = false;
+        private static long                 nextClientId     = 0;
+        private static int                  clientCount      = 0;
+        private static Process              proxyProcess     = null;
+        private static bool                 proxyInitialized = false;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -556,23 +557,16 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(settings != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
 
-            try
+            var client = new CadenceClient(settings);
+
+            await client.SetCacheMaximumSizeAsync(10000);
+
+            lock (staticSyncLock)
             {
-                var client = new CadenceClient(settings);
-
-                await client.SetCacheMaximumSizeAsync(10000);
-
-                return client;
+                clientCount++;
             }
-            catch
-            {
-                lock (staticSyncLock)
-                {
-                    clientCount++;
-                }
 
-                throw;
-            }
+            return client;
         }
 
         //---------------------------------------------------------------------
@@ -683,7 +677,8 @@ namespace Neon.Cadence
                 {
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {
-                        proxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                        proxyProcess     = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                        proxyInitialized = false;
                     }
                 }
             }
@@ -732,17 +727,22 @@ namespace Neon.Cadence
             {
                 try
                 {
-                    // Send the [InitializeRequest] to the [cadence-proxy] so it will know
-                    // where to send reply messages.
+                    if (!proxyInitialized)
+                    {
+                        // Send the [InitializeRequest] to the [cadence-proxy] so it will know
+                        // where to send reply messages.
 
-                    var initializeRequest =
-                        new InitializeRequest()
-                        {
-                            LibraryAddress = ListenUri.Host,
-                            LibraryPort    = ListenUri.Port
-                        };
+                        var initializeRequest =
+                            new InitializeRequest()
+                            {
+                                LibraryAddress = ListenUri.Host,
+                                LibraryPort    = ListenUri.Port
+                            };
 
-                    CallProxyAsync(initializeRequest).Wait();
+                        CallProxyAsync(initializeRequest).Wait();
+
+                        proxyInitialized = true;
+                    }
 
                     // Send the [ConnectRequest] to the [cadence-proxy] telling it
                     // how to connect to the Cadence cluster.
@@ -881,7 +881,8 @@ namespace Neon.Cadence
                                 proxyProcess.Kill();
                             }
 
-                            proxyProcess = null;
+                            proxyProcess     = null;
+                            proxyInitialized = false;
                         }
                     }
                 }
