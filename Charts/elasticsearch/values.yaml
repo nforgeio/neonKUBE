@@ -51,10 +51,7 @@ podAnnotations: {}
 
 esJavaOpts: "-Xmx1g -Xms1g"
 
-resources:
-  limits:
-    cpu: "1000m"
-    memory: "2Gi"
+resources: {}
 
 initResources: {}
   # limits:
@@ -82,7 +79,7 @@ volumeClaimTemplate:
       elasticsearch: default
   resources:
     requests:
-      storage: 1Gi
+      storage: 512Mi
 
 persistence:
   enabled: true

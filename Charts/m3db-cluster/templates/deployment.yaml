@@ -28,7 +28,5 @@ spec:
         matchLabels:
           m3db: default
       resources:
-        requests:
-          storage: {{ .Values.resources.requests.storage }}
-        limits:
-          storage: {{ .Values.resources.limits.storage }}
+{{ toYaml .Values.resources | indent 8 }}
+
