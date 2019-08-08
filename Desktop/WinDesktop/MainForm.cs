@@ -731,7 +731,7 @@ namespace WinDesktop
                             serviceName: "kibana-kibana",
                             localPort: KubeConst.KibanaDashboardProxyPort,
                             remotePort: KubeConst.KibanaDashboardProxyPort,
-                            @namespace: "logging");
+                            @namespace: "monitoring");
 
                     portForwards.Add(kibanaDashboardProxy);
 
