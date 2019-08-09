@@ -405,6 +405,24 @@ namespace Neon.Cadence
         private static bool                 proxyInitialized = false;
 
         /// <summary>
+        /// Used internally to reset any static state during unit tests.  This is
+        /// typically called by the [CadenceFixture] unit testing fixture to ensure
+        /// that the Cadence client starts out in a well known state.
+        /// </summary>
+        internal static void Reset()
+        {
+            // $debug(jeff.lill):
+            //
+            // Uncomment this after we've verified that cadence-proxy uses
+            // the client IDs passed to it.
+
+            nextClientId     = 0;
+            clientCount      = 0;
+            proxyProcess     = null;
+            proxyInitialized = false;
+        }
+
+        /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
         /// to the file system (if that hasn't been done already) and then launches 
         /// a proxy instance configured to listen at the specified endpoint.
