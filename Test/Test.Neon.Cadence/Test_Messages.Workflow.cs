@@ -1691,7 +1691,7 @@ namespace TestCadence
 
             WorkflowGetResultReply message;
 
-            for (int size = 1024; size <= 10 * 1024 * 1024; size *= 2)
+            for (int size = 1024; size <= 1 * 1024 * 1024; size *= 2)
             {
                 using (var stream = new MemoryStream())
                 {

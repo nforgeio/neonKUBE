@@ -246,20 +246,6 @@ namespace Neon.Cadence
         /// </summary>
         private const int debugClientPort = 5001;
 
-        /// <summary>
-        /// <para>
-        /// We're going to configure Kestrel to allow message bodies
-        /// of up to 15MB.  This was chosen to so that messages with
-        /// byte arrays of up to about 10MiB can be encoded as base-64
-        /// while leaving some space for JSON overhead and other properties.
-        /// </para>
-        /// <para>
-        /// We're just going to hardcode this because this won't be an
-        /// issue when we convert cadence-proxy into a shared library.
-        /// </para>
-        /// </summary>
-        private const int maxHttpRequestSize = 15000000;
-
         //---------------------------------------------------------------------
         // Private types
 
@@ -679,7 +665,7 @@ namespace Neon.Cadence
                 .UseKestrel(
                     options =>
                     {
-                        options.Limits.MaxRequestBodySize = maxHttpRequestSize;
+                        options.Limits.MaxRequestBodySize = null;     // Disables request size limits
                         options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
                     })
                 .ConfigureServices(
@@ -719,7 +705,7 @@ namespace Neon.Cadence
                     .UseKestrel(
                         options =>
                         {
-                            options.Limits.MaxRequestBodySize = maxHttpRequestSize;
+                            options.Limits.MaxRequestBodySize = null;   // Disables request size limits
                             options.Listen(address, proxyPort);
                         })
                     .ConfigureServices(

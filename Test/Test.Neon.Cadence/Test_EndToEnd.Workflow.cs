@@ -864,7 +864,7 @@ namespace TestCadence
 
             Assert.Null(await client.NewWorkflowStub<IWorkflowEcho>().EchoAsync(null));
 
-            for (int size = 1024; size <= 10 * 1024 * 1024; size *= 2)
+            for (int size = 1024; size <= 1 * 1024 * 1024; size *= 2)
             {
                 var value = new byte[size];
 
