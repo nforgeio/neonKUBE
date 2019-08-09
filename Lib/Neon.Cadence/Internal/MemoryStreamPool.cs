@@ -74,14 +74,14 @@ namespace Neon.Cadence.Internal
         {
             Covenant.Requires<ArgumentNullException>(stream != null);
 
-            // We're going to limit the capacity of cached streams to 64KiB to
+            // We're going to limit the capacity of cached streams to 1MiB to
             // prevent the accumulation of cached streams with very large buffers.
 
             stream.SetLength(0);
 
-            if (stream.Capacity > 64 * 1024)
+            if (stream.Capacity > 1 * 1024 * 1024)
             {
-                stream.Capacity = 64 * 1024;
+                stream.Capacity = 1 * 1024 * 1024;
             }
 
             lock (poolStack)

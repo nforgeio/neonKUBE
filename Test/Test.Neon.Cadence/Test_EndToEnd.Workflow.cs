@@ -858,7 +858,7 @@ namespace TestCadence
         public async Task Workflow_Echo()
         {
             // Verify that we send and receive varying sizes of content, from
-            // very small to pretty large (10MiB).
+            // small to pretty large (1MiB).
 
             var rand = new Random();
 
