@@ -46,6 +46,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task PingAsync()
         {
+            EnsureNotDisposed();
+
             await CallProxyAsync(new PingRequest());
         }
 
@@ -79,6 +81,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssembly(Assembly assembly, string domain = null)
         {
+            EnsureNotDisposed();
+            
             await RegisterAssemblyWorkflowsAsync(assembly, domain);
             await RegisterAssemblyActivitiesAsync(assembly, domain);
         }
@@ -123,6 +127,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<Worker> StartWorkerAsync(string taskList = null, WorkerOptions options = null, string domain = null)
         {
+            EnsureNotDisposed();
+
             taskList = ResolveTaskList(taskList);
             options  = options ?? new WorkerOptions();
             domain   = ResolveDomain(domain);
@@ -220,6 +226,7 @@ namespace Neon.Cadence
         internal async Task StopWorkerAsync(Worker worker)
         {
             Covenant.Requires<ArgumentNullException>(worker != null);
+            EnsureNotDisposed();
 
             using (await workerRegistrationMutex.AcquireAsync())
             {

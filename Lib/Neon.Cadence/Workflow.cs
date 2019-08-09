@@ -226,6 +226,8 @@ namespace Neon.Cadence
         /// </summary>
         public async Task<DateTime> UtcNowAsync()
         {
+            Client.EnsureNotDisposed();
+
             var reply = await ExecuteNonParallel(
                 async () =>
                 {
@@ -249,6 +251,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ContinueAsNewAsync(params object[] args)
         {
+            Client.EnsureNotDisposed();
+
             // This method doesn't currently do any async operations but I'd
             // like to keep the method signature async just in case this changes
             // in the future.
@@ -276,6 +280,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ContinueAsNewAsync(ContinueAsNewOptions options, params object[] args)
         {
+            Client.EnsureNotDisposed();
+
             // This method doesn't currently do any async operations but I'd
             // like to keep the method signature async just in case this changes
             // in the future.
@@ -467,6 +473,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId));
             Covenant.Requires<ArgumentException>(minSupported <= maxSupported);
+            Client.EnsureNotDisposed();
 
             var reply = await ExecuteNonParallel(
                 async () =>
@@ -496,6 +503,8 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         public async Task<WorkflowExecution> GetWorkflowExecutionAsync(object stub)
         {
+            Client.EnsureNotDisposed();
+
             // $todo(jeff.lill):
             //
             // Come back to this one after we've implemented the stubs.  This information
@@ -553,6 +562,7 @@ namespace Neon.Cadence
         public async Task<T> MutableSideEffectAsync<T>(string id, Func<T> function)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
+            Client.EnsureNotDisposed();
 
             T value;
 
@@ -636,6 +646,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
             Covenant.Requires<ArgumentNullException>(resultType != null);
             Covenant.Requires<ArgumentNullException>(function != null);
+            Client.EnsureNotDisposed();
 
             object value;
 
@@ -678,6 +689,8 @@ namespace Neon.Cadence
         /// <returns>The new <see cref="Guid"/>.</returns>
         public async Task<Guid> NewGuidAsync()
         {
+            Client.EnsureNotDisposed();
+
             return await SideEffectAsync(() => Guid.NewGuid());
         }
 
@@ -700,6 +713,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<double> NextRandomDoubleAsync()
         {
+            Client.EnsureNotDisposed();
+
             return await SideEffectAsync(() => random.NextDouble());
         }
 
@@ -721,6 +736,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync()
         {
+            Client.EnsureNotDisposed();
+
             return await SideEffectAsync(() => random.Next());
         }
 
@@ -744,6 +761,7 @@ namespace Neon.Cadence
         public async Task<int> NextRandomAsync(int maxValue)
         {
             Covenant.Requires<ArgumentNullException>(maxValue > 0);
+            Client.EnsureNotDisposed();
 
             return await SideEffectAsync(() => random.Next(maxValue));
         }
@@ -770,6 +788,7 @@ namespace Neon.Cadence
         public async Task<int> NextRandomAsync(int minValue, int maxValue)
         {
             Covenant.Requires<ArgumentNullException>(minValue < maxValue);
+            Client.EnsureNotDisposed();
 
             return await SideEffectAsync(() => random.Next(minValue, maxValue));
         }
@@ -794,6 +813,7 @@ namespace Neon.Cadence
         public async Task<byte[]> NextRandomBytesAsync(int size)
         {
             Covenant.Requires<ArgumentNullException>(size > 0);
+            Client.EnsureNotDisposed();
 
             return await SideEffectAsync(
                 () =>
@@ -845,6 +865,7 @@ namespace Neon.Cadence
         public async Task<T> SideEffectAsync<T>(Func<T> function)
         {
             Covenant.Requires<ArgumentNullException>(function != null);
+            Client.EnsureNotDisposed();
 
             T value;
 
@@ -915,6 +936,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(resultType != null);
             Covenant.Requires<ArgumentNullException>(function != null);
+            Client.EnsureNotDisposed();
 
             object value;
 
@@ -965,6 +987,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepAsync(TimeSpan duration)
         {
+            Client.EnsureNotDisposed();
+
             var reply = await ExecuteNonParallel(
                 async () =>
                 {
@@ -995,6 +1019,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepUntilUtcAsync(DateTime time)
         {
+            Client.EnsureNotDisposed();
+
             var utcNow = await UtcNowAsync();
 
             if (time > utcNow)
@@ -1010,6 +1036,8 @@ namespace Neon.Cadence
         /// <returns><c>true</c> if the a previous CRON workflow run returned a result.</returns>
         public async Task<bool> IsSetLastCompletionResultAsync()
         {
+            Client.EnsureNotDisposed();
+
             var reply = await ExecuteNonParallel(
                 async () =>
                 {
@@ -1035,6 +1063,8 @@ namespace Neon.Cadence
         /// <returns>The previous run result as bytes or <c>null</c>.</returns>
         public async Task<TResult> GetLastCompletionResultAsync<TResult>()
         {
+            Client.EnsureNotDisposed();
+
             var reply = await ExecuteNonParallel(
                 async () =>
                 {
@@ -1077,6 +1107,7 @@ namespace Neon.Cadence
         public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null, string domain = null)
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
+            Client.EnsureNotDisposed();
 
             return StubManager.CreateActivityStub<TActivityInterface>(Client, this, options, domain);
         }
@@ -1097,6 +1128,7 @@ namespace Neon.Cadence
         public TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null) 
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            Client.EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -1116,6 +1148,7 @@ namespace Neon.Cadence
         public Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            Client.EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -1131,6 +1164,7 @@ namespace Neon.Cadence
         public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            Client.EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -1146,6 +1180,7 @@ namespace Neon.Cadence
         public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null)
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            Client.EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -1190,6 +1225,7 @@ namespace Neon.Cadence
             where TActivityImplementation : TActivityInterface
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
+            Client.EnsureNotDisposed();
 
             return StubManager.CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
@@ -1213,6 +1249,8 @@ namespace Neon.Cadence
         /// </remarks>
         public IActivityStub NewUntypedActivityStub(ActivityOptions options = null)
         {
+            Client.EnsureNotDisposed();
+
             throw new NotImplementedException();
         }
 
@@ -1250,6 +1288,8 @@ namespace Neon.Cadence
         /// </remarks>
         public IChildWorkflowStub NewUntypedChildWorkflowStub(string workflowTypeName, ChildWorkflowOptions options = null)
         {
+            Client.EnsureNotDisposed();
+
             throw new NotImplementedException();
         }
 
@@ -1262,6 +1302,8 @@ namespace Neon.Cadence
         /// <returns>The <see cref="IExternalWorkflowStub"/>.</returns>
         public IExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
         {
+            Client.EnsureNotDisposed();
+
             throw new NotImplementedException();
         }
 
@@ -1274,6 +1316,8 @@ namespace Neon.Cadence
         /// <returns>The <see cref="IExternalWorkflowStub"/>.</returns>
         public IExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
         {
+            Client.EnsureNotDisposed();
+
             throw new NotImplementedException();
         }
 
@@ -1299,6 +1343,7 @@ namespace Neon.Cadence
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Client.EnsureNotDisposed();
 
             options = options ?? new ActivityOptions();
             options = options.Clone();
@@ -1323,16 +1368,17 @@ namespace Neon.Cadence
                 options.StartToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
             }
 
-            var reply = (ActivityExecuteReply)await Client.CallProxyAsync(
-                new ActivityExecuteRequest()
-                {
-                    ContextId              = contextId,
-                    Activity               = activityTypeName,
-                    Args                   = args,
-                    Options                = options.ToInternal(),
-                    Domain                 = domain,
-                    ScheduleToStartTimeout = options.ScheduleToStartTimeout
-                });
+            var reply = await ExecuteNonParallel(
+                async () => (ActivityExecuteReply)await Client.CallProxyAsync(
+                    new ActivityExecuteRequest()
+                    {
+                        ContextId              = contextId,
+                        Activity               = activityTypeName,
+                        Args                   = args,
+                        Options                = options.ToInternal(),
+                        Domain                 = domain,
+                        ScheduleToStartTimeout = options.ScheduleToStartTimeout
+                    }));
 
             reply.ThrowOnError();
             UpdateReplay(reply);
@@ -1370,6 +1416,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase));
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Client.EnsureNotDisposed();
 
             options = options ?? new LocalActivityOptions();
             options = options.Clone();

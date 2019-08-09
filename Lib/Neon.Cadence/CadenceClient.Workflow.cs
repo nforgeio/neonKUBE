@@ -61,6 +61,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
             CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
+            EnsureNotDisposed();
 
             if (workflowWorkerStarted)
             {
@@ -103,6 +104,7 @@ namespace Neon.Cadence
         public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
+            EnsureNotDisposed();
 
             foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
             {
@@ -134,6 +136,7 @@ namespace Neon.Cadence
         public async Task SetCacheMaximumSizeAsync(int cacheMaximumSize)
         {
             Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0);
+            EnsureNotDisposed();
 
             var reply = (WorkflowSetCacheSizeReply)await CallProxyAsync(
                 new WorkflowSetCacheSizeRequest()
@@ -153,6 +156,8 @@ namespace Neon.Cadence
         /// <returns>The maximum number of cached workflows.</returns>
         public async Task<int> GetWorkflowCacheSizeAsync()
         {
+            EnsureNotDisposed();
+
             return await Task.FromResult(workflowCacheSize);
         }
 
@@ -174,6 +179,7 @@ namespace Neon.Cadence
         public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowTypeName = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -213,6 +219,7 @@ namespace Neon.Cadence
         public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -243,6 +250,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -270,6 +278,7 @@ namespace Neon.Cadence
             where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
 
             return StubManager.CreateWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName, domain: domain);
         }
@@ -301,6 +310,7 @@ namespace Neon.Cadence
         internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args = null, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            EnsureNotDisposed();
 
             options = options ?? new WorkflowOptions();
             options = options.Clone();
@@ -353,6 +363,7 @@ namespace Neon.Cadence
         internal async Task<WorkflowDescription> GetWorkflowDescriptionAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            EnsureNotDisposed();
 
             var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
                 new WorkflowDescribeExecutionRequest()
@@ -380,6 +391,7 @@ namespace Neon.Cadence
         internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            EnsureNotDisposed();
 
             var reply = (WorkflowGetResultReply)await CallProxyAsync(
                 new WorkflowGetResultRequest()
@@ -406,6 +418,7 @@ namespace Neon.Cadence
         internal async Task CancelWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            EnsureNotDisposed();
 
             var reply = (WorkflowCancelReply)await CallProxyAsync(
                 new WorkflowCancelRequest()
@@ -432,6 +445,7 @@ namespace Neon.Cadence
         internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            EnsureNotDisposed();
 
             var reply = (WorkflowTerminateReply)await CallProxyAsync(
                 new WorkflowTerminateRequest()
@@ -459,6 +473,7 @@ namespace Neon.Cadence
         internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            EnsureNotDisposed();
 
             var reply = (WorkflowSignalReply)await CallProxyAsync(
                 new WorkflowSignalRequest()
@@ -489,6 +504,7 @@ namespace Neon.Cadence
         internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string signalName, byte[] signalArgs = null, byte[] startArgs = null, string taskList = null, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+            EnsureNotDisposed();
 
             options = options ?? new WorkflowOptions();
 
@@ -522,6 +538,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType));
+            EnsureNotDisposed();
 
             var reply = (WorkflowQueryReply)await CallProxyAsync(
                 new WorkflowQueryRequest()

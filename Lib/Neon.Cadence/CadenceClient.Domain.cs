@@ -43,6 +43,8 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
+            EnsureNotDisposed();
+
             var domainRegisterRequest =
                 new DomainRegisterRequest()
                 {
@@ -81,6 +83,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentException>(retentionDays > 0);
+            EnsureNotDisposed();
 
             try
             {
@@ -115,6 +118,7 @@ namespace Neon.Cadence
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            EnsureNotDisposed();
 
             var domainDescribeRequest =
                 new DomainDescribeRequest()
@@ -152,6 +156,7 @@ namespace Neon.Cadence
         public async Task<DomainDescription> DescribeDomainByIdAsync(string uuid)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid));
+            EnsureNotDisposed();
 
             var domainDescribeRequest =
                 new DomainDescribeRequest()
@@ -193,6 +198,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentNullException>(request.Options != null);
             Covenant.Requires<ArgumentNullException>(request.DomainInfo != null);
+            EnsureNotDisposed();
 
             var domainUpdateRequest 
                 = new DomainUpdateRequest()

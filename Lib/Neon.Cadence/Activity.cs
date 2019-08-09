@@ -111,6 +111,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SendHeartbeatAsync(byte[] details = null)
         {
+            Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
             var reply = (ActivityRecordHeartbeatReply)await Client.CallProxyAsync(
@@ -136,6 +137,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<bool> HasLastHeartbeatDetailsAsync()
         {
+            Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
             var reply = (ActivityHasHeartbeatDetailsReply)await Client.CallProxyAsync(
@@ -162,6 +164,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<byte[]> GetLastHeartbeatDetailsAsync()
         {
+            Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
             var reply = (ActivityGetHeartbeatDetailsReply)await Client.CallProxyAsync(
@@ -193,6 +196,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task CompleteExternallyAsync()
         {
+            Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
             await global::System.Threading.Tasks.Task.CompletedTask;

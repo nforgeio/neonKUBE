@@ -60,6 +60,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateActivityImplementation(typeof(TActivity));
             CadenceHelper.ValidateActivityTypeName(activityTypeName);
+            EnsureNotDisposed();
 
             if (activityWorkerStarted)
             {
@@ -101,6 +102,7 @@ namespace Neon.Cadence
         public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(assembly != null);
+            EnsureNotDisposed();
 
             if (activityWorkerStarted)
             {
@@ -129,7 +131,8 @@ namespace Neon.Cadence
         public async Task RecordActivityHeartbeatAsync(byte[] taskToken, byte[] details = null)
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
-            
+            EnsureNotDisposed();
+
             var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {
@@ -154,6 +157,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+            EnsureNotDisposed();
 
             var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
@@ -178,6 +182,7 @@ namespace Neon.Cadence
         public async Task RespondActivityCompletedAsync(byte[] taskToken, byte[] result = null)
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+            EnsureNotDisposed();
 
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
@@ -204,6 +209,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+            EnsureNotDisposed();
 
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
@@ -227,6 +233,7 @@ namespace Neon.Cadence
         public async Task RespondActivityCancelAsync(byte[] taskToken)
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
+            EnsureNotDisposed();
 
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
@@ -252,6 +259,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
+            EnsureNotDisposed();
 
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
@@ -277,6 +285,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(taskToken != null && taskToken.Length > 0);
             Covenant.Requires<ArgumentNullException>(error != null);
+            EnsureNotDisposed();
 
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
@@ -304,6 +313,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             Covenant.Requires<ArgumentNullException>(error != null);
+            EnsureNotDisposed();
 
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()

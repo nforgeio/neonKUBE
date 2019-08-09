@@ -999,6 +999,18 @@ namespace Neon.Cadence
         public event CadenceClosedDelegate ConnectionClosed;
 
         /// <summary>
+        /// Ensures that that client instance is not disposed.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown if the client is disposed.</exception>
+        internal void EnsureNotDisposed()
+        {
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(CadenceClient));
+            }
+        }
+
+        /// <summary>
         /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already
         /// been raised.
         /// </summary>
@@ -1060,6 +1072,8 @@ namespace Neon.Cadence
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default task list are both null or empty.</exception>
         internal string ResolveTaskList(string taskList)
         {
+            EnsureNotDisposed();
+
             if (!string.IsNullOrEmpty(taskList))
             {
                 return taskList;
@@ -1083,6 +1097,8 @@ namespace Neon.Cadence
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domain are both null or empty.</exception>
         internal string ResolveDomain(string domain)
         {
+            EnsureNotDisposed();
+
             if (!string.IsNullOrEmpty(domain))
             {
                 return domain;
@@ -1386,7 +1402,7 @@ namespace Neon.Cadence
 
                     try
                     {
-                        while (!closingConnection)
+                        while (!closingConnection && !isDisposed)
                         {
                             Thread.Sleep(sleepTime);
 
@@ -1453,7 +1469,7 @@ namespace Neon.Cadence
 
             try
             {
-                while (!closingConnection)
+                while (!closingConnection && !isDisposed)
                 {
                     Thread.Sleep(sleepTime);
 
