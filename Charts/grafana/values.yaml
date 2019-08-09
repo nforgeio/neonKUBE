@@ -345,6 +345,16 @@ grafana.ini:
     mode: console
   grafana_net:
     url: https://grafana.net
+  auth.proxy:
+    # Defaults to false, but set to true to enable this feature
+    enabled: true
+    # HTTP Header name that will contain the username or email
+    header_name: X-WEBAUTH-USER
+    # HTTP Header property, defaults to `username` but can also be `email`
+    header_property: username
+    # Set to `true` to enable auto sign up of users who do not exist in Grafana DB. Defaults to `true`.
+    auto_sign_up: true
+
 ## LDAP Authentication can be enabled with the following values on grafana.ini
 ## NOTE: Grafana will fail to start if the value for ldap.toml is invalid
   # auth.ldap:
