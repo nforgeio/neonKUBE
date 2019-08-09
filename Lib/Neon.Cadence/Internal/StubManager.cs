@@ -181,7 +181,7 @@ namespace Neon.Cadence.Internal
                 var clientType   = typeof(CadenceClient);
                 var workflowType = typeof(Workflow);
 
-                startWorkflowAsync           = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(string), typeof(WorkflowOptions), typeof(string));
+                startWorkflowAsync           = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(WorkflowOptions), typeof(string));
                 getWorkflowDescriptionAsync  = NeonHelper.GetMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
                 getWorkflowResultAsync       = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
                 cancelWorkflowAsync          = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
@@ -197,9 +197,9 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, string taskList, WorkflowOptions options, string domain)
+            public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, WorkflowOptions options, string domain)
             {
-                return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, taskList, options, domain });
+                return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, options, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -498,7 +498,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private string                workflowTypeName;");
             sbSource.AppendLine($"        private WorkflowOptions       options;");
             sbSource.AppendLine($"        private ChildWorkflowOptions  childOptions;");
-            sbSource.AppendLine($"        private string                taskList;");
             sbSource.AppendLine($"        private string                domain;");
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
 
@@ -511,7 +510,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
             sbSource.AppendLine($"            this.options          = options ?? new WorkflowOptions();");
-            sbSource.AppendLine($"            this.taskList         = ___StubHelpers.ResolveTaskList(client, this.options.TaskList);");
             sbSource.AppendLine($"            this.domain           = ___StubHelpers.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
@@ -524,7 +522,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
             sbSource.AppendLine($"            this.childOptions     = options ?? new ChildWorkflowOptions();");
-            sbSource.AppendLine($"            this.taskList         = ___StubHelpers.ResolveTaskList(client, this.childOptions.TaskList);");
             sbSource.AppendLine($"            this.domain           = ___StubHelpers.ResolveDomain(client, this.childOptions.Domain);");
             sbSource.AppendLine($"        }}");
 
@@ -577,16 +574,15 @@ namespace Neon.Cadence.Internal
                 }
 
                 sbSource.AppendLine($"            var ___options          = this.options.Clone();");
-                sbSource.AppendLine($"            var ___taskList         = this.taskList;");
 
                 if (details.WorkflowMethodAttribute != null)
                 {
                     if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.TaskList))
                     {
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (string.IsNullOrEmpty(___taskList))");
+                        sbSource.AppendLine($"            if (string.IsNullOrEmpty(options.TaskList))");
                         sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___taskList = {StringLiteral(details.WorkflowMethodAttribute.TaskList)};");
+                        sbSource.AppendLine($"                options.TaskList = {StringLiteral(details.WorkflowMethodAttribute.TaskList)};");
                         sbSource.AppendLine($"            }}");
                     }
 
@@ -638,7 +634,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                sbSource.AppendLine($"            this.execution     = await ___StubHelpers.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___taskList, ___options, this.domain);");
+                sbSource.AppendLine($"            this.execution     = await ___StubHelpers.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options, this.domain);");
                 sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
 
                 if (!details.IsVoid)

@@ -55,7 +55,6 @@ namespace Neon.Cadence
         // Instance members
 
         private CadenceClient   client;
-        private string          taskList;
         private string          domain;
 
         /// <summary>
@@ -70,7 +69,6 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
             this.client           = client;
@@ -194,7 +192,7 @@ namespace Neon.Cadence
 
             var argBytes = client.DataConverter.ToData(args);
 
-            return await client.StartWorkflowAsync(WorkflowTypeName, argBytes, taskList, Options, domain);
+            return await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options, domain);
         }
     }
 }
