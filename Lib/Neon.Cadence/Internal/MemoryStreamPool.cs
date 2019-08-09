@@ -69,12 +69,20 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Frees the stream by adding it back to the pool.
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="stream">The stream being freed.</param>
         public static void Free(MemoryStream stream)
         {
             Covenant.Requires<ArgumentNullException>(stream != null);
 
+            // We're going to limit the capacity of cached streams to 64KiB to
+            // prevent the accumulation of cached streams with very large buffers.
+
             stream.SetLength(0);
+
+            if (stream.Capacity > 64 * 1024)
+            {
+                stream.Capacity = 64 * 1024;
+            }
 
             lock (poolStack)
             {

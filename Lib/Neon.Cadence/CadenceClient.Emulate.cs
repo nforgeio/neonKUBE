@@ -357,22 +357,48 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnEchoRequestAsync(HttpContext context)
         {
-            var request        = context.Request;
-            var response       = context.Response;
-            var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(request.Body);
-            var clonedMessage  = requestMessage.Clone();
+            // $hack(jeff.lill):
+            //
+            // We need to receive the entire request body before deserializing the
+            // the message because BinaryReader doesn't seem to play nice with reading
+            // from the body stream.  We're seeing EndOfStream exceptions when we try
+            // to read more than about 64KiB bytes of data which is the default size
+            // of the Kestrel receive buffer.  This suggests that there's some kind
+            // of problem reading the next buffer from the request socket.
+            //
+            // This isn't a huge issue since we're going to convert cadence-proxy into
+            // a shared library where we'll be passing message buffers directly.
 
-            response.ContentType = ProxyMessage.ContentType;
-
-            var stream = clonedMessage.SerializeAsStream();
+            var bodyStream = MemoryStreamPool.Alloc();
 
             try
             {
-                await stream.CopyToAsync(response.Body);
+                var request  = context.Request;
+                var response = context.Response;
+
+                await request.Body.CopyToAsync(bodyStream);
+
+                bodyStream.Position = 0;
+
+                var requestMessage = ProxyMessage.Deserialize<ProxyMessage>(bodyStream);
+                var clonedMessage  = requestMessage.Clone();
+
+                response.ContentType = ProxyMessage.ContentType;
+
+                var stream = clonedMessage.SerializeAsStream();
+
+                try
+                {
+                    await stream.CopyToAsync(response.Body);
+                }
+                finally
+                {
+                    MemoryStreamPool.Free(stream);
+                }
             }
             finally
             {
-                MemoryStreamPool.Free(stream);
+                MemoryStreamPool.Free(bodyStream);
             }
         }
 

@@ -858,13 +858,13 @@ namespace TestCadence
         public async Task Workflow_Echo()
         {
             // Verify that we send and receive varying sizes of content, from
-            // very small to pretty large (100MiB).
+            // very small to pretty large (10MiB).
 
             var rand = new Random();
 
             Assert.Null(await client.NewWorkflowStub<IWorkflowEcho>().EchoAsync(null));
 
-            for (int size = 1024; size <= 100 * 1024 * 1024; size *= 2)
+            for (int size = 1024; size <= 10 * 1024 * 1024; size *= 2)
             {
                 var value = new byte[size];
 

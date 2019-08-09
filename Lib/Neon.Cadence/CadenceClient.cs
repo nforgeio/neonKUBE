@@ -246,6 +246,20 @@ namespace Neon.Cadence
         /// </summary>
         private const int debugClientPort = 5001;
 
+        /// <summary>
+        /// <para>
+        /// We're going to configure Kestrel to allow message bodies
+        /// of up to 15MB.  This was chosen to so that messages with
+        /// byte arrays of up to about 10MiB can be encoded as base-64
+        /// while leaving some space for JSON overhead and other properties.
+        /// </para>
+        /// <para>
+        /// We're just going to hardcode this because this won't be an
+        /// issue when we convert cadence-proxy into a shared library.
+        /// </para>
+        /// </summary>
+        private const int maxHttpRequestSize = 15000000;
+
         //---------------------------------------------------------------------
         // Private types
 
@@ -665,6 +679,7 @@ namespace Neon.Cadence
                 .UseKestrel(
                     options =>
                     {
+                        options.Limits.MaxRequestBodySize = maxHttpRequestSize;
                         options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
                     })
                 .ConfigureServices(
@@ -704,6 +719,7 @@ namespace Neon.Cadence
                     .UseKestrel(
                         options =>
                         {
+                            options.Limits.MaxRequestBodySize = maxHttpRequestSize;
                             options.Listen(address, proxyPort);
                         })
                     .ConfigureServices(
@@ -867,7 +883,11 @@ namespace Neon.Cadence
 
                     lock (staticSyncLock)
                     {
-                        if (!isDisposed)
+                        if (isDisposed)
+                        {
+                            return;
+                        }
+                        else
                         {
                             isDisposed = true;
                             clientCount--;
@@ -898,7 +918,7 @@ namespace Neon.Cadence
                                     proxyProcess.Kill();
                                 }
 
-                                proxyProcess     = null;
+                                proxyProcess = null;
                                 proxyInitialized = false;
                             }
                         }
@@ -1154,77 +1174,103 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task OnRootRequestAsync(HttpContext context)
         {
-            var httpRequest  = context.Request;
-            var httpResponse = context.Response;
-            var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(httpRequest.Body);
-            var request      = proxyMessage as ProxyRequest;
-            var reply        = proxyMessage as ProxyReply;
+            // $hack(jeff.lill):
+            //
+            // We need to receive the entire request body before deserializing the
+            // the message because BinaryReader doesn't seem to play nice with reading
+            // from the body stream.  We're seeing EndOfStream exceptions when we try
+            // to read more than about 64KiB bytes of data which is the default size
+            // of the Kestrel receive buffer.  This suggests that there's some kind
+            // of problem reading the next buffer from the request socket.
+            //
+            // This isn't a huge issue since we're going to convert cadence-proxy into
+            // a shared library where we'll be passing message buffers directly.
 
-            if (request != null)
+            var bodyStream = MemoryStreamPool.Alloc();
+
+            try
             {
-                // [cadence-proxy] has sent us a request.
+                var httpRequest  = context.Request;
+                var httpResponse = context.Response;
 
-                switch (request.Type)
+                await httpRequest.Body.CopyToAsync(bodyStream);
+
+                bodyStream.Position = 0;
+
+                var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(bodyStream);
+                var request      = proxyMessage as ProxyRequest;
+                var reply        = proxyMessage as ProxyReply;
+
+                if (request != null)
                 {
-                    case InternalMessageTypes.WorkflowInvokeRequest:
-                    case InternalMessageTypes.WorkflowSignalInvokeRequest:
-                    case InternalMessageTypes.WorkflowQueryInvokeRequest:
-                    case InternalMessageTypes.ActivityInvokeLocalRequest:
-                    case InternalMessageTypes.WorkflowFutureReadyRequest:
+                    // [cadence-proxy] has sent us a request.
 
-                        await WorkflowBase.OnProxyRequestAsync(this, request);
-                        break;
-
-                    case InternalMessageTypes.ActivityInvokeRequest:
-                    case InternalMessageTypes.ActivityStoppingRequest:
-
-                        await ActivityBase.OnProxyRequestAsync(this, request);
-                        break;
-
-                    default:
-
-                        httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                        await httpResponse.WriteAsync($"[cadence-client] Does not support [{request.Type}] messages from the [cadence-proxy].");
-                        break;
-                }
-            }
-            else if (reply != null)
-            {
-                // [cadence-proxy] sent a reply to a request from the client.
-
-                Operation operation;
-
-                lock (syncLock)
-                {
-                    operations.TryGetValue(reply.RequestId, out operation);
-                }
-
-                if (operation != null)
-                {
-                    if (reply.Type != operation.Request.ReplyType)
+                    switch (request.Type)
                     {
-                        httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                        await httpResponse.WriteAsync($"[cadence-client] has a request [type={operation.Request.Type}, requestId={operation.RequestId}] pending but reply [type={reply.Type}] is not valid and will be ignored.");
+                        case InternalMessageTypes.WorkflowInvokeRequest:
+                        case InternalMessageTypes.WorkflowSignalInvokeRequest:
+                        case InternalMessageTypes.WorkflowQueryInvokeRequest:
+                        case InternalMessageTypes.ActivityInvokeLocalRequest:
+                        case InternalMessageTypes.WorkflowFutureReadyRequest:
+
+                            await WorkflowBase.OnProxyRequestAsync(this, request);
+                            break;
+
+                        case InternalMessageTypes.ActivityInvokeRequest:
+                        case InternalMessageTypes.ActivityStoppingRequest:
+
+                            await ActivityBase.OnProxyRequestAsync(this, request);
+                            break;
+
+                        default:
+
+                            httpResponse.StatusCode = StatusCodes.Status400BadRequest;
+                            await httpResponse.WriteAsync($"[cadence-client] Does not support [{request.Type}] messages from the [cadence-proxy].");
+                            break;
+                    }
+                }
+                else if (reply != null)
+                {
+                    // [cadence-proxy] sent a reply to a request from the client.
+
+                    Operation operation;
+
+                    lock (syncLock)
+                    {
+                        operations.TryGetValue(reply.RequestId, out operation);
+                    }
+
+                    if (operation != null)
+                    {
+                        if (reply.Type != operation.Request.ReplyType)
+                        {
+                            httpResponse.StatusCode = StatusCodes.Status400BadRequest;
+                            await httpResponse.WriteAsync($"[cadence-client] has a request [type={operation.Request.Type}, requestId={operation.RequestId}] pending but reply [type={reply.Type}] is not valid and will be ignored.");
+                        }
+                        else
+                        {
+                            operation.SetReply(reply);
+                            httpResponse.StatusCode = StatusCodes.Status200OK;
+                        }
                     }
                     else
                     {
-                        operation.SetReply(reply);
-                        httpResponse.StatusCode = StatusCodes.Status200OK;
+                        log.LogWarn(() => $"Reply [type={reply.Type}, requestId={reply.RequestId}] does not map to a pending operation and will be ignored.");
+
+                        httpResponse.StatusCode = StatusCodes.Status400BadRequest;
+                        await httpResponse.WriteAsync($"[cadence-client] does not have a pending operation with [requestId={reply.RequestId}].");
                     }
                 }
                 else
                 {
-                    log.LogWarn(() => $"Reply [type={reply.Type}, requestId={reply.RequestId}] does not map to a pending operation and will be ignored.");
+                    // We should never see this.
 
-                    httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                    await httpResponse.WriteAsync($"[cadence-client] does not have a pending operation with [requestId={reply.RequestId}].");
+                    Covenant.Assert(false);
                 }
             }
-            else
+            finally
             {
-                // We should never see this.
-
-                Covenant.Assert(false);
+                MemoryStreamPool.Free(bodyStream);
             }
 
             await Task.CompletedTask;
