@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -741,6 +742,36 @@ namespace TestCadence
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync(min, max) returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
         }
 
+        private class BytesHolder
+        {
+            public BytesHolder(byte[] bytes)
+            {
+                Covenant.Requires<ArgumentNullException>(bytes != null);
+                Covenant.Requires<ArgumentException>(bytes.Length > 4);
+
+                this.Bytes = bytes;
+            }
+
+            public byte[] Bytes { get; private set; }
+
+            public override int GetHashCode()
+            {
+                return (Bytes[0] << 24) | (Bytes[1] << 16) | (Bytes[2] << 8) | Bytes[3];
+            }
+
+            public override bool Equals(object obj)
+            {
+                var other = obj as BytesHolder;
+
+                if (other == null)
+                {
+                    return false;
+                }
+
+                return NeonHelper.ArrayEquals(this.Bytes, other.Bytes);
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_NextRandomBytes()
@@ -753,9 +784,10 @@ namespace TestCadence
             // to seed the random number generators the same or just got incrdeably lucky but
             // I'm going to generate enough samples so this should be very unlikely.
 
-            const int size = 64;
+            const int size = 32;
 
             var samples1   = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomBytesAsync(RandomSampleCount, size);
+            var sampleSet  = new HashSet<BytesHolder>();
             var duplicates = 0;
 
             Assert.Equal(RandomSampleCount, samples1.Count);
@@ -764,13 +796,15 @@ namespace TestCadence
             {
                 Assert.Equal(size, sample.Length);
 
-                foreach (var item in samples1)
+                var holder = new BytesHolder(sample);
+
+                if (sampleSet.Contains(holder))
                 {
-                    if (NeonHelper.ArrayEquals(sample, item))
-                    {
-                        duplicates++;
-                        break;
-                    }
+                    duplicates++;
+                }
+                else
+                {
+                    sampleSet.Add(holder);
                 }
             }
 
@@ -800,6 +834,43 @@ namespace TestCadence
             }
 
             Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowEcho : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<byte[]> EchoAsync(byte[] contents);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowEcho : WorkflowBase, IWorkflowEcho
+        {
+            public async Task<byte[]> EchoAsync(byte[] contents)
+            {
+                return await Task.FromResult(contents);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Echo()
+        {
+            // Verify that we send and receive varying sizes of content, from
+            // very small to pretty large (100MiB).
+
+            var rand = new Random();
+
+            Assert.Null(await client.NewWorkflowStub<IWorkflowEcho>().EchoAsync(null));
+
+            for (int size = 1024; size <= 100 * 1024 * 1024; size *= 2)
+            {
+                var value = new byte[size];
+
+                rand.NextBytes(value);
+                Assert.Equal(value, await client.NewWorkflowStub<IWorkflowEcho>().EchoAsync(value));
+            }
         }
     }
 }
