@@ -35,8 +35,9 @@ namespace Neon.Cadence
     {
         private string      name;
         private int  	    executionStartToCloseTimeoutSeconds;
-        private string      taskList;
         private int         taskStartToCloseTimeoutSeconds;
+        private int         scheduleToStartTimeoutSeconds;
+        private string      taskList;
         private string      workflowId;
 
         /// <summary>
@@ -61,7 +62,7 @@ namespace Neon.Cadence
         /// </code>
         /// <para>
         /// where <b>WORKFLOW_TYPENAME</b> is either the workflow interface's fully qualified 
-        /// name or the name specified by <see cref="WorkflowAttribute.TypeName"/> and 
+        /// name or the name specified by <see cref="WorkflowAttribute.Name"/> and 
         /// <b>METHOD_NAME</b> is from <see cref="WorkflowMethodAttribute.Name"/>.  This
         /// is the same convention implemented by the Java client.
         /// </para>
@@ -124,10 +125,27 @@ namespace Neon.Cadence
 
             set
             {
-                Covenant.Requires<ArgumentException>(value <= 60, $"[TaskStartToCloseTimeoutSeconds={value}] exceeds 60 seconds, the maximum allowed.");
+                Covenant.Requires<ArgumentException>(value <= 60, $"[TaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
 
                 taskStartToCloseTimeoutSeconds = Math.Max(value, 0);
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the maximum time a workflow can wait
+        /// between being scheduled and being actually scheduled on a
+        /// worker.
+        /// </para>
+        /// <note>
+        /// This can be overridden when the workflow is executed using
+        /// <see cref="WorkflowOptions"/>,
+        /// </note>
+        /// </summary>
+        public int ScheduleToStartTimeoutSeconds
+        {
+            get => scheduleToStartTimeoutSeconds;
+            set => scheduleToStartTimeoutSeconds = Math.Max(value, 0);
         }
 
         /// <summary>

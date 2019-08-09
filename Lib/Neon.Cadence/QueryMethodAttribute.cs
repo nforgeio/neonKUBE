@@ -35,12 +35,12 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="Name">Specifies the Cadence query type.</param>
-        public QueryMethodAttribute(string Name)
+        /// <param name="name">Specifies the Cadence query type.</param>
+        public QueryMethodAttribute(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(Name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            this.Name = Name;
+            this.Name = name;
         }
 
         /// <summary>

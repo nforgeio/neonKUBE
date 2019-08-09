@@ -108,21 +108,11 @@ namespace Neon.Cadence
             {
                 var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
 
-                if (workflowAttribute != null)
+                if (workflowAttribute != null && workflowAttribute.AutoRegister)
                 {
-                    if (type.BaseType == typeof(WorkflowBase))
-                    {
-                        if (workflowAttribute.AutoRegister)
-                        {
-                            var workflowTypeName = CadenceHelper.GetWorkflowTypeName(type, workflowAttribute);
+                    var workflowTypeName = CadenceHelper.GetWorkflowTypeName(type, workflowAttribute);
 
-                            await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
-                        }
-                    }
-                    else
-                    {
-                        throw new TypeLoadException($"Type [{type.FullName}] is tagged by [{nameof(WorkflowAttribute)}] but is not derived from [{nameof(WorkflowBase)}].");
-                    }
+                    await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
                 }
             }
         }
@@ -168,7 +158,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Creates an untyped stub that can be used to execute, query, and signal a new workflow
-        /// specified using a generic type parameter.
+        /// specified using raw bytes.
         /// </summary>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
@@ -206,7 +196,7 @@ namespace Neon.Cadence
         /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
         /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
         /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.TypeName"/>.
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
         /// </para>
         /// <para>
         /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
@@ -281,7 +271,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
 
-            return StubManager.CreateWorkflowStub<TWorkflowInterface>(this);
+            return StubManager.CreateWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName, domain: domain);
         }
 
         //---------------------------------------------------------------------
@@ -297,7 +287,6 @@ namespace Neon.Cadence
         /// this may have been customized when the workflow worker was registered.
         /// </param>
         /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
-        /// <param name="taskList">Optionally specifies the target task list.  This defaults to the client task list.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <param name="domain">Optionally specifies the Cadence domain where the workflow will run.  This defaults to the client domain.</param>
         /// <returns>A <see cref="WorkflowExecution"/> identifying the new running workflow instance.</returns>
@@ -309,11 +298,32 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args = null, WorkflowOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
 
             options = options ?? new WorkflowOptions();
+            options = options.Clone();
+
+            if (!options.ExecutionStartToCloseTimeout.HasValue)
+            {
+                options.ExecutionStartToCloseTimeout = Settings.WorkflowScheduleToCloseTimeout;
+            }
+
+            if (!options.ScheduleToStartTimeout.HasValue)
+            {
+                options.ScheduleToStartTimeout = Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (!options.TaskStartToCloseTimeout.HasValue)
+            {
+                options.TaskStartToCloseTimeout = Settings.WorkflowTaskStartToCloseTimeout;
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                options.TaskList = Settings.DefaultTaskList;
+            }
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
@@ -321,7 +331,7 @@ namespace Neon.Cadence
                     Workflow = workflowTypeName,
                     Domain   = domain ?? Settings.DefaultDomain,
                     Args     = args,
-                    Options  = options.ToInternal(this, taskList)
+                    Options  = options.ToInternal(this)
                 });
 
             reply.ThrowOnError();
@@ -385,14 +395,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Cancels a workflow if it has not already finished.
-        /// </para>
-        /// <note>
-        /// Workflow cancellation is typically considered to be a normal activity
-        /// and not an error as opposed to workflow termination which will usually
-        /// happen due to an error.
-        /// </note>
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="domain">Optionally identifies the domain.  This defaults to the client domain.</param>
@@ -416,13 +419,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Cancels a workflow if it has not already finished.
-        /// </para>
-        /// <note>
-        /// Workflow termination is typically considered to be due to an error as
-        /// opposed to cancellation which is usually considered as a normal activity.
-        /// </note>
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
@@ -499,7 +496,7 @@ namespace Neon.Cadence
                 new WorkflowSignalWithStartRequest()
                 {
                     WorkflowId   = options.WorkflowId,
-                    Options      = options.ToInternal(this, taskList),
+                    Options      = options.ToInternal(this),
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
                     WorkflowArgs = startArgs,

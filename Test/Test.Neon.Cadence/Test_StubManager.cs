@@ -72,9 +72,9 @@ namespace TestCadence
         //---------------------------------------------------------------------
         // Implementation
 
-        CadenceFixture fixture;
-        CadenceClient       client;
-        HttpClient          proxyClient;
+        private CadenceFixture  fixture;
+        private CadenceClient   client;
+        private HttpClient      proxyClient;
 
         public Test_StubManager(CadenceFixture fixture)
         {
@@ -88,7 +88,7 @@ namespace TestCadence
             fixture.Start(settings, keepConnection: true);
 
             this.fixture     = fixture;
-            this.client      = fixture.Connection;
+            this.client      = fixture.Client;
             this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
         }
 

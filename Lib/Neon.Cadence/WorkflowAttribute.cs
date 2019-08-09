@@ -28,7 +28,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Use this to tag workflow implementations that inherit from
+    /// Used to tag workflow implementations that inherit from
     /// <see cref="WorkflowBase"/> to customize the how the workflow is
     /// registered.
     /// </summary>
@@ -38,23 +38,23 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="typeName">
+        /// <param name="name">
         /// Optionally specifies the workflow type name to override the
         /// tagged type's fully qualified name as the workflow type
         /// name used to register the type with Cadence.
         /// </param>
-        public WorkflowAttribute(string typeName = null)
+        public WorkflowAttribute(string name = null)
         {
-            CadenceHelper.ValidateWorkflowTypeName(typeName);
+            CadenceHelper.ValidateWorkflowTypeName(name);
 
-            this.TypeName = typeName;
+            this.Name = name;
         }
 
         /// <summary>
         /// Returns the type name.  This defaults to the fully qualified name
         /// of the tagged workflow type.
         /// </summary>
-        public string TypeName { get; private set; } = null;
+        public string Name { get; private set; } = null;
 
         /// <summary>
         /// Indicates that <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> will

@@ -38,7 +38,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Specifies the maximum time the activity can run.
+        /// Optionally specifies the maximum time the activity can run.
         /// </summary>
         public TimeSpan ScheduleToCloseTimeout { get; set; }
 
@@ -55,8 +55,8 @@ namespace Neon.Cadence
         {
             return new InternalLocalActivityOptions()
             {
-                ScheduleToCloseTimeoutSeconds = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
-                RetryPolicy                   = RetryOptions?.ToInternal()
+                ScheduleToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
+                RetryPolicy            = RetryOptions?.ToInternal()
             };
         }
 

@@ -179,7 +179,7 @@ namespace Neon.Cadence
         {
             try
             {
-                if (Interlocked.Increment(ref pendingOperationCount) > 0)
+                if (Interlocked.Increment(ref pendingOperationCount) > 1)
                 {
                     throw new WorkflowParallelOperationException();
                 }
@@ -698,7 +698,7 @@ namespace Neon.Cadence
         /// will generally see different sequences of random numbers.
         /// </note>
         /// </remarks>
-        public async Task<double> NextRandomDouble()
+        public async Task<double> NextRandomDoubleAsync()
         {
             return await SideEffectAsync(() => random.NextDouble());
         }
@@ -985,6 +985,14 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="time">The wake time.</param>
         /// <returns>The tracking <see cref="Task"/></returns>
+        /// <remarks>
+        /// <note>
+        /// Cadence timers have a resolution of only one second at this time
+        /// and due to processing delays, it's very possible that the workflow
+        /// will wake several seconds later than scheduled.  You should not
+        /// depend on time resolutions less than around 10 seconds.
+        /// </note>
+        /// </remarks>
         public async Task SleepUntilUtcAsync(DateTime time)
         {
             var utcNow = await UtcNowAsync();
@@ -996,38 +1004,51 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Executes a workflow activity.  This is called from generated activity stubs.
+        /// Determines whether a previous run of the current CRON workflow completed
+        /// and returned a result.
         /// </summary>
-        /// <param name="activityTypeName">The activity type name.</param>
-        /// <param name="args">The activity arguments encoded as a byte array.</param>
-        /// <param name="options">Optionally specifies the activity options.</param>
-        /// <param name="domain">Optionally specifies the activity domain.</param>
-        /// <returns>The activity result encoded as a byte array</returns>
-        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options = null, string domain = null)
+        /// <returns><c>true</c> if the a previous CRON workflow run returned a result.</returns>
+        public async Task<bool> IsSetLastCompletionResultAsync()
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
-            Covenant.Requires<ArgumentNullException>(args != null);
-
-            options          = options ?? new ActivityOptions();
-            options.TaskList = Client.ResolveTaskList(options.TaskList);
-
             var reply = await ExecuteNonParallel(
                 async () =>
-                    {
-                        return (ActivityExecuteReply)await Client.CallProxyAsync(
-                            new ActivityExecuteRequest()
-                            {
-                                Activity = activityTypeName,
-                                Args = args,
-                                Options = options.ToInternal(),
-                                ContextId = contextId
-                            });
-                    });
+                {
+                    return (WorkflowHasLastResultReply)await Client.CallProxyAsync(
+                        new WorkflowHasLastResultRequest()
+                        {
+                            ContextId = contextId
+                        });
+                });
 
             reply.ThrowOnError();
             UpdateReplay(reply);
 
-            return reply.Result;
+            return reply.HasResult;
+        }
+
+        /// <summary>
+        /// Returns the result of the last run of the current CRON workflow or
+        /// <c>null</c>.  This is useful  for CRON workflows that would like to
+        /// pass information from from one workflow run to the next.
+        /// </summary>
+        /// <typeparam name="TResult">The expected result type.</typeparam>
+        /// <returns>The previous run result as bytes or <c>null</c>.</returns>
+        public async Task<TResult> GetLastCompletionResultAsync<TResult>()
+        {
+            var reply = await ExecuteNonParallel(
+                async () =>
+                {
+                    return (WorkflowGetLastLastReply)await Client.CallProxyAsync(
+                        new WorkflowGetLastResultRequest()
+                        {
+                            ContextId = contextId
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return Client.DataConverter.FromData<TResult>(reply.Result);
         }
 
         //---------------------------------------------------------------------
@@ -1039,6 +1060,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="domain">Optionally overrides the parent workflow's domain.</param>
         /// <returns>The new <see cref="IActivityStub"/>.</returns>
         /// <remarks>
         /// <note>
@@ -1047,15 +1069,16 @@ namespace Neon.Cadence
         /// </note>
         /// <para>
         /// Activities launched by the returned stub will be scheduled normally
-        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivityInterface}(ActivityOptions)"/>
+        /// by Cadence to executed on one of the worker nodes.  Use 
+        /// <see cref="NewLocalActivityStub{TActivityInterface, TActivityImplementation}(LocalActivityOptions)"/>
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
-        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null) 
+        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null, string domain = null)
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
-            throw new NotImplementedException();
+            return StubManager.CreateActivityStub<TActivityInterface>(Client, this, options, domain);
         }
 
         /// <summary>
@@ -1063,7 +1086,7 @@ namespace Neon.Cadence
         /// workflows via the type-safe workflow interface methods.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <param name="options"></param>
+        /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The child workflow stub.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -1132,6 +1155,7 @@ namespace Neon.Cadence
         /// instances via the type-safe interface methods.
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
+        /// <typeparam name="TActivityImplementation">The activity implementation.</typeparam>
         /// <param name="options">Optionally specifies activity options.</param>
         /// <returns>The new <see cref="IActivityStub"/>.</returns>
         /// <remarks>
@@ -1153,7 +1177,7 @@ namespace Neon.Cadence
         ///     Local activity types do not need to be registered and local activities.
         ///     </item>
         ///     <item>
-        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskStartToCloseTimeout"/>.
+        ///     Local activities must complete within the <see cref="WorkflowOptions.TaskStartToCloseTimeout"/>.
         ///     This defaults to 10 seconds and can be set to a maximum of 60 seconds.
         ///     </item>
         ///     <item>
@@ -1161,11 +1185,13 @@ namespace Neon.Cadence
         ///     </item>
         /// </list>
         /// </remarks>
-        public TActivityInterface NewLocalActivityStub<TActivityInterface>(ActivityOptions options = null) 
+        public TActivityInterface NewLocalActivityStub<TActivityInterface, TActivityImplementation>(LocalActivityOptions options = null)
+            where TActivityInterface : class
+            where TActivityImplementation : TActivityInterface
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
 
-            throw new NotImplementedException();
+            return StubManager.CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
 
         /// <summary>
@@ -1180,7 +1206,8 @@ namespace Neon.Cadence
         /// </note>
         /// <para>
         /// Activities launched by the returned stub will be scheduled normally
-        /// by Cadence to executed on one of the worker nodes.  Use <see cref="NewLocalActivityStub{TActivityInterface}(ActivityOptions)"/>
+        /// by Cadence to executed on one of the worker nodes.  Use
+        /// <see cref="NewLocalActivityStub{TActivityInterface, TActivityImplementation}(LocalActivityOptions)"/>
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
@@ -1207,7 +1234,7 @@ namespace Neon.Cadence
         /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
         /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
         /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.TypeName"/>.
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
         /// </para>
         /// <para>
         /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
@@ -1259,6 +1286,7 @@ namespace Neon.Cadence
         /// <param name="activityTypeName">Identifies the activity.</param>
         /// <param name="args">Optionally specifies the activity arguments.</param>
         /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="domain">Optionally overrides the parent workflow's domain.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="CadenceException">
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
@@ -1268,19 +1296,42 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
+        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
 
             options = options ?? new ActivityOptions();
+            options = options.Clone();
+
+            if (options.HeartbeatTimeout <= TimeSpan.Zero)
+            {
+                options.HeartbeatTimeout = Client.Settings.ActivityHeartbeatTimeout;
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToStartTimeout = Client.Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.StartToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
+            }
 
             var reply = (ActivityExecuteReply)await Client.CallProxyAsync(
                 new ActivityExecuteRequest()
                 {
-                    ContextId = contextId,
-                    Activity  = activityTypeName,
-                    Args      = args,
-                    Options   = options.ToInternal()
+                    ContextId              = contextId,
+                    Activity               = activityTypeName,
+                    Args                   = args,
+                    Options                = options.ToInternal(),
+                    Domain                 = domain,
+                    ScheduleToStartTimeout = options.ScheduleToStartTimeout
                 });
 
             reply.ThrowOnError();
@@ -1316,16 +1367,17 @@ namespace Neon.Cadence
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.Implements<ActivityBase>());
+            Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase));
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
 
-            var d = new Dictionary<string, MethodInfo>()
-            {
-                { "xxx", (MethodInfo)null }
-            };
-
             options = options ?? new LocalActivityOptions();
+            options = options.Clone();
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
+            }
 
             // We need to register the local activity type with a workflow local ID
             // that we can send to [cadence-proxy] in the [ActivityExecuteLocalRequest]
@@ -1350,7 +1402,7 @@ namespace Neon.Cadence
                                 ContextId      = contextId,
                                 ActivityTypeId = activityActionId,
                                 Args           = args,
-                                Options        = options.ToInternal()
+                                Options        = options.ToInternal(),
                             });
                     });
 

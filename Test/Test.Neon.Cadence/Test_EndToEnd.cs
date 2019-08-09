@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_Messages.cs
+// FILE:        Test_EndToEnd.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,11 +40,16 @@ using Xunit;
 
 namespace TestCadence
 {
-    public class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
+    public partial class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
-        CadenceFixture  fixture;
-        CadenceClient   client;
-        HttpClient      proxyClient;
+        private const int maxWaitSeconds = 5;
+
+        private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
+
+        private CadenceFixture  fixture;
+        private CadenceClient   client;
+        private HttpClient      proxyClient;
 
         public Test_EndToEnd(CadenceFixture fixture)
         {
@@ -60,23 +65,30 @@ namespace TestCadence
                 Emulate                = false,
                 DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
-                DebugDisableHeartbeats = false,
+                DebugDisableHeartbeats = true,
                 //--------------------------------
             };
 
-            fixture.Start(settings, keepConnection: true);
+            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            {
+                this.fixture     = fixture;
+                this.client      = fixture.Client;
+                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
 
-            this.fixture     = fixture;
-            this.client      = fixture.Connection;
-            this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+                // Auto register the test workflow and activity implementations.
 
-            // Auto register the test workflow and activity implementations.
+                client.RegisterAssembly(Assembly.GetExecutingAssembly()).Wait();
 
-            client.RegisterAssembly(Assembly.GetExecutingAssembly()).Wait();
+                // Start the worker.
 
-            // Start the worker.
-
-            client.StartWorkerAsync().Wait();
+                client.StartWorkerAsync().Wait();
+            }
+            else
+            {
+                this.fixture     = fixture;
+                this.client      = fixture.Client;
+                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+            }
         }
 
         public void Dispose()
@@ -86,32 +98,6 @@ namespace TestCadence
                 proxyClient.Dispose();
                 proxyClient = null;
             }
-        }
-
-        //---------------------------------------------------------------------
-
-        public interface IBasicWorkflow
-        {
-            [WorkflowMethod]
-            Task<string> HelloAsync(string name);
-        }
-
-        [Workflow(AutoRegister = true)]
-        public class BasicWorkflow : WorkflowBase, IBasicWorkflow
-        {
-            public async Task<string> HelloAsync(string name)
-            {
-                return await Task.FromResult($"Hello {name}!");
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Test_Workflow_Basic()
-        {
-            var stub = client.NewWorkflowStub<IBasicWorkflow>();
-
-            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
     }
 }

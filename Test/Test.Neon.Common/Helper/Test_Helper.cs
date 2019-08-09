@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -215,6 +216,29 @@ namespace TestCommon
             Assert.False(NeonHelper.SequenceEqual(new List<string>() { "0", "1" }, (List<string>)null));
             Assert.False(NeonHelper.SequenceEqual((List<string>)null, new List<string>() { "0", "1" }));
             Assert.False(NeonHelper.SequenceEqual(new List<string>() { "0", "1" }, new List<string>() { "0" }));
+        }
+
+        private async Task GetNoResultAsync()
+        {
+            await Task.CompletedTask;
+        }
+
+        public async Task<string> GetResultAsync()
+        {
+            return await Task.FromResult("Hello World!");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public async Task GetObjectResultAsync()
+        {
+            // We should see an ArgumentException here because the task doesn't return a result.
+
+            await Assert.ThrowsAsync<ArgumentException>(async () => await NeonHelper.GetTaskResultAsObjectAsync(GetNoResultAsync()));
+
+            // This should succeed.
+
+            Assert.Equal("Hello World!", await NeonHelper.GetTaskResultAsObjectAsync(GetResultAsync()));
         }
     }
 }

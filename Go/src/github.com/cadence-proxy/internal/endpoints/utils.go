@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		common.go
+// FILE:		utils.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,75 +25,15 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
-
-	"go.uber.org/cadence/workflow"
-	"go.uber.org/zap"
 
 	globals "github.com/cadence-proxy/internal"
-	"github.com/cadence-proxy/internal/cadence/cadenceactivities"
 	"github.com/cadence-proxy/internal/cadence/cadenceclient"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
-	"github.com/cadence-proxy/internal/cadence/cadenceworkers"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
-	"github.com/cadence-proxy/internal/server"
-)
-
-var (
-
-	// logger for all endpoints to utilize
-	logger *zap.Logger
-
-	// Instance is a pointer to the server instance of the current server that the
-	// cadence-proxy is listening on.  This gets set in main.go
-	Instance *server.Instance
-
-	// replyAddress specifies the address that the Neon.Cadence library
-	// will be listening on for replies from the cadence proxy
-	replyAddress string
-
-	// terminate is a boolean that will be set after handling an incoming
-	// TerminateRequest.  A true value will indicate that the server instance
-	// needs to gracefully shut down after handling the request, and a false value
-	// indicates the server continues to run
-	terminate bool
-
-	// cadenceClientTimeout specifies the amount of time in seconds a reply has to be sent after
-	// a request has been received by the cadence-proxy
-	cadenceClientTimeout time.Duration = time.Minute
-
-	// ClientHelper is a global variable that holds this cadence-proxy's instance
-	// of the ClientHelper that will be used to create domain and workflow clients
-	// that communicate with the cadence server
-	clientHelper = cadenceclient.NewClientHelper()
-
-	// ActivityContexts maps a int64 ContextId to the cadence
-	// Activity Context passed to the cadence Activity functions.
-	// The cadence-client will use contextIds to refer to specific
-	// activity contexts when perfoming activity actions
-	ActivityContexts = new(cadenceactivities.ActivityContextsMap)
-
-	// Workers maps a int64 WorkerId to the cadence
-	// Worker returned by the Cadence NewWorker() function.
-	// This will be used to stop a worker via the
-	// StopWorkerRequest.
-	Workers = new(cadenceworkers.WorkersMap)
-
-	// WorkflowContexts maps a int64 ContextId to the cadence
-	// Workflow Context passed to the cadence Workflow functions.
-	// The cadence-client will use contextIds to refer to specific
-	// workflow ocntexts when perfoming workflow actions
-	WorkflowContexts = new(cadenceworkflows.WorkflowContextsMap)
-
-	// Operations is a map of operations used to track pending
-	// cadence-client operations
-	Operations = new(operationsMap)
-
-	// httpClient is the HTTP client used to send requests
-	// to the Neon.Cadence client
-	httpClient = http.Client{}
+	"go.uber.org/cadence/workflow"
+	"go.uber.org/zap"
 )
 
 //----------------------------------------------------------------------------
@@ -277,6 +217,28 @@ func sendMessage(message messages.IProxyMessage) {
 			logger.Error("could not close response body", zap.Error(err))
 		}
 	}()
+}
+
+func sendFutureACK(contextID, operationID, clientID int64) *Operation {
+
+	// create the WorkflowFutureReadyRequest
+	requestID := NextRequestID()
+	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
+	workflowFutureReadyRequest.SetRequestID(requestID)
+	workflowFutureReadyRequest.SetContextID(contextID)
+	workflowFutureReadyRequest.SetFutureOperationID(operationID)
+	workflowFutureReadyRequest.SetClientID(clientID)
+
+	// create the Operation for this request and add it to the operations map
+	op := NewOperation(requestID, workflowFutureReadyRequest)
+	op.SetChannel(make(chan interface{}))
+	op.SetContextID(contextID)
+	Operations.Add(requestID, op)
+
+	// send the request
+	go sendMessage(workflowFutureReadyRequest)
+
+	return op
 }
 
 func isCanceledErr(err interface{}) bool {

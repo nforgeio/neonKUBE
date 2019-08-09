@@ -1735,5 +1735,28 @@ namespace Neon.Common
 
             return constructor;
         }
+
+        /// <summary>
+        /// Used to await a generic <see cref="Task{T}"/> and return its result as
+        /// an <see cref="object"/>.  This is handy for situations where the task
+        /// result type is unknown at compile time.
+        /// </summary>
+        /// <param name="task">The <see cref="Task{T}"/>.</param>
+        /// <returns>The task result.</returns>
+        public async static Task<object> GetTaskResultAsObjectAsync(Task task)
+        {
+            Covenant.Requires<ArgumentNullException>(task != null);
+
+            await task;
+
+            var property = task.GetType().GetProperty("Result", BindingFlags.Public | BindingFlags.Instance);
+
+            if (property == null || property.PropertyType.FullName == "System.Threading.Tasks.VoidTaskResult")
+            {
+                throw new ArgumentException("Task does not return a result.");
+            }
+
+            return property.GetValue(task);
+        }
     }
 }

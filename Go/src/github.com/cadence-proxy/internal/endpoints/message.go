@@ -18,12 +18,24 @@
 package endpoints
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"runtime/debug"
+	"sync"
 
 	"go.uber.org/zap"
 
+	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
+	messagetypes "github.com/cadence-proxy/internal/messages/types"
+)
+
+var (
+
+	// Mutex lock to keep race conditions from happening
+	// when terminating the cadence-proxy
+	terminateMu sync.Mutex
 )
 
 // MessageHandler accepts an http.PUT requests and parses the
@@ -87,13 +99,17 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 	defer func() {
 
 		// close the responseChan
+		close(responseChan)
+
 		// check to see if terminate is true, if it is then gracefully
 		// shut down the server instance by sending a truth bool value
 		// to the instance's ShutdownChannel
-		close(responseChan)
+		terminateMu.Lock()
 		if terminate {
 			Instance.ShutdownChannel <- true
+			terminate = false
 		}
+		terminateMu.Unlock()
 	}()
 
 	// switch on message interface type (IProxyRequest/IProxyReply)
@@ -133,4 +149,424 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Error Handling ProxyMessage", zap.Error(err))
 	}
+}
+
+// -------------------------------------------------------------------------
+// IProxyRequest message type handler entrypoint
+
+func handleIProxyRequest(request messages.IProxyRequest) (err error) {
+	var reply messages.IProxyReply
+
+	// defer panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			reply = createReplyMessage(request)
+			err = fmt.Errorf("Panic: %v\nMessageType: %s, RequestId: %d.\n%s",
+				r,
+				request.GetType().String(),
+				request.GetRequestID(),
+				string(debug.Stack()),
+			)
+			buildReply(reply, cadenceerrors.NewCadenceError(err))
+
+			// $debug(jack.burns): DELETE THIS!
+			logger.Error("Panic", zap.Error(err))
+
+			// send the reply
+			var resp *http.Response
+			resp, err = putToNeonCadenceClient(reply)
+			if err != nil {
+				logger.Fatal(err.Error())
+			}
+			err = resp.Body.Close()
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	// check for a cadence server connection.
+	// if it exists, then enter switch block to handle the
+	// specified request type
+	if err = verifyClientHelper(request, Clients.Get(request.GetClientID())); err != nil {
+		reply = createReplyMessage(request)
+		buildReply(reply, cadenceerrors.NewCadenceError(err))
+	} else {
+
+		// create a context for every request
+		// handle the messages individually
+		// based on their message type
+		ctx := context.Background()
+		switch request.GetType() {
+
+		// -------------------------------------------------------------------------
+		// Client message types
+
+		// InitializeRequest
+		case messagetypes.InitializeRequest:
+			if v, ok := request.(*messages.InitializeRequest); ok {
+				reply = handleInitializeRequest(ctx, v)
+			}
+
+		// HeartbeatRequest
+		case messagetypes.HeartbeatRequest:
+			if v, ok := request.(*messages.HeartbeatRequest); ok {
+				reply = handleHeartbeatRequest(ctx, v)
+			}
+
+		// CancelRequest
+		case messagetypes.CancelRequest:
+			if v, ok := request.(*messages.CancelRequest); ok {
+				reply = handleCancelRequest(ctx, v)
+			}
+
+		// ConnectRequest
+		case messagetypes.ConnectRequest:
+			if v, ok := request.(*messages.ConnectRequest); ok {
+				reply = handleConnectRequest(ctx, v)
+			}
+
+		// DisconnectRequest
+		case messagetypes.DisconnectRequest:
+			if v, ok := request.(*messages.DisconnectRequest); ok {
+				reply = handleDisconnectRequest(ctx, v)
+			}
+
+		// DomainDescribeRequest
+		case messagetypes.DomainDescribeRequest:
+			if v, ok := request.(*messages.DomainDescribeRequest); ok {
+				reply = handleDomainDescribeRequest(ctx, v)
+			}
+
+		// DomainRegisterRequest
+		case messagetypes.DomainRegisterRequest:
+			if v, ok := request.(*messages.DomainRegisterRequest); ok {
+				reply = handleDomainRegisterRequest(ctx, v)
+			}
+
+		// DomainUpdateRequest
+		case messagetypes.DomainUpdateRequest:
+			if v, ok := request.(*messages.DomainUpdateRequest); ok {
+				reply = handleDomainUpdateRequest(ctx, v)
+			}
+
+		// TerminateRequest
+		case messagetypes.TerminateRequest:
+			if v, ok := request.(*messages.TerminateRequest); ok {
+				reply = handleTerminateRequest(ctx, v)
+			}
+
+		// NewWorkerRequest
+		case messagetypes.NewWorkerRequest:
+			if v, ok := request.(*messages.NewWorkerRequest); ok {
+				reply = handleNewWorkerRequest(ctx, v)
+			}
+
+		// StopWorkerRequest
+		case messagetypes.StopWorkerRequest:
+			if v, ok := request.(*messages.StopWorkerRequest); ok {
+				reply = handleStopWorkerRequest(ctx, v)
+			}
+
+		// PingRequest
+		case messagetypes.PingRequest:
+			if v, ok := request.(*messages.PingRequest); ok {
+				reply = handlePingRequest(ctx, v)
+			}
+
+		// -------------------------------------------------------------------------
+		// Workflow message types
+
+		// WorkflowRegisterRequest
+		case messagetypes.WorkflowRegisterRequest:
+			if v, ok := request.(*messages.WorkflowRegisterRequest); ok {
+				reply = handleWorkflowRegisterRequest(ctx, v)
+			}
+
+		// WorkflowExecuteRequest
+		case messagetypes.WorkflowExecuteRequest:
+			if v, ok := request.(*messages.WorkflowExecuteRequest); ok {
+				reply = handleWorkflowExecuteRequest(ctx, v)
+			}
+
+		// WorkflowCancelRequest
+		case messagetypes.WorkflowCancelRequest:
+			if v, ok := request.(*messages.WorkflowCancelRequest); ok {
+				reply = handleWorkflowCancelRequest(ctx, v)
+			}
+
+		// WorkflowTerminateRequest
+		case messagetypes.WorkflowTerminateRequest:
+			if v, ok := request.(*messages.WorkflowTerminateRequest); ok {
+				reply = handleWorkflowTerminateRequest(ctx, v)
+			}
+
+		// WorkflowSignalWithStartRequest
+		case messagetypes.WorkflowSignalWithStartRequest:
+			if v, ok := request.(*messages.WorkflowSignalWithStartRequest); ok {
+				reply = handleWorkflowSignalWithStartRequest(ctx, v)
+			}
+
+		// WorkflowSetCacheSizeRequest
+		case messagetypes.WorkflowSetCacheSizeRequest:
+			if v, ok := request.(*messages.WorkflowSetCacheSizeRequest); ok {
+				reply = handleWorkflowSetCacheSizeRequest(ctx, v)
+			}
+
+		// WorkflowQueryRequest
+		case messagetypes.WorkflowQueryRequest:
+			if v, ok := request.(*messages.WorkflowQueryRequest); ok {
+				reply = handleWorkflowQueryRequest(ctx, v)
+			}
+
+		// WorkflowMutableRequest
+		case messagetypes.WorkflowMutableRequest:
+			if v, ok := request.(*messages.WorkflowMutableRequest); ok {
+				reply = handleWorkflowMutableRequest(ctx, v)
+			}
+
+		// WorkflowDescribeExecutionRequest
+		case messagetypes.WorkflowDescribeExecutionRequest:
+			if v, ok := request.(*messages.WorkflowDescribeExecutionRequest); ok {
+				reply = handleWorkflowDescribeExecutionRequest(ctx, v)
+			}
+
+		// WorkflowGetResultRequest
+		case messagetypes.WorkflowGetResultRequest:
+			if v, ok := request.(*messages.WorkflowGetResultRequest); ok {
+				reply = handleWorkflowGetResultRequest(ctx, v)
+			}
+
+		// WorkflowSignalSubscribeRequest
+		case messagetypes.WorkflowSignalSubscribeRequest:
+			if v, ok := request.(*messages.WorkflowSignalSubscribeRequest); ok {
+				reply = handleWorkflowSignalSubscribeRequest(ctx, v)
+			}
+
+		// WorkflowSignalRequest
+		case messagetypes.WorkflowSignalRequest:
+			if v, ok := request.(*messages.WorkflowSignalRequest); ok {
+				reply = handleWorkflowSignalRequest(ctx, v)
+			}
+
+		// WorkflowHasLastResultRequest
+		case messagetypes.WorkflowHasLastResultRequest:
+			if v, ok := request.(*messages.WorkflowHasLastResultRequest); ok {
+				reply = handleWorkflowHasLastResultRequest(ctx, v)
+			}
+
+		// WorkflowGetLastResultRequest
+		case messagetypes.WorkflowGetLastResultRequest:
+			if v, ok := request.(*messages.WorkflowGetLastResultRequest); ok {
+				reply = handleWorkflowGetLastResultRequest(ctx, v)
+			}
+
+		// WorkflowDisconnectContextRequest
+		case messagetypes.WorkflowDisconnectContextRequest:
+			if v, ok := request.(*messages.WorkflowDisconnectContextRequest); ok {
+				reply = handleWorkflowDisconnectContextRequest(ctx, v)
+			}
+
+		// WorkflowGetTimeRequest
+		case messagetypes.WorkflowGetTimeRequest:
+			if v, ok := request.(*messages.WorkflowGetTimeRequest); ok {
+				reply = handleWorkflowGetTimeRequest(ctx, v)
+			}
+
+		// WorkflowSleepRequest
+		case messagetypes.WorkflowSleepRequest:
+			if v, ok := request.(*messages.WorkflowSleepRequest); ok {
+				reply = handleWorkflowSleepRequest(ctx, v)
+			}
+
+		// WorkflowExecuteChildRequest
+		case messagetypes.WorkflowExecuteChildRequest:
+			if v, ok := request.(*messages.WorkflowExecuteChildRequest); ok {
+				reply = handleWorkflowExecuteChildRequest(ctx, v)
+			}
+
+		// WorkflowWaitForChildRequest
+		case messagetypes.WorkflowWaitForChildRequest:
+			if v, ok := request.(*messages.WorkflowWaitForChildRequest); ok {
+				reply = handleWorkflowWaitForChildRequest(ctx, v)
+			}
+
+		// WorkflowSignalChildRequest
+		case messagetypes.WorkflowSignalChildRequest:
+			if v, ok := request.(*messages.WorkflowSignalChildRequest); ok {
+				reply = handleWorkflowSignalChildRequest(ctx, v)
+			}
+
+		// WorkflowCancelChildRequest
+		case messagetypes.WorkflowCancelChildRequest:
+			if v, ok := request.(*messages.WorkflowCancelChildRequest); ok {
+				reply = handleWorkflowCancelChildRequest(ctx, v)
+			}
+
+		// WorkflowSetQueryHandlerRequest
+		case messagetypes.WorkflowSetQueryHandlerRequest:
+			if v, ok := request.(*messages.WorkflowSetQueryHandlerRequest); ok {
+				reply = handleWorkflowSetQueryHandlerRequest(ctx, v)
+			}
+
+		// WorkflowGetVersionRequest
+		case messagetypes.WorkflowGetVersionRequest:
+			if v, ok := request.(*messages.WorkflowGetVersionRequest); ok {
+				reply = handleWorkflowGetVersionRequest(ctx, v)
+			}
+
+		// -------------------------------------------------------------------------
+		// Activity message types
+
+		// ActivityExecuteRequest
+		case messagetypes.ActivityExecuteRequest:
+			if v, ok := request.(*messages.ActivityExecuteRequest); ok {
+				reply = handleActivityExecuteRequest(ctx, v)
+			}
+
+		// ActivityRegisterRequest
+		case messagetypes.ActivityRegisterRequest:
+			if v, ok := request.(*messages.ActivityRegisterRequest); ok {
+				reply = handleActivityRegisterRequest(ctx, v)
+			}
+
+		// ActivityHasHeartbeatDetailsRequest
+		case messagetypes.ActivityHasHeartbeatDetailsRequest:
+			if v, ok := request.(*messages.ActivityHasHeartbeatDetailsRequest); ok {
+				reply = handleActivityHasHeartbeatDetailsRequest(ctx, v)
+			}
+
+		// ActivityGetHeartbeatDetailsRequest
+		case messagetypes.ActivityGetHeartbeatDetailsRequest:
+			if v, ok := request.(*messages.ActivityGetHeartbeatDetailsRequest); ok {
+				reply = handleActivityGetHeartbeatDetailsRequest(ctx, v)
+			}
+
+		// ActivityRecordHeartbeatRequest
+		case messagetypes.ActivityRecordHeartbeatRequest:
+			if v, ok := request.(*messages.ActivityRecordHeartbeatRequest); ok {
+				reply = handleActivityRecordHeartbeatRequest(ctx, v)
+			}
+
+		// ActivityGetInfoRequest
+		case messagetypes.ActivityGetInfoRequest:
+			if v, ok := request.(*messages.ActivityGetInfoRequest); ok {
+				reply = handleActivityGetInfoRequest(ctx, v)
+			}
+
+		// ActivityCompleteRequest
+		case messagetypes.ActivityCompleteRequest:
+			if v, ok := request.(*messages.ActivityCompleteRequest); ok {
+				reply = handleActivityCompleteRequest(ctx, v)
+			}
+
+		// ActivityExecuteLocalRequest
+		case messagetypes.ActivityExecuteLocalRequest:
+			if v, ok := request.(*messages.ActivityExecuteLocalRequest); ok {
+				reply = handleActivityExecuteLocalRequest(ctx, v)
+			}
+
+		// Undefined message type
+		default:
+
+			// $debug(jack.burns): DELETE THIS!
+			e := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
+			logger.Error("Unhandled message type. Could not complete type assertion.", zap.Error(e))
+
+			// set the reply
+			reply = messages.NewProxyReply()
+			reply.SetRequestID(request.GetRequestID())
+			reply.SetError(cadenceerrors.NewCadenceError(e, cadenceerrors.Custom))
+		}
+	}
+
+	// send the reply
+	var resp *http.Response
+	resp, err = putToNeonCadenceClient(reply)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// -------------------------------------------------------------------------
+// IProxyReply message type handlers
+
+func handleIProxyReply(reply messages.IProxyReply) (err error) {
+
+	// handle the messages individually based on their message type
+	switch reply.GetType() {
+
+	// -------------------------------------------------------------------------
+	// client message types
+
+	// TerminateReply
+	case messagetypes.TerminateReply:
+		if v, ok := reply.(*messages.TerminateReply); ok {
+			err = handleTerminateReply(v)
+		}
+
+	// -------------------------------------------------------------------------
+	// Workflow message types
+
+	// WorkflowInvokeReply
+	case messagetypes.WorkflowInvokeReply:
+		if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
+			err = handleWorkflowInvokeReply(v)
+		}
+
+	// WorkflowSignalInvokeReply
+	case messagetypes.WorkflowSignalInvokeReply:
+		if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
+			err = handleWorkflowSignalInvokeReply(v)
+		}
+
+	// WorkflowQueryInvokeReply
+	case messagetypes.WorkflowQueryInvokeReply:
+		if v, ok := reply.(*messages.WorkflowQueryInvokeReply); ok {
+			err = handleWorkflowQueryInvokeReply(v)
+		}
+
+	// WorkflowFutureReadyReply
+	case messagetypes.WorkflowFutureReadyReply:
+		if v, ok := reply.(*messages.WorkflowFutureReadyReply); ok {
+			err = handleWorkflowFutureReadyReply(v)
+		}
+
+	// -------------------------------------------------------------------------
+	// Activity message types
+
+	// ActivityInvokeReply
+	case messagetypes.ActivityInvokeReply:
+		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
+			err = handleActivityInvokeReply(v)
+		}
+
+	// ActivityStoppingReply
+	case messagetypes.ActivityStoppingReply:
+		if v, ok := reply.(*messages.ActivityStoppingReply); ok {
+			err = handleActivityStoppingReply(v)
+		}
+
+	// ActivityInvokeLocalReply
+	case messagetypes.ActivityInvokeLocalReply:
+		if v, ok := reply.(*messages.ActivityInvokeLocalReply); ok {
+			err = handleActivityInvokeLocalReply(v)
+		}
+
+	// Undefined message type
+	default:
+
+		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
+	}
+
+	return
 }

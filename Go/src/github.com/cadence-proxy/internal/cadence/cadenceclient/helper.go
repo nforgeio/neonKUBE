@@ -76,6 +76,7 @@ type (
 		Builder         *WorkflowClientBuilder
 		DomainClient    client.DomainClient
 		WorkflowClients *WorkflowClientsMap
+		ClientTimeout   time.Duration
 	}
 
 	// clientConfiguration contains configuration details for
@@ -158,6 +159,24 @@ func (helper *ClientHelper) SetClientOptions(value *client.Options) {
 	helper.Config.clientOptions = value
 }
 
+// GetClientTimeout gets the ClientTimeout from a ClientHelper instance.
+// specifies the amount of time in seconds a reply has to be sent after
+// a request has been received by the cadence-proxy.
+//
+// returns time.Duration -> time.Duration for the ClientTimeout
+func (helper *ClientHelper) GetClientTimeout() time.Duration {
+	return helper.ClientTimeout
+}
+
+// SetClientTimeout sets the ClientTimeout for a ClientHelper instance.
+// specifies the amount of time in seconds a reply has to be sent after
+// a request has been received by the cadence-proxy.
+//
+// param value time.Duration -> time.Duration for the ClientTimeout
+func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
+	helper.ClientTimeout = value
+}
+
 // SetupServiceConfig configures a ClientHelper's workflowserviceclient.Interface
 // Service.  It also sets the Logger, the WorkflowClientBuilder, and acts as a helper for
 // creating new cadence workflow and domain clients
@@ -180,10 +199,8 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 		return nil
 	}
 
-	// set the logger to global logger
-	helper.Logger = zap.L()
-
 	// Configure the ClientHelper.Builder
+	helper.Logger = zap.L()
 	helper.Builder = NewBuilder(helper.Logger).
 		SetHostPort(helper.Config.hostPort).
 		SetClientOptions(helper.Config.clientOptions).
@@ -282,6 +299,12 @@ func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, 
 	}
 
 	return nil
+}
+
+// DestroyClient stops the Dispatcher, shutting down all inbounds, outbounds, and transports.
+// This function returns after everything has been stopped.
+func (helper *ClientHelper) DestroyClient() error {
+	return helper.Builder.destroy()
 }
 
 // StartWorker starts a workflow worker and activity worker based on configured options.

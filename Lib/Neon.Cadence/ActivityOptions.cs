@@ -47,15 +47,15 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Specifies the maximum time the activity be queued, waiting to be scheduled
-        /// on a worker.  This defaults to 24 hours.
+        /// on a worker.  This defaults to <see cref="CadenceSettings.WorkflowScheduleToStartTimeoutSeconds"/>.
         /// </summary>
-        public TimeSpan ScheduleToStartTimeout { get; set; } = CadenceClient.DefaultTimeout;
+        public TimeSpan ScheduleToStartTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
-        /// Specifies the maximum time the activity may take to run.  This defaults
-        /// to 24 hours.
+        /// Specifies the maximum time the activity may take to run.  This defaults to
+        /// <see cref="CadenceSettings.ActivityStartToCloseTimeoutSeconds"/>.
         /// </summary>
-        public TimeSpan StartToCloseTimeout { get; set; } = CadenceClient.DefaultTimeout;
+        public TimeSpan StartToCloseTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
         /// Optionally specifies the maximum time the activity has to send a heartbeat

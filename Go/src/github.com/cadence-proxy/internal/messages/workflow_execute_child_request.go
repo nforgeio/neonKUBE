@@ -18,6 +18,8 @@
 package messages
 
 import (
+	"time"
+
 	"go.uber.org/cadence/workflow"
 
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
@@ -116,6 +118,28 @@ func (request *WorkflowExecuteChildRequest) SetOptions(value *workflow.ChildWork
 	request.SetJSONProperty("Options", value)
 }
 
+// GetScheduleToStartTimeout gets the ScheduleToStartTimeout property
+// from the WorkflowExecuteChildRequest's properties map.
+// Specifies the maximum time the workflow will wait after being scheduled
+// until it is executed to a worker.
+//
+// returns time.Duration -> the value of the ScheduleToStartTimeout property from
+// the WorkflowExecuteChildRequest's properties map.
+func (request *WorkflowExecuteChildRequest) GetScheduleToStartTimeout() time.Duration {
+	return request.GetTimeSpanProperty("ScheduleToStartTimeout")
+}
+
+// SetScheduleToStartTimeout sets the ScheduleToStartTimeout
+// property in the WorkflowExecuteChildRequest's properties map.
+// Specifies the maximum time the workflow will wait after being scheduled
+// until it is executed to a worker.
+//
+// param value time.Duration -> the time.Duration to be set in the
+// WorkflowExecuteChildRequest's properties map.
+func (request *WorkflowExecuteChildRequest) SetScheduleToStartTimeout(value time.Duration) {
+	request.SetTimeSpanProperty("ScheduleToStartTimeout", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -135,5 +159,6 @@ func (request *WorkflowExecuteChildRequest) CopyTo(target IProxyMessage) {
 		v.SetWorkflow(request.GetWorkflow())
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
+		v.SetScheduleToStartTimeout(request.GetScheduleToStartTimeout())
 	}
 }

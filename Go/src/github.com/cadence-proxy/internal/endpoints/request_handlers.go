@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		request_handler.go
+// FILE:		request_handlers.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,10 +21,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"reflect"
-	"runtime/debug"
 	"time"
 
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
@@ -42,331 +40,7 @@ import (
 	"github.com/cadence-proxy/internal/cadence/cadenceworkers"
 	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
 	"github.com/cadence-proxy/internal/messages"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
-
-// -------------------------------------------------------------------------
-// IProxyRequest message type handler entrypoint
-
-func handleIProxyRequest(request messages.IProxyRequest) error {
-
-	// create a context for every request
-	// defer panic recovery
-	var err error
-	var reply messages.IProxyReply
-	ctx := context.Background()
-	defer func() {
-
-		// recover from panic
-		if r := recover(); r != nil {
-			reply = createReplyMessage(request)
-			buildReply(reply, cadenceerrors.NewCadenceError(
-				fmt.Errorf("recovered from panic when processing message type: %s, RequestId: %d\n%s",
-					request.GetType().String(),
-					request.GetRequestID(), string(debug.Stack()))),
-			)
-		}
-
-		// send the reply
-		var resp *http.Response
-		resp, err = putToNeonCadenceClient(reply)
-		if err != nil {
-			return
-		}
-		err = resp.Body.Close()
-		if err != nil {
-			logger.Error("could not close response body", zap.Error(err))
-		}
-	}()
-
-	// check for clientHelper
-	if err := verifyClientHelper(request, clientHelper); err != nil {
-		reply = createReplyMessage(request)
-		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
-		return err
-	}
-
-	// handle the messages individually
-	// based on their message type
-	switch request.GetType() {
-
-	// -------------------------------------------------------------------------
-	// Client message types
-
-	// InitializeRequest
-	case messagetypes.InitializeRequest:
-		if v, ok := request.(*messages.InitializeRequest); ok {
-			reply = handleInitializeRequest(ctx, v)
-		}
-
-	// HeartbeatRequest
-	case messagetypes.HeartbeatRequest:
-		if v, ok := request.(*messages.HeartbeatRequest); ok {
-			reply = handleHeartbeatRequest(ctx, v)
-		}
-
-	// CancelRequest
-	case messagetypes.CancelRequest:
-		if v, ok := request.(*messages.CancelRequest); ok {
-			reply = handleCancelRequest(ctx, v)
-		}
-
-	// ConnectRequest
-	case messagetypes.ConnectRequest:
-		if v, ok := request.(*messages.ConnectRequest); ok {
-			reply = handleConnectRequest(ctx, v)
-		}
-
-	// DomainDescribeRequest
-	case messagetypes.DomainDescribeRequest:
-		if v, ok := request.(*messages.DomainDescribeRequest); ok {
-			reply = handleDomainDescribeRequest(ctx, v)
-		}
-
-	// DomainRegisterRequest
-	case messagetypes.DomainRegisterRequest:
-		if v, ok := request.(*messages.DomainRegisterRequest); ok {
-			reply = handleDomainRegisterRequest(ctx, v)
-		}
-
-	// DomainUpdateRequest
-	case messagetypes.DomainUpdateRequest:
-		if v, ok := request.(*messages.DomainUpdateRequest); ok {
-			reply = handleDomainUpdateRequest(ctx, v)
-		}
-
-	// TerminateRequest
-	case messagetypes.TerminateRequest:
-		if v, ok := request.(*messages.TerminateRequest); ok {
-			reply = handleTerminateRequest(ctx, v)
-		}
-
-	// NewWorkerRequest
-	case messagetypes.NewWorkerRequest:
-		if v, ok := request.(*messages.NewWorkerRequest); ok {
-			reply = handleNewWorkerRequest(ctx, v)
-		}
-
-	// StopWorkerRequest
-	case messagetypes.StopWorkerRequest:
-		if v, ok := request.(*messages.StopWorkerRequest); ok {
-			reply = handleStopWorkerRequest(ctx, v)
-		}
-
-	// PingRequest
-	case messagetypes.PingRequest:
-		if v, ok := request.(*messages.PingRequest); ok {
-			reply = handlePingRequest(ctx, v)
-		}
-
-	// -------------------------------------------------------------------------
-	// Workflow message types
-
-	// WorkflowRegisterRequest
-	case messagetypes.WorkflowRegisterRequest:
-		if v, ok := request.(*messages.WorkflowRegisterRequest); ok {
-			reply = handleWorkflowRegisterRequest(ctx, v)
-		}
-
-	// WorkflowExecuteRequest
-	case messagetypes.WorkflowExecuteRequest:
-		if v, ok := request.(*messages.WorkflowExecuteRequest); ok {
-			reply = handleWorkflowExecuteRequest(ctx, v)
-		}
-
-	// WorkflowCancelRequest
-	case messagetypes.WorkflowCancelRequest:
-		if v, ok := request.(*messages.WorkflowCancelRequest); ok {
-			reply = handleWorkflowCancelRequest(ctx, v)
-		}
-
-	// WorkflowTerminateRequest
-	case messagetypes.WorkflowTerminateRequest:
-		if v, ok := request.(*messages.WorkflowTerminateRequest); ok {
-			reply = handleWorkflowTerminateRequest(ctx, v)
-		}
-
-	// WorkflowSignalWithStartRequest
-	case messagetypes.WorkflowSignalWithStartRequest:
-		if v, ok := request.(*messages.WorkflowSignalWithStartRequest); ok {
-			reply = handleWorkflowSignalWithStartRequest(ctx, v)
-		}
-
-	// WorkflowSetCacheSizeRequest
-	case messagetypes.WorkflowSetCacheSizeRequest:
-		if v, ok := request.(*messages.WorkflowSetCacheSizeRequest); ok {
-			reply = handleWorkflowSetCacheSizeRequest(ctx, v)
-		}
-
-	// WorkflowQueryRequest
-	case messagetypes.WorkflowQueryRequest:
-		if v, ok := request.(*messages.WorkflowQueryRequest); ok {
-			reply = handleWorkflowQueryRequest(ctx, v)
-		}
-
-	// WorkflowMutableRequest
-	case messagetypes.WorkflowMutableRequest:
-		if v, ok := request.(*messages.WorkflowMutableRequest); ok {
-			reply = handleWorkflowMutableRequest(ctx, v)
-		}
-
-	// WorkflowDescribeExecutionRequest
-	case messagetypes.WorkflowDescribeExecutionRequest:
-		if v, ok := request.(*messages.WorkflowDescribeExecutionRequest); ok {
-			reply = handleWorkflowDescribeExecutionRequest(ctx, v)
-		}
-
-	// WorkflowGetResultRequest
-	case messagetypes.WorkflowGetResultRequest:
-		if v, ok := request.(*messages.WorkflowGetResultRequest); ok {
-			reply = handleWorkflowGetResultRequest(ctx, v)
-		}
-
-	// WorkflowSignalSubscribeRequest
-	case messagetypes.WorkflowSignalSubscribeRequest:
-		if v, ok := request.(*messages.WorkflowSignalSubscribeRequest); ok {
-			reply = handleWorkflowSignalSubscribeRequest(ctx, v)
-		}
-
-	// WorkflowSignalRequest
-	case messagetypes.WorkflowSignalRequest:
-		if v, ok := request.(*messages.WorkflowSignalRequest); ok {
-			reply = handleWorkflowSignalRequest(ctx, v)
-		}
-
-	// WorkflowHasLastResultRequest
-	case messagetypes.WorkflowHasLastResultRequest:
-		if v, ok := request.(*messages.WorkflowHasLastResultRequest); ok {
-			reply = handleWorkflowHasLastResultRequest(ctx, v)
-		}
-
-	// WorkflowGetLastResultRequest
-	case messagetypes.WorkflowGetLastResultRequest:
-		if v, ok := request.(*messages.WorkflowGetLastResultRequest); ok {
-			reply = handleWorkflowGetLastResultRequest(ctx, v)
-		}
-
-	// WorkflowDisconnectContextRequest
-	case messagetypes.WorkflowDisconnectContextRequest:
-		if v, ok := request.(*messages.WorkflowDisconnectContextRequest); ok {
-			reply = handleWorkflowDisconnectContextRequest(ctx, v)
-		}
-
-	// WorkflowGetTimeRequest
-	case messagetypes.WorkflowGetTimeRequest:
-		if v, ok := request.(*messages.WorkflowGetTimeRequest); ok {
-			reply = handleWorkflowGetTimeRequest(ctx, v)
-		}
-
-	// WorkflowSleepRequest
-	case messagetypes.WorkflowSleepRequest:
-		if v, ok := request.(*messages.WorkflowSleepRequest); ok {
-			reply = handleWorkflowSleepRequest(ctx, v)
-		}
-
-	// WorkflowExecuteChildRequest
-	case messagetypes.WorkflowExecuteChildRequest:
-		if v, ok := request.(*messages.WorkflowExecuteChildRequest); ok {
-			reply = handleWorkflowExecuteChildRequest(ctx, v)
-		}
-
-	// WorkflowWaitForChildRequest
-	case messagetypes.WorkflowWaitForChildRequest:
-		if v, ok := request.(*messages.WorkflowWaitForChildRequest); ok {
-			reply = handleWorkflowWaitForChildRequest(ctx, v)
-		}
-
-	// WorkflowSignalChildRequest
-	case messagetypes.WorkflowSignalChildRequest:
-		if v, ok := request.(*messages.WorkflowSignalChildRequest); ok {
-			reply = handleWorkflowSignalChildRequest(ctx, v)
-		}
-
-	// WorkflowCancelChildRequest
-	case messagetypes.WorkflowCancelChildRequest:
-		if v, ok := request.(*messages.WorkflowCancelChildRequest); ok {
-			reply = handleWorkflowCancelChildRequest(ctx, v)
-		}
-
-	// WorkflowSetQueryHandlerRequest
-	case messagetypes.WorkflowSetQueryHandlerRequest:
-		if v, ok := request.(*messages.WorkflowSetQueryHandlerRequest); ok {
-			reply = handleWorkflowSetQueryHandlerRequest(ctx, v)
-		}
-
-	// WorkflowGetVersionRequest
-	case messagetypes.WorkflowGetVersionRequest:
-		if v, ok := request.(*messages.WorkflowGetVersionRequest); ok {
-			reply = handleWorkflowGetVersionRequest(ctx, v)
-		}
-
-	// -------------------------------------------------------------------------
-	// Activity message types
-
-	// ActivityExecuteRequest
-	case messagetypes.ActivityExecuteRequest:
-		if v, ok := request.(*messages.ActivityExecuteRequest); ok {
-			reply = handleActivityExecuteRequest(ctx, v)
-		}
-
-	// ActivityRegisterRequest
-	case messagetypes.ActivityRegisterRequest:
-		if v, ok := request.(*messages.ActivityRegisterRequest); ok {
-			reply = handleActivityRegisterRequest(ctx, v)
-		}
-
-	// ActivityHasHeartbeatDetailsRequest
-	case messagetypes.ActivityHasHeartbeatDetailsRequest:
-		if v, ok := request.(*messages.ActivityHasHeartbeatDetailsRequest); ok {
-			reply = handleActivityHasHeartbeatDetailsRequest(ctx, v)
-		}
-
-	// ActivityGetHeartbeatDetailsRequest
-	case messagetypes.ActivityGetHeartbeatDetailsRequest:
-		if v, ok := request.(*messages.ActivityGetHeartbeatDetailsRequest); ok {
-			reply = handleActivityGetHeartbeatDetailsRequest(ctx, v)
-		}
-
-	// ActivityRecordHeartbeatRequest
-	case messagetypes.ActivityRecordHeartbeatRequest:
-		if v, ok := request.(*messages.ActivityRecordHeartbeatRequest); ok {
-			reply = handleActivityRecordHeartbeatRequest(ctx, v)
-		}
-
-	// ActivityGetInfoRequest
-	case messagetypes.ActivityGetInfoRequest:
-		if v, ok := request.(*messages.ActivityGetInfoRequest); ok {
-			reply = handleActivityGetInfoRequest(ctx, v)
-		}
-
-	// ActivityCompleteRequest
-	case messagetypes.ActivityCompleteRequest:
-		if v, ok := request.(*messages.ActivityCompleteRequest); ok {
-			reply = handleActivityCompleteRequest(ctx, v)
-		}
-
-	// ActivityExecuteLocalRequest
-	case messagetypes.ActivityExecuteLocalRequest:
-		if v, ok := request.(*messages.ActivityExecuteLocalRequest); ok {
-			reply = handleActivityExecuteLocalRequest(ctx, v)
-		}
-
-	// Undefined message type
-	default:
-
-		// $debug(jack.burns): DELETE THIS!
-		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
-		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
-
-		// set the reply
-		reply = messages.NewProxyReply()
-		reply.SetRequestID(request.GetRequestID())
-		reply.SetError(cadenceerrors.NewCadenceError(err, cadenceerrors.Custom))
-	}
-
-	return err
-}
 
 // -------------------------------------------------------------------------
 // IProxyRequest client message type handler methods
@@ -408,6 +82,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ConnectRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int("ProccessId", os.Getpid()),
 	)
 
@@ -422,7 +97,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 	// configure the ClientHelper
 	// setup the domain, service, and workflow clients
-	clientHelper = cadenceclient.NewClientHelper()
+	clientHelper := cadenceclient.NewClientHelper()
 	err := clientHelper.SetupCadenceClients(requestCtx,
 		*request.GetEndpoints(),
 		defaultDomain,
@@ -437,13 +112,13 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	}
 
 	// set the timeout
-	cadenceClientTimeout = request.GetClientTimeout()
+	clientHelper.SetClientTimeout(request.GetClientTimeout())
 
 	// reset the deadline on ctx with new timeout
 	// and check if we need to register the default
 	// domain
 	if request.GetCreateDomain() {
-		ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+		ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 		defer cancel()
 
 		// register the domain
@@ -464,8 +139,49 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		}
 	}
 
+	// add the new ClientHelper to the Clients map
 	// build reply
+	_ = Clients.Add(request.GetClientID(), clientHelper)
 	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleDisconnectRequest(requestCtx context.Context, request *messages.DisconnectRequest) messages.IProxyReply {
+
+	// $debug(jack.burns): DELETE THIS!
+	clientID := request.GetClientID()
+	logger.Debug("DisconnectRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ClientId", clientID),
+		zap.Int("ProccessId", os.Getpid()),
+	)
+
+	// new DisconnectReply
+	reply := createReplyMessage(request)
+
+	// destroy the client
+	if err := Clients.Get(clientID).DestroyClient(); err != nil {
+
+		// $debug(jack.burns): DELETE THIS!
+		logger.Error("Could not disconnect cadence client.",
+			zap.Int64("ClientID", clientID),
+			zap.Error(err),
+		)
+		buildReply(reply, cadenceerrors.NewCadenceError(err))
+
+		return reply
+	}
+
+	// remove the client from Clients map
+	// return reply
+	_ = Clients.Remove(clientID)
+	buildReply(reply, nil)
+
+	// $debug(jack.burns): DELETE THIS!
+	logger.Debug("Successfully removed client.",
+		zap.Int64("ClientID", clientID),
+	)
 
 	return reply
 }
@@ -553,7 +269,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	// create a new worker using a configured ClientHelper instance
 	workerID := cadenceworkers.NextWorkerID()
-	worker, err := clientHelper.StartWorker(domain,
+	worker, err := Clients.Get(request.GetClientID()).StartWorker(domain,
 		taskList,
 		*request.GetOptions(),
 	)
@@ -596,7 +312,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 
 	// stop the worker and
 	// remove it from the Workers map
-	clientHelper.StopWorker(worker)
+	Clients.Get(request.GetClientID()).StopWorker(worker)
 	workerID = Workers.Remove(workerID)
 
 	// $debug(jack.burns): DELETE THIS!
@@ -620,7 +336,8 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 	reply := createReplyMessage(request)
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// send a describe domain request to the cadence server
@@ -661,7 +378,8 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	}
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// register the domain using the RegisterDomainRequest
@@ -713,7 +431,8 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	}
 
 	// create context with timeout
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// Update the domain using the UpdateDomainRequest
@@ -770,6 +489,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetRequestID(requestID)
 		workflowInvokeRequest.SetContextID(contextID)
 		workflowInvokeRequest.SetArgs(input)
+		workflowInvokeRequest.SetClientID(request.GetClientID())
 
 		// get the WorkflowInfo (Domain, WorkflowID, RunID, WorkflowType,
 		// TaskList, ExecutionStartToCloseTimeout)
@@ -828,7 +548,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
@@ -858,7 +578,8 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 	reply := createReplyMessage(request)
 
 	// create the context
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// check for options
@@ -908,7 +629,8 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 	reply := createReplyMessage(request)
 
 	// create the context to cancel the workflow
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// cancel the specified workflow
@@ -945,7 +667,8 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 	reply := createReplyMessage(request)
 
 	// create the context to terminate the workflow
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// terminate the specified workflow
@@ -984,7 +707,8 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 	reply := createReplyMessage(request)
 
 	// create the context
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// signalwithstart the specified workflow
@@ -1127,7 +851,8 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	reply := createReplyMessage(request)
 
 	// create the context
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// DescribeWorkflow call to cadence client
@@ -1160,7 +885,8 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	reply := createReplyMessage(request)
 
 	// create the context
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// call GetWorkflow
@@ -1234,6 +960,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		workflowSignalInvokeRequest.SetContextID(contextID)
 		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
 		workflowSignalInvokeRequest.SetSignalName(signalName)
+		workflowSignalInvokeRequest.SetClientID(request.GetClientID())
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowSignalInvokeRequest)
@@ -1247,7 +974,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		// send the request
 		go sendMessage(workflowSignalInvokeRequest)
 
-		// wait for the future to be unblocked
+		// wait to be unblocked
 		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:
@@ -1298,7 +1025,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			if err != nil {
 				logger.Error("Error In Workflow Context", zap.Error(err))
 			}
-
 			if done {
 				return
 			}
@@ -1324,7 +1050,8 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 	reply := createReplyMessage(request)
 
 	// create the context to signal the workflow
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// signal the specified workflow
@@ -1511,7 +1238,12 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	// pause the current workflow for the specified duration
 	var result interface{}
 	future := workflow.NewTimer(ctx, request.GetDuration())
-	// send ACK here
+
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
+	<-op.GetChannel()
+
+	// wait for the future to be unblocked
 	err := future.Get(ctx, &result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err, cadenceerrors.Cancelled))
@@ -1559,11 +1291,16 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	// set cancellation on the context
 	// execute the child workflow
 	ctx = workflow.WithChildOptions(ctx, opts)
+	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx,
 		*request.GetWorkflow(),
 		request.GetArgs(),
 	)
+
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
+	<-op.GetChannel()
 
 	// create the new ChildContext
 	cctx := cadenceworkflows.NewChildContext(ctx)
@@ -1676,6 +1413,10 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		request.GetSignalArgs(),
 	)
 
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
+	<-op.GetChannel()
+
 	// wait on the future
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
@@ -1761,6 +1502,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		workflowQueryInvokeRequest.SetContextID(contextID)
 		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
 		workflowQueryInvokeRequest.SetQueryName(queryName)
+		workflowQueryInvokeRequest.SetClientID(request.GetClientID())
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowQueryInvokeRequest)
@@ -1808,7 +1550,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
@@ -1843,7 +1585,8 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 	reply := createReplyMessage(request)
 
 	// create the context
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// query the workflow via the cadence client
@@ -1956,6 +1699,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		activityInvokeRequest.SetArgs(input)
 		activityInvokeRequest.SetContextID(contextID)
 		activityInvokeRequest.SetActivity(request.GetName())
+		activityInvokeRequest.SetClientID(request.GetClientID())
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, activityInvokeRequest)
@@ -1979,6 +1723,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			activityStoppingRequest.SetRequestID(requestID)
 			activityStoppingRequest.SetActivityID(request.GetName())
 			activityStoppingRequest.SetContextID(contextID)
+			activityStoppingRequest.SetClientID(request.GetClientID())
 
 			// create the Operation for this request and add it to the operations map
 			stoppingReplyChan := make(chan interface{})
@@ -2030,7 +1775,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
@@ -2070,10 +1815,17 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// and set the activity options on the context
 	opts := request.GetOptions()
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), *opts)
+	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
+	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
+	future := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs())
+
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
+	<-op.GetChannel()
 
 	// execute the activity
 	var result []byte
-	if err := workflow.ExecuteActivity(ctx, *request.GetActivity(), request.GetArgs()).Get(ctx, &result); err != nil {
+	if err := future.Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
 
 		return reply
@@ -2154,10 +1906,14 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	// new ActivityRecordHeartbeatReply
 	reply := createReplyMessage(request)
 
-	// check to see if external or internal
-	// record heartbeat
 	var err error
 	details := request.GetDetails()
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
+	defer cancel()
+
+	// check to see if external or internal
+	// record heartbeat
 	if request.GetTaskToken() == nil {
 		if request.GetActivityID() == nil {
 			actx := ActivityContexts.Get(request.GetContextID())
@@ -2167,9 +1923,8 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 				return reply
 			}
 			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
+
 		} else {
-			ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
-			defer cancel()
 
 			// RecordActivityHeartbeatByID
 			err = clientHelper.RecordActivityHeartbeatByID(ctx,
@@ -2182,10 +1937,6 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		}
 
 	} else {
-
-		// create the new context
-		ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
-		defer cancel()
 
 		// record the heartbeat details
 		err = clientHelper.RecordActivityHeartbeat(ctx,
@@ -2247,7 +1998,8 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	reply := createReplyMessage(request)
 
 	// create the context
-	ctx, cancel := context.WithTimeout(requestCtx, cadenceClientTimeout)
+	clientHelper := Clients.Get(request.GetClientID())
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
 	// check the task token
@@ -2324,6 +2076,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		activityInvokeLocalRequest.SetArgs(input)
 		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
 		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
+		activityInvokeLocalRequest.SetClientID(request.GetClientID())
 
 		// create the Operation for this request and add it to the operations map
 		op := NewOperation(requestID, activityInvokeLocalRequest)
@@ -2370,7 +2123,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 		// unexpected result
 		default:
-			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
 
@@ -2380,12 +2133,18 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		opts = *v
 	}
 
-	// and set the activity options on the context
+	// set the activity options on the context
+	// execute local activity
 	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
+	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args)
+
+	// Send ACK
+	op := sendFutureACK(contextID, request.GetRequestID(), request.GetClientID())
+	<-op.GetChannel()
 
 	// wait for the future to be unblocked
 	var result []byte
-	if err := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args).Get(ctx, &result); err != nil {
+	if err := future.Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
 
 		return reply

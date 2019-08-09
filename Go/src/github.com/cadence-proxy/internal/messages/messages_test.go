@@ -380,6 +380,104 @@ func (s *UnitTestSuite) TestConnectReply() {
 	}
 }
 
+func (s *UnitTestSuite) TestDisconnectRequest() {
+
+	var message messages.IProxyMessage = messages.NewDisconnectRequest()
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(messagetypes.DisconnectReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int64(0), v.GetClientID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetClientID(int64(666))
+		s.Equal(int64(666), v.GetClientID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetClientID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetClientID())
+	}
+}
+
+func (s *UnitTestSuite) TestDisconnectReply() {
+	var message messages.IProxyMessage = messages.NewDisconnectReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DisconnectReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+}
+
 func (s *UnitTestSuite) TestDomainDescribeRequest() {
 
 	var message messages.IProxyMessage = messages.NewDomainDescribeRequest()
@@ -3112,6 +3210,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		s.Nil(v.GetWorkflow())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
+		s.Equal(time.Duration(0), v.GetScheduleToStartTimeout())
 
 		// Round-trip
 
@@ -3134,6 +3233,9 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		}
 		v.SetOptions(&opts)
 		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ChildPolicy: workflow.ChildWorkflowPolicyRequestCancel, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+
+		v.SetScheduleToStartTimeout(time.Second * 30)
+		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3148,6 +3250,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
 		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ChildPolicy: workflow.ChildWorkflowPolicyRequestCancel, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3158,6 +3261,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
 		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ChildPolicy: workflow.ChildWorkflowPolicyRequestCancel, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 }
 
@@ -4221,6 +4325,107 @@ func (s *UnitTestSuite) TestWorkflowSleepRequest() {
 	}
 }
 
+func (s *UnitTestSuite) TestWorkflowFutureReadyReply() {
+	var message messages.IProxyMessage = messages.NewWorkflowFutureReadyReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowFutureReadyReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowFutureReadyReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowFutureReadyReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+}
+
+func (s *UnitTestSuite) TestWorkflowFutureReadyRequest() {
+	var message messages.IProxyMessage = messages.NewWorkflowFutureReadyRequest()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowFutureReadyRequest); ok {
+		s.Equal(messagetypes.WorkflowFutureReadyReply, v.ReplyType)
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int64(0), v.GetContextID())
+		s.Equal(int64(0), v.GetFutureOperationID())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetContextID(int64(666))
+		s.Equal(int64(666), v.GetContextID())
+
+		v.SetFutureOperationID(int64(777))
+		s.Equal(int64(777), v.GetFutureOperationID())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowFutureReadyRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetContextID())
+		s.Equal(int64(777), v.GetFutureOperationID())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.WorkflowFutureReadyRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetContextID())
+		s.Equal(int64(777), v.GetFutureOperationID())
+	}
+}
+
 func (s *UnitTestSuite) TestWorkflowWaitForChildReply() {
 	var message messages.IProxyMessage = messages.NewWorkflowWaitForChildReply()
 	proxyMessage := message.GetProxyMessage()
@@ -4762,6 +4967,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
 		s.Nil(v.GetDomain())
+		s.Equal(time.Duration(0), v.GetScheduleToStartTimeout())
 
 		// Round-trip
 
@@ -4782,6 +4988,9 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		domain := "my-domain"
 		v.SetDomain(&domain)
 		s.Equal("my-domain", *v.GetDomain())
+
+		v.SetScheduleToStartTimeout(time.Second * 30)
+		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4797,6 +5006,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 		s.Equal("my-domain", *v.GetDomain())
+		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4808,6 +5018,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 		s.Equal("my-domain", *v.GetDomain())
+		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 }
 
@@ -5740,6 +5951,7 @@ func (s *UnitTestSuite) TestProxyRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(messagetypes.Unspecified, v.GetReplyType())
 		s.False(v.GetIsCancellable())
+		s.Equal(int64(0), v.GetClientID())
 
 		// Round-trip
 
@@ -5748,6 +5960,9 @@ func (s *UnitTestSuite) TestProxyRequest() {
 
 		v.SetIsCancellable(true)
 		s.True(v.GetIsCancellable())
+
+		v.SetClientID(int64(666))
+		s.Equal(int64(666), v.GetClientID())
 
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
@@ -5765,6 +5980,7 @@ func (s *UnitTestSuite) TestProxyRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(messagetypes.Unspecified, v.GetReplyType())
 		s.True(v.GetIsCancellable())
+		s.Equal(int64(666), v.GetClientID())
 	}
 }
 

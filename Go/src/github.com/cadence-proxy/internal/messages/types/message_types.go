@@ -164,6 +164,16 @@ const (
 	/// </summary>
 	DomainDeprecateReply MessageType = 24
 
+	/// <summary>
+	///  <b>client --> proxy:</b> Sent to have the proxy disconnect from a Cadence cluster.
+	/// </summary>
+	DisconnectRequest MessageType = 25
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DisconnectRequest"/> message.
+	/// </summary>
+	DisconnectReply MessageType = 26
+
 	//---------------------------------------------------------------------
 	// Workflow messages
 	//
@@ -467,14 +477,17 @@ const (
 	WorkflowCancelChildReply MessageType = 155
 
 	/// <summary>
-	/// <b>UNUSED:</b> Available message ID.
+	/// <b>client --> proxy:</b> Sent for workflow operations that are implemented in GOLANG as futures
+	/// and may be executed in parallel.  <b>cadence-proxy</b> will send this message after it has
+	/// submitted the operation to Cadence but before the future actually completes.  The .NET client
+	/// uses this as an indication that another Cadence operation may be started.
 	/// </summary>
-	UNUSED_2 MessageType = 156
+	WorkflowFutureReadyRequest MessageType = 156
 
 	/// <summary>
-	/// <b>UNUSED:</b> Available message ID..
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="WorkflowFutureReadyRequest"/> message.
 	/// </summary>
-	UNUSED_3 MessageType = 157
+	WorkflowFutureReadyReply MessageType = 157
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Registers a query handler by name.
@@ -634,6 +647,10 @@ func (m MessageType) String() string {
 		return "ConnectRequest"
 	case ConnectReply:
 		return "ConnectReply"
+	case DisconnectRequest:
+		return "DisconnectRequest"
+	case DisconnectReply:
+		return "DisconnectReply"
 	case TerminateRequest:
 		return "TerminateRequest"
 	case TerminateReply:
@@ -786,6 +803,10 @@ func (m MessageType) String() string {
 		return "WorkflowCancelChildRequest"
 	case WorkflowCancelChildReply:
 		return "WorkflowCancelChildReply"
+	case WorkflowFutureReadyRequest:
+		return "WorkflowFutureReadyRequest"
+	case WorkflowFutureReadyReply:
+		return "WorkflowFutureReadyReply"
 	case WorkflowSetQueryHandlerRequest:
 		return "WorkflowSetQueryHandlerRequest"
 	case WorkflowSetQueryHandlerReply:

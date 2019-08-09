@@ -84,7 +84,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The type name.</returns>
         /// <remarks>
         /// <para>
-        /// If <paramref name="workflowAttribute"/> is passed and <see cref="WorkflowAttribute.TypeName"/>
+        /// If <paramref name="workflowAttribute"/> is passed and <see cref="WorkflowAttribute.Name"/>
         /// is not <c>null</c> or empty, then the name specified in the attribute is returned.
         /// </para>
         /// <para>
@@ -104,9 +104,9 @@ namespace Neon.Cadence.Internal
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null);
 
-            if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.TypeName))
+            if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.Name))
             {
-                return workflowAttribute.TypeName;
+                return workflowAttribute.Name;
             }
 
             var fullName = workflowType.FullName;
@@ -209,6 +209,11 @@ namespace Neon.Cadence.Internal
                 throw new WorkflowTypeException($"[{workflowInterface.FullName}] is not an interface.");
             }
 
+            if (!workflowInterface.Implements<IWorkflow>())
+            {
+                throw new WorkflowTypeException($"[{workflowInterface.FullName}] does not implement [{typeof(IWorkflow).FullName}].");
+            }
+
             if (workflowInterface.IsGenericType)
             {
                 throw new WorkflowTypeException($"[{workflowInterface.FullName}] has generic type parameters.  Workflow interfaces may not be generic.");
@@ -218,6 +223,8 @@ namespace Neon.Cadence.Internal
             {
                 throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] is not public.");
             }
+
+            // Validate the entrypoint method names.
 
             var workflowNames = new HashSet<string>();
 
@@ -239,6 +246,57 @@ namespace Neon.Cadence.Internal
 
                 workflowNames.Add(name);
             }
+
+            if (workflowNames.Count == 0)
+            {
+                throw new ActivityTypeException($"Workflow interface [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
+            }
+
+            // Validate the signal method names.
+
+            var signalNames = new HashSet<string>();
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var signalMethodAttribute = method.GetCustomAttribute<SignalMethodAttribute>();
+
+                if (signalMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = signalMethodAttribute.Name ?? string.Empty;
+
+                if (signalNames.Contains(name))
+                {
+                    throw new WorkflowTypeException($"Multiple signal methods are tagged by [SignalMethod(name:\"{name}\")].");
+                }
+
+                signalNames.Add(name);
+            }
+
+            // Validate the signal method names.
+
+            var queryNames = new HashSet<string>();
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var queryMethodAttribute = method.GetCustomAttribute<QueryMethodAttribute>();
+
+                if (queryMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = queryMethodAttribute.Name ?? string.Empty;
+
+                if (queryNames.Contains(name))
+                {
+                    throw new WorkflowTypeException($"Multiple query methods are tagged by [QueryMethod(name:\"{name}\")].");
+                }
+
+                queryNames.Add(name);
+            }
         }
 
         /// <summary>
@@ -257,7 +315,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowType.IsValueType)
             {
-                throw new WorkflowTypeException($"[{workflowType.FullName}] workflow implementation cannot be a struct.");
+                throw new ActivityTypeException($"[{workflowType.FullName}] is a [struct].  Workflows must be implemented as a [class].");
             }
 
             if (workflowType.IsGenericType)
@@ -275,25 +333,24 @@ namespace Neon.Cadence.Internal
                 throw new WorkflowTypeException($"The base [{nameof(WorkflowBase)}] class cannot be a workflow implementation.");
             }
 
-            var workflowNames = new HashSet<string>();
+            var workflowInterfaces = new List<Type>();
 
-            foreach (var method in workflowType.GetMethods())
+            foreach (var @interface in workflowType.GetInterfaces())
             {
-                var workflowMethodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
-
-                if (workflowMethodAttribute == null)
+                if (@interface.Implements<IWorkflow>())
                 {
-                    continue;
+                    workflowInterfaces.Add(@interface);
+                    ValidateWorkflowInterface(@interface);
                 }
+            }
 
-                var name = workflowMethodAttribute.Name ?? string.Empty;
-
-                if (workflowNames.Contains(name))
-                {
-                    throw new WorkflowTypeException($"Multiple [{workflowType.FullName}] workflow methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
-                }
-
-                workflowNames.Add(name);
+            if (workflowInterfaces.Count == 0)
+            {
+                throw new WorkflowTypeException($"Workflow type [{workflowType.FullName}] does not implement an interface that derives from [{typeof(IWorkflow).FullName}].");
+            }
+            else if (workflowInterfaces.Count > 1)
+            {
+                throw new WorkflowTypeException($"Workflow type [{workflowType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IWorkflow).FullName}].  This is not supported.");
             }
         }
 
@@ -322,6 +379,11 @@ namespace Neon.Cadence.Internal
             if (!activityInterface.IsInterface)
             {
                 throw new ActivityTypeException($"[{activityInterface.FullName}] is not an interface.");
+            }
+
+            if (!activityInterface.Implements<IActivity>())
+            {
+                throw new ActivityTypeException($"[{activityInterface.FullName}] does not implement [{typeof(IActivity).FullName}].");
             }
 
             if (activityInterface.IsGenericType)
@@ -375,6 +437,11 @@ namespace Neon.Cadence.Internal
                 throw new ActivityTypeException($"[{activityType.FullName}] implementation cannot be an interface.");
             }
 
+            if (activityType.IsValueType)
+            {
+                throw new ActivityTypeException($"[{activityType.FullName}] is a [struct].  Activities must be implemented as a [class].");
+            }
+
             if (activityType.IsGenericType)
             {
                 throw new ActivityTypeException($"[{activityType.FullName}] has generic type parameters.  Activity implementations may not be generic.");
@@ -388,6 +455,26 @@ namespace Neon.Cadence.Internal
             if (activityType == typeof(ActivityBase))
             {
                 throw new ActivityTypeException($"[{nameof(ActivityBase)}] cannot be used to define an activity.");
+            }
+
+            var activityInterfaces = new List<Type>();
+
+            foreach (var @interface in activityType.GetInterfaces())
+            {
+                if (@interface.Implements<IActivity>())
+                {
+                    ValidateActivityInterface(@interface);
+                    activityInterfaces.Add(@interface);
+                }
+            }
+
+            if (activityInterfaces.Count == 0)
+            {
+                throw new ActivityTypeException($"Workflow type [{activityType.FullName}] does not implement an interface that derives from [{typeof(IActivity).FullName}].");
+            }
+            else if (activityInterfaces.Count > 1)
+            {
+                throw new ActivityTypeException($"Workflow type [{activityType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IActivity).FullName}].  This is not supported.");
             }
 
             var activityNames = new HashSet<string>();

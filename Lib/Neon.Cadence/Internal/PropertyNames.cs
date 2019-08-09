@@ -45,6 +45,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Args { get; private set; }                                      = new PropertyNameUtf8("Args");
         public static PropertyNameUtf8 ChangeId { get; private set; }                                  = new PropertyNameUtf8("ChangeId");
         public static PropertyNameUtf8 ChildId { get; private set; }                                   = new PropertyNameUtf8("ChildId");
+        public static PropertyNameUtf8 ClientId { get; private set; }                                  = new PropertyNameUtf8("ClientId");
         public static PropertyNameUtf8 ClientTimeout { get; private set; }                             = new PropertyNameUtf8("ClientTimeout");
         public static PropertyNameUtf8 ConfigurationEmitMetrics { get; private set; }                  = new PropertyNameUtf8("ConfigurationEmitMetrics");
         public static PropertyNameUtf8 ConfigurationRetentionDays { get; private set; }                = new PropertyNameUtf8("ConfigurationRetentionDays");
@@ -98,6 +99,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 ReplayStatus { get; private set; }                              = new PropertyNameUtf8("ReplayStatus");
         public static PropertyNameUtf8 RunId { get; private set; }                                     = new PropertyNameUtf8("RunId");
         public static PropertyNameUtf8 SecurityToken { get; private set; }                             = new PropertyNameUtf8("SecurityToken");
+        public static PropertyNameUtf8 ScheduleToStartTimeout { get; private set; }                    = new PropertyNameUtf8("ScheduleToStartTimeout");
         public static PropertyNameUtf8 SignalArgs { get; private set; }                                = new PropertyNameUtf8("SignalArgs");
         public static PropertyNameUtf8 SignalName { get; private set; }                                = new PropertyNameUtf8("SignalName");
         public static PropertyNameUtf8 Size { get; private set; }                                      = new PropertyNameUtf8("Size");

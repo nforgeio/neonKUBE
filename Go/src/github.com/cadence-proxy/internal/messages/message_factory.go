@@ -45,6 +45,12 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.ConnectRequest:
 		message = NewConnectRequest()
 
+	// Disconnect
+	case messagetypes.DisconnectReply:
+		message = NewDisconnectReply()
+	case messagetypes.DisconnectRequest:
+		message = NewDisconnectRequest()
+
 	// DomainDescribe
 	case messagetypes.DomainDescribeReply:
 		message = NewDomainDescribeReply()
@@ -263,6 +269,12 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 		message = NewWorkflowGetVersionReply()
 	case messagetypes.WorkflowGetVersionRequest:
 		message = NewWorkflowGetVersionRequest()
+
+	// WorkflowFutureReady
+	case messagetypes.WorkflowFutureReadyReply:
+		message = NewWorkflowFutureReadyReply()
+	case messagetypes.WorkflowFutureReadyRequest:
+		message = NewWorkflowFutureReadyRequest()
 
 	// --------------------------------------------------------------------------
 	// Activity messages

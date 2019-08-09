@@ -37,7 +37,18 @@ namespace TestCommon
         void Test();
     }
 
+    internal interface IFooFoo : IFoo
+    {
+    }
+
     internal class Foo : IFoo
+    {
+        public void Test()
+        {
+        }
+    }
+
+    internal class FooFoo : IFooFoo
     {
         public void Test()
         {
@@ -62,10 +73,12 @@ namespace TestCommon
         public void Implements()
         {
             var fooType         = typeof(Foo);
+            var foofooType      = typeof(FooFoo);
             var fooExtendedType = typeof(FooExtended);
             var notFooType      = typeof(NotFoo);
 
             Assert.True(fooType.Implements<IFoo>());
+            Assert.True(foofooType.Implements<IFoo>());
             Assert.True(fooExtendedType.Implements<IFoo>());
 
             Assert.False(notFooType.Implements<IFoo>());

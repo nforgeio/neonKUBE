@@ -530,12 +530,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Asynchronously emulates a call to the <b>cadence-client</b> by sending a request message
-        /// and then waits for a reply.
+        /// and then waiting for a reply.
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
         private async Task<ProxyReply> CallClientAsync(ProxyRequest request)
         {
+            request.ClientId = this.ClientId;
+
             try
             {
                 var requestId = Interlocked.Increment(ref nextRequestId);
