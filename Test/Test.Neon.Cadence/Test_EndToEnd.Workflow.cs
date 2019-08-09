@@ -419,6 +419,387 @@ namespace TestCadence
             {
                 Assert.Equal(CronActivity.CronCalls[i - 1], i);
             }
-       }
+        }
+
+        //---------------------------------------------------------------------
+
+        private const int RandomSampleCount         = 1000;
+        private const int MaxDuplicateRandomSamples = RandomSampleCount / 10;
+
+        public interface IRandomWorkflow : IWorkflow
+        {
+            [WorkflowMethod(Name = "GetRandomDoubles")]
+            Task<List<double>> GetRandomDoublesAsync(int count);
+
+            [WorkflowMethod(Name = "GetRandomInts")]
+            Task<List<int>> GetRandomIntsAsync(int count);
+
+            [WorkflowMethod(Name = "GetRandomInts_Max")]
+            Task<List<int>> GetRandomIntsAsync(int count, int maxValue);
+
+            [WorkflowMethod(Name = "GetRandomInts_MinMax")]
+            Task<List<int>> GetRandomIntsAsync(int count, int minValue, int maxValue);
+
+            [WorkflowMethod(Name = "GetRandomBytes")]
+            Task<List<byte[]>> GetRandomBytesAsync(int count, int size);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class RandomWorkflow : WorkflowBase, IRandomWorkflow
+        {
+            public async Task<List<double>> GetRandomDoublesAsync(int count)
+            {
+                var list = new List<double>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(await Workflow.NextRandomDoubleAsync());
+                }
+
+                return await Task.FromResult(list);
+            }
+
+            public async Task<List<int>> GetRandomIntsAsync(int count)
+            {
+                var list = new List<int>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(await Workflow.NextRandomAsync());
+                }
+
+                return await Task.FromResult(list);
+            }
+
+            public async Task<List<int>> GetRandomIntsAsync(int count, int maxValue)
+            {
+                var list = new List<int>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(await Workflow.NextRandomAsync(maxValue));
+                }
+
+                return await Task.FromResult(list);
+            }
+
+            public async Task<List<int>> GetRandomIntsAsync(int count, int minValue, int maxValue)
+            {
+                var list = new List<int>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(await Workflow.NextRandomAsync(minValue, maxValue));
+                }
+
+                return await Task.FromResult(list);
+            }
+
+            public async Task<List<byte[]>> GetRandomBytesAsync(int count, int size)
+            {
+                var list = new List<byte[]>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    list.Add(await Workflow.NextRandomBytesAsync(size));
+                }
+
+                return await Task.FromResult(list);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_NextRandomDouble()
+        {
+            // Start a workflow that will return a set of random doubles (0.0 <= value < 1.0)
+            // and verify that there are only a small number of duplicates.  Then do the same
+            // with another workflow and verify that there are only a small number of duplicates
+            // compared to the first set.
+            //
+            // There's a statistically small chance that this could fail because we just happened
+            // to seed the random number generators the same or just got incrdeably lucky but
+            // I'm going to generate enough samples so this should be very unlikely.
+
+            var samples1   = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomDoublesAsync(RandomSampleCount);
+            var sampleSet  = new HashSet<double>();
+            var duplicates = 0;
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            foreach (var sample in samples1)
+            {
+                Assert.True(0.0 <= sample);
+                Assert.True(sample < 1.0);
+
+                if (sampleSet.Contains(sample))
+                {
+                    duplicates++;
+                }
+                else
+                {
+                    sampleSet.Add(sample);
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomDoubleAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+
+            // Compare against a new run.  Each wokflow should use a different seed
+            // so we're expecting a different sequence.
+
+            var samples2 = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomDoublesAsync(RandomSampleCount);
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            duplicates = 0;
+
+            for (int i = 0; i < RandomSampleCount; i++)
+            {
+                Assert.True(0.0 <= samples2[i]);
+                Assert.True(samples2[i] < 1.0);
+
+                if (samples1[i] == samples1[2])
+                {
+                    duplicates++;
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomDoubleAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_NextRandomInt()
+        {
+            // Start a workflow that will return a set of random integers (unconstrained)
+            // and verify that there are only a small number of duplicates.  Then do the same
+            // with another workflow and verify that there are only a small number of duplicates
+            // compared to the first set.
+            //
+            // There's a statistically small chance that this could fail because we just happened
+            // to seed the random number generators the same or just got incrdeably lucky but
+            // I'm going to generate enough samples so this should be very unlikely.
+
+            var samples1   = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomDoublesAsync(RandomSampleCount);
+            var sampleSet  = new HashSet<double>();
+            var duplicates = 0;
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            foreach (var sample in samples1)
+            {
+                if (sampleSet.Contains(sample))
+                {
+                    duplicates++;
+                }
+                else
+                {
+                    sampleSet.Add(sample);
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+
+            // Compare against a new run.  Each wokflow should use a different seed
+            // so we're expecting a different sequence.
+
+            var samples2 = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomIntsAsync(RandomSampleCount);
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            duplicates = 0;
+
+            for (int i = 0; i < RandomSampleCount; i++)
+            {
+                if (samples1[i] == samples1[2])
+                {
+                    duplicates++;
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_NextRandomInt_Max()
+        {
+            // Start a workflow that will return a set of random integers (<= 1 million)
+            // and verify that there are only a small number of duplicates.  Then do the same
+            // with another workflow and verify that there are only a small number of duplicates
+            // compared to the first set.
+            //
+            // There's a statistically small chance that this could fail because we just happened
+            // to seed the random number generators the same or just got incrdeably lucky but
+            // I'm going to generate enough samples so this should be very unlikely.
+
+            const int maxSample = 1000000;
+
+            var samples1   = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomIntsAsync(RandomSampleCount, maxSample);
+            var sampleSet  = new HashSet<double>();
+            var duplicates = 0;
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            foreach (var sample in samples1)
+            {
+                Assert.True(sample <= maxSample);
+
+                if (sampleSet.Contains(sample))
+                {
+                    duplicates++;
+                }
+                else
+                {
+                    sampleSet.Add(sample);
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync(max) returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+
+            // Compare against a new run.  Each wokflow should use a different seed
+            // so we're expecting a different sequence.
+
+            var samples2 = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomIntsAsync(RandomSampleCount, maxSample);
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            duplicates = 0;
+
+            for (int i = 0; i < RandomSampleCount; i++)
+            {
+                Assert.True(samples2[i] <= maxSample);
+
+                if (samples1[i] == samples1[2])
+                {
+                    duplicates++;
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync(max) returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_NextRandomInt_MinMax()
+        {
+            // Start a workflow that will return a set of random integers (1 million <= value <= 2 million)
+            // and verify that there are only a small number of duplicates.  Then do the same
+            // with another workflow and verify that there are only a small number of duplicates
+            // compared to the first set.
+            //
+            // There's a statistically small chance that this could fail because we just happened
+            // to seed the random number generators the same or just got incrdeably lucky but
+            // I'm going to generate enough samples so this should be very unlikely.
+
+            const int minSample = 1000000;
+            const int maxSample = 2000000;
+
+            var samples1   = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomIntsAsync(RandomSampleCount, minSample, maxSample);
+            var sampleSet  = new HashSet<double>();
+            var duplicates = 0;
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            foreach (var sample in samples1)
+            {
+                Assert.True(minSample <= sample);
+                Assert.True(sample <= maxSample);
+
+                if (sampleSet.Contains(sample))
+                {
+                    duplicates++;
+                }
+                else
+                {
+                    sampleSet.Add(sample);
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync(min, max) returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+
+            // Compare against a new run.  Each wokflow should use a different seed
+            // so we're expecting a different sequence.
+
+            var samples2 = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomIntsAsync(RandomSampleCount, minSample, maxSample);
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            duplicates = 0;
+
+            for (int i = 0; i < RandomSampleCount; i++)
+            {
+                Assert.True(minSample <= samples2[i]);
+                Assert.True(samples2[i] <= maxSample);
+
+                if (samples1[i] == samples1[2])
+                {
+                    duplicates++;
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync(min, max) returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_NextRandomBytes()
+        {
+            // Start a workflow that will return a set of random byte arrays and verify that there
+            // are only a small number of duplicates.  Then do the same with another workflow and
+            // verify that there are only a small number of duplicates compared to the first set.
+            //
+            // There's a statistically small chance that this could fail because we just happened
+            // to seed the random number generators the same or just got incrdeably lucky but
+            // I'm going to generate enough samples so this should be very unlikely.
+
+            const int size = 64;
+
+            var samples1   = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomBytesAsync(RandomSampleCount, size);
+            var duplicates = 0;
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            foreach (var sample in samples1)
+            {
+                Assert.Equal(size, sample.Length);
+
+                foreach (var item in samples1)
+                {
+                    if (NeonHelper.ArrayEquals(sample, item))
+                    {
+                        duplicates++;
+                        break;
+                    }
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomBytesAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+
+            // Compare against a new run.  Each wokflow should use a different seed
+            // so we're expecting a different sequence.
+
+            var samples2 = await client.NewWorkflowStub<IRandomWorkflow>().GetRandomBytesAsync(RandomSampleCount, size);
+
+            Assert.Equal(RandomSampleCount, samples1.Count);
+
+            duplicates = 0;
+
+            for (int i = 0; i < RandomSampleCount; i++)
+            {
+                Assert.Equal(size, samples2[i].Length);
+
+                foreach (var item in samples1)
+                {
+                    if (NeonHelper.ArrayEquals(samples2[i], item))
+                    {
+                        duplicates++;
+                        break;
+                    }
+                }
+            }
+
+            Assert.True(duplicates <= MaxDuplicateRandomSamples, $"NextRandomAsync() returned more than {MaxDuplicateRandomSamples} duplicate values out of {RandomSampleCount} generated samples.");
+        }
     }
 }

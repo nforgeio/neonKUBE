@@ -408,14 +408,9 @@ namespace Neon.Cadence
         /// Used internally to reset any static state during unit tests.  This is
         /// typically called by the [CadenceFixture] unit testing fixture to ensure
         /// that the Cadence client starts out in a well known state.
-        /// </summary>
+        /// </summary>x
         internal static void Reset()
         {
-            // $debug(jeff.lill):
-            //
-            // Uncomment this after we've verified that cadence-proxy uses
-            // the client IDs passed to it.
-
             nextClientId     = 0;
             clientCount      = 0;
             proxyProcess     = null;
@@ -595,6 +590,7 @@ namespace Neon.Cadence
         private Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
         private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
         private Dictionary<string, Type>        activityTypes = new Dictionary<string, Type>();
+        private bool                            isDisposed    = false;
         private long                            nextRequestId = 0;
         private int                             proxyPort;
         private HttpClient                      proxyClient;
@@ -871,36 +867,40 @@ namespace Neon.Cadence
 
                     lock (staticSyncLock)
                     {
-                        clientCount--;
-
-                        if (clientCount < 0)
+                        if (!isDisposed)
                         {
-                            throw new InvalidOperationException("Client reference count underflow.");
-                        }
+                            isDisposed = true;
+                            clientCount--;
 
-                        if (clientCount == 0)
-                        {
-                            // Signal the proxy that it should exit gracefully and then
-                            // allow it [Settings.TerminateTimeout] to actually exit
-                            // before killing it.
-
-                            try
+                            if (clientCount < 0)
                             {
-                                CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
-                            }
-                            catch
-                            {
-                                // Ignoring these.
+                                throw new InvalidOperationException("Client reference count underflow.");
                             }
 
-                            if (proxyProcess != null && !proxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
+                            if (clientCount == 0)
                             {
-                                log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
-                                proxyProcess.Kill();
-                            }
+                                // Signal the proxy that it should exit gracefully and then
+                                // allow it [Settings.TerminateTimeout] to actually exit
+                                // before killing it.
 
-                            proxyProcess     = null;
-                            proxyInitialized = false;
+                                try
+                                {
+                                    CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
+                                }
+                                catch
+                                {
+                                    // Ignoring these.
+                                }
+
+                                if (proxyProcess != null && !proxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
+                                {
+                                    log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
+                                    proxyProcess.Kill();
+                                }
+
+                                proxyProcess     = null;
+                                proxyInitialized = false;
+                            }
                         }
                     }
                 }

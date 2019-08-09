@@ -698,7 +698,7 @@ namespace Neon.Cadence
         /// will generally see different sequences of random numbers.
         /// </note>
         /// </remarks>
-        public async Task<double> NextRandomDouble()
+        public async Task<double> NextRandomDoubleAsync()
         {
             return await SideEffectAsync(() => random.NextDouble());
         }
