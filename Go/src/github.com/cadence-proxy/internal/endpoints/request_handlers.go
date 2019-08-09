@@ -82,6 +82,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ConnectRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int("ProccessId", os.Getpid()),
 	)
 
@@ -140,7 +141,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 	// add the new ClientHelper to the Clients map
 	// build reply
-	_ = Clients.Add(cadenceclient.NextClientID(), clientHelper)
+	_ = Clients.Add(request.GetClientID(), clientHelper)
 	buildReply(reply, nil)
 
 	return reply

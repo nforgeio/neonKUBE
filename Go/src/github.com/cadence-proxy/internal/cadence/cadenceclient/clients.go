@@ -21,14 +21,6 @@ import (
 	"sync"
 )
 
-var (
-	mu sync.RWMutex
-
-	// clientsID is incremented (protected by a mutex) every time
-	// a new cadence workflow service client is created
-	clientID int64
-)
-
 type (
 
 	// ClientsMap holds a thread-safe map[interface{}]interface{} that stores
@@ -37,26 +29,6 @@ type (
 		safeMap sync.Map
 	}
 )
-
-//----------------------------------------------------------------------------
-// clientID methods
-
-// NextClientID increments the global variable
-// clientID by 1 and is protected by a mutex lock
-func NextClientID() int64 {
-	mu.Lock()
-	clientID = clientID + 1
-	defer mu.Unlock()
-	return clientID
-}
-
-// GetClientID gets the value of the global variable
-// clientID and is protected by a mutex Read lock
-func GetClientID() int64 {
-	mu.RLock()
-	defer mu.RUnlock()
-	return clientID
-}
 
 //----------------------------------------------------------------------------
 // ClientsMap instance methods
