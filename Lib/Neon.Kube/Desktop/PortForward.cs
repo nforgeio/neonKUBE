@@ -108,23 +108,15 @@ namespace Neon.Kube
         /// <param name="serviceName"></param>
         /// <param name="localPort">The local port.</param>
         /// <param name="remotePort">The remote port.</param>
-        /// <param name="@namespace"></param>
-
+        /// <param name="namespace">
         /// Optionally specifies an acceptable server certificate.  This can be used 
-        /// as a way to allow access for a specific self-signed certificate.  Passing 
-        /// a certificate implies <paramref name="remoteTls"/><c>=true</c>.
+        /// as a way to allow access for a specific self-signed certificate.
         /// </param>
-        /// <param name="clientCertificate">
-        /// Optionally specifies a client certificate.  Passing a certificate implies
-        /// <paramref name="remoteTls"/><c>=true</c>.
-        /// </param>
-        /// <param name="requestHandler">Optional request hook.</param>
-        /// <param name="responseHandler">Optional response hook.</param>
         public PortForward(
-            string                  serviceName,
-            int                     localPort,
-            int                     remotePort,
-            string                  @namespace = "default")
+            string      serviceName,
+            int         localPort,
+            int         remotePort,
+            string      @namespace = "default")
         {
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
             Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
@@ -134,13 +126,13 @@ namespace Neon.Kube
                 throw new NotSupportedException($"[{nameof(PortForward)}] is supported only on Windows.");
             }
 
-            this.serviceName     = serviceName;
-            this.localPort       = localPort;
-            this.remotePort      = remotePort;
-            this.@namespace    = @namespace;
+            this.serviceName         = serviceName;
+            this.localPort           = localPort;
+            this.remotePort          = remotePort;
+            this.@namespace          = @namespace;
             this.kubectlProxyProcess = new Process();
-            // Create the client.
 
+            // Create the client.
 
             KubeHelper.PortForward(serviceName, remotePort, localPort, @namespace, kubectlProxyProcess);
         }
