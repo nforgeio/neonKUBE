@@ -44,72 +44,38 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructs a query/signal method map for a workflow type.
         /// </summary>
-        /// <param name="workflowType">The workflow interface.</param>
+        /// <param name="workflowType">The workflow type.</param>
         /// <returns>The <see cref="WorkflowMethodMap"/>.</returns>
         public static WorkflowMethodMap Create(Type workflowType)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null);
-
-            // $todo(jeff.lill):
-            //
-            // The code below doesn't not verify that query/signal names are unique
-            // but also doesn't barf.  It will send requets to the last method 
-            // encountered with the same name, which is pretty reasonable.
-            //
-            // In a perfect world, we'd detect this and throw an exception.
+            Covenant.Requires<ArgumentException>(!workflowType.IsInterface);
 
             var map = new WorkflowMethodMap();
 
-            foreach (var method in workflowType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (var @interface in workflowType.GetInterfaces())
             {
-                // Signal methods are tagged by [SignalHandler], accept a single byte array parameter,
-                // and returns [Task].
-
-                var signalHandlerAttribute = method.GetCustomAttribute<SignalMethodAttribute>();
-
-                if (signalHandlerAttribute != null)
+                foreach (var method in @interface.GetMethods(BindingFlags.Public | BindingFlags.Instance))
                 {
-                    if (method.ReturnType != typeof(Task))
+                    // Signal methods are tagged by [SignalMethod].
+
+                    var signalMethodAttribute = method.GetCustomAttribute<SignalMethodAttribute>();
+
+                    if (signalMethodAttribute != null)
                     {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't return [void].  It will be ignored.");
+                        map.nameToSignalMethod[signalMethodAttribute.Name] = method;
                         continue;
                     }
 
-                    var parameters = method.GetParameters();
+                    // Query methods are tagged by [QueryMethod].
 
-                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
+                    var queryMethodAttribute = method.GetCustomAttribute<QueryMethodAttribute>();
+
+                    if (queryMethodAttribute != null)
                     {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] signal handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
+                        map.nameToQueryMethod[queryMethodAttribute.Name] = method;
                         continue;
                     }
-
-                    map.nameToSignalMethod[signalHandlerAttribute.Name] = method;
-                    continue;
-                }
-
-                // Query methods are tagged by [QueryHandler], accept a single byte array parameter,
-                // and returns [Task<byte[]>].
-
-                var queryHandlerAttribute = method.GetCustomAttribute<QueryMethodAttribute>();
-
-                if (queryHandlerAttribute != null)
-                {
-                    if (method.ReturnType != typeof(Task<byte[]>))
-                    {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't return a byte array.  It will be ignored.");
-                        continue;
-                    }
-
-                    var parameters = method.GetParameters();
-
-                    if (parameters.Length != 1 || parameters[0].ParameterType != typeof(byte[]))
-                    {
-                        Log.LogWarn($"Workflow [{workflowType.FullName}.{method.Name}()] query handler is invalid because it doesn't accept a single byte array parameter.  It will be ignored.");
-                        continue;
-                    }
-
-                    map.nameToQueryMethod[queryHandlerAttribute.Name] = method;
-                    continue;
                 }
             }
 

@@ -1020,7 +1020,7 @@ namespace TestCadence
             WorkflowSignalOnce.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowSignalOnce>();
-            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds * 10));
+            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds));
 
             NeonHelper.WaitFor(() => WorkflowSignalOnce.IsRunning, workflowTimeout);
 

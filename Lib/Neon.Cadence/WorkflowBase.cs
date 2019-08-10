@@ -423,17 +423,6 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                if (request.ReplayStatus != InternalReplayStatus.Unspecified)
-                {
-#if TODO
-                    // $todo(jeff.lill): Restore this code once Jack sets the status.
-
-                    return new WorkflowInvokeReply()
-                    {
-                        Error = new CadenceError($"[{nameof(WorkflowInvokeRequest)}]: [{nameof(request.ReplayStatus)}] cannot be [{nameof(InternalReplayStatus.Unspecified)}]..")
-                    };
-#endif
-                }
 
                 if (idToWorkflow.TryGetValue(workflowKey, out workflow))
                 {
@@ -590,7 +579,15 @@ namespace Neon.Cadence
 
                     if (method != null)
                     {
-                        await (Task)(method.Invoke(workflow, new object[] { request.SignalArgs }));
+                        var methodParameters     = method.GetParameters();
+                        var methodParameterTypes = new Type[methodParameters.Length];
+
+                        for (int i = 0; i < methodParameters.Length; i++)
+                        {
+                            methodParameterTypes[i] = methodParameters[i].ParameterType;
+                        }
+
+                        await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, methodParameterTypes)));
 
                         return new WorkflowSignalInvokeReply()
                         {
@@ -644,12 +641,36 @@ namespace Neon.Cadence
 
                     if (method != null)
                     {
-                        var result = await (Task<byte[]>)(method.Invoke(workflow, new object[] { request.QueryArgs }));
+                        var resultType           = method.ReturnType;
+                        var methodParameters     = method.GetParameters();
+                        var methodParameterTypes = new Type[methodParameters.Length];
+
+                        for (int i = 0; i < methodParameters.Length; i++)
+                        {
+                            methodParameterTypes[i] = methodParameters[i].ParameterType;
+                        }
+
+                        var serializedResult = emptyBytes;
+
+                        if (resultType.IsGenericType)
+                        {
+                            // Query method returns: Task<T>
+
+                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, client.DataConverter.FromDataArray(request.QueryArgs, methodParameterTypes)));
+
+                            serializedResult = client.DataConverter.ToData(result);
+                        }
+                        else
+                        {
+                            // Query method returns: Task
+
+                            await (Task)method.Invoke(workflow, client.DataConverter.FromDataArray(request.QueryArgs, methodParameterTypes));
+                        }
 
                         return new WorkflowQueryInvokeReply()
                         {
                             RequestId = request.RequestId,
-                            Result    = result
+                            Result    = serializedResult
                         };
                     }
                     else
