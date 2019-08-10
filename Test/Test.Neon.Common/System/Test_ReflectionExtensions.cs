@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Type.cs
+// FILE:	    Test_ReflectionExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -66,11 +66,18 @@ namespace TestCommon
         }
     }
 
-    public class Test_Type
+    internal class MethodTest
+    {
+        public void Test(string p1, int p2, double p3)
+        {
+        }
+    }
+
+    public class Test_ReflectionExtensions
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Implements()
+        public void Type_Implements()
         {
             var fooType         = typeof(Foo);
             var foofooType      = typeof(FooFoo);
@@ -85,6 +92,17 @@ namespace TestCommon
 
             Assert.Throws<ArgumentNullException>(() => ((Type)null).Implements<IFoo>());
             Assert.Throws<ArgumentException>(() => fooType.Implements<NotFoo>());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Method_GetParameterTypes()
+        {
+            var type       = typeof(MethodTest);
+            var method     = type.GetMethod("Test");
+            var paramTypes = method.GetParamaterTypes();
+
+            Assert.Equal(new Type[] { typeof(string), typeof(int), typeof(double) }, paramTypes);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TypeExtensions.cs
+// FILE:	    ReflectionExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,10 +28,13 @@ using System.Threading.Tasks;
 namespace System
 {
     /// <summary>
-    /// Type extension methods.
+    /// Reflection related extension methods.
     /// </summary>
-    public static class TypeExtensions
+    public static class ReflectionExtensions
     {
+        //---------------------------------------------------------------------
+        // System.Type:
+
         /// <summary>
         /// Determines whether a <see cref="System.Type"/> implements a specific interface.
         /// </summary>
@@ -72,6 +76,27 @@ namespace System
             }
 
             return false;
+        }
+
+        //---------------------------------------------------------------------
+        // System.Reflection.Method
+
+        /// <summary>
+        /// Returns the array of types for a method's parameters.
+        /// </summary>
+        /// <param name="method">The method.</param>
+        /// <returns>The parameter type array.</returns>
+        public static Type[] GetParamaterTypes(this MethodInfo method)
+        {
+            var methodParameters     = method.GetParameters();
+            var methodParameterTypes = new Type[methodParameters.Length];
+
+            for (int i = 0; i < methodParameters.Length; i++)
+            {
+                methodParameterTypes[i] = methodParameters[i].ParameterType;
+            }
+
+            return methodParameterTypes;
         }
     }
 }
