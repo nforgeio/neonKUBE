@@ -14,6 +14,8 @@ data:
 {{- if .Values.kiali.contextPath }}
       web_root: {{ .Values.kiali.contextPath }}
 {{- end }}
+    auth:
+      strategy: anonymous
     external_services:
       istio:
         url_service_version: http://istio-pilot.{{ .Values.global.istioNamespace }}:8080/version
