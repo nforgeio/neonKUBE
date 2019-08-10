@@ -872,5 +872,161 @@ namespace TestCadence
                 Assert.Equal(value, await client.NewWorkflowStub<IWorkflowEcho>().EchoAsync(value));
             }
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowSideEffect : IWorkflow
+        {
+            [WorkflowMethod(Name = "SideEffect")]
+            Task<string> SideEffectAsync(string input);
+
+            [WorkflowMethod(Name = "GenericSideEffect")]
+            Task<string> GenericSideEffectAsync(string input);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowSideEffect : WorkflowBase, IWorkflowSideEffect
+        {
+            public async Task<string> SideEffectAsync(string input)
+            {
+                var output = (string)await Workflow.SideEffectAsync(typeof(string), () => input);
+
+                return await Task.FromResult(output);
+            }
+
+            public async Task<string> GenericSideEffectAsync(string input)
+            {
+                var output = await Workflow.SideEffectAsync<string>(() => input);
+
+                return await Task.FromResult(output);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_SideEffect()
+        {
+            // Verify that SideEffect() and SideEffect<T>() work.
+
+            Assert.Equal("test1", await client.NewWorkflowStub<IWorkflowSideEffect>().SideEffectAsync("test1"));
+            Assert.Equal("test2", await client.NewWorkflowStub<IWorkflowSideEffect>().GenericSideEffectAsync("test2"));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowMutableSideEffect : IWorkflow
+        {
+            [WorkflowMethod(Name = "MutableSideEffect")]
+            Task<string> MutableSideEffectAsync(string id, string input);
+
+            [WorkflowMethod(Name = "GenericSideEffect")]
+            Task<string> GenericMutableSideEffectAsync(string id, string input);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowMutableSideEffect : WorkflowBase, IWorkflowMutableSideEffect
+        {
+            public async Task<string> MutableSideEffectAsync(string id, string input)
+            {
+                var output = (string)await Workflow.MutableSideEffectAsync(typeof(string), id, () => input);
+
+                return await Task.FromResult(output);
+            }
+
+            public async Task<string> GenericMutableSideEffectAsync(string id, string input)
+            {
+                var output = await Workflow.MutableSideEffectAsync<string>(id, () => input);
+
+                return await Task.FromResult(output);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_MutableSideEffect()
+        {
+            // Verify that MutableSideEffect() and MutableSideEffect<T>() work.
+
+            Assert.Equal("test1", await client.NewWorkflowStub<IWorkflowMutableSideEffect>().MutableSideEffectAsync("id-1", "test1"));
+            Assert.Equal("test2", await client.NewWorkflowStub<IWorkflowMutableSideEffect>().GenericMutableSideEffectAsync("id-2", "test2"));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowSignalOnce : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> RunAsync(TimeSpan timeout);
+
+            [SignalMethod("signal")]
+            Task Signal(string message);
+        }
+
+        /// <summary>
+        /// This workflow tests basic signal reception by waiting for a signal and then
+        /// returning the message passed with the signal.  The workflow will timeout
+        /// if a signal is not received in time.  Note that we've hacked workflow start
+        /// detection using a static field.
+        /// </summary>
+        [Workflow(AutoRegister = true)]
+        public class WorkflowSignalOnce : WorkflowBase, IWorkflowSignalOnce
+        {
+            //-----------------------------------------------------------------
+            // Static members
+
+            public static bool IsRunning { get; private set; } = false;
+
+            public static void Reset()
+            {
+                IsRunning = false;
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members
+
+            private string signalMessage = null;
+
+            public async Task<string> RunAsync(TimeSpan timeout)
+            {
+                IsRunning = true;
+
+                var timeoutUtc = await Workflow.UtcNowAsync() + timeout;
+
+                while (await Workflow.UtcNowAsync() < timeoutUtc)
+                {
+                    if (signalMessage != null)
+                    {
+                        return signalMessage;
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                throw new CadenceTimeoutException("Timeout waiting for signal.");
+            }
+
+            public async Task Signal(string message)
+            {
+                signalMessage = message;
+
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_SignalBasic()
+        {
+            WorkflowSignalOnce.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowSignalOnce>();
+            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+            NeonHelper.WaitFor(() => WorkflowSignalOnce.IsRunning, workflowTimeout);
+
+            await stub.Signal("my-signal-message");
+
+            Assert.Equal("my-signal-message", await task);
+        }
     }
 }

@@ -607,8 +607,8 @@ namespace Neon.Cadence
         /// result type.
         /// </para>
         /// </summary>
-        /// <param name="id">Identifies the value in the workflow history.</param>
         /// <param name="resultType">Specifies the result type.</param>
+        /// <param name="id">Identifies the value in the workflow history.</param>
         /// <param name="function">The side effect function.</param>
         /// <returns>The latest value persisted to the workflow history.</returns>
         /// <remarks>
@@ -631,7 +631,7 @@ namespace Neon.Cadence
         /// The .NET version of this method currently works a bit differently than
         /// the Java and GOLANG clients which will only call the function once.
         /// The .NET implementation calls the function every time 
-        /// <see cref="MutableSideEffectAsync(string, Type, Func{object})"/>
+        /// <see cref="MutableSideEffectAsync(Type, string, Func{object})"/>
         /// is called but it will ignore the all but the first call's result.
         /// </para>
         /// <para>
@@ -641,7 +641,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public async Task<object> MutableSideEffectAsync(string id, Type resultType, Func<dynamic> function)
+        public async Task<object> MutableSideEffectAsync(Type resultType, string id, Func<dynamic> function)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
             Covenant.Requires<ArgumentNullException>(resultType != null);

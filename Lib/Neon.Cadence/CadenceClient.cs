@@ -1227,7 +1227,7 @@ namespace Neon.Cadence
                         default:
 
                             httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                            await httpResponse.WriteAsync($"[cadence-client] Does not support [{request.Type}] messages from the [cadence-proxy].");
+                            await httpResponse.WriteAsync($"[cadence-client] does not support [{request.Type}] messages from the [cadence-proxy].");
                             break;
                     }
                 }
