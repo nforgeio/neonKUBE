@@ -254,20 +254,12 @@ namespace Neon.Cadence
                     }
                     else
                     {
-                        var methodParameters     = method.GetParameters();
-                        var methodParameterTypes = new Type[methodParameters.Length];
-
-                        for (int i = 0; i < methodParameters.Length; i++)
-                        {
-                            methodParameterTypes[i] = methodParameters[i].ParameterType;
-                        }
-
                         nameToRegistration[workflowTypeKey] =
                             new WorkflowRegistration()
                             {
                                 WorkflowType                 = workflowType,
                                 WorkflowMethod               = method,
-                                WorkflowMethodParameterTypes = methodParameterTypes,
+                                WorkflowMethodParameterTypes = method.GetParameterTypes(),
                                 MethodMap                    = methodMap
                             };
                     }
@@ -579,15 +571,7 @@ namespace Neon.Cadence
 
                     if (method != null)
                     {
-                        var methodParameters     = method.GetParameters();
-                        var methodParameterTypes = new Type[methodParameters.Length];
-
-                        for (int i = 0; i < methodParameters.Length; i++)
-                        {
-                            methodParameterTypes[i] = methodParameters[i].ParameterType;
-                        }
-
-                        await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, methodParameterTypes)));
+                        await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, method.GetParameterTypes())));
 
                         return new WorkflowSignalInvokeReply()
                         {
@@ -642,13 +626,7 @@ namespace Neon.Cadence
                     if (method != null)
                     {
                         var resultType           = method.ReturnType;
-                        var methodParameters     = method.GetParameters();
-                        var methodParameterTypes = new Type[methodParameters.Length];
-
-                        for (int i = 0; i < methodParameters.Length; i++)
-                        {
-                            methodParameterTypes[i] = methodParameters[i].ParameterType;
-                        }
+                        var methodParameterTypes = method.GetParameterTypes();
 
                         var serializedResult = emptyBytes;
 

@@ -86,7 +86,7 @@ namespace System
         /// </summary>
         /// <param name="method">The method.</param>
         /// <returns>The parameter type array.</returns>
-        public static Type[] GetParamaterTypes(this MethodInfo method)
+        public static Type[] GetParameterTypes(this MethodInfo method)
         {
             var methodParameters     = method.GetParameters();
             var methodParameterTypes = new Type[methodParameters.Length];

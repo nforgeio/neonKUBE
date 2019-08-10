@@ -252,21 +252,13 @@ namespace Neon.Cadence
                     }
                     else
                     {
-                        var methodParameters     = method.GetParameters();
-                        var methodParameterTypes = new Type[methodParameters.Length];
-
-                        for (int i = 0; i < methodParameters.Length; i++)
-                        {
-                            methodParameterTypes[i] = methodParameters[i].ParameterType;
-                        }
-
                         nameToRegistration[activityTypeKey] =
                             new ActivityRegistration()
                             {
                                 ActivityType                 = activityType,
                                 ActivityConstructor          = constructor,
                                 ActivityMethod               = method,
-                                ActivityMethodParamaterTypes = methodParameterTypes
+                                ActivityMethodParamaterTypes = method.GetParameterTypes()
                             };
                     }
                 }

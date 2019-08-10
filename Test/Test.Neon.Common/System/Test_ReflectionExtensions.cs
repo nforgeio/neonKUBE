@@ -100,7 +100,7 @@ namespace TestCommon
         {
             var type       = typeof(MethodTest);
             var method     = type.GetMethod("Test");
-            var paramTypes = method.GetParamaterTypes();
+            var paramTypes = method.GetParameterTypes();
 
             Assert.Equal(new Type[] { typeof(string), typeof(int), typeof(double) }, paramTypes);
         }
