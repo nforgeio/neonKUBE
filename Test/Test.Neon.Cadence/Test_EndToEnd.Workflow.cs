@@ -1379,5 +1379,105 @@ namespace TestCadence
             await stub.Signal2Async("my-signal-2");
             Assert.Equal(new List<string>() { "query-1:my-query-1", "signal-1:my-signal-1", "query-2:my-query-2", "signal-2:my-signal-2" }, await task);
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowChild : IWorkflow
+        {
+            [WorkflowMethod(Name = "run")]
+            Task RunAsync();
+
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+
+            [QueryMethod("query")]
+            Task<string> QueryAsync(string value);
+
+            [SignalMethod("signal")]
+            Task SignalAsync(string value);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowChild : WorkflowBase, IWorkflowChild
+        {
+            //-----------------------------------------------------------------
+            // Static members
+
+            public static bool          WasExecuted     = false;
+            public static List<string>  ReceivedQueries = new List<string>();
+            public static List<string>  ReceivedSignals = new List<string>();
+
+            public static void Reset()
+            {
+                WasExecuted = false;
+                ReceivedQueries.Clear();
+                ReceivedSignals.Clear();
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members
+
+            public async Task RunAsync()
+            {
+                WasExecuted = true;
+
+                await Task.CompletedTask;
+            }
+
+            public async Task<string> HelloAsync(string name)
+            {
+                WasExecuted = true;
+
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<string> QueryAsync(string value)
+            {
+                ReceivedQueries.Add(value);
+
+                return await Task.FromResult(value);
+            }
+
+            public async Task SignalAsync(string value)
+            {
+                ReceivedSignals.Add(value);
+
+                await Task.CompletedTask;
+            }
+        }
+
+        public interface IWorkflowParent : IWorkflow
+        {
+            [WorkflowMethod]
+            Task ExecuteChildAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowParent : WorkflowBase, IWorkflowParent
+        {
+            /// <summary>
+            /// Simply executes a child workflow.
+            /// </summary>
+            public async Task ExecuteChildAsync()
+            {
+                var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+
+                await childStub.RunAsync();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Child()
+        {
+            // Verify that we can call a child workflow that doesn't return a result.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            await stub.ExecuteChildAsync();
+            Assert.True(WorkflowChild.WasExecuted);
+        }
     }
 }

@@ -64,8 +64,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidNoArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow().Workflow));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidNoArgs, ActivityEntryVoidNoArgs>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidNoArgs>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewLocalActivityStub<IActivityEntryVoidNoArgs, ActivityEntryVoidNoArgs>(client, new DummyWorkflow().Workflow));
         }
 
         //---------------------------------------------------------------------
@@ -88,16 +88,16 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidWithOptions()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new ActivityOptions(), domain: "my-domain"));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new LocalActivityOptions()));
+            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new ActivityOptions(), domain: "my-domain"));
+            Assert.NotNull(StubManager.NewLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new LocalActivityOptions()));
         }
 
         //---------------------------------------------------------------------
@@ -120,8 +120,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityResultWithArgs()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow().Workflow));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityEntryResultWithArgs, ActivityEntryResultWithArgs>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryResultWithArgs>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewLocalActivityStub<IActivityEntryResultWithArgs, ActivityEntryResultWithArgs>(client, new DummyWorkflow().Workflow));
         }
 
         //---------------------------------------------------------------------
@@ -160,8 +160,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityMultiMethods()
         {
-            Assert.NotNull(StubManager.CreateActivityStub<IActivityMultiMethods>(client, new DummyWorkflow().Workflow));
-            Assert.NotNull(StubManager.CreateLocalActivityStub<IActivityMultiMethods, ActivityMultiMethods>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewActivityStub<IActivityMultiMethods>(client, new DummyWorkflow().Workflow));
+            Assert.NotNull(StubManager.NewLocalActivityStub<IActivityMultiMethods, ActivityMultiMethods>(client, new DummyWorkflow().Workflow));
         }
     }
 }

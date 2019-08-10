@@ -56,7 +56,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowEntryVoidNoArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryVoidNoArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowEntryVoidNoArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -73,7 +73,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowEntryVoidWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryVoidWithArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowEntryVoidWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -90,7 +90,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowResultWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryResultWithArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -99,7 +99,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowResultWithOptions()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new WorkflowOptions() { TaskList = "my-tasklist" } , domain: "my-domain");
+            var stub = StubManager.NewWorkflowStub<IWorkflowEntryResultWithArgs>(client, options: new WorkflowOptions() { TaskList = "my-tasklist" } , domain: "my-domain");
 
             Assert.NotNull(stub);
         }
@@ -119,7 +119,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowSignalNoArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowSignalNoArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowSignalNoArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -139,7 +139,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowSignalWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowSignalWithArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowSignalWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -159,7 +159,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowQueryVoidNoArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryVoidNoArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowQueryVoidNoArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -179,7 +179,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowQueryVoidWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryVoidWithArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowQueryVoidWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -199,7 +199,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowQueryResultWithArgs()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowQueryResultWithArgs>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowQueryResultWithArgs>(client);
 
             Assert.NotNull(stub);
         }
@@ -240,7 +240,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_WorkflowMultiMethods()
         {
-            var stub = StubManager.CreateWorkflowStub<IWorkflowMultiMethods>(client);
+            var stub = StubManager.NewWorkflowStub<IWorkflowMultiMethods>(client);
 
             Assert.NotNull(stub);
         }

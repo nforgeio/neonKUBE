@@ -1109,7 +1109,7 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
 
-            return StubManager.CreateActivityStub<TActivityInterface>(Client, this, options, domain);
+            return StubManager.NewActivityStub<TActivityInterface>(Client, this, options, domain);
         }
 
         /// <summary>
@@ -1131,6 +1131,8 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
 
             throw new NotImplementedException();
+
+            //return StubManager.NewChildWorkflowStub<IWorkflowInterface>(options);
         }
 
         /// <summary>
@@ -1227,7 +1229,7 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
 
-            return StubManager.CreateLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
+            return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
 
         /// <summary>
