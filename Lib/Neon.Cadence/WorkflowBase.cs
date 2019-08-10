@@ -454,7 +454,7 @@ namespace Neon.Cadence
                 idToWorkflow.Add(workflowKey, workflow);
             }
 
-            // Register any workflow signal and/or query handlers with cadence-proxy
+            // Register any workflow signal and/or query methods with cadence-proxy.
 
             foreach (var signalName in registration.MethodMap.GetSignalNames())
             {

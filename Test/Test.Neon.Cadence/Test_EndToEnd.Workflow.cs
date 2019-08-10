@@ -45,8 +45,6 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        private static bool workflowTests_WorkflowWithNoResultCalled;
-
         public interface IWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
@@ -56,9 +54,22 @@ namespace TestCadence
         [Workflow(AutoRegister = true)]
         public class WorkflowWithNoResult : WorkflowBase, IWorkflowWithNoResult
         {
+            //-------------------------------------------------------
+            // Static members
+
+            public static bool WorkflowWithNoResultCalled = false;
+
+            public static void Reset()
+            {
+                WorkflowWithNoResultCalled = false;
+            }
+
+            //-------------------------------------------------------
+            // Instance members
+
             public async Task RunAsync()
             {
-                workflowTests_WorkflowWithNoResultCalled = true;
+                WorkflowWithNoResultCalled = true;
 
                 await Task.CompletedTask;
             }
@@ -71,13 +82,13 @@ namespace TestCadence
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
 
-            workflowTests_WorkflowWithNoResultCalled = false;
+            WorkflowWithNoResult.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowWithNoResult>();
 
             await stub.RunAsync();
 
-            Assert.True(workflowTests_WorkflowWithNoResultCalled);
+            Assert.True(WorkflowWithNoResult.WorkflowWithNoResultCalled);
         }
 
         //---------------------------------------------------------------------
@@ -953,23 +964,23 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowSignalOnce : IWorkflow
+        public interface IWorkflowSignal : IWorkflow
         {
             [WorkflowMethod]
-            Task<string> RunAsync(TimeSpan timeout);
+            Task<List<string>> RunAsync(TimeSpan timeout, int expectedSignals);
 
             [SignalMethod("signal")]
-            Task Signal(string message);
+            Task SignalAsync(string message);
         }
 
         /// <summary>
-        /// This workflow tests basic signal reception by waiting for a signal and then
-        /// returning the message passed with the signal.  The workflow will timeout
-        /// if a signal is not received in time.  Note that we've hacked workflow start
+        /// This workflow tests basic signal reception by waiting for some number of signals
+        /// and then returning the received signal messages.  The workflow will timeout
+        /// if the signals aren't received in time.  Note that we've hacked workflow start
         /// detection using a static field.
         /// </summary>
         [Workflow(AutoRegister = true)]
-        public class WorkflowSignalOnce : WorkflowBase, IWorkflowSignalOnce
+        public class WorkflowSignal : WorkflowBase, IWorkflowSignal
         {
             //-----------------------------------------------------------------
             // Static members
@@ -984,9 +995,9 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // Instance members
 
-            private string signalMessage = null;
+            private List<string> signalMessages = new List<string>();
 
-            public async Task<string> RunAsync(TimeSpan timeout)
+            public async Task<List<string>> RunAsync(TimeSpan timeout, int expectedSignals)
             {
                 IsRunning = true;
 
@@ -994,20 +1005,20 @@ namespace TestCadence
 
                 while (await Workflow.UtcNowAsync() < timeoutUtc)
                 {
-                    if (signalMessage != null)
+                    if (signalMessages.Count >= expectedSignals)
                     {
-                        return signalMessage;
+                        return signalMessages;
                     }
 
                     await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
                 }
 
-                throw new CadenceTimeoutException("Timeout waiting for signal.");
+                throw new CadenceTimeoutException("Timeout waiting for signal(s).");
             }
 
-            public async Task Signal(string message)
+            public async Task SignalAsync(string message)
             {
-                signalMessage = message;
+                signalMessages.Add(message);
 
                 await Task.CompletedTask;
             }
@@ -1015,18 +1026,358 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_SignalBasic()
+        public async Task Workflow_SignalOnce()
         {
-            WorkflowSignalOnce.Reset();
+            WorkflowSignal.Reset();
 
-            var stub = client.NewWorkflowStub<IWorkflowSignalOnce>();
-            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+            var stub = client.NewWorkflowStub<IWorkflowSignal>();
+            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedSignals: 1);
 
-            NeonHelper.WaitFor(() => WorkflowSignalOnce.IsRunning, workflowTimeout);
+            NeonHelper.WaitFor(() => WorkflowSignal.IsRunning, workflowTimeout);
 
-            await stub.Signal("my-signal-message");
+            await stub.SignalAsync("my-signal-1");
 
-            Assert.Equal("my-signal-message", await task);
+            Assert.Equal(new List<string>() { "my-signal-1" }, await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_SignalTwice()
+        {
+            WorkflowSignal.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowSignal>();
+            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedSignals: 2);
+
+            NeonHelper.WaitFor(() => WorkflowSignal.IsRunning, workflowTimeout);
+
+            await stub.SignalAsync("my-signal-1");
+            await stub.SignalAsync("my-signal-2");
+
+            Assert.Equal(new List<string>() { "my-signal-1", "my-signal-2" }, await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_SignalBeforeStart()
+        {
+            // Verify that we're not allowed to send a signal via a
+            // stub before we started the workflow.
+
+            WorkflowSignal.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowSignal>();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.SignalAsync("my-signal"));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowQuery : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<List<string>> RunAsync(TimeSpan timeout, int expectedQueries);
+
+            [QueryMethod("query")]
+            Task<string> QueryAsync(string arg1, int arg2);
+
+            [QueryMethod("query-no-result")]
+            Task QueryNoResultAsync(string arg1, int arg2);
+        }
+
+        /// <summary>
+        /// This workflow tests basic query reception by waiting for some number of queries
+        /// and then returning the generated query results.  The queries will return the 
+        /// parameters converted to strings and separated with a colon.  The workflow will
+        /// timeout if the queries aren't received in time.  Note that we've hacked workflow
+        /// start detection using a static field.
+        /// </summary>
+        [Workflow(AutoRegister = true)]
+        public class WorkflowQuery : WorkflowBase, IWorkflowQuery
+        {
+            //-----------------------------------------------------------------
+            // Static members
+
+            public static bool IsRunning { get; private set; } = false;
+
+            public static void Reset()
+            {
+                IsRunning = false;
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members
+
+            private List<string> queryResults = new List<string>();
+
+            public async Task<List<string>> RunAsync(TimeSpan timeout, int expectedQueries)
+            {
+                IsRunning = true;
+
+                var timeoutUtc = await Workflow.UtcNowAsync() + timeout;
+
+                while (await Workflow.UtcNowAsync() < timeoutUtc)
+                {
+                    if (queryResults.Count >= expectedQueries)
+                    {
+                        return queryResults;
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                throw new CadenceTimeoutException("Timeout waiting for query(s).");
+            }
+
+            public async Task<string> QueryAsync(string arg1, int arg2)
+            {
+                var result = $"{arg1}:{arg2}";
+
+                queryResults.Add(result);
+
+                return await Task.FromResult(result);
+            }
+
+            public async Task QueryNoResultAsync(string arg1, int arg2)
+            {
+                var result = $"{arg1}:{arg2}";
+
+                queryResults.Add(result);
+
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueryOnce()
+        {
+            WorkflowQuery.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowQuery>();
+            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedQueries: 1);
+
+            NeonHelper.WaitFor(() => WorkflowQuery.IsRunning, workflowTimeout);
+
+            Assert.Equal("my-query:1", await stub.QueryAsync("my-query", 1));
+            Assert.Equal(new List<string>() { "my-query:1" }, await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueryTwice()
+        {
+            WorkflowQuery.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowQuery>();
+            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedQueries: 2);
+
+            NeonHelper.WaitFor(() => WorkflowQuery.IsRunning, workflowTimeout);
+
+            Assert.Equal("my-query:1", await stub.QueryAsync("my-query", 1));
+            Assert.Equal("my-query:2", await stub.QueryAsync("my-query", 2));
+            Assert.Equal(new List<string>() { "my-query:1", "my-query:2" }, await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueryNoResult()
+        {
+            // Verify that we can call a query method that doesn't
+            // return a result.
+
+            WorkflowQuery.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowQuery>();
+            var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedQueries: 1);
+
+            NeonHelper.WaitFor(() => WorkflowQuery.IsRunning, workflowTimeout);
+
+            await stub.QueryNoResultAsync("my-query", 1);
+            Assert.Equal(new List<string>() { "my-query:1" }, await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueryBeforeStart()
+        {
+            // Verify that we're not allowed to submit a query via a
+            // stub before we started the workflow.
+
+            WorkflowQuery.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowQuery>();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.QueryAsync("my-query", 1));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowGetVersion : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<int> RunAsync(string changeId, int minVersion, int maxVersion);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowGetVersion : WorkflowBase, IWorkflowGetVersion
+        {
+            public async Task<int> RunAsync(string changeId, int minVersion, int maxVersion)
+            {
+                return await Workflow.GetVersionAsync(changeId, minVersion, maxVersion);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_GetVersion()
+        {
+            // Minimally exercise the workflow GetVersion() API.
+
+            WorkflowQuery.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowGetVersion>();
+
+            Assert.Equal(1, await stub.RunAsync("my-change-id", Workflow.DefaultVersion, 1));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowComplex : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<List<string>> WaitForQueriesAndSignalsAsync(TimeSpan timeout, int expectedOperations);
+
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "goodbye")]
+            Task<string> GoodbyeAsync(string name);
+
+            [QueryMethod("query-1")]
+            Task<string> Query1Async(string arg1);
+
+            [QueryMethod("query-2")]
+            Task<string> Query2Async(string arg1);
+
+            [SignalMethod("signal-1")]
+            Task Signal1Async(string arg1);
+
+            [SignalMethod("signal-2")]
+            Task Signal2Async(string arg1);
+        }
+
+        /// <summary>
+        /// This workflow is used to verify that complex workflows with multiple
+        /// entry point, query, and signal methods works.
+        /// </summary>
+        [Workflow(AutoRegister = true)]
+        public class WorkflowComplex : WorkflowBase, IWorkflowComplex
+        {
+            //-----------------------------------------------------------------
+            // Static members
+
+            public static bool IsRunning { get; private set; } = false;
+
+            public static void Reset()
+            {
+                IsRunning = false;
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members
+
+            private List<string> operations = new List<string>();
+
+            public async Task<List<string>> WaitForQueriesAndSignalsAsync(TimeSpan timeout, int expectedOperations)
+            {
+                IsRunning = true;
+
+                var timeoutUtc = await Workflow.UtcNowAsync() + timeout;
+
+                while (await Workflow.UtcNowAsync() < timeoutUtc)
+                {
+                    if (operations.Count >= expectedOperations)
+                    {
+                        return operations;
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                throw new CadenceTimeoutException("Timeout waiting for queries and/or signals.");
+            }
+
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<string> GoodbyeAsync(string name)
+            {
+                return await Task.FromResult($"Goodbye {name}!");
+            }
+
+            public async Task<string> Query1Async(string arg1)
+            {
+                var operation = $"query-1:{arg1}";
+
+                operations.Add(operation);
+
+                return await Task.FromResult(operation);
+            }
+
+            public async Task<string> Query2Async(string arg1)
+            {
+                var operation = $"query-2:{arg1}";
+
+                operations.Add(operation);
+
+                return await Task.FromResult(operation);
+            }
+
+            public async Task Signal1Async(string arg1)
+            {
+                var operation = $"signal-1:{arg1}";
+
+                operations.Add(operation);
+
+                await Task.CompletedTask;
+            }
+
+            public async Task Signal2Async(string arg1)
+            {
+                var operation = $"signal-2:{arg1}";
+
+                operations.Add(operation);
+
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Complex()
+        {
+            // Verify that we can start a workflow via different entry point methods.
+
+            Assert.Equal("Hello Jeff!", await client.NewWorkflowStub<IWorkflowComplex>().HelloAsync("Jeff"));
+            Assert.Equal("Goodbye Jeff!", await client.NewWorkflowStub<IWorkflowComplex>().GoodbyeAsync("Jeff"));
+
+            // Verify that we can send different queries and signals to a workflow.
+
+            WorkflowComplex.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowComplex>();
+            var task = stub.WaitForQueriesAndSignalsAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedOperations: 4);
+
+            NeonHelper.WaitFor(() => WorkflowComplex.IsRunning, workflowTimeout);
+
+            Assert.Equal("query-1:my-query-1", await stub.Query1Async("my-query-1"));
+            await stub.Signal1Async("my-signal-1");
+            Assert.Equal("query-2:my-query-2", await stub.Query2Async("my-query-2"));
+            await stub.Signal2Async("my-signal-2");
+            Assert.Equal(new List<string>() { "query-1:my-query-1", "signal-1:my-signal-1", "query-2:my-query-2", "signal-2:my-signal-2" }, await task);
         }
     }
 }
