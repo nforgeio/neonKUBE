@@ -295,9 +295,9 @@ namespace Neon.Cadence
         /// This name will often be the fully qualified name of the workflow type but 
         /// this may have been customized when the workflow worker was registered.
         /// </param>
-        /// <param name="args">Optionally specifies the workflow arguments encoded into a byte array.</param>
+        /// <param name="args">Specifies the workflow arguments encoded into a byte array.</param>
         /// <param name="options">Specifies the workflow options.</param>
-        /// <param name="domain">Optionally specifies the Cadence domain where the workflow will run.  This defaults to the client domain.</param>
+        /// <param name="domain">Specifies the Cadence domain where the workflow will run.  This defaults to the client domain.</param>
         /// <returns>A <see cref="WorkflowExecution"/> identifying the new running workflow instance.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
@@ -307,7 +307,7 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args = null, WorkflowOptions options = null, string domain = null)
+        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args, WorkflowOptions options, string domain)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
@@ -349,6 +349,54 @@ namespace Neon.Cadence
             var execution = reply.Execution;
 
             return new WorkflowExecution(execution.ID, execution.RunID);
+        }
+
+        /// <summary>
+        /// Starts a child workflow.
+        /// </summary>
+        /// <param name="workflowTypeName">
+        /// The type name used when registering the workers that will handle this workflow.
+        /// This name will often be the fully qualified name of the workflow type but 
+        /// this may have been customized when the workflow worker was registered.
+        /// </param>
+        /// <param name="args">Specifies the workflow arguments encoded into a byte array.</param>
+        /// <param name="options">Specifies the workflow options.</param>
+        /// <returns>A <see cref="ChildExecution"/> identifying the new running workflow instance.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
+        /// <exception cref="CadenceWorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
+        /// <remarks>
+        /// This method kicks off a new child workflow instance and returns after Cadence has
+        /// queued the operation but the method <b>does not</b> wait for the workflow to
+        /// complete.
+        /// </remarks>
+        internal async Task<ChildExecution> StartChildWorkflowAsync(string workflowTypeName, byte[] args, ChildWorkflowOptions options)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            EnsureNotDisposed();
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                options.TaskList = Settings.DefaultTaskList;
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                options.Domain = Settings.DefaultDomain;
+            }
+
+            var reply = (WorkflowExecuteChildReply)await CallProxyAsync(
+                new WorkflowExecuteChildRequest()
+                {
+                    Workflow               = options.WorkflowId,
+                    Args                   = args,
+                    Options                = options.ToInternal(),
+                    ScheduleToStartTimeout = options.ScheduleToStartTimeout ?? Settings.WorkflowScheduleToStartTimeout
+                });
+
+            reply.ThrowOnError();
+
+            return new ChildExecution(reply.Execution.ToPublic(), reply.ChildId);
         }
 
         /// <summary>

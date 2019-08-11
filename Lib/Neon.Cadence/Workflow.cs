@@ -496,7 +496,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the <see cref="WorkflowExecution"/> for a child workflow created via
-        /// <see cref="NewChildWorkflowStub{TWorkflowInterface}(ChildWorkflowOptions)"/>
+        /// <see cref="NewChildWorkflowStub{TWorkflowInterface}(ChildWorkflowOptions, string)"/>
         /// or <see cref="NewExternalWorkflowStub{TWorkflowInterface}(string, string)"/>.
         /// </summary>
         /// <param name="stub">The child workflow stub.</param>
@@ -1105,6 +1105,7 @@ namespace Neon.Cadence
         /// </para>
         /// </remarks>
         public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null, string domain = null)
+            where TActivityInterface : class
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
@@ -1117,7 +1118,12 @@ namespace Neon.Cadence
         /// workflows via the type-safe workflow interface methods.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="options">Optionally specifies the child workflow options.</param>
+        /// <param name="workflowTypeName">
+        /// Optionally specifies the workflow type name by overriding the fully 
+        /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
+        /// specified by a <see cref="WorkflowAttribute"/>.
+        /// </param>
         /// <returns>The child workflow stub.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -1125,14 +1131,13 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null) 
+        public TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(ChildWorkflowOptions options = null, string workflowTypeName = null)
+            where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            throw new NotImplementedException();
-
-            //return StubManager.NewChildWorkflowStub<IWorkflowInterface>(options);
+            return StubManager.NewChildWorkflowStub<TWorkflowInterface>(Client, options, workflowTypeName);
         }
 
         /// <summary>

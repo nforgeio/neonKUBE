@@ -225,7 +225,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Retuurns a shallow clone of the current instance.
+        /// Returns a shallow clone of the current instance.
         /// </summary>
         /// <returns>The cloned <see cref="WorkflowOptions"/>.</returns>
         public WorkflowOptions Clone()

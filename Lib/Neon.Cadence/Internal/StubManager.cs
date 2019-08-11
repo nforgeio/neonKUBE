@@ -142,9 +142,11 @@ namespace Neon.Cadence.Internal
         private static int      nextClassId = -1;
         private static object   syncLock    = new object();
 
-        // This dictionary maps workflow interfaces to their dynamically generated stubs.
+        // These dictionaries map workflow interfaces to their dynamically generated stubs
+        // for external and child workflows.
 
-        private static Dictionary<Type, DynamicWorkflowStub> workflowInterfaceToStub = new Dictionary<Type, DynamicWorkflowStub>();
+        private static Dictionary<Type, DynamicWorkflowStub> workflowInterfaceToStub      = new Dictionary<Type, DynamicWorkflowStub>();
+        private static Dictionary<Type, DynamicWorkflowStub> workflowInterfaceToChildStub = new Dictionary<Type, DynamicWorkflowStub>();
 
         // ...and this one does the same for activities.
 
@@ -163,6 +165,7 @@ namespace Neon.Cadence.Internal
 @"        private static class ___StubHelpers
         {
             private static MethodInfo       startWorkflowAsync;             // from: CadenceClient
+            private static MethodInfo       startChildWorkflowAsync;        // from: CadenceClient
             private static MethodInfo       getWorkflowDescriptionAsync;    // from: CadenceClient
             private static MethodInfo       getWorkflowResultAsync;         // from: CadenceClient
             private static MethodInfo       cancelWorkflowAsync;            // from: CadenceClient
@@ -182,6 +185,7 @@ namespace Neon.Cadence.Internal
                 var workflowType = typeof(Workflow);
 
                 startWorkflowAsync           = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(WorkflowOptions), typeof(string));
+                startChildWorkflowAsync      = NeonHelper.GetMethod(clientType, ""StartChildWorkflowAsync"", typeof(string), typeof(byte[]), typeof(ChildWorkflowOptions));
                 getWorkflowDescriptionAsync  = NeonHelper.GetMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
                 getWorkflowResultAsync       = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
                 cancelWorkflowAsync          = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
@@ -200,6 +204,12 @@ namespace Neon.Cadence.Internal
             public static async Task<WorkflowExecution> StartWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, WorkflowOptions options, string domain)
             {
                 return await (Task<WorkflowExecution>)startWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, options, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<ChildExecution> StartChildWorkflowAsync(CadenceClient client, string workflowTypeName, byte[] args, ChildWorkflowOptions options)
+            {
+                return await (Task<ChildExecution>)startChildWorkflowAsync.Invoke(client, new object[] { workflowTypeName, args, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -278,54 +288,42 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Creates a dynamically generated stub for the specified workflow interface.
+        /// Returns the <see cref="DynamicWorkflowStub"/> for a workflow interface, dynamically generating code
+        /// to implement the stub if necessary.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
-        /// <param name="options">Optionally specifies the workflow options.</param>
-        /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
-        /// <param name="domain">Optionally specifies the target domain.</param>
+        /// <param name="isChild">Indicates whether an external or child workflow stub is required.</param>
         /// <returns>The stub instance.</returns>
         /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
-        public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(CadenceClient client, WorkflowOptions options = null, string workflowTypeName = null, string domain = null)
+        public static DynamicWorkflowStub GetWorkflowStub<TWorkflowInterface>(bool isChild)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            options = options ?? new WorkflowOptions();
-
-            if (string.IsNullOrEmpty(domain))
-            {
-                domain = null;
-            }
-
-            if (string.IsNullOrEmpty(workflowTypeName))
-            {
-                workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
-            }
-
             //-----------------------------------------------------------------
-            // Check whether we already have generated a stub class for the interface
-            // and return a stub instance right away.
+            // Check whether we already have generated a stub class for the interface.
 
             DynamicWorkflowStub stub;
 
             lock (syncLock)
             {
-                if (!workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
+                if (isChild)
                 {
-                    stub = null;
+                    if (workflowInterfaceToChildStub.TryGetValue(workflowInterface, out stub))
+                    {
+                        return stub;
+                    }
                 }
-            }
-
-            if (stub != null)
-            {
-                return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options, domain);
+                else
+                {
+                    if (workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
+                    {
+                        return stub;
+                    }
+                }
             }
 
             //-----------------------------------------------------------------
@@ -450,12 +448,14 @@ namespace Neon.Cadence.Internal
 
             // Generate C# source code that implements the stub.  Note that stub classes will
             // be generated within the [Neon.Cadence.Stubs] namespace and will be named by
-            // the interface name plus the "Stub_#" suffix where "#" is the number of stubs
-            // generated so far.  This will help avoid naming conflicts while still being
-            // somewhat readable in debug stack traces
+            // the interface name plus the "Stub_#" (for external workflows) or "ChildStub_#"
+            // (for child workflows) suffix where "#" is the number of stubs generated so far.
+            //
+            // This will help avoid name conflicts while still being somewhat readable in 
+            // debug stack traces
 
             var classId       = Interlocked.Increment(ref nextClassId);
-            var stubClassName = $"{workflowInterface.Name}Stub_{classId}";
+            var stubClassName = isChild ? $"{workflowInterface.Name}ChildStub_{classId}" : $"{workflowInterface.Name}Stub_{classId}";
 
             if (stubClassName.Length > 1 && stubClassName.StartsWith("I"))
             {
@@ -463,9 +463,11 @@ namespace Neon.Cadence.Internal
             }
 
             var stubFullClassName = $"Neon.Cadence.Stubs.{stubClassName}";
-            var interfaceFullName = workflowInterface.FullName.Replace('+', '.');   // .NET uses "+" for nested types; convert these to "."
+            var interfaceFullName = workflowInterface.FullName.Replace('+', '.');   // .NET uses internally "+" for nested types; convert these to "."
             var sbSource          = new StringBuilder();
 
+            sbSource.AppendLine("#pragma warning disable CS0169  // Disable unreferenced field warnings.");
+            sbSource.AppendLine();
             sbSource.AppendLine($"using System;");
             sbSource.AppendLine($"using System.Collections.Generic;");
             sbSource.AppendLine($"using System.ComponentModel;");
@@ -500,6 +502,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private ChildWorkflowOptions  childOptions;");
             sbSource.AppendLine($"        private string                domain;");
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
+            sbSource.AppendLine($"        private ChildExecution        childExecution;");
 
             // Generate the constructor used to start an external workflow.
 
@@ -561,86 +564,180 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            // Configure the workflow.");
-                sbSource.AppendLine();
 
-                if (string.IsNullOrEmpty(details.WorkflowMethodAttribute.Name))
+                if (isChild)
                 {
-                    sbSource.AppendLine($"            var ___workflowTypeName = this.workflowTypeName;");
+                    //---------------------------------------------------------
+                    // Generate code for child workflows
+
+                    sbSource.AppendLine($"            // Configure the workflow.");
+                    sbSource.AppendLine();
+
+                    if (string.IsNullOrEmpty(details.WorkflowMethodAttribute.Name))
+                    {
+                        sbSource.AppendLine($"            var ___workflowTypeName = this.workflowTypeName;");
+                    }
+                    else
+                    {
+                        sbSource.AppendLine($"            var ___workflowTypeName = $\"{{this.workflowTypeName}}::{details.WorkflowMethodAttribute.Name}\";");
+                    }
+
+                    sbSource.AppendLine($"            var ___options          = this.childOptions.Clone();");
+
+                    if (details.WorkflowMethodAttribute != null)
+                    {
+                        if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.TaskList))
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (string.IsNullOrEmpty(options.TaskList))");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                options.TaskList = {StringLiteral(details.WorkflowMethodAttribute.TaskList)};");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (__options.ExecutionStartToCloseTimeout <= TimeSpan.Zero)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.ExecutionStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds});");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (__options.ScheduleToStartTimeoutSeconds <= TimeSpan.Zero)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.ScheduleToStartTimeoutSeconds = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds});");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (details.WorkflowMethodAttribute.TaskStartToCloseTimeoutSeconds > 0)
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (__options.TaskStartToCloseTimeout <= TimeSpan.Zero)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.TaskStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.TaskList});");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.WorkflowId))
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (string.IsNullOrEmpty(__options.WorkflowId)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.WorkflowId = {StringLiteral(details.WorkflowMethodAttribute.WorkflowId)};");
+                            sbSource.AppendLine($"            }}");
+                        }
+                    }
+
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            // Ensure that this stub instance has not already been started.");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            if (this.execution != null)");
+                    sbSource.AppendLine($"            {{");
+                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
+                    sbSource.AppendLine($"            }}");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            var ___argBytes     = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            this.childExecution = await ___StubHelpers.StartChildWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            var ___resultBytes  = await ___StubHelpers.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+
+                    if (!details.IsVoid)
+                    {
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            return this.dataConverter.FromData<{resultType}>(___resultBytes);");
+                    }
                 }
                 else
                 {
-                    sbSource.AppendLine($"            var ___workflowTypeName = $\"{{this.workflowTypeName}}::{details.WorkflowMethodAttribute.Name}\";");
-                }
+                    //---------------------------------------------------------
+                    // Generate code for external workflows
 
-                sbSource.AppendLine($"            var ___options          = this.options.Clone();");
-
-                if (details.WorkflowMethodAttribute != null)
-                {
-                    if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.TaskList))
-                    {
-                        sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (string.IsNullOrEmpty(options.TaskList))");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                options.TaskList = {StringLiteral(details.WorkflowMethodAttribute.TaskList)};");
-                        sbSource.AppendLine($"            }}");
-                    }
-
-                    if (details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
-                    {
-                        sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (__options.ExecutionStartToCloseTimeout <= TimeSpan.Zero)");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.ExecutionStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds});");
-                        sbSource.AppendLine($"            }}");
-                    }
-
-                    if (details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds > 0)
-                    {
-                        sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (__options.ScheduleToStartTimeoutSeconds <= TimeSpan.Zero)");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.ScheduleToStartTimeoutSeconds = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds});");
-                        sbSource.AppendLine($"            }}");
-                    }
-
-                    if (details.WorkflowMethodAttribute.TaskStartToCloseTimeoutSeconds > 0)
-                    {
-                        sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (__options.TaskStartToCloseTimeout <= TimeSpan.Zero)");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.TaskStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.TaskList});");
-                        sbSource.AppendLine($"            }}");
-                    }
-
-                    if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.WorkflowId))
-                    {
-                        sbSource.AppendLine();
-                        sbSource.AppendLine($"            if (string.IsNullOrEmpty(__options.WorkflowId)");
-                        sbSource.AppendLine($"            {{");
-                        sbSource.AppendLine($"                ___options.WorkflowId = {StringLiteral(details.WorkflowMethodAttribute.WorkflowId)};");
-                        sbSource.AppendLine($"            }}");
-                    }
-                }
-
-                sbSource.AppendLine();
-                sbSource.AppendLine($"            // Ensure that this stub instance has not already been started.");
-                sbSource.AppendLine();
-                sbSource.AppendLine($"            if (this.execution != null)");
-                sbSource.AppendLine($"            {{");
-                sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
-                sbSource.AppendLine($"            }}");
-                sbSource.AppendLine();
-                sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
-                sbSource.AppendLine();
-                sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                sbSource.AppendLine($"            this.execution     = await ___StubHelpers.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options, this.domain);");
-                sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
-
-                if (!details.IsVoid)
-                {
+                    sbSource.AppendLine($"            // Configure the workflow.");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            return this.dataConverter.FromData<{resultType}>(___resultBytes);");
+
+                    if (string.IsNullOrEmpty(details.WorkflowMethodAttribute.Name))
+                    {
+                        sbSource.AppendLine($"            var ___workflowTypeName = this.workflowTypeName;");
+                    }
+                    else
+                    {
+                        sbSource.AppendLine($"            var ___workflowTypeName = $\"{{this.workflowTypeName}}::{details.WorkflowMethodAttribute.Name}\";");
+                    }
+
+                    sbSource.AppendLine($"            var ___options          = this.options.Clone();");
+
+                    if (details.WorkflowMethodAttribute != null)
+                    {
+                        if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.TaskList))
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (string.IsNullOrEmpty(options.TaskList))");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                options.TaskList = {StringLiteral(details.WorkflowMethodAttribute.TaskList)};");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (__options.ExecutionStartToCloseTimeout <= TimeSpan.Zero)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.ExecutionStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ExecutionStartToCloseTimeoutSeconds});");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (__options.ScheduleToStartTimeoutSeconds <= TimeSpan.Zero)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.ScheduleToStartTimeoutSeconds = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.ScheduleToStartTimeoutSeconds});");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (details.WorkflowMethodAttribute.TaskStartToCloseTimeoutSeconds > 0)
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (__options.TaskStartToCloseTimeout <= TimeSpan.Zero)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.TaskStartToCloseTimeout = TimeSpan.FromSeconds({details.WorkflowMethodAttribute.TaskList});");
+                            sbSource.AppendLine($"            }}");
+                        }
+
+                        if (!string.IsNullOrEmpty(details.WorkflowMethodAttribute.WorkflowId))
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"            if (string.IsNullOrEmpty(__options.WorkflowId)");
+                            sbSource.AppendLine($"            {{");
+                            sbSource.AppendLine($"                ___options.WorkflowId = {StringLiteral(details.WorkflowMethodAttribute.WorkflowId)};");
+                            sbSource.AppendLine($"            }}");
+                        }
+                    }
+
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            // Ensure that this stub instance has not already been started.");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            if (this.execution != null)");
+                    sbSource.AppendLine($"            {{");
+                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
+                    sbSource.AppendLine($"            }}");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            this.execution     = await ___StubHelpers.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options, this.domain);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+
+                    if (!details.IsVoid)
+                    {
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            return this.dataConverter.FromData<{resultType}>(___resultBytes);");
+                    }
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -758,18 +855,101 @@ namespace Neon.Cadence.Internal
 
             lock (syncLock)
             {
-                if (!workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
+                if (isChild)
                 {
-                    var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
-                    var stubType     = stubAssembly.GetType(stubFullClassName);
+                    if (!workflowInterfaceToChildStub.TryGetValue(workflowInterface, out stub))
+                    {
+                        var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
+                        var stubType = stubAssembly.GetType(stubFullClassName);
 
-                    stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
+                        stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
 
-                    workflowInterfaceToStub.Add(stubType, stub);
+                        workflowInterfaceToChildStub.Add(stubType, stub);
+                    }
+                }
+                else
+                {
+                    if (!workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
+                    {
+                        var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
+                        var stubType = stubAssembly.GetType(stubFullClassName);
+
+                        stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
+
+                        workflowInterfaceToStub.Add(stubType, stub);
+                    }
                 }
             }
 
+            return stub;
+        }
+
+        /// <summary>
+        /// Creates a dynamically generated stub for the specified workflow interface.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
+        /// <param name="domain">Optionally specifies the target domain.</param>
+        /// <returns>The stub instance.</returns>
+        /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
+        public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(CadenceClient client, WorkflowOptions options = null, string workflowTypeName = null, string domain = null)
+            where TWorkflowInterface : class
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            var workflowInterface = typeof(TWorkflowInterface);
+            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
+
+            CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+            options = options ?? new WorkflowOptions();
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                domain = null;
+            }
+
+            if (string.IsNullOrEmpty(workflowTypeName))
+            {
+                workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+            }
+
+            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: false);
+
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options, domain);
+        }
+
+        /// <summary>
+        /// Creates a dynamically generated stub for the specified child workflow interface.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
+        /// <returns>The stub instance.</returns>
+        /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
+        public static TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(CadenceClient client, ChildWorkflowOptions options = null, string workflowTypeName = null)
+            where TWorkflowInterface : class
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            var workflowInterface = typeof(TWorkflowInterface);
+            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
+
+            CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+            options = options ?? new ChildWorkflowOptions();
+
+            if (string.IsNullOrEmpty(workflowTypeName))
+            {
+                workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+            }
+
+            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: true);
+
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options);
         }
 
         /// <summary>
@@ -868,7 +1048,7 @@ namespace Neon.Cadence.Internal
             }
 
             var stubFullClassName = $"Neon.Cadence.Stubs.{stubClassName}";
-            var interfaceFullName = activityInterface.FullName.Replace('+', '.');   // .NET uses "+" for nested types; convert these to "."
+            var interfaceFullName = activityInterface.FullName.Replace('+', '.');   // .NET uses "+" internally for nested types; convert these to "."
             var sbSource          = new StringBuilder();
 
             sbSource.AppendLine($"using System;");
@@ -888,7 +1068,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"{{");
             sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
-
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Private types");
             sbSource.AppendLine();
