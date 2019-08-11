@@ -312,28 +312,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
-            options = options ?? new WorkflowOptions();
-            options = options.Clone();
-
-            if (!options.ExecutionStartToCloseTimeout.HasValue)
-            {
-                options.ExecutionStartToCloseTimeout = Settings.WorkflowScheduleToCloseTimeout;
-            }
-
-            if (!options.ScheduleToStartTimeout.HasValue)
-            {
-                options.ScheduleToStartTimeout = Settings.WorkflowScheduleToStartTimeout;
-            }
-
-            if (!options.TaskStartToCloseTimeout.HasValue)
-            {
-                options.TaskStartToCloseTimeout = Settings.WorkflowTaskStartToCloseTimeout;
-            }
-
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                options.TaskList = Settings.DefaultTaskList;
-            }
+            options = WorkflowOptions.Normalize(this, options);
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
@@ -341,7 +320,7 @@ namespace Neon.Cadence
                     Workflow = workflowTypeName,
                     Domain   = domain ?? Settings.DefaultDomain,
                     Args     = args,
-                    Options  = options.ToInternal(this)
+                    Options  = options.ToInternal()
                 });
 
             reply.ThrowOnError();
@@ -375,6 +354,8 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
+            options = options.Clone();
+
             if (string.IsNullOrEmpty(options.TaskList))
             {
                 options.TaskList = Settings.DefaultTaskList;
@@ -383,6 +364,21 @@ namespace Neon.Cadence
             if (string.IsNullOrEmpty(options.Domain))
             {
                 options.Domain = Settings.DefaultDomain;
+            }
+
+            if (!options.ScheduleToCloseTimeout.HasValue)
+            {
+                options.ScheduleToCloseTimeout = Settings.WorkflowScheduleToCloseTimeout;
+            }
+
+            if (!options.ScheduleToStartTimeout.HasValue)
+            {
+                options.ScheduleToStartTimeout = Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (!options.TaskStartToCloseTimeout.HasValue)
+            {
+                options.TaskStartToCloseTimeout = Settings.WorkflowTaskStartToCloseTimeout;
             }
 
             var reply = (WorkflowExecuteChildReply)await CallProxyAsync(
@@ -554,13 +550,13 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
             EnsureNotDisposed();
 
-            options = options ?? new WorkflowOptions();
+            options = WorkflowOptions.Normalize(this, options);
 
             var reply = (WorkflowSignalWithStartReply)await CallProxyAsync(
                 new WorkflowSignalWithStartRequest()
                 {
                     WorkflowId   = options.WorkflowId,
-                    Options      = options.ToInternal(this),
+                    Options      = options.ToInternal(),
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
                     WorkflowArgs = startArgs,

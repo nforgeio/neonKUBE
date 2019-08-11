@@ -221,7 +221,7 @@ namespace Neon.Cadence
         internal TimeSpan WorkflowScheduleToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowScheduleToCloseTimeoutSeconds, 0));
 
         /// <summary>
-        /// Specifies the default maximum time a workflow can wait betweem being scheduled
+        /// Specifies the default maximum time a workflow can wait between being scheduled
         /// and actually begin executing.  This defaults to <c>24 hours</c>.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowScheduleToStartTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

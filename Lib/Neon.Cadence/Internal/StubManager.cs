@@ -940,7 +940,7 @@ namespace Neon.Cadence.Internal
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            options = options ?? new ChildWorkflowOptions();
+            options = ChildWorkflowOptions.Normalize(client, options);
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {

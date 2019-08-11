@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -30,6 +31,65 @@ namespace Neon.Cadence
     /// </summary>
     public class ChildWorkflowOptions
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Normalizes the options passed by creating or cloning a new instance as
+        /// required and filling unset properties using default client settings.
+        /// </summary>
+        /// <param name="client">The associated Cadence client.</param>
+        /// <param name="options">The input options or <c>null</c>.</param>
+        /// <returns>The normalized options.</returns>
+        internal static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            if (options == null)
+            {
+                options = new ChildWorkflowOptions();
+            }
+            else
+            {
+                options = options.Clone();
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                options.Domain = client.Settings.DefaultDomain;
+            }
+
+            if (!options.ScheduleToCloseTimeout.HasValue || options.ScheduleToCloseTimeout.Value <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+            }
+
+            if (!options.ScheduleToStartTimeout.HasValue || options.ScheduleToStartTimeout.Value <= TimeSpan.Zero)
+            {
+                options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (!options.TaskStartToCloseTimeout.HasValue || options.TaskStartToCloseTimeout.Value <= TimeSpan.Zero)
+            {
+                options.TaskStartToCloseTimeout = client.Settings.WorkflowTaskStartToCloseTimeout;
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                options.TaskList = client.Settings.DefaultTaskList;
+            }
+
+            if (!options.WorkflowIdReusePolicy.HasValue)
+            {
+                options.WorkflowIdReusePolicy = Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+            }
+
+            return options;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -59,10 +119,10 @@ namespace Neon.Cadence
         /// Specifies the maximum time the child workflow may execute from start
         /// to finish.  This defaults to <see cref="CadenceSettings.WorkflowScheduleToCloseTimeoutSeconds"/>.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; set; } = TimeSpan.Zero;
+        public TimeSpan? ScheduleToCloseTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
-        /// Optionally specifies the default maximum time a workflow can wait betweem being scheduled
+        /// Optionally specifies the default maximum time a workflow can wait between being scheduled
         /// and actually begin executing.  This defaults to <c>24 hours</c>.
         /// </summary>
         public TimeSpan? ScheduleToStartTimeout { get; set; }
@@ -71,7 +131,7 @@ namespace Neon.Cadence
         /// Optionally specifies the decision task timeout for the child workflow.
         /// This defaults to <see cref="CadenceSettings.WorkflowTaskStartToCloseTimeout"/>.
         /// </summary>
-        public TimeSpan TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan? TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
@@ -89,7 +149,7 @@ namespace Neon.Cadence
         /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
         /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
         /// </summary>
-        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+        public WorkflowIdReusePolicy? WorkflowIdReusePolicy { get; set; }
 
         /// <summary>
         /// Optionally specifies retry options.
@@ -99,7 +159,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Optionally specifies a recurring schedule for the workflow.  This can be set to a string specifying
         /// the minute, hour, day of month, month, and day of week scheduling parameters using the standard Linux
-        /// CRON format described here: <a href="https://en.wikipedia.org/wiki/Cron"/>
+        /// CRON format described here: <a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a>
         /// </summary>
         /// <remarks>
         /// <para>
@@ -152,7 +212,7 @@ namespace Neon.Cadence
         /// </item>
         /// </list>
         /// <para>
-        /// You can use this handy CRON calculator to see how this works: <a href="https://crontab.guru"/>
+        /// You can use this handy CRON calculator to see how this works: <a href="https://crontab.guru">https://crontab.guru</a>
         /// </para>
         /// </remarks>
         public string CronSchedule { get; set; }
@@ -173,10 +233,10 @@ namespace Neon.Cadence
                 Domain                       = this.Domain,
                 ChildPolicy                  = (int)this.ChildPolicy,
                 CronSchedule                 = this.CronSchedule,
-                ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ExecutionStartToCloseTimeout),
+                ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout.Value),
                 RetryPolicy                  = this.RetryOptions?.ToInternal(),
                 TaskList                     = this.TaskList,
-                TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout),
+                TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout.Value),
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowID                   = this.WorkflowId,
                 WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy
@@ -194,7 +254,7 @@ namespace Neon.Cadence
                 Domain                       = this.Domain,
                 CronSchedule                 = this.CronSchedule,
                 ChildPolicy                  = this.ChildPolicy,
-                ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout,
+                ScheduleToCloseTimeout       = this.ScheduleToCloseTimeout,
                 Memo                         = this.Memo,
                 RetryOptions                 = this.RetryOptions,
                 ScheduleToStartTimeout       = this.ScheduleToStartTimeout,
