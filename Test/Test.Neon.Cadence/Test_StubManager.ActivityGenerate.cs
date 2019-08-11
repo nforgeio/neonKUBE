@@ -96,7 +96,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Generate_ActivityEntryVoidWithOptions()
         {
-            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new ActivityOptions(), domain: "my-domain"));
+            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new ActivityOptions() { Domain = "my-domain" }));
             Assert.NotNull(StubManager.NewLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new LocalActivityOptions()));
         }
 

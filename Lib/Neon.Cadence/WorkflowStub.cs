@@ -192,7 +192,7 @@ namespace Neon.Cadence
 
             var argBytes = client.DataConverter.ToData(args);
 
-            return await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options, domain);
+            return await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
         }
     }
 }

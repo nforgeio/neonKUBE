@@ -190,7 +190,6 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowTypeName">Specifies workflow type name (see the remarks).</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
-        /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
         /// <remarks>
         /// <para>
@@ -216,7 +215,7 @@ namespace Neon.Cadence
         /// from other languages.  The Java Cadence client works the same way.
         /// </para>
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null, string domain = null)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
@@ -266,7 +265,6 @@ namespace Neon.Cadence
         /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
         /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
-        /// <param name="domain">Optionally overrides the client's default domain.</param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -274,13 +272,13 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null, string domain = null)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null)
             where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName, domain: domain);
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName);
         }
 
         //---------------------------------------------------------------------
@@ -297,7 +295,6 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="args">Specifies the workflow arguments encoded into a byte array.</param>
         /// <param name="options">Specifies the workflow options.</param>
-        /// <param name="domain">Specifies the Cadence domain where the workflow will run.  This defaults to the client domain.</param>
         /// <returns>A <see cref="WorkflowExecution"/> identifying the new running workflow instance.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
@@ -307,7 +304,7 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args, WorkflowOptions options, string domain)
+        internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args, WorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
@@ -318,7 +315,7 @@ namespace Neon.Cadence
                 new WorkflowExecuteRequest()
                 {
                     Workflow = workflowTypeName,
-                    Domain   = domain ?? Settings.DefaultDomain,
+                    Domain   = options.Domain,
                     Args     = args,
                     Options  = options.ToInternal()
                 });
@@ -540,12 +537,11 @@ namespace Neon.Cadence
         /// <param name="startArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
         /// <param name="taskList">Optionally overrides the <see cref="CadenceClient"/> default task list.</param>
-        /// <param name="domain">Optionally overrides the <see cref="CadenceClient"/> default domain.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string signalName, byte[] signalArgs = null, byte[] startArgs = null, string taskList = null, WorkflowOptions options = null, string domain = null)
+        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string signalName, byte[] signalArgs = null, byte[] startArgs = null, string taskList = null, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
             EnsureNotDisposed();
@@ -560,7 +556,7 @@ namespace Neon.Cadence
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
                     WorkflowArgs = startArgs,
-                    Domain       = ResolveDomain(domain)
+                    Domain       = options.Domain
                 });
 
             reply.ThrowOnError();

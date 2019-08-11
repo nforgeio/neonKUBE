@@ -35,13 +35,13 @@ namespace Neon.Cadence
         // Static members
 
         /// <summary>
-        /// Normalizes the options passed by creating or cloning a new instance as
-        /// required and filling unset properties using default client settings.
+        /// <b>INTERNAL USE ONLY:</b> Normalizes the options passed by creating or cloning a new 
+        /// instance as required and filling unset properties using default client settings.
         /// </summary>
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
         /// <returns>The normalized options.</returns>
-        internal static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options)
+        public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -52,11 +52,6 @@ namespace Neon.Cadence
             else
             {
                 options = options.Clone();
-            }
-
-            if (string.IsNullOrEmpty(options.Domain))
-            {
-                options.Domain = client.Settings.DefaultDomain;
             }
 
             if (!options.ScheduleToCloseTimeout.HasValue || options.ScheduleToCloseTimeout.Value <= TimeSpan.Zero)

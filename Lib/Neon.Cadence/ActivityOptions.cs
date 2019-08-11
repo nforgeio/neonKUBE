@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 
@@ -32,11 +33,66 @@ namespace Neon.Cadence
     /// </summary>
     public class ActivityOptions
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Normalizes the options passed by creating or cloning a new instance as
+        /// required and filling unset properties using default client settings.
+        /// </summary>
+        /// <param name="client">The associated Cadence client.</param>
+        /// <param name="options">The input options or <c>null</c>.</param>
+        /// <returns>The normalized options.</returns>
+        internal static ActivityOptions Normalize(CadenceClient client, ActivityOptions options)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            if (options == null)
+            {
+                options = new ActivityOptions();
+            }
+            else
+            {
+                options = options.Clone();
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                options.Domain = client.Settings.DefaultDomain;
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                options.TaskList = client.Settings.DefaultTaskList;
+            }
+
+            return options;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Optionally specifies the task list where the activity will be scheduled.
         /// This defaults to the same task list as the parent workflow.
         /// </summary>
         public string TaskList { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies the target domain.  This defaults to the parent 
+        /// workflow's domain.
+        /// </summary>
+        public string Domain { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the end-to-end timeout for the activity.  The 
@@ -115,6 +171,7 @@ namespace Neon.Cadence
         {
             return new ActivityOptions()
             {
+                Domain                 = this.Domain,
                 HeartbeatTimeout       = this.HeartbeatTimeout,
                 RetryOptions           = this.RetryOptions,
                 ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,

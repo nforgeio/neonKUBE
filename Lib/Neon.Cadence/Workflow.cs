@@ -1090,7 +1090,6 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="options">Optionally specifies the activity options.</param>
-        /// <param name="domain">Optionally overrides the parent workflow's domain.</param>
         /// <returns>The new <see cref="IActivityStub"/>.</returns>
         /// <remarks>
         /// <note>
@@ -1104,13 +1103,13 @@ namespace Neon.Cadence
         /// to execute short-lived activities locally within the current process.
         /// </para>
         /// </remarks>
-        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null, string domain = null)
+        public TActivityInterface NewActivityStub<TActivityInterface>(ActivityOptions options = null)
             where TActivityInterface : class
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
 
-            return StubManager.NewActivityStub<TActivityInterface>(Client, this, options, domain);
+            return StubManager.NewActivityStub<TActivityInterface>(Client, this, options);
         }
 
         /// <summary>
@@ -1337,7 +1336,6 @@ namespace Neon.Cadence
         /// <param name="activityTypeName">Identifies the activity.</param>
         /// <param name="args">Optionally specifies the activity arguments.</param>
         /// <param name="options">Optionally specifies the activity options.</param>
-        /// <param name="domain">Optionally overrides the parent workflow's domain.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="CadenceException">
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
@@ -1347,7 +1345,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null, string domain = null)
+        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
             Client.EnsureNotDisposed();
@@ -1383,7 +1381,7 @@ namespace Neon.Cadence
                         Activity               = activityTypeName,
                         Args                   = args,
                         Options                = options.ToInternal(),
-                        Domain                 = domain,
+                        Domain                 = options.Domain,
                         ScheduleToStartTimeout = options.ScheduleToStartTimeout
                     }));
 

@@ -37,7 +37,7 @@ namespace Neon.Cadence
         // Static members
 
         /// <summary>
-        /// Normalizes the options passed by creating or cloning a new instance as
+        /// Normalizes the options passed by creating or cloning a new instance as 
         /// required and filling unset properties using default client settings.
         /// </summary>
         /// <param name="client">The associated Cadence client.</param>
@@ -54,6 +54,11 @@ namespace Neon.Cadence
             else
             {
                 options = options.Clone();
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                options.Domain = client.Settings.DefaultDomain;
             }
 
             if (!options.ScheduleToCloseTimeout.HasValue || options.ScheduleToCloseTimeout.Value <= TimeSpan.Zero)
@@ -99,6 +104,11 @@ namespace Neon.Cadence
         /// to a generated UUID.
         /// </summary>
         public string WorkflowId { get; set; } = null;
+
+        /// <summary>
+        /// Optionally specifies the target domain overriding the default client domain.
+        /// </summary>
+        public string Domain { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the target task list overriding the default client task list
@@ -245,6 +255,8 @@ namespace Neon.Cadence
         {
             return new WorkflowOptions()
             {
+                Domain                  = this.Domain,
+                TaskList                = this.TaskList,
                 CronSchedule            = this.CronSchedule,
                 ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,
                 Memo                    = this.Memo,

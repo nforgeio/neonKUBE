@@ -65,7 +65,7 @@ namespace Neon.Cadence.Internal
             // Fetch the stub type and reflect the required constructors and methods.
 
             this.stubType          = assembly.GetType(className);
-            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions), typeof(string));
+            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions));
             this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(Type), typeof(LocalActivityOptions));
         }
 
@@ -76,16 +76,15 @@ namespace Neon.Cadence.Internal
         /// <param name="workflow">The parent workflow.</param>
         /// <param name="activityTypeName">Specifies the activity type name.</param>
         /// <param name="options">Specifies the <see cref="ActivityOptions"/>.</param>
-        /// <param name="domain">Optionally specifies the target domain.</param>
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, string domain = null)
+        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflow != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
             Covenant.Requires<ArgumentNullException>(options != null);
 
-            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options, domain });
+            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options });
         }
 
         /// <summary>
