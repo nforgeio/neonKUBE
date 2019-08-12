@@ -343,22 +343,6 @@ namespace Neon.Cadence
         public bool Emulate { get; set; } = false;
 
         /// <summary>
-        /// <para>
-        /// Optionally specifies the <see cref="IDataConverter"/> implementation used to manage
-        /// serialization of paramaters and results for workflow and activity methods so they
-        /// can be persisted to the Cadence cluster database.  This defaults to a <see cref="JsonDataConverter"/>
-        /// instance which will serialize data as UTF-8 encoded JSON text.
-        /// </para>
-        /// <note>
-        /// This property cannot be deserialized from JSON or YAML input.  You need to
-        /// specify this type explicitly in code to use a custom converter.
-        /// </note>
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        internal IDataConverter DataConverter { get; set; } = new JsonDataConverter();
-
-        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
         /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and

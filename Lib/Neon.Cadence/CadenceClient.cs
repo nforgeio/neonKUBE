@@ -656,7 +656,7 @@ namespace Neon.Cadence
                 Settings.ProxyTimeoutSeconds = Settings.DebugHttpTimeout.TotalSeconds;
             }
 
-            DataConverter = settings.DataConverter ?? new JsonDataConverter();
+            DataConverter = new JsonDataConverter();
 
             // Start the web server that will listen for requests from the associated 
             // [cadence-proxy] process.
@@ -987,9 +987,16 @@ namespace Neon.Cadence
         public Uri ProxyUri => new Uri($"http://{address}:{proxyPort}");
 
         /// <summary>
-        /// Returns the <see cref="IDataConverter"/> used for workflows and activities managed by the client.
+        /// <para>
+        /// Specifies the <see cref="IDataConverter"/> used for workflows and activities managed by the client.
+        /// This defaults to an internal JSON based converter.
+        /// </para>
+        /// <note>
+        /// When you need a custom data converter, you must set this immediately after connecting
+        /// the client.  You must not change the converter after you've started workers.
+        /// </note>
         /// </summary>
-        internal IDataConverter DataConverter { get; private set; }
+        public IDataConverter DataConverter { get; set; }
 
         /// <summary>
         /// Raised when the connection is closed.  You can determine whether the connection

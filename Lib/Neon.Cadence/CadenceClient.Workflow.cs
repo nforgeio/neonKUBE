@@ -328,8 +328,37 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the result from a workflow execution, blocking until the workflow
+        /// completes if it is still running.
+        /// </summary>
+        /// <param name="execution">Identifies the workflow execution.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+            EnsureNotDisposed();
+
+            var reply = (WorkflowGetResultReply)await CallProxyAsync(
+                new WorkflowGetResultRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
+        }
+
+        /// <summary>
         /// Starts a child workflow.
         /// </summary>
+        /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">
         /// The type name used when registering the workers that will handle this workflow.
         /// This name will often be the fully qualified name of the workflow type but 
@@ -346,22 +375,13 @@ namespace Neon.Cadence
         /// queued the operation but the method <b>does not</b> wait for the workflow to
         /// complete.
         /// </remarks>
-        internal async Task<ChildExecution> StartChildWorkflowAsync(string workflowTypeName, byte[] args, ChildWorkflowOptions options)
+        internal async Task<ChildExecution> StartChildWorkflowAsync(Workflow parentWorkflow, string workflowTypeName, byte[] args, ChildWorkflowOptions options)
         {
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
             options = options.Clone();
-
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                options.TaskList = Settings.DefaultTaskList;
-            }
-
-            if (string.IsNullOrEmpty(options.Domain))
-            {
-                options.Domain = Settings.DefaultDomain;
-            }
 
             if (!options.ScheduleToCloseTimeout.HasValue)
             {
@@ -381,7 +401,8 @@ namespace Neon.Cadence
             var reply = (WorkflowExecuteChildReply)await CallProxyAsync(
                 new WorkflowExecuteChildRequest()
                 {
-                    Workflow               = options.WorkflowId,
+                    ContextId              = parentWorkflow.ContextId,
+                    Workflow               = workflowTypeName,
                     Args                   = args,
                     Options                = options.ToInternal(),
                     ScheduleToStartTimeout = options.ScheduleToStartTimeout ?? Settings.WorkflowScheduleToStartTimeout
@@ -390,6 +411,34 @@ namespace Neon.Cadence
             reply.ThrowOnError();
 
             return new ChildExecution(reply.Execution.ToPublic(), reply.ChildId);
+        }
+
+        /// <summary>
+        /// Returns the result from a child workflow execution, blocking until the workflow
+        /// completes if it is still running.
+        /// </summary>
+        /// <param name="parentWorkflow">The parent workflow.</param>
+        /// <param name="execution">Identifies the child workflow execution.</param>
+        /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution execution)
+        {
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(execution != null);
+            EnsureNotDisposed();
+
+            var reply = (WorkflowWaitForChildReply)await CallProxyAsync(
+                new WorkflowWaitForChildRequest()
+                {
+                    ContextId = parentWorkflow.ContextId,
+                    ChildId   = execution.ChildId
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result;
         }
 
         /// <summary>
@@ -417,34 +466,6 @@ namespace Neon.Cadence
             reply.ThrowOnError();
 
             return reply.Details.ToPublic();
-        }
-
-        /// <summary>
-        /// Returns the result from a workflow execution, blocking until the workflow
-        /// completes if it is still running.
-        /// </summary>
-        /// <param name="execution">Identifies the workflow execution.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
-        /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
-        {
-            Covenant.Requires<ArgumentNullException>(execution != null);
-            EnsureNotDisposed();
-
-            var reply = (WorkflowGetResultReply)await CallProxyAsync(
-                new WorkflowGetResultRequest()
-                {
-                    WorkflowId = execution.WorkflowId,
-                    RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
-                });
-
-            reply.ThrowOnError();
-
-            return reply.Result;
         }
 
         /// <summary>

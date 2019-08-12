@@ -27,7 +27,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Holds information about a child workflow execution.
     /// </summary>
-    public struct ChildExecution
+    public class ChildExecution
     {
         /// <summary>
         /// Constructor.

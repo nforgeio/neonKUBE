@@ -1054,7 +1054,11 @@ namespace TestCadence
             await stub.SignalAsync("my-signal-1");
             await stub.SignalAsync("my-signal-2");
 
-            Assert.Equal(new List<string>() { "my-signal-1", "my-signal-2" }, await task);
+            var results = await task;
+
+            Assert.Equal(2, results.Count);
+            Assert.Contains("my-signal-1", results);
+            Assert.Contains("my-signal-2", results);
         }
 
         [Fact]
@@ -1176,7 +1180,12 @@ namespace TestCadence
 
             Assert.Equal("my-query:1", await stub.QueryAsync("my-query", 1));
             Assert.Equal("my-query:2", await stub.QueryAsync("my-query", 2));
-            Assert.Equal(new List<string>() { "my-query:1", "my-query:2" }, await task);
+
+            var results = await task;
+
+            Assert.Equal(2, results.Count);
+            Assert.Contains("my-query:1", results);
+            Assert.Contains("my-query:2", results);
         }
 
         [Fact]
@@ -1377,7 +1386,14 @@ namespace TestCadence
             await stub.Signal1Async("my-signal-1");
             Assert.Equal("query-2:my-query-2", await stub.Query2Async("my-query-2"));
             await stub.Signal2Async("my-signal-2");
-            Assert.Equal(new List<string>() { "query-1:my-query-1", "signal-1:my-signal-1", "query-2:my-query-2", "signal-2:my-signal-2" }, await task);
+
+            var results = await task;
+
+            Assert.Equal(4, results.Count);
+            Assert.Contains("query-1:my-query-1", results);
+            Assert.Contains("signal-1:my-signal-1", results);
+            Assert.Contains("query-2:my-query-2", results);
+            Assert.Contains("signal-2:my-signal-2", results);
         }
 
         //---------------------------------------------------------------------

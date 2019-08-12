@@ -67,7 +67,7 @@ namespace Neon.Cadence.Internal
 
             this.stubType         = assembly.GetType(className);
             this.startConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions));
-            this.childConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(ChildWorkflowOptions));
+            this.childConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildWorkflowOptions));
             this.toUntyped        = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
         }
 
@@ -89,12 +89,13 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="dataConverter">The data converter.</param>
+        /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
         /// <param name="options">Specifies the child workflow options.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, ChildWorkflowOptions options)
+        public object Create(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options)
         {
-            return childConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options });
+            return childConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowTypeName, options });
         }
 
         /// <summary>

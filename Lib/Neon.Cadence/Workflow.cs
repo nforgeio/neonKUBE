@@ -44,7 +44,6 @@ namespace Neon.Cadence
         public const int DefaultVersion = -1;
 
         private object                  syncLock = new object();
-        private long                    contextId;
         private int                     pendingOperationCount;
         private long                    nextLocalActivityActionId;
         private bool                    isDisconnected;
@@ -83,7 +82,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
 
             this.Parent                    = parent;
-            this.contextId                 = contextId;
+            this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
             this.isDisconnected            = false;
@@ -128,6 +127,11 @@ namespace Neon.Cadence
         /// Returns the parent <see cref="WorkflowBase"/> implementation.
         /// </summary>
         internal WorkflowBase Parent { get; private set; }
+
+        /// <summary>
+        /// Returns the parent workflow's context ID.
+        /// </summary>
+        internal long ContextId { get; private set; }
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
@@ -234,7 +238,7 @@ namespace Neon.Cadence
                     return (WorkflowGetTimeReply)await Client.CallProxyAsync(
                         new WorkflowGetTimeRequest()
                         {
-                            ContextId = contextId
+                            ContextId = ContextId
                         });
                 });
 
@@ -481,7 +485,7 @@ namespace Neon.Cadence
                     return (WorkflowGetVersionReply)await Client.CallProxyAsync(
                         new WorkflowGetVersionRequest()
                         {
-                            ContextId    = this.contextId,
+                            ContextId    = this.ContextId,
                             ChangeId     = changeId,
                             MinSupported = minSupported,
                             MaxSupported = maxSupported
@@ -581,7 +585,7 @@ namespace Neon.Cadence
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
                         new WorkflowMutableRequest()
                         {
-                            ContextId = this.contextId,
+                            ContextId = this.ContextId,
                             MutableId = id,
                             Result    = Client.DataConverter.ToData(value)
                         });
@@ -665,7 +669,7 @@ namespace Neon.Cadence
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
                         new WorkflowMutableRequest()
                         {
-                            ContextId = this.contextId,
+                            ContextId = this.ContextId,
                             MutableId = id,
                             Result    = Client.DataConverter.ToData(value)
                         });
@@ -884,7 +888,7 @@ namespace Neon.Cadence
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
                         new WorkflowMutableRequest()
                         {
-                            ContextId = this.contextId,
+                            ContextId = this.ContextId,
                             MutableId = null,
                             Result    = Client.DataConverter.ToData(value)
                         });
@@ -955,7 +959,7 @@ namespace Neon.Cadence
                     return (WorkflowMutableReply)await Client.CallProxyAsync(
                         new WorkflowMutableRequest()
                         {
-                            ContextId = this.contextId,
+                            ContextId = this.ContextId,
                             MutableId = null,
                             Result    = Client.DataConverter.ToData(value)
                         });
@@ -995,7 +999,7 @@ namespace Neon.Cadence
                     return (WorkflowSleepReply)await Client.CallProxyAsync(
                         new WorkflowSleepRequest()
                         {
-                            ContextId = contextId,
+                            ContextId = ContextId,
                             Duration  = duration
                         });
                 });
@@ -1044,7 +1048,7 @@ namespace Neon.Cadence
                     return (WorkflowHasLastResultReply)await Client.CallProxyAsync(
                         new WorkflowHasLastResultRequest()
                         {
-                            ContextId = contextId
+                            ContextId = ContextId
                         });
                 });
 
@@ -1071,7 +1075,7 @@ namespace Neon.Cadence
                     return (WorkflowGetLastLastReply)await Client.CallProxyAsync(
                         new WorkflowGetLastResultRequest()
                         {
-                            ContextId = contextId
+                            ContextId = ContextId
                         });
                 });
 
@@ -1136,7 +1140,7 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            return StubManager.NewChildWorkflowStub<TWorkflowInterface>(Client, options, workflowTypeName);
+            return StubManager.NewChildWorkflowStub<TWorkflowInterface>(Client, this, options, workflowTypeName);
         }
 
         /// <summary>
@@ -1377,7 +1381,7 @@ namespace Neon.Cadence
                 async () => (ActivityExecuteReply)await Client.CallProxyAsync(
                     new ActivityExecuteRequest()
                     {
-                        ContextId              = contextId,
+                        ContextId              = ContextId,
                         Activity               = activityTypeName,
                         Args                   = args,
                         Options                = options.ToInternal(),
@@ -1451,7 +1455,7 @@ namespace Neon.Cadence
                         return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
                             new ActivityExecuteLocalRequest()
                             {
-                                ContextId      = contextId,
+                                ContextId      = ContextId,
                                 ActivityTypeId = activityActionId,
                                 Args           = args,
                                 Options        = options.ToInternal(),
