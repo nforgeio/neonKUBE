@@ -7,9 +7,9 @@ spec:
   replicationFactor:  {{ .Values.replicationFactor }}
   numberOfShards: 256
   isolationGroups:
-  {{- toYaml .Values.isolationGroups | nindent 2 }}
+{{- toYaml .Values.isolationGroups | nindent 4 }}
   etcdEndpoints:
-  - http://etcd-m3db-client.monitoring:2379
+  - "http://etcd-m3db-client.monitoring:2379"
   podIdentityConfig:
     sources: []
   namespaces:
