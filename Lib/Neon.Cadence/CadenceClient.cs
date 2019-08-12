@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +35,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -403,6 +406,7 @@ namespace Neon.Cadence
         private static int                  clientCount      = 0;
         private static Process              proxyProcess     = null;
         private static bool                 proxyInitialized = false;
+        private static bool                 compilerReady    = false;
 
         /// <summary>
         /// Used internally to reset any static state during unit tests.  This is
@@ -570,6 +574,8 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(settings != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
 
+            InitializeCompiler();
+
             var client = new CadenceClient(settings);
 
             await client.SetCacheMaximumSizeAsync(10000);
@@ -580,6 +586,83 @@ namespace Neon.Cadence
             }
 
             return client;
+        }
+
+        /// <summary>
+        /// Ensures that the Microsoft C# compiler libraries are preloaded and ready
+        /// so that subsequent complations won't take excessive time.
+        /// </summary>
+        private static void InitializeCompiler()
+        {
+            lock (staticSyncLock)
+            {
+            // The .NET client dynamically generates code at runtime to implement
+            // workflow stubs.  The Microsoft C# compiler classes take about 1.8
+            // seconds to load and compile code for the first time.  Subsequent
+            // compiles take about 200ms.
+            //
+            // The problem with this is that 1.8 seconds is quite long and is
+            // roughly 1/5th of the default decision task timeout of 10 seconds.
+            // So it's conceivable that this additional delay could push a
+            // workflow to timeout.
+
+            // $todo(jeff.lill):
+            //
+            // A potentially better approach would be to have the registration
+            // methods prebuild (and cache) all of the stubs and/or implement
+            // more specific stub generation methods.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/615
+
+            const string source =
+@"
+namespace Neon.Cadence.WorkflowStub
+{
+    internal class __CompilerInitialized
+    {
+    }
+}
+";
+                if (compilerReady)
+                {
+                    return;
+                }
+
+                var syntaxTree = CSharpSyntaxTree.ParseText(source);
+                var references = new List<MetadataReference>();
+
+                // Reference these required assemblies.
+
+                references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
+
+                // Reference all loaded assemblies.
+
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)))
+                {
+                    references.Add(MetadataReference.CreateFromFile(assembly.Location));
+                }
+
+                var assemblyName    = "Neon-Cadence-WorkflowStub-Initialize";
+                var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
+                var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
+                var dllStream       = new MemoryStream();
+
+                using (var pdbStream = new MemoryStream())
+                {
+                    var emitted = compilation.Emit(dllStream, pdbStream);
+
+                    if (!emitted.Success)
+                    {
+                        throw new CompilerErrorException(emitted.Diagnostics);
+                    }
+                }
+
+                dllStream.Position = 0;
+                AssemblyLoadContext.Default.LoadFromStream(dllStream);
+
+                compilerReady = true;
+            }
         }
 
         //---------------------------------------------------------------------
