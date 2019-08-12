@@ -6,9 +6,9 @@ isolationGroups: []
 
 containerResources:
   requests:
-    storage: 1Gi
+    cpu: 250m
+    memory: 256Mi
   limits:
-    storage: 1Gi
     cpu: 500m
     memory: 512Mi
 
