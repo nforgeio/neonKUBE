@@ -153,7 +153,7 @@ namespace Neon.Cadence.Internal
         private static Dictionary<Type, DynamicActivityStub> activityInterfaceToStub = new Dictionary<Type, DynamicActivityStub>();
 
         /// <summary>
-        /// Generates the static <b>___StubHelpers</b> class that exposes internal methods
+        /// Generates the static <b>___StubHelper</b> class that exposes internal methods
         /// and constructors from <see cref="CadenceClient"/> and other types that are
         /// required by generated workflow and activity stubs.  The generated class uses
         /// reflection to gain access these members.
@@ -162,7 +162,7 @@ namespace Neon.Cadence.Internal
         private static void AppendStubHelper(StringBuilder sbSource)
         {
             sbSource.Append(
-@"        private static class ___StubHelpers
+@"        private static class ___StubHelper
         {
             private static MethodInfo       startWorkflowAsync;             // from: CadenceClient
             private static MethodInfo       getWorkflowResultAsync;         // from: CadenceClient
@@ -176,14 +176,15 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
             private static MethodInfo       resolveTaskList;                // from: CadenceClient
             private static MethodInfo       resolveDomain;                  // from: CadenceClient
-            private static ConstructorInfo  newWorkflowStub;                // from: CadenceClient
+            private static MethodInfo       signalChildWorkflowAsync;       // from: CadenceClient
+            private static ConstructorInfo  newWorkflowStub;                // from: WorkflowStub
             private static MethodInfo       executeActivityAsync;           // from: Workflow
             private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
             private static MethodInfo       activityOptionsNormalize;       // from: ActivityOptions
             private static MethodInfo       childWorkflowOptionsNormalize;  // from: ChildWorkflowOptions
             private static MethodInfo       workflowOptionsNormalize;       // from: WorkflowOptions
 
-            static ___StubHelpers()
+            static ___StubHelper()
             {
                 var clientType   = typeof(CadenceClient);
                 var workflowType = typeof(Workflow);
@@ -200,6 +201,7 @@ namespace Neon.Cadence.Internal
                 queryWorkflowAsync            = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 resolveTaskList               = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
                 resolveDomain                 = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
+                signalChildWorkflowAsync      = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
                 newWorkflowStub               = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(WorkflowOptions), typeof(string));
                 executeActivityAsync          = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
                 executeLocalActivityAsync     = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
@@ -290,6 +292,12 @@ namespace Neon.Cadence.Internal
             public static async Task<byte[]> ExecuteActivityAsync(Workflow workflow, string activityTypeName, byte[] args, ActivityOptions options)
             {
                 return await (Task<byte[]>)executeActivityAsync.Invoke(workflow, new object[] { activityTypeName, args, options });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task SignalChildWorkflowAsync(CadenceClient client, Workflow workflow, ChildExecution child, string signalName, byte[] signalArgs)
+            {
+                await (Task)signalChildWorkflowAsync.Invoke(client, new object[] { workflow, child, signalName, signalArgs });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -545,8 +553,8 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
-            sbSource.AppendLine($"            this.options          = ___StubHelpers.NormalizeOptions(client, options);");
-            sbSource.AppendLine($"            this.domain           = ___StubHelpers.ResolveDomain(client, options.Domain);");
+            sbSource.AppendLine($"            this.options          = ___StubHelper.NormalizeOptions(client, options);");
+            sbSource.AppendLine($"            this.domain           = ___StubHelper.ResolveDomain(client, options.Domain);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to for child workflow stubs.
@@ -570,7 +578,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.client        = client;");
             sbSource.AppendLine($"            this.dataConverter = dataConverter;");
             sbSource.AppendLine($"            this.execution     = execution;");
-            sbSource.AppendLine($"            this.domain        = ___StubHelpers.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.domain        = ___StubHelper.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
             // Generate the method that converts the instance into a new untyped [IWorkflowStub].
@@ -578,7 +586,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public IWorkflowStub ToUntyped()");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            return ___StubHelpers.NewWorkflowStub(client, workflowTypeName, execution, options);");
+            sbSource.AppendLine($"            return ___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
             sbSource.AppendLine($"        }}");
 
             // Generate the workflow entry point methods.
@@ -677,8 +685,8 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes     = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            this.childExecution = await ___StubHelpers.StartChildWorkflowAsync(this.client, parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
-                    sbSource.AppendLine($"            var ___resultBytes  = await ___StubHelpers.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
+                    sbSource.AppendLine($"            this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            var ___resultBytes  = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
 
                     if (!details.IsVoid)
                     {
@@ -764,8 +772,8 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            this.execution     = await ___StubHelpers.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+                    sbSource.AppendLine($"            this.execution     = await ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
 
                     if (!details.IsVoid)
                     {
@@ -777,7 +785,8 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"        }}");
             }
 
-            // Generate the workflow signal methods.
+            // Generate the workflow signal methods.  Note that these will vary a bit
+            // between external and child workflows.
 
             foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Signal))
             {
@@ -791,16 +800,31 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async Task {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-                sbSource.AppendLine($"            // Ensure that this stub instance has been started.");
-                sbSource.AppendLine();
-                sbSource.AppendLine($"            if (this.execution == null)");
-                sbSource.AppendLine($"            {{");
-                sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because the workflow hasn't been started.\");");
-                sbSource.AppendLine($"            }}");
-                sbSource.AppendLine();
-                sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
-                sbSource.AppendLine();
-                sbSource.AppendLine($"            await ___StubHelpers.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
+
+                if (isChild)
+                {
+                    // Code to signal a child workflow.
+
+                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            await ___StubHelper.SignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes);");
+                }
+                else
+                {
+                    // Code to signal an external workflow.
+
+                    sbSource.AppendLine($"            // Ensure that this stub instance has been started.");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            if (this.execution == null)");
+                    sbSource.AppendLine($"            {{");
+                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because the workflow hasn't been started.\");");
+                    sbSource.AppendLine($"            }}");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
+                }
+
                 sbSource.AppendLine($"        }}");
             }
 
@@ -827,7 +851,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"            }}");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                sbSource.AppendLine($"            var ___resultBytes = await ___StubHelpers.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
+                sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
 
                 if (!details.IsVoid)
                 {
@@ -894,7 +918,7 @@ namespace Neon.Cadence.Internal
                     if (!workflowInterfaceToChildStub.TryGetValue(workflowInterface, out stub))
                     {
                         var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
-                        var stubType = stubAssembly.GetType(stubFullClassName);
+                        var stubType     = stubAssembly.GetType(stubFullClassName);
 
                         stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
 
@@ -906,7 +930,7 @@ namespace Neon.Cadence.Internal
                     if (!workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
                     {
                         var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
-                        var stubType = stubAssembly.GetType(stubFullClassName);
+                        var stubType     = stubAssembly.GetType(stubFullClassName);
 
                         stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
 
@@ -1129,7 +1153,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.workflow         = workflow;");
             sbSource.AppendLine($"            this.isLocal          = false;");
             sbSource.AppendLine($"            this.activityTypeName = activityTypeName;");
-            sbSource.AppendLine($"            this.options          = ___StubHelpers.NormalizeOptions(client, options);");
+            sbSource.AppendLine($"            this.options          = ___StubHelper.NormalizeOptions(client, options);");
             sbSource.AppendLine($"            this.domain           = options.Domain;");
             sbSource.AppendLine($"        }}");
 
@@ -1253,7 +1277,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"                // Execute the activity.");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteActivityAsync(this.workflow, ___activityTypeName, ___argBytes, this.options);");
+                sbSource.AppendLine($"                ___resultBytes = await ___StubHelper.ExecuteActivityAsync(this.workflow, ___activityTypeName, ___argBytes, this.options);");
                 sbSource.AppendLine($"            }}");
                 sbSource.AppendLine($"            else");
                 sbSource.AppendLine($"            {{");
@@ -1278,7 +1302,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"                    throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have an activity method named [\\\"{details.ActivityMethodAttribute.Name ?? string.Empty}\\\"].  Be sure your activity method is tagged by [ActivityMethod].\");");
                 sbSource.AppendLine($"                }}");
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                ___resultBytes = await ___StubHelpers.ExecuteLocalActivityAsync(this.workflow, this.activityType, this.activityConstructor, ___activityMethod, ___argBytes, ___localOptions);");
+                sbSource.AppendLine($"                ___resultBytes = await ___StubHelper.ExecuteLocalActivityAsync(this.workflow, this.activityType, this.activityConstructor, ___activityMethod, ___argBytes, ___localOptions);");
                 sbSource.AppendLine($"            }}");
 
                 if (!details.IsVoid)

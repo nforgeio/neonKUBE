@@ -418,22 +418,22 @@ namespace Neon.Cadence
         /// completes if it is still running.
         /// </summary>
         /// <param name="parentWorkflow">The parent workflow.</param>
-        /// <param name="execution">Identifies the child workflow execution.</param>
+        /// <param name="child">Identifies the child workflow execution.</param>
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution execution)
+        internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution child)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(child != null);
             EnsureNotDisposed();
 
             var reply = (WorkflowWaitForChildReply)await CallProxyAsync(
                 new WorkflowWaitForChildRequest()
                 {
                     ContextId = parentWorkflow.ContextId,
-                    ChildId   = execution.ChildId
+                    ChildId   = child.ChildId
                 });
 
             reply.ThrowOnError();
@@ -523,7 +523,8 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Transmits a signal to a running workflow.
+        /// Transmits a signal to a running external workflow.  This low-level method accepts a byte array
+        /// with the already encoded parameters.
         /// </summary>
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="signalName">Identifies the signal.</param>
@@ -551,7 +552,8 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Transmits a signal to a workflow, starting the workflow if it's not currently running.
+        /// Transmits a signal to an external workflow, starting the workflow if it's not currently running.
+        /// This low-level method accepts a byte array with the already encoded parameters.
         /// </summary>
         /// <param name="signalName">Identifies the signal.</param>
         /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
@@ -586,7 +588,8 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Queries a workflow.
+        /// Queries an external workflow.  This low-level method accepts a byte array
+        /// with the already encoded parameters and returns an encoded result.
         /// </summary>
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="queryType">Identifies the query.</param>
@@ -614,6 +617,43 @@ namespace Neon.Cadence
             reply.ThrowOnError();
 
             return reply.Result;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Signals a child workflow.  This low-level method accepts a byte array
+        /// with the already encoded parameters.
+        /// </para>
+        /// <note>
+        /// This method blocks until the child workflow is scheduled and
+        /// actually started on a worker.
+        /// </note>
+        /// </summary>
+        /// <param name="workflow">The parent workflow.</param>
+        /// <param name="child">The child workflow execution.</param>
+        /// <param name="signalName">Specifies the signal name.</param>
+        /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        internal async Task SignalChildWorkflowAsync(Workflow workflow, ChildExecution child, string signalName, byte[] signalArgs)
+        {
+            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(child != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+
+            var reply = (WorkflowSignalChildReply)await CallProxyAsync(
+                new WorkflowSignalChildRequest()
+                {
+                    ContextId   = workflow.ContextId,
+                    ChildId     = child.ChildId,
+                    SignalName  = signalName,
+                    SignalArgs  = signalArgs
+                }); ;
+
+            reply.ThrowOnError();
         }
     }
 }
