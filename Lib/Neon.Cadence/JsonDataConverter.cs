@@ -29,7 +29,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
     /// <para>
@@ -41,7 +41,7 @@ namespace Neon.Cadence.Internal
     /// it easier to manage data schema changes. 
     /// </note>
     /// </summary>
-    internal class JsonDataConverter : IDataConverter
+    public class JsonDataConverter : IDataConverter
     {
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)

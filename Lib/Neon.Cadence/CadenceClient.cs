@@ -989,7 +989,7 @@ namespace Neon.Cadence
         /// <summary>
         /// <para>
         /// Specifies the <see cref="IDataConverter"/> used for workflows and activities managed by the client.
-        /// This defaults to an internal JSON based converter.
+        /// This defaults to <see cref="JsonDataConverter"/>.
         /// </para>
         /// <note>
         /// When you need a custom data converter, you must set this immediately after connecting
