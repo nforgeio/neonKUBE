@@ -9,5 +9,7 @@ resources:
     storage: 1Gi
   limits:
     storage: 1Gi
+    cpu: 500m
+    memory: 512Mi
 
 replicationFactor: 1
