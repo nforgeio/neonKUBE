@@ -1400,11 +1400,14 @@ namespace TestCadence
 
         public interface IWorkflowChild : IWorkflow
         {
-            [WorkflowMethod(Name = "run")]
+            [WorkflowMethod]
             Task RunAsync();
 
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "wait-for-signal")]
+            Task WaitForSignalAsync();
 
             [QueryMethod("query")]
             Task<string> QueryAsync(string value);
@@ -1447,6 +1450,23 @@ namespace TestCadence
                 return await Task.FromResult($"Hello {name}!");
             }
 
+            public async Task WaitForSignalAsync()
+            {
+                var maxWaitTimeUtc = await Workflow.UtcNowAsync() + TimeSpan.FromSeconds(maxWaitSeconds);
+
+                WasExecuted = true;
+
+                while (ReceivedSignals.Count == 0)
+                {
+                    if (await Workflow.UtcNowAsync() >= maxWaitTimeUtc)
+                    {
+                        throw new TimeoutException("Timeout waiting for signal.");
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+            }
+
             public async Task<string> QueryAsync(string value)
             {
                 ReceivedQueries.Add(value);
@@ -1465,20 +1485,51 @@ namespace TestCadence
         public interface IWorkflowParent : IWorkflow
         {
             [WorkflowMethod]
-            Task ExecuteChildAsync();
+            Task RunChildAsync();
+
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloChildAsync(string name);
+
+            [WorkflowMethod(Name = "signal")]
+            Task SignalChildAsync();
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowParent : WorkflowBase, IWorkflowParent
         {
-            /// <summary>
-            /// Simply executes a child workflow.
-            /// </summary>
-            public async Task ExecuteChildAsync()
+            public async Task RunChildAsync()
             {
                 var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
 
                 await childStub.RunAsync();
+            }
+
+            public async Task<string> HelloChildAsync(string name)
+            {
+                var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+
+                return await childStub.HelloAsync(name);
+            }
+
+            public async Task SignalChildAsync()
+            {
+                var childStub      = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+                var task           = childStub.WaitForSignalAsync();
+                var maxWaitTimeUtc = await Workflow.UtcNowAsync() + TimeSpan.FromSeconds(maxWaitSeconds);
+
+                while (!WorkflowChild.WasExecuted)
+                {
+                    if (await Workflow.UtcNowAsync() >= maxWaitTimeUtc)
+                    {
+                        throw new TimeoutException("Timeout waiting for child execution.");
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                await childStub.SignalAsync("my-signal");
+
+                await task;
             }
         }
 
@@ -1492,8 +1543,39 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowParent>();
 
-            await stub.ExecuteChildAsync();
+            await stub.RunChildAsync();
             Assert.True(WorkflowChild.WasExecuted);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildHello()
+        {
+            // Verify that we can call a child workflow that doesn't return a result.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.Equal("Hello Jeff!", await stub.HelloChildAsync("Jeff"));
+            Assert.True(WorkflowChild.WasExecuted);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildSignal()
+        {
+            // Verify that a parent workflow can signal a child.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            await stub.SignalChildAsync();
+
+            Assert.True(WorkflowChild.WasExecuted);
+            Assert.Single(WorkflowChild.ReceivedSignals);
+            Assert.Equal("my-signal", WorkflowChild.ReceivedSignals[0]);
         }
     }
 }
