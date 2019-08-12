@@ -4,12 +4,18 @@
 
 isolationGroups: []
 
-resources:
+containerResources:
   requests:
     storage: 1Gi
   limits:
     storage: 1Gi
     cpu: 500m
     memory: 512Mi
+
+volumeResources:
+  requests:
+    storage: 1Gi
+  limits:
+    storage: 1Gi
 
 replicationFactor: 1

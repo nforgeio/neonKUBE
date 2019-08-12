@@ -17,6 +17,8 @@ spec:
       preset: 10s:2d
     - name: metrics-10s:2d
       preset: 1m:40d
+  containerResources:
+{{ toYaml .Values.containerResources | indent 4 }}
   dataDirVolumeClaimTemplate:
     metadata:
       name: m3db-data
@@ -28,5 +30,5 @@ spec:
         matchLabels:
           m3db: default
       resources:
-{{ toYaml .Values.resources | indent 8 }}
+{{ toYaml .Values.volumeResources | indent 8 }}
 
