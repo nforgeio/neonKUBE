@@ -596,30 +596,51 @@ namespace Neon.Cadence
         {
             lock (staticSyncLock)
             {
-            // The .NET client dynamically generates code at runtime to implement
-            // workflow stubs.  The Microsoft C# compiler classes take about 1.8
-            // seconds to load and compile code for the first time.  Subsequent
-            // compiles take about 200ms.
-            //
-            // The problem with this is that 1.8 seconds is quite long and is
-            // roughly 1/5th of the default decision task timeout of 10 seconds.
-            // So it's conceivable that this additional delay could push a
-            // workflow to timeout.
+                // The .NET client dynamically generates code at runtime to implement
+                // workflow stubs.  The Microsoft C# compiler classes take about 1.8
+                // seconds to load and compile code for the first time.  Subsequent
+                // compiles take about 200ms.
+                //
+                // The problem with this is that 1.8 seconds is quite long and is
+                // roughly 1/5th of the default decision task timeout of 10 seconds.
+                // So it's conceivable that this additional delay could push a
+                // workflow to timeout.
 
-            // $todo(jeff.lill):
-            //
-            // A potentially better approach would be to have the registration
-            // methods prebuild (and cache) all of the stubs and/or implement
-            // more specific stub generation methods.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/615
+                // $todo(jeff.lill):
+                //
+                // A potentially better approach would be to have the registrationd
+                // methods prebuild (and cache) all of the stubs and/or implement
+                // more specific stub generation methods.
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/615
 
-            const string source =
+                const string source =
 @"
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
+using Neon.Common;
+using Neon.Cadence;
+using Neon.Cadence.Internal;
+
 namespace Neon.Cadence.WorkflowStub
 {
     internal class __CompilerInitialized
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public async Task<int> DoNothingAsync()
+        {
+            // Call a few things so the the C# compiler will need to load some assemblies.
+
+            await CadenceClient.ConnectAsync(new CadenceSettings());
+            return await Task.FromResult(0);
+        }
     }
 }
 ";
