@@ -26,8 +26,10 @@ spec:
     - namespace: monitoring
       name: alertmanager
       port: web
+  {{ if .Values.persistence.enabled }}
   remoteRead:
     - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/read"
       readRecent: true
   remoteWrite:
     - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/write"
+  {{ end }}
