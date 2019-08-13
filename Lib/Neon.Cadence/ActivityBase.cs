@@ -545,6 +545,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
             Covenant.Requires<ArgumentNullException>(dataConverter != null);
+            CadenceHelper.ValidateActivityImplementation(activityType);
 
             this.Client                  = client;
             this.Activity                = new Activity(this);

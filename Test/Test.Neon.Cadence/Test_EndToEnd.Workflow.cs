@@ -985,11 +985,11 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // Static members
 
-            public static bool IsRunning { get; private set; } = false;
+            public static bool HasStarted { get; private set; } = false;
 
             public static void Reset()
             {
-                IsRunning = false;
+                HasStarted = false;
             }
 
             //-----------------------------------------------------------------
@@ -999,7 +999,7 @@ namespace TestCadence
 
             public async Task<List<string>> RunAsync(TimeSpan timeout, int expectedSignals)
             {
-                IsRunning = true;
+                HasStarted = true;
 
                 var timeoutUtc = await Workflow.UtcNowAsync() + timeout;
 
@@ -1033,7 +1033,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowSignal>();
             var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedSignals: 1);
 
-            NeonHelper.WaitFor(() => WorkflowSignal.IsRunning, workflowTimeout);
+            NeonHelper.WaitFor(() => WorkflowSignal.HasStarted, workflowTimeout);
 
             await stub.SignalAsync("my-signal-1");
 
@@ -1049,7 +1049,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowSignal>();
             var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedSignals: 2);
 
-            NeonHelper.WaitFor(() => WorkflowSignal.IsRunning, workflowTimeout);
+            NeonHelper.WaitFor(() => WorkflowSignal.HasStarted, workflowTimeout);
 
             await stub.SignalAsync("my-signal-1");
             await stub.SignalAsync("my-signal-2");
@@ -1102,11 +1102,11 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // Static members
 
-            public static bool IsRunning { get; private set; } = false;
+            public static bool HasStarted { get; private set; } = false;
 
             public static void Reset()
             {
-                IsRunning = false;
+                HasStarted = false;
             }
 
             //-----------------------------------------------------------------
@@ -1116,7 +1116,7 @@ namespace TestCadence
 
             public async Task<List<string>> RunAsync(TimeSpan timeout, int expectedQueries)
             {
-                IsRunning = true;
+                HasStarted = true;
 
                 var timeoutUtc = await Workflow.UtcNowAsync() + timeout;
 
@@ -1161,7 +1161,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
             var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedQueries: 1);
 
-            NeonHelper.WaitFor(() => WorkflowQuery.IsRunning, workflowTimeout);
+            NeonHelper.WaitFor(() => WorkflowQuery.HasStarted, workflowTimeout);
 
             Assert.Equal("my-query:1", await stub.QueryAsync("my-query", 1));
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
@@ -1176,7 +1176,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
             var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedQueries: 2);
 
-            NeonHelper.WaitFor(() => WorkflowQuery.IsRunning, workflowTimeout);
+            NeonHelper.WaitFor(() => WorkflowQuery.HasStarted, workflowTimeout);
 
             Assert.Equal("my-query:1", await stub.QueryAsync("my-query", 1));
             Assert.Equal("my-query:2", await stub.QueryAsync("my-query", 2));
@@ -1200,7 +1200,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
             var task = stub.RunAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedQueries: 1);
 
-            NeonHelper.WaitFor(() => WorkflowQuery.IsRunning, workflowTimeout);
+            NeonHelper.WaitFor(() => WorkflowQuery.HasStarted, workflowTimeout);
 
             await stub.QueryNoResultAsync("my-query", 1);
             Assert.Equal(new List<string>() { "my-query:1" }, await task);
@@ -1252,6 +1252,21 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IChildActivity : IActivity
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ChildActivity : ActivityBase, IChildActivity
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
         public interface IWorkflowComplex : IWorkflow
         {
             [WorkflowMethod]
@@ -1286,11 +1301,11 @@ namespace TestCadence
             //-----------------------------------------------------------------
             // Static members
 
-            public static bool IsRunning { get; private set; } = false;
+            public static bool HasStarted { get; private set; } = false;
 
             public static void Reset()
             {
-                IsRunning = false;
+                HasStarted = false;
             }
 
             //-----------------------------------------------------------------
@@ -1300,7 +1315,7 @@ namespace TestCadence
 
             public async Task<List<string>> WaitForQueriesAndSignalsAsync(TimeSpan timeout, int expectedOperations)
             {
-                IsRunning = true;
+                HasStarted = true;
 
                 var timeoutUtc = await Workflow.UtcNowAsync() + timeout;
 
@@ -1380,7 +1395,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowComplex>();
             var task = stub.WaitForQueriesAndSignalsAsync(TimeSpan.FromSeconds(maxWaitSeconds), expectedOperations: 4);
 
-            NeonHelper.WaitFor(() => WorkflowComplex.IsRunning, workflowTimeout);
+            NeonHelper.WaitFor(() => WorkflowComplex.HasStarted, workflowTimeout);
 
             Assert.Equal("query-1:my-query-1", await stub.Query1Async("my-query-1"));
             await stub.Signal1Async("my-signal-1");
@@ -1406,8 +1421,17 @@ namespace TestCadence
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloAsync(string name);
 
+            [WorkflowMethod(Name = "hello-activity")]
+            Task<string> HelloActivityAsync(string name);
+
+            [WorkflowMethod(Name = "nested-hello")]
+            Task<string> NestedHelloAsync(string name);
+
             [WorkflowMethod(Name = "wait-for-signal")]
             Task WaitForSignalAsync();
+
+            [WorkflowMethod(Name = "wait-for-query")]
+            Task WaitForQueryAsync();
 
             [QueryMethod("query")]
             Task<string> QueryAsync(string value);
@@ -1423,12 +1447,15 @@ namespace TestCadence
             // Static members
 
             public static bool          WasExecuted     = false;
+            public static bool          ExitNow         = false;
             public static List<string>  ReceivedQueries = new List<string>();
             public static List<string>  ReceivedSignals = new List<string>();
 
             public static void Reset()
             {
                 WasExecuted = false;
+                ExitNow     = false;
+
                 ReceivedQueries.Clear();
                 ReceivedSignals.Clear();
             }
@@ -1450,17 +1477,50 @@ namespace TestCadence
                 return await Task.FromResult($"Hello {name}!");
             }
 
-            public async Task WaitForSignalAsync()
+            public async Task<string> HelloActivityAsync(string name)
             {
-                var maxWaitTimeUtc = await Workflow.UtcNowAsync() + TimeSpan.FromSeconds(maxWaitSeconds);
-
                 WasExecuted = true;
 
-                while (ReceivedSignals.Count == 0)
+                return await Workflow.NewActivityStub<IChildActivity>().HelloAsync("Jeff");
+            }
+
+            public async Task<string> NestedHelloAsync(string name)
+            {
+                WasExecuted = true;
+
+                var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+
+                return await childStub.HelloAsync(name);
+            }
+
+            public async Task WaitForSignalAsync()
+            {
+                WasExecuted = true;
+
+                var maxWaitTimeUtc = await Workflow.UtcNowAsync() + TimeSpan.FromSeconds(maxWaitSeconds);
+
+                while (ReceivedSignals.Count == 0 && !ExitNow)
                 {
                     if (await Workflow.UtcNowAsync() >= maxWaitTimeUtc)
                     {
                         throw new TimeoutException("Timeout waiting for signal.");
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+            }
+
+            public async Task WaitForQueryAsync()
+            {
+                WasExecuted = true;
+
+                var maxWaitTimeUtc = await Workflow.UtcNowAsync() + TimeSpan.FromSeconds(maxWaitSeconds);
+
+                while (ReceivedQueries.Count == 0 && !ExitNow)
+                {
+                    if (await Workflow.UtcNowAsync() >= maxWaitTimeUtc)
+                    {
+                        throw new TimeoutException("Timeout waiting for query.");
                     }
 
                     await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
@@ -1490,8 +1550,17 @@ namespace TestCadence
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloChildAsync(string name);
 
-            [WorkflowMethod(Name = "signal")]
+            [WorkflowMethod(Name = "hello-activity")]
+            Task<string> HelloChildActivityAsync(string name);
+
+            [WorkflowMethod(Name = "nested-hello")]
+            Task<string> NestedHelloChildAsync(string name);
+
+            [WorkflowMethod(Name = "signal-child")]
             Task SignalChildAsync();
+
+            [WorkflowMethod(Name = "query-child")]
+            Task<bool> QueryChildAsync();
         }
 
         [Workflow(AutoRegister = true)]
@@ -1511,6 +1580,20 @@ namespace TestCadence
                 return await childStub.HelloAsync(name);
             }
 
+            public async Task<string> HelloChildActivityAsync(string name)
+            {
+                var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+
+                return await childStub.HelloActivityAsync(name);
+            }
+
+            public async Task<string> NestedHelloChildAsync(string name)
+            {
+                var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+
+                return await childStub.NestedHelloAsync(name);
+            }
+
             public async Task SignalChildAsync()
             {
                 var childStub      = Workflow.NewChildWorkflowStub<IWorkflowChild>();
@@ -1528,8 +1611,48 @@ namespace TestCadence
                 }
 
                 await childStub.SignalAsync("my-signal");
+                await task;
+            }
+
+            public async Task<bool> QueryChildAsync()
+            {
+                // Direct querying of child workflows is not currently supported.
+                // We're going to verify that we get an exception.  This method 
+                // returns TRUE for the expected behavior.
+                //
+                // NOTE: We'll probably relax this constraint in the future:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/617
+
+                var childStub      = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+                var task           = childStub.WaitForQueryAsync();
+                var maxWaitTimeUtc = DateTime.UtcNow + TimeSpan.FromSeconds(maxWaitSeconds);
+                var pass           = false;
+
+                while (!WorkflowChild.WasExecuted)
+                {
+                    if (DateTime.UtcNow >= maxWaitTimeUtc)
+                    {
+                        throw new TimeoutException("Timeout waiting for child execution.");
+                    }
+
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                try
+                {
+                    await childStub.QueryAsync("test");
+                }
+                catch (NotSupportedException)
+                {
+                    pass = true;
+                }
+
+                WorkflowChild.ExitNow = true;
 
                 await task;
+
+                return pass;
             }
         }
 
@@ -1551,7 +1674,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildHello()
         {
-            // Verify that we can call a child workflow that doesn't return a result.
+            // Verify that we can call a child workflow that accepts a
+            // parameter and returns a result.
 
             WorkflowChild.Reset();
 
@@ -1563,19 +1687,44 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ChildSignal()
+        public async Task Workflow_ChildActivity()
         {
-            // Verify that a parent workflow can signal a child.
+            // Verify that we can call a child workflow that calls an activity.
 
             WorkflowChild.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowParent>();
 
-            await stub.SignalChildAsync();
-
+            Assert.Equal("Hello Jeff!", await stub.HelloChildActivityAsync("Jeff"));
             Assert.True(WorkflowChild.WasExecuted);
-            Assert.Single(WorkflowChild.ReceivedSignals);
-            Assert.Equal("my-signal", WorkflowChild.ReceivedSignals[0]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildQueryNotSupported()
+        {
+            // Verify that querying a child workflow is not supported.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+            var pass = await stub.QueryChildAsync();
+
+            Assert.True(pass);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildNested()
+        {
+            // Verify that calling a workflow that calls a child, that
+            // calls another child works.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
         }
     }
 }

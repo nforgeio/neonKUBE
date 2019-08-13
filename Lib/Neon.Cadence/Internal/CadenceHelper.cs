@@ -325,7 +325,14 @@ namespace Neon.Cadence.Internal
 
             if (workflowType.BaseType != typeof(WorkflowBase))
             {
-                throw new WorkflowTypeException($"[{workflowType.FullName}] does not inherit [{typeof(WorkflowBase).FullName}].");
+                if (workflowType.BaseType == typeof(ActivityBase))
+                {
+                    throw new WorkflowTypeException($"[{workflowType.FullName}] does not inherit [{typeof(WorkflowBase).FullName}].  Did you mean to use [Activity]?");
+                }
+                else
+                {
+                    throw new WorkflowTypeException($"[{workflowType.FullName}] does not inherit [{typeof(WorkflowBase).FullName}].");
+                }
             }
 
             if (workflowType == typeof(WorkflowBase))
@@ -449,7 +456,17 @@ namespace Neon.Cadence.Internal
 
             if (activityType.BaseType != typeof(ActivityBase))
             {
-                throw new ActivityTypeException($"[{activityType.FullName}] does not inherit [{typeof(ActivityBase).FullName}].");
+                if (activityType.BaseType != typeof(ActivityBase))
+                {
+                    if (activityType.BaseType == typeof(WorkflowBase))
+                    {
+                        throw new WorkflowTypeException($"[{activityType.FullName}] does not inherit [{typeof(ActivityBase).FullName}].  Did you mean to use [Workflow]?");
+                    }
+                    else
+                    {
+                        throw new WorkflowTypeException($"[{activityType.FullName}] does not inherit [{typeof(ActivityBase).FullName}].");
+                    }
+                }
             }
 
             if (activityType == typeof(ActivityBase))

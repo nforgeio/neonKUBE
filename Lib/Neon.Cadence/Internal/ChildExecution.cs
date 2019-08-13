@@ -37,7 +37,7 @@ namespace Neon.Cadence.Internal
         /// The child workflow's local ID.  This is used to identify the 
         /// child when communicating with <b>cadence-proxy</b>.
         /// </param>
-        public ChildExecution(WorkflowExecution execution, long childId)
+        internal ChildExecution(WorkflowExecution execution, long childId)
         {
             this.Execution = execution;
             this.ChildId   = childId;
