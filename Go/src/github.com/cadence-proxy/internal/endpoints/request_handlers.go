@@ -1303,13 +1303,10 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	<-op.GetChannel()
 
 	// create the new ChildContext
-	cctx := cadenceworkflows.NewChildContext(ctx)
-	cctx.SetCancelFunction(cancel)
-	cctx.SetFuture(childFuture)
-
 	// add the ChildWorkflowFuture and the cancel func to the
 	// ChildContexts map in the parent workflow's entry
 	// in the WorkflowContexts map
+	cctx := cadenceworkflows.NewChildContext(childFuture, cancel)
 	childID := wectx.AddChildContext(cadenceworkflows.NextChildID(), cctx)
 
 	// get the child workflow execution
@@ -1350,7 +1347,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	}
 
 	// set ReplayStatus
-	ctx := cctx.GetContext()
+	ctx := wectx.GetContext()
 	setReplayStatus(ctx, reply)
 
 	// wait on the child workflow
@@ -1404,7 +1401,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	}
 
 	// set ReplayStatus
-	ctx := cctx.GetContext()
+	ctx := wectx.GetContext()
 	setReplayStatus(ctx, reply)
 
 	// signal the child workflow
@@ -1456,7 +1453,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	}
 
 	// set replaying
-	setReplayStatus(cctx.GetContext(), reply)
+	setReplayStatus(wectx.GetContext(), reply)
 
 	// get cancel function
 	// call the cancel function
