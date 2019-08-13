@@ -173,10 +173,10 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       terminateWorkflowAsync;         // from: CadenceClient
             private static MethodInfo       signalWorkflowAsync;            // from: CadenceClient
             private static MethodInfo       signalWorkflowWithStartAsync;   // from: CadenceClient
+            private static MethodInfo       signalChildWorkflowAsync;       // from: CadenceClient
             private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
             private static MethodInfo       resolveTaskList;                // from: CadenceClient
             private static MethodInfo       resolveDomain;                  // from: CadenceClient
-            private static MethodInfo       signalChildWorkflowAsync;       // from: CadenceClient
             private static ConstructorInfo  newWorkflowStub;                // from: WorkflowStub
             private static MethodInfo       executeActivityAsync;           // from: Workflow
             private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
@@ -198,10 +198,10 @@ namespace Neon.Cadence.Internal
                 terminateWorkflowAsync        = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 signalWorkflowAsync           = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 signalWorkflowWithStartAsync  = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(byte[]), typeof(byte[]), typeof(string), typeof(WorkflowOptions));
+                signalChildWorkflowAsync      = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
                 queryWorkflowAsync            = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 resolveTaskList               = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
                 resolveDomain                 = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
-                signalChildWorkflowAsync      = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
                 newWorkflowStub               = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(WorkflowOptions), typeof(string));
                 executeActivityAsync          = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
                 executeLocalActivityAsync     = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
@@ -687,12 +687,12 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___argBytes     = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            this.hasStarted     = true;");
-                    sbSource.AppendLine($"            this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            this.childExecution = ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options).Result;");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___resultBytes  = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
 
                     if (!details.IsVoid)
                     {
@@ -777,10 +777,10 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            this.hasStarted    = true;");
-                    sbSource.AppendLine($"            this.execution     = await ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            this.hasStarted = true;");
+                    sbSource.AppendLine($"            this.execution  = ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options).Result;");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
 
@@ -816,7 +816,7 @@ namespace Neon.Cadence.Internal
 
                     sbSource.AppendLine($"            if (!this.hasStarted)");
                     sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because the workflow hasn't been started.\");");
+                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
@@ -829,7 +829,7 @@ namespace Neon.Cadence.Internal
 
                     sbSource.AppendLine($"            if (!this.hasStarted)");
                     sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because the workflow hasn't been started.\");");
+                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because ta workflow method needs to be called first.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
@@ -868,7 +868,7 @@ namespace Neon.Cadence.Internal
                 {
                     sbSource.AppendLine($"            if (this.execution == null)");
                     sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be queried because the workflow hasn't been started.\");");
+                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be queried because a workflow method needs to be called first.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
@@ -893,6 +893,11 @@ namespace Neon.Cadence.Internal
 
             //-----------------------------------------------------------------
             // Compile the new workflow stub class into an assembly.
+
+            //--------------------------------
+            // $debug(jeff.lill): DELETE THIS!
+            var interfaceTypeName = workflowInterface.Name;
+            //--------------------------------
 
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var dotnetPath = Path.GetDirectoryName(typeof(object).Assembly.Location);

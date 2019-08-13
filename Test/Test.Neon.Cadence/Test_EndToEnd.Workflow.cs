@@ -1557,7 +1557,7 @@ namespace TestCadence
             Task<string> NestedHelloChildAsync(string name);
 
             [WorkflowMethod(Name = "signal-child")]
-            Task SignalChildAsync();
+            Task SignalChildAsync(string signal);
 
             [WorkflowMethod(Name = "query-child")]
             Task<bool> QueryChildAsync();
@@ -1594,24 +1594,13 @@ namespace TestCadence
                 return await childStub.NestedHelloAsync(name);
             }
 
-            public async Task SignalChildAsync()
+            public async Task SignalChildAsync(string signal)
             {
-                var childStub      = Workflow.NewChildWorkflowStub<IWorkflowChild>();
-                var task           = childStub.WaitForSignalAsync();
-                var maxWaitTimeUtc = await Workflow.UtcNowAsync() + TimeSpan.FromSeconds(maxWaitSeconds);
+                var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
+                var childTask = childStub.WaitForSignalAsync();
 
-                while (!WorkflowChild.WasExecuted)
-                {
-                    if (await Workflow.UtcNowAsync() >= maxWaitTimeUtc)
-                    {
-                        throw new TimeoutException("Timeout waiting for child execution.");
-                    }
-
-                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
-                }
-
-                await childStub.SignalAsync("my-signal");
-                await task;
+                await childStub.SignalAsync(signal);
+                await childTask;
             }
 
             public async Task<bool> QueryChildAsync()
@@ -1701,6 +1690,22 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildSignal()
+        {
+            // Verify that signalling a child workflow.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            await stub.SignalChildAsync("my-signal");
+
+            Assert.Single(WorkflowChild.ReceivedSignals);
+            Assert.Contains("my-signal", WorkflowChild.ReceivedSignals);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildQueryNotSupported()
         {
             // Verify that querying a child workflow is not supported.
@@ -1717,8 +1722,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildNested()
         {
-            // Verify that calling a workflow that calls a child, that
-            // calls another child works.
+            // Test calling a workflow that calls a child which
+            // calls another child.
 
             WorkflowChild.Reset();
 
