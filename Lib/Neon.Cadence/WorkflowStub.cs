@@ -181,7 +181,7 @@ namespace Neon.Cadence
             var signalArgBytes = client.DataConverter.ToData(signalArgs);
             var startArgBytes  = client.DataConverter.ToData(startArgs);
 
-            return await client.SignalWorkflowWithStartAsync(signalName, signalArgBytes, startArgBytes, domain);
+            return await client.SignalWorkflowWithStartAsync(this.WorkflowTypeName, signalName, signalArgBytes, startArgBytes, this.Options);
         }
 
         /// <inheritdoc/>

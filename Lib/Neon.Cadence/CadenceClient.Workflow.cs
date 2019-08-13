@@ -564,7 +564,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs = null, byte[] startArgs = null, WorkflowOptions options = null)
+        internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, WorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
@@ -646,24 +646,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(child != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-            // The code below doesn't work.  It throws this error:
-            //
-            //      Neon.Cadence.CadenceGenericException : : Panic: getState: illegal access from outside of workflow context
-            //
-            // The problem is that the GO client tries to verify that the signal
-            // call is actually being called by the workflow's GO function but that's
-            // not going to be the case for the .NET client, because the signal child
-            // workflow message will be received and handled by a separate go routine.
-            //
-            // One solution would be to recode the cadence-proxy to somehow inject
-            // the operation to the workflow's GO function, but I'd rather not add
-            // the complication.
-            //
-            // The alternative is to simply use an external signalling mechanism.
-            // The semantics of this call are to wait for the child to start executing
-            // and then send the signal.
-
-#if DONT_WORK
             var reply = (WorkflowSignalChildReply)await CallProxyAsync(
                 new WorkflowSignalChildRequest()
                 {
@@ -674,7 +656,6 @@ namespace Neon.Cadence
                 }); ;
 
             reply.ThrowOnError();
-#endif
         }
     }
 }
