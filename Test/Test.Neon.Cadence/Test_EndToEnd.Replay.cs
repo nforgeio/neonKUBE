@@ -79,6 +79,21 @@ namespace TestCadence
             }
         }
 
+        public interface IActivityReplayNop : IActivity
+        {
+            [ActivityMethod]
+            Task DoNothingAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityReplayNop : ActivityBase, IActivityReplayNop
+        {
+            public async Task DoNothingAsync()
+            {
+                await Task.CompletedTask;
+            }
+        }
+
         /// <summary>
         /// Used to help manage workflow replay testing.
         /// </summary>
@@ -130,6 +145,19 @@ namespace TestCadence
         /// </remarks>
         public class ReplayManager
         {
+            private IActivityReplayNop nop;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="workflow">Must be passed as the parent workflow.</param>
+            public ReplayManager(Workflow workflow)
+            {
+                Covenant.Requires<ArgumentNullException>(workflow != null);
+
+                nop = workflow.NewLocalActivityStub<IActivityReplayNop, ActivityReplayNop>();
+            }
+
             /// <summary>
             /// Identifies the currently completed decision step.  Zero indicates
             /// that the workflow hasn't been started yet.
@@ -149,6 +177,25 @@ namespace TestCadence
             {
                 Step = 0;
                 History.Clear();
+            }
+
+            /// <summary>
+            /// Starts a new decision task by running a NOP local activity.
+            /// </summary>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            private async Task NewDecisionTaskAsync()
+            {
+                await nop.DoNothingAsync();
+            }
+
+            /// <summary>
+            /// Forces the workflow to restart.
+            /// </summary>
+            private void ForceRestart()
+            {
+                throw new ForceReplayException();
+
+                // await Task.Delay(TimeSpan.FromSeconds(12));
             }
 
             /// <summary>
@@ -172,16 +219,15 @@ namespace TestCadence
 
                     await decision();
                     Step++;
-                    await workflow.NewGuidAsync();  // Starts a new decision task
+                    await NewDecisionTaskAsync();
                 }
                 else
                 {
                     await decision();
                     History.Add(null);
                     Step++;
-                    await workflow.NewGuidAsync();  // Starts a new decision task
-
-                    throw new ForceReplayException();
+                    await NewDecisionTaskAsync();
+                    ForceRestart();
                 }
             }
 
@@ -214,17 +260,15 @@ namespace TestCadence
                     }
 
                     Step++;
-                    await workflow.NewGuidAsync();  // Starts a new decision task
+                    await NewDecisionTaskAsync();
                 }
                 else
                 {
                     result = await decision();
                     History.Add(result);
                     Step++;
-                    await workflow.NewGuidAsync();  // Starts a new decision task
-
-                    //throw new ForceReplayException();
-                    await Task.Delay(TimeSpan.FromSeconds(12));
+                    await NewDecisionTaskAsync();
+                    ForceRestart();
                 }
 
                 return result;
@@ -232,21 +276,6 @@ namespace TestCadence
         }
 
         //---------------------------------------------------------------------
-
-        public interface IActivityReplayNop : IActivity
-        {
-            [ActivityMethod]
-            Task DoNothingAsync();
-        }
-
-        [Activity(AutoRegister = true)]
-        public class ActivityReplayNop : ActivityBase, IActivityReplayNop
-        {
-            public async Task DoNothingAsync()
-            {
-                await Task.CompletedTask;
-            }
-        }
 
         public interface IWorkflowReplayStart : IWorkflow
         {
