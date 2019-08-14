@@ -153,6 +153,23 @@ namespace Neon.Cadence.Internal
         private static Dictionary<Type, DynamicActivityStub> activityInterfaceToStub = new Dictionary<Type, DynamicActivityStub>();
 
         /// <summary>
+        /// Returns C# compatible fully qualified type name for a type.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The fully qualified type name.</returns>
+        private static string NormalizeTypeName(Type type)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+
+            // .NET returns fully qualified type names that include a "+" for
+            // nested types.  We're going to convert these to "." to make the 
+            // name's C# compatible.  We're also going to prepend "global::"
+            // to avoid namespace conflicts.
+
+            return "global::" + type.FullName.Replace('+', '.');
+        }
+
+        /// <summary>
         /// Generates the static <b>___StubHelper</b> class that exposes internal methods
         /// and constructors from <see cref="CadenceClient"/> and other types that are
         /// required by generated workflow and activity stubs.  The generated class uses
@@ -503,7 +520,7 @@ namespace Neon.Cadence.Internal
             }
 
             var stubFullClassName = $"Neon.Cadence.Stubs.{stubClassName}";
-            var interfaceFullName = workflowInterface.FullName.Replace('+', '.');   // .NET uses internally "+" for nested types; convert these to "."
+            var interfaceFullName = NormalizeTypeName(workflowInterface);
             var sbSource          = new StringBuilder();
 
             sbSource.AppendLine("#pragma warning disable CS0169  // Disable unreferenced field warnings.");
@@ -1129,7 +1146,7 @@ namespace Neon.Cadence.Internal
             }
 
             var stubFullClassName = $"Neon.Cadence.Stubs.{stubClassName}";
-            var interfaceFullName = activityInterface.FullName.Replace('+', '.');   // .NET uses "+" internally for nested types; convert these to "."
+            var interfaceFullName = NormalizeTypeName(activityInterface);
             var sbSource          = new StringBuilder();
 
             sbSource.AppendLine($"using System;");

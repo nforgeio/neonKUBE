@@ -415,7 +415,6 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-
                 if (idToWorkflow.TryGetValue(workflowKey, out workflow))
                 {
                     return new WorkflowInvokeReply()

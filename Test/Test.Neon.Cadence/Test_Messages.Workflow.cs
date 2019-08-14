@@ -337,6 +337,7 @@ namespace TestCadence
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ContextId);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
                 Assert.Null(message.Name);
                 Assert.Null(message.Args);
                 Assert.Null(message.Domain);
@@ -351,6 +352,7 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.ContextId = 666;
+                message.ReplayStatus = InternalReplayStatus.Replaying;
                 message.Name = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Domain = "my-domain";
@@ -361,6 +363,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-workflowid", message.WorkflowId);
@@ -377,6 +380,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
+                message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-domain", message.Domain);
@@ -392,6 +396,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
+                message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-domain", message.Domain);
@@ -407,6 +412,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
+                message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-domain", message.Domain);

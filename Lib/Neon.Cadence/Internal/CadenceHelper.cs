@@ -606,9 +606,11 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            // We're going to use the global namespace to avoid namespace conflicts.
+            // We're going to use the global namespace to avoid namespace conflicts and
+            // we need to replace the "+" characters .NET uses for nested types into
+            // "." so the result will be a valid C# type identifier.
 
-            return $"global::{typeName}";
+            return $"global::{typeName}".Replace('+', '.');
         }
 
         /// <summary>
