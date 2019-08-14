@@ -260,21 +260,25 @@ namespace TestCadence
 
                 if (!alreadyStarted)
                 {
+                    alreadyStarted = true;
+
                     if (Workflow.IsReplaying)
                     {
-                        // We should be replaying because this is the first invoke.
+                        // We should NOT be replaying because this is the first invoke.
 
                         return await Task.FromResult(false);
                     }
 
-                    alreadyStarted = true;
                     throw new ForceReplayException();
+                    // await Task.Delay(TimeSpan.FromSeconds(12));
+
+                    return await Task.FromResult(false);
                 }
                 else
                 {
                     if (!Workflow.IsReplaying)
                     {
-                        // We should NOT be replaying because this is the NOT first invoke.
+                        // We SHOULD be replaying because this is the NOT first invoke.
 
                         return await Task.FromResult(false);
                     }
