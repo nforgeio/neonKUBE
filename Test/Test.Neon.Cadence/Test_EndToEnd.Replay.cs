@@ -233,6 +233,21 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IActivityReplayNop : IActivity
+        {
+            [ActivityMethod]
+            Task DoNothingAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityReplayNop : ActivityBase, IActivityReplayNop
+        {
+            public async Task DoNothingAsync()
+            {
+                await Task.CompletedTask;
+            }
+        }
+
         public interface IWorkflowReplayStart : IWorkflow
         {
             [WorkflowMethod]
@@ -251,6 +266,10 @@ namespace TestCadence
 
             public async Task<bool> RunAsync()
             {
+                var nop = Workflow.NewLocalActivityStub<IActivityReplayNop, ActivityReplayNop>();
+
+                await nop.DoNothingAsync();
+
                 // Verify that workflows start off not replaying and then
                 // will indicate replay when restarted.  We're going to 
                 // force a replay by throwing an exception on the first
@@ -269,8 +288,8 @@ namespace TestCadence
                         return await Task.FromResult(false);
                     }
 
-                    throw new ForceReplayException();
-                    // await Task.Delay(TimeSpan.FromSeconds(12));
+                    //throw new ForceReplayException();
+                    await Task.Delay(TimeSpan.FromSeconds(12));
 
                     return await Task.FromResult(false);
                 }
