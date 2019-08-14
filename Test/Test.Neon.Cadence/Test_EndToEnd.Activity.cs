@@ -173,7 +173,7 @@ namespace TestCadence
         }
 
         [Workflow(AutoRegister = true)]
-        public class LocalActivityWorkflowWithResult : WorkflowBase, IActivityWorkflowWithResult
+        public class LocalActivityWorkflowWithResult : WorkflowBase, ILocalActivityWorkflowWithResult
         {
             public async Task<string> HelloAsync(string name)
             {
@@ -194,6 +194,65 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<ILocalActivityWorkflowWithResult>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface ILocalActivityWithoutResult : IActivity
+        {
+            [ActivityMethod]
+            Task HelloAsync(string name);
+        }
+
+        public class LocalActivityWithouthResult : ActivityBase, ILocalActivityWithoutResult
+        {
+            public static string Name { get; private set; } = null;
+
+            public static void Reset()
+            {
+                Name = null;
+            }
+
+            [ActivityMethod]
+            public async Task HelloAsync(string name)
+            {
+                LocalActivityWithouthResult.Name = name;
+
+                await Task.CompletedTask;
+            }
+        }
+
+        public interface ILocalActivityWorkflowWithoutResult : IWorkflow
+        {
+            [WorkflowMethod]
+            Task HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class LocalActivityWorkflowWithoutResult : WorkflowBase, ILocalActivityWorkflowWithoutResult
+        {
+            public async Task HelloAsync(string name)
+            {
+                var stub = Workflow.NewLocalActivityStub<ILocalActivityWithoutResult, LocalActivityWithouthResult>();
+
+                await stub.HelloAsync(name);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task LocalActivity_WithoutResult()
+        {
+            LocalActivityWithouthResult.Reset();
+
+            // Verify that we can call a simple workflow that accepts a
+            // parameter, calls a similarly simple local activity that
+            // doesn't return a result.
+
+            var stub = client.NewWorkflowStub<ILocalActivityWorkflowWithoutResult>();
+
+            await stub.HelloAsync("Jeff");
+            Assert.Equal("Jeff", LocalActivityWithouthResult.Name);
         }
 
         //---------------------------------------------------------------------

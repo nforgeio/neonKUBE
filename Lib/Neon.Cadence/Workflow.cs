@@ -1238,27 +1238,7 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityImplementation(typeof(TActivityImplementation));
             Client.EnsureNotDisposed();
 
-            // $todo(jeff.lill):
-            //
-            // We're temorarily returning a regular activity stub until we
-            // fix this bug:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/620
-
-            //return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
-
-            ActivityOptions regularOptions = null;
-
-            if (options != null)
-            {
-                regularOptions = new ActivityOptions()
-                {
-                    ScheduleToCloseTimeout = options.ScheduleToCloseTimeout,
-                    RetryOptions           = options.RetryOptions
-                };
-            }
-
-            return StubManager.NewActivityStub<TActivityInterface>(Client, this, regularOptions);
+            return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
 
         /// <summary>
