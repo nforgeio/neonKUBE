@@ -4,13 +4,7 @@
 
 isolationGroups: []
 
-containerResources:
-  requests:
-    cpu: 250m
-    memory: 256Mi
-  limits:
-    cpu: 500m
-    memory: 2Gi
+containerResources: {}
 
 volumeResources:
   requests:
