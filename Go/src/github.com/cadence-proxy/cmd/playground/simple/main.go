@@ -26,12 +26,12 @@ func startWorkers(h *common.SampleHelper) worker.Worker {
 
 func startWorkflow(h *common.SampleHelper) client.WorkflowRun {
 	workflowOptions := client.StartWorkflowOptions{
-		ID:                              "greetings_" + uuid.New(),
+		ID:                              "simple_" + uuid.New(),
 		TaskList:                        ApplicationName,
 		ExecutionStartToCloseTimeout:    time.Minute,
 		DecisionTaskStartToCloseTimeout: time.Minute,
 	}
-	return h.StartWorkflow(workflowOptions, SampleGreetingsWorkflow)
+	return h.StartWorkflow(workflowOptions, SampleWorkflow)
 }
 
 func main() {

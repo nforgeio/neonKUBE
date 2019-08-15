@@ -11,24 +11,24 @@ import (
 )
 
 /**
- * This greetings sample workflow executes 3 activities in sequential. It gets greeting and name from 2 different activities,
- * and then pass greeting and name as input to a 3rd activity to generate final greetings.
+ * This is a simple sample cadence workflow playground that allows you to mess around with cadence
+ * workflows using the native go-client
  */
 
 // ApplicationName is the task list for this sample
-const ApplicationName = "greetingsGroup"
+const ApplicationName = "simpleGroup"
 
 // This is registration process where you register all your workflows
 // and activity function handlers.
 func init() {
-	workflow.Register(SampleGreetingsWorkflow)
+	workflow.Register(SampleWorkflow)
 	activity.Register(getGreetingActivity)
 	activity.Register(getNameActivity)
 	activity.Register(sayGreetingActivity)
 }
 
-// SampleGreetingsWorkflow Workflow Decider.
-func SampleGreetingsWorkflow(ctx workflow.Context) (string, error) {
+// SampleWorkflow Workflow Decider.
+func SampleWorkflow(ctx workflow.Context) (string, error) {
 
 	// workflow sleep
 	var err error
