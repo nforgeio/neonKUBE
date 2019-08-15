@@ -3,4 +3,6 @@
 # Declare variables to be passed into your templates.
 
 persistence:
-  enabled: false
+  enabled: true
+
+logLevel: debug

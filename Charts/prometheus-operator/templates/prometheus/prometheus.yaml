@@ -21,6 +21,7 @@ spec:
   serviceMonitorNamespaceSelector:
     any: true
   secrets: [ istio.prometheus ]
+  logLevel: {{ .Values.logLevel }}
   alerting:
     alertmanagers:
     - namespace: monitoring
