@@ -11,7 +11,7 @@ spec:
   type: {{ .Values.service.type }}
   ports:
   {{- range $port := .Values.service.ports }}
-    - name: {{ $port.name }}
+    - name: {{ $port.protocol }}-{{ $port.name }}
       port: {{ $port.containerPort }}
       targetPort: {{ $port.containerPort }}
       protocol: {{ $port.protocol }}
@@ -20,7 +20,7 @@ spec:
       nodePort: {{ .Values.service.nodePort }}
   {{ end }}
   {{- if .Values.metrics.enabled }}
-    - name: metrics
+    - name: tcp-metrics
       port: {{ .Values.metrics.service.port }}
       targetPort: metrics
       protocol: TCP
