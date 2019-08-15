@@ -254,6 +254,14 @@ datasources:
       type: prometheus
       url: http://prometheus-operated.monitoring:9090
       access: proxy
+      isDefault: false
+      jsonData:
+        timeInterval: 5s
+      editable: true
+    - name: M3
+      type: prometheus
+      url: http://m3coordinator-m3db-prometheus.monitoring:7201
+      access: proxy
       isDefault: true
       jsonData:
         timeInterval: 5s
