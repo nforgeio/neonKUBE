@@ -8,6 +8,10 @@ spec:
   numberOfShards: 256
   isolationGroups:
 {{- toYaml .Values.isolationGroups | nindent 4 }}
+  tolerations:
+  - key: neonkube.io/m3
+    effect: NoSchedule
+    operator: Exists
   etcdEndpoints:
   - http://etcd-m3db-client.monitoring:2379
   podIdentityConfig:

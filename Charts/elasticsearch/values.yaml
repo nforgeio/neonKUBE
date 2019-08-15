@@ -161,7 +161,10 @@ schedulerName: ""
 imagePullSecrets: []
 nodeSelector:
   neonkube.io/mon.elasticsearch: "true"
-tolerations: []
+tolerations:
+  - key: "neonkube.io/elasticsearch"
+    operator: "Exists"
+    effect: "NoSchedule"
 
 # Enabling this will publically expose your Elasticsearch instance.
 # Only enable this if you have security enabled on your cluster
