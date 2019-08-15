@@ -10,6 +10,8 @@ spec:
   size: 3
   version: "3.2.13"
   pod:
+    tolerations: 
+{{- toYaml .Values.tolerations | nindent 6 }}
     affinity:
       podAntiAffinity:
         preferredDuringSchedulingIgnoredDuringExecution:
