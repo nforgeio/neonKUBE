@@ -10,7 +10,7 @@ image:
   #   - secret2
 
 output:
-  host: elasticsearch-master.logging
+  host: elasticsearch-master.monitoring
   port: 9200
   scheme: http
   sslVersion: TLSv1

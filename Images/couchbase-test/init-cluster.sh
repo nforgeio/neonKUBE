@@ -39,9 +39,11 @@ if [ "${BUCKET_RAM_MB}" == "" ] ; then
     BUCKET_RAM_MB=256
 fi
 
+echo "*** Waiting for Couchbase to start..."
+
 while : 
 do
-    # Give Couchbase a bit of a chance to start and then attempt
+    # Give Couchbase a chance to start and then attempt
     # to initialize the cluster.
 
     sleep 1
@@ -58,9 +60,13 @@ do
     fi
 done
 
+echo "*** Couchbase is running."
+
 # The cluster is ready, so create the bucket.  Note that we're
 # enabling FLUSH so it will be easy to clear the bucket state
 # for unit tests.
+
+echo "*** Creating bucket: ${BUCKET_NAME}"
 
 couchbase-cli bucket-create \
     -u ${USERNAME} \
@@ -73,8 +79,16 @@ couchbase-cli bucket-create \
 
 # ...and then create the user account with full cluster admin rights.
 
+echo "*** Creating bucket: ${BUCKET_NAME}"
+
 couchbase-cli user-manage \
     -u ${USERNAME} \
     -p ${PASSWORD} \
+    --set \
     --cluster localhost:8091 \
+    --rbac-username ${USERNAME} \
+    --rbac-password ${PASSWORD} \
+    --auth-domain local \
     --roles admin
+
+ echo "*** Couchbase is READY!"

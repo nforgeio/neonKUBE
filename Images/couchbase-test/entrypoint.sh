@@ -41,9 +41,9 @@ overridePort "ssl_proxy_upstream_port"
 #------------------------------------------------------------------------------
 # START: NEON MODIFICATIONS
 #
-# We're going to launch the [init-cluster.sh] script that will run wait in
-# the background for Couchbase to be started below and become ready.  Once
-# this happens, the script will initialize the cluster and bucket.
+# We're going to launch the [init-cluster.sh] script that will wait in the
+# background for Couchbase to be started below and become ready.  Once this
+# happens, the script will initialize the cluster and bucket.
 
 /init-cluster.sh &
 

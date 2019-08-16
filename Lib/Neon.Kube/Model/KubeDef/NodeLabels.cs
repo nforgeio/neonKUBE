@@ -412,19 +412,34 @@ namespace Neon.Kube
         // Define the logging related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="StorageSize"/>.
+        /// Reserved label name for <see cref="Elasticsearch"/>.
         /// </summary>
         public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "mon.elasticsearch";
 
         /// <summary>
+        /// Reserved label name for <see cref="M3DB"/>.
+        /// </summary>
+        public const string LabelM3DB = ClusterDefinition.ReservedLabelPrefix + "mon.m3db";
+
+        /// <summary>
         /// <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
         /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
-        /// This defaults to <c>true</c>.
+        /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
         [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool Elasticsearch { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neonkube.mon.m3db.enabled</b> [<c>bool</c>]: Indicates that M3DB 
+        /// will be deployed to this node if <see cref="PrometheusOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "M3DB", Required = Required.Default)]
+        [YamlMember(Alias = "m3db", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool M3DB { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Ceph Storage Cluster related labels.
@@ -700,7 +715,9 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
 
-                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,    NeonHelper.ToBoolString(Elasticsearch)));
+                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,           NeonHelper.ToBoolString(Elasticsearch)));
+
+                list.Add(new KeyValuePair<string, object>(LabelM3DB,                    NeonHelper.ToBoolString(M3DB)));
 
                 list.Add(new KeyValuePair<string, object>(LabelCephMON,                 NeonHelper.ToBoolString(CephMON)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 NeonHelper.ToBoolString(CephOSD)));

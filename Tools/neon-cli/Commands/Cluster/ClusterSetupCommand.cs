@@ -33,8 +33,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using ICSharpCode.SharpZipLib.Zip;
-using k8s.Exceptions;
-
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -311,6 +309,7 @@ OPTIONS:
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
                     controller.AddGlobalStep("label nodes", LabelNodes);
+                    controller.AddGlobalStep("taint nodes", TaintNodes);
                     if (cluster.Definition.Mon.Enabled)
                     {
                         controller.AddGlobalStep("setup monitoring", SetupMonitoring);
@@ -436,9 +435,8 @@ OPTIONS:
             {
                 try
                 {
-                    k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: $"root@{cluster.Definition.Name}"));
-                }
-                catch (KubeConfigException)
+                    k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
+                } catch (k8s.Exceptions.KubeConfigException e)
                 {
                     return;
                 }
@@ -689,6 +687,17 @@ OPTIONS:
                     }
 
                     node.SudoCommand(CommandBundle.FromScript(sbVolumesScript));
+
+                    node.Status = "setup: configure /etc/sysctl";
+
+                    var helmInstallScript =
+$@"#!/bin/bash
+sed -ir 's/.*vm.max_map_count.*/vm.max_map_count = 3000000/g' /etc/sysctl.conf
+sed -ir 's/.*fs.file-max.*/fs.file-max = 3000000/g' /etc/sysctl.conf
+echo ""fs.nr_open = 3000000"" >> /etc/sysctl.conf
+echo ""vm.swappiness = 1"" >> /etc/sysctl.conf
+";
+                    node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
                 });
         }
 
@@ -971,7 +980,7 @@ networking:
 
                             if (pEnd == -1)
                             {
-                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\\", "");
+                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\", "");
                             }
                             else
                             {
@@ -1547,30 +1556,46 @@ helm template install/kubernetes/helm/istio \
     --namespace istio-system \
     --set istio_cni.enabled=true \
     --set global.proxy.accessLogFile=/dev/stdout \
-    --set kiali.enabled=true \
+    --set kiali.enabled=false \
     --set tracing.enabled=true \
-    --set grafana.enabled=true \
+    --set grafana.enabled=false \
+    --set prometheus.enabled=false \
     --set certmanager.enabled=true \
     --set certmanager.email=mailbox@donotuseexample.com \
+	--set gateways.istio-egressgateway.enabled=true \
+";
+            if (cluster.Definition.Network.Ingress.Count > 0)
+            {
+                istioScript1 +=
+$@" \
     --set gateways.istio-ingressgateway.sds.enabled=true \
     --set gateways.istio-ingressgateway.type=NodePort \
-    --set gateways.istio-ingressgateway.ports[0].targetPort=80 \
-    --set gateways.istio-ingressgateway.ports[0].port=80 \
-    --set gateways.istio-ingressgateway.ports[0].name=http2 \
-    --set gateways.istio-ingressgateway.ports[0].nodePort=30080 \
-    \
-    --set gateways.istio-ingressgateway.ports[1].targetPort=443 \
-    --set gateways.istio-ingressgateway.ports[1].port=443 \
-    --set gateways.istio-ingressgateway.ports[1].name=https \
-    --set gateways.istio-ingressgateway.ports[1].nodePort=30443 \
-    \
+";
+                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
+                {
+                    istioScript1 +=
+$@" \
+    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
+    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
+    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
+    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
+";
+                }
+            }
+
+            istioScript1 +=
+$@" \
     | kubectl apply -f -
+
+until [ `kubectl get pods --namespace istio-system --field-selector=status.phase!=Succeeded,status.phase!=Running | wc -l` == ""0"" ]; do
+    sleep 1
+done
 ";
             master.SudoCommand(CommandBundle.FromScript(istioScript1));
         }
 
         /// <summary>
-        /// Initializes the EFK stack and other logging services.
+        /// Initializes the EFK stack and other monitoring services.
         /// </summary>
         private void SetupMonitoring()
         {
@@ -1584,13 +1609,64 @@ helm template install/kubernetes/helm/istio \
                     KubeSetup(firstMaster).Wait();
                 });
 
+            // Setup Kubernetes.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-state-metrics",
+                () =>
+                {
+                    InstallKubeStateMetrics(firstMaster).Wait();
+                });
+
+            // Install an Kiali to the monitoring namespace
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kiali",
+                () =>
+                {
+                    InstallKiali(firstMaster).Wait();
+                });
+
+            if (cluster.Definition.Mon.Prometheus.Persistence)
+            {
+                // Install an Etcd cluster to the monitoring namespace
+
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-etcd",
+                    () =>
+                    {
+                        InstallEtcd(firstMaster);
+                    });
+
+                // Install an M3DB cluster to the monitoring namespace
+
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-m3db",
+                    () =>
+                    {
+                        InstallM3db(firstMaster);
+                    });
+
+            }
+        
+            // Install an Prometheus cluster to the monitoring namespace
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-prometheus",
+                () =>
+                {
+                    InstallPrometheus(firstMaster);
+                });
+
+            // Install Grafana to the monitoring namespace
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-grafana",
+                () =>
+                {
+                    InstallGrafana(firstMaster).Wait();
+                });
 
             // Install Elasticsearch.
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
                 () =>
                 {
-                    InstallElasticSearch(firstMaster).Wait();
+                    InstallElasticSearch(firstMaster);
                 });
 
 
@@ -1640,11 +1716,12 @@ helm template install/kubernetes/helm/istio \
         /// <param name="values"></param>
         /// <returns></returns>
         private async Task InstallHelmChartAsync(
-            SshProxy<NodeDefinition> master, 
-            string chartName, 
-            string @namespace = "default", 
+            SshProxy<NodeDefinition> master,
+            string chartName,
+            string @namespace = "default",
             int timeout = 300,
-            List<KeyValuePair<string, string>> values = null)
+            bool wait = true,
+            List<KeyValuePair<string, object>> values = null)
         {
             using (var client = new HeadendClient())
             {
@@ -1658,7 +1735,16 @@ helm template install/kubernetes/helm/istio \
             {
                 foreach (var value in values)
                 {
-                    valueOverrides += $"--set {value.Key}={value.Value} \\\n";
+                    switch (value.Value.GetType().Name)
+                    {
+                        case nameof(String):
+                            valueOverrides += $"--set-string {value.Key}={value.Value} \\\n";
+                            break;
+                        case nameof(Int32):
+                            valueOverrides += $"--set {value.Key}={value.Value} \\\n";
+                            break;
+                    }
+
                 }
             }
 
@@ -1671,11 +1757,41 @@ do
   sleep 1
 done
 
+rm -rf {chartName}
+
 unzip {chartName}.zip -d {chartName}
-helm install --namespace {@namespace} --name {chartName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} --wait
+helm install --namespace {@namespace} --name {chartName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} {(wait ? "--wait" : "")}
+
+START=`date +%s`
+DEPLOY_END=$((START+15))
+
+until [ `helm status {chartName} | grep ""STATUS: DEPLOYED"" | wc -l` -eq 1  ];
+do
+  if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
+    helm delete --purge {chartName} || true
+    exit 1
+  fi
+   sleep 1
+done
+
 rm -rf {chartName}*
 ";
-            master.SudoCommand(CommandBundle.FromScript(helmChartScript));
+
+            var tries = 0;
+            var success = false;
+            while (tries < 3 && !success)
+            {
+                try
+                {
+                    var response = master.SudoCommand(CommandBundle.FromScript(helmChartScript), RunOptions.None);
+                    response.EnsureSuccess();
+                    success = true;
+                }
+                catch
+                {
+                    tries++;
+                }
+            }
         }
 
         /// <summary>
@@ -1686,54 +1802,192 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: cluster-setup";
 
-            await InstallHelmChartAsync(master, "cluster-setup", @namespace: "logging");
+            await InstallHelmChartAsync(master, "cluster-setup");
+        }
 
-            master.Status = "deploy: kube-state-config";
+        /// <summary>
+        /// Setup Kube state metrics.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallKubeStateMetrics(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: kube-state-metrics";
 
             await InstallHelmChartAsync(master, "kubernetes");
         }
 
         /// <summary>
-        /// Installs Elasticsearch
+        /// Deploy Kiali
         /// </summary>
         /// <param name="master"></param>
-        private async Task InstallElasticSearch(SshProxy<NodeDefinition> master)
+        private async Task InstallKiali(SshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: elasticsearch";
+            master.Status = "deploy: kiali";
 
-            var i = 0;
-            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Elasticsearch == true))
-            {
-                var volume = new V1PersistentVolume()
+            await InstallHelmChartAsync(master, "kiali", @namespace: "monitoring");
+        }
+
+        /// <summary>
+        /// Installs an Etcd cluster to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private void InstallEtcd(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: etcd";
+
+            master.InvokeIdempotentAction("deploy/etcd-operator",
+                () =>
                 {
-                    ApiVersion = "v1",
-                    Kind = "PersistentVolume",
-                    Metadata = new V1ObjectMeta()
+                    InstallHelmChartAsync(master, "etcd-operator", @namespace: "monitoring", wait: true, timeout: 300).Wait();
+                });
+
+            NeonHelper.WaitFor(() => k8sClient.ListCustomResourceDefinitionAsync().Result.Items.Any(i => i.Spec.Names.Kind == "EtcdCluster"), TimeSpan.FromSeconds(5));
+
+            master.Status = "setup: etcd-m3db-volumes";
+
+            master.InvokeIdempotentAction("setup/etcd-m3db-volumes",
+                () =>
+                {
+                    var i = 0;
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB == true))
                     {
-                        Name = $"elasticsearch-data-{i}",
-                        Labels = new Dictionary<string, string>()
+                        var volume = new V1PersistentVolume()
                         {
-                            ["elasticsearch"] = "default"
-                        }
-                    },
-                    Spec = new V1PersistentVolumeSpec()
-                    {
-                        Capacity = new Dictionary<string, ResourceQuantity>()
-                        {
-                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Elasticsearch.DiskSize) }
-                        },
-                        AccessModes = new List<string>() { "ReadWriteOnce" },
-                        PersistentVolumeReclaimPolicy = "Retain",
-                        StorageClassName = "local-storage",
-                        Local = new V1LocalVolumeSource()
-                        {
-                            Path = $"{KubeConst.LocalVolumePath}/99"
-                        },
-                        NodeAffinity = new V1VolumeNodeAffinity()
-                        {
-                            Required = new V1NodeSelector()
+                            ApiVersion = "v1",
+                            Kind = "PersistentVolume",
+                            Metadata = new V1ObjectMeta()
                             {
-                                NodeSelectorTerms = new List<V1NodeSelectorTerm>()
+                                Name = $"etcd-data-{i}",
+                                Labels = new Dictionary<string, string>()
+                                {
+                                    ["etcd"] = "monitoring"
+                                }
+                            },
+                            Spec = new V1PersistentVolumeSpec()
+                            {
+                                Capacity = new Dictionary<string, ResourceQuantity>()
+                    {
+                        { "storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
+                    },
+                                AccessModes = new List<string>() { "ReadWriteOnce" },
+                                PersistentVolumeReclaimPolicy = "Retain",
+                                StorageClassName = "local-storage",
+                                Local = new V1LocalVolumeSource()
+                                {
+                                    Path = $"{KubeConst.LocalVolumePath}/98"
+                                },
+                                NodeAffinity = new V1VolumeNodeAffinity()
+                                {
+                                    Required = new V1NodeSelector()
+                                    {
+                                        NodeSelectorTerms = new List<V1NodeSelectorTerm>()
+                            {
+                                new V1NodeSelectorTerm()
+                                {
+                                    MatchExpressions = new List<V1NodeSelectorRequirement>()
+                                    {
+                                        new V1NodeSelectorRequirement()
+                                        {
+                                            Key = "kubernetes.io/hostname",
+                                            OperatorProperty = "In",
+                                            Values = new List<string>() { $"{n.Name}" }
+                                        }
+                                    }
+                                }
+                            }
+                                    }
+                                }
+                            },
+                        };
+
+                        k8sClient.CreatePersistentVolumeAsync(volume).Wait();
+                        i++;
+                    }
+                });
+            
+
+            master.Status = "deploy: etcd-cluster";
+
+            master.InvokeIdempotentAction("deploy/etcd-cluster",
+                () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
+                    var i = 0;
+
+                    values.Add(new KeyValuePair<string, object>($"size", cluster.Definition.Nodes.Count(n => n.Labels.M3DB == true).ToString()));
+                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", "neonkube.io/m3"));
+                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+
+                    if (cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize != null)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"resources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize.ToString()));
+                    }
+
+                    InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring", values: values).Wait();
+                });
+
+            
+            // wait for cluster to be running before proceeding
+            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "etcd_cluster=etcd-m3db")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
+            {
+                Thread.Sleep(1000);
+            }
+        }
+
+        /// <summary>
+        /// Installs an m3db cluster to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private void InstallM3db(SshProxy<NodeDefinition> master)
+        {
+
+            master.Status = "deploy: m3db";
+
+            master.InvokeIdempotentAction("deploy/m3db-operator",
+                () =>
+                {
+                    InstallHelmChartAsync(master, "m3db-operator", @namespace: "monitoring").Wait();
+                });
+
+            NeonHelper.WaitFor(() => k8sClient.ListCustomResourceDefinitionAsync().Result.Items.Any(i => i.Spec.Names.Kind == "M3DBCluster"), TimeSpan.FromSeconds(5));
+       
+            master.InvokeIdempotentAction("setup/m3db-volumes",
+                () =>
+                {
+                    var i = 0;
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB == true))
+                    {
+                        var volume = new V1PersistentVolume()
+                        {
+                            ApiVersion = "v1",
+                            Kind = "PersistentVolume",
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = $"m3db-data-{i}",
+                                Labels = new Dictionary<string, string>()
+                                {
+                                    ["m3db"] = "default"
+                                }
+                            },
+                            Spec = new V1PersistentVolumeSpec()
+                            {
+                                Capacity = new Dictionary<string, ResourceQuantity>()
+                        {
+                            { "storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize ??  new ResourceQuantity("1Gi") }
+                        },
+                                AccessModes = new List<string>() { "ReadWriteOnce" },
+                                PersistentVolumeReclaimPolicy = "Retain",
+                                StorageClassName = "local-storage",
+                                Local = new V1LocalVolumeSource()
+                                {
+                                    Path = $"{KubeConst.LocalVolumePath}/97"
+                                },
+                                NodeAffinity = new V1VolumeNodeAffinity()
+                                {
+                                    Required = new V1NodeSelector()
+                                    {
+                                        NodeSelectorTerms = new List<V1NodeSelectorTerm>()
                                 {
                                     new V1NodeSelectorTerm()
                                     {
@@ -1748,42 +2002,204 @@ rm -rf {chartName}*
                                         }
                                     }
                                 }
-                            }
-                        }
-                    },
-                };
+                                    }
+                                }
+                            },
+                        };
 
-                await k8sClient.CreatePersistentVolumeAsync(volume);
-                i++;
-            }
+                        k8sClient.CreatePersistentVolumeAsync(volume).Wait();
+                        i++;
+                    }
+                });
 
-            var values = new List<KeyValuePair<string, string>>();
+            
 
-            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
-            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
-            values.Add(new KeyValuePair<string, string>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+            master.Status = "deploy: m3db-cluster";
 
-            if (cluster.Definition.Mon.Elasticsearch.Resources != null)
+            master.InvokeIdempotentAction("deploy/m3db-cluster",
+                () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
+                    var i = 0;
+
+                    foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true))
+                    {
+                        var args = new string[] { "label", "nodes", "--overwrite", n.Name, $"neonkube.io/m3db.faultdomain={i}" };
+                        NeonHelper.ExecuteAsync("kubectl", args).Wait();
+                        values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].name", $"faultdomain-{i}"));
+                        values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].numInstances", 1));
+                        values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].nodeAffinityTerms[0].key", "neonkube.io/m3db.faultdomain"));
+                        values.Add(new KeyValuePair<string, object>($"isolationGroups[{i}].nodeAffinityTerms[0].values[0]", i.ToString()));
+                        i++;
+                    }
+
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.limits.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
+
+                    if (cluster.Definition.Nodes.Count(l => l.Labels.M3DB) <= 3)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"replicationFactor", cluster.Definition.Nodes.Count(l => l.Labels.M3DB == true).ToString()));
+                    }
+                    else
+                    {
+                        values.Add(new KeyValuePair<string, object>($"replicationFactor", 3));
+                    }
+
+                    InstallHelmChartAsync(master, "m3db-cluster", @namespace: "monitoring", values: values).Wait();
+                });            
+
+            // wait for M3DB cluster to be running before proceeding.
+            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "operator.m3db.io/cluster=m3db-prometheus")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
             {
-                if (cluster.Definition.Mon.Elasticsearch.Resources.Limits != null)
-                {
-                    foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
-                    {
-                        values.Add(new KeyValuePair<string, string>($"resources.limits.{r.Key}", r.Value.ToString()));
-                    }
-                }
-
-                if (cluster.Definition.Mon.Elasticsearch.Resources.Requests != null)
-                {
-                    foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
-                    {
-                        values.Add(new KeyValuePair<string, string>($"resources.requests.{r.Key}", r.Value.ToString()));
-                    }
-                }
+                Thread.Sleep(1000);
             }
+        }
 
-            await InstallHelmChartAsync(master, "elasticsearch", @namespace: "logging", timeout: 900, values: values);
+        /// <summary>
+        /// Installs an Prometheus cluster to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private void InstallPrometheus(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: prometheus";
 
+            master.InvokeIdempotentAction("deploy/prometheus-operator",
+                () =>
+                {
+                    var values = new List<KeyValuePair<string, object>>();
+                    if (cluster.Definition.Mon.Prometheus.Persistence)
+                    {
+                        values.Add(new KeyValuePair<string, object>("persistence.enabled", "true"));
+                    }
+
+                    InstallHelmChartAsync(master, "prometheus-operator", @namespace: "monitoring", values: values).Wait();
+                });
+
+            master.InvokeIdempotentAction("deploy/istio-prometheus",
+                () =>
+                {
+                    InstallHelmChartAsync(master, "istio-prometheus", @namespace: "monitoring").Wait();
+                });
+        }
+
+        /// <summary>
+        /// Installs Grafana to the monitoring namespace.
+        /// </summary>
+        /// <param name="master"></param>
+        private async Task InstallGrafana(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: grafana";
+
+            await InstallHelmChartAsync(master, "grafana", @namespace: "monitoring");
+
+        }
+
+        /// <summary>
+        /// Installs Elasticsearch
+        /// </summary>
+        /// <param name="master"></param>
+        private void InstallElasticSearch(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: elasticsearch";
+
+            master.InvokeIdempotentAction("setup/elasticsearch-volumes",
+                () =>
+                {
+                    var i = 0;
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Elasticsearch == true))
+                    {
+                        var volume = new V1PersistentVolume()
+                        {
+                            ApiVersion = "v1",
+                            Kind = "PersistentVolume",
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = $"elasticsearch-data-{i}",
+                                Labels = new Dictionary<string, string>()
+                                {
+                                    ["elasticsearch"] = "default"
+                                }
+                            },
+                            Spec = new V1PersistentVolumeSpec()
+                            {
+                                Capacity = new Dictionary<string, ResourceQuantity>()
+                        {
+                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Elasticsearch.DiskSize) }
+                        },
+                                AccessModes = new List<string>() { "ReadWriteOnce" },
+                                PersistentVolumeReclaimPolicy = "Retain",
+                                StorageClassName = "local-storage",
+                                Local = new V1LocalVolumeSource()
+                                {
+                                    Path = $"{KubeConst.LocalVolumePath}/99"
+                                },
+                                NodeAffinity = new V1VolumeNodeAffinity()
+                                {
+                                    Required = new V1NodeSelector()
+                                    {
+                                        NodeSelectorTerms = new List<V1NodeSelectorTerm>()
+                                {
+                                    new V1NodeSelectorTerm()
+                                    {
+                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
+                                        {
+                                            new V1NodeSelectorRequirement()
+                                            {
+                                                Key = "kubernetes.io/hostname",
+                                                OperatorProperty = "In",
+                                                Values = new List<string>() { $"{n.Name}" }
+                                            }
+                                        }
+                                    }
+                                }
+                                    }
+                                }
+                            },
+                        };
+
+                        k8sClient.CreatePersistentVolumeAsync(volume).Wait();
+                        i++;
+                    }
+                });
+
+            master.InvokeIdempotentAction("deploy/elasticsearch",
+                () =>
+                {
+                var values = new List<KeyValuePair<string, object>>();
+
+                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
+                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+
+                if (cluster.Definition.Mon.Elasticsearch.Resources != null)
+                {
+                    if (cluster.Definition.Mon.Elasticsearch.Resources.Limits != null)
+                    {
+                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
+                        {
+                            values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
+                        }
+                    }
+
+                    if (cluster.Definition.Mon.Elasticsearch.Resources.Requests != null)
+                    {
+                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
+                        {
+                            values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
+                        }
+                    }
+                }
+
+                InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
+
+                // wait for Elasticsearch cluster to be running before proceeding.
+                while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
+                {
+                    Thread.Sleep(1000);
+                }
+                    
+
+                });          
         }
 
         /// <summary>
@@ -1794,8 +2210,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluent-bit";
 
-            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "logging", timeout: 300);
-
+            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
@@ -1806,7 +2221,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            await InstallHelmChartAsync(master, "fluentd", @namespace: "logging", timeout: 300);
+            await InstallHelmChartAsync(master, "fluentd", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
@@ -1817,8 +2232,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            await InstallHelmChartAsync(master, "kibana", @namespace: "logging", timeout: 300);
-
+            await InstallHelmChartAsync(master, "kibana", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
@@ -1829,8 +2243,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: metricbeat";
 
-            await InstallHelmChartAsync(master, "metricbeat", @namespace: "logging", timeout: 300);
-
+            await InstallHelmChartAsync(master, "metricbeat", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
@@ -1864,7 +2277,7 @@ rm -rf {chartName}*
                         // that initializes the labels for all nodes.
 
                         var sbScript = new StringBuilder();
-                        var sbArgs   = new StringBuilder();
+                        var sbArgs = new StringBuilder();
 
                         sbScript.AppendLineLinux("#!/bin/bash");
 
@@ -1896,6 +2309,61 @@ rm -rf {chartName}*
 
                             sbScript.AppendLine();
                             sbScript.AppendLineLinux($"kubectl label nodes --overwrite {node.Name} {sbArgs}");
+                        }
+
+                        master.SudoCommand(CommandBundle.FromScript(sbScript));
+                    }
+                    finally
+                    {
+                        master.Status = string.Empty;
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Adds the node taints.
+        /// </summary>
+        private void TaintNodes()
+        {
+            var master = cluster.FirstMaster;
+
+            master.InvokeIdempotentAction("setup/cluster-taint-nodes",
+                () =>
+                {
+                    master.Status = "taint: nodes";
+
+                    try
+                    {
+                        // Generate a Bash script we'll submit to the first master
+                        // that initializes the taints for all nodes.
+
+                        var sbScript = new StringBuilder();
+                        var sbArgs = new StringBuilder();
+
+                        sbScript.AppendLineLinux("#!/bin/bash");
+
+                        foreach (var node in cluster.Nodes)
+                        {
+                            var taintDefinitions = new List<string>();
+
+                            if (node.Metadata.IsWorker)
+                            {
+                                // Kubernetes doesn't set the role for worker nodes so we'll do that here.
+
+                                taintDefinitions.Add("kubernetes.io/role=worker");
+                            }
+
+                            taintDefinitions.Add($"{NodeLabels.LabelDatacenter}={GetLabelValue(cluster.Definition.Datacenter.ToLowerInvariant())}");
+                            taintDefinitions.Add($"{NodeLabels.LabelEnvironment}={GetLabelValue(cluster.Definition.Environment.ToString().ToLowerInvariant())}");
+
+                            if (node.Metadata.Taints != null)
+                            {
+                                foreach (var taint in node.Metadata.Taints)
+                                {
+                                    sbScript.AppendLine();
+                                    sbScript.AppendLineLinux($"kubectl taint nodes {node.Name} {taint}");
+                                }
+                            }
                         }
 
                         master.SudoCommand(CommandBundle.FromScript(sbScript));
@@ -1940,22 +2408,22 @@ rm -rf {chartName}*
                             throw new NotImplementedException();
                     }
 
-                    var values = new List<KeyValuePair<string, string>>();
+                    var values = new List<KeyValuePair<string, object>>();
                     var i = 0;
 
                     foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true))
                     {
-                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].name", n.Name));
-                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].devices[0].name", deviceName));
-                        values.Add(new KeyValuePair<string, string>($"nodes[{i}].config.storeType", "bluestore"));
+                        values.Add(new KeyValuePair<string, object>($"nodes[{i}].name", n.Name));
+                        values.Add(new KeyValuePair<string, object>($"nodes[{i}].devices[0].name", deviceName));
+                        values.Add(new KeyValuePair<string, object>($"nodes[{i}].config.storeType", "bluestore"));
                         i++;
                     }
 
-                    values.Add(new KeyValuePair<string, string>("mon.count", cluster.Definition.Nodes.Count(n => n.Labels.CephMON).ToString()));
+                    values.Add(new KeyValuePair<string, object>("mon.count", cluster.Definition.Nodes.Count(n => n.Labels.CephMON).ToString()));
 
                     InstallHelmChartAsync(firstMaster, chartName: "ceph-cluster", @namespace: "rook-ceph", timeout: 300, values: values).Wait();
 
-                    while ((k8sClient.ListNamespacedPodAsync("rook-ceph", labelSelector: "app=rook-ceph-osd")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true).Count())
+                    while ((k8sClient.ListNamespacedPodAsync("rook-ceph", labelSelector: "app=rook-ceph-osd")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true).Count())
                     {
                         Thread.Sleep(1000);
                     }
@@ -1970,7 +2438,7 @@ rm -rf {chartName}*
             firstMaster.InvokeIdempotentAction("setup/cluster-rook-ceph-storageclass",
                 () =>
                 {
-                    var values = new List<KeyValuePair<string, string>>();
+                    var values = new List<KeyValuePair<string, object>>();
 
                     var monitors = "";
                     for (int i = 0; i < cluster.Definition.Nodes.Count(n => n.Labels.CephMON); i++)
@@ -1982,7 +2450,7 @@ rm -rf {chartName}*
                         }
                     }
 
-                    values.Add(new KeyValuePair<string, string>($"monitors", monitors));
+                    values.Add(new KeyValuePair<string, object>($"monitors", monitors));
 
                     InstallHelmChartAsync(firstMaster, chartName: "ceph-storageclass", @namespace: "rook-ceph", timeout: 300, values: values).Wait();
                 });
