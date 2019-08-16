@@ -169,6 +169,14 @@ namespace Neon.Kube
         public NodeLabels Labels { get; set; }
 
         /// <summary>
+        /// Specifies the taints to be assigned to the host node.  
+        /// </summary>
+        [JsonProperty(PropertyName = "Taints")]
+        [YamlMember(Alias = "taints", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<string> Taints { get; set; }
+
+        /// <summary>
         /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
         [JsonProperty(PropertyName = "Azure")]
