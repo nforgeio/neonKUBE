@@ -43,7 +43,7 @@ func (h *SampleHelper) SetupServiceConfig() {
 	}
 
 	// Initialize developer config for running samples
-	h.Config.DomainName = "loopie"
+	h.Config.DomainName = "test-domain"
 	h.Config.ServiceName = "cadence-frontend"
 	h.Config.HostNameAndPort = "0.0.0.0:7933"
 

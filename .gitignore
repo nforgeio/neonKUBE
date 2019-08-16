@@ -113,3 +113,5 @@ Go/**/test/logs/**
 /Lib/Neon.Cadence2/Resources/cadence-proxy.osx.gz
 /Lib/Neon.Cadence2/Resources/cadence-proxy.linux.gz
 .vscode/settings.json
+/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/settings.json
+/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/launch.json

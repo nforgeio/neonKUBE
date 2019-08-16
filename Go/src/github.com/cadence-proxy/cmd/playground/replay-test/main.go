@@ -25,15 +25,13 @@ func startWorkers(h *common.SampleHelper) worker.Worker {
 }
 
 func startWorkflow(h *common.SampleHelper) client.WorkflowRun {
-
 	workflowOptions := client.StartWorkflowOptions{
 		ID:                              "simple_" + uuid.New(),
 		TaskList:                        ApplicationName,
 		ExecutionStartToCloseTimeout:    time.Minute,
 		DecisionTaskStartToCloseTimeout: time.Minute,
 	}
-
-	return h.StartWorkflow(workflowOptions, RetryWorkflow)
+	return h.StartWorkflow(workflowOptions, SampleWorkflow)
 }
 
 func main() {
