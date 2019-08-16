@@ -56,6 +56,15 @@ namespace Neon.Kube
         public bool Enabled { get; set; } = true;
 
         /// <summary>
+        /// Indicates whether Prometheus persistence is to be enabled.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Persistence", Required = Required.Default)]
+        [YamlMember(Alias = "persistence", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Persistence { get; set; } = false;
+
+        /// <summary>
         /// Compute Resources required by Elasticsearch.
         /// </summary>
         [JsonProperty(PropertyName = "Resources", Required = Required.Default)]
@@ -64,22 +73,12 @@ namespace Neon.Kube
         public V1ResourceRequirements Resources { get; set; } = null;
 
         /// <summary>
-        /// Indicates whether Prometheus metrics are to be enabled for the cluster.  
-        /// This defaults to <c>true</c>.
+        /// M3DB specific options.
         /// </summary>
-        [JsonProperty(PropertyName = "M3dbDiskSize", Required = Required.Default)]
-        [YamlMember(Alias = "m3dbDiskSize", ApplyNamingConventions = false)]
-        [DefaultValue("1Gi")]
-        public string M3dbDiskSize { get; set; } = "1Gi";
-
-        /// <summary>
-        /// Indicates whether Prometheus metrics are to be enabled for the cluster.  
-        /// This defaults to <c>true</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "EtcdDiskSize", Required = Required.Default)]
-        [YamlMember(Alias = "etcdDiskSize", ApplyNamingConventions = false)]
-        [DefaultValue("1Gi")]
-        public string EtcdDiskSize { get; set; } = "1Gi";
+        [JsonProperty(PropertyName = "M3DB", Required = Required.Default)]
+        [YamlMember(Alias = "m3db", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public M3DBOptions M3DB { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
