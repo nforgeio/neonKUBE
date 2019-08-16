@@ -703,7 +703,7 @@ namespace WinDesktop
                         dashboardToken = tokenLine.Split(new char[] { ' ' }, 2).Skip(1).First().Trim();
                     }
 
-                    Action<RequestContext> dashboardRequestHandler =
+                    Action<RequestContext> kubernetesDashboardRequestHandler =
                         context =>
                         {
                             context.Request.Headers.Add("Authorization", $"Bearer {dashboardToken}");
@@ -722,7 +722,7 @@ namespace WinDesktop
                             remotePort: KubeHostPorts.KubeDashboard,
                             remoteHost: cluster.GetReachableMaster().PrivateAddress.ToString(),
                             validCertificate: dashboardCert,
-                            requestHandler: dashboardRequestHandler);
+                            requestHandler: kubernetesDashboardRequestHandler);
 
                     proxies.Add(kubeDashboardProxy);
 
@@ -749,7 +749,7 @@ namespace WinDesktop
                             serviceName: "kiali",
                             localPort: KubeConst.KialiDashboardProxyPort,
                             remotePort: KubeConst.KialiDashboardProxyPort,
-                            @namespace: "istio-system");
+                            @namespace: "monitoring");
 
                     portForwards.Add(kialiDashboardProxy);
 
