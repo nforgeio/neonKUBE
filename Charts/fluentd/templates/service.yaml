@@ -11,7 +11,7 @@ spec:
   type: {{ .Values.service.type }}
   ports:
   {{- range $port := .Values.service.ports }}
-    - name: {{ $port.protocol }}-{{ $port.name }}
+    - name: {{ $port.protocol | lower }}-{{ $port.name }}
       port: {{ $port.containerPort }}
       targetPort: {{ $port.containerPort }}
       protocol: {{ $port.protocol }}
