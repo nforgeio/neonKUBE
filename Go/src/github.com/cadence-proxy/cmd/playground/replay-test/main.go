@@ -68,7 +68,7 @@ const ApplicationName = "simpleGroup"
 
 func init() {
 	workflow.Register(ReplayWorkflow)
-	activity.Register(testActivity)
+	activity.Register(TestActivity)
 }
 
 var firstRun = true
@@ -78,15 +78,16 @@ func ReplayWorkflow(ctx workflow.Context) (string, error) {
 	printRun()
 	printReplayStatus(ctx)
 
-	if firstRun {
-		firstRun = false
-		forceReplay()
-	}
-
-	fmt.Println("Calling activity")
-	workflow.ExecuteActivity(ctx)
-	workflow.Sleep(ctx, time.Second)
+	fmt.Println("Calling activity #1")
+	testActivity(ctx, "#1")
 	printReplayStatus(ctx)
+
+	fmt.Println("Calling activity #2")
+	testActivity(ctx, "#2")
+	printReplayStatus(ctx)
+
+	firstRun = false
+	forceReplay(ctx)
 
 	return "Completed", nil
 }
@@ -108,11 +109,11 @@ func printReplayStatus(ctx workflow.Context) {
 	}
 }
 
-func forceReplay() {
-	time.Sleep(time.Second * 12)
+func forceReplay(ctx workflow.Context) {
+	workflow.Sleep(ctx, 0)
 }
 
-func testActivity(value string) (string, error) {
+func TestActivity(ctx context.Context, value string) (string, error) {
 	return value, nil
 }
 
@@ -124,8 +125,9 @@ func testActivity(value string) (string, error) {
 func startWorkers(h *common.SampleHelper) worker.Worker {
 	// Configure worker options.
 	workerOptions := worker.Options{
-		MetricsScope: h.Scope,
-		Logger:       h.Logger,
+		MetricsScope:           h.Scope,
+		Logger:                 h.Logger,
+		DisableStickyExecution: true,
 	}
 	return h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
 }
@@ -146,4 +148,24 @@ func startWorkflow(h *common.SampleHelper) client.WorkflowRun {
 	}
 
 	return h.StartWorkflow(workflowOptions, ReplayWorkflow)
+}
+
+func testActivity(ctx workflow.Context, value string) (string, error) {
+
+	var result string
+	var err error
+
+	ao := workflow.ActivityOptions{
+		ScheduleToCloseTimeout: time.Second * 60,
+		ScheduleToStartTimeout: time.Second * 60,
+		StartToCloseTimeout:    time.Second * 60,
+		HeartbeatTimeout:       time.Second * 10,
+		WaitForCancellation:    false,
+	}
+
+	ctx = workflow.WithActivityOptions(ctx, ao)
+	future := workflow.ExecuteActivity(ctx, TestActivity, value)
+	err = future.Get(ctx, &result)
+
+	return result, err
 }
