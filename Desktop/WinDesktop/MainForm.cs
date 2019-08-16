@@ -703,7 +703,7 @@ namespace WinDesktop
                         dashboardToken = tokenLine.Split(new char[] { ' ' }, 2).Skip(1).First().Trim();
                     }
 
-                    Action<RequestContext> dashboardRequestHandler =
+                    Action<RequestContext> kubernetesDashboardRequestHandler =
                         context =>
                         {
                             context.Request.Headers.Add("Authorization", $"Bearer {dashboardToken}");
@@ -722,7 +722,7 @@ namespace WinDesktop
                             remotePort: KubeHostPorts.KubeDashboard,
                             remoteHost: cluster.GetReachableMaster().PrivateAddress.ToString(),
                             validCertificate: dashboardCert,
-                            requestHandler: dashboardRequestHandler);
+                            requestHandler: kubernetesDashboardRequestHandler);
 
                     proxies.Add(kubeDashboardProxy);
 
@@ -731,16 +731,16 @@ namespace WinDesktop
                             serviceName: "kibana-kibana",
                             localPort: KubeConst.KibanaDashboardProxyPort,
                             remotePort: KubeConst.KibanaDashboardProxyPort,
-                            @namespace: "logging");
+                            @namespace: "monitoring");
 
                     portForwards.Add(kibanaDashboardProxy);
 
                     var prometheusDashboardProxy =
                         new PortForward(
-                            serviceName: "prometheus",
+                            serviceName: "prometheus-operated",
                             localPort: KubeConst.PrometheusDashboardProxyPort,
                             remotePort: KubeConst.PrometheusDashboardProxyPort,
-                            @namespace: "istio-system");
+                            @namespace: "monitoring");
 
                     portForwards.Add(prometheusDashboardProxy);
 
@@ -749,7 +749,7 @@ namespace WinDesktop
                             serviceName: "kiali",
                             localPort: KubeConst.KialiDashboardProxyPort,
                             remotePort: KubeConst.KialiDashboardProxyPort,
-                            @namespace: "istio-system");
+                            @namespace: "monitoring");
 
                     portForwards.Add(kialiDashboardProxy);
 
@@ -757,8 +757,9 @@ namespace WinDesktop
                         new PortForward(
                             serviceName: "grafana",
                             localPort: KubeConst.GrafanaDashboardProxyPort,
-                            remotePort: KubeConst.GrafanaDashboardProxyPort,
-                            @namespace: "istio-system");
+                            remotePort: 80,
+                            @namespace: "monitoring");
+
 
                     portForwards.Add(grafanaDashboardProxy);
 

@@ -205,6 +205,8 @@ You can disable the use of this encrypted folder by specifying
                 validOptions.Add("--quiet");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
+                validOptions.Add("-b");
+                validOptions.Add("--branch");
 
                 if (CommandLine.Arguments.Length == 0)
                 {

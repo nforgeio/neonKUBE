@@ -78,7 +78,7 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
 3. **Helm:** [releases](https://github.com/helm/helm/releases) - current: **2.12.3**
 
-4. **Istio:** [releases](https://github.com/istio/istio/releases) - current: **1.2.2**
+4. **Istio:** [releases](https://github.com/istio/istio/releases) - current: **1.2.4**
 
 5. **Calico**: [releases](https://github.com/projectcalico/calico/releases) - current: **3.4.0**
 
