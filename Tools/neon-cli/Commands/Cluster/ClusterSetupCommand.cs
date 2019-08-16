@@ -309,6 +309,7 @@ OPTIONS:
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
                     controller.AddGlobalStep("label nodes", LabelNodes);
+                    controller.AddGlobalStep("taint nodes", TaintNodes);
                     if (cluster.Definition.Mon.Enabled)
                     {
                         controller.AddGlobalStep("setup monitoring", SetupMonitoring);
@@ -1624,22 +1625,26 @@ done
                     InstallKiali(firstMaster).Wait();
                 });
 
-            // Install an Etcd cluster to the monitoring namespace
+            if (cluster.Definition.Mon.Prometheus.Persistence)
+            {
+                // Install an Etcd cluster to the monitoring namespace
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-etcd",
-                () =>
-                {
-                    InstallEtcd(firstMaster);
-                });
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-etcd",
+                    () =>
+                    {
+                        InstallEtcd(firstMaster);
+                    });
 
-            // Install an M3DB cluster to the monitoring namespace
+                // Install an M3DB cluster to the monitoring namespace
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-m3db",
-                () =>
-                {
-                    InstallM3db(firstMaster);
-                });
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-m3db",
+                    () =>
+                    {
+                        InstallM3db(firstMaster);
+                    });
 
+            }
+        
             // Install an Prometheus cluster to the monitoring namespace
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-prometheus",
@@ -1715,6 +1720,7 @@ done
             string chartName,
             string @namespace = "default",
             int timeout = 300,
+            bool wait = true,
             List<KeyValuePair<string, object>> values = null)
         {
             using (var client = new HeadendClient())
@@ -1754,7 +1760,7 @@ done
 rm -rf {chartName}
 
 unzip {chartName}.zip -d {chartName}
-helm install --namespace {@namespace} --name {chartName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} --wait
+helm install --namespace {@namespace} --name {chartName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} {(wait ? "--wait" : "")}
 
 START=`date +%s`
 DEPLOY_END=$((START+15))
@@ -1832,7 +1838,7 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/etcd-operator",
                 () =>
                 {
-                    InstallHelmChartAsync(master, "etcd-operator", @namespace: "monitoring").Wait();
+                    InstallHelmChartAsync(master, "etcd-operator", @namespace: "monitoring", wait: true, timeout: 300).Wait();
                 });
 
             NeonHelper.WaitFor(() => k8sClient.ListCustomResourceDefinitionAsync().Result.Items.Any(i => i.Spec.Names.Kind == "EtcdCluster"), TimeSpan.FromSeconds(5));
@@ -1843,7 +1849,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Prometheus == true))
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB == true))
                     {
                         var volume = new V1PersistentVolume()
                         {
@@ -1861,7 +1867,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                     {
-                        { "storage", new ResourceQuantity(cluster.Definition.Mon.Prometheus.EtcdDiskSize) }
+                        { "storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
                     },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -1905,12 +1911,25 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/etcd-cluster",
                 () =>
                 {
-                    InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring").Wait();
+                    var values = new List<KeyValuePair<string, object>>();
+                    var i = 0;
+
+                    values.Add(new KeyValuePair<string, object>($"size", cluster.Definition.Nodes.Count(n => n.Labels.M3DB == true).ToString()));
+                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", "neonkube.io/m3"));
+                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+
+                    if (cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize != null)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"resources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize.ToString()));
+                    }
+
+                    InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring", values: values).Wait();
                 });
 
             
             // wait for cluster to be running before proceeding
-            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "etcd_cluster=etcd-m3db")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true).Count())
+            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "etcd_cluster=etcd-m3db")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
             {
                 Thread.Sleep(1000);
             }
@@ -1922,6 +1941,7 @@ rm -rf {chartName}*
         /// <param name="master"></param>
         private void InstallM3db(SshProxy<NodeDefinition> master)
         {
+
             master.Status = "deploy: m3db";
 
             master.InvokeIdempotentAction("deploy/m3db-operator",
@@ -1936,7 +1956,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Prometheus == true))
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB == true))
                     {
                         var volume = new V1PersistentVolume()
                         {
@@ -1954,7 +1974,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                         {
-                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Prometheus.M3dbDiskSize) }
+                            { "storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize ??  new ResourceQuantity("1Gi") }
                         },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2002,7 +2022,7 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
                     var i = 0;
 
-                    foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true))
+                    foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true))
                     {
                         var args = new string[] { "label", "nodes", "--overwrite", n.Name, $"neonkube.io/m3db.faultdomain={i}" };
                         NeonHelper.ExecuteAsync("kubectl", args).Wait();
@@ -2013,9 +2033,12 @@ rm -rf {chartName}*
                         i++;
                     }
 
-                    if (cluster.Definition.Nodes.Count(l => l.Labels.Prometheus == true) <= 3)
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.limits.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
+
+                    if (cluster.Definition.Nodes.Count(l => l.Labels.M3DB) <= 3)
                     {
-                        values.Add(new KeyValuePair<string, object>($"replicationFactor", cluster.Definition.Nodes.Count(l => l.Labels.Prometheus == true).ToString()));
+                        values.Add(new KeyValuePair<string, object>($"replicationFactor", cluster.Definition.Nodes.Count(l => l.Labels.M3DB == true).ToString()));
                     }
                     else
                     {
@@ -2026,7 +2049,7 @@ rm -rf {chartName}*
                 });            
 
             // wait for M3DB cluster to be running before proceeding.
-            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "operator.m3db.io/cluster=m3db-prometheus")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.Prometheus == true).Count())
+            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "operator.m3db.io/cluster=m3db-prometheus")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
             {
                 Thread.Sleep(1000);
             }
@@ -2043,7 +2066,13 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/prometheus-operator",
                 () =>
                 {
-                    InstallHelmChartAsync(master, "prometheus-operator", @namespace: "monitoring").Wait();
+                    var values = new List<KeyValuePair<string, object>>();
+                    if (cluster.Definition.Mon.Prometheus.Persistence)
+                    {
+                        values.Add(new KeyValuePair<string, object>("persistence.enabled", "true"));
+                    }
+
+                    InstallHelmChartAsync(master, "prometheus-operator", @namespace: "monitoring", values: values).Wait();
                 });
 
             master.InvokeIdempotentAction("deploy/istio-prometheus",
@@ -2136,32 +2165,40 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/elasticsearch",
                 () =>
                 {
-                    var values = new List<KeyValuePair<string, object>>();
+                var values = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
+                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
 
-                    if (cluster.Definition.Mon.Elasticsearch.Resources != null)
+                if (cluster.Definition.Mon.Elasticsearch.Resources != null)
+                {
+                    if (cluster.Definition.Mon.Elasticsearch.Resources.Limits != null)
                     {
-                        if (cluster.Definition.Mon.Elasticsearch.Resources.Limits != null)
+                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
                         {
-                            foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
-                            {
-                                values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
-                            }
-                        }
-
-                        if (cluster.Definition.Mon.Elasticsearch.Resources.Requests != null)
-                        {
-                            foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
-                            {
-                                values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
-                            }
+                            values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
                         }
                     }
 
-                    InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 900, values: values).Wait();
+                    if (cluster.Definition.Mon.Elasticsearch.Resources.Requests != null)
+                    {
+                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
+                        {
+                            values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
+                        }
+                    }
+                }
+
+                InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
+
+                // wait for Elasticsearch cluster to be running before proceeding.
+                while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
+                {
+                    Thread.Sleep(1000);
+                }
+                    
+
                 });          
         }
 
@@ -2240,7 +2277,7 @@ rm -rf {chartName}*
                         // that initializes the labels for all nodes.
 
                         var sbScript = new StringBuilder();
-                        var sbArgs   = new StringBuilder();
+                        var sbArgs = new StringBuilder();
 
                         sbScript.AppendLineLinux("#!/bin/bash");
 
@@ -2272,6 +2309,61 @@ rm -rf {chartName}*
 
                             sbScript.AppendLine();
                             sbScript.AppendLineLinux($"kubectl label nodes --overwrite {node.Name} {sbArgs}");
+                        }
+
+                        master.SudoCommand(CommandBundle.FromScript(sbScript));
+                    }
+                    finally
+                    {
+                        master.Status = string.Empty;
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Adds the node taints.
+        /// </summary>
+        private void TaintNodes()
+        {
+            var master = cluster.FirstMaster;
+
+            master.InvokeIdempotentAction("setup/cluster-taint-nodes",
+                () =>
+                {
+                    master.Status = "taint: nodes";
+
+                    try
+                    {
+                        // Generate a Bash script we'll submit to the first master
+                        // that initializes the taints for all nodes.
+
+                        var sbScript = new StringBuilder();
+                        var sbArgs = new StringBuilder();
+
+                        sbScript.AppendLineLinux("#!/bin/bash");
+
+                        foreach (var node in cluster.Nodes)
+                        {
+                            var taintDefinitions = new List<string>();
+
+                            if (node.Metadata.IsWorker)
+                            {
+                                // Kubernetes doesn't set the role for worker nodes so we'll do that here.
+
+                                taintDefinitions.Add("kubernetes.io/role=worker");
+                            }
+
+                            taintDefinitions.Add($"{NodeLabels.LabelDatacenter}={GetLabelValue(cluster.Definition.Datacenter.ToLowerInvariant())}");
+                            taintDefinitions.Add($"{NodeLabels.LabelEnvironment}={GetLabelValue(cluster.Definition.Environment.ToString().ToLowerInvariant())}");
+
+                            if (node.Metadata.Taints != null)
+                            {
+                                foreach (var taint in node.Metadata.Taints)
+                                {
+                                    sbScript.AppendLine();
+                                    sbScript.AppendLineLinux($"kubectl taint nodes {node.Name} {taint}");
+                                }
+                            }
                         }
 
                         master.SudoCommand(CommandBundle.FromScript(sbScript));
@@ -2331,7 +2423,7 @@ rm -rf {chartName}*
 
                     InstallHelmChartAsync(firstMaster, chartName: "ceph-cluster", @namespace: "rook-ceph", timeout: 300, values: values).Wait();
 
-                    while ((k8sClient.ListNamespacedPodAsync("rook-ceph", labelSelector: "app=rook-ceph-osd")).Result.Items.Count != cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true).Count())
+                    while ((k8sClient.ListNamespacedPodAsync("rook-ceph", labelSelector: "app=rook-ceph-osd")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.CephOSD == true).Count())
                     {
                         Thread.Sleep(1000);
                     }
