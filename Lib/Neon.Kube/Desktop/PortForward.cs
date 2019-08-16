@@ -105,10 +105,10 @@ namespace Neon.Kube
         /// <summary>
         /// Constructs a reverse proxy.
         /// </summary>
-        /// <param name="serviceName"></param>
+        /// <param name="serviceName">The service to connect to.</param>
         /// <param name="localPort">The local port.</param>
         /// <param name="remotePort">The remote port.</param>
-        /// <param name="namespace">
+        /// <param name="namespace">The namespace which the service is running.</param>
         /// Optionally specifies an acceptable server certificate.  This can be used 
         /// as a way to allow access for a specific self-signed certificate.
         /// </param>

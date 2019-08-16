@@ -1334,11 +1334,11 @@ namespace Neon.Kube
         /// <summary>
         /// Executes a <b>kubectl port-forward</b> command on the local workstation.
         /// </summary>
-        /// <param name="serviceName"></param>
-        /// <param name="remotePort"></param>
-        /// <param name="localPort"></param>
-        /// <param name="namespace"></param>
-        /// <param name="process"></param>
+        /// <param name="serviceName">The service to forward.</param>
+        /// <param name="remotePort">The service port.</param>
+        /// <param name="localPort">The local port to forward to.</param>
+        /// <param name="namespace">The Kubernetes namespace where the service is running.</param>
+        /// <param name="process">The <see cref="Process"/> to use.</param>
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         public static void PortForward(string serviceName, int remotePort, int localPort, string @namespace, Process process)
         {
@@ -1349,10 +1349,10 @@ namespace Neon.Kube
         /// <summary>
         /// Executes a command in a k8s pod.
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="pod"></param>
-        /// <param name="namespace"></param>
-        /// <param name="command"></param>
+        /// <param name="client">The <see cref="Kubernetes"/> client to use.</param>
+        /// <param name="pod">The pod where the command should run.</param>
+        /// <param name="namespace">The namespace where the pod is running.</param>
+        /// <param name="command">The command to run.</param>
         /// <returns></returns>
         public async static Task<string> ExecInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {

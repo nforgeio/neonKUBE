@@ -319,6 +319,8 @@ namespace Neon.Kube
         /// <summary>
         /// Gets a helm chart from the NeonKube repository and returns it as a zip file
         /// </summary>
+        /// <param name="chartName">The Helm chart name.</param>
+        /// <param name="branch">The branch to get the chart from. Defaults to master.</param>
         /// <returns></returns>
         public async Task<byte[]> GetHelmChartZipAsync(string chartName, string branch = "master")
         {
@@ -335,10 +337,10 @@ namespace Neon.Kube
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="zip"></param>
-        /// <param name="directory"></param>
-        /// <param name="baseDirectory"></param>
-        /// <returns></returns>
+        /// <param name="zip">The zip file.</param>
+        /// <param name="directory">The directory to add.</param>
+        /// <param name="baseDirectory">The base directory.</param>
+        /// <returns>A zip </returns>
         public async Task<ZipArchive> AddGitFilesToZipAsync(ZipArchive zip, string directory, string baseDirectory)
         {
             var dirListing = await gitHubClient.GetAsync<dynamic>(directory);

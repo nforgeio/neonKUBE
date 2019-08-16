@@ -1798,7 +1798,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Some initial kubernetes config.
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task KubeSetup(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: cluster-setup";
@@ -1809,7 +1809,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Setup Kube state metrics.
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task InstallKubeStateMetrics(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kube-state-metrics";
@@ -1820,7 +1820,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Deploy Kiali
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task InstallKiali(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kiali";
@@ -1831,7 +1831,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs an Etcd cluster to the monitoring namespace.
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private void InstallEtcd(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: etcd";
@@ -1939,7 +1939,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs an m3db cluster to the monitoring namespace.
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private void InstallM3db(SshProxy<NodeDefinition> master)
         {
 
@@ -2059,7 +2059,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs an Prometheus cluster to the monitoring namespace.
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private void InstallPrometheus(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: prometheus";
@@ -2086,7 +2086,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs Grafana to the monitoring namespace.
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task InstallGrafana(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: grafana";
@@ -2098,7 +2098,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs Elasticsearch
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private void InstallElasticSearch(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: elasticsearch";
@@ -2206,7 +2206,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs FluentBit
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task InstallFluentBit(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: fluent-bit";
@@ -2217,7 +2217,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs fluentd
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task InstallFluentd(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: fluentd";
@@ -2228,7 +2228,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs Kibana
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task InstallKibana(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kibana";
@@ -2239,7 +2239,7 @@ rm -rf {chartName}*
         /// <summary>
         /// Installs metricbeat
         /// </summary>
-        /// <param name="master"></param>
+        /// <param name="master">The master node.</param>
         private async Task InstallMetricbeat(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: metricbeat";
