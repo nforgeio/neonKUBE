@@ -438,7 +438,7 @@ OPTIONS:
                     k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
                 } catch (k8s.Exceptions.KubeConfigException e)
                 {
-                    return;
+                    throw e;
                 }
             }
         }
@@ -980,7 +980,7 @@ networking:
 
                             if (pEnd == -1)
                             {
-                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\", "");
+                                kubeContextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
                             else
                             {
@@ -1709,11 +1709,12 @@ done
         /// <summary>
         /// Installs a Helm chart from the neonKUBE github repository.
         /// </summary>
-        /// <param name="master"></param>
-        /// <param name="chartName"></param>
-        /// <param name="namespace"></param>
-        /// <param name="timeout"></param>
-        /// <param name="values"></param>
+        /// <param name="master">The master node that will install the Helm chart.</param>
+        /// <param name="chartName">The name of the Helm chart.</param>
+        /// <param name="namespace">The Kubernetes namespace where the Helm chart should be installed. Defaults to "default"</param>
+        /// <param name="timeout">Optional timeout to in seconds. Defaults to 300 (5 mins)</param>
+        /// <param name="wait">Whether to wait for all pods to be alive before exiting.</param>
+        /// <param name="values">Optional values to override Helm chart values.</param>
         /// <returns></returns>
         private async Task InstallHelmChartAsync(
             SshProxy<NodeDefinition> master,
