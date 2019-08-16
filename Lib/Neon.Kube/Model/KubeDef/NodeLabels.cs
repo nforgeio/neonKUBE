@@ -417,9 +417,9 @@ namespace Neon.Kube
         public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "mon.elasticsearch";
 
         /// <summary>
-        /// Reserved label name for <see cref="Prometheus"/>.
+        /// Reserved label name for <see cref="M3DB"/>.
         /// </summary>
-        public const string LabelPrometheus = ClusterDefinition.ReservedLabelPrefix + "mon.prometheus";
+        public const string LabelM3DB = ClusterDefinition.ReservedLabelPrefix + "mon.m3db";
 
         /// <summary>
         /// <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
@@ -432,14 +432,14 @@ namespace Neon.Kube
         public bool Elasticsearch { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.mon.prometheus.enabled</b> [<c>bool</c>]: Indicates that Prometheus 
+        /// <b>io.neonkube.mon.m3db.enabled</b> [<c>bool</c>]: Indicates that M3DB 
         /// will be deployed to this node if <see cref="PrometheusOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Prometheus", Required = Required.Default)]
-        [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "M3DB", Required = Required.Default)]
+        [YamlMember(Alias = "m3db", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Prometheus { get; set; } = false;
+        public bool M3DB { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Ceph Storage Cluster related labels.
@@ -717,7 +717,7 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelElasticsearch,           NeonHelper.ToBoolString(Elasticsearch)));
 
-                list.Add(new KeyValuePair<string, object>(LabelPrometheus,              NeonHelper.ToBoolString(Prometheus)));
+                list.Add(new KeyValuePair<string, object>(LabelM3DB,                    NeonHelper.ToBoolString(M3DB)));
 
                 list.Add(new KeyValuePair<string, object>(LabelCephMON,                 NeonHelper.ToBoolString(CephMON)));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 NeonHelper.ToBoolString(CephOSD)));
