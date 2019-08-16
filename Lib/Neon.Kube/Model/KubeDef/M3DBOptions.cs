@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    M3DBOptions.cs
-// CONTRIBUTOR: Jeff Lill
+// CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
