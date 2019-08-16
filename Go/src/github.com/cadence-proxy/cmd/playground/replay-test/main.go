@@ -13,10 +13,7 @@ import (
 	"github.com/cadence-proxy/cmd/playground/common"
 )
 
-// This needs to be done as part of a bootstrap step when the process starts.
-// The workers are supposed to be long running.
 func startWorkers(h *common.SampleHelper) worker.Worker {
-	// Configure worker options.
 	workerOptions := worker.Options{
 		MetricsScope: h.Scope,
 		Logger:       h.Logger,
