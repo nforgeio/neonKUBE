@@ -46,7 +46,6 @@ namespace Neon.Cadence
         private object                  syncLock = new object();
         private int                     pendingOperationCount;
         private long                    nextLocalActivityActionId;
-        private bool                    isDisconnected;
         private Random                  random;
 
         /// <summary>
@@ -85,7 +84,6 @@ namespace Neon.Cadence
             this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
-            this.isDisconnected            = false;
             this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
             this.MethodMap                 = methodMap;
             this.Client                    = client;
