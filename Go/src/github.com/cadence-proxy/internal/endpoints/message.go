@@ -72,7 +72,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	// go routine to process the message
 	// receive error on responseChan
 	responseChan := make(chan error)
-	go proccessIncomingMessage(message, responseChan)
+	go processIncomingMessage(message, responseChan)
 
 	// block and wait for error value
 	// on responseChan to send an http.Response
@@ -92,7 +92,7 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 // -------------------------------------------------------------------------
 // Helper methods for handling incoming messages
 
-func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan error) {
+func processIncomingMessage(message messages.IProxyMessage, responseChan chan error) {
 
 	// defer the termination of the server
 	// and the closing of the responseChan

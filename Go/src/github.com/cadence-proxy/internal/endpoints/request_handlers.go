@@ -50,7 +50,7 @@ func handlePingRequest(requestCtx context.Context, request *messages.PingRequest
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("PingRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new PingReply
@@ -67,7 +67,7 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 	logger.Debug("CancelRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("TargetId", targetID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new InitializeReply
@@ -83,7 +83,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	logger.Debug("ConnectRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ClientId", request.GetClientID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ConnectReply
@@ -154,7 +154,7 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 	logger.Debug("DisconnectRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ClientId", clientID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DisconnectReply
@@ -191,7 +191,7 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("HeartbeatRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new HeartbeatReply
@@ -206,7 +206,7 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("InitializeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new InitializeReply
@@ -236,7 +236,7 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("TerminateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new TerminateReply
@@ -261,7 +261,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
 		zap.String("TaskList", taskList),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new NewWorkerReply
@@ -295,7 +295,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 	logger.Debug("StopWorkerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("WorkerId", workerID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new StopWorkerReply
@@ -329,7 +329,7 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 	logger.Debug("DomainDescribeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DomainDescribeReply
@@ -359,7 +359,7 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DomainRegisterReply
@@ -403,7 +403,7 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	logger.Debug("DomainUpdateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DomainUpdateReply
@@ -459,7 +459,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 	logger.Debug("WorkflowRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Workflow", *workflowName),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowRegisterReply
@@ -475,7 +475,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 			zap.String("Workflow", *workflowName),
 			zap.Int64("RequestId", requestID),
 			zap.Int64("ContextId", contextID),
-			zap.Int("ProccessId", os.Getpid()),
+			zap.Int("ProcessId", os.Getpid()),
 		)
 
 		// set the WorkflowContext in WorkflowContexts
@@ -527,7 +527,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
@@ -541,7 +541,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil
@@ -571,7 +571,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowName", workflowName),
 		zap.String("Domain", domain),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowExecuteReply
@@ -622,7 +622,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowCancelReply
@@ -660,7 +660,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowTerminateReply
@@ -700,7 +700,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Workflow", workflow),
 		zap.String("WorkflowId", workflowID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalWithStartReply
@@ -739,7 +739,7 @@ func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *mess
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowSetCacheSizeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSetCacheSizeReply
@@ -759,7 +759,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowMutableRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowMutableReply
@@ -844,7 +844,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowDescribeExecutionReply
@@ -878,7 +878,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowGetResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetResultReply
@@ -923,7 +923,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 	logger.Debug("WorkflowSignalSubscribeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", request.GetContextID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalSubscribeReply
@@ -1043,7 +1043,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalReply
@@ -1082,7 +1082,7 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 	logger.Debug("WorkflowHasLastResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowHasLastResultReply
@@ -1113,7 +1113,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 	logger.Debug("WorkflowGetLastResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetLastResultReply
@@ -1153,7 +1153,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	logger.Debug("WorkflowDisconnectContextRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowDisconnectContextReply
@@ -1186,7 +1186,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 	logger.Debug("WorkflowGetTimeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetTimeReply
@@ -1217,7 +1217,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	logger.Debug("WorkflowSleepRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSleepReply
@@ -1264,7 +1264,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	logger.Debug("WorkflowExecuteChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowExecuteChildReply
@@ -1331,7 +1331,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowWaitForChildReply
@@ -1385,7 +1385,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalChildReply
@@ -1437,7 +1437,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowCancelChildReply
@@ -1473,7 +1473,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	logger.Debug("WorkflowSetQueryHandlerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSetQueryHandlerReply
@@ -1526,7 +1526,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
@@ -1540,7 +1540,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil
@@ -1575,7 +1575,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowQueryReply
@@ -1624,7 +1624,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 	logger.Debug("WorkflowGetVersionRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetVersionReply
@@ -1666,7 +1666,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 	logger.Debug("ActivityRegisterRequest Received",
 		zap.Int64("RequestId", requestID),
 		zap.String("Activity", *activityName),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityRegisterReply
@@ -1681,7 +1681,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			zap.String("Activity", *activityName),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProccessId", os.Getpid()),
+			zap.Int("ProcessId", os.Getpid()),
 		)
 
 		// add the context to ActivityContexts
@@ -1751,7 +1751,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
@@ -1765,7 +1765,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil
@@ -1794,7 +1794,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.String("ActivityName", *request.GetActivity()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityExecuteReply
@@ -1839,7 +1839,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityHasHeartbeatDetailsRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityHasHeartbeatDetailsReply
@@ -1863,7 +1863,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityGetHeartbeatDetailsRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityGetHeartbeatDetailsReply
@@ -1897,7 +1897,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityRecordHeartbeatRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityRecordHeartbeatReply
@@ -1961,7 +1961,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 	logger.Debug("ActivityGetInfoRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ActivityContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityGetInfoReply
@@ -1988,7 +1988,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityCompleteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityCompleteReply
@@ -2042,7 +2042,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ActivityTypeId", activityTypeID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityExecuteLocalReply
@@ -2098,7 +2098,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
@@ -2113,7 +2113,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Any("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil

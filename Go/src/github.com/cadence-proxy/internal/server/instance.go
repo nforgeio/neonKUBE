@@ -82,7 +82,7 @@ func (s *Instance) Start() {
 	s.Logger = zap.L()
 	s.Logger.Info("Server Details",
 		zap.String("Address", s.httpServer.Addr),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// listen and serve (for your country)
