@@ -224,6 +224,20 @@ func (reply *WorkflowInvokeReply) SetContinueAsNewDomain(value *string) {
 	reply.SetStringProperty("ContinueAsNewDomain", value)
 }
 
+// GetForceReplay returns the property indicate that the current workflow
+// execution should be aboorted such that it will be rescheduled and replayed
+// as required.
+func (reply *WorkflowInvokeReply) GetForceReplay() bool {
+	return reply.GetBoolProperty("ForceReplay")
+}
+
+// SetForceReplay sets the property indicate that the current workflow
+// execution should be aboorted such that it will be rescheduled and replayed
+// as required.
+func (reply *WorkflowInvokeReply) SetForceReplay(value bool) {
+	reply.SetBoolProperty("ForceReplay", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -249,5 +263,6 @@ func (reply *WorkflowInvokeReply) CopyTo(target IProxyMessage) {
 		v.SetContinueAsNewStartToCloseTimeout(reply.GetContinueAsNewStartToCloseTimeout())
 		v.SetContinueAsNewTaskList(reply.GetContinueAsNewTaskList())
 		v.SetContinueAsNewDomain(reply.GetContinueAsNewDomain())
+		v.SetForceReplay(reply.GetForceReplay())
 	}
 }

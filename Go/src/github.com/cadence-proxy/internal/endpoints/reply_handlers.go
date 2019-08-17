@@ -81,6 +81,12 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 		return globals.ErrEntityNotExist
 	}
 
+	// check for ForceReplay
+
+	if reply.GetForceReplay() {
+		panic("force-replay")
+	}
+
 	// check for ContinueAsNew
 	if reply.GetContinueAsNew() {
 		continueContext := wectx.GetContext()

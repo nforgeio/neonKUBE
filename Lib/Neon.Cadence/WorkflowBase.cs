@@ -519,7 +519,14 @@ namespace Neon.Cadence
                     Result = serializedResult
                 };
             }
-            catch (CadenceWorkflowRestartException e)
+            catch (CadenceForceReplayException)
+            {
+                return new WorkflowInvokeReply()
+                {
+                    ForceReplay = true
+                };
+            }
+            catch (CadenceWorkflowContinueAsNewException e)
             {
                 return new WorkflowInvokeReply()
                 {

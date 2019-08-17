@@ -128,6 +128,18 @@ namespace Neon.Cadence.Internal
             set => SetStringProperty(PropertyNames.ContinueAsNewDomain, value);
         }
 
+        /// <summary>
+        /// Optionally indicates that the workflow should be aborted such that it
+        /// will be restarted with decision tasks being replayed as required.  The
+        /// <b>cadence-proxy</b> should do this via a GOLANG <b>panic("force-replay")</b>
+        /// within the workflow function.
+        /// </summary>
+        public bool ForceReplay
+        {
+            get => GetBoolProperty(PropertyNames.ForceReplay);
+            set => SetBoolProperty(PropertyNames.ForceReplay, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -154,6 +166,7 @@ namespace Neon.Cadence.Internal
             typedTarget.ContinueAsNewScheduleToCloseTimeout       = this.ContinueAsNewScheduleToCloseTimeout;
             typedTarget.ContinueAsNewScheduleToStartTimeout       = this.ContinueAsNewScheduleToStartTimeout;
             typedTarget.ContinueAsNewStartToCloseTimeout          = this.ContinueAsNewStartToCloseTimeout;
+            typedTarget.ForceReplay                               = this.ForceReplay;
         }
     }
 }
