@@ -191,10 +191,15 @@ namespace TestCadence
 
                         if (firstPass)
                         {
+                            originalValue = await Workflow.GetVersionAsync("foo", Workflow.DefaultVersion, 1);
+                            originalValue = await Workflow.GetVersionAsync("foo", Workflow.DefaultVersion, 1);
+
                             await ForceReplayAsync();
                         }
                         else
                         {
+                            await Workflow.GetVersionAsync("foo", Workflow.DefaultVersion, 1);
+
                             success = Workflow.IsReplaying;
                         }
                         break;

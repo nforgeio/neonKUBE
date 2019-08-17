@@ -75,6 +75,7 @@ var firstRun = true
 
 func ReplayWorkflow(ctx workflow.Context) (string, error) {
 
+	fmt.Println("==================================")
 	printRun()
 	printReplayStatus(ctx)
 
@@ -86,8 +87,14 @@ func ReplayWorkflow(ctx workflow.Context) (string, error) {
 	testActivity(ctx, "#2")
 	printReplayStatus(ctx)
 
-	firstRun = false
-	forceReplay(ctx)
+	if firstRun {
+		firstRun = false
+		forceReplay(ctx)
+	}
+
+	fmt.Println("Calling activity #3")
+	testActivity(ctx, "#3")
+	printReplayStatus(ctx)
 
 	return "Completed", nil
 }
@@ -110,8 +117,11 @@ func printReplayStatus(ctx workflow.Context) {
 }
 
 func forceReplay(ctx workflow.Context) {
+	fmt.Println("*** Force Replay ***")
 	//workflow.Sleep(ctx, 0)
-	workflow.NewTimer(ctx, 0).Get(ctx, nil)
+	//workflow.NewTimer(ctx, 0).Get(ctx, nil)
+	panic("Force Replay")
+	//fmt.Println("*** Force DONE ***")
 }
 
 func TestActivity(ctx context.Context, value string) (string, error) {
@@ -128,7 +138,7 @@ func startWorkers(h *common.SampleHelper) worker.Worker {
 	workerOptions := worker.Options{
 		MetricsScope:           h.Scope,
 		Logger:                 h.Logger,
-		DisableStickyExecution: true,
+		DisableStickyExecution: false,
 	}
 	return h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
 }
