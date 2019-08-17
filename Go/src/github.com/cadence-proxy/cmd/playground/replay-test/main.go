@@ -110,7 +110,8 @@ func printReplayStatus(ctx workflow.Context) {
 }
 
 func forceReplay(ctx workflow.Context) {
-	workflow.Sleep(ctx, 0)
+	//workflow.Sleep(ctx, 0)
+	workflow.NewTimer(ctx, 0).Get(ctx, nil)
 }
 
 func TestActivity(ctx context.Context, value string) (string, error) {
