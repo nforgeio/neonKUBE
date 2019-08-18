@@ -45,7 +45,7 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 	logger.Info("Request Received",
 		zap.String("Address", fmt.Sprintf("http://%s%s", r.Host, r.URL.String())),
 		zap.String("Method", r.Method),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// check if the content type is correct

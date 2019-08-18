@@ -452,6 +452,7 @@ namespace TestCadence
                 Assert.Equal(0, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Null(message.ContinueAsNewTaskList);
                 Assert.Null(message.ContinueAsNewDomain);
+                Assert.False(message.ForceReplay);
 
                 // Round-trip
 
@@ -466,6 +467,7 @@ namespace TestCadence
                 message.ContinueAsNewStartToCloseTimeout = 4000;
                 message.ContinueAsNewTaskList = "my-tasklist";
                 message.ContinueAsNewDomain = "my-domain";
+                message.ForceReplay = true;
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -474,6 +476,7 @@ namespace TestCadence
                 Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.True(message.ForceReplay);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -492,6 +495,7 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.True(message.ForceReplay);
 
                 // Echo the message via the connection's web server and verify.
 
@@ -508,6 +512,7 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.True(message.ForceReplay);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -524,6 +529,7 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.True(message.ForceReplay);
             }
         }
 

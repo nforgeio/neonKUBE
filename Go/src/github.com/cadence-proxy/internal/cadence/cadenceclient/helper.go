@@ -341,7 +341,7 @@ func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.
 	helper.Logger.Info("New Worker Created",
 		zap.String("Domain", domain),
 		zap.String("TaskList", taskList),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	return worker, nil
