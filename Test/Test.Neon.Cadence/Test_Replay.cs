@@ -237,6 +237,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
+#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task GetVersion()
@@ -423,5 +424,6 @@ namespace TestCadence
 
             Assert.True(await stub.RunAsync(ReplayTest.LocalActivity));
         }
+#endif
     }
 }
