@@ -65,7 +65,7 @@ Follow the steps below to configure a development or test workstation:
 
   * Select **all workloads** on the first panel
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK SDK SDK 3.0.100-preview7-012821 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
+  * Install **.NET Core SDK 3.0.100-preview8-013656 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
