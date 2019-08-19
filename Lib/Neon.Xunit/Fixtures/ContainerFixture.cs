@@ -260,10 +260,12 @@ namespace Neon.Xunit
             }
 
             dockerArgs.Add("--detach");
+#if TODO
+            // This requires Docker experimental features.
 
             dockerArgs.Add("--platform");
             dockerArgs.Add("linux");
-
+#endif
             if (!string.IsNullOrEmpty(name))
             {
                 dockerArgs.Add("--name");
