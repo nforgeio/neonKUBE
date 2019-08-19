@@ -18,6 +18,8 @@
 // Code based on a MSDN article by Stephen Toub (MSFT):
 // http://blogs.msdn.com/b/pfxteam/archive/2012/02/12/10267069.aspx
 
+#if TODO
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -52,12 +54,16 @@ namespace Neon.Tasks
     /// </para>
     /// <para>
     /// The <see cref="WarmTask"/> and <see cref="WarmTask{T}"/> classes provide an
-    /// easy way to implement both warm and cold tasks using callback actions and functions.
+    /// easy way to implement both warm and cold tasks using asynchronous unctions.
     /// </para>
     /// </remarks>
     public class WarmTask
     {
-        private readonly WarmTaskAwaiter awaiter;
+        private readonly TaskCompletionSource<object> awaiter;
+
+        public WarmTask()
+        {
+        }
 
         /// <summary>
         /// Constructs a <see cref="WarmTask"/> that immediately schedules the optional
@@ -67,7 +73,7 @@ namespace Neon.Tasks
         /// </summary>
         /// <param name="hotAction">The hot action (can be <c>null</c>).</param>
         /// <param name="coldAction">The cold action (required).</param>
-        public WarmTask(Action hotAction, Action coldAction)
+        public WarmTask(Func<Task> hotAction, Func<Task> coldAction)
         {
             Covenant.Requires<ArgumentNullException>(coldAction != null);
         }
@@ -76,18 +82,37 @@ namespace Neon.Tasks
         /// The magic method the C# compiler uses to implement async/await.
         /// </summary>
         /// <returns>The operation's awaiter.</returns>
-        public WarmTaskAwaiter GetAwaiter() => awaiter;
+        public Task GetAwaiter() => awaiter.Task;
     }
 
     /// <summary>
-    /// Implements a specialized form of <see cref="Task{Task}"/> that allows operations to
+    /// Implements a specialized form of <see cref="Task{T}"/> that allows operations to
     /// divide their implementation into two stages: the part that executes immediately
     /// and the part that executes after the task is actually awaited by the caller.
     /// </summary>
-    /// <typeparam name="T">The operation result type.</typeparam>
-    public class WarmTask<T>
+    /// <typeparam name="TResult">The operation result type.</typeparam>
+    /// <remarks>
+    /// <para>
+    /// Async operation implementations start <b>hot</b>.  This means that the async operation
+    /// will be scheduled to run immediately and that the operation may have already completed
+    /// before it is awaited.  This is usually the desired behavior.
+    /// </para>
+    /// <para>
+    /// Occassionally though, you may need more control over exactly when the operation is
+    /// performed or perhaps even splitting the operation into two stages, the <b>hot</b>
+    /// stage that starts immediately and the completion stage that starts after the caller
+    /// awaits the operation.  An operation that defers its implementation until after
+    /// it is awaited is known as a cold task and operations that split their implementation
+    /// with a <b>hot</b> and <b>cold</b> parts is known as a <b>warm</b> task.
+    /// </para>
+    /// <para>
+    /// The <see cref="WarmTask"/> and <see cref="WarmTask{T}"/> classes provide an
+    /// easy way to implement both warm and cold tasks using asynchronous unctions.
+    /// </para>
+    /// </remarks>
+    public class WarmTask<TResult>
     {
-        private readonly WarmTaskAwaiter<T> awaiter;
+        private readonly TaskCompletionSource<TResult> awaiter;
 
         /// <summary>
         /// Constructs a <see cref="WarmTask"/> that immediately schedules the optional
@@ -104,7 +129,7 @@ namespace Neon.Tasks
         /// is actually a function that returns the result.
         /// </note>
         /// </remarks>
-        public WarmTask(Action hotAction, Func<T> coldAction)
+        public WarmTask(Action hotAction, Func<TResult> coldAction)
         {
             Covenant.Requires<ArgumentNullException>(coldAction != null);
         }
@@ -113,6 +138,8 @@ namespace Neon.Tasks
         /// The magic method the C# compiler uses to implement async/await.
         /// </summary>
         /// <returns>The operation's awaiter.</returns>
-        public WarmTaskAwaiter<T> GetAwaiter() => awaiter;
+        public Task<TResult> GetAwaiter() => awaiter.Task;
     }
 }
+
+#endif
