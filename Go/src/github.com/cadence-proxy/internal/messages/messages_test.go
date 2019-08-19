@@ -2021,6 +2021,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 		s.Equal(int64(0), v.GetContextID())
+		s.False(v.GetForceReplay())
 
 		// Round-trip
 
@@ -2036,6 +2037,9 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 
 		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
 		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+
+		v.SetForceReplay(true)
+		s.True(v.GetForceReplay())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2051,6 +2055,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+		s.True(v.GetForceReplay())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2062,6 +2067,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+		s.True(v.GetForceReplay())
 	}
 }
 
