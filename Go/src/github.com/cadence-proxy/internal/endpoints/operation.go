@@ -47,7 +47,6 @@ func NewOperation(requestID int64, request messages.IProxyRequest) *Operation {
 	op.isCancelled = false
 	op.request = request
 	op.requestID = requestID
-
 	return op
 }
 

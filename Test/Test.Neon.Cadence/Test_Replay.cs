@@ -191,6 +191,8 @@ namespace TestCadence
 
                         if (firstPass)
                         {
+                            firstPass = false;
+
                             await Workflow.ForceReplayAsync();
                         }
                         else
@@ -226,7 +228,7 @@ namespace TestCadence
             }
         }
 
-        [Fact(Skip = "Not working yet!")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Nop()
         {
@@ -234,7 +236,11 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
 
-            Assert.True(await stub.RunAsync(ReplayTest.Nop));
+            var result = await stub.RunAsync(ReplayTest.Nop);
+
+            Assert.True(result);
+
+            //Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
 #if TODO
