@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceWorkflowContinueAsNewException.cs
+// FILE:	    CadenceContinueAsNewException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -61,7 +61,7 @@ namespace Neon.Cadence
     /// }
     /// </code>
     /// </remarks>
-    public class CadenceWorkflowContinueAsNewException : CadenceInternalException
+    public class CadenceContinueAsNewException : CadenceInternalException
     {
         /// <summary>
         /// Constructor.
@@ -74,7 +74,7 @@ namespace Neon.Cadence
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
         /// <param name="taskStartToCloseTimeout">Optional decision task start to close timeout for the new execution.</param>
         /// <param name="retryPolicy">Optional retry policy for the new execution.</param>
-        public CadenceWorkflowContinueAsNewException(
+        public CadenceContinueAsNewException(
             byte[]          args                    = null,
             string          domain                  = null,
             string          taskList                = null,

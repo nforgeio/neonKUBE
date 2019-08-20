@@ -526,7 +526,7 @@ namespace Neon.Cadence
                     ForceReplay = true
                 };
             }
-            catch (CadenceWorkflowContinueAsNewException e)
+            catch (CadenceContinueAsNewException e)
             {
                 return new WorkflowInvokeReply()
                 {

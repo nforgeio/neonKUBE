@@ -97,14 +97,7 @@ namespace TestCadence
 
                 // Start the worker.
 
-                client.SetCacheMaximumSizeAsync(0).Wait();
-
-                var options = new WorkerOptions()
-                {
-                    DisableStickyExecution = true   // Replay tests require that this be disabled.
-                };
-
-                client.StartWorkerAsync(options: options).Wait();
+                client.StartWorkerAsync().Wait();
             }
             else
             {
@@ -197,11 +190,26 @@ namespace TestCadence
                         }
                         else
                         {
-                            success = Workflow.IsReplaying;
+                            success = IsReplaying();
                         }
                         break;
 
                     case ReplayTest.GetVersion:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.GetVersionAsync("change", Workflow.DefaultVersion, 1);
+
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.GetVersionAsync("change", Workflow.DefaultVersion, 1));
+                            success = success || IsReplaying();
+                        }
+                        break;
+
                     case ReplayTest.GetWorkflowExecution:
                     case ReplayTest.MutableSideEffect:
                     case ReplayTest.MutableSideEffectGeneric:
@@ -226,6 +234,18 @@ namespace TestCadence
 
                 return await Task.FromResult(success);
             }
+
+            private bool IsReplaying()
+            {
+                // $debug(jeff.lill): We're having some trouble with <see cref="Workflow.IsReplaying"/>
+                // being <c>false</c> when it should be <c>true</c> in the second run of the workflow.
+                // I'm going to temporarily ignore this while we investigate further.
+                //
+                // https://github.com/nforgeio/neonKUBE/issues/619
+
+                return Workflow.IsReplaying;
+                //return true;
+            }
         }
 
         [Fact]
@@ -243,7 +263,6 @@ namespace TestCadence
             //Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
-#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task GetVersion()
@@ -255,6 +274,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.GetVersion));
         }
 
+#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task GetWorkflowExecution()
