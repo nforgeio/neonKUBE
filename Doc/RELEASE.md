@@ -30,13 +30,15 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-6. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
+6. Verify that the new release installer works.
 
-7. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
-8. Push the `release-VERSION` branch to GitHub.
+8. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+9. Push the `release-VERSION` branch to GitHub.
+
+10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
