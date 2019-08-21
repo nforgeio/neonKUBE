@@ -23,13 +23,12 @@
 
 CADENCE_HOME=$1
 RF=${RF:-1}
-export LOG_LEVEL="${LOG_LEVEL:-info}"
-export NUM_HISTORY_SHARDS=${NUM_HISTORY_SHARDS:-4}
 
 # cassandra env
 export KEYSPACE="${KEYSPACE:-cadence}"
 export VISIBILITY_KEYSPACE="${VISIBILITY_KEYSPACE:-cadence_visibility}"
 export CASSANDRA_CONSISTENCY="${CASSANDRA_CONSISTENCY:-One}"
+export CASSANDRA_SEEDS="127.0.0.1"
 
 setup_schema() {
     SCHEMA_DIR=$CADENCE_HOME/schema/cassandra/cadence/versioned
@@ -59,60 +58,13 @@ wait_for_cassandra() {
     echo 'cassandra started'
 }
 
-init_env() {
-
-    export HOST_IP=`hostname --ip-address`
-    if [ "$BIND_ON_LOCALHOST" == true ] || [ "$BIND_ON_IP" == "127.0.0.1" ]; then
-        export BIND_ON_IP="127.0.0.1"
-        export HOST_IP="127.0.0.1"
-    elif [ -z "$BIND_ON_IP" ]; then
-        # not binding to localhost and bind_on_ip is empty - use default host ip addr
-        export BIND_ON_IP=$HOST_IP
-    elif [ "$BIND_ON_IP" != "0.0.0.0" ]; then
-        # binding to a user specified addr, make sure HOST_IP also uses the same addr
-        export HOST_IP=$BIND_ON_IP
-    fi
-
-    if [ -z "$RINGPOP_SEEDS" ]; then
-        export RINGPOP_SEEDS_JSON_ARRAY="[\"$HOST_IP:7933\",\"$HOST_IP:7934\",\"$HOST_IP:7935\",\"$HOST_IP:7939\"]"
-    else
-        array=(${RINGPOP_SEEDS//,/ })
-        export RINGPOP_SEEDS_JSON_ARRAY=$(json_array "${array[@]}")
-    fi
-
-    if [ -z "$STATSD_ENDPOINT" ]; then 
-        export STATSD_ENDPOINT="$HOST_IP:8125"
-    fi
-
-    if [ -z "$CASSANDRA_SEEDS" ]; then 
-        export CASSANDRA_SEEDS=$HOST_IP
-    fi
-}
-
-json_array() {
-  echo -n '['
-  while [ $# -gt 0 ]; do
-    x=${1//\\/\\\\}
-    echo -n \"${x//\"/\\\"}\"
-    [ $# -gt 1 ] && echo -n ', '
-    shift
-  done
-  echo ']'
-}
-
-
-# initialize the environment,
 # start cassandra,
 # wait for it to complete startup,
 # set up the schema
-init_env
 start_cassandra
 wait_for_cassandra
 setup_schema
 setup_visibility_schema
-
-# inject environment variables into the .yaml config files
-envsubst < config/docker_template_cassandra.yaml > config/docker.yaml
 
 # sleep for 1 second to make sure that all writes have been completed
 sleep 1

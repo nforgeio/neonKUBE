@@ -53,6 +53,7 @@
     <None Include="cadence-test\entrypoint.sh" />
     <None Include="cadence-test\publish.ps1" />
     <None Include="cadence-test\README.md" />
+    <None Include="cadence-test\setup.sh" />
     <None Include="couchbase-test\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
