@@ -1693,7 +1693,7 @@ namespace TestCadence
         public async Task Workflow_ChildSignal()
         {
             // Verify that signalling a child workflow.
-
+            
             WorkflowChild.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowParent>();

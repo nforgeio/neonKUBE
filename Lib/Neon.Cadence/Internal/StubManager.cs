@@ -409,20 +409,10 @@ namespace Neon.Cadence.Internal
 
                 if (method.ReturnType.IsGenericType)
                 {
-                    if (method.ReturnType.BaseType != typeof(Task))
-                    {
-                        throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
                 }
                 else
                 {
-                    if (method.ReturnType != typeof(Task))
-                    {
-                        throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = typeof(void);
                 }
 
@@ -538,6 +528,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Cadence;");
             sbSource.AppendLine($"using Neon.Cadence.Internal;");
+            sbSource.AppendLine($"using Neon.Tasks;");
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");
@@ -632,9 +623,6 @@ namespace Neon.Cadence.Internal
                     //---------------------------------------------------------
                     // Generate code for child workflows
 
-                    sbSource.AppendLine($"            // Configure the workflow.");
-                    sbSource.AppendLine();
-
                     if (string.IsNullOrEmpty(details.WorkflowMethodAttribute.Name))
                     {
                         sbSource.AppendLine($"            var ___workflowTypeName = this.workflowTypeName;");
@@ -695,21 +683,29 @@ namespace Neon.Cadence.Internal
                     }
 
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            // Ensure that this stub instance has not already been started.");
-                    sbSource.AppendLine();
                     sbSource.AppendLine($"            if (this.hasStarted)");
                     sbSource.AppendLine($"            {{");
                     sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
+                    sbSource.AppendLine($"            byte[] ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            byte[] ___resultBytes = null;");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            Func<Task> hotAction =");
+                    sbSource.AppendLine($"                async () =>");
+                    sbSource.AppendLine($"                {{");
+                    sbSource.AppendLine($"                    this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"                }};");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            this.hasStarted     = true;");
-                    sbSource.AppendLine($"            this.childExecution = ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options).Result;");
+                    sbSource.AppendLine($"            Func<Task> coldAction =");
+                    sbSource.AppendLine($"                async () =>");
+                    sbSource.AppendLine($"                {{");
+                    sbSource.AppendLine($"                    ___resultBytes = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
+                    sbSource.AppendLine($"                }};");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
+                    sbSource.AppendLine($"            this.hasStarted = true;");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            await new WarmTask(hotAction, coldAction);");
 
                     if (!details.IsVoid)
                     {
@@ -721,9 +717,6 @@ namespace Neon.Cadence.Internal
                 {
                     //---------------------------------------------------------
                     // Generate code for external workflows
-
-                    sbSource.AppendLine($"            // Configure the workflow.");
-                    sbSource.AppendLine();
 
                     if (string.IsNullOrEmpty(details.WorkflowMethodAttribute.Name))
                     {
@@ -785,21 +778,29 @@ namespace Neon.Cadence.Internal
                     }
 
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            // Ensure that this stub instance has not already been started.");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            if (this.execution != null)");
+                    sbSource.AppendLine($"            if (this.hasStarted)");
                     sbSource.AppendLine($"            {{");
                     sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            // Start and then wait for the workflow to complete.");
+                    sbSource.AppendLine($"            byte[] ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            byte[] ___resultBytes = null;");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            Func<Task> hotAction =");
+                    sbSource.AppendLine($"                async () =>");
+                    sbSource.AppendLine($"                {{");
+                    sbSource.AppendLine($"                    this.execution = await ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"                }};");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            Func<Task> coldAction =");
+                    sbSource.AppendLine($"                async () =>");
+                    sbSource.AppendLine($"                {{");
+                    sbSource.AppendLine($"                    ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+                    sbSource.AppendLine($"                }};");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            this.hasStarted = true;");
-                    sbSource.AppendLine($"            this.execution  = ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options).Result;");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+                    sbSource.AppendLine($"            await new WarmTask(hotAction, coldAction);");
 
                     if (!details.IsVoid)
                     {
@@ -1088,21 +1089,6 @@ namespace Neon.Cadence.Internal
 
             foreach (var method in activityInterface.GetMethods())
             {
-                if (method.ReturnType.IsGenericType)
-                {
-                    if (method.ReturnType.BaseType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-                }
-                else
-                {
-                    if (method.ReturnType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-                }
-
                 var details = new ActivityMethodDetails()
                 {
                     ActivityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>() ?? new ActivityMethodAttribute() { Name = string.Empty },
@@ -1111,20 +1097,10 @@ namespace Neon.Cadence.Internal
 
                 if (method.ReturnType.IsGenericType)
                 {
-                    if (method.ReturnType.BaseType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
                 }
                 else
                 {
-                    if (method.ReturnType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = typeof(void);
                 }
 
@@ -1161,6 +1137,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Cadence;");
             sbSource.AppendLine($"using Neon.Cadence.Internal;");
+            sbSource.AppendLine($"using Neon.Tasks;");
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");

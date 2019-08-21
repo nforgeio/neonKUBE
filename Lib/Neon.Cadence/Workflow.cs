@@ -267,7 +267,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceWorkflowContinueAsNewException(
+            throw new CadenceContinueAsNewException(
                 args:       Client.DataConverter.ToData(args),
                 domain:     WorkflowInfo.Domain,
                 taskList:   WorkflowInfo.TaskList);
@@ -296,7 +296,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceWorkflowContinueAsNewException(
+            throw new CadenceContinueAsNewException(
                 args:                       Client.DataConverter.ToData(args),
                 domain:                     WorkflowInfo.Domain,
                 taskList:                   WorkflowInfo.TaskList,
