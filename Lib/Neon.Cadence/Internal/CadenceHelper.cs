@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -33,6 +34,8 @@ namespace Neon.Cadence.Internal
     /// </summary>
     internal static class CadenceHelper
     {
+        private static readonly string genericTaskNamePrefix;
+
         /// <summary>
         /// The optional separator string used to separate the base workflow type
         /// name from the optional workflow method name.  This string may not be
@@ -62,6 +65,33 @@ namespace Neon.Cadence.Internal
         /// </summary>
         public static TimeSpan MinTimespan { get; private set; } = TimeSpan.FromTicks(long.MinValue / 100);
 
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static CadenceHelper()
+        {
+            var fullName = typeof(Task<string>).FullName;
+            var tickPos  = fullName.IndexOf('`');
+
+            genericTaskNamePrefix = fullName.Substring(0, tickPos + 1);
+        }
+
+        /// <summary>
+        /// Determines whether the type passed is a <see cref="Task"/> or <see cref="Task{T}"/>.
+        /// </summary>
+        /// <param name="type">The type being tested.</param>
+        /// <returns><c>true</c> if the type is a Cadence task.</returns>
+        internal static bool IsTask(Type type)
+        {
+            if (type == typeof(Task))
+            {
+                return true;
+            }
+            else
+            {
+                return type.IsGenericType && type.FullName.StartsWith(genericTaskNamePrefix);
+            }
+        }
         /// <summary>
         /// Ensures that a workflow type name is valid.
         /// </summary>
@@ -224,7 +254,7 @@ namespace Neon.Cadence.Internal
                 throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] is not public.");
             }
 
-            // Validate the entrypoint method names.
+            // Validate the entrypoint method names and result types.
 
             var workflowNames = new HashSet<string>();
 
@@ -235,6 +265,11 @@ namespace Neon.Cadence.Internal
                 if (workflowMethodAttribute == null)
                 {
                     continue;
+                }
+
+                if (!CadenceHelper.IsTask(method.ReturnType))
+                {
+                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
@@ -252,7 +287,7 @@ namespace Neon.Cadence.Internal
                 throw new ActivityTypeException($"Workflow interface [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
             }
 
-            // Validate the signal method names.
+            // Validate the signal method names and return types.
 
             var signalNames = new HashSet<string>();
 
@@ -265,6 +300,11 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (!CadenceHelper.IsTask(method.ReturnType))
+                {
+                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                }
+
                 var name = signalMethodAttribute.Name ?? string.Empty;
 
                 if (signalNames.Contains(name))
@@ -275,7 +315,7 @@ namespace Neon.Cadence.Internal
                 signalNames.Add(name);
             }
 
-            // Validate the signal method names.
+            // Validate the signal method names and return types.
 
             var queryNames = new HashSet<string>();
 
@@ -286,6 +326,11 @@ namespace Neon.Cadence.Internal
                 if (queryMethodAttribute == null)
                 {
                     continue;
+                }
+
+                if (!CadenceHelper.IsTask(method.ReturnType))
+                {
+                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = queryMethodAttribute.Name ?? string.Empty;
@@ -414,11 +459,16 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (!CadenceHelper.IsTask(method.ReturnType))
+                {
+                    throw new WorkflowTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                }
+
                 var name = activityMethodAttribute.Name ?? string.Empty;
 
                 if (activityNames.Contains(name))
                 {
-                    throw new ActivityTypeException($"Multiple [{activityInterface.FullName}] activity methods are tagged by [ActivityMethod(Name = \"{name}x\")].");
+                    throw new ActivityTypeException($"Multiple [{activityInterface.FullName}] activity methods are tagged by [ActivityMethod(Name = \"{name}\")].");
                 }
 
                 activityNames.Add(name);

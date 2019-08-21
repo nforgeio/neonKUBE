@@ -409,20 +409,10 @@ namespace Neon.Cadence.Internal
 
                 if (method.ReturnType.IsGenericType)
                 {
-                    if (method.ReturnType.BaseType != typeof(Task))
-                    {
-                        throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
                 }
                 else
                 {
-                    if (method.ReturnType != typeof(Task))
-                    {
-                        throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = typeof(void);
                 }
 
@@ -1099,21 +1089,6 @@ namespace Neon.Cadence.Internal
 
             foreach (var method in activityInterface.GetMethods())
             {
-                if (method.ReturnType.IsGenericType)
-                {
-                    if (method.ReturnType.BaseType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-                }
-                else
-                {
-                    if (method.ReturnType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-                }
-
                 var details = new ActivityMethodDetails()
                 {
                     ActivityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>() ?? new ActivityMethodAttribute() { Name = string.Empty },
@@ -1122,20 +1097,10 @@ namespace Neon.Cadence.Internal
 
                 if (method.ReturnType.IsGenericType)
                 {
-                    if (method.ReturnType.BaseType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = method.ReturnType.GetGenericArguments().First();
                 }
                 else
                 {
-                    if (method.ReturnType != typeof(Task))
-                    {
-                        throw new ActivityTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
-                    }
-
                     details.ReturnType = typeof(void);
                 }
 
