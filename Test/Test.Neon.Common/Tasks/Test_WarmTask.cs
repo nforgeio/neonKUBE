@@ -233,5 +233,41 @@ namespace TestCommon
             Assert.True(hotCompleted);
             Assert.True(coldCompleted);
         }
+
+        [Fact]
+        public async Task WarmTask_Await()
+        {
+            // Verify that awaiting a WarmTask works.
+
+            var hotCompleted  = false;
+            var coldCompleted = false;
+
+            var warmTask = new WarmTask(
+                hotAction: async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    hotCompleted = true;
+                },
+                coldAction: async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                    coldCompleted = true;
+                });
+
+            // Give the hot action a chance to complete and
+            // then verify that it did in fact complete but
+            // that the cold action is not complete (because
+            // we haven't awaited it yet).
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
+
+            Assert.True(hotCompleted);
+            Assert.False(coldCompleted);
+
+            await warmTask;
+
+            Assert.True(hotCompleted);
+            Assert.True(coldCompleted);
+        }
     }
 }

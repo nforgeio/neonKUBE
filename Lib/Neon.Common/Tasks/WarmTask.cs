@@ -110,7 +110,7 @@ namespace Neon.Tasks
     /// Assert.True(coldCompleted);
     /// </code>
     /// </remarks>
-    public class WarmTask : INotifyCompletion
+    public class WarmTask : ICriticalNotifyCompletion
     {
         private TaskCompletionSource<object>    tcs;
         private Func<Task>                      coldAction;
@@ -150,7 +150,7 @@ namespace Neon.Tasks
         {
             if (hotTask != null)
             {
-                // We have a hot action and we need to ensure that it
+                // We have a hot action so we need to ensure that it
                 // has completed before we start the cold action.
 
                 hotTask.ContinueWith(
@@ -182,6 +182,15 @@ namespace Neon.Tasks
 
         /// <inheritdoc/>
         public void OnCompleted(Action continuation)
+        {
+            if (continuation != null)
+            {
+                Task.Run(continuation);
+            }
+        }
+
+        /// <inheritdoc/>
+        public void UnsafeOnCompleted(Action continuation)
         {
             if (continuation != null)
             {
@@ -270,7 +279,7 @@ namespace Neon.Tasks
     /// Assert.True(coldCompleted);
     /// </code>
     /// </remarks>
-    public class WarmTask<TResult> : INotifyCompletion
+    public class WarmTask<TResult> : ICriticalNotifyCompletion
     {
         private TaskCompletionSource<TResult>   tcs;
         private Func<Task<TResult>>             coldAction;
@@ -297,7 +306,7 @@ namespace Neon.Tasks
 
             if (hotAction != null)
             {
-                this.hotTask = Task.Run(() => hotAction());
+                this.hotTask = global::System.Threading.Tasks.Task.Run(() => hotAction());
             }
             else
             {
@@ -315,7 +324,7 @@ namespace Neon.Tasks
         {
             if (hotTask != null)
             {
-                // We have a hot action and we need to ensure that it
+                // We have a hot action so we need to ensure that it
                 // has completed before we start the cold action.
 
                 hotTask.ContinueWith(
@@ -329,12 +338,12 @@ namespace Neon.Tasks
                 // There is no hot action, so we can immediately start the
                 // cold action when the WarmTask is awaited.
 
-                Task.Run(() => coldAction())
+                global::System.Threading.Tasks.Task.Run(() => coldAction())
                     .ContinueWith(
                         async state =>
                         {
                             tcs.SetResult(state.Result);
-                            await Task.CompletedTask;
+                            await global::System.Threading.Tasks.Task.CompletedTask;
                         });
             }
 
@@ -346,6 +355,15 @@ namespace Neon.Tasks
 
         /// <inheritdoc/>
         public void OnCompleted(Action continuation)
+        {
+            if (continuation != null)
+            {
+                global::System.Threading.Tasks.Task.Run(continuation);
+            }
+        }
+
+        /// <inheritdoc/>
+        public void UnsafeOnCompleted(Action continuation)
         {
             if (continuation != null)
             {
