@@ -56,7 +56,7 @@ namespace TestCadence
     // perform the specified operation on the first pass, trigger a replay, and
     // then ensure that the operation returned the same results on the second pass.
 
-    public partial class Test_Replay : IClassFixture<CadenceFixture>, IDisposable
+    public class Test_Replay : IClassFixture<CadenceFixture>, IDisposable
     {
         private const int maxWaitSeconds = 5;
 
