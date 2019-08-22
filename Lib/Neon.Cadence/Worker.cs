@@ -47,12 +47,12 @@ namespace Neon.Cadence
         /// <param name="taskList">The Cadence task list.</param>
         internal Worker(CadenceClient client, WorkerMode mode, long workerId, string domain, string taskList)
         {
-            this.Client     = client;
-            this.Mode       = mode;
-            this.WorkerId   = workerId;
-            this.Domain     = domain;
-            this.Tasklist   = taskList;
-            this.RefCount   = 1;
+            this.Client   = client;
+            this.Mode     = mode;
+            this.WorkerId = workerId;
+            this.Domain   = domain;
+            this.Tasklist = taskList;
+            this.RefCount = 1;
         }
 
         /// <inheritdoc/>

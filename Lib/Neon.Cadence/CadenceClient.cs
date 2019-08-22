@@ -996,15 +996,18 @@ namespace Neon.Cadence.WorkflowStub
                                     proxyProcess.Kill();
                                 }
 
-                                proxyProcess = null;
+                                proxyProcess     = null;
                                 proxyInitialized = false;
                             }
                         }
+
+                        WorkflowBase.UnregisterClient(this);
+                        ActivityBase.UnregisterClient(this);
                     }
                 }
                 catch
                 {
-                    // Ignoring this.
+                    // Ignoring errors.
                 }
             }
 
@@ -1048,9 +1051,6 @@ namespace Neon.Cadence.WorkflowStub
                 host.Dispose();
                 host = null;
             }
-
-            WorkflowBase.UnregisterClient(this);
-            ActivityBase.UnregisterClient(this);
 
             if (disposing)
             {
