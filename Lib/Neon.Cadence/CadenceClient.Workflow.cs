@@ -279,6 +279,24 @@ namespace Neon.Cadence
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Creates an untyped workflow stub to be used for launching a workflow.
+        /// </summary>
+        /// <param name="workflowTypeName">Specifies the workflow type name.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <returns>The new <see cref="WorkflowStub"/>.</returns>
+        public IWorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            EnsureNotDisposed();
+
+            return new WorkflowStub(this)
+            {
+                WorkflowTypeName = workflowTypeName,
+                Options          = options
+            };
+        }
+
         //---------------------------------------------------------------------
         // Internal workflow related methods used by dynamically generated workflow stubs.
 

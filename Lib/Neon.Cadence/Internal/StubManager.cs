@@ -194,7 +194,7 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
             private static MethodInfo       resolveTaskList;                // from: CadenceClient
             private static MethodInfo       resolveDomain;                  // from: CadenceClient
-            private static ConstructorInfo  newWorkflowStub;                // from: WorkflowStub
+            private static MethodInfo       newWorkflowStub;                // from: CadenceClient
             private static MethodInfo       executeActivityAsync;           // from: Workflow
             private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
             private static MethodInfo       activityOptionsNormalize;       // from: ActivityOptions
@@ -219,7 +219,7 @@ namespace Neon.Cadence.Internal
                 queryWorkflowAsync            = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 resolveTaskList               = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
                 resolveDomain                 = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
-                newWorkflowStub               = NeonHelper.GetConstructor(typeof(WorkflowStub), typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(WorkflowOptions), typeof(string));
+                newWorkflowStub               = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(WorkflowOptions));
                 executeActivityAsync          = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
                 executeLocalActivityAsync     = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
                 activityOptionsNormalize      = NeonHelper.GetMethod(typeof(ActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(ActivityOptions));
@@ -300,9 +300,9 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowStub NewWorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options)
+            public static WorkflowStub NewWorkflowStub(CadenceClient client, string workflowTypeName, WorkflowOptions options)
             {
-                return (WorkflowStub)newWorkflowStub.Invoke(new object[] { client, workflowTypeName, execution, options });
+                return (WorkflowStub)newWorkflowStub.Invoke(client, new object[] { workflowTypeName, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -597,7 +597,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public IWorkflowStub ToUntyped()");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            return ___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
+            sbSource.AppendLine($"            return ___StubHelper.NewWorkflowStub(client, workflowTypeName, options);");
             sbSource.AppendLine($"        }}");
 
             // Generate the workflow entry point methods.
