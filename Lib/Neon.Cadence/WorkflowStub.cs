@@ -36,6 +36,16 @@ namespace Neon.Cadence
     public class WorkflowStub : IWorkflowStub
     {
         //---------------------------------------------------------------------
+        // Local types
+
+        internal enum StubState
+        {
+            NotStarted = 0,
+            Started,
+            Complete
+        }
+
+        //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
@@ -55,28 +65,20 @@ namespace Neon.Cadence
         // Instance members
 
         private CadenceClient   client;
-        private string          domain;
 
         /// <summary>
         /// Default constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
-        /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <param name="execution">The workflow execution or <c>null</c> if the workflow hasn't been started.</param>
-        /// <param name="options">Specifies the workflow options.</param>
-        /// <param name="domain">Specifies specifies the domain.</param>
-        internal WorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options, string domain)
+        internal WorkflowStub(CadenceClient client)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
 
-            this.client           = client;
-            this.WorkflowTypeName = workflowTypeName;
-            this.Execution        = execution;
-            this.Options          = options;
-            this.domain           = domain;
+            this.client = client;
         }
+
+        /// <inheritdoc/>
+        public string WorkflowTypeName { get; internal set; }
 
         /// <inheritdoc/>
         public WorkflowExecution Execution { get; internal set; }
@@ -84,8 +86,10 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public WorkflowOptions Options { get; internal set; }
 
-        /// <inheritdoc/>
-        public string WorkflowTypeName { get; internal set; }
+        /// <summary>
+        /// Indicates the current stub state.
+        /// </summary>
+        internal StubState State { get; set; }
 
         /// <summary>
         /// Ensures that the workflow has been started.
@@ -114,7 +118,7 @@ namespace Neon.Cadence
         {
             EnsureStarted();
 
-            await client.CancelWorkflowAsync(Execution, domain);
+            await client.CancelWorkflowAsync(Execution, client.ResolveDomain(Options?.Domain));
         }
 
         /// <inheritdoc/>
@@ -122,17 +126,16 @@ namespace Neon.Cadence
         {
             EnsureStarted();
 
-            return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, domain));
+            return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, client.ResolveDomain(Options?.Domain)));
         }
 
         /// <inheritdoc/>
         public async Task<object> GetResultAsync(Type resultType)
         {
             Covenant.Requires<ArgumentNullException>(resultType != null);
-
             EnsureStarted();
 
-            return client.DataConverter.FromData(resultType, await client.GetWorkflowResultAsync(Execution, domain));
+            return client.DataConverter.FromData(resultType, await client.GetWorkflowResultAsync(Execution, client.ResolveDomain(Options?.Domain)));
         }
 
         /// <inheritdoc/>
@@ -144,7 +147,7 @@ namespace Neon.Cadence
 
             var argBytes = client.DataConverter.ToData(args);
 
-            return client.DataConverter.FromData<TResult>(await client.QueryWorkflowAsync(Execution, queryType, argBytes, domain));
+            return client.DataConverter.FromData<TResult>(await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
         }
 
         /// <inheritdoc/>
@@ -156,7 +159,7 @@ namespace Neon.Cadence
 
             var argBytes = client.DataConverter.ToData(args);
 
-            return client.DataConverter.FromData(resultType, await client.QueryWorkflowAsync(Execution, queryType, argBytes, domain));
+            return client.DataConverter.FromData(resultType, await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
         }
 
         /// <inheritdoc/>
@@ -168,7 +171,7 @@ namespace Neon.Cadence
 
             var argBytes = client.DataConverter.ToData(args);
 
-            await client.SignalWorkflowAsync(Execution, signalName, argBytes, domain);
+            await client.SignalWorkflowAsync(Execution, signalName, argBytes, client.ResolveDomain(Options?.Domain));
         }
 
         /// <inheritdoc/>
@@ -192,7 +195,10 @@ namespace Neon.Cadence
 
             var argBytes = client.DataConverter.ToData(args);
 
-            return await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+            State     = StubState.Started;
+
+            return Execution;
         }
     }
 }
