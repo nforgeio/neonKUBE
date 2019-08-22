@@ -235,7 +235,7 @@ namespace Neon.Cadence
     /// in different ways to manage where workflows and activities will be scheduled for execution.
     /// </para>
     /// </remarks>
-    public partial class CadenceClient
+    public partial class CadenceClient : IDisposable
     {
         /// <summary>
         /// The <b>cadence-proxy</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
