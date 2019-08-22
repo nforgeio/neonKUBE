@@ -229,7 +229,7 @@ namespace Neon.Xunit.Couchbase
                 settings = settings ?? new CouchbaseSettings();
 
                 settings.Servers.Clear();
-                settings.Servers.Add(new Uri("http://localhost:8091"));
+                settings.Servers.Add(new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}:8091"));
 
                 if (settings.Bucket == null)
                 {
@@ -242,7 +242,7 @@ namespace Neon.Xunit.Couchbase
                 Password = password;
 
                 jsonClient             = new JsonClient();
-                jsonClient.BaseAddress = new Uri("http://localhost:8094");
+                jsonClient.BaseAddress = new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}:8094");
                 jsonClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue(
                         "Basic",

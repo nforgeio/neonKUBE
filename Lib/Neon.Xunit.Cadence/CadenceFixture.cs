@@ -77,7 +77,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, bool, string, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, bool, string, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -272,7 +272,7 @@ namespace Neon.Xunit.Cadence
                 };
 
                 settings.Servers.Clear();
-                settings.Servers.Add($"http://localhost:{NetworkPorts.Cadence}");
+                settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Cadence}");
 
                 settings.Emulate = emulateProxy || settings.Emulate;
 

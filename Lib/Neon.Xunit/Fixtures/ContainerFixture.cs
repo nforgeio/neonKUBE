@@ -95,20 +95,29 @@ namespace Neon.Xunit
         /// container ports should be published.
         /// </summary>
         /// <param name="hostInterface">The desired host interface IPv4 address or <c>null</c>.</param>
+        /// <param name="forConnection">
+        /// Indicates that the address a client should use to establish a connection should be 
+        /// returned vs. the address the container will listen on.
+        /// </param>
         /// <returns>The target network interface address.</returns>
         /// <remarks>
         /// This method returns <see cref="DefaultHostInterface"/> when <paramref name="hostInterface"/>
         /// is <c>null</c> or empty otherwise it will ensure that the parameter is valid
         /// and before returning it.
         /// </remarks>
-        protected static string GetHostInterface(string hostInterface)
+        protected static string GetHostInterface(string hostInterface, bool forConnection = false)
         {
             if (string.IsNullOrEmpty(hostInterface))
             {
-                return DefaultHostInterface;
+                hostInterface = DefaultHostInterface;
             }
 
             Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{hostInterface}] is not a valid IPv4 address.");
+
+            if (forConnection && hostInterface == "0.0.0.0")
+            {
+                return "127.0.0.1";
+            }
 
             return hostInterface;
         }

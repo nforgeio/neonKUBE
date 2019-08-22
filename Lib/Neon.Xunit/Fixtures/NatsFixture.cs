@@ -59,6 +59,8 @@ namespace Neon.Xunit
         /// </summary>
         public const string ConnectionUri = "nats://localhost:4222";
 
+        private string hostInterface;
+
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
@@ -77,7 +79,7 @@ namespace Neon.Xunit
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(string, string, string[])"/>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[], string)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -134,7 +136,8 @@ namespace Neon.Xunit
             string[] args          = null,
             string   hostInterface = null)
         {
-            image = image ?? $"{KubeConst.NeonBranchRegistry}/nats:latest";
+            image              = image ?? $"{KubeConst.NeonBranchRegistry}/nats:latest";
+            this.hostInterface = hostInterface;
 
             base.CheckWithinAction();
 
@@ -158,7 +161,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection();
+                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
 
                     await Task.CompletedTask;
 
@@ -185,7 +188,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection();
+                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
                     await Task.CompletedTask;
 
                 }).Wait();
