@@ -10,10 +10,6 @@
 
 3. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-4. Deploy a test cluster.
-
-5. Run all unit tests against the test cluster and fix any bugs until all tests pass.
-
 ## Release 
 
 1. Select the release branch.
@@ -36,7 +32,7 @@
 
 8. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-9. Push the `release-VERSION` branch to GitHub.
+9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
 
 10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 

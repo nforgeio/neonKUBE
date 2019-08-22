@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Test_CadenceFixture.cs
+// FILE:        Test_FixtureNoConnect.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -46,12 +46,12 @@ namespace TestCadence
     /// These tests prevent the <see cref="CadenceFixture"/> from establishing a client
     /// connection and then creates a connection to run a test or two.
     /// </summary>
-    public partial class Test_CadenceFixture : IClassFixture<CadenceFixture>, IDisposable
+    public partial class Test_FixtureNoConnect : IClassFixture<CadenceFixture>, IDisposable
     {
         private CadenceFixture  fixture;
         private CadenceClient   client;
 
-        public Test_CadenceFixture(CadenceFixture fixture)
+        public Test_FixtureNoConnect(CadenceFixture fixture)
         {
             var settings = new CadenceSettings()
             {
@@ -112,7 +112,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_WithResult()
+        public async Task Workflow_WithResult1()
         {
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
@@ -120,6 +120,18 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowWithResult>();
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_WithResult2()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter and results a result.
+
+            var stub = client.NewWorkflowStub<IWorkflowWithResult>();
+
+            Assert.Equal("Hello Jack!", await stub.HelloAsync("Jack"));
         }
     }
 }
