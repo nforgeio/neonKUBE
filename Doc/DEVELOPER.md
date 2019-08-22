@@ -97,8 +97,8 @@ Follow the steps below to configure a development or test workstation:
   * Select the **Resources/ADVANCED/FILE SHARINGS** tab click the check box to **share** the drive where you'll clone the project source code (typically drive C:)
   * Click **Apply & Restart (You'll need to enter your workstation **credentials**).
   * Select the **Resources/NETWORK** tab and enable **Manual DNS Configuration** and set the DNS to **8.8.8.8**.
-  * Click **Aplly & Restart.
-  * Select the **Docker Engine** tab on the left and make sure that **experimental** setting is **true**.
+  * Click **Apply & Restart.
+  * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
   * Click **Apply & Restart**.
 
 14. Update Docker's network settings:
