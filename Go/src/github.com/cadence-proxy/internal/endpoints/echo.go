@@ -34,8 +34,6 @@ import (
 //
 // param r *http.Request
 func EchoHandler(w http.ResponseWriter, r *http.Request) {
-
-	// grab the global logger
 	logger = Instance.Logger
 
 	// check if the request has the correct content type,
@@ -50,20 +48,14 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	// read the body and deserialize it
 	message, err := readAndDeserialize(r.Body)
 	if err != nil {
-
-		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug(fmt.Sprintf("Echo message type %s", message.GetProxyMessage().Type.String()))
-
 	// serialize the message
+	logger.Debug(fmt.Sprintf("Echo message type %s", message.GetProxyMessage().Type.String()))
 	serializedMessageCopy, err := cloneForEcho(message)
 	if err != nil {
-
-		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)
 	}
@@ -76,29 +68,18 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func cloneForEcho(message messages.IProxyMessage) (b []byte, e error) {
-
-	// recover from panic
 	defer func() {
 		if r := recover(); r != nil {
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Debug("Recovered in cloneForEcho")
 			e = fmt.Errorf("panic %v", r)
 			b = nil
 		}
 	}()
 
-	// create a clone of the message to send back
-	// as a PUT request
 	messageCopy := message.Clone()
 	proxyMessage := messageCopy.GetProxyMessage()
-
-	// serialize the cloned message into a []byte
-	// to send back over the network
 	serializedMessageCopy, err := proxyMessage.Serialize(false)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Error serializing proxy message", zap.Error(err))
 		return nil, err
 	}

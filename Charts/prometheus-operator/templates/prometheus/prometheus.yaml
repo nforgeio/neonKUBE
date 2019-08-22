@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  annotations:
+    "helm.sh/hook": "post-install"
+  name: prometheus
+  labels:
+    prometheus: prometheus
+spec:
+  replicas: 1
+  resources:
+    requests:
+      memory: 200Mi
+      cpu: 250m
+    limits:
+      memory: 500Mi
+      cpu: 500m
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    any: true
+  serviceMonitorNamespaceSelector:
+    any: true
+  secrets: [ istio.prometheus ]
+  logLevel: {{ .Values.logLevel }}
+  alerting:
+    alertmanagers:
+    - namespace: monitoring
+      name: alertmanager
+      port: web
+  {{ if .Values.persistence.enabled }}
+  remoteRead:
+    - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/read"
+      readRecent: true
+  remoteWrite:
+    - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/write"
+  {{ end }}

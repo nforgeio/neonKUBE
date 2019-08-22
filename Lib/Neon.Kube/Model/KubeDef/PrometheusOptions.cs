@@ -56,12 +56,29 @@ namespace Neon.Kube
         public bool Enabled { get; set; } = true;
 
         /// <summary>
+        /// Indicates whether Prometheus persistence is to be enabled.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Persistence", Required = Required.Default)]
+        [YamlMember(Alias = "persistence", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Persistence { get; set; } = false;
+
+        /// <summary>
         /// Compute Resources required by Elasticsearch.
         /// </summary>
         [JsonProperty(PropertyName = "Resources", Required = Required.Default)]
         [YamlMember(Alias = "resources", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public V1ResourceRequirements Resources { get; set; } = null;
+
+        /// <summary>
+        /// M3DB specific options.
+        /// </summary>
+        [JsonProperty(PropertyName = "M3DB", Required = Required.Default)]
+        [YamlMember(Alias = "m3db", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public M3DBOptions M3DB { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

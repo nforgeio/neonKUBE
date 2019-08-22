@@ -10,6 +10,7 @@ using System.Diagnostics.Contracts;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,7 +77,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, bool, string, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -98,6 +99,11 @@ namespace Neon.Xunit.Cadence
         /// state before it establishes a new connection.  This is normally <c>false</c> which is usually
         /// what you want.  The one scenario where you'll want to pass <c>true</c> is when your test requires
         /// multiple Cadence fixtures possibly communication with different Cadence clusters.
+        /// </param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
@@ -132,6 +138,7 @@ namespace Neon.Xunit.Cadence
             bool                keepConnection  = false,
             bool                keepOpen        = false,
             bool                noReset         = false,
+            string              hostInterface   = null,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -165,6 +172,11 @@ namespace Neon.Xunit.Cadence
         /// what you want.  The one scenario where you'll want to pass <c>true</c> is when your test requires
         /// multiple Cadence fixtures possibly communication with different Cadence clusters.
         /// </param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
@@ -187,6 +199,7 @@ namespace Neon.Xunit.Cadence
             bool                keepConnection  = false,
             bool                keepOpen        = false,
             bool                noReset         = false,
+            string              hostInterface   = null,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -195,6 +208,15 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
+                if (string.IsNullOrEmpty(hostInterface))
+                {
+                    hostInterface = ContainerFixture.DefaultHostInterface;
+                }
+                else
+                {
+                    Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{hostInterface}] is not a valid IPv4 address.");
+                }
+
                 // We generally want to make sure that the global CadenceClient state
                 // is reset between test runs.
 
@@ -209,8 +231,8 @@ namespace Neon.Xunit.Cadence
                     new string[]
                     {
                         "--detach",
-                        "-p", "7933-7939:7933-7939",
-                        "-p", "8088:8088"
+                        "-p", $"{GetHostInterface(hostInterface)}:7933-7939:7933-7939",
+                        "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
                     },
                     env: env,
                     keepOpen: keepOpen);

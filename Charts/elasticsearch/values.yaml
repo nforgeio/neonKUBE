@@ -51,10 +51,7 @@ podAnnotations: {}
 
 esJavaOpts: "-Xmx1g -Xms1g"
 
-resources:
-  limits:
-    cpu: "1000m"
-    memory: "2Gi"
+resources: {}
 
 initResources: {}
   # limits:
@@ -82,7 +79,7 @@ volumeClaimTemplate:
       elasticsearch: default
   resources:
     requests:
-      storage: 1Gi
+      storage: 512Mi
 
 persistence:
   enabled: true
@@ -164,7 +161,10 @@ schedulerName: ""
 imagePullSecrets: []
 nodeSelector:
   neonkube.io/mon.elasticsearch: "true"
-tolerations: []
+tolerations:
+  - key: "neonkube.io/elasticsearch"
+    operator: "Exists"
+    effect: "NoSchedule"
 
 # Enabling this will publically expose your Elasticsearch instance.
 # Only enable this if you have security enabled on your cluster

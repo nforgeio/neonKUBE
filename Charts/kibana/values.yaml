@@ -1,7 +1,7 @@
 ---
 
-elasticsearchURL: "" # "http://elasticsearch-master.logging:9200"
-elasticsearchHosts: "http://elasticsearch-master.logging:9200"
+elasticsearchURL: "" # "http://elasticsearch-master.monitoring:9200"
+elasticsearchHosts: "http://elasticsearch-master.monitoring:9200"
 
 replicas: 1
 
@@ -24,13 +24,7 @@ image: "docker.elastic.co/kibana/kibana"
 imageTag: "7.2.0"
 imagePullPolicy: "IfNotPresent"
 
-resources:
-  requests:
-    cpu: "100m"
-    memory: "500m"
-  limits:
-    cpu: "1000m"
-    memory: "1Gi"
+resources: {}
 
 protocol: http
 

@@ -80,9 +80,9 @@ func (s *Instance) Start() {
 	// set the logger to the global
 	// zap.Logger
 	s.Logger = zap.L()
-	s.Logger.Info("Server Details",
+	s.Logger.Debug("Server Details",
 		zap.String("Address", s.httpServer.Addr),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// listen and serve (for your country)
@@ -104,6 +104,6 @@ func (s *Instance) Start() {
 		if err := s.httpServer.Shutdown(ctx); err != nil {
 			s.Logger.Fatal("could not gracefully shut server down", zap.Error(err))
 		}
-		s.Logger.Info("server gracefully shutting down")
+		s.Logger.Debug("server gracefully shutting down")
 	}
 }

@@ -84,7 +84,6 @@ func NewWorkflowContext(ctx workflow.Context) *WorkflowContext {
 	wectx := new(WorkflowContext)
 	wectx.childContexts = new(ChildContextsMap)
 	wectx.SetContext(ctx)
-
 	return wectx
 }
 

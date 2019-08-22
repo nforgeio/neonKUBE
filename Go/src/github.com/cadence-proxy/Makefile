@@ -26,6 +26,7 @@ PROJECT_ROOT = github.com/cadence-proxy
 BUILD_DIR := $(NF_ROOT)/Build
 COMPRESSED_DIR := $(NF_ROOT)/Lib/Neon.Cadence/Resources
 APP_DIR=./cmd/cadenceproxy
+PLAYGROUND_DIR=./cmd/playground
 LOG_DIR=./test/logs
 
 # test dirs
@@ -34,10 +35,11 @@ MESSAGES_TEST_DIR=./internal/messages
 TEST_DIRS := $(MESSAGES_TEST_DIR)
 
 # Gather source code		
-SRC := $(APP_DIR)/main.go
+APP_SRC := $(APP_DIR)/main.go
 
 # programs in the /cmd dir to build
-PROGS = cadenceproxy
+PROGS = cadenceproxy \
+	playground \
 
 # executable names
 WIN := cadence-proxy.win.exe
@@ -57,6 +59,9 @@ cadence-proxy-linux: dep-ensured $(ALL_SRC)
 
 cadence-proxy-osx: dep-ensured $(ALL_SRC)
 	env GOOS=darwin GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(OSX) $(APP_DIR)/*.go
+
+simple: dep-ensured $(ALL_SRC)
+	go build -i -o bin/simple $(PLAYGROUND_DIR)/simple/*.go
 
 cadenceproxy: cadence-proxy-linux \
 	cadence-proxy-windows \
@@ -88,3 +93,4 @@ clean:
 	rm -f $(COMPRESSED_DIR)/$(LINUX).gz
 	rm -f $(COMPRESSED_DIR)/$(OSX).gz
 	rm -f $(NEON_TEST_DIR)/cadence-proxy.exe
+

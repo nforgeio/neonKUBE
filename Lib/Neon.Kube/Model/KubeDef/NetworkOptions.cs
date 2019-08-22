@@ -171,6 +171,14 @@ namespace Neon.Kube
         public bool MutualPodTLS { get; set; } = false;
 
         /// <summary>
+        /// Optionally sets the ingress ports.
+        /// </summary>
+        [JsonProperty(PropertyName = "Ingress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingress", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<Ingress> Ingress { get; set; } = new List<Ingress>();
+
+        /// <summary>
         /// Used for checking subnet conflicts below.
         /// </summary>
         private class SubnetDefinition
