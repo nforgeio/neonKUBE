@@ -172,9 +172,9 @@ namespace Neon.Cadence
     /// which you don't have source code.
     /// </para>
     /// <para>
-    /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflowInterface}(string, string, string, string)"/>
+    /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflowInterface}(string, string, string)"/>
     /// and <see cref="NewWorkflowStub{TWorkflowInterface}(WorkflowOptions, string)"/> and external
-    /// untyped stubs via <see cref="NewUntypedWorkflowStub(string, string, string, string)"/> and
+    /// untyped stubs via <see cref="NewUntypedWorkflowStub(string, string, WorkflowOptions)"/> and
     /// <see cref="NewUntypedWorkflowStub(string, WorkflowOptions)"/>.
     /// </para>
     /// <para>

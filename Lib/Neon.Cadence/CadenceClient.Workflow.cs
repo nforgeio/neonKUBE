@@ -162,13 +162,10 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Creates an untyped stub that can be used to execute, query, and signal a new workflow
-        /// specified using raw bytes.
+        /// Creates an untyped stub that can be used to start a single workflow execution.
         /// </summary>
-        /// <param name="workflowId">Specifies the workflow ID.</param>
-        /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
-        /// <param name="domain">Optionally overrides the client's default domain.</param>
+        /// <param name="workflowTypeName">Specifies the workflow type name.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
         /// <returns>The <see cref="IWorkflowStub"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -176,82 +173,57 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string workflowTypeName = null, string domain = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            EnsureNotDisposed();
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Creates an untyped stub that can be used to execute, query, and signal a new workflow
-        /// specified using an explicit type parameter.
-        /// </summary>
-        /// <param name="workflowTypeName">Specifies workflow type name (see the remarks).</param>
-        /// <param name="options">Optionally specifies the workflow options.</param>
-        /// <returns>The <see cref="IWorkflowStub"/>.</returns>
-        /// <remarks>
-        /// <para>
-        /// Unlike activity stubs, a workflow stub may only be used to launch a single
-        /// workflow.  You'll need to create a new stub for each workflow you wish to
-        /// invoke.
-        /// </para>
-        /// <para>
-        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
-        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
-        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
-        /// </para>
-        /// <para>
-        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
-        /// look like:
-        /// </para>
-        /// <code>
-        /// WORKFLOW-TYPE-NAME::METHOD-NAME
-        /// </code>
-        /// <para>
-        /// You'll need to use this format when calling workflows using external untyped stubs or 
-        /// from other languages.  The Java Cadence client works the same way.
-        /// </para>
-        /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
+        public IWorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return new WorkflowStub(this)
+            {
+                State            = WorkflowStub.StubState.NotStarted,
+                WorkflowTypeName = workflowTypeName,
+                Options          = options ?? new WorkflowOptions()
+            };
         }
 
         /// <summary>
-        /// Creates a typed workflow stub connected to a known workflow execution.
-        /// This can be used to signal and query the workflow via the type-safe
-        /// interface methods.
+        /// Creates an untyped stub for a known workflow execution.
         /// </summary>
-        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
-        /// <param name="workflowId">Specifies the workflow ID.</param>
-        /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="workflowTypeName">
-        /// Optionally specifies the workflow type name by overriding the fully 
-        /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
-        /// specified by a <see cref="WorkflowAttribute"/>.
-        /// </param>
-        /// <param name="domain">Optionally overrides the client's default domain.</param>
-        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
-        /// <remarks>
-        /// Unlike activity stubs, a workflow stub may only be used to launch a single
-        /// workflow.  You'll need to create a new stub for each workflow you wish to
-        /// invoke and then the first method called on a workflow stub must be
-        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
-        /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string workflowTypeName = null, string domain = null)
-            where TWorkflowInterface : class
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="workflowTypeName">The workflow type name.</param>
+        /// <returns></returns>
+        public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId, string workflowTypeName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return new WorkflowStub(this)
+            {
+                State = WorkflowStub.StubState.Started,
+                Execution = new WorkflowExecution(workflowId, runId)
+            };
+        }
+
+        /// <summary>
+        /// Creates an untyped stub for a known workflow execution.
+        /// </summary>
+        /// <param name="execution">The workflow execution.</param>
+        /// <param name="workflowTypeName">The workflow type name.</param>
+        /// <returns></returns>
+        public IWorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string workflowTypeName)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            EnsureNotDisposed();
+
+            return new WorkflowStub(this)
+            {
+                State     = WorkflowStub.StubState.Started,
+                Execution = execution
+            };
         }
 
         /// <summary>
@@ -279,6 +251,50 @@ namespace Neon.Cadence
             EnsureNotDisposed();
 
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName);
+        }
+
+        /// <summary>
+        /// Creates a typed workflow stub connected to a known workflow execution.
+        /// This can be used to signal and query the workflow via the type-safe
+        /// interface methods.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
+        /// <param name="workflowId">Specifies the workflow ID.</param>
+        /// <param name="runId">Optionally specifies the workflow's run ID.</param>
+        /// <param name="domain">Optionally specifies a domain that </param>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string domain = null)
+            where TWorkflowInterface : class
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates an untyped workflow stub to be used for launching a workflow.
+        /// </summary>
+        /// <param name="workflowTypeName">Specifies the workflow type name.</param>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <returns>The new <see cref="WorkflowStub"/>.</returns>
+        public IWorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            EnsureNotDisposed();
+
+            return new WorkflowStub(this)
+            {
+                WorkflowTypeName = workflowTypeName,
+                Options          = options
+            };
         }
 
         //---------------------------------------------------------------------

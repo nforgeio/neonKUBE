@@ -105,6 +105,11 @@ namespace Neon.Xunit.Cadence
         /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
         /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
+        /// <param name="noClient">
+        /// Optionally disables establishing a client connection when <c>true</c>
+        /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
+        /// will be set to <c>null</c> in this case.
+        /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
@@ -139,6 +144,7 @@ namespace Neon.Xunit.Cadence
             bool                keepOpen        = false,
             bool                noReset         = false,
             string              hostInterface   = null,
+            bool                noClient        = false,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -146,7 +152,18 @@ namespace Neon.Xunit.Cadence
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(settings, image, name, env, defaultDomain, defaultTaskList, keepConnection, keepOpen, emulateProxy);
+                    StartAsComposed(
+                        settings:        settings, 
+                        image:           image, 
+                        name:            name, 
+                        env:             env, 
+                        defaultDomain:   defaultDomain, 
+                        defaultTaskList: defaultTaskList, 
+                        keepConnection:  keepConnection,
+                        keepOpen:        keepOpen, 
+                        noReset:         noReset,
+                        noClient:        noClient, 
+                        emulateProxy:    emulateProxy);
                 });
         }
 
@@ -177,6 +194,11 @@ namespace Neon.Xunit.Cadence
         /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
         /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
+        /// <param name="noClient">
+        /// Optionally disables establishing a client connection when <c>true</c>
+        /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
+        /// will be set to <c>null</c> in this case.
+        /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
@@ -200,6 +222,7 @@ namespace Neon.Xunit.Cadence
             bool                keepOpen        = false,
             bool                noReset         = false,
             string              hostInterface   = null,
+            bool                noClient        = false,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -256,16 +279,24 @@ namespace Neon.Xunit.Cadence
                 this.settings       = settings;
                 this.keepConnection = keepConnection;
 
-                // Establish the Cadence connection.
-
-                Client = CadenceClient.ConnectAsync(settings).Result;
-
-                HttpClient = new HttpClient()
+                if (!noClient)
                 {
-                    BaseAddress = Client.ListenUri
-                };
+                    // Establish the Cadence connection.
+
+                    Client = CadenceClient.ConnectAsync(settings).Result;
+
+                    HttpClient = new HttpClient()
+                    {
+                        BaseAddress = Client.ListenUri
+                    };
+                }
             }
         }
+
+        /// <summary>
+        /// Returns the settings used to connect to the Cadence cluster.
+        /// </summary>
+        public CadenceSettings Settings => settings;
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> to be used to interact with Cadence.
