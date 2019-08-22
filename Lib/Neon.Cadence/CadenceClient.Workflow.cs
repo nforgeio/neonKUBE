@@ -166,21 +166,37 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
-        /// <returns>The <see cref="IWorkflowStub"/>.</returns>
+        /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
+        /// <para>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
         /// workflow.  You'll need to create a new stub for each workflow you wish to
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// and annotations to assign unique names to each.  Each workflow method is actually
+        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
+        /// or <c>null</c> name will simply be registered using the workflow type name.
+        /// </para>
+        /// <para>
+        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// type name and the method name, using <b>"::"</b> as the separator, like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPENAME::METHOD-NAME
+        /// </code>
+        /// </note>
         /// </remarks>
-        public IWorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)
             {
-                State            = WorkflowStub.StubState.NotStarted,
                 WorkflowTypeName = workflowTypeName,
                 Options          = options ?? new WorkflowOptions()
             };
@@ -192,8 +208,31 @@ namespace Neon.Cadence
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">The workflow run ID.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <returns></returns>
-        public IWorkflowStub NewUntypedWorkflowStub(string workflowId, string runId, string workflowTypeName)
+        /// <returns>The <see cref="WorkflowStub"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// and annotations to assign unique names to each.  Each workflow method is actually
+        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
+        /// or <c>null</c> name will simply be registered using the workflow type name.
+        /// </para>
+        /// <para>
+        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// type name and the method name, using <b>"::"</b> as the separator, like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPENAME::METHOD-NAME
+        /// </code>
+        /// </note>
+        /// </remarks>
+        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId, string workflowTypeName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
@@ -202,7 +241,6 @@ namespace Neon.Cadence
 
             return new WorkflowStub(this)
             {
-                State = WorkflowStub.StubState.Started,
                 Execution = new WorkflowExecution(workflowId, runId)
             };
         }
@@ -212,8 +250,31 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="execution">The workflow execution.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <returns></returns>
-        public IWorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string workflowTypeName)
+        /// <returns>The <see cref="WorkflowStub"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// and annotations to assign unique names to each.  Each workflow method is actually
+        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
+        /// or <c>null</c> name will simply be registered using the workflow type name.
+        /// </para>
+        /// <para>
+        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// type name and the method name, using <b>"::"</b> as the separator, like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPENAME::METHOD-NAME
+        /// </code>
+        /// </note>
+        /// </remarks>
+        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string workflowTypeName)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
@@ -221,36 +282,8 @@ namespace Neon.Cadence
 
             return new WorkflowStub(this)
             {
-                State     = WorkflowStub.StubState.Started,
                 Execution = execution
             };
-        }
-
-        /// <summary>
-        /// Creates a typed workflow stub that can be used to start as well as 
-        /// query and signal the workflow via the type-safe interface methods.
-        /// </summary>
-        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
-        /// <param name="options">Optionally specifies the workflow options.</param>
-        /// <param name="workflowTypeName">
-        /// Optionally specifies the workflow type name by overriding the fully 
-        /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
-        /// specified by a <see cref="WorkflowAttribute"/>.
-        /// </param>
-        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
-        /// <remarks>
-        /// Unlike activity stubs, a workflow stub may only be used to launch a single
-        /// workflow.  You'll need to create a new stub for each workflow you wish to
-        /// invoke and then the first method called on a workflow stub must be
-        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
-        /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null)
-            where TWorkflowInterface : class
-        {
-            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
-            EnsureNotDisposed();
-
-            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName);
         }
 
         /// <summary>
@@ -264,10 +297,27 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally specifies a domain that </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
+        /// <para>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
         /// workflow.  You'll need to create a new stub for each workflow you wish to
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// and annotations to assign unique names to each.  Each workflow method is actually
+        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
+        /// or <c>null</c> name will simply be registered using the workflow type name.
+        /// </para>
+        /// <para>
+        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// type name and the method name, using <b>"::"</b> as the separator, like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPENAME::METHOD-NAME
+        /// </code>
+        /// </note>
         /// </remarks>
         public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string domain = null)
             where TWorkflowInterface : class
@@ -285,7 +335,30 @@ namespace Neon.Cadence
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <returns>The new <see cref="WorkflowStub"/>.</returns>
-        public IWorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
+        /// <remarks>
+        /// <para>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// and annotations to assign unique names to each.  Each workflow method is actually
+        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
+        /// or <c>null</c> name will simply be registered using the workflow type name.
+        /// </para>
+        /// <para>
+        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// type name and the method name, using <b>"::"</b> as the separator, like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPENAME::METHOD-NAME
+        /// </code>
+        /// </note>
+        /// </remarks>
+        public WorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
@@ -295,6 +368,50 @@ namespace Neon.Cadence
                 WorkflowTypeName = workflowTypeName,
                 Options          = options
             };
+        }
+
+        /// <summary>
+        /// Creates a typed workflow stub that can be used to start as well as 
+        /// query and signal the workflow via the type-safe interface methods.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
+        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="workflowTypeName">
+        /// Optionally specifies the workflow type name by overriding the fully 
+        /// qualified <typeparamref name="TWorkflowInterface"/> type name or the name
+        /// specified by a <see cref="WorkflowAttribute"/>.
+        /// </param>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// and annotations to assign unique names to each.  Each workflow method is actually
+        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
+        /// or <c>null</c> name will simply be registered using the workflow type name.
+        /// </para>
+        /// <para>
+        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// type name and the method name, using <b>"::"</b> as the separator, like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPENAME::METHOD-NAME
+        /// </code>
+        /// </note>
+        /// </remarks>
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null)
+            where TWorkflowInterface : class
+        {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
+
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName);
         }
 
         //---------------------------------------------------------------------

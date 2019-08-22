@@ -99,12 +99,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Creates a new untyped <see cref="IWorkflowStub"/> from the dynamic stub.
+        /// Creates a new untyped <see cref="WorkflowStub"/> from the dynamic stub.
         /// </summary>
-        /// <returns>The new <see cref="IWorkflowStub"/>.</returns>
-        public IWorkflowStub ToUntyped()
+        /// <returns>The new <see cref="WorkflowStub"/>.</returns>
+        public WorkflowStub ToUntyped()
         {
-            return (IWorkflowStub)toUntyped.Invoke(this, Type.EmptyTypes);
+            return (WorkflowStub)toUntyped.Invoke(this, Type.EmptyTypes);
         }
     }
 }

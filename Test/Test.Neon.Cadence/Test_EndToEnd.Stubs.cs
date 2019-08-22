@@ -45,28 +45,106 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
-        public interface IWorkflowStubUntyped_Execute : IWorkflow
+        public interface ITestWorkflowStub_Execute : IWorkflow
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "wait-for-signals")]
+            Task<List<string>> GetSignalsAsync();
+
+            [WorkflowMethod(Name = "wait-for-queries")]
+            Task<List<string>> GetQueriesAsync();
+
+            [SignalMethod(name: "signal")]
+            Task SignalAsync(string signal);
+
+            [QueryMethod(name: "query")]
+            Task<string> QueryAsync(string query);
         }
 
-        [Workflow(AutoRegister = true, Name = nameof(WorkflowStubUntyped_Execute))]
-        public class WorkflowStubUntyped_Execute : WorkflowBase, IWorkflowStubUntyped_Execute
+        [Workflow(AutoRegister = true, Name = nameof(TestWorkflowStub_Execute))]
+        public class TestWorkflowStub_Execute : WorkflowBase, ITestWorkflowStub_Execute
         {
+            //-----------------------------------------------------------------
+            // Static members
+
+            private static bool isRunning = false;
+
+            public static void Reset()
+            {
+                isRunning = false;
+            }
+
+            public static async Task WaitUntilRunningAsync()
+            {
+                await NeonHelper.WaitForAsync(async () => await Task.FromResult(isRunning), TimeSpan.FromSeconds(maxWaitSeconds));
+            }
+
+            //-----------------------------------------------------------------
+            // Instance members
+
+            private List<string> signals = new List<string>();
+            private List<string> queries = new List<string>();
+
             public async Task<string> HelloAsync(string name)
             {
+                isRunning = true;
                 return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<List<string>> GetQueriesAsync()
+            {
+                isRunning = true;
+
+                // Wait to receive some queries.
+
+                await Workflow.SleepAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                return queries;
+            }
+
+            public async Task<List<string>> GetSignalsAsync()
+            {
+                isRunning = true;
+
+                // Wait to receive some signals.
+
+                await Workflow.SleepAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                return signals;
+            }
+
+            public async Task SignalAsync(string signal)
+            {
+                lock (signals)
+                {
+                    signals.Add(signal);
+                }
+
+                await Task.CompletedTask;
+            }
+
+            public async Task<string> QueryAsync(string query)
+            {
+                lock (queries)
+                {
+                    queries.Add(query);
+                }
+
+                return await Task.FromResult(query);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task WorkflowStub_Untyped_Execute()
+        public async Task WorkflowStub_Execute()
         {
+            TestWorkflowStub_Execute.Reset();
+
             // Use an untyped workflow stub to execute a workflow.
 
-            var stub      = client.NewUntypedWorkflowStub(nameof(WorkflowStubUntyped_Execute));
+            var stub      = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute));
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -79,11 +157,13 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task WorkflowStub_Untyped_Attach()
+        public async Task WorkflowStub_Attach()
         {
+            TestWorkflowStub_Execute.Reset();
+
             // Use an untyped workflow stub to execute a workflow.
 
-            var stub      = client.NewUntypedWorkflowStub(nameof(WorkflowStubUntyped_Execute));
+            var stub      = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute));
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -92,15 +172,39 @@ namespace TestCadence
             // Now connect another stub to the workflow and verify that we
             // can use it to obtain the result.
 
-            stub = client.NewUntypedWorkflowStub(execution.WorkflowId, execution.RunId, nameof(WorkflowStubUntyped_Execute));
+            stub = client.NewUntypedWorkflowStub(execution.WorkflowId, execution.RunId, nameof(TestWorkflowStub_Execute));
 
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
 
             // There's one more method override for attaching to an existing workflow.
 
-            stub = client.NewUntypedWorkflowStub(execution, nameof(WorkflowStubUntyped_Execute));
+            stub = client.NewUntypedWorkflowStub(execution, nameof(TestWorkflowStub_Execute));
 
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task WorkflowStub_Signal()
+        {
+            TestWorkflowStub_Execute.Reset();
+
+            // Use an untyped workflow stub to execute a workflow and then
+            // verify that we're able to send signals to it.
+
+            var stub = client.NewUntypedWorkflowStub($"{nameof(TestWorkflowStub_Execute)}::wait-for-signals");
+            
+            await stub.StartAsync();
+            await TestWorkflowStub_Execute.WaitUntilRunningAsync();
+
+            await stub.SignalAsync("signal", "my-signal-1");
+            await stub.SignalAsync("signal", "my-signal-2");
+
+            var received = await stub.GetResultAsync<List<string>>();
+
+            Assert.Equal(2, received.Count);
+            Assert.Contains("my-signal-1", received);
+            Assert.Contains("my-signal-2", received);
         }
     }
 }
