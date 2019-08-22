@@ -30,7 +30,7 @@ start_cassandra() {
 }
 
 wait_for_cassandra() {
-    server=`echo $HOST_IP | awk -F ',' '{print $1}'`
+    server=`echo $CASSANDRA_SEEDS | awk -F ',' '{print $1}'`
     until cqlsh --cqlversion=3.4.4 $server < /dev/null; do
         echo 'waiting for cassandra to start up'
         sleep 1
