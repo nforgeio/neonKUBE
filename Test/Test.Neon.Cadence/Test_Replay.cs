@@ -194,7 +194,7 @@ namespace TestCadence
                             // The other Cadence clients (GOLANG, Java,...) always report
                             // IsReplaying=FALSE when a workflow with no history is restarted,
                             // which is what's happening in this case.  This is a bit weird
-                            // but is BY DESIGN and will probably be extermely rare in real life.
+                            // but is BY DESIGN but will probably be very rare in real life.
                             //
                             //      https://github.com/uber-go/cadence-client/issues/821
 
