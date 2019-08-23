@@ -189,7 +189,16 @@ namespace TestCadence
                         }
                         else
                         {
-                            success = IsReplaying();
+                            // NOTE: 
+                            //
+                            // The other Cadence clients (GOLANG, Java,...) always report
+                            // IsReplaying=FALSE when a workflow with no history is restarted,
+                            // which is what's happening in this case.  This is a bit weird
+                            // but is BY DESIGN and will probably be extermely rare in real life.
+                            //
+                            //      https://github.com/uber-go/cadence-client/issues/821
+
+                            success = !Workflow.IsReplaying;
                         }
                         break;
 
@@ -205,7 +214,7 @@ namespace TestCadence
                         else
                         {
                             success = originalValue.Equals(await Workflow.GetVersionAsync("change", Workflow.DefaultVersion, 1));
-                            success = success || IsReplaying();
+                            success = success || Workflow.IsReplaying;
                         }
                         break;
 
@@ -232,18 +241,6 @@ namespace TestCadence
                 }
 
                 return await Task.FromResult(success);
-            }
-
-            private bool IsReplaying()
-            {
-                // $debug(jeff.lill): We're having some trouble with <see cref="Workflow.IsReplaying"/>
-                // being <c>false</c> when it should be <c>true</c> in the second run of the workflow.
-                // I'm going to temporarily ignore this while we investigate further.
-                //
-                // https://github.com/nforgeio/neonKUBE/issues/619
-
-                return Workflow.IsReplaying;
-                //return true;
             }
         }
 
