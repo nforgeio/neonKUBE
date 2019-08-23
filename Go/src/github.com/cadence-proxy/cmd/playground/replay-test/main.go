@@ -79,20 +79,21 @@ func ReplayWorkflow(ctx workflow.Context) (string, error) {
 	printRun()
 	printReplayStatus(ctx)
 
-	fmt.Println("Calling activity #1")
-	testActivity(ctx, "#1")
-	printReplayStatus(ctx)
-
-	fmt.Println("Calling activity #2")
-	testActivity(ctx, "#2")
-	printReplayStatus(ctx)
-
 	if firstRun {
 		firstRun = false
 		forceReplay(ctx)
 	}
 
-	fmt.Println("Calling activity #3")
+	fmt.Println("Calling activity #1")
+	testActivity(ctx, "#1")
+	printReplayStatus(ctx)
+
+	// if firstRun {
+	// 	firstRun = false
+	// 	forceReplay(ctx)
+	// }
+
+	fmt.Println("Calling activity #2")
 	testActivity(ctx, "#3")
 	printReplayStatus(ctx)
 
