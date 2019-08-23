@@ -69,7 +69,9 @@ type (
 		SetProxyMessage(value *ProxyMessage)
 		GetProxyMessage() *ProxyMessage
 		GetRequestID() int64
-		SetRequestID(int64)
+		SetRequestID(value int64)
+		GetClientID() int64
+		SetClientID(value int64)
 		GetType() messagetypes.MessageType
 		SetType(value messagetypes.MessageType)
 	}
@@ -304,6 +306,8 @@ func (proxyMessage *ProxyMessage) Serialize(allowUnspecified bool) ([]byte, erro
 // during a Clone() operation
 func (proxyMessage *ProxyMessage) CopyTo(target IProxyMessage) {
 	target.SetRequestID(proxyMessage.GetRequestID())
+	target.SetClientID(proxyMessage.GetClientID())
+	target.SetType(proxyMessage.GetType())
 }
 
 // Clone is implemented by derived classes to make a clone of themselves
@@ -338,6 +342,20 @@ func (proxyMessage *ProxyMessage) GetRequestID() int64 {
 // param value int64 -> the long value to set as a ProxyMessage request id
 func (proxyMessage *ProxyMessage) SetRequestID(value int64) {
 	proxyMessage.SetLongProperty("RequestId", value)
+}
+
+// GetClientID gets the ClientId property from a ProxyMessage's properties map
+//
+// returns int64 -> A int64 corresponding to a ProxyMessage's ClientId
+func (proxyMessage *ProxyMessage) GetClientID() int64 {
+	return proxyMessage.GetLongProperty("ClientId")
+}
+
+// SetClientID sets the ClientId property in a ProxyMessage's properties map
+//
+// param value int64 -> the int64 value to set as a ProxyMessage's ClientId
+func (proxyMessage *ProxyMessage) SetClientID(value int64) {
+	proxyMessage.SetLongProperty("ClientId", value)
 }
 
 // GetType gets the message type
