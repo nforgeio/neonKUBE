@@ -232,3 +232,7 @@ func isCanceledErr(err interface{}) bool {
 
 	return strings.Contains(errStr, "CanceledError")
 }
+
+func isForceReplayErr(err error) bool {
+	return strings.Contains(err.Error(), "force-replay")
+}

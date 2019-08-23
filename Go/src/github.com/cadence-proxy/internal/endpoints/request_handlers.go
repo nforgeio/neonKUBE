@@ -469,6 +469,10 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 		// workflow failed
 		case error:
+			if isForceReplayErr(s) {
+				panic("force-replay")
+			}
+
 			logger.Error("Workflow Failed With Error",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
