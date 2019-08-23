@@ -134,6 +134,17 @@ namespace Neon.Cadence
         private static Dictionary<string, ActivityRegistration>   nameToRegistration = new Dictionary<string, ActivityRegistration>();
 
         /// <summary>
+        /// Restores the class to its initial state.
+        /// </summary>
+        internal static void Reset()
+        {
+            lock (syncLock)
+            {
+                idToActivity.Clear();
+            }
+        }
+
+        /// <summary>
         /// Prepends the Cadence client ID to the activity type name and optional
         /// activity method attribute name to generate the key used to dereference the 
         /// <see cref="nameToRegistration"/> dictionary.

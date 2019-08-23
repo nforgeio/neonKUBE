@@ -53,6 +53,7 @@ namespace Neon.Xunit.Cadence
         private CadenceSettings     settings;
         private CadenceClient       client;
         private bool                keepConnection;
+        private bool                noReset;
 
         /// <summary>
         /// The default domain configured for <see cref="CadenceFixture"/> clients.
@@ -104,6 +105,11 @@ namespace Neon.Xunit.Cadence
         /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
         /// will be set to <c>null</c> in this case.
         /// </param>
+        /// <param name="noReset">
+        /// Optionally prevents the fixture from calling <see cref="CadenceClient.Reset()"/> to
+        /// put the Cadence client library into its initial state before the fixture starts as well
+        /// as when the fixture itself is reset.
+        /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
@@ -138,6 +144,7 @@ namespace Neon.Xunit.Cadence
             bool                keepOpen        = false,
             string              hostInterface   = null,
             bool                noClient        = false,
+            bool                noReset         = false,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -155,6 +162,7 @@ namespace Neon.Xunit.Cadence
                         keepConnection:  keepConnection,
                         keepOpen:        keepOpen, 
                         noClient:        noClient, 
+                        noReset:         noReset,
                         emulateProxy:    emulateProxy);
                 });
         }
@@ -185,6 +193,11 @@ namespace Neon.Xunit.Cadence
         /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
         /// will be set to <c>null</c> in this case.
         /// </param>
+        /// <param name="noReset">
+        /// Optionally prevents the fixture from calling <see cref="CadenceClient.Reset()"/> to
+        /// put the Cadence client library into its initial state before the fixture starts as well
+        /// as when the fixture itself is reset.
+        /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
         /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
@@ -208,6 +221,7 @@ namespace Neon.Xunit.Cadence
             bool                keepOpen        = false,
             string              hostInterface   = null,
             bool                noClient        = false,
+            bool                noReset         = false,
             bool                emulateProxy    = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -223,6 +237,15 @@ namespace Neon.Xunit.Cadence
                 else
                 {
                     Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{hostInterface}] is not a valid IPv4 address.");
+                }
+
+                // Reset CadenceClient to its initial state.
+
+                this.noReset = noReset;
+
+                if (!noReset)
+                {
+                    CadenceClient.Reset();
                 }
 
                 // Start the Cadence container.
@@ -344,6 +367,11 @@ namespace Neon.Xunit.Cadence
         /// </summary>
         public override void Reset()
         {
+            if (!noReset)
+            {
+                CadenceClient.Reset();
+            }
+
             if (Client != null)
             {
                 Client.Dispose();

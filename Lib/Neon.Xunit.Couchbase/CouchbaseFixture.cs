@@ -78,7 +78,7 @@ namespace Neon.Xunit.Couchbase
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CouchbaseSettings, string, string, string[], string, string, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CouchbaseSettings, string, string, string[], string, string, bool, string)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>

@@ -592,10 +592,10 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.domain        = ___StubHelper.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
-            // Generate the method that converts the instance into a new untyped [IWorkflowStub].
+            // Generate the method that converts the instance into a new untyped [WorkflowStub].
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public IWorkflowStub ToUntyped()");
+            sbSource.AppendLine($"        public WorkflowStub ToUntyped()");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            return ___StubHelper.NewWorkflowStub(client, workflowTypeName, options);");
             sbSource.AppendLine($"        }}");

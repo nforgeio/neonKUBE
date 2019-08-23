@@ -64,6 +64,7 @@ namespace TestCadence
                 Assert.Equal(InternalMessageTypes.Unspecified, message.Type);
                 Assert.Empty(message.Properties);
                 Assert.Empty(message.Attachments);
+                Assert.Equal(0, message.ClientId);
 
                 // Message with args and attachments.
 
@@ -105,6 +106,12 @@ namespace TestCadence
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Attachments[0]);
                 Assert.Empty(message.Attachments[1]);
                 Assert.Null(message.Attachments[2]);
+
+                // ClientId property
+
+                message.ClientId = 444;
+
+                Assert.Equal(444, message.ClientId);
             }
         }
 

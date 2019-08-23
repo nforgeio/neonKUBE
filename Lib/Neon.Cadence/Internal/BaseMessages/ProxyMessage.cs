@@ -547,6 +547,7 @@ namespace Neon.Cadence.Internal
         /// </remarks>
         protected virtual void CopyTo(ProxyMessage target)
         {
+            target.ClientId = this.ClientId;
         }
 
         //---------------------------------------------------------------------
@@ -913,6 +914,19 @@ namespace Neon.Cadence.Internal
             {
                 Properties[key] = Convert.ToBase64String(value);
             }
+        }
+
+        //---------------------------------------------------------------------
+        // Common message properties.
+
+        /// <summary>
+        /// Identifies the Cadence service client the request references.  This will
+        /// be zero for the few messages that don't reference a client.
+        /// </summary>
+        public long ClientId
+        {
+            get => GetLongProperty(PropertyNames.ClientId);
+            set => SetLongProperty(PropertyNames.ClientId, value);
         }
     }
 }

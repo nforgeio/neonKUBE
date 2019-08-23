@@ -38,16 +38,6 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the Cadence service client the request references.  This will
-        /// be zero for the few messages that don't reference a client.
-        /// </summary>
-        public long ClientId
-        {
-            get => GetLongProperty(PropertyNames.ClientId);
-            set => SetLongProperty(PropertyNames.ClientId, value);
-        }
-
-        /// <summary>
         /// Uniquely identifies this request.
         /// </summary>
         public long RequestId
@@ -89,7 +79,6 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ProxyRequest)target;
 
-            typedTarget.ClientId      = this.ClientId;
             typedTarget.RequestId     = this.RequestId;
             typedTarget.IsCancellable = this.IsCancellable;
         }
