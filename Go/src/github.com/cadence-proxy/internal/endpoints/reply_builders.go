@@ -330,6 +330,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyReply {
 	}
 
 	reply.SetRequestID(request.GetRequestID())
+	reply.SetClientID(request.GetClientID())
 	if v, ok := reply.(messages.IProxyReply); ok {
 		return v
 	}

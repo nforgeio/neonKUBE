@@ -18,6 +18,7 @@
 package endpoints
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -57,7 +58,12 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 
 	// check for ForceReplay
 	if reply.GetForceReplay() {
-		panic("force-replay")
+		err := op.SendChannel(nil, cadenceerrors.NewCadenceError(errors.New("force-replay")))
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	// check for ContinueAsNew

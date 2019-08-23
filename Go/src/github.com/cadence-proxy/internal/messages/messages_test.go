@@ -5880,6 +5880,7 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		s.Equal(messagetypes.Unspecified, v.Type)
 		s.Empty(v.Properties)
 		s.Empty(v.Attachments)
+		s.Equal(int64(0), v.GetClientID())
 	}
 
 	// new proxy message to fill
@@ -5907,6 +5908,10 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		v.Attachments = append(v.Attachments, make([]byte, 0))
 		v.Attachments = append(v.Attachments, nil)
 
+		// clientID
+		v.SetClientID(int64(666))
+		s.Equal(int64(666), v.GetClientID())
+
 		// serialize the new message
 		serializedMessage, err := v.Serialize(true)
 		s.NoError(err)
@@ -5924,12 +5929,13 @@ func (s *UnitTestSuite) TestProxyMessage() {
 
 		// type and property values
 		s.Equal(messagetypes.Unspecified, v.Type)
-		s.Equal(6, len(v.Properties))
+		s.Equal(7, len(v.Properties))
 		s.Equal("1", *v.Properties["One"])
 		s.Equal("2", *v.Properties["Two"])
 		s.Empty(v.Properties["Empty"])
 		s.Nil(v.Properties["Nil"])
 		s.Equal("c29tZSBkYXRhIHdpdGggACBhbmQg77u/", *v.Properties["Bytes"])
+		s.Equal(int64(666), v.GetClientID())
 
 		cadenceError := cadenceerrors.NewCadenceErrorEmpty()
 		v.GetJSONProperty("Error", cadenceError)
@@ -6002,12 +6008,15 @@ func (s *UnitTestSuite) TestProxyReply() {
 	if v, ok := message.(*messages.ProxyReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
+		s.Equal(int64(0), v.GetClientID())
 
 		// Round-trip
 		v.SetRequestID(int64(555))
+		v.SetClientID(int64(666))
 		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
 
 		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetClientID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
 		s.Equal("foo", *v.GetError().String)
 
@@ -6027,6 +6036,7 @@ func (s *UnitTestSuite) TestProxyReply() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.Custom, v.GetError().GetType())
 		s.Equal("foo", *v.GetError().String)
+		s.Equal(int64(666), v.GetClientID())
 	}
 }
 
