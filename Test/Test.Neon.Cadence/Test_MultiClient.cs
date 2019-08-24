@@ -70,14 +70,58 @@ namespace TestCadence
         {
         }
 
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowWithResult1: IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        public class WorkflowWithResult1 : WorkflowBase, IWorkflowWithResult1
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"WF1 says: Hello {name}!");
+            }
+        }
+
+        public interface IWorkflowWithResult2 : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        public class WorkflowWithResult2 : WorkflowBase, IWorkflowWithResult2
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"WF2 says: Hello {name}!");
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Connect_Twice()
         {
+            // We're going to establish two client connections, register a
+            // workflow on each, and then verify that these workflows work.
+
             using (var client1 = await CadenceClient.ConnectAsync(fixture.Settings))
             {
+                await client1.RegisterWorkflowAsync<WorkflowWithResult1>();
+                await client1.StartWorkerAsync();
+
                 using (var client2 = await CadenceClient.ConnectAsync(fixture.Settings))
                 {
+                    await client2.RegisterWorkflowAsync<WorkflowWithResult2>();
+                    await client2.StartWorkerAsync();
+
+                    var stub1 = client1.NewWorkflowStub<IWorkflowWithResult1>();
+                    var stub2 = client2.NewWorkflowStub<IWorkflowWithResult2>();
+
+                    Assert.Equal("WF1 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
+                    Assert.Equal("WF2 says: Hello Jeff!", await stub2.HelloAsync("Jeff"));
                 }
             }
         }
