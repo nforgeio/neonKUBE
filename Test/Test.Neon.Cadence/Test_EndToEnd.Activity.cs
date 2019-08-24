@@ -208,7 +208,7 @@ namespace TestCadence
         {
             public static string Name { get; private set; } = null;
 
-            public static void Reset()
+            public new static void Reset()
             {
                 Name = null;
             }

@@ -65,7 +65,6 @@ namespace TestCadence
 
         private CadenceFixture  fixture;
         private CadenceClient   client;
-        private HttpClient      proxyClient;
 
         public Test_Replay(CadenceFixture fixture)
         {
@@ -86,9 +85,8 @@ namespace TestCadence
 
             if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
-                this.fixture     = fixture;
-                this.client      = fixture.Client;
-                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+                this.fixture = fixture;
+                this.client  = fixture.Client;
 
                 // Auto register the test workflow and activity implementations.
 
@@ -100,19 +98,13 @@ namespace TestCadence
             }
             else
             {
-                this.fixture     = fixture;
-                this.client      = fixture.Client;
-                this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+                this.fixture = fixture;
+                this.client  = fixture.Client;
             }
         }
 
         public void Dispose()
         {
-            if (proxyClient != null)
-            {
-                proxyClient.Dispose();
-                proxyClient = null;
-            }
         }
 
         //---------------------------------------------------------------------
@@ -121,7 +113,7 @@ namespace TestCadence
         {
             Nop,
             GetVersion,
-            GetWorkflowExecution,
+            WorkflowExecution,
             MutableSideEffect,
             MutableSideEffectGeneric,
             SideEffect,
@@ -137,6 +129,21 @@ namespace TestCadence
             ChildWorkflow,
             Activity,
             LocalActivity
+        }
+
+        public interface IWorkflowReplayHello : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowReplayHello : WorkflowBase, IWorkflowReplayHello
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
         }
 
         public interface IReplayActivity : IActivity
@@ -167,15 +174,36 @@ namespace TestCadence
             private static bool     firstPass = true;
             private static object   originalValue;
 
-            public static void Reset()
+            public new static void Reset()
             {
                 firstPass = true;
             }
 
+            /// <summary>
+            /// Some workflow operations like <see cref="Workflow.SideEffectAsync{T}(Func{T})"/> don't
+            /// actually indicate the end of a decision task by themselves.  We'll use this method in
+            /// these cases to run a local activity which will do this.
+            /// </summary>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            private async Task DecisionAsync()
+            {
+                var stub = Workflow.NewActivityStub<IReplayActivity>();
+
+                await stub.RunAsync("test");
+            }
+
             public async Task<bool> RunAsync(ReplayTest test)
             {
-                var     stub    = Workflow.NewLocalActivityStub<IReplayActivity, ReplayActivity>();
-                bool    success = false;
+                var success = false;
+
+                if (test != ReplayTest.Nop)
+                {
+                    // This ensures that the workflow has some history so that when
+                    // Cadence restarts the workflow it will be treated as a replay
+                    // instead of an initial execution.
+
+                    await DecisionAsync();
+                }
 
                 switch (test)
                 {
@@ -214,16 +242,110 @@ namespace TestCadence
                         else
                         {
                             success = originalValue.Equals(await Workflow.GetVersionAsync("change", Workflow.DefaultVersion, 1));
-                            success = success || Workflow.IsReplaying;
+                            success = success && Workflow.IsReplaying;
                         }
                         break;
 
-                    case ReplayTest.GetWorkflowExecution:
+                    case ReplayTest.WorkflowExecution:
+
+                        var helloStub = Workflow.Client.NewWorkflowStub<IWorkflowReplayHello>();
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await helloStub.HelloAsync("Jeff");
+
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await helloStub.HelloAsync("Jeff"));
+                            success = success && Workflow.IsReplaying;
+                        }
+                        break;
+
                     case ReplayTest.MutableSideEffect:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.MutableSideEffectAsync(typeof(string), "value", () => "my-value");
+
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.MutableSideEffectAsync(typeof(string), "value", () => "my-value"));
+                            success = success && Workflow.IsReplaying;
+                        }
+                        break;
+
                     case ReplayTest.MutableSideEffectGeneric:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.MutableSideEffectAsync<string>("value", () => "my-value");
+
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.MutableSideEffectAsync<string>("value", () => "my-value"));
+                            success = success && Workflow.IsReplaying;
+                        }
+                        break;
+
                     case ReplayTest.SideEffect:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.SideEffectAsync(typeof(string), () => "my-value");
+
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.SideEffectAsync(typeof(string), () => "my-value"));
+                            success = success && Workflow.IsReplaying;
+                        }
+                        break;
+
                     case ReplayTest.SideEffectGeneric:
+
+                        if (firstPass)
+                        {
+                            firstPass = false;
+                            originalValue = await Workflow.SideEffectAsync<string>(() => "my-value");
+
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.SideEffectAsync<string>(() => "my-value"));
+                            success = success && Workflow.IsReplaying;
+                        }
+                        break;
+
                     case ReplayTest.NewGuid:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.NewGuidAsync();
+
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            var v = await Workflow.NewGuidAsync();
+
+                            success = originalValue.Equals(await Workflow.NewGuidAsync());
+                            success = success && Workflow.IsReplaying;
+                        }
+                        break;
+
                     case ReplayTest.NextRandomDouble:
                     case ReplayTest.NextRandom:
                     case ReplayTest.NextRandomMax:
@@ -270,16 +392,15 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.GetVersion));
         }
 
-#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task GetWorkflowExecution()
+        public async Task WorkflowExecution()
         {
             WorkflowReplay.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
 
-            Assert.True(await stub.RunAsync(ReplayTest.GetWorkflowExecution));
+            Assert.True(await stub.RunAsync(ReplayTest.WorkflowExecution));
         }
 
         [Fact]
@@ -337,6 +458,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NewGuid));
         }
 
+#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task NextRandomDouble()

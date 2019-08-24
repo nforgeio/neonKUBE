@@ -198,6 +198,7 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       executeActivityAsync;           // from: Workflow
             private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
             private static MethodInfo       activityOptionsNormalize;       // from: ActivityOptions
+            private static MethodInfo       localActivityOptionsNormalize;  // from: LocalActivityOptions
             private static MethodInfo       childWorkflowOptionsNormalize;  // from: ChildWorkflowOptions
             private static MethodInfo       workflowOptionsNormalize;       // from: WorkflowOptions
 
@@ -223,6 +224,7 @@ namespace Neon.Cadence.Internal
                 executeActivityAsync          = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
                 executeLocalActivityAsync     = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
                 activityOptionsNormalize      = NeonHelper.GetMethod(typeof(ActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(ActivityOptions));
+                localActivityOptionsNormalize = NeonHelper.GetMethod(typeof(LocalActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(LocalActivityOptions));
                 childWorkflowOptionsNormalize = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(ChildWorkflowOptions));
                 workflowOptionsNormalize      = NeonHelper.GetMethod(typeof(WorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(WorkflowOptions));
             }
@@ -327,6 +329,12 @@ namespace Neon.Cadence.Internal
             public static ActivityOptions NormalizeOptions(CadenceClient client, ActivityOptions options)
             {
                 return (ActivityOptions)activityOptionsNormalize.Invoke(null, new object[] { client, options });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static LocalActivityOptions NormalizeOptions(CadenceClient client, LocalActivityOptions options)
+            {
+                return (LocalActivityOptions)localActivityOptionsNormalize.Invoke(null, new object[] { client, options });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1189,7 +1197,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.isLocal             = true;");
             sbSource.AppendLine($"            this.activityType        = activityType;");
             sbSource.AppendLine($"            this.activityConstructor = activityType.GetConstructor(Type.EmptyTypes);");
-            sbSource.AppendLine($"            this.localOptions        = localOptions ?? new LocalActivityOptions();");
+            sbSource.AppendLine($"            this.localOptions        = ___StubHelper.Normalize(client, localOptions);");
             sbSource.AppendLine();
             sbSource.AppendLine($"            if (this.activityConstructor == null)");
             sbSource.AppendLine($"            {{");
