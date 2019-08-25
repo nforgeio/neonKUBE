@@ -380,7 +380,7 @@ namespace Couchbase
         /// <param name="bucket">The bucket.</param>
         public static async Task WaitForIndexerAsync(this IBucket bucket)
         {
-            var queryRequest = QueryRequest.Create($"select * from `{bucket.Name}` limit 0")
+            var queryRequest = QueryRequest.Create($"select * from `{bucket.Name}` limit 1")
                 .ScanConsistency(ScanConsistency.RequestPlus);
 
             await bucket.QueryAsync<dynamic>(queryRequest);
