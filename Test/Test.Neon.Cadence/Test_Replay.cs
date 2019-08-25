@@ -237,12 +237,15 @@ namespace TestCadence
                             firstPass     = false;
                             originalValue = await Workflow.GetVersionAsync("change", Workflow.DefaultVersion, 1);
 
+                            await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
                             success = originalValue.Equals(await Workflow.GetVersionAsync("change", Workflow.DefaultVersion, 1));
                             success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
                         }
                         break;
 
@@ -358,7 +361,6 @@ namespace TestCadence
                     case ReplayTest.LocalActivity:
                     default:
 
-                        success = false;
                         break;
                 }
 

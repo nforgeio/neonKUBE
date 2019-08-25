@@ -1197,7 +1197,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.isLocal             = true;");
             sbSource.AppendLine($"            this.activityType        = activityType;");
             sbSource.AppendLine($"            this.activityConstructor = activityType.GetConstructor(Type.EmptyTypes);");
-            sbSource.AppendLine($"            this.localOptions        = ___StubHelper.Normalize(client, localOptions);");
+            sbSource.AppendLine($"            this.localOptions        = ___StubHelper.NormalizeOptions(client, localOptions);");
             sbSource.AppendLine();
             sbSource.AppendLine($"            if (this.activityConstructor == null)");
             sbSource.AppendLine($"            {{");
