@@ -100,7 +100,7 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
 	proxyMessage := message.GetProxyMessage()
-	logger.Debug("Sending request to Neon.Cadence client",
+	logger.Debug("Sending message to .net client",
 		zap.String("Address", replyAddress),
 		zap.String("MessageType", proxyMessage.Type.String()),
 		zap.Int("ProcessId", os.Getpid()),
@@ -118,7 +118,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	buf := bytes.NewBuffer(content)
 	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
 	if err != nil {
-		logger.Error("Error creating Neon.Cadence Library request", zap.Error(err))
+		logger.Error("Error creating .net client request", zap.Error(err))
 		return nil, err
 	}
 
@@ -130,7 +130,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// initialize the http.Client and send the request
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		logger.Error("Error sending Neon.Cadence Library request", zap.Error(err))
+		logger.Error("Error sending .net client request", zap.Error(err))
 		return nil, err
 	}
 
