@@ -47,8 +47,11 @@ namespace TestCadence
     //
     //      https://github.com/nforgeio/neonKUBE/issues/620
     //
-    // This gist is that we need to disable sticky execution for the worker and
-    // then the workflow will replay after sleeping.
+    // This gist is that we need to panic within the workflow.  Note that workflows
+    // with no recorded history that fail will be considered to be an initial run
+    // even if it isn't.  This seems a bit odd, but Maxim says this is by design
+    // (and probably very unlikely to happen in the wild).  So, we're going to
+    // ensure that all tests (besides the NOP one) have a recorded decision task.
     //
     // So we're going to implement a workflow that accepts a parameter that specifies
     // the operation to be tested and uses a static field to indicate whether the
@@ -258,12 +261,15 @@ namespace TestCadence
                             firstPass     = false;
                             originalValue = await helloStub.HelloAsync("Jeff");
 
+                            await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
                             success = originalValue.Equals(await helloStub.HelloAsync("Jeff"));
                             success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
                         }
                         break;
 
@@ -274,12 +280,15 @@ namespace TestCadence
                             firstPass     = false;
                             originalValue = await Workflow.MutableSideEffectAsync(typeof(string), "value", () => "my-value");
 
+                            await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
                             success = originalValue.Equals(await Workflow.MutableSideEffectAsync(typeof(string), "value", () => "my-value"));
                             success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
                         }
                         break;
 
@@ -290,12 +299,15 @@ namespace TestCadence
                             firstPass     = false;
                             originalValue = await Workflow.MutableSideEffectAsync<string>("value", () => "my-value");
 
+                            await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
                             success = originalValue.Equals(await Workflow.MutableSideEffectAsync<string>("value", () => "my-value"));
                             success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
                         }
                         break;
 
@@ -306,12 +318,15 @@ namespace TestCadence
                             firstPass     = false;
                             originalValue = await Workflow.SideEffectAsync(typeof(string), () => "my-value");
 
+                            await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
                             success = originalValue.Equals(await Workflow.SideEffectAsync(typeof(string), () => "my-value"));
                             success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
                         }
                         break;
 
@@ -322,12 +337,15 @@ namespace TestCadence
                             firstPass = false;
                             originalValue = await Workflow.SideEffectAsync<string>(() => "my-value");
 
+                            await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
                             success = originalValue.Equals(await Workflow.SideEffectAsync<string>(() => "my-value"));
                             success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
                         }
                         break;
 
@@ -338,29 +356,224 @@ namespace TestCadence
                             firstPass     = false;
                             originalValue = await Workflow.NewGuidAsync();
 
+                            await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
-                            var v = await Workflow.NewGuidAsync();
-
                             success = originalValue.Equals(await Workflow.NewGuidAsync());
                             success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
                         }
                         break;
 
                     case ReplayTest.NextRandomDouble:
-                    case ReplayTest.NextRandom:
-                    case ReplayTest.NextRandomMax:
-                    case ReplayTest.NextRandomMinMax:
-                    case ReplayTest.NextRandomBytes:
-                    case ReplayTest.GetLastCompletionResult:
-                    case ReplayTest.GetIsSetLastCompletionResult:
-                    case ReplayTest.ChildWorkflow:
-                    case ReplayTest.Activity:
-                    case ReplayTest.LocalActivity:
-                    default:
 
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.NextRandomDoubleAsync();
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.NextRandomDoubleAsync());
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.NextRandom:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.NextRandomAsync();
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.NextRandomAsync());
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.NextRandomMax:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.NextRandomAsync(10000);
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.NextRandomAsync(10000));
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.NextRandomMinMax:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.NextRandomAsync(100, 1000);
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.NextRandomAsync(100, 1000));
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.NextRandomBytes:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.NextRandomBytesAsync(32);
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = NeonHelper.ArrayEquals((byte[])originalValue, await Workflow.NextRandomBytesAsync(32));
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.GetLastCompletionResult:
+
+                        // $todo(jeff.lill):
+                        //
+                        // This case is a bit tricker to test.  We'd need to schedule the
+                        // workflow with a CRON schedule, let it run once and then perform
+                        // this test for the second run.
+                        //
+                        // I'm going just fail the test here and skip the actual test case.
+                        // Testing this case is not worth the trouble right now.
+#if TODO
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.GetLastCompletionResultAsync<object>();
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.GetLastCompletionResultAsync<object>());
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+#else
+                        success = false;
+#endif
+                        break;
+
+                    case ReplayTest.GetIsSetLastCompletionResult:
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await Workflow.IsSetLastCompletionResultAsync();
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await Workflow.IsSetLastCompletionResultAsync());
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.ChildWorkflow:
+
+                        var childStub = Workflow.NewChildWorkflowStub<IWorkflowReplayHello>();
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await childStub.HelloAsync("Jeff");
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await childStub.HelloAsync("Jeff"));
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.Activity:
+
+                        var localActivityStub = Workflow.NewLocalActivityStub<IReplayActivity, ReplayActivity>();
+
+                        if (firstPass)
+                        {
+                            firstPass     = false;
+                            originalValue = await localActivityStub.RunAsync("Hello World!");
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await localActivityStub.RunAsync("Hello World!"));
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.LocalActivity:
+
+                        var activityStub = Workflow.NewActivityStub<IReplayActivity>();
+
+                        if (firstPass)
+                        {
+                            firstPass = false;
+                            originalValue = await activityStub.RunAsync("Hello World!");
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await activityStub.RunAsync("Hello World!"));
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
                         break;
                 }
 
@@ -376,11 +589,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowReplay>();
 
-            var result = await stub.RunAsync(ReplayTest.Nop);
-
-            Assert.True(result);
-
-            //Assert.True(await stub.RunAsync(ReplayTest.Nop));
+            Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
         [Fact]
@@ -460,7 +669,6 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NewGuid));
         }
 
-#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task NextRandomDouble()
@@ -516,7 +724,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.NextRandomBytes));
         }
 
-        [Fact]
+        [Fact(Skip = "Not Implemented")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task GetLastCompletionResult()
         {
@@ -570,6 +778,5 @@ namespace TestCadence
 
             Assert.True(await stub.RunAsync(ReplayTest.LocalActivity));
         }
-#endif
     }
 }
