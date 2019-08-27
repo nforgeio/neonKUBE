@@ -416,6 +416,7 @@ namespace Neon.Cadence
 
             lock (staticSyncLock)
             {
+                InternalLogLevel   = Diagnostics.LogLevel.None;
                 stickyCacheSizeSet = false;
                 nextClientId       = 0;
                 nextRequestId      = 0;
@@ -439,6 +440,13 @@ namespace Neon.Cadence
                 }
             }
         }
+
+        /// <summary>
+        /// Specifies the logging level for low-level Cadence and <b>cadence-proxy</b>
+        /// related events.  This defaults to <see cref="Neon.Diagnostics.LogLevel.None"/>
+        /// but it may be useful to enable this when debugging.
+        /// </summary>
+        public static Neon.Diagnostics.LogLevel InternalLogLevel { get; set; } = Neon.Diagnostics.LogLevel.None;
 
         /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
@@ -1069,7 +1077,8 @@ namespace Neon.Cadence.WorkflowStub
                             new InitializeRequest()
                             {
                                 LibraryAddress = ListenUri.Host,
-                                LibraryPort    = ListenUri.Port
+                                LibraryPort    = ListenUri.Port,
+                                LogLevel       = InternalLogLevel
                             };
 
                         CallProxyAsync(initializeRequest).Wait();
