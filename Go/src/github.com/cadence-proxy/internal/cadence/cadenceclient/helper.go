@@ -387,14 +387,12 @@ func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRe
 	domain := registerDomainRequest.GetName()
 	err := helper.DomainClient.Register(ctx, registerDomainRequest)
 	if err != nil {
-		if _, ok := err.(*cadenceshared.DomainAlreadyExistsError); !ok {
-			helper.Logger.Error("failed to register domain",
-				zap.String("Domain Name", domain),
-				zap.Error(err),
-			)
+		helper.Logger.Error("failed to register domain",
+			zap.String("Domain Name", domain),
+			zap.Error(err),
+		)
 
-			return err
-		}
+		return err
 	}
 	helper.Logger.Debug("domain successfully registered", zap.String("Domain Name", domain))
 
