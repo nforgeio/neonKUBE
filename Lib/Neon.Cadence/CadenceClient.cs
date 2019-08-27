@@ -738,6 +738,13 @@ namespace Neon.Cadence
 
                     switch (request.Type)
                     {
+                        case InternalMessageTypes.LogRequest:
+
+                            // $todo(jeff.lill): Record logs from cadence-proxy
+
+                            await client.ProxyReplyAsync(request, new LogReply());
+                            break;
+
                         case InternalMessageTypes.WorkflowInvokeRequest:
                         case InternalMessageTypes.WorkflowSignalInvokeRequest:
                         case InternalMessageTypes.WorkflowQueryInvokeRequest:

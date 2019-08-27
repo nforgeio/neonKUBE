@@ -1605,5 +1605,122 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_LogRequest()
+        {
+            LogRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new LogRequest();
+
+                Assert.Equal(InternalMessageTypes.LogReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<LogRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(DateTime.MinValue, message.TimeUtc);
+                Assert.Equal(0, (int)message.LogLevel);
+                Assert.False(message.FromCadence);
+                Assert.Null(message.LogMessage);
+
+                // Round-trip
+
+                message.ClientId    = 444;
+                message.RequestId   = 555;
+                message.TimeUtc     = new DateTime(2019, 8, 27);
+                message.FromCadence = true;
+                message.LogLevel    = Neon.Diagnostics.LogLevel.Info;
+                message.LogMessage  = "Hello World!";
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new DateTime(2019, 8, 27), message.TimeUtc);
+                Assert.True(message.FromCadence);
+                Assert.Equal(Neon.Diagnostics.LogLevel.Info, message.LogLevel);
+                Assert.Equal("Hello World!", message.LogMessage);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<LogRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new DateTime(2019, 8, 27), message.TimeUtc);
+                Assert.True(message.FromCadence);
+                Assert.Equal(Neon.Diagnostics.LogLevel.Info, message.LogLevel);
+                Assert.Equal("Hello World!", message.LogMessage);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new DateTime(2019, 8, 27), message.TimeUtc);
+                Assert.True(message.FromCadence);
+                Assert.Equal(Neon.Diagnostics.LogLevel.Info, message.LogLevel);
+                Assert.Equal("Hello World!", message.LogMessage);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_LogReply()
+        {
+            LogReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new LogReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<LogReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.ClientId  = 444;
+                message.RequestId = 555;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<LogReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
     }
 }
