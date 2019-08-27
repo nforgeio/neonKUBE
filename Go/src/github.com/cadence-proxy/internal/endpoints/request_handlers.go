@@ -126,9 +126,10 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 			},
 		)
 		if err != nil {
-			buildReply(reply, cadenceerrors.NewCadenceError(err))
-
-			return reply
+			if _, ok := err.(*cadenceshared.DomainAlreadyExistsError); !ok {
+				buildReply(reply, cadenceerrors.NewCadenceError(err))
+				return reply
+			}
 		}
 	}
 
