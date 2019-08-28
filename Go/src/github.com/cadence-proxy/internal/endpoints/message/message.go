@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package message
 
 import (
 	"context"
@@ -26,8 +26,9 @@ import (
 
 	"go.uber.org/zap"
 
-	globals "github.com/cadence-proxy/internal"
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
+	"github.com/cadence-proxy/internal"
+	proxyerror "github.com/cadence-proxy/internal/cadence/error"
+	common "github.com/cadence-proxy/internal/endpoints/common"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -48,18 +49,16 @@ var (
 //
 // param r *http.Request
 func MessageHandler(w http.ResponseWriter, r *http.Request) {
-	logger = Instance.Logger
-
 	// check if the request has the correct content type
 	// and is an http.PUT request
-	statusCode, err := checkRequestValidity(w, r)
+	statusCode, err := common.CheckRequestValidity(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		return
 	}
 
 	// read and deserialize the body
-	message, err := readAndDeserialize(r.Body)
+	message, err := common.ReadAndDeserialize(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -100,7 +99,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 		// to the instance's ShutdownChannel
 		terminateMu.Lock()
 		if terminate {
-			Instance.ShutdownChannel <- true
+			internal.Instance.ShutdownChannel <- true
 			terminate = false
 		}
 		terminateMu.Unlock()
@@ -111,7 +110,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	switch s := message.(type) {
 	case nil:
 		err = fmt.Errorf("nil type for incoming ProxyMessage of type %v", message.GetType())
-		logger.Debug("Error processing incoming message", zap.Error(err))
+		internal.Logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 
 	// IProxyRequest
@@ -127,7 +126,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	// Unrecognized type
 	default:
 		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %v", message.GetType())
-		logger.Debug("Error processing incoming message", zap.Error(err))
+		internal.Logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 	}
 
@@ -135,7 +134,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	// if there are, then something is wrong with the server
 	// and most likely needs to be terminated
 	if err != nil {
-		logger.Error("Error Handling ProxyMessage", zap.Error(err))
+		internal.Logger.Error("Error Handling ProxyMessage", zap.Error(err))
 	}
 }
 
@@ -155,14 +154,14 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				request.GetRequestID(),
 				string(debug.Stack()),
 			)
-			buildReply(reply, cadenceerrors.NewCadenceError(err))
-			logger.Error("Panic", zap.Error(err))
+			buildReply(reply, proxyerror.NewCadenceError(err))
+			internal.Logger.Error("Panic", zap.Error(err))
 
 			// send the reply
 			var resp *http.Response
 			resp, err = putToNeonCadenceClient(reply)
 			if err != nil {
-				logger.Fatal(err.Error())
+				internal.Logger.Fatal(err.Error())
 			}
 			err = resp.Body.Close()
 			if err != nil {
@@ -176,7 +175,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	// specified request type
 	if err = verifyClientHelper(request, Clients.Get(request.GetClientID())); err != nil {
 		reply = createReplyMessage(request)
-		buildReply(reply, cadenceerrors.NewCadenceError(err))
+		buildReply(reply, proxyerror.NewCadenceError(err))
 	} else {
 
 		// create a context for every request
@@ -455,12 +454,12 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// Undefined message type
 		default:
 			e := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
-			logger.Error("Unhandled message type. Could not complete type assertion.", zap.Error(e))
+			internal.Logger.Error("Unhandled message type. Could not complete type assertion.", zap.Error(e))
 
 			// set the reply
 			reply = messages.NewProxyReply()
 			reply.SetRequestID(request.GetRequestID())
-			reply.SetError(cadenceerrors.NewCadenceError(e, cadenceerrors.Custom))
+			reply.SetError(proxyerror.NewCadenceError(e, proxyerror.Custom))
 		}
 	}
 
@@ -468,7 +467,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	var resp *http.Response
 	resp, err = putToNeonCadenceClient(reply)
 	if err != nil {
-		logger.Fatal(err.Error())
+		internal.Logger.Fatal(err.Error())
 	}
 	err = resp.Body.Close()
 	if err != nil {
@@ -493,7 +492,7 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 				reply.GetRequestID(),
 				string(debug.Stack()),
 			)
-			logger.Error("Panic", zap.Error(err))
+			internal.Logger.Error("Panic", zap.Error(err))
 		}
 
 		// remove the operation
@@ -503,7 +502,7 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 	// check to make sure that the operation exists
 	op := Operations.Get(reply.GetRequestID())
 	if op == nil {
-		err = globals.ErrEntityNotExist
+		err = internal.ErrEntityNotExist
 	} else {
 
 		// handle the messages individually based on their message type
@@ -560,7 +559,7 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 		// Undefined message type
 		default:
 			err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
-			logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
+			internal.Logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
 		}
 	}
 

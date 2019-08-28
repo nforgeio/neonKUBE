@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		globals.go
+// FILE:		vars.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,7 +17,13 @@
 
 package internal
 
-import "errors"
+import (
+	"errors"
+
+	"go.uber.org/zap"
+
+	"github.com/cadence-proxy/internal/server"
+)
 
 const (
 
@@ -27,6 +33,12 @@ const (
 )
 
 var (
+	// Global logger
+	Logger *zap.Logger
+
+	// Instance is a pointer to the server instance of the current server that the
+	// cadence-proxy is listening on.  This gets set in main.go
+	Instance *server.Instance
 
 	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the

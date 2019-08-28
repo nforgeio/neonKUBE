@@ -29,10 +29,13 @@ import (
 // the global zap.Logger to a custom configured logger where the properties
 // are specified in the parameters
 //
-// param logLevel string -> the log level to set in the global logger
+// param l LogLevel -> the log level to set in the global logger
 //
 // param debugMode bool -> run in debug mode or not
-func SetLogger(logLevel string, debugMode bool) {
+//
+// returns *zap.Logger -> the configured global zap logger.
+// Can also be accessed via zap.L().
+func SetLogger(l LogLevel, debugMode bool) *zap.Logger {
 
 	// new *zap.Logger
 	// new zapcore.EncoderConfig for the logger
@@ -54,17 +57,17 @@ func SetLogger(logLevel string, debugMode bool) {
 	default:
 
 		// set the log level
-		switch logLevel {
-		case "panic":
+		switch l {
+		case Panic:
 			atom.SetLevel(zap.PanicLevel)
-		case "fatal":
-			atom.SetLevel(zap.FatalLevel)
-		case "error":
+		case Error:
 			atom.SetLevel(zap.ErrorLevel)
-		case "warn":
+		case Warn:
 			atom.SetLevel(zap.WarnLevel)
-		case "debug":
+		case Debug:
 			atom.SetLevel(zap.DebugLevel)
+		case Info:
+			atom.SetLevel(zap.InfoLevel)
 		default:
 			atom.SetLevel(zap.InfoLevel)
 		}
@@ -78,12 +81,6 @@ func SetLogger(logLevel string, debugMode bool) {
 	encoderCfg.EncodeCaller = zapcore.ShortCallerEncoder
 	encoderCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 
-	// keys
-	encoderCfg.CallerKey = "caller"
-	encoderCfg.TimeKey = "ts"
-	encoderCfg.LevelKey = "lvl"
-	encoderCfg.MessageKey = "msg"
-
 	// create the logger
 	enc := zapcore.NewConsoleEncoder(encoderCfg)
 	logger = zap.New(zapcore.NewCore(
@@ -94,6 +91,8 @@ func SetLogger(logLevel string, debugMode bool) {
 
 	// set the global logger
 	_ = zap.ReplaceGlobals(logger)
+
+	return logger
 }
 
 func syslogTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {

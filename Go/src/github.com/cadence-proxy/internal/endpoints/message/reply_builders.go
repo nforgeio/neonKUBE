@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package message
 
 import (
 	"fmt"
@@ -27,13 +27,14 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
-	"github.com/cadence-proxy/internal/cadence/cadenceclient"
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
+	"github.com/cadence-proxy/internal"
+	proxyclient "github.com/cadence-proxy/internal/cadence/client"
+	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
-func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 
 	// check if there is anything in result
 	var value interface{}
@@ -315,7 +316,7 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	// This should never happen.
 	default:
 		err := fmt.Errorf("Error building reply for message type %s", reply.GetType())
-		logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
+		internal.Logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
 		panic(err)
 	}
 }
@@ -341,7 +342,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyReply {
 // -------------------------------------------------------------------------
 // Client message builders
 
-func buildCancelReply(reply *messages.CancelReply, cadenceError *cadenceerrors.CadenceError, wasCancelled ...interface{}) {
+func buildCancelReply(reply *messages.CancelReply, cadenceError *proxyerror.CadenceError, wasCancelled ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(wasCancelled) > 0 {
@@ -351,22 +352,22 @@ func buildCancelReply(reply *messages.CancelReply, cadenceError *cadenceerrors.C
 	}
 }
 
-func buildConnectReply(reply *messages.ConnectReply, cadenceError *cadenceerrors.CadenceError) {
+func buildConnectReply(reply *messages.ConnectReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildDisconnectReply(reply *messages.DisconnectReply, cadenceError *cadenceerrors.CadenceError) {
+func buildDisconnectReply(reply *messages.DisconnectReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError *cadenceerrors.CadenceError, describeDomainResponse ...interface{}) {
+func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError *proxyerror.CadenceError, describeDomainResponse ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(describeDomainResponse) > 0 {
 		if v, ok := describeDomainResponse[0].(*cadenceshared.DescribeDomainResponse); ok {
 			reply.SetDomainInfoName(v.DomainInfo.Name)
 			reply.SetDomainInfoDescription(v.DomainInfo.Description)
-			reply.SetDomainInfoStatus(cadenceclient.StringToDomainStatus(v.DomainInfo.Status.String()))
+			reply.SetDomainInfoStatus(proxyclient.StringToDomainStatus(v.DomainInfo.Status.String()))
 			reply.SetConfigurationEmitMetrics(*v.Configuration.EmitMetric)
 			reply.SetConfigurationRetentionDays(*v.Configuration.WorkflowExecutionRetentionPeriodInDays)
 			reply.SetDomainInfoOwnerEmail(v.DomainInfo.OwnerEmail)
@@ -374,27 +375,27 @@ func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError 
 	}
 }
 
-func buildDomainRegisterReply(reply *messages.DomainRegisterReply, cadenceError *cadenceerrors.CadenceError) {
+func buildDomainRegisterReply(reply *messages.DomainRegisterReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildDomainUpdateReply(reply *messages.DomainUpdateReply, cadenceError *cadenceerrors.CadenceError) {
+func buildDomainUpdateReply(reply *messages.DomainUpdateReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildHeartbeatReply(reply *messages.HeartbeatReply, cadenceError *cadenceerrors.CadenceError) {
+func buildHeartbeatReply(reply *messages.HeartbeatReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildInitializeReply(reply *messages.InitializeReply, cadenceError *cadenceerrors.CadenceError) {
+func buildInitializeReply(reply *messages.InitializeReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildTerminateReply(reply *messages.TerminateReply, cadenceError *cadenceerrors.CadenceError) {
+func buildTerminateReply(reply *messages.TerminateReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceerrors.CadenceError, workerID ...interface{}) {
+func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *proxyerror.CadenceError, workerID ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(workerID) > 0 {
@@ -404,48 +405,22 @@ func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *cadenceer
 	}
 }
 
-func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *cadenceerrors.CadenceError) {
+func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildPingReply(reply *messages.PingReply, cadenceError *cadenceerrors.CadenceError) {
+func buildPingReply(reply *messages.PingReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
 // -------------------------------------------------------------------------
 // Workflow message builders
 
-func buildWorkflowRegisterReply(reply *messages.WorkflowRegisterReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowRegisterReply(reply *messages.WorkflowRegisterReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceError *cadenceerrors.CadenceError, execution ...interface{}) {
-	reply.SetError(cadenceError)
-
-	if len(execution) > 0 {
-		if v, ok := execution[0].(*workflow.Execution); ok {
-			reply.SetExecution(v)
-		}
-	}
-}
-
-func buildWorkflowCancelReply(reply *messages.WorkflowCancelReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
-}
-
-func buildWorkflowTerminateReply(reply *messages.WorkflowTerminateReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
-}
-
-func buildWorkflowSignalSubscribeReply(reply *messages.WorkflowSignalSubscribeReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
-}
-
-func buildWorkflowSignalReply(reply *messages.WorkflowSignalReply, cadenceError *cadenceerrors.CadenceError) {
-	reply.SetError(cadenceError)
-}
-
-func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply, cadenceError *cadenceerrors.CadenceError, execution ...interface{}) {
+func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceError *proxyerror.CadenceError, execution ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(execution) > 0 {
@@ -455,11 +430,37 @@ func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartRe
 	}
 }
 
-func buildWorkflowSetCacheSizeReply(reply *messages.WorkflowSetCacheSizeReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowCancelReply(reply *messages.WorkflowCancelReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildWorkflowTerminateReply(reply *messages.WorkflowTerminateReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowSignalSubscribeReply(reply *messages.WorkflowSignalSubscribeReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowSignalReply(reply *messages.WorkflowSignalReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply, cadenceError *proxyerror.CadenceError, execution ...interface{}) {
+	reply.SetError(cadenceError)
+
+	if len(execution) > 0 {
+		if v, ok := execution[0].(*workflow.Execution); ok {
+			reply.SetExecution(v)
+		}
+	}
+}
+
+func buildWorkflowSetCacheSizeReply(reply *messages.WorkflowSetCacheSizeReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -469,7 +470,7 @@ func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *c
 	}
 }
 
-func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -479,7 +480,7 @@ func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, cadenceErro
 	}
 }
 
-func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecutionReply, cadenceError *cadenceerrors.CadenceError, description ...interface{}) {
+func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecutionReply, cadenceError *proxyerror.CadenceError, description ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(description) > 0 {
@@ -489,7 +490,7 @@ func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecuti
 	}
 }
 
-func buildWorkflowGetResultReply(reply *messages.WorkflowGetResultReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildWorkflowGetResultReply(reply *messages.WorkflowGetResultReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -499,7 +500,7 @@ func buildWorkflowGetResultReply(reply *messages.WorkflowGetResultReply, cadence
 	}
 }
 
-func buildWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply, cadenceError *cadenceerrors.CadenceError, hasResult ...interface{}) {
+func buildWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply, cadenceError *proxyerror.CadenceError, hasResult ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(hasResult) > 0 {
@@ -509,7 +510,7 @@ func buildWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply,
 	}
 }
 
-func buildWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -519,11 +520,11 @@ func buildWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply,
 	}
 }
 
-func buildWorkflowDisconnectContextReply(reply *messages.WorkflowDisconnectContextReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowDisconnectContextReply(reply *messages.WorkflowDisconnectContextReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply, cadenceError *cadenceerrors.CadenceError, t ...interface{}) {
+func buildWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply, cadenceError *proxyerror.CadenceError, t ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(t) > 0 {
@@ -533,11 +534,11 @@ func buildWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply, cadenceErro
 	}
 }
 
-func buildWorkflowSleepReply(reply *messages.WorkflowSleepReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowSleepReply(reply *messages.WorkflowSleepReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, cadenceError *cadenceerrors.CadenceError, childInfo ...interface{}) {
+func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, cadenceError *proxyerror.CadenceError, childInfo ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(childInfo) > 0 {
@@ -553,7 +554,7 @@ func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, c
 	}
 }
 
-func buildWorkflowWaitForChildReply(reply *messages.WorkflowWaitForChildReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildWorkflowWaitForChildReply(reply *messages.WorkflowWaitForChildReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -563,7 +564,7 @@ func buildWorkflowWaitForChildReply(reply *messages.WorkflowWaitForChildReply, c
 	}
 }
 
-func buildWorkflowSignalChildReply(reply *messages.WorkflowSignalChildReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildWorkflowSignalChildReply(reply *messages.WorkflowSignalChildReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -573,11 +574,11 @@ func buildWorkflowSignalChildReply(reply *messages.WorkflowSignalChildReply, cad
 	}
 }
 
-func buildWorkflowCancelChildReply(reply *messages.WorkflowCancelChildReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowCancelChildReply(reply *messages.WorkflowCancelChildReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -587,18 +588,18 @@ func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, caden
 	}
 }
 
-func buildWorkflowSetQueryHandlerReply(reply *messages.WorkflowSetQueryHandlerReply, cadenceError *cadenceerrors.CadenceError) {
+func buildWorkflowSetQueryHandlerReply(reply *messages.WorkflowSetQueryHandlerReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
 // -------------------------------------------------------------------------
 // Activity message builders
 
-func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceError *cadenceerrors.CadenceError) {
+func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {
@@ -608,7 +609,7 @@ func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceErro
 	}
 }
 
-func buildActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeatDetailsReply, cadenceError *cadenceerrors.CadenceError, hasDetails ...interface{}) {
+func buildActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeatDetailsReply, cadenceError *proxyerror.CadenceError, hasDetails ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(hasDetails) > 0 {
@@ -618,7 +619,7 @@ func buildActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeatD
 	}
 }
 
-func buildActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeatDetailsReply, cadenceError *cadenceerrors.CadenceError, details ...interface{}) {
+func buildActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeatDetailsReply, cadenceError *proxyerror.CadenceError, details ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(details) > 0 {
@@ -628,7 +629,7 @@ func buildActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeatD
 	}
 }
 
-func buildActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatReply, cadenceError *cadenceerrors.CadenceError, details ...interface{}) {
+func buildActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatReply, cadenceError *proxyerror.CadenceError, details ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(details) > 0 {
@@ -638,7 +639,7 @@ func buildActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatRe
 	}
 }
 
-func buildActivityGetInfoReply(reply *messages.ActivityGetInfoReply, cadenceError *cadenceerrors.CadenceError, info ...interface{}) {
+func buildActivityGetInfoReply(reply *messages.ActivityGetInfoReply, cadenceError *proxyerror.CadenceError, info ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(info) > 0 {
@@ -648,11 +649,11 @@ func buildActivityGetInfoReply(reply *messages.ActivityGetInfoReply, cadenceErro
 	}
 }
 
-func buildActivityCompleteReply(reply *messages.ActivityCompleteReply, cadenceError *cadenceerrors.CadenceError) {
+func buildActivityCompleteReply(reply *messages.ActivityCompleteReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 
-func buildActivityExecuteLocalReply(reply *messages.ActivityExecuteLocalReply, cadenceError *cadenceerrors.CadenceError, result ...interface{}) {
+func buildActivityExecuteLocalReply(reply *messages.ActivityExecuteLocalReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 
 	if len(result) > 0 {

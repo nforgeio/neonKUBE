@@ -563,7 +563,7 @@ namespace Neon.Cadence
             // mode on Windows.  We'll ignore this for the other platforms.
 
             var debugOption = settings.Debug ? " --debug" : string.Empty;
-            var commandLine = $"--listen {endpoint.Address}:{endpoint.Port} --log-level {settings.LogLevel}{debugOption}";
+            var commandLine = $"--listen {endpoint.Address}:{endpoint.Port}{debugOption}";
 
             if (NeonHelper.IsWindows)
             {

@@ -43,8 +43,11 @@ type Instance struct {
 // param addr string -> the desired address for the server to
 // listen and serve on
 //
+// param logger *zap.Logger -> zap logger for the server to log
+// with.
+//
 // returns *Instance -> Pointer to an Instance object
-func NewInstance(addr string) *Instance {
+func NewInstance(addr string, logger *zap.Logger) *Instance {
 
 	// Router defines new chi router to set up the routes
 	var router = chi.NewRouter()
@@ -54,6 +57,7 @@ func NewInstance(addr string) *Instance {
 		Router:          router,
 		httpServer:      &http.Server{Addr: addr, Handler: router},
 		ShutdownChannel: make(chan bool),
+		Logger:          logger,
 	}
 
 	return s
@@ -64,6 +68,10 @@ func NewInstance(addr string) *Instance {
 // and provides functionality for a clean shutdown if the server
 // shuts down unexpectedly
 func (s *Instance) Start() {
+	s.Logger.Info("Server Details",
+		zap.String("Address", s.httpServer.Addr),
+		zap.Int("ProcessId", os.Getpid()),
+	)
 
 	// defer behaviors
 	defer func() {
@@ -76,14 +84,6 @@ func (s *Instance) Start() {
 			s.Logger.Error("Error", zap.Error(err))
 		}
 	}()
-
-	// set the logger to the global
-	// zap.Logger
-	s.Logger = zap.L()
-	s.Logger.Debug("Server Details",
-		zap.String("Address", s.httpServer.Addr),
-		zap.Int("ProcessId", os.Getpid()),
-	)
 
 	// listen and serve (for your country)
 	go func() {
@@ -104,6 +104,6 @@ func (s *Instance) Start() {
 		if err := s.httpServer.Shutdown(ctx); err != nil {
 			s.Logger.Fatal("could not gracefully shut server down", zap.Error(err))
 		}
-		s.Logger.Debug("server gracefully shutting down")
+		s.Logger.Info("server gracefully shutting down")
 	}
 }

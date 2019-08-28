@@ -15,14 +15,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package message
 
 import (
 	"errors"
 	"sync"
 
-	globals "github.com/cadence-proxy/internal"
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
+	"github.com/cadence-proxy/internal"
+	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
 )
 
@@ -111,9 +111,9 @@ func (op *Operation) SetChannel(value chan interface{}) {
 
 // SendChannel sends an interface{} value over the
 // Operation's channel
-func (op *Operation) SendChannel(result interface{}, cadenceError *cadenceerrors.CadenceError) error {
+func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.CadenceError) error {
 	if op.channel == nil {
-		return globals.ErrArgumentNil
+		return internal.ErrArgumentNil
 	}
 
 	defer close(op.channel)

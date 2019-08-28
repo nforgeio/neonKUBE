@@ -17,6 +17,10 @@
 
 package logger
 
+import (
+	"strings"
+)
+
 // LogLevel enumerates the possible log levels.  Note that the relative
 // ordinal values of  these definitions are used when deciding
 // to log an event when a specific LogLevel is
@@ -79,24 +83,25 @@ func (l LogLevel) String() string {
 // ParseLogLevel takes a string value and returns
 // the corresponding LogLevel
 func ParseLogLevel(value string) LogLevel {
+	value = strings.ToUpper(value)
 	switch value {
-	case "None":
+	case "NONE":
 		return None
-	case "Panic":
+	case "PANIC":
 		return Panic
-	case "Critical":
+	case "CRITICAL":
 		return Panic
-	case "SError":
+	case "SERROR":
 		return SError
-	case "Error":
+	case "ERROR":
 		return Error
-	case "Warn":
+	case "WARN":
 		return Warn
-	case "Info":
+	case "INFO":
 		return Info
-	case "SInfo":
+	case "SINFO":
 		return SInfo
-	case "Debug":
+	case "DEBUG":
 		return Debug
 	default:
 		return None

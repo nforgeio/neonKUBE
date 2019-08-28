@@ -15,92 +15,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package message
 
 import (
 	"bytes"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 
-	globals "github.com/cadence-proxy/internal"
-	"github.com/cadence-proxy/internal/cadence/cadenceclient"
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
-	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
-	"github.com/cadence-proxy/internal/messages"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
+
+	"github.com/cadence-proxy/internal"
+	proxyclient "github.com/cadence-proxy/internal/cadence/client"
+	proxyerror "github.com/cadence-proxy/internal/cadence/error"
+	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
+	"github.com/cadence-proxy/internal/messages"
+	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
-
-//----------------------------------------------------------------------------
-// ProxyMessage processing helpers
-
-func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
-	logger.Debug("Request Received",
-		zap.String("Address", fmt.Sprintf("http://%s%s", r.Host, r.URL.String())),
-		zap.String("Method", r.Method),
-		zap.Int("ProcessId", os.Getpid()),
-	)
-
-	// check if the content type is correct
-	if r.Header.Get("Content-Type") != globals.ContentType {
-		err := fmt.Errorf("incorrect Content-Type %s. Content must be %s",
-			r.Header.Get("Content-Type"),
-			globals.ContentType,
-		)
-
-		logger.Error("Incorrect Content-Type",
-			zap.String("Content Type", r.Header.Get("Content-Type")),
-			zap.String("Expected Content Type", globals.ContentType),
-			zap.Error(err),
-		)
-
-		return http.StatusBadRequest, err
-	}
-
-	if r.Method != http.MethodPut {
-		err := fmt.Errorf("invalid HTTP Method: %s, must be HTTP Metho: %s",
-			r.Method,
-			http.MethodPut,
-		)
-
-		logger.Error("Invalid HTTP Method",
-			zap.String("Method", r.Method),
-			zap.String("Expected", http.MethodPut),
-			zap.Error(err),
-		)
-
-		return http.StatusMethodNotAllowed, err
-	}
-
-	return http.StatusOK, nil
-}
-
-func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
-	payload, err := ioutil.ReadAll(body)
-	if err != nil {
-		logger.Error("Null request body", zap.Error(err))
-		return nil, err
-	}
-
-	// deserialize the payload
-	buf := bytes.NewBuffer(payload)
-	message, err := messages.Deserialize(buf, false)
-	if err != nil {
-		logger.Error("Error deserializing input", zap.Error(err))
-		return nil, err
-	}
-
-	return message, nil
-}
 
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
 	proxyMessage := message.GetProxyMessage()
-	logger.Debug("Sending message to .net client",
+	internal.Logger.Debug("Sending message to .net client",
 		zap.String("Address", replyAddress),
 		zap.String("MessageType", proxyMessage.Type.String()),
 		zap.Int("ProcessId", os.Getpid()),
@@ -109,7 +45,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// serialize the message
 	content, err := proxyMessage.Serialize(false)
 	if err != nil {
-		logger.Error("Error serializing proxy message", zap.Error(err))
+		internal.Logger.Error("Error serializing proxy message", zap.Error(err))
 		return nil, err
 	}
 
@@ -118,41 +54,23 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	buf := bytes.NewBuffer(content)
 	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
 	if err != nil {
-		logger.Error("Error creating .net client request", zap.Error(err))
+		internal.Logger.Error("Error creating .net client request", zap.Error(err))
 		return nil, err
 	}
 
 	// set the request header to specified content type
 	// and disable http request compression
-	req.Header.Set("Content-Type", globals.ContentType)
+	req.Header.Set("Content-Type", internal.ContentType)
 	req.Header.Set("Accept-Encoding", "identity")
 
 	// initialize the http.Client and send the request
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		logger.Error("Error sending .net client request", zap.Error(err))
+		internal.Logger.Error("Error sending .net client request", zap.Error(err))
 		return nil, err
 	}
 
 	return resp, nil
-}
-
-func verifyClientHelper(request messages.IProxyRequest, helper *cadenceclient.ClientHelper) error {
-	switch request.GetType() {
-	case messagetypes.InitializeRequest,
-		messagetypes.PingRequest,
-		messagetypes.ConnectRequest,
-		messagetypes.TerminateRequest,
-		messagetypes.CancelRequest,
-		messagetypes.HeartbeatRequest:
-		return nil
-	default:
-		if helper == nil {
-			return globals.ErrConnection
-		}
-	}
-
-	return nil
 }
 
 func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
@@ -160,27 +78,27 @@ func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
 	switch s := message.(type) {
 	case messages.IWorkflowReply:
 		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
 		}
 	case *messages.WorkflowInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
 		}
 	case *messages.WorkflowQueryInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
 		}
 	case *messages.WorkflowSignalInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(cadenceworkflows.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
 		}
 	}
 }
@@ -193,7 +111,7 @@ func sendMessage(message messages.IProxyMessage) {
 	defer func() {
 		err := resp.Body.Close()
 		if err != nil {
-			logger.Error("could not close response body", zap.Error(err))
+			internal.Logger.Error("could not close response body", zap.Error(err))
 		}
 	}()
 }
@@ -222,7 +140,7 @@ func sendFutureACK(contextID, operationID, clientID int64) *Operation {
 
 func isCanceledErr(err interface{}) bool {
 	var errStr string
-	if v, ok := err.(*cadenceerrors.CadenceError); ok {
+	if v, ok := err.(*proxyerror.CadenceError); ok {
 		errStr = v.ToString()
 	}
 
@@ -235,4 +153,24 @@ func isCanceledErr(err interface{}) bool {
 
 func isForceReplayErr(err error) bool {
 	return strings.Contains(err.Error(), "force-replay")
+}
+
+func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.ClientHelper) error {
+	switch request.GetType() {
+	case messagetypes.InitializeRequest,
+		messagetypes.PingRequest,
+		messagetypes.ConnectRequest,
+		messagetypes.TerminateRequest,
+		messagetypes.CancelRequest,
+		messagetypes.HeartbeatRequest:
+
+		return nil
+
+	default:
+		if helper == nil {
+			return internal.ErrConnection
+		}
+	}
+
+	return nil
 }

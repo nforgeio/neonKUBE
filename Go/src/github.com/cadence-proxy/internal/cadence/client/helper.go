@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cadenceclient
+package proxyclient
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
+	"github.com/cadence-proxy/internal/cadence/error"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
@@ -761,10 +761,10 @@ func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID
 //
 // param result interface{} -> the result to complete the activity with
 //
-// pararm cadenceError *cadenceerrors.CadenceError -> error to complete the activity with
+// pararm cadenceError *proxyerror.CadenceError -> error to complete the activity with
 //
 // returns error -> error upon failure to complete the activity, nil upon success
-func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, domain string, result interface{}, cadenceError *cadenceerrors.CadenceError) error {
+func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, domain string, result interface{}, cadenceError *proxyerror.CadenceError) error {
 	var e error
 	if cadenceError != nil {
 		e = errors.New(cadenceError.ToString())
@@ -800,10 +800,10 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 //
 // param result interface{} -> the result to complete the activity with
 //
-// pararm cadenceError *cadenceerrors.CadenceError -> error to complete the activity with
+// pararm cadenceError *proxyerror.CadenceError -> error to complete the activity with
 //
 // returns error -> error upon failure to complete the activity, nil upon success
-func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, workflowID, runID, activityID string, result interface{}, cadenceError *cadenceerrors.CadenceError) error {
+func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, workflowID, runID, activityID string, result interface{}, cadenceError *proxyerror.CadenceError) error {
 	var e error
 	if cadenceError != nil {
 		e = errors.New(cadenceError.ToString())

@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package message
 
 import (
 	"errors"
@@ -26,13 +26,10 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
-	globals "github.com/cadence-proxy/internal"
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
+	"github.com/cadence-proxy/internal"
+	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
 )
-
-// -------------------------------------------------------------------------
-// ProxyReply handlers
 
 // -------------------------------------------------------------------------
 // Workflow message types
@@ -44,7 +41,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	logger.Debug("Settling Workflow",
+	internal.Logger.Debug("Settling Workflow",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -53,12 +50,12 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 	// WorkflowContext at the specified WorflowContextID
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		return globals.ErrEntityNotExist
+		return internal.ErrEntityNotExist
 	}
 
 	// check for ForceReplay
 	if reply.GetForceReplay() {
-		err := op.SendChannel(nil, cadenceerrors.NewCadenceError(errors.New("force-replay")))
+		err := op.SendChannel(nil, proxyerror.NewCadenceError(errors.New("force-replay")))
 		if err != nil {
 			return err
 		}
@@ -108,7 +105,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 
 	// special errors
 	var result interface{} = reply.GetResult()
-	var cadenceError *cadenceerrors.CadenceError = reply.GetError()
+	var cadenceError *proxyerror.CadenceError = reply.GetError()
 	if cadenceError != nil {
 		if isCanceledErr(cadenceError) {
 			result = workflow.ErrCanceled
@@ -128,7 +125,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	logger.Debug("Settling Signal",
+	internal.Logger.Debug("Settling Signal",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -136,7 +133,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := WorkflowContexts.Get(contextID); wectx == nil {
-		return globals.ErrEntityNotExist
+		return internal.ErrEntityNotExist
 	}
 
 	// set the reply
@@ -151,7 +148,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	logger.Debug("Settling Query",
+	internal.Logger.Debug("Settling Query",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -159,7 +156,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := WorkflowContexts.Get(contextID); wectx == nil {
-		return globals.ErrEntityNotExist
+		return internal.ErrEntityNotExist
 	}
 
 	// set the reply
@@ -174,7 +171,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	logger.Debug("Settling Future ACK",
+	internal.Logger.Debug("Settling Future ACK",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -199,7 +196,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operatio
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	logger.Debug("Settling Activity",
+	internal.Logger.Debug("Settling Activity",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -207,7 +204,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operatio
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := ActivityContexts.Get(contextID); actx == nil {
-		return globals.ErrEntityNotExist
+		return internal.ErrEntityNotExist
 	}
 
 	// check if the activity is to be
@@ -231,7 +228,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operatio
 func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	logger.Debug("Settling Activity Stopping",
+	internal.Logger.Debug("Settling Activity Stopping",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -253,7 +250,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	logger.Debug("Settling Local Activity",
+	internal.Logger.Debug("Settling Local Activity",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -261,7 +258,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := ActivityContexts.Get(contextID); actx == nil {
-		return globals.ErrEntityNotExist
+		return internal.ErrEntityNotExist
 	}
 
 	// set the reply
