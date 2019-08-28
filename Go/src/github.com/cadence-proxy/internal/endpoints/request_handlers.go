@@ -115,9 +115,6 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		defer cancel()
 
 		// register the domain
-
-		// $debug(jack.burns): DELETE THIS!
-		// THIS IS A PATCH, NEED TO COME BACK AND LOOK AT THIS
 		retention := int32(365)
 		err = clientHelper.RegisterDomain(ctx,
 			&cadenceshared.RegisterDomainRequest{

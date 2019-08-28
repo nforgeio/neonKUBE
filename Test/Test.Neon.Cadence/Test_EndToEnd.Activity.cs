@@ -151,6 +151,61 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IActivityFailure : IActivity
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityFailure : ActivityBase, IActivityFailure
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                throw new NullReferenceException($"Forced {name} failure");
+            }
+        }
+
+        public interface IWorkflowActivityFailure : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowActivityFailure : WorkflowBase, IWorkflowActivityFailure
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                var ao = new ActivityOptions()
+                {
+                    StartToCloseTimeout = TimeSpan.FromSeconds(360)
+                };
+
+                var stub = Workflow.NewActivityStub<IActivityFailure>(ao);
+
+                return await stub.HelloAsync(name);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Failure()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter, calls a similarly simple activity that returns
+            // a result.
+            var wo = new WorkflowOptions()
+            {
+                TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
+            };
+            var stub = client.NewWorkflowStub<IWorkflowActivityFailure>(wo);
+
+            _ = await Assert.ThrowsAsync<CadenceGenericException>(async () => await stub.HelloAsync("Jack"));
+        }
+
+        //---------------------------------------------------------------------
+
         public interface ILocalActivityWithResult : IActivity
         {
             [ActivityMethod]
