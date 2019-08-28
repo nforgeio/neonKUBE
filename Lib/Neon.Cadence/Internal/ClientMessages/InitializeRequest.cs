@@ -21,6 +21,7 @@ using System.ComponentModel;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence.Internal
 {
@@ -62,6 +63,16 @@ namespace Neon.Cadence.Internal
             set => SetIntProperty(PropertyNames.LibraryPort, value);
         }
 
+        /// <summary>
+        /// Specifies the log level <b>cadence-proxy</b> should use when deciding
+        /// which log events to forward to the <b>cadence-client</b>.
+        /// </summary>
+        public LogLevel LogLevel
+        {
+            get => GetEnumProperty<LogLevel>(PropertyNames.LogLevel);
+            set => SetEnumProperty<LogLevel>(PropertyNames.LogLevel, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -81,6 +92,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.LibraryAddress = this.LibraryAddress;
             typedTarget.LibraryPort    = this.LibraryPort;
+            typedTarget.LogLevel       = this.LogLevel;
         }
     }
 }

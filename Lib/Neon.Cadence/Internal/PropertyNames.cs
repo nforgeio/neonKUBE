@@ -72,6 +72,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");
         public static PropertyNameUtf8 Execution { get; private set; }                                 = new PropertyNameUtf8("Execution");
         public static PropertyNameUtf8 ExecutionStartToCloseTimeout { get; private set; }              = new PropertyNameUtf8("ExecutionStartToCloseTimeout");
+        public static PropertyNameUtf8 FromCadence { get; private set; }                               = new PropertyNameUtf8("FromCadence");
         public static PropertyNameUtf8 ForceReplay { get; private set; }                               = new PropertyNameUtf8("ForceReplay");
         public static PropertyNameUtf8 FutureOperationId { get; private set; }                         = new PropertyNameUtf8("FutureOperationId");
         public static PropertyNameUtf8 HasDetails { get; private set; }                                = new PropertyNameUtf8("HasDetails");
@@ -82,6 +83,8 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 IsWorkflow { get; private set; }                                = new PropertyNameUtf8("IsWorkflow");
         public static PropertyNameUtf8 LibraryAddress { get; private set; }                            = new PropertyNameUtf8("LibraryAddress");
         public static PropertyNameUtf8 LibraryPort { get; private set; }                               = new PropertyNameUtf8("LibraryPort");
+        public static PropertyNameUtf8 LogLevel { get; private set; }                                  = new PropertyNameUtf8("LogLevel");
+        public static PropertyNameUtf8 LogMessage { get; private set; }                                = new PropertyNameUtf8("LogMessage");
         public static PropertyNameUtf8 MinSupported { get; private set; }                              = new PropertyNameUtf8("MinSupported");
         public static PropertyNameUtf8 MaxSupported { get; private set; }                              = new PropertyNameUtf8("MaxSupported");
         public static PropertyNameUtf8 MutableId { get; private set; }                                 = new PropertyNameUtf8("MutableId");

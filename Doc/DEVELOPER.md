@@ -71,7 +71,7 @@ Follow the steps below to configure a development or test workstation:
   
 8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
-9. Install **.NET Framework 4.7 Developer Pack** from: [here](https://dotnet.microsoft.com/download/thank-you/net47-developer-pack)
+9. Install **.NET Framework 4.8 Developer Pack** from: [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
 10. Install **Git source control tools**:
 
