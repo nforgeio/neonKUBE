@@ -267,10 +267,6 @@
       <Project>{e77c7d25-275f-4dd6-b572-7317fed20393}</Project>
       <Name>Neon.Cryptography</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj">
-      <Project>{b95e2a73-4711-4601-b792-17d8ca8edf61}</Project>
-      <Name>Neon.Xunit.Cadence</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj">
       <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>
       <Name>Neon.Xunit</Name>
