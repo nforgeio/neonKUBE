@@ -36,7 +36,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public partial class Test_Helper
+    public partial class Test_NeonHelper
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

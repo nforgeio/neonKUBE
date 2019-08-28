@@ -6,11 +6,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{567158FF-F2A1-4B04-A7AD-F38BB64207F9}</ProjectGuid>
+    <ProjectGuid>{88C08F44-B79E-46F5-969F-CCE710A5F7FA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Test.Neon.Cadence</RootNamespace>
-    <AssemblyName>Test.Neon.Cadence.net</AssemblyName>
+    <RootNamespace>TestCryptography</RootNamespace>
+    <AssemblyName>Test.Neon.Cryptography.net</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -36,11 +36,32 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.Extensions.Logging.Abstractions.2.2.0\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Configuration, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Configuration.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Extensions.Primitives, Version=1.1.1.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Microsoft.Extensions.Primitives.1.1.1\lib\netstandard1.0\Microsoft.Extensions.Primitives.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Configuration.Abstractions.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Configuration.Binder, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Configuration.Binder.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.Configuration.Binder.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.3.0.0-preview8.19405.4\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Logging.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Logging.Abstractions.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Options, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Options.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.Options.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.Primitives.3.0.0-preview8.19405.4\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Net.Http.Server, Version=1.1.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.Net.Http.Server.1.1.4\lib\net451\Microsoft.Net.Http.Server.dll</HintPath>
@@ -59,7 +80,14 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.ComponentModel.Annotations.4.6.0-preview8.19405.3\lib\net461\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Console, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Console.4.3.0\lib\net46\System.Console.dll</HintPath>
       <Private>True</Private>
@@ -115,6 +143,9 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Memory.4.5.2\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net.Http, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Net.Http.4.3.0\lib\net46\System.Net.Http.dll</HintPath>
       <Private>True</Private>
@@ -126,6 +157,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reflection, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Reflection.4.3.0\lib\net462\System.Reflection.dll</HintPath>
       <Private>True</Private>
@@ -136,8 +170,8 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.4.6.0-preview8.19405.3\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Extensions, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Runtime.Extensions.4.3.0\lib\net462\System.Runtime.Extensions.dll</HintPath>
@@ -154,6 +188,7 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Security.Cryptography.Algorithms.4.3.0\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
       <Private>True</Private>
@@ -201,93 +236,29 @@
     <Reference Include="xunit.execution.desktop, Version=2.4.1.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
       <HintPath>..\..\packages\xunit.extensibility.execution.2.4.1\lib\net452\xunit.execution.desktop.dll</HintPath>
     </Reference>
+    <Reference Include="YamlDotNet, Version=6.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\YamlDotNet.6.1.2\lib\net45\YamlDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Test.Neon.Cadence\AssemblyInfo.cs">
+    <Compile Include="..\Test.Neon.Common\AssemblyInfo.cs">
       <Link>AssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Cadence\CadenceTestHelper.cs">
-      <Link>CadenceTestHelper.cs</Link>
+    <Compile Include="..\Test.Neon.Cryptography\Test_AesCipher.cs">
+      <Link>Test_AesCipher.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Activity.cs">
-      <Link>Test_EndToEnd.Activity.cs</Link>
+    <Compile Include="..\Test.Neon.Cryptography\Test_CryptoHelper.cs">
+      <Link>Test_CryptoHelper.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Base.cs">
-      <Link>Test_EndToEnd.Base.cs</Link>
+    <Compile Include="..\Test.Neon.Cryptography\Test_NeonVault.cs">
+      <Link>Test_NeonVault.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.cs">
-      <Link>Test_EndToEnd.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Error.cs">
-      <Link>Test_EndToEnd.Error.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Stubs.cs">
-      <Link>Test_EndToEnd.Stubs.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Workflow.cs">
-      <Link>Test_EndToEnd.Workflow.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_FixtureNoConnect.cs">
-      <Link>Test_FixtureNoConnect.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_JsonDataConverter.cs">
-      <Link>Test_JsonDataConverter.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_Messages.Activity.cs">
-      <Link>Test_Messages.Activity.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_Messages.Base.cs">
-      <Link>Test_Messages.Base.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_Messages.Client.cs">
-      <Link>Test_Messages.Client.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_Messages.cs">
-      <Link>Test_Messages.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_Messages.Workflow.cs">
-      <Link>Test_Messages.Workflow.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_MultiClient.cs">
-      <Link>Test_MultiClient.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_RegistrationError.Activity.cs">
-      <Link>Test_RegistrationError.Activity.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_RegistrationError.cs">
-      <Link>Test_RegistrationError.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_RegistrationError.Workflow.cs">
-      <Link>Test_RegistrationError.Workflow.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_Replay.cs">
-      <Link>Test_Replay.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_StubManager.ActivityError.cs">
-      <Link>Test_StubManager.ActivityError.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_StubManager.ActivityGenerate.cs">
-      <Link>Test_StubManager.ActivityGenerate.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_StubManager.cs">
-      <Link>Test_StubManager.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_StubManager.WorkflowError.cs">
-      <Link>Test_StubManager.WorkflowError.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_StubManager.WorkflowGenerate.cs">
-      <Link>Test_StubManager.WorkflowGenerate.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Cadence\Test_Worker.cs">
-      <Link>Test_Worker.cs</Link>
+    <Compile Include="..\Test.Neon.Cryptography\Test_TlsCertificate.cs">
+      <Link>Test_TlsCertificate.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj">
-      <Project>{b3f86535-f343-43a8-b92c-560e8bc35a25}</Project>
-      <Name>Neon.Cadence</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj">
       <Project>{8d3bd5ba-aaf6-4233-879f-69a63eb6cda1}</Project>
       <Name>Neon.Common</Name>
@@ -316,6 +287,7 @@
   <ItemGroup>
     <Analyzer Include="..\..\packages\xunit.analyzers.0.10.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
