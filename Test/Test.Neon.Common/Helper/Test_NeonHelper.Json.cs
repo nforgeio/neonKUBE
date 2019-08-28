@@ -27,7 +27,7 @@ using System.Text;
 
 namespace TestCommon
 {
-    public partial class Test_Helper
+    public partial class Test_NeonHelper
     {
         public class JsonTestPerson
         {

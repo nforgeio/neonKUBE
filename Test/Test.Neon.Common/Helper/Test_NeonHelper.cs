@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Helper.cs
+// FILE:	    Test_NeonHelper.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,7 +31,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public partial class Test_Helper
+    public partial class Test_NeonHelper
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

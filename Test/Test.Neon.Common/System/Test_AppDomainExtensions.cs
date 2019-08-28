@@ -43,21 +43,29 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void GetUserAssemblies()
         {
-            // Verify that we see no [System*] or [Microsoft*] related assemblies and
-            // also that we scan types from the assemblies that are returned, to verify
-            // that this method works around this issue:
+            // $note(jeff.lill):
             //
-            //      https://github.com/nforgeio/neonKUBE/issues/531
+            // This test works only for .NET Core.  We're going to ignore the other 
+            // framework platforms.
 
-            foreach (var assembly in AppDomain.CurrentDomain.GetUserAssemblies())
+            if (NeonHelper.Framework == NetFramework.Core)
             {
-                Assert.NotEqual("System", assembly.FullName);
-                Assert.NotEqual("Microsoft", assembly.FullName);
+                // Verify that we see no [System*] or [Microsoft*] related assemblies and
+                // also that we scan types from the assemblies that are returned, to verify
+                // that this method works around this issue:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/531
 
-                Assert.False(assembly.FullName.StartsWith("System."));
-                Assert.False(assembly.FullName.StartsWith("Microsoft."));
+                foreach (var assembly in AppDomain.CurrentDomain.GetUserAssemblies())
+                {
+                    Assert.NotEqual("System", assembly.FullName);
+                    Assert.NotEqual("Microsoft", assembly.FullName);
 
-                assembly.GetTypes().ToArray();
+                    Assert.False(assembly.FullName.StartsWith("System."));
+                    Assert.False(assembly.FullName.StartsWith("Microsoft."));
+
+                    assembly.GetTypes().ToArray();
+                }
             }
         }
     }
