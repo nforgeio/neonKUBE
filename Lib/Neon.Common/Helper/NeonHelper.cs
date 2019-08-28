@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -153,6 +154,11 @@ namespace Neon.Common
         private static bool specialUtf8EncodingProvider = false;
 
         /// <summary>
+        /// Identifies the framework hosting the current process.
+        /// </summary>
+        private static NetFramework netFramework = NetFramework.Unknown;
+
+        /// <summary>
         /// The root dependency injection service container used by Neon class libraries. 
         /// and applications.
         /// </summary>
@@ -250,6 +256,28 @@ namespace Neon.Common
 
                 Encoding.RegisterProvider(new SpecialUtf8EncodingProvider());
                 specialUtf8EncodingProvider = true;
+            }
+        }
+
+        /// <summary>
+        /// Identifies the .NET framework hosting the current process.
+        /// </summary>
+        public static NetFramework Framework
+        {
+            get
+            {
+                if (netFramework != NetFramework.Unknown)
+                {
+                    return netFramework;
+                }
+
+                switch (RuntimeInformation.FrameworkDescription)
+                {
+                    case ".NET Core":       return netFramework = NetFramework.Core;
+                    case ".NET Framework":  return netFramework = NetFramework.Framework;
+                    case ".NET Native":     return netFramework = NetFramework.Native;
+                    default:                return NetFramework.Unknown;
+                }
             }
         }
     }

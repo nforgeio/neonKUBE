@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,6 +33,34 @@ namespace TestCommon
 {
     public partial class Test_Helper
     {
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Framework()
+        {
+            switch (RuntimeInformation.FrameworkDescription)
+            {
+                case ".NET Core":
+
+                    Assert.Equal(NetFramework.Core, NeonHelper.Framework);
+                    break;
+
+                case ".NET Framework":
+
+                    Assert.Equal(NetFramework.Framework, NeonHelper.Framework);
+                    break;
+
+                case ".NET Native":
+
+                    Assert.Equal(NetFramework.Native, NeonHelper.Framework);
+                    break;
+
+                default:
+
+                    Assert.Equal(NetFramework.Unknown, NeonHelper.Framework);
+                    break;
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ParseCsv()
