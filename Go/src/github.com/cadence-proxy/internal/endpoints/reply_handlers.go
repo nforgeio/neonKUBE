@@ -18,7 +18,7 @@
 package endpoints
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"time"
 
@@ -35,50 +35,35 @@ import (
 // ProxyReply handlers
 
 // -------------------------------------------------------------------------
-// Client message types
-
-func handleTerminateReply(reply *messages.TerminateReply) error {
-	err := fmt.Errorf("not implemented exception for message type TerminateReply")
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("Error handling TerminateReply", zap.Error(err))
-	return err
-}
-
-// -------------------------------------------------------------------------
 // Workflow message types
 
-func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
-	requestID := reply.GetRequestID()
+func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operation) error {
 	defer func() {
-		_ = WorkflowContexts.Remove(Operations.Get(requestID).GetContextID())
-		_ = Operations.Remove(requestID)
+		_ = WorkflowContexts.Remove(op.GetContextID())
 	}()
 
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return globals.ErrEntityNotExist
-	}
+	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Settling Workflow",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// WorkflowContext at the specified WorflowContextID
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		return globals.ErrEntityNotExist
+	}
+
+	// check for ForceReplay
+	if reply.GetForceReplay() {
+		err := op.SendChannel(nil, cadenceerrors.NewCadenceError(errors.New("force-replay")))
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	// check for ContinueAsNew
@@ -140,28 +125,13 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply) error {
 	return nil
 }
 
-func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowSignalInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
+func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *Operation) error {
 	requestID := reply.GetRequestID()
-	defer Operations.Remove(requestID)
-
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return globals.ErrEntityNotExist
-	}
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := op.GetContextID()
 	logger.Debug("Settling Signal",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// WorkflowContext at the specified WorflowContextID
@@ -178,28 +148,13 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply) 
 	return nil
 }
 
-func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowQueryInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
+func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *Operation) error {
 	requestID := reply.GetRequestID()
-	defer Operations.Remove(requestID)
-
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return globals.ErrEntityNotExist
-	}
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := op.GetContextID()
 	logger.Debug("Settling Query",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// WorkflowContext at the specified WorflowContextID
@@ -216,28 +171,13 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply) er
 	return nil
 }
 
-func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("WorkflowFutureReadyReply Received", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
+func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *Operation) error {
 	requestID := reply.GetRequestID()
-	defer Operations.Remove(requestID)
-
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return globals.ErrEntityNotExist
-	}
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := op.GetContextID()
 	logger.Debug("Settling Future ACK",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// set the reply
@@ -252,31 +192,17 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply) er
 // -------------------------------------------------------------------------
 // Activity message types
 
-func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityInvokeReply Received", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
-	requestID := reply.GetRequestID()
+func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operation) error {
 	defer func() {
-		_ = ActivityContexts.Remove(Operations.Get(requestID).GetContextID())
-		_ = Operations.Remove(requestID)
+		_ = ActivityContexts.Remove(op.GetContextID())
 	}()
 
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return globals.ErrEntityNotExist
-	}
+	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Settling Activity",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// ActivityContext at the specified WorflowContextID
@@ -302,20 +228,14 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply) error {
 	return nil
 }
 
-func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityStoppingReply Received", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the Operation from the map
+func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Operation) error {
 	requestID := reply.GetRequestID()
-	defer Operations.Remove(requestID)
-
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return globals.ErrEntityNotExist
-	}
+	contextID := op.GetContextID()
+	logger.Debug("Settling Activity Stopping",
+		zap.Int64("ActivityContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProcessId", os.Getpid()),
+	)
 
 	// set the reply
 	err := op.SendChannel(true, reply.GetError())
@@ -326,27 +246,21 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply) error {
 	return nil
 }
 
-func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply) error {
-
-	// $debug(jack.burns): DELETE THIS!
-	logger.Debug("ActivityInvokeLocalReply Received", zap.Int("ProccessId", os.Getpid()))
-
-	// remove the WorkflowContext from the map
-	// and remove the Operation from the map
-	requestID := reply.GetRequestID()
+func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *Operation) error {
 	defer func() {
-		_ = ActivityContexts.Remove(Operations.Get(requestID).GetContextID())
-		_ = Operations.Remove(requestID)
+		_ = ActivityContexts.Remove(op.GetContextID())
 	}()
 
-	// get the Operation corresponding the the reply
-	op := Operations.Get(requestID)
-	if op == nil {
-		return globals.ErrEntityNotExist
-	}
+	requestID := reply.GetRequestID()
+	contextID := op.GetContextID()
+	logger.Debug("Settling Local Activity",
+		zap.Int64("ActivityContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProcessId", os.Getpid()),
+	)
 
 	// ActivityContext at the specified WorflowContextID
-	if actx := ActivityContexts.Get(op.GetContextID()); actx == nil {
+	if actx := ActivityContexts.Get(contextID); actx == nil {
 		return globals.ErrEntityNotExist
 	}
 

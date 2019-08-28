@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <Version>0.5.6-alpha</Version>
+    <Version>0.5.8-alpha</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Product>neonKUBE</Product>
@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0-preview7.19365.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.0.0-preview8.19405.7" />
     <PackageReference Include="Microsoft.Net.Http.Headers" Version="2.2.0" />
   </ItemGroup>
 

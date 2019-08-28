@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -30,6 +31,40 @@ namespace Neon.Cadence
     /// </summary>
     public class LocalActivityOptions
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Normalizes the options passed by creating or cloning a new instance as
+        /// required and filling unset properties using default client settings.
+        /// </summary>
+        /// <param name="client">The associated Cadence client.</param>
+        /// <param name="options">The input options or <c>null</c>.</param>
+        /// <returns>The normalized options.</returns>
+        internal static LocalActivityOptions Normalize(CadenceClient client, LocalActivityOptions options)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            if (options == null)
+            {
+                options = new LocalActivityOptions();
+            }
+            else
+            {
+                options = options.Clone();
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+            }
+
+            return options;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Default constructor.
         /// </summary>

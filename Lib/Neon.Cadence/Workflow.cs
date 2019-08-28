@@ -43,11 +43,10 @@ namespace Neon.Cadence
         /// </summary>
         public const int DefaultVersion = -1;
 
-        private object                  syncLock = new object();
-        private int                     pendingOperationCount;
-        private long                    nextLocalActivityActionId;
-        //private bool                    isDisconnected;
-        private Random                  random;
+        private object      syncLock = new object();
+        private int         pendingOperationCount;
+        private long        nextLocalActivityActionId;
+        private Random      random;
 
         /// <summary>
         /// Constructor.
@@ -85,7 +84,6 @@ namespace Neon.Cadence
             this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
-            //this.isDisconnected            = false;
             this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
             this.MethodMap                 = methodMap;
             this.Client                    = client;
@@ -269,7 +267,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceWorkflowRestartException(
+            throw new CadenceContinueAsNewException(
                 args:       Client.DataConverter.ToData(args),
                 domain:     WorkflowInfo.Domain,
                 taskList:   WorkflowInfo.TaskList);
@@ -298,7 +296,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceWorkflowRestartException(
+            throw new CadenceContinueAsNewException(
                 args:                       Client.DataConverter.ToData(args),
                 domain:                     WorkflowInfo.Domain,
                 taskList:                   WorkflowInfo.TaskList,
@@ -1060,7 +1058,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the result of the last run of the current CRON workflow or
-        /// <c>null</c>.  This is useful  for CRON workflows that would like to
+        /// <c>null</c>.  This is useful for CRON workflows that would like to
         /// pass information from from one workflow run to the next.
         /// </summary>
         /// <typeparam name="TResult">The expected result type.</typeparam>
@@ -1477,6 +1475,18 @@ namespace Neon.Cadence
                     IdToLocalActivityAction.Remove(activityActionId);
                 }
             }
+        }
+
+        /// <summary>
+        /// Forces the current workflow execution to terminate such that it will be rescheduled
+        /// and replayed as required.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        internal async Task ForceReplayAsync()
+        {
+            await Task.CompletedTask;
+
+            throw new CadenceForceReplayException();
         }
     }
 }

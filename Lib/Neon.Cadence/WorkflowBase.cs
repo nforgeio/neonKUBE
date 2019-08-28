@@ -141,6 +141,17 @@ namespace Neon.Cadence
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
         /// <summary>
+        /// Restores the class to its initial state.
+        /// </summary>
+        internal static void Reset()
+        {
+            lock (syncLock)
+            {
+                idToWorkflow.Clear();
+            }
+        }
+
+        /// <summary>
         /// Prepends the Cadence client ID to the workflow type name as well as the optional
         /// workflow method name to generate the key used to dereference the <see cref="nameToRegistration"/> 
         /// dictionary.
@@ -519,7 +530,14 @@ namespace Neon.Cadence
                     Result = serializedResult
                 };
             }
-            catch (CadenceWorkflowRestartException e)
+            catch (CadenceForceReplayException)
+            {
+                return new WorkflowInvokeReply()
+                {
+                    ForceReplay = true
+                };
+            }
+            catch (CadenceContinueAsNewException e)
             {
                 return new WorkflowInvokeReply()
                 {

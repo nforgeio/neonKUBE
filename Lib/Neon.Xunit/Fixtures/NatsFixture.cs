@@ -59,6 +59,8 @@ namespace Neon.Xunit
         /// </summary>
         public const string ConnectionUri = "nats://localhost:4222";
 
+        private string hostInterface;
+
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
@@ -77,7 +79,7 @@ namespace Neon.Xunit
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(string, string, string[])"/>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[], string)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -88,22 +90,28 @@ namespace Neon.Xunit
         /// </param>
         /// <param name="name">Optionally specifies the NATS container name (defaults to <c>nats-test</c>).</param>
         /// <param name="args">Optional NATS server command line arguments.</param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
         /// fixture was already running.
         /// </returns>
         public TestFixtureStatus Start(
-            string   image = null,
-            string   name  = "nats-test",
-            string[] args  = null)
+            string   image         = null,
+            string   name          = "nats-test",
+            string[] args          = null,
+            string   hostInterface = null)
         {
             base.CheckDisposed();
 
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(image, name, args);
+                    StartAsComposed(image, name, args, hostInterface);
                 });
         }
 
@@ -117,12 +125,19 @@ namespace Neon.Xunit
         /// </param>
         /// <param name="name">Optionally specifies the container name (defaults to <c>nats-test</c>).</param>
         /// <param name="args">Optional NATS server command line arguments.</param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
         public void StartAsComposed(
-            string   image = null,
-            string   name  = "nats-test",
-            string[] args  = null)
+            string   image         = null,
+            string   name          = "nats-test",
+            string[] args          = null,
+            string   hostInterface = null)
         {
-            image = image ?? $"{KubeConst.NeonBranchRegistry}/nats:latest";
+            image              = image ?? $"{KubeConst.NeonBranchRegistry}/nats:latest";
+            this.hostInterface = hostInterface;
 
             base.CheckWithinAction();
 
@@ -130,9 +145,9 @@ namespace Neon.Xunit
                 new string[]
                 {
                     "--detach",
-                    "-p", "4222:4222",
-                    "-p", "8222:8222",
-                    "-p", "6222:6222"
+                    "-p", $"{GetHostInterface(hostInterface)}:4222:4222",
+                    "-p", $"{GetHostInterface(hostInterface)}:8222:8222",
+                    "-p", $"{GetHostInterface(hostInterface)}:6222:6222"
                 };
 
             if (!IsRunning)
@@ -146,7 +161,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection();
+                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
 
                     await Task.CompletedTask;
 
@@ -173,7 +188,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection();
+                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
                     await Task.CompletedTask;
 
                 }).Wait();

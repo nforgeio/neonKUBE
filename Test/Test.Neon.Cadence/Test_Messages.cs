@@ -70,7 +70,6 @@ namespace TestCadence
 
                 //--------------------------------
                 // $debug(jeff.lill): DELETE THIS!
-                Emulate                = false,
                 DebugPrelaunched       = false,
                 DebugDisableHandshakes = false,
                 DebugDisableHeartbeats = false,
@@ -147,42 +146,6 @@ namespace TestCadence
 
             message.SetTimeSpanProperty(fooProperty, TimeSpan.FromSeconds(123));
             Assert.Equal(TimeSpan.FromSeconds(123), message.GetTimeSpanProperty(fooProperty));
-        }
-
-        /// <summary>
-        /// Transmits a message to the local <b>cadence-client</b> web server and then 
-        /// verifies that the response matches.
-        /// </summary>
-        /// <typeparam name="TMessage">The message type.</typeparam>
-        /// <param name="message">The message to be checked.</param>
-        /// <returns>The received echo message.</returns>
-        private TMessage EchoToClient<TMessage>(TMessage message)
-            where TMessage : ProxyMessage, new()
-        {
-#if DEBUG
-            var bytes   = message.SerializeAsBytes();
-            var content = new ByteArrayContent(bytes);
-
-            content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
-
-            var request = new HttpRequestMessage(HttpMethod.Put, "/echo")
-            {
-                Content = content
-            };
-
-            var response = fixture.HttpClient.SendAsync(request).Result;
-
-            response.EnsureSuccessStatusCode();
-
-            bytes = response.Content.ReadAsByteArrayAsync().Result;
-
-            return ProxyMessage.Deserialize<TMessage>(response.Content.ReadAsStreamAsync().Result);
-#else
-            // The RELEASE client doesn't support the "/echo" endpoint so we'll
-            // simply return the input message so the unit tests will pass.
-
-            return message;
-#endif
         }
 
         /// <summary>

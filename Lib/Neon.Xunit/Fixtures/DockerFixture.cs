@@ -836,10 +836,12 @@ namespace Neon.Xunit
 
             extraArgs.Add("--name");
             extraArgs.Add(name);
+#if TODO
+            // This requires Docker experimental features.
 
             extraArgs.Add("--platform");
             extraArgs.Add("linux");
-
+#endif
             if (env != null)
             {
                 foreach (var variable in env)
@@ -1091,10 +1093,12 @@ namespace Neon.Xunit
 
             extraArgs.Add("--name");
             extraArgs.Add(name);
+#if TODO
+            // This requires Docker experimental features.
 
             extraArgs.Add("--platform");
             extraArgs.Add("linux");
-
+#endif
             extraArgs.Add("--detach");
 
             if (env != null)

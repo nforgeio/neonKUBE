@@ -51,10 +51,10 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the type name.  This defaults to the fully qualified name
+        /// The workflow type name.  This defaults to the fully qualified name
         /// of the tagged workflow type.
         /// </summary>
-        public string Name { get; private set; } = null;
+        public string Name { get; set; } = null;
 
         /// <summary>
         /// Indicates that <see cref="CadenceClient.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> will

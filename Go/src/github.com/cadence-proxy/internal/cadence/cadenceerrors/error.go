@@ -133,7 +133,6 @@ func (c *CadenceError) SetType(errorType CadenceErrorType) {
 		err := fmt.Errorf("unrecognized error type %s", errorType)
 		panic(err)
 	}
-
 	c.Type = &typeString
 }
 

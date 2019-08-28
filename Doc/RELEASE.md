@@ -10,10 +10,6 @@
 
 3. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
 
-4. Deploy a test cluster.
-
-5. Run all unit tests against the test cluster and fix any bugs until all tests pass.
-
 ## Release 
 
 1. Select the release branch.
@@ -30,13 +26,15 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-6. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
+6. Verify that the new release installer works.
 
-7. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
-8. Push the `release-VERSION` branch to GitHub.
+8. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
+
+10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version

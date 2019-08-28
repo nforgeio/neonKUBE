@@ -115,18 +115,15 @@ func (b *WorkflowClientBuilder) BuildServiceClient() (workflowserviceclient.Inte
 
 	if b.dispatcher == nil {
 		err := errors.New("no RPC dispatcher provided to create a connection to Cadence Service")
-
-		// $debug(jack.burns): DELETE THIS!
 		b.Logger.Error("error building service client", zap.Error(err))
 		return nil, err
-
 	}
 
 	return workflowserviceclient.New(b.dispatcher.ClientConfig(_cadenceFrontendService)), nil
 }
 
 // build builds the transport channels and dispatcher
-// for connection between teh cadence client instance
+// for connection between the cadence client instance
 // and the cadence server
 func (b *WorkflowClientBuilder) build() error {
 	if b.dispatcher != nil {
@@ -143,13 +140,10 @@ func (b *WorkflowClientBuilder) build() error {
 	)
 
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		b.Logger.Error("Failed to create transport channel", zap.Error(err))
 		return err
 	}
 
-	// $debug(jack.burns): DELETE THIS!
 	b.Logger.Debug("Creating RPC dispatcher outbound",
 		zap.String("ServiceName", _cadenceFrontendService),
 		zap.String("HostPort", b.hostPort))
@@ -163,14 +157,11 @@ func (b *WorkflowClientBuilder) build() error {
 
 	if b.dispatcher != nil {
 		if err := b.dispatcher.Start(); err != nil {
-
-			// $debug(jack.burns): DELETE THIS!
 			b.Logger.Error("Failed to create outbound transport channel", zap.Error(err))
 			return err
 		}
 
-		// $debug(jack.burns): DELETE THIS!
-		b.Logger.Info("Created outbound transport channel/RPC dispatcher outbound",
+		b.Logger.Debug("Created outbound transport channel/RPC dispatcher outbound",
 			zap.String("ServiceName", _cadenceFrontendService),
 			zap.String("HostPort", b.hostPort))
 	}
@@ -183,8 +174,7 @@ func (b *WorkflowClientBuilder) destroy() error {
 		return globals.ErrEntityNotExist
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	b.Logger.Info("Removing outbound transport channel/RPC dispatcher outbound",
+	b.Logger.Debug("Removing outbound transport channel/RPC dispatcher outbound",
 		zap.String("ServiceName", _cadenceFrontendService),
 		zap.String("HostPort", b.hostPort))
 

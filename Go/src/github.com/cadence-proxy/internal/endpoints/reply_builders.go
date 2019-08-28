@@ -314,10 +314,8 @@ func buildReply(reply messages.IProxyReply, cadenceError *cadenceerrors.CadenceE
 	// Undefined message type
 	// This should never happen.
 	default:
-
-		// $debug(jack.burns): DELETE THIS!
-		err := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
-		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
+		err := fmt.Errorf("Error building reply for message type %s", reply.GetType())
+		logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
 		panic(err)
 	}
 }
@@ -332,6 +330,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyReply {
 	}
 
 	reply.SetRequestID(request.GetRequestID())
+	reply.SetClientID(request.GetClientID())
 	if v, ok := reply.(messages.IProxyReply); ok {
 		return v
 	}

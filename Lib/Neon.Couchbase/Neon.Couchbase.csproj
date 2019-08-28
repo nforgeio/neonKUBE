@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>0.5.6-alpha</Version>
+    <Version>0.5.8-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonKUBE</Product>
     <Description>neonKUBE Couchbase client extensions.</Description>
@@ -41,8 +41,8 @@
   <ItemGroup>
     <PackageReference Include="CouchbaseNetClient" Version="2.7.11" />
     <PackageReference Include="Linq2Couchbase" Version="1.4.1" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.6.0-preview7.19362.9" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0-preview7.19362.4" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.6.0-preview8.19405.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0-preview8.19405.4" />
   </ItemGroup>
 
   <ItemGroup>

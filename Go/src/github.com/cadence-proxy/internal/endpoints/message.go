@@ -26,6 +26,7 @@ import (
 
 	"go.uber.org/zap"
 
+	globals "github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
@@ -47,8 +48,6 @@ var (
 //
 // param r *http.Request
 func MessageHandler(w http.ResponseWriter, r *http.Request) {
-
-	// grab the logger from the server instance
 	logger = Instance.Logger
 
 	// check if the request has the correct content type
@@ -62,8 +61,6 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	// read and deserialize the body
 	message, err := readAndDeserialize(r.Body)
 	if err != nil {
-
-		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -72,27 +69,24 @@ func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	// go routine to process the message
 	// receive error on responseChan
 	responseChan := make(chan error)
-	go proccessIncomingMessage(message, responseChan)
+	go processIncomingMessage(message, responseChan)
 
 	// block and wait for error value
 	// on responseChan to send an http.Response
 	// back to the Neon.Cadence Lib
 	err = <-responseChan
 	if err != nil {
-
-		// write the error and status code into response
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// write the response header to 200 OK
 	w.WriteHeader(http.StatusOK)
 }
 
 // -------------------------------------------------------------------------
 // Helper methods for handling incoming messages
 
-func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan error) {
+func processIncomingMessage(message messages.IProxyMessage, responseChan chan error) {
 
 	// defer the termination of the server
 	// and the closing of the responseChan
@@ -116,8 +110,6 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 	var err error
 	switch s := message.(type) {
 	case nil:
-
-		// $debug(jack.burns): DELETE THIS!
 		err = fmt.Errorf("nil type for incoming ProxyMessage of type %v", message.GetType())
 		logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
@@ -134,8 +126,6 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 
 	// Unrecognized type
 	default:
-
-		// $debug(jack.burns): DELETE THIS!
 		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %v", message.GetType())
 		logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
@@ -145,8 +135,6 @@ func proccessIncomingMessage(message messages.IProxyMessage, responseChan chan e
 	// if there are, then something is wrong with the server
 	// and most likely needs to be terminated
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Error Handling ProxyMessage", zap.Error(err))
 	}
 }
@@ -168,8 +156,6 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				string(debug.Stack()),
 			)
 			buildReply(reply, cadenceerrors.NewCadenceError(err))
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Error("Panic", zap.Error(err))
 
 			// send the reply
@@ -468,8 +454,6 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 
 		// Undefined message type
 		default:
-
-			// $debug(jack.burns): DELETE THIS!
 			e := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
 			logger.Error("Unhandled message type. Could not complete type assertion.", zap.Error(e))
 
@@ -498,74 +482,86 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 // IProxyReply message type handlers
 
 func handleIProxyReply(reply messages.IProxyReply) (err error) {
+	defer func() {
+		requestID := reply.GetRequestID()
 
-	// handle the messages individually based on their message type
-	switch reply.GetType() {
-
-	// -------------------------------------------------------------------------
-	// client message types
-
-	// TerminateReply
-	case messagetypes.TerminateReply:
-		if v, ok := reply.(*messages.TerminateReply); ok {
-			err = handleTerminateReply(v)
+		// recover from panic
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Panic: %v. MessageType: %s, RequestId: %d. %s",
+				r,
+				reply.GetType().String(),
+				reply.GetRequestID(),
+				string(debug.Stack()),
+			)
+			logger.Error("Panic", zap.Error(err))
 		}
 
-	// -------------------------------------------------------------------------
-	// Workflow message types
+		// remove the operation
+		Operations.Remove(requestID)
+	}()
 
-	// WorkflowInvokeReply
-	case messagetypes.WorkflowInvokeReply:
-		if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
-			err = handleWorkflowInvokeReply(v)
+	// check to make sure that the operation exists
+	op := Operations.Get(reply.GetRequestID())
+	if op == nil {
+		err = globals.ErrEntityNotExist
+	} else {
+
+		// handle the messages individually based on their message type
+		switch reply.GetType() {
+
+		// -------------------------------------------------------------------------
+		// Workflow message types
+
+		// WorkflowInvokeReply
+		case messagetypes.WorkflowInvokeReply:
+			if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
+				err = handleWorkflowInvokeReply(v, op)
+			}
+
+		// WorkflowSignalInvokeReply
+		case messagetypes.WorkflowSignalInvokeReply:
+			if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
+				err = handleWorkflowSignalInvokeReply(v, op)
+			}
+
+		// WorkflowQueryInvokeReply
+		case messagetypes.WorkflowQueryInvokeReply:
+			if v, ok := reply.(*messages.WorkflowQueryInvokeReply); ok {
+				err = handleWorkflowQueryInvokeReply(v, op)
+			}
+
+		// WorkflowFutureReadyReply
+		case messagetypes.WorkflowFutureReadyReply:
+			if v, ok := reply.(*messages.WorkflowFutureReadyReply); ok {
+				err = handleWorkflowFutureReadyReply(v, op)
+			}
+
+		// -------------------------------------------------------------------------
+		// Activity message types
+
+		// ActivityInvokeReply
+		case messagetypes.ActivityInvokeReply:
+			if v, ok := reply.(*messages.ActivityInvokeReply); ok {
+				err = handleActivityInvokeReply(v, op)
+			}
+
+		// ActivityStoppingReply
+		case messagetypes.ActivityStoppingReply:
+			if v, ok := reply.(*messages.ActivityStoppingReply); ok {
+				err = handleActivityStoppingReply(v, op)
+			}
+
+		// ActivityInvokeLocalReply
+		case messagetypes.ActivityInvokeLocalReply:
+			if v, ok := reply.(*messages.ActivityInvokeLocalReply); ok {
+				err = handleActivityInvokeLocalReply(v, op)
+			}
+
+		// Undefined message type
+		default:
+			err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
+			logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
 		}
-
-	// WorkflowSignalInvokeReply
-	case messagetypes.WorkflowSignalInvokeReply:
-		if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
-			err = handleWorkflowSignalInvokeReply(v)
-		}
-
-	// WorkflowQueryInvokeReply
-	case messagetypes.WorkflowQueryInvokeReply:
-		if v, ok := reply.(*messages.WorkflowQueryInvokeReply); ok {
-			err = handleWorkflowQueryInvokeReply(v)
-		}
-
-	// WorkflowFutureReadyReply
-	case messagetypes.WorkflowFutureReadyReply:
-		if v, ok := reply.(*messages.WorkflowFutureReadyReply); ok {
-			err = handleWorkflowFutureReadyReply(v)
-		}
-
-	// -------------------------------------------------------------------------
-	// Activity message types
-
-	// ActivityInvokeReply
-	case messagetypes.ActivityInvokeReply:
-		if v, ok := reply.(*messages.ActivityInvokeReply); ok {
-			err = handleActivityInvokeReply(v)
-		}
-
-	// ActivityStoppingReply
-	case messagetypes.ActivityStoppingReply:
-		if v, ok := reply.(*messages.ActivityStoppingReply); ok {
-			err = handleActivityStoppingReply(v)
-		}
-
-	// ActivityInvokeLocalReply
-	case messagetypes.ActivityInvokeLocalReply:
-		if v, ok := reply.(*messages.ActivityInvokeLocalReply); ok {
-			err = handleActivityInvokeLocalReply(v)
-		}
-
-	// Undefined message type
-	default:
-
-		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Unhandled message type. Could not complete type assertion", zap.Error(err))
 	}
 
 	return

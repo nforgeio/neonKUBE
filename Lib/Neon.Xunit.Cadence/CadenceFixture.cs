@@ -10,6 +10,7 @@ using System.Diagnostics.Contracts;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,6 +53,7 @@ namespace Neon.Xunit.Cadence
         private CadenceSettings     settings;
         private CadenceClient       client;
         private bool                keepConnection;
+        private bool                noReset;
 
         /// <summary>
         /// The default domain configured for <see cref="CadenceFixture"/> clients.
@@ -76,7 +78,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, string, bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -93,11 +95,20 @@ namespace Neon.Xunit.Cadence
         /// <param name="keepOpen">
         /// Optionally indicates that the container should continue to run after the fixture is disposed.
         /// </param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
+        /// <param name="noClient">
+        /// Optionally disables establishing a client connection when <c>true</c>
+        /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
+        /// will be set to <c>null</c> in this case.
+        /// </param>
         /// <param name="noReset">
-        /// Optionally indicates that the fixture <b>will not</b> reset the <see cref="CadenceClient"/> global
-        /// state before it establishes a new connection.  This is normally <c>false</c> which is usually
-        /// what you want.  The one scenario where you'll want to pass <c>true</c> is when your test requires
-        /// multiple Cadence fixtures possibly communication with different Cadence clusters.
+        /// Optionally prevents the fixture from calling <see cref="CadenceClient.Reset()"/> to
+        /// put the Cadence client library into its initial state before the fixture starts as well
+        /// as when the fixture itself is reset.
         /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
@@ -131,6 +142,8 @@ namespace Neon.Xunit.Cadence
             string              defaultTaskList = DefaultTaskList,
             bool                keepConnection  = false,
             bool                keepOpen        = false,
+            string              hostInterface   = null,
+            bool                noClient        = false,
             bool                noReset         = false,
             bool                emulateProxy    = false)
         {
@@ -139,7 +152,18 @@ namespace Neon.Xunit.Cadence
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(settings, image, name, env, defaultDomain, defaultTaskList, keepConnection, keepOpen, emulateProxy);
+                    StartAsComposed(
+                        settings:        settings, 
+                        image:           image, 
+                        name:            name, 
+                        env:             env, 
+                        defaultDomain:   defaultDomain, 
+                        defaultTaskList: defaultTaskList, 
+                        keepConnection:  keepConnection,
+                        keepOpen:        keepOpen, 
+                        noClient:        noClient, 
+                        noReset:         noReset,
+                        emulateProxy:    emulateProxy);
                 });
         }
 
@@ -159,11 +183,20 @@ namespace Neon.Xunit.Cadence
         /// <param name="keepOpen">
         /// Optionally indicates that the container should continue to run after the fixture is disposed.
         /// </param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
+        /// <param name="noClient">
+        /// Optionally disables establishing a client connection when <c>true</c>
+        /// is passed.  The <see cref="Client"/> and <see cref="HttpClient"/> properties
+        /// will be set to <c>null</c> in this case.
+        /// </param>
         /// <param name="noReset">
-        /// Optionally indicates that the fixture <b>will not</b> reset the <see cref="CadenceClient"/> global
-        /// state before it establishes a new connection.  This is normally <c>false</c> which is usually
-        /// what you want.  The one scenario where you'll want to pass <c>true</c> is when your test requires
-        /// multiple Cadence fixtures possibly communication with different Cadence clusters.
+        /// Optionally prevents the fixture from calling <see cref="CadenceClient.Reset()"/> to
+        /// put the Cadence client library into its initial state before the fixture starts as well
+        /// as when the fixture itself is reset.
         /// </param>
         /// <param name="emulateProxy">
         /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
@@ -186,6 +219,8 @@ namespace Neon.Xunit.Cadence
             string              defaultTaskList = DefaultTaskList,
             bool                keepConnection  = false,
             bool                keepOpen        = false,
+            string              hostInterface   = null,
+            bool                noClient        = false,
             bool                noReset         = false,
             bool                emulateProxy    = false)
         {
@@ -195,8 +230,18 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
-                // We generally want to make sure that the global CadenceClient state
-                // is reset between test runs.
+                if (string.IsNullOrEmpty(hostInterface))
+                {
+                    hostInterface = ContainerFixture.DefaultHostInterface;
+                }
+                else
+                {
+                    Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{hostInterface}] is not a valid IPv4 address.");
+                }
+
+                // Reset CadenceClient to its initial state.
+
+                this.noReset = noReset;
 
                 if (!noReset)
                 {
@@ -209,8 +254,8 @@ namespace Neon.Xunit.Cadence
                     new string[]
                     {
                         "--detach",
-                        "-p", "7933-7939:7933-7939",
-                        "-p", "8088:8088"
+                        "-p", $"{GetHostInterface(hostInterface)}:7933-7939:7933-7939",
+                        "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
                     },
                     env: env,
                     keepOpen: keepOpen);
@@ -227,23 +272,29 @@ namespace Neon.Xunit.Cadence
                 };
 
                 settings.Servers.Clear();
-                settings.Servers.Add($"http://localhost:{NetworkPorts.Cadence}");
-
-                settings.Emulate = emulateProxy || settings.Emulate;
+                settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Cadence}");
 
                 this.settings       = settings;
                 this.keepConnection = keepConnection;
 
-                // Establish the Cadence connection.
-
-                Client = CadenceClient.ConnectAsync(settings).Result;
-
-                HttpClient = new HttpClient()
+                if (!noClient)
                 {
-                    BaseAddress = Client.ListenUri
-                };
+                    // Establish the Cadence connection.
+
+                    Client = CadenceClient.ConnectAsync(settings).Result;
+
+                    HttpClient = new HttpClient()
+                    {
+                        BaseAddress = Client.ListenUri
+                    };
+                }
             }
         }
+
+        /// <summary>
+        /// Returns the settings used to connect to the Cadence cluster.
+        /// </summary>
+        public CadenceSettings Settings => settings;
 
         /// <summary>
         /// Returns the <see cref="CadenceClient"/> to be used to interact with Cadence.
@@ -316,6 +367,11 @@ namespace Neon.Xunit.Cadence
         /// </summary>
         public override void Reset()
         {
+            if (!noReset)
+            {
+                CadenceClient.Reset();
+            }
+
             if (Client != null)
             {
                 Client.Dispose();

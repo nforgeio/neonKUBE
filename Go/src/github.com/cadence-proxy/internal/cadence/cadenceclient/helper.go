@@ -218,6 +218,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 		}
 		break
 	}
+
 	if err != nil {
 		helper = nil
 		return err
@@ -227,10 +228,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	// build the domain client
 	domainClient, err := helper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
-
 		return err
 	}
 	helper.DomainClient = domainClient
@@ -251,10 +249,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	// build the workflow client
 	workflowClient, err := helper.Builder.BuildCadenceClient()
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
-
 		return nil
 	}
 	_ = helper.WorkflowClients.Add(helper.Builder.domain, workflowClient)
@@ -333,15 +328,13 @@ func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.
 	err := worker.Start()
 	if err != nil {
 		helper.Logger.Error("failed to start workers.", zap.Error(err))
-
 		return nil, err
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Info("New Worker Created",
+	helper.Logger.Debug("New Worker Created",
 		zap.String("Domain", domain),
 		zap.String("TaskList", taskList),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	return worker, nil
@@ -374,9 +367,7 @@ func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (
 		return nil, err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Domain Describe Response", zap.Any("Domain Info", *resp.DomainInfo))
-
 	return resp, nil
 }
 
@@ -396,18 +387,16 @@ func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRe
 	domain := registerDomainRequest.GetName()
 	err := helper.DomainClient.Register(ctx, registerDomainRequest)
 	if err != nil {
+		if _, ok := err.(*cadenceshared.DomainAlreadyExistsError); !ok {
+			helper.Logger.Error("failed to register domain",
+				zap.String("Domain Name", domain),
+				zap.Error(err),
+			)
 
-		// $debug(jack.burns): DELETE THIS!
-		helper.Logger.Error("failed to register domain",
-			zap.String("Domain Name", domain),
-			zap.Error(err),
-		)
-
-		return err
+			return err
+		}
 	}
-
-	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Info("domain successfully registered", zap.String("Domain Name", domain))
+	helper.Logger.Debug("domain successfully registered", zap.String("Domain Name", domain))
 
 	return nil
 }
@@ -428,8 +417,6 @@ func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainReques
 	domain := updateDomainRequest.GetName()
 	err := helper.DomainClient.Update(ctx, updateDomainRequest)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		helper.Logger.Error("failed to update domain",
 			zap.String("Domain Name", domain),
 			zap.Error(err),
@@ -438,9 +425,7 @@ func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainReques
 		return err
 	}
 
-	// $debug(jack.burns): DELETE THIS!
-	helper.Logger.Info("domain successfully updated", zap.String("Domain Name", domain))
-
+	helper.Logger.Debug("domain successfully updated", zap.String("Domain Name", domain))
 	return nil
 }
 
@@ -479,16 +464,13 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 				continue
 			}
 
-			// $debug(jack.burns)
 			helper.Logger.Error("failed to create workflow", zap.Error(err))
 			return nil, err
 		}
-
 		break
 	}
 
-	// $debug(jack.burns)
-	helper.Logger.Info("Started Workflow",
+	helper.Logger.Debug("Started Workflow",
 		zap.String("WorkflowID", workflowRun.GetID()),
 		zap.String("RunID", workflowRun.GetRunID()),
 	)
@@ -517,9 +499,7 @@ func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID, 
 	// get the workflow execution
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	workflowRun := workflowClient.GetWorkflow(ctx, workflowID, runID)
-
-	// $debug(jack.burns)
-	helper.Logger.Info("Get Workflow",
+	helper.Logger.Debug("Get Workflow",
 		zap.String("WorkflowID", workflowRun.GetID()),
 		zap.String("RunID", workflowRun.GetRunID()),
 	)
@@ -546,8 +526,6 @@ func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runI
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.CancelWorkflow(ctx, workflowID, runID)
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to cancel workflow",
 			zap.String("WorkflowID", workflowID),
 			zap.String("RunID", runID),
@@ -557,8 +535,7 @@ func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runI
 		return err
 	}
 
-	// $debug(jack.burns)
-	helper.Logger.Info("Workflow Cancelled",
+	helper.Logger.Debug("Workflow Cancelled",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
 	)
@@ -593,9 +570,8 @@ func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, r
 		reason,
 		details,
 	)
-	if err != nil {
 
-		// $debug(jack.burns)
+	if err != nil {
 		helper.Logger.Error("failed to terminate workflow",
 			zap.String("WorkflowID", workflowID),
 			zap.String("RunID", runID),
@@ -605,8 +581,7 @@ func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, r
 		return err
 	}
 
-	// $debug(jack.burns)
-	helper.Logger.Info("Workflow Terminated",
+	helper.Logger.Debug("Workflow Terminated",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
 	)
@@ -649,15 +624,13 @@ func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflo
 		workflow,
 		args...,
 	)
-	if err != nil {
 
-		// $debug(jack.burns)
+	if err != nil {
 		helper.Logger.Error("failed to start workflow", zap.Error(err))
 		return nil, err
 	}
 
-	// $debug(jack.burns)
-	helper.Logger.Info("Started Workflow",
+	helper.Logger.Debug("Started Workflow",
 		zap.String("WorkflowID", workflowExecution.ID),
 		zap.String("RunID", workflowExecution.RunID),
 	)
@@ -687,8 +660,6 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	response, err := workflowClient.DescribeWorkflowExecution(ctx, workflowID, runID)
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to describe workflow execution",
 			zap.String("WorkflowID", workflowID),
 			zap.String("RunID", runID),
@@ -698,7 +669,6 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 		return nil, err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Workflow Describe Execution Successful",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
@@ -733,14 +703,12 @@ func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runI
 		signalName,
 		arg,
 	)
-	if err != nil {
 
-		// $debug(jack.burns)
+	if err != nil {
 		helper.Logger.Error("failed to signal workflow", zap.Error(err))
 		return err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Successfully Signaled Workflow",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
@@ -772,13 +740,10 @@ func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	value, err := workflowClient.QueryWorkflow(ctx, workflowID, runID, queryType, args...)
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to query workflow", zap.Error(err))
 		return nil, err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Successfully Queried Workflow",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
@@ -802,7 +767,6 @@ func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID
 //
 // returns error -> error upon failure to complete the activity, nil upon success
 func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, domain string, result interface{}, cadenceError *cadenceerrors.CadenceError) error {
-
 	var e error
 	if cadenceError != nil {
 		e = errors.New(cadenceError.ToString())
@@ -812,13 +776,10 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.CompleteActivity(ctx, taskToken, result, e)
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to complete activity", zap.Error(err))
 		return err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Successfully Completed Activity",
 		zap.Any("Result", result),
 		zap.Any("Error", e),
@@ -845,7 +806,6 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 //
 // returns error -> error upon failure to complete the activity, nil upon success
 func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, workflowID, runID, activityID string, result interface{}, cadenceError *cadenceerrors.CadenceError) error {
-
 	var e error
 	if cadenceError != nil {
 		e = errors.New(cadenceError.ToString())
@@ -855,13 +815,10 @@ func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, wo
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.CompleteActivityByID(ctx, domain, workflowID, runID, activityID, result, e)
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to complete activity", zap.Error(err))
 		return err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Successfully Completed Activity",
 		zap.Any("Result", result),
 		zap.Any("Error", e),
@@ -883,20 +840,14 @@ func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, wo
 //
 // returns error -> error upon failure to record activity heartbeat, nil upon success
 func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskToken []byte, domain string, details ...interface{}) error {
-
-	// query the workflow
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.RecordActivityHeartbeat(ctx, taskToken, details)
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to record activity heartbeat", zap.Error(err))
 		return err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Successfully Recorded Activity Heartbeat")
-
 	return nil
 }
 
@@ -916,20 +867,14 @@ func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskTok
 //
 // returns error -> error upon failure to record activity heartbeat, nil upon success
 func (helper *ClientHelper) RecordActivityHeartbeatByID(ctx context.Context, domain, workflowID, runID, activityID string, details ...interface{}) error {
-
-	// query the workflow
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.RecordActivityHeartbeatByID(ctx, domain, workflowID, runID, activityID, details)
 	if err != nil {
-
-		// $debug(jack.burns)
 		helper.Logger.Error("failed to record activity heartbeat", zap.Error(err))
 		return err
 	}
 
-	// $debug(jack.burns)
 	helper.Logger.Debug("Successfully Recorded Activity Heartbeat")
-
 	return nil
 }
 

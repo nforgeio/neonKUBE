@@ -40,12 +40,10 @@ import (
 // ProxyMessage processing helpers
 
 func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
-
-	// log when a new request has come in
-	logger.Info("Request Received",
+	logger.Debug("Request Received",
 		zap.String("Address", fmt.Sprintf("http://%s%s", r.Host, r.URL.String())),
 		zap.String("Method", r.Method),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// check if the content type is correct
@@ -55,7 +53,6 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 			globals.ContentType,
 		)
 
-		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Incorrect Content-Type",
 			zap.String("Content Type", r.Header.Get("Content-Type")),
 			zap.String("Expected Content Type", globals.ContentType),
@@ -71,8 +68,7 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 			http.MethodPut,
 		)
 
-		// $debug(jack.burns): DELETE THIS!
-		logger.Debug("Invalid HTTP Method",
+		logger.Error("Invalid HTTP Method",
 			zap.String("Method", r.Method),
 			zap.String("Expected", http.MethodPut),
 			zap.Error(err),
@@ -85,13 +81,8 @@ func checkRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 }
 
 func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
-
-	// create an empty []byte and read the
-	// request body into it if not nil
 	payload, err := ioutil.ReadAll(body)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Null request body", zap.Error(err))
 		return nil, err
 	}
@@ -100,8 +91,6 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	buf := bytes.NewBuffer(payload)
 	message, err := messages.Deserialize(buf, false)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Error deserializing input", zap.Error(err))
 		return nil, err
 	}
@@ -110,10 +99,8 @@ func readAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 }
 
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
-
-	// $debug(jack.burns): DELETE THIS!
 	proxyMessage := message.GetProxyMessage()
-	logger.Info("Sending request to Neon.Cadence client",
+	logger.Debug("Sending message to .net client",
 		zap.String("Address", replyAddress),
 		zap.String("MessageType", proxyMessage.Type.String()),
 		zap.Int("ProcessId", os.Getpid()),
@@ -122,8 +109,6 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// serialize the message
 	content, err := proxyMessage.Serialize(false)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Error serializing proxy message", zap.Error(err))
 		return nil, err
 	}
@@ -133,9 +118,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	buf := bytes.NewBuffer(content)
 	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Error("Error creating Neon.Cadence Library request", zap.Error(err))
+		logger.Error("Error creating .net client request", zap.Error(err))
 		return nil, err
 	}
 
@@ -147,9 +130,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// initialize the http.Client and send the request
 	resp, err := httpClient.Do(req)
 	if err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
-		logger.Error("Error sending Neon.Cadence Library request", zap.Error(err))
+		logger.Error("Error sending .net client request", zap.Error(err))
 		return nil, err
 	}
 
@@ -210,8 +191,6 @@ func sendMessage(message messages.IProxyMessage) {
 		panic(err)
 	}
 	defer func() {
-
-		// $debug(jack.burns): DELETE THIS!
 		err := resp.Body.Close()
 		if err != nil {
 			logger.Error("could not close response body", zap.Error(err))
@@ -252,4 +231,8 @@ func isCanceledErr(err interface{}) bool {
 	}
 
 	return strings.Contains(errStr, "CanceledError")
+}
+
+func isForceReplayErr(err error) bool {
+	return strings.Contains(err.Error(), "force-replay")
 }

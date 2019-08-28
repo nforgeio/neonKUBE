@@ -172,9 +172,9 @@ namespace Neon.Cadence
     /// which you don't have source code.
     /// </para>
     /// <para>
-    /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflowInterface}(string, string, string, string)"/>
+    /// You can create typed external workflow stubs via <see cref="NewWorkflowStub{TWorkflowInterface}(string, string, string)"/>
     /// and <see cref="NewWorkflowStub{TWorkflowInterface}(WorkflowOptions, string)"/> and external
-    /// untyped stubs via <see cref="NewUntypedWorkflowStub(string, string, string, string)"/> and
+    /// untyped stubs via <see cref="NewUntypedWorkflowStub(string, string, WorkflowOptions)"/> and
     /// <see cref="NewUntypedWorkflowStub(string, WorkflowOptions)"/>.
     /// </para>
     /// <para>
@@ -235,7 +235,7 @@ namespace Neon.Cadence
     /// in different ways to manage where workflows and activities will be scheduled for execution.
     /// </para>
     /// </remarks>
-    public partial class CadenceClient
+    public partial class CadenceClient : IDisposable
     {
         /// <summary>
         /// The <b>cadence-proxy</b> listening port to use when <see cref="CadenceSettings.DebugPrelaunched"/>
@@ -266,21 +266,7 @@ namespace Neon.Cadence
 
                 app.Run(async context =>
                 {
-                    await client.OnHttpRequestAsync(context);
-                });
-            }
-        }
-
-        /// <summary>
-        /// Configures an emulation of a <b>cadence-proxy</b> for unit testing.
-        /// </summary>
-        private class EmulatedStartup
-        {
-            public void Configure(IApplicationBuilder app, CadenceClient client)
-            {
-                app.Run(async context =>
-                {
-                    await client.OnEmulatedHttpRequestAsync(context);
+                    await OnHttpRequestAsync(context);
                 });
             }
         }
@@ -398,27 +384,60 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly object      staticSyncLock   = new object();
-        private static readonly Assembly    thisAssembly     = Assembly.GetExecutingAssembly();
-        private static readonly INeonLogger log              = LogManager.Default.GetLogger<CadenceClient>();
-        private static bool                 proxyWritten     = false;
-        private static long                 nextClientId     = 0;
-        private static int                  clientCount      = 0;
-        private static Process              proxyProcess     = null;
-        private static bool                 proxyInitialized = false;
-        private static bool                 compilerReady    = false;
+        private static readonly object                  staticSyncLock     = new object();
+        private static readonly Assembly                thisAssembly       = Assembly.GetExecutingAssembly();
+        private static readonly INeonLogger             log                = LogManager.Default.GetLogger<CadenceClient>();
+        private static bool                             proxyWritten       = false;
+        private static long                             nextClientId       = 0;
+        private static Dictionary<long, CadenceClient>  idToClient         = new Dictionary<long, CadenceClient>();
+        private static Process                          proxyProcess       = null;
+        private static bool                             proxyInitialized   = false;
+        private static bool                             compilerReady      = false;
+        private static bool                             stickyCacheSizeSet = false;
+        private static int                              proxyPort          = 0;
+        private static IWebHost                         host               = null;
+        private static long                             nextRequestId      = 0;
+        private static Dictionary<long, Operation>      operations         = new Dictionary<long, Operation>();
 
         /// <summary>
-        /// Used internally to reset any static state during unit tests.  This is
-        /// typically called by the [CadenceFixture] unit testing fixture to ensure
-        /// that the Cadence client starts out in a well known state.
-        /// </summary>x
+        /// Resets <see cref="CadenceClient"/> to its initial state, by closing
+        /// and existing connections and clearing any operation state.  This is
+        /// called by the <b>CadenceFixture</b>.
+        /// </summary>
         internal static void Reset()
         {
-            nextClientId     = 0;
-            clientCount      = 0;
-            proxyProcess     = null;
-            proxyInitialized = false;
+            foreach (var client in idToClient.Values)
+            {
+                client.Dispose();
+            }
+
+            ActivityBase.Reset();
+            WorkflowBase.Reset();
+
+            lock (staticSyncLock)
+            {
+                stickyCacheSizeSet = false;
+                nextClientId       = 0;
+                nextRequestId      = 0;
+
+                idToClient.Clear();
+                operations.Clear();
+
+                if (proxyProcess != null)
+                {
+                    proxyProcess.Kill();
+                    proxyProcess = null;
+                }
+
+                proxyInitialized = false;
+                proxyPort        = 0;
+
+                if (host != null)
+                {
+                    host.Dispose();
+                    host = null;
+                }
+            }
         }
 
         /// <summary>
@@ -554,6 +573,26 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the client associated with a given ID.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <returns>The <see cref="CadenceClient"/> or <c>null</c> if the client doesn't exist.</returns>
+        private static CadenceClient GetClient(long clientId)
+        {
+            lock (staticSyncLock)
+            {
+                if (idToClient.TryGetValue(clientId, out var client))
+                {
+                    return client;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
         /// Establishes a connection to a Cadence cluster.
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
@@ -561,12 +600,6 @@ namespace Neon.Cadence
         /// <remarks>
         /// <note>
         /// The <see cref="CadenceSettings"/> passed must specify a <see cref="CadenceSettings.DefaultDomain"/>.
-        /// </note>
-        /// <note>
-        /// <b>IMPORTANT:</b> The current .NET Cadence client release supports having one
-        /// client open at a time.  A <see cref="NotSupportedException"/> will be thrown
-        /// when attempting to connect a second client.  This restriction may be relaxed
-        /// for future releases.
         /// </note>
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
@@ -578,14 +611,200 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            await client.SetCacheMaximumSizeAsync(10000);
-
-            lock (staticSyncLock)
+            if (!stickyCacheSizeSet)
             {
-                clientCount++;
+                // The Cadence GOLANG client treats the sticky cache size as a process
+                // global rather than a per-connection setting and it's not possible
+                // to set this after the first worker is started.
+                //
+                // We're going to try to avoid calling this multiple times and we're
+                // also going to ignore any errors.
+
+                stickyCacheSizeSet = true;
+
+                try
+                {
+                    await client.SetCacheMaximumSizeAsync(10000);
+                }
+                catch
+                {
+                    // Ignoring these.
+                }
             }
 
             return client;
+        }
+
+        /// <summary>
+        /// Called when an HTTP request is received by the integrated web server 
+        /// (presumably sent by the associated <b>cadence-proxy</b> process).
+        /// </summary>
+        /// <param name="context">The request context.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task OnHttpRequestAsync(HttpContext context)
+        {
+            var request  = context.Request;
+            var response = context.Response;
+
+            if (request.Method != "PUT")
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted via [PUT].");
+                return;
+            }
+
+            if (request.ContentType != ProxyMessage.ContentType)
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                await response.WriteAsync($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}].");
+                return;
+            }
+
+            try
+            {
+                switch (request.Path)
+                {
+                    case "/":
+
+                        await OnRootRequestAsync(context);
+                        break;
+
+                    default:
+
+                        response.StatusCode = StatusCodes.Status404NotFound;
+                        await response.WriteAsync($"[{request.Path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed.");
+                        return;
+                }
+            }
+            catch (FormatException e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status400BadRequest;
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+        }
+
+        /// <summary>
+        /// Handles requests to the root <b>"/"</b> endpoint path.
+        /// </summary>
+        /// <param name="context">The request context.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task OnRootRequestAsync(HttpContext context)
+        {
+            // $hack(jeff.lill):
+            //
+            // We need to receive the entire request body before deserializing the
+            // the message because BinaryReader doesn't seem to play nice with reading
+            // from the body stream.  We're seeing EndOfStream exceptions when we try
+            // to read more than about 64KiB bytes of data which is the default size
+            // of the Kestrel receive buffer.  This suggests that there's some kind
+            // of problem reading the next buffer from the request socket.
+            //
+            // This isn't a huge issue since we're going to convert cadence-proxy into
+            // a shared library where we'll be passing message buffers directly.
+
+            var bodyStream = MemoryStreamPool.Alloc();
+
+            try
+            {
+                var httpRequest  = context.Request;
+                var httpResponse = context.Response;
+
+                await httpRequest.Body.CopyToAsync(bodyStream);
+
+                bodyStream.Position = 0;
+
+                var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(bodyStream);
+                var request      = proxyMessage as ProxyRequest;
+                var reply        = proxyMessage as ProxyReply;
+                var client       = GetClient(proxyMessage.ClientId);
+
+                if (client == null)
+                {
+                    // The message client ID doesn't map to a client so we'll
+                    // ignore it.
+
+                    log.LogWarn(() => $"[{request.GetType().Name}] message received with [clientId={request.ClientId}] does not map to a client.");
+                    return;
+                }
+
+                if (request != null)
+                {
+                    // [cadence-proxy] has sent us a request.
+
+                    switch (request.Type)
+                    {
+                        case InternalMessageTypes.WorkflowInvokeRequest:
+                        case InternalMessageTypes.WorkflowSignalInvokeRequest:
+                        case InternalMessageTypes.WorkflowQueryInvokeRequest:
+                        case InternalMessageTypes.ActivityInvokeLocalRequest:
+                        case InternalMessageTypes.WorkflowFutureReadyRequest:
+
+                            await WorkflowBase.OnProxyRequestAsync(client, request);
+                            break;
+
+                        case InternalMessageTypes.ActivityInvokeRequest:
+                        case InternalMessageTypes.ActivityStoppingRequest:
+
+                            await ActivityBase.OnProxyRequestAsync(client, request);
+                            break;
+
+                        default:
+
+                            httpResponse.StatusCode = StatusCodes.Status400BadRequest;
+                            await httpResponse.WriteAsync($"[cadence-client] does not support [{request.Type}] messages from the [cadence-proxy].");
+                            break;
+                    }
+                }
+                else if (reply != null)
+                {
+                    // [cadence-proxy] sent a reply to a request from the client.
+
+                    Operation operation;
+
+                    lock (staticSyncLock)
+                    {
+                        operations.TryGetValue(reply.RequestId, out operation);
+                    }
+
+                    if (operation != null)
+                    {
+                        if (reply.Type != operation.Request.ReplyType)
+                        {
+                            httpResponse.StatusCode = StatusCodes.Status400BadRequest;
+                            await httpResponse.WriteAsync($"[cadence-client] has a request [type={operation.Request.Type}, requestId={operation.RequestId}] pending but reply [type={reply.Type}] is not valid and will be ignored.");
+                        }
+                        else
+                        {
+                            operation.SetReply(reply);
+                            httpResponse.StatusCode = StatusCodes.Status200OK;
+                        }
+                    }
+                    else
+                    {
+                        log.LogWarn(() => $"Reply [type={reply.Type}, requestId={reply.RequestId}] does not map to a pending operation and will be ignored.");
+
+                        httpResponse.StatusCode = StatusCodes.Status400BadRequest;
+                        await httpResponse.WriteAsync($"[cadence-client] does not have a pending operation with [requestId={reply.RequestId}].");
+                    }
+                }
+                else
+                {
+                    // We should never see this.
+
+                    Covenant.Assert(false);
+                }
+            }
+            finally
+            {
+                MemoryStreamPool.Free(bodyStream);
+            }
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -691,21 +910,16 @@ namespace Neon.Cadence.WorkflowStub
 
         private object                          syncLock      = new object();
         private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
-        private Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
         private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
         private Dictionary<string, Type>        activityTypes = new Dictionary<string, Type>();
         private bool                            isDisposed    = false;
-        private long                            nextRequestId = 0;
-        private int                             proxyPort;
         private HttpClient                      proxyClient;
-        private IWebHost                        host;
         private Exception                       pendingException;
         private bool                            closingConnection;
         private bool                            connectionClosedRaised;
         private int                             workflowCacheSize;
         private Thread                          heartbeatThread;
         private Thread                          timeoutThread;
-        private Task                            emulationTask;
         private bool                            workflowWorkerStarted;
         private bool                            activityWorkerStarted;
 
@@ -762,66 +976,58 @@ namespace Neon.Cadence.WorkflowStub
 
             DataConverter = new JsonDataConverter();
 
-            // Start the web server that will listen for requests from the associated 
-            // [cadence-proxy] process.
-
-            host = new WebHostBuilder()
-                .UseKestrel(
-                    options =>
-                    {
-                        options.Limits.MaxRequestBodySize = null;     // Disables request size limits
-                        options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
-                    })
-                .ConfigureServices(
-                    services =>
-                    {
-                        services.AddSingleton(typeof(CadenceClient), this);
-                        services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
-                    })
-                .UseStartup<Startup>()
-                .Build();
-
-            host.Start();
-
-            ListenUri = new Uri(host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
-
-            // Determine the port we'll have [cadence-proxy] listen on and then
-            // fire up the cadence-proxy process or the stubbed host.
-
-            proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
-
-            if (!settings.Emulate)
+            lock (staticSyncLock)
             {
-                lock (staticSyncLock)
+                try
                 {
+                    idToClient.Add(this.ClientId, this);
+
+                    if (host == null)
+                    {
+                        // Start the web server that will listen for requests from the associated 
+                        // [cadence-proxy] process.
+
+                        host = new WebHostBuilder()
+                            .UseKestrel(
+                                options =>
+                                {
+                                    options.Limits.MaxRequestBodySize = null;     // Disables request size limits
+                                    options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
+                                })
+                            .ConfigureServices(
+                                services =>
+                                {
+                                    services.AddSingleton(typeof(CadenceClient), this);
+                                    services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
+                                })
+                            .UseStartup<Startup>()
+                            .Build();
+
+                        host.Start();
+                    }
+
+                    ListenUri = new Uri(host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
+
+                    // Determine the port we'll have [cadence-proxy] listen on and then
+                    // fire up the cadence-proxy process or the stubbed host.  Note that
+                    // we're going to reuse the existing port when a proxy is already running.
+
+                    if (proxyProcess == null)
+                    {
+                        proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
+                    }
+
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {
-                        proxyProcess     = StartProxy(new IPEndPoint(address, proxyPort), settings);
+                        proxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings);
                         proxyInitialized = false;
                     }
                 }
-            }
-            else
-            {
-                // Start up a partially implemented emulation of a cadence-proxy.
-
-                emulatedHost = new WebHostBuilder()
-                    .UseKestrel(
-                        options =>
-                        {
-                            options.Limits.MaxRequestBodySize = null;   // Disables request size limits
-                            options.Listen(address, proxyPort);
-                        })
-                    .ConfigureServices(
-                        services =>
-                        {
-                            services.AddSingleton(typeof(CadenceClient), this);
-                            services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
-                        })
-                    .UseStartup<EmulatedStartup>()
-                    .Build();
-
-                emulatedHost.Start();
+                catch
+                {
+                    idToClient.Remove(this.ClientId);
+                    throw;
+                }
             }
 
             // Create the HTTP client we'll use to communicate with the [cadence-proxy].
@@ -897,18 +1103,10 @@ namespace Neon.Cadence.WorkflowStub
             }
 
             // Crank up the background threads which will handle [cadence-proxy]
-            // health heartbeats as well as request timeouts.
-
-            heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
-            heartbeatThread.Start();
+            // request timeouts.
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
-
-            if (settings.Emulate)
-            {
-                emulationTask = Task.Run(async () => await EmulationTaskAsync());
-            }
         }
 
         /// <summary>
@@ -955,20 +1153,8 @@ namespace Neon.Cadence.WorkflowStub
 
                     // Signal the proxy to disconnect.
 
-// $todo(jeff.lill):
-//
-// We need to restore the code sending the DisconnectRequest, but it's
-// currently causing some exceptions.  The problem is that the disconnect
-// looks like it's stopping the workers which is causing activities to be
-// stopped, but by the time we reply to these stop messages, the cadence-proxy
-// has already closed the HTTP service for the connection (and perhaps terminated).
-//
-// Commenting this line code, will avoid this, and frankly we could probably
-// ship with this disabled.
-
-#if TODO
                     CallProxyAsync(new DisconnectRequest()).Wait();
-#endif
+
                     // Terminate the proxy if there are no remaining connections.
 
                     lock (staticSyncLock)
@@ -980,43 +1166,20 @@ namespace Neon.Cadence.WorkflowStub
                         else
                         {
                             isDisposed = true;
-                            clientCount--;
 
-                            if (clientCount < 0)
+                            lock (staticSyncLock)
                             {
-                                throw new InvalidOperationException("Client reference count underflow.");
-                            }
-
-                            if (clientCount == 0)
-                            {
-                                // Signal the proxy that it should exit gracefully and then
-                                // allow it [Settings.TerminateTimeout] to actually exit
-                                // before killing it.
-
-                                try
-                                {
-                                    CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
-                                }
-                                catch
-                                {
-                                    // Ignoring these.
-                                }
-
-                                if (proxyProcess != null && !proxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
-                                {
-                                    log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
-                                    proxyProcess.Kill();
-                                }
-
-                                proxyProcess = null;
-                                proxyInitialized = false;
+                                idToClient.Remove(ClientId);
                             }
                         }
+
+                        WorkflowBase.UnregisterClient(this);
+                        ActivityBase.UnregisterClient(this);
                     }
                 }
                 catch
                 {
-                    // Ignoring this.
+                    // Ignoring errors.
                 }
             }
 
@@ -1032,37 +1195,11 @@ namespace Neon.Cadence.WorkflowStub
                 timeoutThread = null;
             }
 
-            if (emulationTask != null)
-            {
-                emulationTask.Wait();
-            }
-
-            if (emulatedHost != null)
-            {
-                emulatedHost.Dispose();
-                emulatedHost = null;
-            }
-
-            if (EmulatedLibraryClient != null)
-            {
-                EmulatedLibraryClient.Dispose();
-                EmulatedLibraryClient = null;
-            }
-
             if (proxyClient != null)
             {
                 proxyClient.Dispose();
                 proxyClient = null;
             }
-
-            if (host != null)
-            {
-                host.Dispose();
-                host = null;
-            }
-
-            WorkflowBase.UnregisterClient(this);
-            ActivityBase.UnregisterClient(this);
 
             if (disposing)
             {
@@ -1223,173 +1360,6 @@ namespace Neon.Cadence.WorkflowStub
         }
 
         /// <summary>
-        /// Called when an HTTP request is received by the integrated web server 
-        /// (presumably sent by the associated <b>cadence-proxy</b> process).
-        /// </summary>
-        /// <param name="context">The request context.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnHttpRequestAsync(HttpContext context)
-        {
-            var request  = context.Request;
-            var response = context.Response;
-
-            if (request.Method != "PUT")
-            {
-                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
-                await response.WriteAsync($"[{request.Method}] HTTP method is not supported.  All requests must be submitted via [PUT].");
-                return;
-            }
-
-            if (request.ContentType != ProxyMessage.ContentType)
-            {
-                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
-                await response.WriteAsync($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}].");
-                return;
-            }
-
-            try
-            {
-                switch (request.Path)
-                {
-                    case "/":
-
-                        await OnRootRequestAsync(context);
-                        break;
-
-                    case "/echo":
-
-                        await OnEchoRequestAsync(context);
-                        break;
-
-                    default:
-
-                        response.StatusCode = StatusCodes.Status404NotFound;
-                        await response.WriteAsync($"[{request.Path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed.");
-                        return;
-                }
-            }
-            catch (FormatException e)
-            {
-                log.LogError(e);
-                response.StatusCode = StatusCodes.Status400BadRequest;
-            }
-            catch (Exception e)
-            {
-                log.LogError(e);
-                response.StatusCode = StatusCodes.Status500InternalServerError;
-            }
-        }
-
-        /// <summary>
-        /// Handles requests to the root <b>"/"</b> endpoint path.
-        /// </summary>
-        /// <param name="context">The request context.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task OnRootRequestAsync(HttpContext context)
-        {
-            // $hack(jeff.lill):
-            //
-            // We need to receive the entire request body before deserializing the
-            // the message because BinaryReader doesn't seem to play nice with reading
-            // from the body stream.  We're seeing EndOfStream exceptions when we try
-            // to read more than about 64KiB bytes of data which is the default size
-            // of the Kestrel receive buffer.  This suggests that there's some kind
-            // of problem reading the next buffer from the request socket.
-            //
-            // This isn't a huge issue since we're going to convert cadence-proxy into
-            // a shared library where we'll be passing message buffers directly.
-
-            var bodyStream = MemoryStreamPool.Alloc();
-
-            try
-            {
-                var httpRequest  = context.Request;
-                var httpResponse = context.Response;
-
-                await httpRequest.Body.CopyToAsync(bodyStream);
-
-                bodyStream.Position = 0;
-
-                var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(bodyStream);
-                var request      = proxyMessage as ProxyRequest;
-                var reply        = proxyMessage as ProxyReply;
-
-                if (request != null)
-                {
-                    // [cadence-proxy] has sent us a request.
-
-                    switch (request.Type)
-                    {
-                        case InternalMessageTypes.WorkflowInvokeRequest:
-                        case InternalMessageTypes.WorkflowSignalInvokeRequest:
-                        case InternalMessageTypes.WorkflowQueryInvokeRequest:
-                        case InternalMessageTypes.ActivityInvokeLocalRequest:
-                        case InternalMessageTypes.WorkflowFutureReadyRequest:
-
-                            await WorkflowBase.OnProxyRequestAsync(this, request);
-                            break;
-
-                        case InternalMessageTypes.ActivityInvokeRequest:
-                        case InternalMessageTypes.ActivityStoppingRequest:
-
-                            await ActivityBase.OnProxyRequestAsync(this, request);
-                            break;
-
-                        default:
-
-                            httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                            await httpResponse.WriteAsync($"[cadence-client] does not support [{request.Type}] messages from the [cadence-proxy].");
-                            break;
-                    }
-                }
-                else if (reply != null)
-                {
-                    // [cadence-proxy] sent a reply to a request from the client.
-
-                    Operation operation;
-
-                    lock (syncLock)
-                    {
-                        operations.TryGetValue(reply.RequestId, out operation);
-                    }
-
-                    if (operation != null)
-                    {
-                        if (reply.Type != operation.Request.ReplyType)
-                        {
-                            httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                            await httpResponse.WriteAsync($"[cadence-client] has a request [type={operation.Request.Type}, requestId={operation.RequestId}] pending but reply [type={reply.Type}] is not valid and will be ignored.");
-                        }
-                        else
-                        {
-                            operation.SetReply(reply);
-                            httpResponse.StatusCode = StatusCodes.Status200OK;
-                        }
-                    }
-                    else
-                    {
-                        log.LogWarn(() => $"Reply [type={reply.Type}, requestId={reply.RequestId}] does not map to a pending operation and will be ignored.");
-
-                        httpResponse.StatusCode = StatusCodes.Status400BadRequest;
-                        await httpResponse.WriteAsync($"[cadence-client] does not have a pending operation with [requestId={reply.RequestId}].");
-                    }
-                }
-                else
-                {
-                    // We should never see this.
-
-                    Covenant.Assert(false);
-                }
-            }
-            finally
-            {
-                MemoryStreamPool.Free(bodyStream);
-            }
-
-            await Task.CompletedTask;
-        }
-
-        /// <summary>
         /// Asynchronously calls the <b>cadence-proxy</b> by sending a request message
         /// and then waits for a reply.
         /// </summary>
@@ -1406,7 +1376,7 @@ namespace Neon.Cadence.WorkflowStub
 
             try
             {
-                var requestId = Interlocked.Increment(ref this.nextRequestId);
+                var requestId = Interlocked.Increment(ref nextRequestId);
                 var operation = new Operation(requestId, request, timeout);
 
                 lock (syncLock)
@@ -1475,6 +1445,8 @@ namespace Neon.Cadence.WorkflowStub
             Covenant.Requires<ArgumentNullException>(request != null);
             Covenant.Requires<ArgumentNullException>(reply != null);
 
+            reply.ClientId = ClientId;
+
             try
             {
                 await proxyClient.SendReplyAsync(request, reply);
@@ -1485,8 +1457,8 @@ namespace Neon.Cadence.WorkflowStub
                 // Either a requestID somehow got reused (which should never 
                 // happen) the HTTP request to the [cadence-proxy] failed
                 // to be transmitted, timed out, or the proxy returned an
-                // error status code, or maybe the client was closed out from
-                // under us.
+                // error status code, or maybe the client was closed out 
+                // from under us.
                 //
                 // We're going to save the exception to [pendingException]
                 // and signal the background thread to close the connection.
@@ -1497,76 +1469,6 @@ namespace Neon.Cadence.WorkflowStub
                 log.LogCritical(e);
                 throw;
             }
-        }
-
-        /// <summary>
-        /// Implements the connection's background thread which is responsible
-        /// for checking <b>cadence-proxy</b> health via heartbeat requests.
-        /// </summary>
-        private void HeartbeatThread()
-        {
-            Task.Run(
-                async () =>
-                {
-                    var sleepTime = TimeSpan.FromSeconds(1);
-                    var exception = (Exception)null;
-
-                    try
-                    {
-                        while (!closingConnection && !isDisposed)
-                        {
-                            Thread.Sleep(sleepTime);
-
-                            if (!Settings.DebugDisableHeartbeats)
-                            {
-                                // Verify [cadence-proxy] health via by sending a heartbeat
-                                // and waiting a bit for a reply.
-
-                                try
-                                {
-                                    var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: Settings.DebugHttpTimeout);
-
-                                    if (heartbeatReply.Error != null)
-                                    {
-                                        throw new Exception($"[cadence-proxy]: Heartbeat returns [{heartbeatReply.Error}].");
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    log.LogError("Heartbeat check failed.  Closing Cadence connection.", e);
-                                    exception = new CadenceTimeoutException("Heartbeat check failed.", e);
-
-                                    // Break out of the while loop so we'll signal the application that
-                                    // the connection has closed and then exit the thread below.
-
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        // We shouldn't see any exceptions here except perhaps
-                        // [TaskCanceledException] when the connection is in
-                        // the process of being closed.
-
-                        if (!closingConnection || !e.Contains<TaskCanceledException>())
-                        {
-                            exception = e;
-                            log.LogError(e);
-                        }
-                    }
-
-                    if (exception == null && pendingException != null)
-                    {
-                        exception = pendingException;
-                    }
-
-                    // This is a good place to signal the client application that the
-                    // connection has been closed.
-
-                    RaiseConnectionClosed(exception);
-                });
         }
 
         /// <summary>

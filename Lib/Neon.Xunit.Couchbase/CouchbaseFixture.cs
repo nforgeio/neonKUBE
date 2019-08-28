@@ -78,7 +78,7 @@ namespace Neon.Xunit.Couchbase
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CouchbaseSettings, string, string, string[], string, string, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CouchbaseSettings, string, string, string[], string, string, bool, string)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -93,6 +93,11 @@ namespace Neon.Xunit.Couchbase
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
         /// <param name="noPrimary">Optionally disable creation of the primary bucket index.</param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
@@ -149,13 +154,14 @@ namespace Neon.Xunit.Couchbase
         /// </list>
         /// </remarks>
         public TestFixtureStatus Start(
-            CouchbaseSettings   settings  = null,
-            string              image     = null,
-            string              name      = "cb-test",
-            string[]            env       = null,
-            string              username  = "Administrator",
-            string              password  = "password",
-            bool                noPrimary = false)
+            CouchbaseSettings   settings      = null,
+            string              image         = null,
+            string              name          = "cb-test",
+            string[]            env           = null,
+            string              username      = "Administrator",
+            string              password      = "password",
+            bool                noPrimary     = false,
+            string              hostInterface = null)
         {
             return base.Start(
                 () =>
@@ -178,14 +184,20 @@ namespace Neon.Xunit.Couchbase
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
         /// <param name="noPrimary">Optionally disable creation of thea primary bucket index.</param>
+        /// <param name="hostInterface">
+        /// Optionally specifies the host interface where the container public ports will be
+        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
+        /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
         public void StartAsComposed(
-            CouchbaseSettings   settings  = null,
-            string              image     = null,
-            string              name      = "cb-test",
-            string[]            env       = null,
-            string              username  = "Administrator",
-            string              password  = "password",
-            bool                noPrimary = false)
+            CouchbaseSettings   settings      = null,
+            string              image         = null,
+            string              name          = "cb-test",
+            string[]            env           = null,
+            string              username      = "Administrator",
+            string              password      = "password",
+            bool                noPrimary     = false,
+            string              hostInterface = null)
         {
             image = image ?? $"{KubeConst.NeonBranchRegistry}/couchbase-test:latest";
 
@@ -199,16 +211,16 @@ namespace Neon.Xunit.Couchbase
                     new string[]
                     {
                         "--detach",
-                        "-p", "4369:4369",
-                        "-p", "8091-8096:8091-8096",
-                        "-p", "9100-9105:9100-9105",
-                        "-p", "9110-9118:9110-9118",
-                        "-p", "9120-9122:9120-9122",
-                        "-p", "9999:9999",
-                        "-p", "11207:11207",
-                        "-p", "11209-11211:11209-11211",
-                        "-p", "18091-18096:18091-18096",
-                        "-p", "21100-21299:21100-21299"
+                        "-p", $"{GetHostInterface(hostInterface)}:4369:4369",
+                        "-p", $"{GetHostInterface(hostInterface)}:8091-8096:8091-8096",
+                        "-p", $"{GetHostInterface(hostInterface)}:9100-9105:9100-9105",
+                        "-p", $"{GetHostInterface(hostInterface)}:9110-9118:9110-9118",
+                        "-p", $"{GetHostInterface(hostInterface)}:9120-9122:9120-9122",
+                        "-p", $"{GetHostInterface(hostInterface)}:9999:9999",
+                        "-p", $"{GetHostInterface(hostInterface)}:11207:11207",
+                        "-p", $"{GetHostInterface(hostInterface)}:11209-11211:11209-11211",
+                        "-p", $"{GetHostInterface(hostInterface)}:18091-18096:18091-18096",
+                        "-p", $"{GetHostInterface(hostInterface)}:21100-21299:21100-21299"
                     },
                     env: env);
 
@@ -217,7 +229,7 @@ namespace Neon.Xunit.Couchbase
                 settings = settings ?? new CouchbaseSettings();
 
                 settings.Servers.Clear();
-                settings.Servers.Add(new Uri("http://localhost:8091"));
+                settings.Servers.Add(new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}:8091"));
 
                 if (settings.Bucket == null)
                 {
@@ -230,7 +242,7 @@ namespace Neon.Xunit.Couchbase
                 Password = password;
 
                 jsonClient             = new JsonClient();
-                jsonClient.BaseAddress = new Uri("http://localhost:8094");
+                jsonClient.BaseAddress = new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}:8094");
                 jsonClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue(
                         "Basic",

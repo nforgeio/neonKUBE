@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceWorkflowRestartException.cs
+// FILE:	    CadenceContinueAsNewException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,13 +33,35 @@ namespace Neon.Cadence
     /// a workflow.
     /// </summary>
     /// <remarks>
-    /// <note>
-    /// Workflow entry points must allow this exception to be caught by the
-    /// calling <see cref="CadenceClient"/> so that the contunue will work 
-    /// properly.
-    /// </note>
+    /// <para>
+    /// If your workflow needs a general exception handler, you should include
+    /// a <c>catch</c> clause that catches and rethrows any <see cref="CadenceInternalException"/>
+    /// derived exceptions before your custom handler.  This will look something like:
+    /// </para>
+    /// <code language="c#">
+    /// public class MyWorkflow
+    /// {
+    ///     public Task Entrypoint()
+    ///     {
+    ///         try
+    ///         {
+    ///             // Workflow implementation.
+    ///         }
+    ///         catch (CadenceInternalException)
+    ///         {
+    ///             // Rethrow so Cadence can handle these exceptions.        
+    /// 
+    ///             throw;
+    ///         }
+    ///         catch (Exception e)
+    ///         {
+    ///             // Your exception handler.
+    ///         }
+    ///     }
+    /// }
+    /// </code>
     /// </remarks>
-    public class CadenceWorkflowRestartException : Exception
+    public class CadenceContinueAsNewException : CadenceInternalException
     {
         /// <summary>
         /// Constructor.
@@ -52,7 +74,7 @@ namespace Neon.Cadence
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
         /// <param name="taskStartToCloseTimeout">Optional decision task start to close timeout for the new execution.</param>
         /// <param name="retryPolicy">Optional retry policy for the new execution.</param>
-        public CadenceWorkflowRestartException(
+        public CadenceContinueAsNewException(
             byte[]          args                    = null,
             string          domain                  = null,
             string          taskList                = null,

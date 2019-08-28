@@ -46,11 +46,9 @@ import (
 // IProxyRequest client message type handler methods
 
 func handlePingRequest(requestCtx context.Context, request *messages.PingRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("PingRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new PingReply
@@ -61,13 +59,11 @@ func handlePingRequest(requestCtx context.Context, request *messages.PingRequest
 }
 
 func handleCancelRequest(requestCtx context.Context, request *messages.CancelRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	targetID := request.GetTargetRequestID()
 	logger.Debug("CancelRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("TargetId", targetID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new InitializeReply
@@ -78,12 +74,10 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 }
 
 func handleConnectRequest(requestCtx context.Context, request *messages.ConnectRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ConnectRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ClientId", request.GetClientID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ConnectReply
@@ -107,7 +101,6 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrConnection))
-
 		return reply
 	}
 
@@ -139,8 +132,6 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		}
 	}
 
-	// add the new ClientHelper to the Clients map
-	// build reply
 	_ = Clients.Add(request.GetClientID(), clientHelper)
 	buildReply(reply, nil)
 
@@ -148,13 +139,11 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 }
 
 func handleDisconnectRequest(requestCtx context.Context, request *messages.DisconnectRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	clientID := request.GetClientID()
 	logger.Debug("DisconnectRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ClientId", clientID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DisconnectReply
@@ -162,8 +151,6 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 
 	// destroy the client
 	if err := Clients.Get(clientID).DestroyClient(); err != nil {
-
-		// $debug(jack.burns): DELETE THIS!
 		logger.Error("Could not disconnect cadence client.",
 			zap.Int64("ClientID", clientID),
 			zap.Error(err),
@@ -178,7 +165,6 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 	_ = Clients.Remove(clientID)
 	buildReply(reply, nil)
 
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Successfully removed client.",
 		zap.Int64("ClientID", clientID),
 	)
@@ -187,11 +173,9 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 }
 
 func handleHeartbeatRequest(requestCtx context.Context, request *messages.HeartbeatRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("HeartbeatRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new HeartbeatReply
@@ -202,11 +186,9 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 }
 
 func handleInitializeRequest(requestCtx context.Context, request *messages.InitializeRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("InitializeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new InitializeReply
@@ -224,7 +206,6 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 		)
 	}
 
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
 	buildReply(reply, nil)
 
@@ -232,11 +213,9 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 }
 
 func handleTerminateRequest(requestCtx context.Context, request *messages.TerminateRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("TerminateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new TerminateReply
@@ -245,23 +224,19 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 	// setting terminate to true indicates that after the TerminateReply is sent,
 	// the server instance should gracefully shut down
 	terminate = true
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWorkerRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	domain := *request.GetDomain()
 	taskList := *request.GetTaskList()
 	logger.Debug("NewWorkerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
 		zap.String("TaskList", taskList),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new NewWorkerReply
@@ -275,27 +250,22 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err), workerID)
-
 		return reply
 	}
 
 	// put the worker and workerID from the new worker to the
 	workerID = Workers.Add(workerID, worker)
-
-	// build the reply
 	buildReply(reply, nil, workerID)
 
 	return reply
 }
 
 func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopWorkerRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workerID := request.GetWorkerID()
 	logger.Debug("StopWorkerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("WorkerId", workerID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new StopWorkerReply
@@ -306,7 +276,6 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 	worker := Workers.Get(workerID)
 	if worker == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -315,7 +284,6 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 	Clients.Get(request.GetClientID()).StopWorker(worker)
 	workerID = Workers.Remove(workerID)
 
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Worker has been removed from Workers", zap.Int64("WorkerID", workerID))
 	buildReply(reply, nil)
 
@@ -323,13 +291,11 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 }
 
 func handleDomainDescribeRequest(requestCtx context.Context, request *messages.DomainDescribeRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	domain := *request.GetName()
 	logger.Debug("DomainDescribeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DomainDescribeReply
@@ -344,22 +310,17 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 	describeDomainResponse, err := clientHelper.DescribeDomain(ctx, domain)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build reply
 	buildReply(reply, nil, describeDomainResponse)
 
 	return reply
 }
 
 func handleDomainRegisterRequest(requestCtx context.Context, request *messages.DomainRegisterRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("DomainRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DomainRegisterReply
@@ -386,24 +347,19 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	err := clientHelper.RegisterDomain(ctx, &registerDomainRequest)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleDomainUpdateRequest(requestCtx context.Context, request *messages.DomainUpdateRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	domain := *request.GetName()
 	logger.Debug("DomainUpdateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new DomainUpdateReply
@@ -439,11 +395,8 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	err := clientHelper.UpdateDomain(ctx, &domainUpdateRequest)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build reply
 	buildReply(reply, nil)
 
 	return reply
@@ -453,13 +406,11 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 // IProxyRequest workflow message type handler methods
 
 func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages.WorkflowRegisterRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflowName := request.GetName()
 	logger.Debug("WorkflowRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Workflow", *workflowName),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowRegisterReply
@@ -467,15 +418,13 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 	// create workflow function
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
-
-		// $debug(jack.burns): DELETE THIS!
 		contextID := cadenceworkflows.NextContextID()
 		requestID := NextRequestID()
 		logger.Debug("Executing Workflow",
 			zap.String("Workflow", *workflowName),
 			zap.Int64("RequestId", requestID),
 			zap.Int64("ContextId", contextID),
-			zap.Int("ProccessId", os.Getpid()),
+			zap.Int("ProcessId", os.Getpid()),
 		)
 
 		// set the WorkflowContext in WorkflowContexts
@@ -520,28 +469,28 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 		// workflow failed
 		case error:
+			if isForceReplayErr(s) {
+				panic("force-replay")
+			}
 
-			// $debug(jack.burns): DELETE THIS!
 			logger.Error("Workflow Failed With Error",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
 
 		// workflow succeeded
 		case []byte:
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Info("Workflow Completed Successfully",
+			logger.Debug("Workflow Completed Successfully",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil
@@ -554,8 +503,6 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 	// register the workflow
 	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *workflowName})
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("workflow successfully registered", zap.String("WorkflowName", *workflowName))
 	buildReply(reply, nil)
 
@@ -563,15 +510,13 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 }
 
 func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.WorkflowExecuteRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflowName := *request.GetWorkflow()
 	domain := *request.GetDomain()
 	logger.Debug("WorkflowExecuteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowName", workflowName),
 		zap.String("Domain", domain),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowExecuteReply
@@ -597,7 +542,6 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
 
@@ -606,23 +550,19 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 		ID:    workflowRun.GetID(),
 		RunID: workflowRun.GetRunID(),
 	}
-
-	// build the reply
 	buildReply(reply, nil, &workflowExecution)
 
 	return reply
 }
 
 func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.WorkflowCancelRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
 	logger.Debug("WorkflowCancelRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowCancelReply
@@ -641,26 +581,21 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowTerminateRequest(requestCtx context.Context, request *messages.WorkflowTerminateRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
 	logger.Debug("WorkflowTerminateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowTerminateReply
@@ -681,26 +616,21 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *messages.WorkflowSignalWithStartRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflow := *request.GetWorkflow()
 	workflowID := *request.GetWorkflowID()
 	logger.Debug("WorkflowSignalWithStartRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Workflow", workflow),
 		zap.String("WorkflowId", workflowID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalWithStartReply
@@ -724,22 +654,17 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil, workflowExecution)
 
 	return reply
 }
 
 func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *messages.WorkflowSetCacheSizeRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowSetCacheSizeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSetCacheSizeReply
@@ -747,19 +672,15 @@ func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *mess
 
 	// set the sticky workflow cache size
 	worker.SetStickyWorkflowCacheSize(request.GetSize())
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.WorkflowMutableRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowMutableRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowMutableReply
@@ -769,7 +690,6 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -784,8 +704,6 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 
 	// the equals function for workflow.MutableSideEffect
 	equals := func(a, b interface{}) bool {
-
-		// check if the results are *cadencerrors.CadenceError
 		if v, ok := a.(*cadenceerrors.CadenceError); ok {
 			if _v, _ok := b.(*cadenceerrors.CadenceError); _ok {
 				if v.GetType() == _v.GetType() &&
@@ -796,8 +714,6 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 			}
 			return false
 		}
-
-		// check if the results are []byte
 		if v, ok := a.([]byte); ok {
 			if _v, _ok := b.([]byte); _ok {
 				return bytes.Equal(v, _v)
@@ -825,26 +741,21 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	err := value.Get(&result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build reply
 	buildReply(reply, nil, result)
 
 	return reply
 }
 
 func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request *messages.WorkflowDescribeExecutionRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
 	logger.Debug("WorkflowDescribeExecutionRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowDescribeExecutionReply
@@ -863,22 +774,17 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build reply
 	buildReply(reply, nil, dwer)
 
 	return reply
 }
 
 func handleWorkflowGetResultRequest(requestCtx context.Context, request *messages.WorkflowGetResultRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("WorkflowGetResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetResultReply
@@ -897,7 +803,6 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
 
@@ -906,24 +811,19 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	err = workflowRun.Get(ctx, &result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil, result)
 
 	return reply
 }
 
 func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowSignalSubscribeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", request.GetContextID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalSubscribeReply
@@ -933,7 +833,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -948,8 +847,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 	selector := workflow.NewSelector(ctx)
 	selector = selector.AddReceive(workflow.GetSignalChannel(ctx, *signalName), func(channel workflow.Channel, more bool) {
 		channel.Receive(ctx, &signalArgs)
-
-		// $debug(jack.burns): DELETE THIS!
 		logger.Debug("Received signal!", zap.String("signal", *signalName),
 			zap.ByteString("args", signalArgs))
 
@@ -978,8 +875,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Error("signal failed with error",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
@@ -988,8 +883,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			)
 
 		case bool:
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Info("signal completed successfully",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
@@ -998,8 +891,6 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			)
 
 		default:
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Info("signal result unexpected",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
@@ -1035,15 +926,13 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 }
 
 func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.WorkflowSignalRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
 	logger.Debug("WorkflowSignalRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalReply
@@ -1065,24 +954,19 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *messages.WorkflowHasLastResultRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowHasLastResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowHasLastResultReply
@@ -1092,28 +976,23 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
 	// set ReplayStatus
 	ctx := wectx.GetContext()
 	setReplayStatus(ctx, reply)
-
-	// build the reply
 	buildReply(reply, nil, workflow.HasLastCompletionResult(ctx))
 
 	return reply
 }
 
 func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *messages.WorkflowGetLastResultRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowGetLastResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetLastResultReply
@@ -1123,7 +1002,6 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1136,24 +1014,19 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 	err := workflow.GetLastCompletionResult(ctx, &result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil, result)
 
 	return reply
 }
 
 func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request *messages.WorkflowDisconnectContextRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowDisconnectContextRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowDisconnectContextReply
@@ -1163,7 +1036,6 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1172,21 +1044,17 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	disconnectedCtx, cancel := workflow.NewDisconnectedContext(wectx.GetContext())
 	wectx.SetContext(disconnectedCtx)
 	wectx.SetCancelFunction(cancel)
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.WorkflowGetTimeRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowGetTimeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetTimeReply
@@ -1196,28 +1064,23 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
 	// set replay status
 	ctx := wectx.GetContext()
 	setReplayStatus(ctx, reply)
-
-	// build the reply
 	buildReply(reply, nil, workflow.Now(ctx))
 
 	return reply
 }
 
 func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.WorkflowSleepRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowSleepRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSleepReply
@@ -1227,7 +1090,6 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1247,24 +1109,19 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	err := future.Get(ctx, &result)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err, cadenceerrors.Cancelled))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *messages.WorkflowExecuteChildRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowExecuteChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowExecuteChildReply
@@ -1274,7 +1131,6 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1315,23 +1171,19 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
 	}
-
-	// build the reply
 	buildReply(reply, nil, append(make([]interface{}, 0), childID, childWE))
 
 	return reply
 }
 
 func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *messages.WorkflowWaitForChildRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	childID := request.GetChildID()
 	logger.Debug("WorkflowWaitForChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowWaitForChildReply
@@ -1342,7 +1194,6 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1359,33 +1210,28 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		} else {
 			cadenceError = cadenceerrors.NewCadenceError(err)
 		}
-
 		buildReply(reply, cadenceError)
 
 		return reply
 	}
+	buildReply(reply, nil, result)
 
 	// remove the child context
 	defer func() {
 		_ = wectx.RemoveChildContext(childID)
 	}()
 
-	// build the reply
-	buildReply(reply, nil, result)
-
 	return reply
 }
 
 func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messages.WorkflowSignalChildRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	childID := request.GetChildID()
 	logger.Debug("WorkflowSignalChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSignalChildReply
@@ -1396,7 +1242,6 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1418,26 +1263,21 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil, result)
 
 	return reply
 }
 
 func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messages.WorkflowCancelChildRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	childID := request.GetChildID()
 	logger.Debug("WorkflowCancelChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowCancelChildReply
@@ -1459,21 +1299,17 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	// call the cancel function
 	cancel := cctx.GetCancelFunction()
 	cancel()
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *messages.WorkflowSetQueryHandlerRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowSetQueryHandlerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowSetQueryHandlerReply
@@ -1483,7 +1319,6 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1519,28 +1354,24 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 
 		// failure
 		case error:
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Error("Query Failed With Error",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
 
 		// success
 		case []byte:
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Info("Query Completed Successfully",
+			logger.Debug("Query Completed Successfully",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil
@@ -1556,26 +1387,21 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	err := workflow.SetQueryHandler(ctx, *queryName, queryHandler)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.WorkflowQueryRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
 	logger.Debug("WorkflowQueryRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowQueryReply
@@ -1596,7 +1422,6 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 	)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
 
@@ -1606,25 +1431,20 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 		err = value.Get(&result)
 		if err != nil {
 			buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 			return reply
 		}
 	}
-
-	// build reply
 	buildReply(reply, nil, result)
 
 	return reply
 }
 
 func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messages.WorkflowGetVersionRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("WorkflowGetVersionRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new WorkflowGetVersionReply
@@ -1634,7 +1454,6 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1648,8 +1467,6 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 		workflow.Version(request.GetMinSupported()),
 		workflow.Version(request.GetMaxSupported()),
 	)
-
-	// build the reply
 	buildReply(reply, nil, version)
 
 	return reply
@@ -1659,14 +1476,12 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 // IProxyRequest activity message type handler methods
 
 func handleActivityRegisterRequest(requestCtx context.Context, request *messages.ActivityRegisterRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	requestID := NextRequestID()
 	activityName := request.GetName()
 	logger.Debug("ActivityRegisterRequest Received",
 		zap.Int64("RequestId", requestID),
 		zap.String("Activity", *activityName),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityRegisterReply
@@ -1674,14 +1489,12 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 	// define the activity function
 	activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
-
-		// $debug(jack.burns): DELETE THIS!
 		contextID := cadenceactivities.NextContextID()
 		logger.Debug("Executing Activity",
 			zap.String("Activity", *activityName),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProccessId", os.Getpid()),
+			zap.Int("ProcessId", os.Getpid()),
 		)
 
 		// add the context to ActivityContexts
@@ -1744,28 +1557,24 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 		// failure
 		case error:
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Error("Activity Failed With Error",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
 
 		// success
 		case []byte:
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Info("Activity Completed Successfully",
+			logger.Debug("Activity Completed Successfully",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil
@@ -1778,8 +1587,6 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 	// register the activity
 	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *activityName})
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *activityName))
 	buildReply(reply, nil)
 
@@ -1787,14 +1594,12 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 }
 
 func handleActivityExecuteRequest(requestCtx context.Context, request *messages.ActivityExecuteRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("ActivityExecuteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.String("ActivityName", *request.GetActivity()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityExecuteReply
@@ -1804,7 +1609,6 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1824,22 +1628,17 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil, result)
 
 	return reply
 }
 
 func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, request *messages.ActivityHasHeartbeatDetailsRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityHasHeartbeatDetailsRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityHasHeartbeatDetailsReply
@@ -1848,22 +1647,17 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 	actx := ActivityContexts.Get(request.GetContextID())
 	if actx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil, activity.HasHeartbeatDetails(actx.GetContext()))
 
 	return reply
 }
 
 func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, request *messages.ActivityGetHeartbeatDetailsRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityGetHeartbeatDetailsRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityGetHeartbeatDetailsReply
@@ -1873,7 +1667,6 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	actx := ActivityContexts.Get(request.GetContextID())
 	if actx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -1882,22 +1675,17 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	err := activity.GetHeartbeatDetails(actx.GetContext(), &details)
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil, details)
 
 	return reply
 }
 
 func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *messages.ActivityRecordHeartbeatRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityRecordHeartbeatRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityRecordHeartbeatReply
@@ -1916,14 +1704,11 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 			actx := ActivityContexts.Get(request.GetContextID())
 			if actx == nil {
 				buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 				return reply
 			}
 			activity.RecordHeartbeat(ActivityContexts.Get(request.GetContextID()).GetContext(), details)
 
 		} else {
-
-			// RecordActivityHeartbeatByID
 			err = clientHelper.RecordActivityHeartbeatByID(ctx,
 				*request.GetDomain(),
 				*request.GetWorkflowID(),
@@ -1934,8 +1719,6 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		}
 
 	} else {
-
-		// record the heartbeat details
 		err = clientHelper.RecordActivityHeartbeat(ctx,
 			request.GetTaskToken(),
 			*request.GetDomain(),
@@ -1944,24 +1727,19 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	}
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.ActivityGetInfoRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	logger.Debug("ActivityGetInfoRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ActivityContextId", contextID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityGetInfoReply
@@ -1984,11 +1762,9 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 }
 
 func handleActivityCompleteRequest(requestCtx context.Context, request *messages.ActivityCompleteRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	logger.Debug("ActivityCompleteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityCompleteReply
@@ -2023,26 +1799,21 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	}
 	if err != nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(err))
-
 		return reply
 	}
-
-	// build the reply
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleActivityExecuteLocalRequest(requestCtx context.Context, request *messages.ActivityExecuteLocalRequest) messages.IProxyReply {
-
-	// $debug(jack.burns): DELETE THIS!
 	contextID := request.GetContextID()
 	activityTypeID := request.GetActivityTypeID()
 	logger.Debug("ActivityExecuteLocalRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ActivityTypeId", activityTypeID),
-		zap.Int("ProccessId", os.Getpid()),
+		zap.Int("ProcessId", os.Getpid()),
 	)
 
 	// new ActivityExecuteLocalReply
@@ -2051,7 +1822,6 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
 		buildReply(reply, cadenceerrors.NewCadenceError(globals.ErrEntityNotExist))
-
 		return reply
 	}
 
@@ -2090,30 +1860,26 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 		// failure
 		case error:
-
-			// $debug(jack.burns): DELETE THIS!
 			logger.Error("Activity Failed With Error",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Error(s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return nil, s
 
 		// success
 		case []byte:
-
-			// $debug(jack.burns): DELETE THIS!
-			logger.Info("Activity Successful",
+			logger.Debug("Activity Successful",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("ActivityTypeId", activityTypeID),
 				zap.Any("Result", s),
-				zap.Int("ProccessId", os.Getpid()),
+				zap.Int("ProcessId", os.Getpid()),
 			)
 
 			return s, nil
@@ -2146,8 +1912,6 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 		return reply
 	}
-
-	// build reply
 	buildReply(reply, nil, result)
 
 	return reply

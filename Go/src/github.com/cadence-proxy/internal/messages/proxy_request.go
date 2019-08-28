@@ -45,8 +45,6 @@ type (
 		SetReplyType(value messagetypes.MessageType)
 		GetIsCancellable() bool
 		SetIsCancellable(value bool)
-		GetClientID() int64
-		SetClientID(value int64)
 	}
 )
 
@@ -103,20 +101,6 @@ func (request *ProxyRequest) SetIsCancellable(value bool) {
 	request.SetBoolProperty("IsCancellable", value)
 }
 
-// GetClientID gets the ClientId property from a ProxyRequest's properties map
-//
-// returns int64 -> A int64 corresponding to a ProxyRequest's ClientId
-func (request *ProxyRequest) GetClientID() int64 {
-	return request.GetLongProperty("ClientId")
-}
-
-// SetClientID sets the ClientId property in a ProxyRequest's properties map
-//
-// param value int64 -> the int64 value to set as a ProxyRequest's ClientId
-func (request *ProxyRequest) SetClientID(value int64) {
-	request.SetLongProperty("ClientId", value)
-}
-
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -135,6 +119,5 @@ func (request *ProxyRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(IProxyRequest); ok {
 		v.SetReplyType(request.GetReplyType())
 		v.SetIsCancellable(request.GetIsCancellable())
-		v.SetClientID(request.GetClientID())
 	}
 }

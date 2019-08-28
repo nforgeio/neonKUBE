@@ -65,7 +65,7 @@ Follow the steps below to configure a development or test workstation:
 
   * Select **all workloads** on the first panel
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK SDK SDK 3.0.100-preview7-012821 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
+  * Install **.NET Core SDK 3.0.100-preview8-013656 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
@@ -97,8 +97,8 @@ Follow the steps below to configure a development or test workstation:
   * Select the **Resources/ADVANCED/FILE SHARINGS** tab click the check box to **share** the drive where you'll clone the project source code (typically drive C:)
   * Click **Apply & Restart (You'll need to enter your workstation **credentials**).
   * Select the **Resources/NETWORK** tab and enable **Manual DNS Configuration** and set the DNS to **8.8.8.8**.
-  * Click **Aplly & Restart.
-  * Select the **Docker Engine** tab on the left and make sure that **experimental** setting is **true**.
+  * Click **Apply & Restart.
+  * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
   * Click **Apply & Restart**.
 
 14. Update Docker's network settings:

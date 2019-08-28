@@ -169,7 +169,7 @@ namespace Neon.Cadence
         /// This is an optimization for workflow execution. When sticky execution is enabled, the worker can maintain
         /// workflow state and history making workflow replaying faster.
         /// </remarks>
-        public bool DisableStickyExecution { get; set; }
+        internal bool DisableStickyExecution { get; set; }
 
         /// <summary>
         /// Optionally sets the sticky schedule to start timeout.  Defaults to <b>5 seconds</b>.
@@ -180,7 +180,7 @@ namespace Neon.Cadence
         /// Optionally sets how decision workers deals with non-deterministic history events,
         /// presumably arising from non-deterministic workflow definitions or non-backward compatible workflow definition changes.
         /// This defaults to <see cref="NonDeterministicPolicy.BlockWorkflow"/> which 
-        /// just logs error but reply nothing back to server
+        /// just logs error and does not fail the workflow.
         /// </summary>
         public NonDeterministicPolicy NonDeterministicWorkflowPolicy { get; set; } = NonDeterministicPolicy.BlockWorkflow;
 

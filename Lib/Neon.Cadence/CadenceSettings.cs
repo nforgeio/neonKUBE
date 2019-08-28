@@ -327,22 +327,6 @@ namespace Neon.Cadence
         public bool Debug { get; set; } = false;
 
         /// <summary>
-        /// <note>
-        /// <b>IMPORTANT:</b> Eventually, we'd like to implement a high-fidelity in-memory emulation
-        /// mode for user based unit testing but the library isn't there yet.  We don't recommend
-        /// that you enable emulation at this time.
-        /// </note>
-        /// <para>
-        /// Optionally specifies that a local in-memory Cadence emulation should be started
-        /// for unit testing.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "Emulate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "emulate", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool Emulate { get; set; } = false;
-
-        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
         /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and

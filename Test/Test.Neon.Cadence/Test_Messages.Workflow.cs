@@ -74,6 +74,7 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.Name = "Foo";
                 message.Domain = "my-domain";
+
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal("my-domain", message.Domain);
@@ -83,15 +84,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRegisterRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-domain", message.Domain);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -127,14 +119,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowRegisterReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -143,13 +139,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowRegisterReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -157,6 +147,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -199,6 +190,7 @@ namespace TestCadence
                 message.Workflow = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("100s").Ticks };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
@@ -213,19 +205,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-domain", message.Domain);
-                Assert.Equal("Foo", message.Workflow);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -269,18 +248,22 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Execution);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Execution = new InternalWorkflowExecution() { ID = "foo", RunID = "bar" };
+                message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("foo", message.Execution.ID);
                 Assert.Equal("bar", message.Execution.RunID);
-                message.Error = new CadenceError("MyError");
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -289,15 +272,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("foo", message.Execution.ID);
                 Assert.Equal("bar", message.Execution.RunID);
@@ -307,6 +282,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("foo", message.Execution.ID);
                 Assert.Equal("bar", message.Execution.RunID);
@@ -360,6 +336,7 @@ namespace TestCadence
                 message.RunId = "my-runid";
                 message.WorkflowType = "my-workflowtype";
                 message.ExecutionStartToCloseTimeout = TimeSpan.FromDays(1);
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
@@ -376,22 +353,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowInvokeRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
-                message.ReplayStatus = InternalReplayStatus.Replaying;
-                Assert.Equal("Foo", message.Name);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-domain", message.Domain);
-                Assert.Equal("my-workflowid", message.WorkflowId);
-                Assert.Equal("my-runid", message.RunId);
-                Assert.Equal("my-workflowtype", message.WorkflowType);
-                Assert.Equal(TimeSpan.FromDays(1), message.ExecutionStartToCloseTimeout);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -441,6 +402,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowInvokeReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Result);
                 Assert.Null(message.Error);
@@ -452,9 +414,11 @@ namespace TestCadence
                 Assert.Equal(0, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Null(message.ContinueAsNewTaskList);
                 Assert.Null(message.ContinueAsNewDomain);
+                Assert.False(message.ForceReplay);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
                 message.Error = new CadenceError("MyError");
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
@@ -466,6 +430,9 @@ namespace TestCadence
                 message.ContinueAsNewStartToCloseTimeout = 4000;
                 message.ContinueAsNewTaskList = "my-tasklist";
                 message.ContinueAsNewDomain = "my-domain";
+                message.ForceReplay = true;
+
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -474,6 +441,7 @@ namespace TestCadence
                 Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.True(message.ForceReplay);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -481,6 +449,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowInvokeReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -492,27 +461,13 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-                Assert.True(message.ContinueAsNew);
-                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.ContinueAsNewArgs);
-                Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
-                Assert.Equal(2000, message.ContinueAsNewScheduleToCloseTimeout);
-                Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
-                Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
-                Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
-                Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.True(message.ForceReplay);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -524,6 +479,7 @@ namespace TestCadence
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
+                Assert.True(message.ForceReplay);
             }
         }
 
@@ -560,6 +516,7 @@ namespace TestCadence
                 message.WorkflowId = "666";
                 message.RunId = "777";
                 message.Domain = "my-domain";
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
@@ -571,16 +528,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Domain);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -618,14 +565,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowCancelReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -634,13 +585,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowCancelReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -648,6 +593,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -690,6 +636,7 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.Reason = "my-reason";
                 message.Details = new byte[] { 0, 1, 2, 3, 4 };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
@@ -703,18 +650,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowTerminateRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Domain);
-                Assert.Equal("my-reason", message.Reason);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -756,14 +691,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowTerminateReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -772,13 +711,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowTerminateReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -786,6 +719,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -828,6 +762,7 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
@@ -841,18 +776,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Domain);
-                Assert.Equal("my-signal", message.SignalName);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -894,14 +817,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -910,13 +837,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -924,6 +845,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -970,6 +892,7 @@ namespace TestCadence
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalStartWorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = (int)WorkflowIdReusePolicy.AllowDuplicate };
                 message.WorkflowArgs = new byte[] { 5, 6, 7, 8, 9 };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
@@ -986,21 +909,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalWithStartRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-workflow", message.Workflow);
-                Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("my-domain", message.Domain);
-                Assert.Equal("my-signal", message.SignalName);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
-                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1048,17 +956,23 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalWithStartReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Execution);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Execution = new InternalWorkflowExecution() { ID = "666", RunID = "777" };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal("666", message.Execution.ID);
+                Assert.Equal("777", message.Execution.RunID);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1066,15 +980,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalWithStartReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal("666", message.Execution.ID);
-                Assert.Equal("777", message.Execution.RunID);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal("666", message.Execution.ID);
@@ -1084,6 +990,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal("666", message.Execution.ID);
@@ -1128,6 +1035,7 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.QueryName = "my-query";
                 message.QueryArgs = new byte[] { 0, 1, 2, 3, 4 };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
@@ -1141,18 +1049,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Domain);
-                Assert.Equal("my-query", message.QueryName);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1194,17 +1090,22 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowQueryReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Result);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1212,14 +1113,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowQueryReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -1228,6 +1122,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -1268,9 +1163,11 @@ namespace TestCadence
                 message.ContextId = 666;
                 message.MutableId = "my-mutable";
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal("my-mutable", message.MutableId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
@@ -1278,16 +1175,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowMutableRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-mutable", message.MutableId);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1326,19 +1213,24 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowMutableReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Result);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.ContextId = 666;
-                Assert.Equal(666, message.ContextId);
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1346,14 +1238,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowMutableReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -1362,6 +1247,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -1401,6 +1287,7 @@ namespace TestCadence
                 message.WorkflowId = "666";
                 message.RunId = "777";
                 message.Domain = "my-domain";
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
@@ -1412,16 +1299,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDescribeExecutionRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Domain);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1573,17 +1450,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowDescribeExecutionReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Details);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Details = GetDescribeWorkflow();
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1591,14 +1472,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowDescribeExecutionReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                VerifyDescribeWorkflow(message.Details);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 VerifyDescribeWorkflow(message.Details);
@@ -1646,26 +1520,18 @@ namespace TestCadence
                 message.WorkflowId = "666";
                 message.RunId = "777";
                 message.Domain = "my-domain";
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("777", message.RunId);
 
-                stream.SetLength(0);
-                stream.Write(message.SerializeAsBytes());
-                stream.Seek(0, SeekOrigin.Begin);
-
-                message = ProxyMessage.Deserialize<WorkflowGetResultRequest>(stream);
-                Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
                 Assert.Equal("my-domain", message.Domain);
 
-                // Echo the message via the connection's web server and verify.
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
 
-                message = EchoToClient(message);
+                message = ProxyMessage.Deserialize<WorkflowGetResultRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1715,17 +1581,22 @@ namespace TestCadence
 
                     message = ProxyMessage.Deserialize<WorkflowGetResultReply>(stream);
                     Assert.NotNull(message);
+                    Assert.Equal(0, message.ClientId);
                     Assert.Equal(0, message.RequestId);
                     Assert.Null(message.Error);
                     Assert.Null(message.Result);
 
                     // Round-trip
 
+                    message.ClientId = 444;
                     message.RequestId = 555;
-                    Assert.Equal(555, message.RequestId);
                     message.Error = new CadenceError("MyError");
-                    Assert.Equal("MyError", message.Error.String);
                     message.Result = data;
+
+                    Assert.Equal(444, message.ClientId);
+                    Assert.Equal(555, message.RequestId);
+                    Assert.Equal("MyError", message.Error.String);
+                    Assert.Equal(data, message.Result);
 
                     stream.SetLength(0);
                     stream.Write(message.SerializeAsBytes());
@@ -1733,14 +1604,7 @@ namespace TestCadence
 
                     message = ProxyMessage.Deserialize<WorkflowGetResultReply>(stream);
                     Assert.NotNull(message);
-                    Assert.Equal(555, message.RequestId);
-                    Assert.Equal("MyError", message.Error.String);
-                    Assert.Equal(data, message.Result);
-
-                    // Echo the message via the connection's web server and verify.
-
-                    message = EchoToClient(message);
-                    Assert.NotNull(message);
+                    Assert.Equal(444, message.ClientId);
                     Assert.Equal(555, message.RequestId);
                     Assert.Equal("MyError", message.Error.String);
                     Assert.Equal(data, message.Result);
@@ -1749,6 +1613,7 @@ namespace TestCadence
 
                     message = EchoToProxy(message);
                     Assert.NotNull(message);
+                    Assert.Equal(444, message.ClientId);
                     Assert.Equal(555, message.RequestId);
                     Assert.Equal("MyError", message.Error.String);
                     Assert.Equal(data, message.Result);
@@ -1785,6 +1650,7 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.SignalName = "my-signal";
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-signal", message.SignalName);
@@ -1794,14 +1660,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalSubscribeRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-signal", message.SignalName);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1835,14 +1693,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalSubscribeReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -1851,13 +1713,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalSubscribeReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -1865,6 +1721,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -1901,6 +1758,7 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-signal", message.SignalName);
@@ -1911,15 +1769,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalInvokeRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-signal", message.SignalName);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1955,14 +1804,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalInvokeReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -1971,13 +1824,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalInvokeReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -1985,6 +1832,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -2017,6 +1865,7 @@ namespace TestCadence
 
                 message.ClientId = 444;
                 message.RequestId = 555;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
 
@@ -2025,13 +1874,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowHasLastResultRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2063,17 +1905,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowHasLastResultReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.False(message.HasResult);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.HasResult = true;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.True(message.HasResult);
 
                 stream.SetLength(0);
@@ -2082,14 +1928,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowHasLastResultReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.True(message.HasResult);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.True(message.HasResult);
@@ -2098,6 +1937,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.True(message.HasResult);
@@ -2131,6 +1971,7 @@ namespace TestCadence
 
                 message.ClientId = 444;
                 message.RequestId = 555;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
 
@@ -2139,13 +1980,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetLastResultRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2177,17 +2011,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowGetLastLastReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Result);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+                message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                message.Result = new byte[] { 0, 1, 2, 3, 4 }; ;
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
@@ -2196,14 +2034,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowGetLastLastReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -2212,6 +2043,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -2245,6 +2077,7 @@ namespace TestCadence
 
                 message.ClientId = 444;
                 message.RequestId = 555;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
 
@@ -2253,13 +2086,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowDisconnectContextRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2291,14 +2117,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowDisconnectContextReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -2307,13 +2137,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowDisconnectContextReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -2321,6 +2145,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -2353,6 +2178,7 @@ namespace TestCadence
 
                 message.ClientId = 444;
                 message.RequestId = 555;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
 
@@ -2361,13 +2187,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowGetTimeRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2399,17 +2218,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowGetTimeReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Equal(DateTime.MinValue, message.Time);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Time = new DateTime(2019, 5, 28);
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new DateTime(2019, 5, 28), message.Time);
 
                 stream.SetLength(0);
@@ -2418,14 +2241,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowGetTimeReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new DateTime(2019, 5, 28), message.Time);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new DateTime(2019, 5, 28), message.Time);
@@ -2434,6 +2250,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new DateTime(2019, 5, 28), message.Time);
@@ -2469,6 +2286,7 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Duration = TimeSpan.FromDays(2);
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(TimeSpan.FromDays(2), message.Duration);
@@ -2478,14 +2296,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSleepRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(TimeSpan.FromDays(2), message.Duration);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2519,14 +2329,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSleepReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -2535,13 +2349,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSleepReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -2549,6 +2357,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -2620,6 +2429,7 @@ namespace TestCadence
                 message.Args = new byte[] { 5, 6, 7, 8, 9 };
                 message.Options = options;
                 message.ScheduleToStartTimeout = TimeSpan.FromSeconds(120);
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 AssertEqualChildOptions(options, message.Options);
@@ -2637,17 +2447,6 @@ namespace TestCadence
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
                 AssertEqualChildOptions(options, message.Options);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                AssertEqualChildOptions(options, message.Options);
-                Assert.Equal("my-workflow", message.Workflow);
-                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
                 Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -2681,6 +2480,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteChildReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Equal(0, message.ChildId);
@@ -2688,11 +2488,14 @@ namespace TestCadence
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.ChildId = 666;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
 
                 message.Execution = new InternalWorkflowExecution() { ID = "foo", RunID = "bar" };
@@ -2705,16 +2508,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowExecuteChildReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(666, message.ChildId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
@@ -2725,6 +2519,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
@@ -2762,6 +2557,7 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.ChildId = 666;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ChildId);
@@ -2771,14 +2567,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowWaitForChildRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ChildId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2812,17 +2600,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowWaitForChildReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Result);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
@@ -2831,14 +2623,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowWaitForChildReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -2847,6 +2632,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -2886,6 +2672,7 @@ namespace TestCadence
                 message.ChildId = 666;
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ChildId);
@@ -2897,16 +2684,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSignalChildRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ChildId);
-                Assert.Equal("my-signal", message.SignalName);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2944,17 +2721,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalChildReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Result);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
                 stream.SetLength(0);
@@ -2963,14 +2744,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSignalChildReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -2979,6 +2753,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -3014,6 +2789,7 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.ChildId = 666;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ChildId);
@@ -3023,14 +2799,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowCancelChildRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ChildId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -3064,14 +2832,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowCancelChildReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -3080,13 +2852,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowCancelChildReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -3094,6 +2860,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -3128,6 +2895,7 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.QueryName = "my-query";
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-query", message.QueryName);
@@ -3137,14 +2905,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowSetQueryHandlerRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-query", message.QueryName);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -3178,14 +2938,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowSetQueryHandlerReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -3197,17 +2961,11 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
                 // Echo the message via the associated [cadence-proxy] and verify.
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }
@@ -3246,6 +3004,7 @@ namespace TestCadence
                 message.ContextId = 666;
                 message.QueryName = "my-query";
                 message.QueryArgs = new byte[] { 0, 1, 2, 3, 4 };
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
@@ -3257,16 +3016,6 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowQueryInvokeRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-query", message.QueryName);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -3304,17 +3053,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowQueryInvokeReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Null(message.Result);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -3326,18 +3079,11 @@ namespace TestCadence
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
 
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
-
                 // Echo the message via the associated [cadence-proxy] and verify.
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
@@ -3379,6 +3125,7 @@ namespace TestCadence
                 message.ChangeId = "my-change";
                 message.MinSupported = 10;
                 message.MaxSupported = 20;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
@@ -3394,17 +3141,6 @@ namespace TestCadence
                 Assert.Equal(20, message.MaxSupported);
 
                 message = ProxyMessage.Deserialize<WorkflowGetVersionRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-change", message.ChangeId);
-                Assert.Equal(10, message.MinSupported);
-                Assert.Equal(20, message.MaxSupported);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -3444,17 +3180,21 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowGetVersionReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.Equal(0, message.Version);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
-                Assert.Equal("MyError", message.Error.String);
                 message.Version = 20;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(20, message.Version);
 
                 stream.SetLength(0);
@@ -3463,14 +3203,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowGetVersionReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-                Assert.Equal(20, message.Version);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(20, message.Version);
@@ -3479,6 +3212,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(20, message.Version);
@@ -3517,6 +3251,7 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.ContextId = 666;
                 message.FutureOperationId = 777;
+
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
@@ -3528,15 +3263,6 @@ namespace TestCadence
                 Assert.Equal(777, message.FutureOperationId);
 
                 message = ProxyMessage.Deserialize<WorkflowFutureReadyRequest>(stream);
-                Assert.NotNull(message);
-                Assert.Equal(444, message.ClientId);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal(666, message.ContextId);
-                Assert.Equal(777, message.FutureOperationId);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -3572,14 +3298,18 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowFutureReadyReply>(stream);
                 Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
 
                 // Round-trip
 
+                message.ClientId = 444;
                 message.RequestId = 555;
-                Assert.Equal(555, message.RequestId);
                 message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -3588,13 +3318,7 @@ namespace TestCadence
 
                 message = ProxyMessage.Deserialize<WorkflowFutureReadyReply>(stream);
                 Assert.NotNull(message);
-                Assert.Equal(555, message.RequestId);
-                Assert.Equal("MyError", message.Error.String);
-
-                // Echo the message via the connection's web server and verify.
-
-                message = EchoToClient(message);
-                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
@@ -3602,6 +3326,7 @@ namespace TestCadence
 
                 message = EchoToProxy(message);
                 Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
             }

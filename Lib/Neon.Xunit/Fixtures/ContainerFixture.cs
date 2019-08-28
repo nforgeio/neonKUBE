@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,6 +53,78 @@ namespace Neon.Xunit
     /// <threadsafety instance="true"/>
     public class ContainerFixture : TestFixture
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static string defaultHostInterface = "0.0.0.0";
+
+        /// <summary>
+        /// Specifies the IP address of host interface where container ports
+        /// will be published.  This defaults to <b>0.0.0.0</b> which binds
+        /// ports to all network interfaces.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// You may need to customize this to avoid port conflicts with other
+        /// running applications.  When all tests are running on a single host,
+        /// you should consider setting this to one of the 16 million loopback
+        /// addresses in the <b>127.0.0.0/8</b> subnet (e.g. 127.0.0.1, 127.0.0.2,
+        /// etc.  You'll need to set this before starting any fixture containers.
+        /// </para>
+        /// <note>
+        /// Fixtures implemented by neonFORGE that are derived from <see cref="ContainerFixture"/> 
+        /// all implement tis behavior.  If you implement your own derived fixtures,
+        /// you should consider implementing this as well for consistency.
+        /// </note>
+        /// </remarks>
+        public static string DefaultHostInterface
+        {
+            get => defaultHostInterface;
+
+            set
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
+                Covenant.Requires<ArgumentException>(IPAddress.TryParse(value, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{value}] is not a valid IPv4 address.");
+                
+                defaultHostInterface = value;
+            }
+        }
+
+        /// <summary>
+        /// Used by derived fixtures to retrieve the host network interface where 
+        /// container ports should be published.
+        /// </summary>
+        /// <param name="hostInterface">The desired host interface IPv4 address or <c>null</c>.</param>
+        /// <param name="forConnection">
+        /// Indicates that the address a client should use to establish a connection should be 
+        /// returned vs. the address the container will listen on.
+        /// </param>
+        /// <returns>The target network interface address.</returns>
+        /// <remarks>
+        /// This method returns <see cref="DefaultHostInterface"/> when <paramref name="hostInterface"/>
+        /// is <c>null</c> or empty otherwise it will ensure that the parameter is valid
+        /// and before returning it.
+        /// </remarks>
+        protected static string GetHostInterface(string hostInterface, bool forConnection = false)
+        {
+            if (string.IsNullOrEmpty(hostInterface))
+            {
+                hostInterface = DefaultHostInterface;
+            }
+
+            Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{hostInterface}] is not a valid IPv4 address.");
+
+            if (forConnection && hostInterface == "0.0.0.0")
+            {
+                return "127.0.0.1";
+            }
+
+            return hostInterface;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         // Arguments required to restart the container.
 
         private string                  name;
@@ -260,10 +334,12 @@ namespace Neon.Xunit
             }
 
             dockerArgs.Add("--detach");
+#if TODO
+            // This requires Docker experimental features.
 
             dockerArgs.Add("--platform");
             dockerArgs.Add("linux");
-
+#endif
             if (!string.IsNullOrEmpty(name))
             {
                 dockerArgs.Add("--name");

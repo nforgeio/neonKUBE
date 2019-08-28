@@ -51,10 +51,10 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the type name.  This defaults to the fully qualified name
+        /// The activity type name.  This defaults to the fully qualified name
         /// of the tagged activity type.
         /// </summary>
-        public string TypeName { get; private set; } = null;
+        public string TypeName { get; set; } = null;
 
         /// <summary>
         /// Indicates that <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly, string)"/> will

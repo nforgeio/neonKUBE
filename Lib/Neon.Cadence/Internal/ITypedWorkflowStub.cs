@@ -34,8 +34,8 @@ namespace Neon.Cadence.Internal
     internal interface ITypedWorkflowStub
     {
         /// <summary>
-        /// Creates an untyped <see cref="IWorkflowStub"/> from a typed stub.
+        /// Creates an untyped <see cref="WorkflowStub"/> from a typed stub.
         /// </summary>
-        IWorkflowStub ToUntyped();
+        WorkflowStub ToUntyped();
     }
 }
