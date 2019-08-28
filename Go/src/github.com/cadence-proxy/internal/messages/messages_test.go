@@ -158,6 +158,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetLibraryAddress())
 		s.Equal(int32(0), v.GetLibraryPort())
+		s.Equal(logger.None, v.GetLogLevel())
 
 		// Round-trip
 
@@ -170,6 +171,9 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 
 		v.SetLibraryPort(int32(666))
 		s.Equal(int32(666), v.GetLibraryPort())
+
+		v.SetLogLevel(logger.Panic)
+		s.Equal(logger.Panic, v.GetLogLevel())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -184,6 +188,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
+		s.Equal(logger.Panic, v.GetLogLevel())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -194,6 +199,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
+		s.Equal(logger.Panic, v.GetLogLevel())
 	}
 }
 
@@ -1481,6 +1487,119 @@ func (s *UnitTestSuite) TestStopWorkerReply() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.StopWorkerReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+}
+
+func (s *UnitTestSuite) TestLogRequest() {
+	var message messages.IProxyMessage = messages.NewLogRequest()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.LogRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(logger.None, v.GetLogLevel())
+		s.Equal(time.Time{}, v.GetTimeUtc())
+		s.False(v.GetFromCadence())
+		s.Nil(v.GetLogMessage())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetLogLevel(logger.Error)
+		s.Equal(logger.Error, v.GetLogLevel())
+
+		v.SetTimeUtc(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC))
+		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
+
+		v.SetFromCadence(true)
+		s.True(v.GetFromCadence())
+
+		msg := "test-msg"
+		v.SetLogMessage(&msg)
+		s.Equal("test-msg", *v.GetLogMessage())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.LogRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(logger.Error, v.GetLogLevel())
+		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
+		s.True(v.GetFromCadence())
+		s.Equal("test-msg", *v.GetLogMessage())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.LogRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(logger.Error, v.GetLogLevel())
+		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
+		s.True(v.GetFromCadence())
+		s.Equal("test-msg", *v.GetLogMessage())
+	}
+}
+
+func (s *UnitTestSuite) TestLogReply() {
+	var message messages.IProxyMessage = messages.NewLogReply()
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.LogReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetError(cadenceerrors.NewCadenceError(errors.New("foo")))
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.LogReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.LogReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(cadenceerrors.NewCadenceError(errors.New("foo"), cadenceerrors.Custom), v.GetError())
 	}

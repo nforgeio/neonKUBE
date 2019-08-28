@@ -174,6 +174,17 @@ const (
 	/// </summary>
 	DisconnectReply MessageType = 26
 
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent by <b>cadence-proxy</b> to log Cadence and cadence-proxy
+	/// events to the host's event stream.
+	/// </summary>
+	LogRequest MessageType = 27
+
+	/// <summary>
+	///  <b>client --> proxy:</b> Sent in response to a <see cref="LogRequest"/> message.
+	/// </summary>
+	LogReply MessageType = 28
+
 	//---------------------------------------------------------------------
 	// Workflow messages
 	//
@@ -691,6 +702,10 @@ func (m MessageType) String() string {
 		return "PingRequest"
 	case PingReply:
 		return "PingReply"
+	case LogRequest:
+		return "LogRequest"
+	case LogReply:
+		return "LogReply"
 	case WorkflowRegisterRequest:
 		return "WorkflowRegisterRequest"
 	case WorkflowRegisterReply:

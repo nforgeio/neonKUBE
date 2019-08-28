@@ -111,6 +111,12 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.PingRequest:
 		message = NewPingRequest()
 
+	// Log
+	case messagetypes.LogReply:
+		message = NewLogReply()
+	case messagetypes.LogRequest:
+		message = NewLogRequest()
+
 	// --------------------------------------------------------------------------
 	// Workflow messages
 

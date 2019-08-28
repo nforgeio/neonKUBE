@@ -18,6 +18,7 @@
 package messages
 
 import (
+	"github.com/cadence-proxy/internal/logger"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -83,6 +84,28 @@ func (request *InitializeRequest) SetLibraryPort(value int32) {
 	request.SetIntProperty("LibraryPort", value)
 }
 
+// GetLogLevel gets the LogLevel property from an InitializeRequest
+// in its properties map.  Identifies the log level.
+//
+// returns logger.LogLevel -> InitializeRequest's LogLevel
+func (request *InitializeRequest) GetLogLevel() logger.LogLevel {
+	str := request.GetStringProperty("LogLevel")
+	if str == nil {
+		return logger.None
+	}
+
+	return logger.ParseLogLevel(*str)
+}
+
+// SetLogLevel sets the LogLevel property in an INitializeRequest's
+// properties map.  Identifies the log level.
+//
+// param value logger.LogLevel -> InitializeRequest's LogLevel
+func (request *InitializeRequest) SetLogLevel(value logger.LogLevel) {
+	str := value.String()
+	request.SetStringProperty("LogLevel", &str)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -101,5 +124,6 @@ func (request *InitializeRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*InitializeRequest); ok {
 		v.SetLibraryAddress(request.GetLibraryAddress())
 		v.SetLibraryPort(request.GetLibraryPort())
+		v.SetLogLevel(request.GetLogLevel())
 	}
 }
