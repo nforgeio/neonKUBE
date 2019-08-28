@@ -415,79 +415,98 @@ namespace Neon.Cadence
                 {
                     case NetFramework.Core:
 
-                        if (kestrel == null)
-                        {
-                            // Start the web server that will listen for requests from the associated 
-                            // [cadence-proxy] process.
-
-                            kestrel = new WebHostBuilder()
-                                .UseKestrel(
-                                    options =>
-                                    {
-                                        options.Limits.MaxRequestBodySize = null;     // Disables request size limits
-                                        options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
-                                    })
-                                .ConfigureServices(
-                                    services =>
-                                    {
-                                        services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
-                                    })
-                                .UseStartup<Startup>()
-                                .Build();
-
-                            kestrel.Start();
-
-                            ListenUri = new Uri(kestrel.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
-                        }
+                        InitializeNetCore(address, settings);
                         break;
 
                     case NetFramework.Framework:
 
-                        var openPort         = NetHelper.GetUnusedTcpPort(address);
-                        var listenerSettings = new WebListenerSettings();
-
-                        ListenUri = new Uri($"http://{address}:{openPort}");
-
-                        listenerSettings.UrlPrefixes.Add(ListenUri.ToString());
-
-                        listener = new WebListener(listenerSettings);
-                        listener.Start();
-
-                        // Process the inbound messages on a free running task.
-
-                        _ = Task.Run(
-                            async () =>
-                            {
-                                try
-                                {
-                                    var newContext = await listener.AcceptAsync();
-
-                                    // Process each request in its own task.
-
-                                    _ = Task.Factory.StartNew(
-                                        async (object arg) =>
-                                        {
-                                            using (var context = (RequestContext)arg)
-                                            {
-                                                await OnListenerRequestAsync(context);
-                                            }
-                                        },
-                                        newContext);
-                                }
-                                catch
-                                {
-                                    // We're going to see exceptions like ObjectDisposedException when
-                                    // the listener is disposed.  We're just going to ignore these
-                                    // and exit.
-                                }
-                            });
-
+                        InitializeNetFramework(address, settings);
                         break;
 
                     default:
 
-                        throw new Exception($"Unsupported .NET framework: {NeonHelper.Framework}");
+                        throw new NotSupportedException($"Unsupported .NET framework: {NeonHelper.Framework}");
                 }
+            }
+
+            /// <summary>
+            /// Initializes the HTTP server when running on .NET Core.
+            /// </summary>
+            /// <param name="address">The IP address where the service should listen.</param>
+            /// <param name="settings">The Cadence settings.</param>
+            private void InitializeNetCore(IPAddress address, CadenceSettings settings)
+            {
+                if (kestrel == null)
+                {
+                    // Start the web server that will listen for requests from the associated 
+                    // [cadence-proxy] process.
+
+                    kestrel = new WebHostBuilder()
+                        .UseKestrel(
+                            options =>
+                            {
+                                options.Limits.MaxRequestBodySize = null;     // Disables request size limits
+                                options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
+                            })
+                        .ConfigureServices(
+                            services =>
+                            {
+                                services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
+                            })
+                        .UseStartup<Startup>()
+                        .Build();
+
+                    kestrel.Start();
+
+                    ListenUri = new Uri(kestrel.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
+                }
+            }
+
+            /// <summary>
+            /// Initializes the HTTP server when running on .NET Framework.
+            /// </summary>
+            /// <param name="address">The IP address where the service should listen.</param>
+            /// <param name="settings">The Cadence settings.</param>
+            private void InitializeNetFramework(IPAddress address, CadenceSettings settings)
+            {
+                var openPort         = NetHelper.GetUnusedTcpPort(address);
+                var listenerSettings = new WebListenerSettings();
+
+                ListenUri = new Uri($"http://{address}:{openPort}");
+
+                listenerSettings.UrlPrefixes.Add(ListenUri.ToString());
+
+                listener = new WebListener(listenerSettings);
+                listener.Start();
+
+                // Process the inbound messages on a free running task.
+
+                _ = Task.Run(
+                    async () =>
+                    {
+                        try
+                        {
+                            var newContext = await listener.AcceptAsync();
+
+                            // Process each request in its own task.
+
+                            _ = Task.Factory.StartNew(
+                                async (object arg) =>
+                                {
+                                    using (var context = (RequestContext)arg)
+                                    {
+                                        await OnListenerRequestAsync(context);
+                                    }
+                                },
+                                newContext);
+                        }
+                        catch
+                        {
+                            // We're going to see exceptions like ObjectDisposedException when
+                            // the listener is disposed.  We're just going to ignore these
+                            // and exit.
+                        }
+                    });
             }
 
             /// <inheritdoc/>
@@ -1129,11 +1148,11 @@ namespace Neon.Cadence.WorkflowStub
                 var assemblyName    = "Neon-Cadence-WorkflowStub-Initialize";
                 var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
                 var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
-                var dllStream       = new MemoryStream();
+                var assemblyStream  = new MemoryStream();
 
                 using (var pdbStream = new MemoryStream())
                 {
-                    var emitted = compilation.Emit(dllStream, pdbStream);
+                    var emitted = compilation.Emit(assemblyStream, pdbStream);
 
                     if (!emitted.Success)
                     {
@@ -1141,8 +1160,8 @@ namespace Neon.Cadence.WorkflowStub
                     }
                 }
 
-                dllStream.Position = 0;
-                AssemblyLoadContext.Default.LoadFromStream(dllStream);
+                assemblyStream.Position = 0;
+                CadenceHelper.LoadAssembly(assemblyStream);
 
                 compilerReady = true;
             }

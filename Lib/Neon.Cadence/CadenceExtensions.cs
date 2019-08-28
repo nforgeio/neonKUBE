@@ -58,7 +58,7 @@ namespace Neon.Cadence
 
             try
             {
-                var content = new StreamContent(stream);
+                var content = new ByteArrayContent(stream.GetBuffer(), 0, (int)stream.Length);
 
                 content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
 
@@ -106,7 +106,7 @@ namespace Neon.Cadence
 
             try
             {
-                var content = new StreamContent(stream);
+                var content = new ByteArrayContent(stream.GetBuffer(), 0, (int)stream.Length);
 
                 content.Headers.ContentType = new MediaTypeHeaderValue(ProxyMessage.ContentType);
 

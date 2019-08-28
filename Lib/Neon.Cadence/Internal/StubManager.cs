@@ -944,11 +944,11 @@ namespace Neon.Cadence.Internal
             var assemblyName    = $"Neon-Cadence-WorkflowStub-{classId}";
             var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
             var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
-            var dllStream       = new MemoryStream();
+            var assemblyStream  = new MemoryStream();
 
             using (var pdbStream = new MemoryStream())
             {
-                var emitted = compilation.Emit(dllStream, pdbStream);
+                var emitted = compilation.Emit(assemblyStream, pdbStream);
 
                 if (!emitted.Success)
                 {
@@ -956,7 +956,7 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            dllStream.Position = 0;
+            assemblyStream.Position = 0;
 
             //-----------------------------------------------------------------
             // Load the new assembly into the current context.  Note that we're
@@ -970,7 +970,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (!workflowInterfaceToChildStub.TryGetValue(workflowInterface, out stub))
                     {
-                        var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
+                        var stubAssembly = CadenceHelper.LoadAssembly(assemblyStream);
                         var stubType     = stubAssembly.GetType(stubFullClassName);
 
                         stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
@@ -982,7 +982,7 @@ namespace Neon.Cadence.Internal
                 {
                     if (!workflowInterfaceToStub.TryGetValue(workflowInterface, out stub))
                     {
-                        var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
+                        var stubAssembly = CadenceHelper.LoadAssembly(assemblyStream);
                         var stubType     = stubAssembly.GetType(stubFullClassName);
 
                         stub = new DynamicWorkflowStub(stubType, stubAssembly, stubFullClassName);
@@ -1396,7 +1396,7 @@ namespace Neon.Cadence.Internal
             {
                 if (!activityInterfaceToStub.TryGetValue(activityInterface, out stub))
                 {
-                    var stubAssembly = AssemblyLoadContext.Default.LoadFromStream(dllStream);
+                    var stubAssembly = CadenceHelper.LoadAssembly(dllStream);
                     var stubType     = stubAssembly.GetType(stubFullClassName);
 
                     stub = new DynamicActivityStub(stubType, stubAssembly, stubFullClassName);
