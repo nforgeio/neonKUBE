@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Sent by <b>cadence-proxy</b> to log Cadence and cadence-proxy
     /// events to the host's event stream.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.LogReply)]
+    [InternalProxyMessage(InternalMessageTypes.LogRequest)]
     internal class LogRequest : ProxyRequest
     {
         /// <summary>
