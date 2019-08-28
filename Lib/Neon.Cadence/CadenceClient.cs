@@ -40,7 +40,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
+using Microsoft.Net.Http.Server;
 using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
@@ -254,7 +254,8 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Configures the <b>cadence-client</b> connection's web server used to 
-        /// receive messages from the <b>cadence-proxy</b>.
+        /// receive messages from the <b>cadence-proxy</b> when serving via
+        /// Kestrel on .NET Core.
         /// </summary>
         private class Startup
         {
@@ -262,7 +263,7 @@ namespace Neon.Cadence
             {
                 app.Run(async context =>
                 {
-                    await OnHttpRequestAsync(context);
+                    await OnKestralRequestAsync(context);
                 });
             }
         }
@@ -400,7 +401,8 @@ namespace Neon.Cadence
         /// </summary>
         private class HttpServer : IDisposable
         {
-            private IWebHost host;
+            private IWebHost    kestrel;    // Used for .NET Core
+            private WebListener listener;   // Used for .NET Framework
 
             /// <summary>
             /// Constructor.
@@ -409,39 +411,98 @@ namespace Neon.Cadence
             /// <param name="settings">The Cadence settings.</param>
             public HttpServer(IPAddress address, CadenceSettings settings)
             {
-                if (host == null)
+                switch (NeonHelper.Framework)
                 {
-                    // Start the web server that will listen for requests from the associated 
-                    // [cadence-proxy] process.
+                    case NetFramework.Core:
 
-                    host = new WebHostBuilder()
-                        .UseKestrel(
-                            options =>
+                        if (kestrel == null)
+                        {
+                            // Start the web server that will listen for requests from the associated 
+                            // [cadence-proxy] process.
+
+                            kestrel = new WebHostBuilder()
+                                .UseKestrel(
+                                    options =>
+                                    {
+                                        options.Limits.MaxRequestBodySize = null;     // Disables request size limits
+                                        options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
+                                    })
+                                .ConfigureServices(
+                                    services =>
+                                    {
+                                        services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
+                                    })
+                                .UseStartup<Startup>()
+                                .Build();
+
+                            kestrel.Start();
+
+                            ListenUri = new Uri(kestrel.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
+                        }
+                        break;
+
+                    case NetFramework.Framework:
+
+                        var openPort         = NetHelper.GetUnusedTcpPort(address);
+                        var listenerSettings = new WebListenerSettings();
+
+                        ListenUri = new Uri($"http://{address}:{openPort}");
+
+                        listenerSettings.UrlPrefixes.Add(ListenUri.ToString());
+
+                        listener = new WebListener(listenerSettings);
+                        listener.Start();
+
+                        // Process the inbound messages on a free running task.
+
+                        _ = Task.Run(
+                            async () =>
                             {
-                                options.Limits.MaxRequestBodySize = null;     // Disables request size limits
-                                options.Listen(address, !settings.DebugPrelaunched ? settings.ListenPort : debugClientPort);
-                            })
-                        .ConfigureServices(
-                            services =>
-                            {
-                                services.Configure<KestrelServerOptions>(options => options.AllowSynchronousIO = true);
-                            })
-                        .UseStartup<Startup>()
-                        .Build();
+                                try
+                                {
+                                    var newContext = await listener.AcceptAsync();
 
-                    host.Start();
+                                    // Process each request in its own task.
 
-                    ListenUri = new Uri(host.ServerFeatures.Get<IServerAddressesFeature>().Addresses.OfType<string>().FirstOrDefault());
+                                    _ = Task.Factory.StartNew(
+                                        async (object arg) =>
+                                        {
+                                            using (var context = (RequestContext)arg)
+                                            {
+                                                await OnListenerRequestAsync(context);
+                                            }
+                                        },
+                                        newContext);
+                                }
+                                catch
+                                {
+                                    // We're going to see exceptions like ObjectDisposedException when
+                                    // the listener is disposed.  We're just going to ignore these
+                                    // and exit.
+                                }
+                            });
+
+                        break;
+
+                    default:
+
+                        throw new Exception($"Unsupported .NET framework: {NeonHelper.Framework}");
                 }
             }
 
             /// <inheritdoc/>
             public void Dispose()
             {
-                if (host != null)
+                if (kestrel != null)
                 {
-                    host.Dispose();
-                    host = null;
+                    kestrel.Dispose();
+                    kestrel = null;
+                }
+
+                if (listener != null)
+                {
+                    listener.Dispose();
+                    listener = null;
                 }
             }
 
@@ -714,12 +775,12 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Called when an HTTP request is received by the integrated web server 
+        /// Called when an HTTP request is received by the integrated Kestrel web server 
         /// (presumably sent by the associated <b>cadence-proxy</b> process).
         /// </summary>
         /// <param name="context">The request context.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task OnHttpRequestAsync(HttpContext context)
+        private static async Task OnKestralRequestAsync(HttpContext context)
         {
             var request  = context.Request;
             var response = context.Response;
@@ -787,6 +848,96 @@ namespace Neon.Cadence
 
                         response.StatusCode = StatusCodes.Status404NotFound;
                         await response.WriteAsync($"[{request.Path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed.");
+                        return;
+                }
+            }
+            catch (FormatException e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status400BadRequest;
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+                response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+        }
+
+        /// <summary>
+        /// Called when an HTTP request is received by the integrated WebListener
+        /// (presumably sent by the associated <b>cadence-proxy</b> process).
+        /// </summary>
+        /// <param name="context">The request context.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task OnListenerRequestAsync(RequestContext context)
+        {
+            var request  = context.Request;
+            var response = context.Response;
+
+            if (request.Method != "PUT")
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+
+                await response.Body.WriteAsync(Encoding.UTF8.GetBytes($"[{request.Method}] HTTP method is not supported.  All requests must be submitted via [PUT]."));
+                return;
+            }
+
+            if (request.ContentType != ProxyMessage.ContentType)
+            {
+                response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+                await response.Body.WriteAsync(Encoding.UTF8.GetBytes($"[{request.ContentType}] Content-Type is not supported.  All requests must be submitted with [Content-Type={request.ContentType}]."));
+                return;
+            }
+
+            try
+            {
+                switch (request.Path)
+                {
+                    case "/":
+
+                        // $hack(jeff.lill):
+                        //
+                        // We need to receive the entire request body before deserializing the
+                        // the message because BinaryReader doesn't seem to play nice with reading
+                        // from the body stream.  We're seeing EndOfStream exceptions when we try
+                        // to read more than about 64KiB bytes of data which is the default size
+                        // of the Kestrel receive buffer.  This suggests that there's some kind
+                        // of problem reading the next buffer from the request socket.
+                        //
+                        // This isn't a huge issue since we're going to convert cadence-proxy into
+                        // a shared library where we'll be passing message buffers directly.
+
+                        var bodyStream = MemoryStreamPool.Alloc();
+
+                        try
+                        {
+                            var httpRequest  = context.Request;
+                            var httpResponse = context.Response;
+
+                            await httpRequest.Body.CopyToAsync(bodyStream);
+
+                            bodyStream.Position = 0;
+
+                            var proxyMessage = ProxyMessage.Deserialize<ProxyMessage>(bodyStream);
+                            var httpReply    = await OnRootRequestAsync(proxyMessage);
+
+                            response.StatusCode = httpReply.StatusCode;
+
+                            if (!string.IsNullOrEmpty(httpReply.Message))
+                            {
+                                await response.Body.WriteAsync(Encoding.UTF8.GetBytes(httpReply.Message));
+                            }
+                        }
+                        finally
+                        {
+                            MemoryStreamPool.Free(bodyStream);
+                        }
+                        break;
+
+                    default:
+
+                        response.StatusCode = StatusCodes.Status404NotFound;
+                        await response.Body.WriteAsync(Encoding.UTF8.GetBytes($"[{request.Path}] HTTP PATH is not supported.  Only [/] and [/echo] are allowed."));
                         return;
                 }
             }

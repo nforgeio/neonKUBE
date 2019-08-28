@@ -156,7 +156,7 @@ namespace Neon.Common
         /// <summary>
         /// Identifies the framework hosting the current process.
         /// </summary>
-        private static NetFramework netFramework = NetFramework.Unknown;
+        private static NetFramework? netFramework = null;
 
         /// <summary>
         /// The root dependency injection service container used by Neon class libraries. 
@@ -266,17 +266,26 @@ namespace Neon.Common
         {
             get
             {
-                if (netFramework != NetFramework.Unknown)
+                if (netFramework.HasValue)
                 {
-                    return netFramework;
+                    return netFramework.Value;
                 }
 
-                switch (RuntimeInformation.FrameworkDescription)
+                if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core"))
                 {
-                    case ".NET Core":       return netFramework = NetFramework.Core;
-                    case ".NET Framework":  return netFramework = NetFramework.Framework;
-                    case ".NET Native":     return netFramework = NetFramework.Native;
-                    default:                return NetFramework.Unknown;
+                    return (netFramework = NetFramework.Core).Value;
+                }
+                else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework"))
+                {
+                    return (netFramework = NetFramework.Framework).Value;
+                }
+                else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native"))
+                {
+                    return (netFramework = NetFramework.Native).Value;
+                }
+                else
+                {
+                    return (netFramework = NetFramework.Unknown).Value;
                 }
             }
         }
