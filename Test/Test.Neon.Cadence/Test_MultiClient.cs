@@ -102,10 +102,10 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Connect_Twice()
+        public async Task Simultaneous()
         {
-            // We're going to establish two client connections, register a
-            // workflow on each, and then verify that these workflows work.
+            // We're going to establish two simultaneous client connections, 
+            // register a workflow on each, and then verify that these workflows work.
 
             using (var client1 = await CadenceClient.ConnectAsync(fixture.Settings))
             {
@@ -122,6 +122,38 @@ namespace TestCadence
 
                     Assert.Equal("WF1 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
                     Assert.Equal("WF2 says: Hello Jeff!", await stub2.HelloAsync("Jeff"));
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Connect_Twice()
+        {
+            // We're going to establish two successive client connections
+            // and verify that these work.
+
+            using (var client = await CadenceClient.ConnectAsync(fixture.Settings))
+            {
+                await client.RegisterWorkflowAsync<WorkflowWithResult1>();
+                
+                using (await client.StartWorkerAsync())
+                {
+                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult1>();
+
+                    Assert.Equal("WF1 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
+                }
+            }
+
+            using (var client = await CadenceClient.ConnectAsync(fixture.Settings))
+            {
+                await client.RegisterWorkflowAsync<WorkflowWithResult2>();
+
+                using (await client.StartWorkerAsync())
+                {
+                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult2>();
+
+                    Assert.Equal("WF2 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
                 }
             }
         }
