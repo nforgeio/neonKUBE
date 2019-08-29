@@ -583,6 +583,8 @@ namespace Neon.Cadence
         private static long                             nextRequestId      = 0;
         private static Dictionary<long, Operation>      operations         = new Dictionary<long, Operation>();
         private static HttpServer                       httpServer         = null;
+        private static INeonLogger                      cadenceLogger;
+        private static INeonLogger                      cadenceProxyLogger;
 
         /// <summary>
         /// Resets <see cref="CadenceClient"/> to its initial state, by closing
@@ -1030,7 +1032,98 @@ namespace Neon.Cadence
                 {
                     case InternalMessageTypes.LogRequest:
 
-                        // $todo(jeff.lill): Record logs from cadence-proxy
+                        var logRequest = (LogRequest)request;
+
+                        if (logRequest.FromCadence)
+                        {
+                            switch (logRequest.LogLevel)
+                            {
+                                default:
+                                case Neon.Diagnostics.LogLevel.None:
+
+                                    break;  // NOP
+
+                                case Neon.Diagnostics.LogLevel.Critical:
+
+                                    cadenceLogger.LogCritical(logRequest.LogMessage);
+;                                   break;
+
+                                case Neon.Diagnostics.LogLevel.SError:
+
+                                    cadenceLogger.LogSError(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Error:
+
+                                    cadenceLogger.LogError(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Warn:
+
+                                    cadenceLogger.LogWarn(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Info:
+
+                                    cadenceLogger.LogInfo(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.SInfo:
+
+                                    cadenceLogger.LogSInfo(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Debug:
+
+                                    cadenceLogger.LogDebug(logRequest.LogMessage);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            switch (logRequest.LogLevel)
+                            {
+                                default:
+                                case Neon.Diagnostics.LogLevel.None:
+
+                                    break;  // NOP
+
+                                case Neon.Diagnostics.LogLevel.Critical:
+
+                                    cadenceProxyLogger.LogCritical(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.SError:
+
+                                    cadenceProxyLogger.LogSError(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Error:
+
+                                    cadenceProxyLogger.LogError(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Warn:
+
+                                    cadenceProxyLogger.LogWarn(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Info:
+
+                                    cadenceProxyLogger.LogInfo(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.SInfo:
+
+                                    cadenceProxyLogger.LogSInfo(logRequest.LogMessage);
+                                    break;
+
+                                case Neon.Diagnostics.LogLevel.Debug:
+
+                                    cadenceProxyLogger.LogDebug(logRequest.LogMessage);
+                                    break;
+                            }
+                        }
 
                         await client.ProxyReplyAsync(request, new LogReply());
                         break;
@@ -1265,7 +1358,9 @@ namespace Neon.Cadence.WorkflowStub
                 Settings.ProxyTimeoutSeconds = Settings.DebugHttpTimeout.TotalSeconds;
             }
 
-            DataConverter = new JsonDataConverter();
+            DataConverter      = new JsonDataConverter();
+            cadenceLogger      = LogManager.Default.GetLogger("cadence", isLogEnabledFunc: () => Settings.LogCadence);
+            cadenceProxyLogger = LogManager.Default.GetLogger("cadence-proxy", isLogEnabledFunc: () => Settings.LogCadenceProxy);
 
             lock (staticSyncLock)
             {

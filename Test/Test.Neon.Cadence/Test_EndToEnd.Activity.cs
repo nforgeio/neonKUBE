@@ -256,6 +256,60 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IActivityLogger : IActivity
+        {
+            [ActivityMethod]
+            Task RunAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityLogger : ActivityBase, IActivityLogger
+        {
+            public async Task RunAsync()
+            {
+                Activity.Logger.LogInfo("Hello World!");
+                await Task.CompletedTask;
+            }
+        }
+
+        public interface IActivityWorkflowLogger : IWorkflow
+        {
+            [WorkflowMethod]
+            Task RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowLogger : WorkflowBase, IActivityWorkflowLogger
+        {
+            public async Task RunAsync()
+            {
+                var stub = Workflow.NewActivityStub<IActivityLogger>();
+                
+                await stub.RunAsync();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Logger()
+        {
+            // Verify that logging within an activity doesn't barf.
+
+            // $todo(jeff.lill):
+            //
+            // It would be nice to add additional tests that actually
+            // verify that something reasonable was logged, including
+            // using the workflow run ID as the log context.
+            //
+            // I did verify this manually.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowLogger>();
+
+            await stub.RunAsync();
+        }
+
+        //---------------------------------------------------------------------
+
         public interface IActivityMultipleStubCalls : IActivity
         {
             [ActivityMethod]

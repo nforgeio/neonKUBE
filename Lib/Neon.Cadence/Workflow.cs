@@ -88,21 +88,17 @@ namespace Neon.Cadence
             this.MethodMap                 = methodMap;
             this.Client                    = client;
             this.IsReplaying               = isReplaying;
+            this.Logger                    = LogManager.Default.GetLogger(sourceModule: Client.Settings.ClientIdentity, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
 
             // Initialize the random number generator with a fairly unique
             // seed for the workflow without consuming entropy to obtain
             // a cryptographically random number.
             //
             // Note that we can use a new seed every time the workflow is
-            // invoked because the actually random numbers returned below
-            // will be recorded and replayed from history.
+            // invoked because the actual random numbers returned by the
+            // methods below will be recorded and replayed from history.
 
-            var seed = Environment.TickCount;
-
-            seed ^= (int)DateTime.Now.Ticks;
-            seed ^= (int)contextId;
-
-            this.random = new Random(seed);
+            this.random = new Random(Environment.TickCount ^ (int)DateTime.Now.Ticks);
 
             // Initialize the workflow information.
 
@@ -135,6 +131,11 @@ namespace Neon.Cadence
         /// Returns the <see cref="CadenceClient"/> managing this workflow.
         /// </summary>
         public CadenceClient Client { get; set; }
+
+        /// <summary>
+        /// Returns the logger to be used for logging workflow related events.
+        /// </summary>
+        public INeonLogger Logger { get; private set; }
 
         /// <summary>
         /// Returns information about the running workflow.

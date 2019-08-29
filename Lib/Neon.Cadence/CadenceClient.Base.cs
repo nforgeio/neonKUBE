@@ -79,7 +79,7 @@ namespace Neon.Cadence
         /// Be sure to register all of your workflow implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssembly(Assembly assembly, string domain = null)
+        public async Task RegisterAssemblyAsync(Assembly assembly, string domain = null)
         {
             EnsureNotDisposed();
             

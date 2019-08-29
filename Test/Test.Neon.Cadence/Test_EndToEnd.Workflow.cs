@@ -121,6 +121,43 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IWorkflowLogger : IWorkflow
+        {
+            [WorkflowMethod]
+            Task RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowLogger : WorkflowBase, IWorkflowLogger
+        {
+            public async Task RunAsync()
+            {
+                Workflow.Logger.LogInfo("Hello World!");
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Logger()
+        {
+            // Verify that logging within a workflow doesn't barf.
+
+            // $todo(jeff.lill):
+            //
+            // It would be nice to add additional tests that actually
+            // verify that something reasonable was logged, including
+            // using the workflow run ID as the log context.
+            //
+            // I did verify this manually.
+
+            var stub = client.NewWorkflowStub<IWorkflowLogger>();
+
+            await stub.RunAsync();
+        }
+
+        //---------------------------------------------------------------------
+
         public interface IWorkflowUtcNow : IWorkflow
         {
             [WorkflowMethod]

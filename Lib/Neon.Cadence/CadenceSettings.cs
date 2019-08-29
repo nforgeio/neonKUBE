@@ -335,6 +335,16 @@ namespace Neon.Cadence
         public bool LogCadenceProxy { get; set; } = false;
 
         /// <summary>
+        /// Optionally enable workflow logging while the workflow is being
+        /// replayed from history.  This should generally be enabled only
+        /// while debugging.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogDuringReplay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logDuringReplay", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool LogDuringReplay { get; set; } = false;
+
+        /// <summary>
         /// Optionally specifies that the connection should run in DEBUG mode.  This currently
         /// launches the <b>cadence-proxy</b> with a command window (on Windows only) to make 
         /// it easy to see any output it generates and also has <b>cadence-proxy</b>.  This

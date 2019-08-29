@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence
 {
@@ -46,6 +47,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(parent != null);
 
             this.parent = parent;
+            this.Logger = LogManager.Default.GetLogger(sourceModule: Client.Settings.ClientIdentity, contextId: parent.ActivityTask?.WorkflowExecution?.RunId);
         }
 
         /// <summary>
@@ -83,6 +85,11 @@ namespace Neon.Cadence
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         public ActivityTask Task => parent.ActivityTask;
+
+        /// <summary>
+        /// Returns the logger to be used for logging activity related events.
+        /// </summary>
+        public INeonLogger Logger { get; private set; }
 
         /// <summary>
         /// <para>
