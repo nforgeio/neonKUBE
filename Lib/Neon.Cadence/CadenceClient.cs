@@ -1135,9 +1135,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-using Neon.Common;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
+using Neon.Common;
 
 namespace Neon.Cadence.WorkflowStub
 {

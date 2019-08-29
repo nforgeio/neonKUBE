@@ -533,9 +533,9 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"using System.Runtime.CompilerServices;");
             sbSource.AppendLine($"using System.Threading.Tasks;");
             sbSource.AppendLine();
-            sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Cadence;");
             sbSource.AppendLine($"using Neon.Cadence.Internal;");
+            sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Tasks;");
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
@@ -1142,9 +1142,9 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"using System.Runtime.CompilerServices;");
             sbSource.AppendLine($"using System.Threading.Tasks;");
             sbSource.AppendLine();
-            sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Cadence;");
             sbSource.AppendLine($"using Neon.Cadence.Internal;");
+            sbSource.AppendLine($"using Neon.Common;");
             sbSource.AppendLine($"using Neon.Tasks;");
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
