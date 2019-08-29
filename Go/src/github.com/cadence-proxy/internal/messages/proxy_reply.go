@@ -18,7 +18,7 @@
 package messages
 
 import (
-	"github.com/cadence-proxy/internal/cadence/cadenceerrors"
+	"github.com/cadence-proxy/internal/cadence/error"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -37,8 +37,8 @@ type (
 	// allow message types that implement it to get and set their nested ProxyReply
 	IProxyReply interface {
 		IProxyMessage
-		GetError() *cadenceerrors.CadenceError
-		SetError(value *cadenceerrors.CadenceError)
+		GetError() *proxyerror.CadenceError
+		SetError(value *proxyerror.CadenceError)
 	}
 )
 
@@ -61,10 +61,10 @@ func NewProxyReply() *ProxyReply {
 // GetError gets the CadenceError encoded as a JSON string in a ProxyReply's
 // Properties map
 //
-// returns cadenceerrors.CadenceError -> a CadenceError struct encoded with the
+// returns proxyerror.CadenceError -> a CadenceError struct encoded with the
 // JSON property values at a ProxyReply's Error property
-func (reply *ProxyReply) GetError() *cadenceerrors.CadenceError {
-	cadenceError := cadenceerrors.NewCadenceErrorEmpty()
+func (reply *ProxyReply) GetError() *proxyerror.CadenceError {
+	cadenceError := proxyerror.NewCadenceErrorEmpty()
 	err := reply.GetJSONProperty("Error", cadenceError)
 	if err != nil {
 		return nil
@@ -76,9 +76,9 @@ func (reply *ProxyReply) GetError() *cadenceerrors.CadenceError {
 // SetError sets a CadenceError as a JSON string in a ProxyReply's
 // properties map at the Error Property
 //
-// param cadenceerrors.CadenceError -> the CadenceError to marshal into a
+// param proxyerror.CadenceError -> the CadenceError to marshal into a
 // JSON string and set at a ProxyReply's Error property
-func (reply *ProxyReply) SetError(value *cadenceerrors.CadenceError) {
+func (reply *ProxyReply) SetError(value *proxyerror.CadenceError) {
 	reply.SetJSONProperty("Error", value)
 }
 

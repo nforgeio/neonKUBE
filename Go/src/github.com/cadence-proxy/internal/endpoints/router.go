@@ -20,6 +20,8 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/cadence-proxy/internal/endpoints/echo"
+	"github.com/cadence-proxy/internal/endpoints/message"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -44,8 +46,8 @@ func SetupRoutes(router *chi.Mux) {
 		router.Use(middleware.Recoverer)
 
 		// cadence-proxy endpoints
-		router.Put("/", MessageHandler)
-		router.Put("/echo", EchoHandler)
+		router.Put("/", message.MessageHandler)
+		router.Put("/echo", echo.EchoHandler)
 
 		// endpoints for test paths
 		router.Mount("/test", TestRouter())

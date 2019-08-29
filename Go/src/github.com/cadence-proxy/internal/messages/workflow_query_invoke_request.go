@@ -18,7 +18,7 @@
 package messages
 
 import (
-	"github.com/cadence-proxy/internal/cadence/cadenceworkflows"
+	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -93,14 +93,14 @@ func (request *WorkflowQueryInvokeRequest) SetQueryArgs(value []byte) {
 // map. For workflow requests related to an executing workflow,
 // this will indicate the current history replay state.
 //
-// returns cadenceworkflows.ReplayStatus -> the current history replay
+// returns proxyworkflow.ReplayStatus -> the current history replay
 // state of a workflow
-func (request *WorkflowQueryInvokeRequest) GetReplayStatus() cadenceworkflows.ReplayStatus {
+func (request *WorkflowQueryInvokeRequest) GetReplayStatus() proxyworkflow.ReplayStatus {
 	replayStatusPtr := request.GetStringProperty("ReplayStatus")
 	if replayStatusPtr == nil {
-		return cadenceworkflows.ReplayStatusUnspecified
+		return proxyworkflow.ReplayStatusUnspecified
 	}
-	replayStatus := cadenceworkflows.StringToReplayStatus(*replayStatusPtr)
+	replayStatus := proxyworkflow.StringToReplayStatus(*replayStatusPtr)
 
 	return replayStatus
 }
@@ -109,9 +109,9 @@ func (request *WorkflowQueryInvokeRequest) GetReplayStatus() cadenceworkflows.Re
 // map. For workflow requests related to an executing workflow,
 // this will indicate the current history replay state.
 //
-// param value cadenceworkflows.ReplayStatus -> the current history replay
+// param value proxyworkflow.ReplayStatus -> the current history replay
 // state of a workflow
-func (request *WorkflowQueryInvokeRequest) SetReplayStatus(value cadenceworkflows.ReplayStatus) {
+func (request *WorkflowQueryInvokeRequest) SetReplayStatus(value proxyworkflow.ReplayStatus) {
 	status := value.String()
 	request.SetStringProperty("ReplayStatus", &status)
 }

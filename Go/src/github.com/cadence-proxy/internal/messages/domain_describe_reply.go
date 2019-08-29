@@ -18,7 +18,7 @@
 package messages
 
 import (
-	"github.com/cadence-proxy/internal/cadence/cadenceclient"
+	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -83,12 +83,12 @@ func (reply *DomainDescribeReply) SetDomainInfoDescription(value *string) {
 //
 // returns *DomainStatus -> DomainStatus of the Domain being described
 // from a DomainDescribeReply's properties map
-func (reply *DomainDescribeReply) GetDomainInfoStatus() cadenceclient.DomainStatus {
+func (reply *DomainDescribeReply) GetDomainInfoStatus() proxyclient.DomainStatus {
 	domainInfoStatusPtr := reply.GetStringProperty("DomainInfoStatus")
 	if domainInfoStatusPtr == nil {
-		return cadenceclient.DomainStatusUnspecified
+		return proxyclient.DomainStatusUnspecified
 	}
-	domainStatus := cadenceclient.StringToDomainStatus(*domainInfoStatusPtr)
+	domainStatus := proxyclient.StringToDomainStatus(*domainInfoStatusPtr)
 
 	return domainStatus
 }
@@ -98,7 +98,7 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() cadenceclient.DomainStat
 //
 // param value *DomainStatus -> DomainStatus value to set
 // as the DomainDescribeReply's DomainInfoStatus in its properties map
-func (reply *DomainDescribeReply) SetDomainInfoStatus(value cadenceclient.DomainStatus) {
+func (reply *DomainDescribeReply) SetDomainInfoStatus(value proxyclient.DomainStatus) {
 	status := value.String()
 	reply.SetStringProperty("DomainInfoStatus", &status)
 }

@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package endpoints
+package echo
 
 import (
 	"fmt"
@@ -23,6 +23,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/cadence-proxy/internal"
+	common "github.com/cadence-proxy/internal/endpoints/common"
 	"github.com/cadence-proxy/internal/messages"
 )
 
@@ -34,26 +36,25 @@ import (
 //
 // param r *http.Request
 func EchoHandler(w http.ResponseWriter, r *http.Request) {
-	logger = Instance.Logger
 
 	// check if the request has the correct content type,
 	// has a body that is not nil,
 	// and is an http.PUT request
-	statusCode, err := checkRequestValidity(w, r)
+	statusCode, err := common.CheckRequestValidity(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		panic(err)
 	}
 
 	// read the body and deserialize it
-	message, err := readAndDeserialize(r.Body)
+	message, err := common.ReadAndDeserialize(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)
 	}
 
 	// serialize the message
-	logger.Debug(fmt.Sprintf("Echo message type %s", message.GetProxyMessage().Type.String()))
+	internal.Logger.Debug(fmt.Sprintf("Echo message type %s", message.GetProxyMessage().Type.String()))
 	serializedMessageCopy, err := cloneForEcho(message)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -70,7 +71,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 func cloneForEcho(message messages.IProxyMessage) (b []byte, e error) {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Debug("Recovered in cloneForEcho")
+			internal.Logger.Debug("Recovered in cloneForEcho")
 			e = fmt.Errorf("panic %v", r)
 			b = nil
 		}
@@ -80,7 +81,7 @@ func cloneForEcho(message messages.IProxyMessage) (b []byte, e error) {
 	proxyMessage := messageCopy.GetProxyMessage()
 	serializedMessageCopy, err := proxyMessage.Serialize(false)
 	if err != nil {
-		logger.Debug("Error serializing proxy message", zap.Error(err))
+		internal.Logger.Debug("Error serializing proxy message", zap.Error(err))
 		return nil, err
 	}
 

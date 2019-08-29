@@ -20,7 +20,7 @@ package main
 import (
 	"flag"
 
-	globals "github.com/cadence-proxy/internal"
+	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/endpoints"
 	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/server"
@@ -29,14 +29,9 @@ import (
 var (
 
 	// variables to put command line args in
-	address, logLevel string
-	debugMode         bool
+	address   string
+	debugMode bool
 
-	// INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
-	// already be running for debugging purposes.  When this is true, the
-	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
-	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
-	// This defaults to false.
 	debugPrelaunched = false
 )
 
@@ -44,24 +39,22 @@ func main() {
 
 	// define the flags and parse them
 	flag.StringVar(&address, "listen", "127.0.0.2:5000", "Address for the Cadence Proxy Server to listen on")
-	flag.StringVar(&logLevel, "log-level", "info", "The log level when running the proxy")
 	flag.BoolVar(&debugMode, "debug", true, "Set to debug mode")
 	flag.Parse()
 
-	// debug prelaunched
 	if debugPrelaunched {
-		globals.DebugPrelaunched = true
+		internal.DebugPrelaunched = true
 	}
-
-	// set the log level and if the program should run in debug mode
-	logger.SetLogger(logLevel, debugMode)
+	l := logger.SetLogger(logger.Info, debugMode)
 
 	// create the instance, set the routes,
 	// and start the server
-	instance := server.NewInstance(address)
+	instance := server.NewInstance(address, l)
 
-	// set server instance variable in endpoints package
-	endpoints.Instance = instance
+	// set server instance and
+	// logger for endpoints
+	internal.Instance = instance
+	internal.Logger = instance.Logger
 
 	// setup the routes
 	endpoints.SetupRoutes(instance.Router)
