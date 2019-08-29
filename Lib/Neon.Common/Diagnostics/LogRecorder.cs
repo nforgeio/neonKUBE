@@ -202,27 +202,8 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogCritical(object message, Exception e, string activityId = null)
         {
-            log.LogCritical(message, e, activityId);
+            log.LogCritical(message, e, activityId); ;
             capture.AppendLine($"[CRITICAL] {message} {NeonHelper.ExceptionError(e)}");
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, IEnumerable<string> txtFields, IEnumerable<double> numFields)
-        {
-            log.LogMetrics(level, txtFields, numFields);
-            capture.AppendLine($"[{level.ToString().ToUpperInvariant()}] {NeonLogger.FormatMetrics(txtFields, numFields)}");
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params string[] txtFields)
-        {
-            log.LogMetrics(level, txtFields, null);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params double[] numFields)
-        {
-            log.LogMetrics(level, null, numFields);
         }
 
         /// <summary>

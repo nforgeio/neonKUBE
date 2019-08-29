@@ -69,7 +69,7 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logger">The <see cref="ILogger"/> to be wrapped.</param>
+        /// <param name="logger">The <see cref="ILogger"/> being wrapped.</param>
         public NeonLoggerShim(ILogger logger)
         {
             Covenant.Requires<ArgumentNullException>(logger == null);
@@ -149,7 +149,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="message">The message object.</param>
         /// <param name="activityId">The optional activiity ID.</param>
-        /// <returns></returns>
+        /// <returns>The formatted log event.</returns>
         private static string FormatMessage(object message, string activityId = null)
         {
             string text;
@@ -167,6 +167,13 @@ namespace Neon.Diagnostics
             {
                 text += $" [activity-id:{activityId}]";
             }
+
+            // $todo(jeff.lill): Do I need to support contextIDs here too?
+
+            //if (!string.IsNullOrEmpty(contextId))
+            //{
+            //    text += $" [context-id:{contextId}]";
+            //}
 
             return text;
         }
@@ -253,88 +260,6 @@ namespace Neon.Diagnostics
         public void LogCritical(object message, Exception e, string activityId = null)
         {
             logger.LogCritical(e, FormatMessage(message, activityId));
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, IEnumerable<string> txtFields, IEnumerable<double> numFields)
-        {
-            var txtCount = 0;
-            var numCount = 0;
-
-            if (txtFields != null)
-            {
-                txtCount = txtFields.Count();
-            }
-
-            if (numFields != null)
-            {
-                numCount = numFields.Count();
-            }
-
-            if (txtCount == 0 && numCount == 0)
-            {
-                return;     // Nothing to write.
-            }
-
-            var message = NeonLogger.FormatMetrics(txtFields, numFields);
-
-            switch (level)
-            {
-                case LogLevel.Critical:
-
-                    LogCritical(message);
-                    break;
-
-                case LogLevel.Debug:
-
-                    LogDebug(message);
-                    break;
-
-                case LogLevel.Error:
-
-                    LogError(message);
-                    break;
-
-                case LogLevel.Info:
-
-                    LogInfo(message);
-                    break;
-
-                case LogLevel.None:
-
-                    break;  // NOP
-
-                case LogLevel.SError:
-
-                    LogSError(message);
-                    break;
-
-                case LogLevel.SInfo:
-
-                    LogSInfo(message);
-                    break;
-
-                case LogLevel.Warn:
-
-                    LogWarn(message);
-                    break;
-
-                default:
-
-                    throw new NotImplementedException();
-            }
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params string[] txtFields)
-        {
-            LogMetrics(level, txtFields, null);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params double[] numFields)
-        {
-            LogMetrics(level, null, numFields);
         }
 
         //---------------------------------------------------------------------

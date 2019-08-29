@@ -371,23 +371,5 @@ namespace Neon.Web
         {
             GetLogger().LogCritical(message, e, activityId);
         }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, IEnumerable<string> textFields, IEnumerable<double> numFields)
-        {
-            GetLogger().LogMetrics(level, textFields, numFields);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params string[] textFields)
-        {
-            GetLogger().LogMetrics(level, textFields);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params double[] numFields)
-        {
-            GetLogger().LogMetrics(level, numFields);
-        }
     }
 }
