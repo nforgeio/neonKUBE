@@ -88,7 +88,7 @@ namespace Neon.Cadence
             this.MethodMap                 = methodMap;
             this.Client                    = client;
             this.IsReplaying               = isReplaying;
-            this.Logger                    = LogManager.Default.GetLogger(sourceModule: Client.Settings.ClientIdentity, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
+            this.Logger                    = LogManager.Default.GetLogger(sourceModule: Client.Settings?.ClientIdentity, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
 
             // Initialize the random number generator with a fairly unique
             // seed for the workflow without consuming entropy to obtain
