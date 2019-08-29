@@ -178,6 +178,9 @@ namespace Neon.Web
         }
 
         /// <inheritdoc/>
+        public string ContextId => GetLogger().ContextId;
+
+        /// <inheritdoc/>
         public bool IsLogDebugEnabled => GetLogger().IsLogDebugEnabled;
 
         /// <inheritdoc/>

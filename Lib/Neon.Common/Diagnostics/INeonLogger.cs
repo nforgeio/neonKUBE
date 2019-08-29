@@ -32,6 +32,11 @@ namespace Neon.Diagnostics
     public interface INeonLogger
     {
         /// <summary>
+        /// Returns the logger's context ID or <c>null</c>.
+        /// </summary>
+        string ContextId { get; }
+
+        /// <summary>
         /// Returns <c>true</c> if <b>debug</b> logging is enabled.
         /// </summary>
         bool IsLogDebugEnabled { get; }

@@ -47,6 +47,9 @@ namespace Neon.Diagnostics
         private Func<bool>  isLogEnabledFunc;
 
         /// <inheritdoc/>
+        public string ContextId => this.contextId;
+
+        /// <inheritdoc/>
         public bool IsLogDebugEnabled => logManager.LogLevel >= LogLevel.Debug;
 
         /// <inheritdoc/>

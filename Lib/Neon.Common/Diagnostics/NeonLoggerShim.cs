@@ -64,7 +64,8 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Instance members
 
-        private ILogger logger;
+        private ILogger         logger;
+        private INeonLogger     neonLogger;     // Non-NULL if [logger] is also an [INeonLogger].
 
         /// <summary>
         /// Constructor.
@@ -74,11 +75,15 @@ namespace Neon.Diagnostics
         {
             Covenant.Requires<ArgumentNullException>(logger == null);
 
-            this.logger = logger;
+            this.logger     = logger;
+            this.neonLogger = logger as INeonLogger;
         }
 
         //---------------------------------------------------------------------
         // INeonLogger implementation:
+
+        /// <inheritdoc/>
+        public string ContextId => neonLogger?.ContextId;
 
         /// <inheritdoc/>
         public bool IsLogDebugEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug);
@@ -147,10 +152,11 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Formats the log message.
         /// </summary>
+        /// <param name="neonLogger">The <see cref="INeonLogger"/> implementation or <c>null</c>.</param>
         /// <param name="message">The message object.</param>
         /// <param name="activityId">The optional activiity ID.</param>
         /// <returns>The formatted log event.</returns>
-        private static string FormatMessage(object message, string activityId = null)
+        private static string FormatMessage(INeonLogger neonLogger, object message, string activityId = null)
         {
             string text;
 
@@ -168,12 +174,10 @@ namespace Neon.Diagnostics
                 text += $" [activity-id:{activityId}]";
             }
 
-            // $todo(jeff.lill): Do I need to support contextIDs here too?
-
-            //if (!string.IsNullOrEmpty(contextId))
-            //{
-            //    text += $" [context-id:{contextId}]";
-            //}
+            if (neonLogger != null && !string.IsNullOrEmpty(neonLogger.ContextId))
+            {
+                text += $" [context-id:{neonLogger.ContextId}]";
+            }
 
             return text;
         }
@@ -181,85 +185,85 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogDebug(object message, string activityId = null)
         {
-            logger.LogDebug(FormatMessage(message, activityId));
+            logger.LogDebug(FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogSInfo(object message, string activityId = null)
         {
-            logger.LogInformation(FormatMessage(message, activityId));
+            logger.LogInformation(FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogInfo(object message, string activityId = null)
         {
-            logger.LogInformation(FormatMessage(message, activityId));
+            logger.LogInformation(FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogWarn(object message, string activityId = null)
         {
-            logger.LogWarning(FormatMessage(message, activityId));
+            logger.LogWarning(FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogSError(object message, string activityId = null)
         {
-            logger.LogError(FormatMessage(message, activityId));
+            logger.LogError(FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogError(object message, string activityId = null)
         {
-            logger.LogError(FormatMessage(message, activityId));
+            logger.LogError(FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogCritical(object message, string activityId = null)
         {
-            logger.LogCritical(FormatMessage(message, activityId));
+            logger.LogCritical(FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogDebug(object message, Exception e, string activityId = null)
         {
-            logger.LogDebug(e, FormatMessage(message, activityId));
+            logger.LogDebug(e, FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogSInfo(object message, Exception e, string activityId = null)
         {
-            logger.LogInformation(e, FormatMessage(message, activityId));
+            logger.LogInformation(e, FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogInfo(object message, Exception e, string activityId = null)
         {
-            logger.LogInformation(e, FormatMessage(message, activityId));
+            logger.LogInformation(e, FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogWarn(object message, Exception e, string activityId = null)
         {
-            logger.LogWarning(e, FormatMessage(message, activityId));
+            logger.LogWarning(e, FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogError(object message, Exception e, string activityId = null)
         {
-            logger.LogError(e, FormatMessage(message, activityId));
+            logger.LogError(e, FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogSError(object message, Exception e, string activityId = null)
         {
-            logger.LogError(e, FormatMessage(message, activityId));
+            logger.LogError(e, FormatMessage(neonLogger, message, activityId));
         }
 
         /// <inheritdoc/>
         public void LogCritical(object message, Exception e, string activityId = null)
         {
-            logger.LogCritical(e, FormatMessage(message, activityId));
+            logger.LogCritical(e, FormatMessage(neonLogger, message, activityId));
         }
 
         //---------------------------------------------------------------------

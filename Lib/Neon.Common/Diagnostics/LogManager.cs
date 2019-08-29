@@ -137,9 +137,14 @@ namespace Neon.Diagnostics
         }
 
         /// <summary>
-        /// Specifies the level of events to be actually recorded.
+        /// Specifies the level of events to be actually recorded.  This defaults to
+        /// <see cref="LogLevel.Info"/>.
         /// </summary>
-        public LogLevel LogLevel { get; set; }
+        public LogLevel LogLevel
+        {
+            get => this.logLevel;
+            set => this.logLevel = value;
+        }
 
         /// <summary>
         /// Sets the log level by safely parsing a string.

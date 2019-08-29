@@ -82,6 +82,9 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
+        public string ContextId => log.ContextId;
+
+        /// <inheritdoc/>
         public bool IsLogDebugEnabled => log.IsLogDebugEnabled;
 
         /// <inheritdoc/>
