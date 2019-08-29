@@ -485,27 +485,32 @@ namespace Neon.Cadence
                 _ = Task.Run(
                     async () =>
                     {
-                        try
+                        while (true)
                         {
-                            var newContext = await listener.AcceptAsync();
+                            try
+                            {
+                                var newContext = await listener.AcceptAsync();
 
-                            // Process each request in its own task.
+                                // Process each request in its own task.
 
-                            _ = Task.Factory.StartNew(
-                                async (object arg) =>
-                                {
-                                    using (var context = (RequestContext)arg)
+                                _ = Task.Factory.StartNew(
+                                    async (object arg) =>
                                     {
-                                        await OnListenerRequestAsync(context);
-                                    }
-                                },
-                                newContext);
-                        }
-                        catch
-                        {
-                            // We're going to see exceptions like ObjectDisposedException when
-                            // the listener is disposed.  We're just going to ignore these
-                            // and exit.
+                                        using (var context = (RequestContext)arg)
+                                        {
+                                            await OnListenerRequestAsync(context);
+                                        }
+                                    },
+                                    newContext);
+                            }
+                            catch
+                            {
+                                // We're going to see exceptions like ObjectDisposedException when
+                                // the listener is disposed.  We're just going to ignore these
+                                // and exit.
+
+                                break;
+                            }
                         }
                     });
             }
@@ -513,12 +518,41 @@ namespace Neon.Cadence
             /// <inheritdoc/>
             public void Dispose()
             {
+                switch (NeonHelper.Framework)
+                {
+                    case NetFramework.Core:
+
+                        DisposeCoreFramework();
+                        break;
+
+                    case NetFramework.Framework:
+
+                        DisposeNetFramewwork();
+                        break;
+
+                    default:
+
+                        throw new NotSupportedException($"Unsupported framework: {NeonHelper.Framework}");
+                }
+            }
+
+            /// <summary>
+            /// Handles dispose when running as .NET Core.
+            /// </summary>
+            private void DisposeCoreFramework()
+            {
                 if (kestrel != null)
                 {
                     kestrel.Dispose();
                     kestrel = null;
                 }
+            }
 
+            /// <summary>
+            /// Handles dispose when running .NET Framework.
+            /// </summary>
+            private void DisposeNetFramewwork()
+            {                
                 if (listener != null)
                 {
                     listener.Dispose();
@@ -841,10 +875,7 @@ namespace Neon.Cadence
 
                         try
                         {
-                            var httpRequest  = context.Request;
-                            var httpResponse = context.Response;
-
-                            await httpRequest.Body.CopyToAsync(bodyStream);
+                            await request.Body.CopyToAsync(bodyStream);
 
                             bodyStream.Position = 0;
 
@@ -931,10 +962,7 @@ namespace Neon.Cadence
 
                         try
                         {
-                            var httpRequest  = context.Request;
-                            var httpResponse = context.Response;
-
-                            await httpRequest.Body.CopyToAsync(bodyStream);
+                            await request.Body.CopyToAsync(bodyStream);
 
                             bodyStream.Position = 0;
 
@@ -1336,7 +1364,6 @@ namespace Neon.Cadence.WorkflowStub
                             Domain        = settings.DefaultDomain,
                             CreateDomain  = settings.CreateDomain
                         };
-
 
                     CallProxyAsync(connectRequest).Result.ThrowOnError();
                 }

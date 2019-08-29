@@ -295,7 +295,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_MultipleStubCalls()
+        public async Task Activity_MultipleStubs()
         {
             // Verify that we can reuse an activity stub to make multiple calls.
 

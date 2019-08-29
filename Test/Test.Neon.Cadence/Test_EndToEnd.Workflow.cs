@@ -324,7 +324,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_MultipleStubCalls()
+        public async Task Workflow_MultipleStubs()
         {
             // Verify that we CANNOT reuse a workflow stub to make multiple calls.
 
