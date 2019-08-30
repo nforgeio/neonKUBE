@@ -1770,6 +1770,38 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IWorkflowDifferentNamesInterface : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowDifferentNamesClass : WorkflowBase, IWorkflowDifferentNamesInterface
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_DifferentNames()
+        {
+            // Verify that a workflow whose class and interface names
+            // don't match works.  This ensures that the Cadence client
+            // doesn't make any assumptions about naming conventions.
+            //
+            // ...which was happening in earlier times.
+
+            var stub = client.NewWorkflowStub<IWorkflowDifferentNamesInterface>();
+
+            Assert.Equal($"Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
+
+        //---------------------------------------------------------------------
+
         public interface IWorkflowFailure : IWorkflow
         {
             [WorkflowMethod]

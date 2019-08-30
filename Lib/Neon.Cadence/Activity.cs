@@ -37,6 +37,7 @@ namespace Neon.Cadence
     public class Activity
     {
         private ActivityBase    parent;
+        private DateTime        nextHeartbeatUtc = DateTime.MinValue;
 
         /// <summary>
         /// Internal constructor.
@@ -208,6 +209,54 @@ namespace Neon.Cadence
 
             await global::System.Threading.Tasks.Task.CompletedTask;
             throw new CadenceActivityExternalCompletionException();
+        }
+
+        /// <summary>
+        /// Used to record heartbeats at a specific interval.
+        /// </summary>
+        /// <param name="detailsFunc">Optionally specifies a function that returns the heartbeat details.</param>
+        /// <param name="interval">
+        /// Optionally specifies the interval between heartbeats.  This defaults
+        /// to 1/2 of activity's heartbeat timeout.
+        /// </param>
+        /// <returns><c>true</c> if a heartbeat was recorded.</returns>
+        /// <remarks>
+        /// <para>
+        /// This is a convienence method that can be used to make it easy to
+        /// restrict how often activity heartbeats are actually recorded.
+        /// The activity can call this as often as it likes but the method
+        /// schedules heartbeat times and only transmits a heartbeat when
+        /// this time has been reached.
+        /// </para>
+        /// <para>
+        /// By default, the method records heartbeats at 1/2 the activity's heartbeat
+        /// timeout, but this can be customized via the <paramref name="interval"/>
+        /// parameter.  No heartbeat details will be recorded by default, but you
+        /// can customize this by passing a <paramref name="detailsFunc"/>.
+        /// </para>
+        /// <note>
+        /// Any <paramref name="detailsFunc"/> passed will only be called when a
+        /// heartbeat is scheduled.
+        /// </note>
+        /// </remarks>
+        public async Task<bool> HeartbeatAsync(Func<byte[]> detailsFunc = null, TimeSpan? interval = null)
+        {
+            var nextInterval = interval.HasValue ? interval.Value : TimeSpan.FromTicks(Task.HeartbeatTimeout.Ticks / 2);
+
+            if (DateTime.UtcNow >= nextHeartbeatUtc)
+            {
+                var details = detailsFunc != null ? detailsFunc() : null;
+
+                await SendHeartbeatAsync(details);
+
+                nextHeartbeatUtc = DateTime.UtcNow + nextInterval;
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

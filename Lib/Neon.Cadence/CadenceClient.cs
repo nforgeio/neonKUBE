@@ -145,7 +145,7 @@ namespace Neon.Cadence
     /// <note>
     /// <para>
     /// The .NET client uses a simple huristic to try to ensure that the default workflow and activity
-    /// type names applied when the <see cref="WorkflowAttribute.Name"/> and <see cref="ActivityAttribute.TypeName"/>
+    /// type names applied when the <see cref="WorkflowAttribute.Name"/> and <see cref="ActivityAttribute.Name"/>
     /// properties are not set for the interface and implementation classes.  If the interface
     /// name starts with an "I", the "I" will be stripped out before generating the fully qualified
     /// type name.  This handles the common C# convention where interface names started with an "I"

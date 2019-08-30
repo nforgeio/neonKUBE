@@ -62,7 +62,7 @@ namespace Neon.Cadence
         /// </code>
         /// <para>
         /// where <b>ACTIVITY_TYPENNAME</b> is either the activity interface's fully qualified 
-        /// name or the name specified by <see cref="ActivityAttribute.TypeName"/> and 
+        /// name or the name specified by <see cref="ActivityAttribute.Name"/> and 
         /// <b>METHOD_NAME</b> is from <see cref="ActivityMethodAttribute.Name"/>.  This
         /// is the same convention implemented by the Java client.
         /// </para>

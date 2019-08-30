@@ -45,7 +45,7 @@ namespace Neon.Cadence
         /// <paramref name="activityTypeName"/> specifies the target activity implementation type name and optionally,
         /// the specific activity method to be called for activity interfaces that have multiple methods.  For
         /// activity methods tagged by <c>ActivityMethod]</c>[ with specifying a name, the activity type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.TypeName"/>.
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.Name"/>.
         /// </para>
         /// <para>
         /// For activity methods with <see cref="ActivityMethodAttribute.Name"/> specified, the activity type will
@@ -73,7 +73,7 @@ namespace Neon.Cadence
         /// <paramref name="activityTypeName"/> specifies the target activity implementation type name and optionally,
         /// the specific activity method to be called for activity interfaces that have multiple methods.  For
         /// activity methods tagged by <c>ActivityMethod]</c>[ with specifying a name, the activity type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.TypeName"/>.
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.Name"/>.
         /// </para>
         /// <para>
         /// For activity methods with <see cref="ActivityMethodAttribute.Name"/> specified, the activity type will
@@ -101,7 +101,7 @@ namespace Neon.Cadence
         /// <paramref name="activityTypeName"/> specifies the target activity implementation type name and optionally,
         /// the specific activity method to be called for activity interfaces that have multiple methods.  For
         /// activity methods tagged by <c>ActivityMethod]</c>[ with specifying a name, the activity type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.TypeName"/>.
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.Name"/>.
         /// </para>
         /// <para>
         /// For activity methods with <see cref="ActivityMethodAttribute.Name"/> specified, the activity type will

@@ -72,10 +72,10 @@ namespace Neon.Cadence
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
-                workflowTypeName = workflowTypeName ?? CadenceHelper.GetWorkflowTypeName(workflowType);
+                workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowType, workflowType.GetCustomAttribute<WorkflowAttribute>());
             }
 
-            await WorkflowBase.RegisterAsync(this, typeof(TWorkflow), workflowTypeName, ResolveDomain(domain));
+            await WorkflowBase.RegisterAsync(this, workflowType, workflowTypeName, ResolveDomain(domain));
         }
 
         /// <summary>
