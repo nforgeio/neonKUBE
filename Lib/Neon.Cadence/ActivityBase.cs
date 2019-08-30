@@ -558,7 +558,13 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(dataConverter != null);
             CadenceHelper.ValidateActivityImplementation(activityType);
 
+            var activityTask = new ActivityTask()
+            {
+                 // $todo(jeff.lill): Need to initialize these properties.
+            };
+
             this.Client                  = client;
+            this.ActivityTask            = activityTask;
             this.Activity                = new Activity(this);
             this.activityType            = activityType;
             this.activityMethod          = activityMethod;
@@ -598,7 +604,7 @@ namespace Neon.Cadence
         internal bool IsLocal => !ContextId.HasValue;
 
         /// <summary>
-        /// Returns additional information about the activity and thr workflow that executed it.
+        /// Returns additional information about the activity and the workflow that executed it.
         /// </summary>
         internal ActivityTask ActivityTask { get; private set; }
 

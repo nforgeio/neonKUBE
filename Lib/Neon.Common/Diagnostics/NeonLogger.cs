@@ -36,63 +36,18 @@ namespace Neon.Diagnostics
     /// <summary>
     /// A general purpose implementation of <see cref="INeonLogger"/> and <see cref="ILogger"/>.
     /// </summary>
-    internal class NeonLogger : INeonLogger, ILogger
+    public class NeonLogger : INeonLogger, ILogger
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        /// <summary>
-        /// Formats metric fields into a message.
-        /// </summary>
-        /// <param name="txtFields">The text fields (or <c>null</c>).</param>
-        /// <param name="numFields">The numeric fields (or <c>null</c>).</param>
-        /// <exception cref="ArgumentException">
-        /// Thrown if either of <paramref name="txtFields"/> or <paramref name="numFields"/> 
-        /// includes more than 10 items.
-        /// </exception>
-        /// <returns>The formatted message.</returns>
-        internal static string FormatMetrics(IEnumerable<string> txtFields, IEnumerable<double> numFields)
-        {
-            var sb    = new StringBuilder();
-            var index = 0;
-
-            if (txtFields != null)
-            {
-                if (txtFields.Count() > 10)
-                {
-                    throw new ArgumentException($"[{nameof(txtFields)}] count exceeds 10.");
-                }
-
-                foreach (var field in txtFields)
-                {
-                    sb.AppendWithSeparator($"[txt.{index}={field}]");
-                }
-            }
-
-            if (numFields != null)
-            {
-                if (numFields.Count() > 10)
-                {
-                    throw new ArgumentException($"[{nameof(numFields)}] count exceeds 10.");
-                }
-
-                foreach (var field in numFields)
-                {
-                    sb.AppendWithSeparator($"[num.{index}={field}]");
-                }
-            }
-
-            return sb.ToString();
-        }
-
-        //---------------------------------------------------------------------
-        // Instance members
-
         private ILogManager logManager;
         private string      sourceModule;
         private bool        infoAsDebug;
         private long        emitCount;
         private TextWriter  writer;
+        private string      contextId;
+        private Func<bool>  isLogEnabledFunc;
+
+        /// <inheritdoc/>
+        public string ContextId => this.contextId;
 
         /// <inheritdoc/>
         public bool IsLogDebugEnabled => logManager.LogLevel >= LogLevel.Debug;
@@ -122,6 +77,16 @@ namespace Neon.Diagnostics
         /// <param name="sourceModule">Optionally identifies the event source module or <c>null</c>.</param>
         /// <param name="noisyAspNet">Optionally enables normal (noisy) logging of ASP.NET <b>INFO</b> events (see note in remarks).</param>
         /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
+        /// <param name="contextId">
+        /// Optionally specifies additional information that can be used to identify
+        /// context for logged events.  For example, the Neon.Cadence client uses this 
+        ///  to record the ID of the workflow recording events.
+        /// </param>
+        /// <param name="isLogEnabledFunc">
+        /// Optionally specifies a function that will be called at runtime to
+        /// determine whether to actually log an event.  This defaults to <c>null</c>
+        /// which will always log events.
+        /// </param>
         /// <remarks>
         /// <para>
         /// The instances returned will log nothing if <paramref name="logManager"/>
@@ -140,11 +105,19 @@ namespace Neon.Diagnostics
         /// </para>
         /// </note>
         /// </remarks>
-        public NeonLogger(ILogManager logManager, string sourceModule = null, bool noisyAspNet = false, TextWriter writer = null)
+        public NeonLogger(
+            ILogManager     logManager, 
+            string          sourceModule     = null, 
+            bool            noisyAspNet      = false, 
+            TextWriter      writer           = null,
+            string          contextId        = null,
+            Func<bool>      isLogEnabledFunc = null)
         {
-            this.logManager   = logManager ?? LogManager.Disabled;
-            this.sourceModule = sourceModule ?? string.Empty;
-            this.writer       = writer ?? Console.Error;
+            this.logManager       = logManager ?? LogManager.Disabled;
+            this.sourceModule     = sourceModule ?? string.Empty;
+            this.writer           = writer ?? Console.Error;
+            this.contextId        = contextId;
+            this.isLogEnabledFunc = isLogEnabledFunc;
 
             // $hack(jeff.lill):
             //
@@ -157,6 +130,13 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public bool IsLogLevelEnabled(LogLevel logLevel)
         {
+            // Verify that logging isn't temporarily disabled.
+
+            if (isLogEnabledFunc != null && !isLogEnabledFunc())
+            {
+                return false;
+            }
+
             // Map into Neon log levels.
 
             switch (logLevel)
@@ -255,7 +235,14 @@ namespace Neon.Diagnostics
 
                 if (!string.IsNullOrEmpty(activityId))
                 {
-                    activityId = $" [activity-id:{activityId}]";
+                    activity = $" [activity-id:{activityId}]";
+                }
+
+                var context = string.Empty;
+
+                if (!string.IsNullOrEmpty(contextId))
+                {
+                    context = $" [context-id:{contextId}]";
                 }
 
                 var index = string.Empty;
@@ -269,11 +256,11 @@ namespace Neon.Diagnostics
                 {
                     var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZOffset);
 
-                    writer.WriteLine($"[{timestamp}] [{level}]{activity}{module}{index} {message}");
+                    writer.WriteLine($"[{timestamp}] [{level}]{module}{activity}{context}{index} {message}");
                 }
                 else
                 {
-                    writer.WriteLine($"[{level}]{activity}{module}{index} {message}");
+                    writer.WriteLine($"[{level}]{module}{activity}{context}{index} {message}");
                 }
             }
         }
@@ -285,7 +272,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log(LogLevel.Debug, message?.ToString());
+                    Log(LogLevel.Debug, message?.ToString(), activityId);
                 }
                 catch
                 {
@@ -303,11 +290,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log(LogLevel.Debug, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Debug, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                     else
                     {
-                        Log(LogLevel.Debug, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Debug, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -324,7 +311,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log(LogLevel.Error, message?.ToString());
+                    Log(LogLevel.Error, message?.ToString(), activityId);
                 }
                 catch
                 {
@@ -342,11 +329,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log(LogLevel.Error, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Error, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                     else
                     {
-                        Log(LogLevel.Error, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Error, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -363,7 +350,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log(LogLevel.SError, message?.ToString());
+                    Log(LogLevel.SError, message?.ToString(), activityId);
                 }
                 catch
                 {
@@ -381,11 +368,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log(LogLevel.SError, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SError, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                     else
                     {
-                        Log(LogLevel.SError, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SError, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -402,7 +389,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log(LogLevel.Critical, message?.ToString());
+                    Log(LogLevel.Critical, message?.ToString(), activityId);
                 }
                 catch
                 {
@@ -420,11 +407,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log(LogLevel.Critical, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Critical, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                     else
                     {
-                        Log(LogLevel.Critical, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Critical, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -441,7 +428,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log(LogLevel.Info, message?.ToString());
+                    Log(LogLevel.Info, message?.ToString(), activityId);
                 }
                 catch
                 {
@@ -459,11 +446,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log(LogLevel.Info, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Info, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                     else
                     {
-                        Log(LogLevel.Info, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Info, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -480,7 +467,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log(LogLevel.SInfo, message?.ToString());
+                    Log(LogLevel.SInfo, message?.ToString(), activityId);
                 }
                 catch
                 {
@@ -498,11 +485,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log(LogLevel.SInfo, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SInfo, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                     else
                     {
-                        Log(LogLevel.SInfo, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SInfo, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -519,7 +506,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log(LogLevel.Warn, message?.ToString());
+                    Log(LogLevel.Warn, message?.ToString(), activityId);
                 }
                 catch
                 {
@@ -537,11 +524,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log(LogLevel.Warn, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Warn, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                     else
                     {
-                        Log(LogLevel.Warn, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Warn, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -710,24 +697,6 @@ namespace Neon.Diagnostics
                     }
                     break;
             }
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, IEnumerable<string> txtFields, IEnumerable<double> numFields)
-        {
-            LogMetrics(level, txtFields, numFields);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params string[] txtFields)
-        {
-            LogMetrics(level, txtFields);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params double[] numFields)
-        {
-            LogMetrics(level, numFields);
         }
 
         /// <inheritdoc/>

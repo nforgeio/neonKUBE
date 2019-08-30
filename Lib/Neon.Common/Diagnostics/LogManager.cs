@@ -137,9 +137,14 @@ namespace Neon.Diagnostics
         }
 
         /// <summary>
-        /// Specifies the level of events to be actually recorded.
+        /// Specifies the level of events to be actually recorded.  This defaults to
+        /// <see cref="LogLevel.Info"/>.
         /// </summary>
-        public LogLevel LogLevel { get; set; }
+        public LogLevel LogLevel
+        {
+            get => this.logLevel;
+            set => this.logLevel = value;
+        }
 
         /// <summary>
         /// Sets the log level by safely parsing a string.
@@ -225,8 +230,13 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="name">The case sensitive logger name.</param>
         /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
+        /// <param name="isLogEnabledFunc">
+        /// Optionally specifies a function that will be called at runtime to
+        /// determine whether to actually log an event.  This defaults to <c>null</c>
+        /// which will always log events.
+        /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        private INeonLogger InternalGetLogger(string name, TextWriter writer = null)
+        private INeonLogger InternalGetLogger(string name, TextWriter writer = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
         {
             name = name ?? string.Empty;
 
@@ -234,7 +244,7 @@ namespace Neon.Diagnostics
             {
                 if (!nameToLogger.TryGetValue(name, out var logger))
                 {
-                    logger = new NeonLogger(this, name, writer: writer);
+                    logger = new NeonLogger(this, name, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
                     nameToLogger.Add(name, logger);
                 }
 
@@ -243,21 +253,21 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger(string sourceModule = null)
+        public INeonLogger GetLogger(string sourceModule = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
         {
-            return InternalGetLogger(sourceModule, writer);
+            return InternalGetLogger(sourceModule, writer, contextId, isLogEnabledFunc);
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger(Type type)
+        public INeonLogger GetLogger(Type type, string contextId = null, Func<bool> isLogEnabledFunc = null)
         {
-            return InternalGetLogger(type.FullName, writer);
+            return InternalGetLogger(type.FullName, writer, contextId, isLogEnabledFunc);
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger<T>()
+        public INeonLogger GetLogger<T>(string contextId = null, Func<bool> isLogEnabledFunc = null)
         {
-            return InternalGetLogger(typeof(T).FullName, writer);
+            return InternalGetLogger(typeof(T).FullName, writer, contextId, isLogEnabledFunc);
         }
 
         //---------------------------------------------------------------------

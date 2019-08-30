@@ -20,7 +20,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
+using System.Runtime;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -727,6 +730,71 @@ namespace Neon.Cadence.Internal
 
             Covenant.Assert(false); // We should never get here.            
             return null;
+        }
+
+        /// <summary>
+        /// Loads the assembly from a stream into current <see cref="AssemblyLoadContext"/> or
+        /// <see cref="AppDomain"/>, depending on whether we're running on .NET Core or
+        /// .NET Frtamework.
+        /// </summary>
+        /// <param name="stream">The stream with the assembly bytes.</param>
+        /// <returns>The loaded <see cref="Assembly"/>.</returns>
+        public static Assembly LoadAssembly(Stream stream)
+        {
+            Covenant.Requires<ArgumentNullException>(stream != null);
+
+            switch (NeonHelper.Framework)
+            {
+                case NetFramework.Core:
+
+                    return LoadAssemblyNetCore(stream);
+
+                case NetFramework.Framework:
+
+                    return LoadAssemblyNetFramework(stream);
+
+                default:
+
+                    throw new NotSupportedException($"Framework [{NeonHelper.Framework}] is not supported.");
+            }
+        }
+
+        /// <summary>
+        /// <b>.NET CORE ONLY:</b> Loads the assembly from a stream into the current <see cref="AssemblyLoadContext"/>.
+        /// </summary>
+        /// <param name="stream">The stream with the assembly bytes.</param>
+        /// <returns>The loaded <see cref="Assembly"/>.</returns>
+        private static Assembly LoadAssemblyNetCore(Stream stream)
+        {
+            var orgPos = stream.Position;
+
+            try
+            {
+                return AssemblyLoadContext.Default.LoadFromStream(stream);
+            }
+            finally
+            {
+                stream.Position = orgPos;
+            }
+        }
+
+        /// <summary>
+        /// <b>.NET FRAMEWORK ONLY:</b> Loads the assembly from a stream into the current <see cref="AppDomain"/>.
+        /// </summary>
+        /// <param name="stream">The stream with the assembly bytes.</param>
+        /// <returns>The loaded <see cref="Assembly"/>.</returns>
+        private static Assembly LoadAssemblyNetFramework(Stream stream)
+        {
+            var orgPos = stream.Position;
+
+            try
+            {
+                return AppDomain.CurrentDomain.Load(stream.ReadToEnd());
+            }
+            finally
+            {
+                stream.Position = orgPos;
+            }
         }
     }
 }

@@ -72,23 +72,53 @@ namespace Neon.Diagnostics
         /// Returns a named logger.
         /// </summary>
         /// <param name="sourceModule">The case sensitive logger event source module (defaults to <c>null</c>).</param>
+        /// <param name="contextId">
+        /// Optionally specifies additional information that can be used to identify
+        /// context for logged events.  For example, the Neon.Cadence client uses this 
+        ///  to record the ID of the workflow recording events.
+        /// </param>
+        /// <param name="isLogEnabledFunc">
+        /// Optionally specifies a function that will be called at runtime to
+        /// determine whether to actually log an event.  This defaults to <c>null</c>
+        /// which will always log events.
+        /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        INeonLogger GetLogger(string sourceModule = null);
+        INeonLogger GetLogger(string sourceModule = null, string contextId = null, Func<bool> isLogEnabledFunc = null);
 
         /// <summary>
         /// Returns a logger to be associated with a specific type.  This method
         /// supports both <c>static</c> and normal types.
         /// </summary>
         /// <param name="type">The type.</param>
+        /// <param name="contextId">
+        /// Optionally specifies additional information that can be used to identify
+        /// context for logged events.  For example, the Neon.Cadence client uses this 
+        ///  to record the ID of the workflow recording events.
+        /// </param>
+        /// <param name="isLogEnabledFunc">
+        /// Optionally specifies a function that will be called at runtime to
+        /// determine whether to actually log an event.  This defaults to <c>null</c>
+        /// which will always log events.
+        /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        INeonLogger GetLogger(Type type);
+        INeonLogger GetLogger(Type type, string contextId = null, Func<bool> isLogEnabledFunc = null);
 
         /// <summary>
         /// Returns a logger to be associated with a specific type.  This
         /// method works only for non-<c>static</c> types.
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>
+        /// <param name="contextId">
+        /// Optionally specifies additional information that can be used to identify
+        /// context for logged events.  For example, the Neon.Cadence client uses this 
+        ///  to record the ID of the workflow recording events.
+        /// </param>
+        /// <param name="isLogEnabledFunc">
+        /// Optionally specifies a function that will be called at runtime to
+        /// determine whether to actually log an event.  This defaults to <c>null</c>
+        /// which will always log events.
+        /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        INeonLogger GetLogger<T>();
+        INeonLogger GetLogger<T>(string contextId = null, Func<bool> isLogEnabledFunc = null);
     }
 }

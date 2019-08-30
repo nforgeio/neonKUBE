@@ -178,6 +178,9 @@ namespace Neon.Web
         }
 
         /// <inheritdoc/>
+        public string ContextId => GetLogger().ContextId;
+
+        /// <inheritdoc/>
         public bool IsLogDebugEnabled => GetLogger().IsLogDebugEnabled;
 
         /// <inheritdoc/>
@@ -370,24 +373,6 @@ namespace Neon.Web
         public void LogCritical(object message, Exception e, string activityId = null)
         {
             GetLogger().LogCritical(message, e, activityId);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, IEnumerable<string> textFields, IEnumerable<double> numFields)
-        {
-            GetLogger().LogMetrics(level, textFields, numFields);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params string[] textFields)
-        {
-            GetLogger().LogMetrics(level, textFields);
-        }
-
-        /// <inheritdoc/>
-        public void LogMetrics(LogLevel level, params double[] numFields)
-        {
-            GetLogger().LogMetrics(level, numFields);
         }
     }
 }

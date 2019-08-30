@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.Loader;
@@ -34,7 +35,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
-using System.IO;
 
 namespace Neon.Cadence.Internal
 {

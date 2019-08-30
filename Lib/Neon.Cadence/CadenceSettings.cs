@@ -25,8 +25,8 @@ using System.Text;
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 
-using Neon.Common;
 using Neon.Cadence.Internal;
+using Neon.Common;
 
 namespace Neon.Cadence
 {
@@ -314,6 +314,35 @@ namespace Neon.Cadence
         [YamlMember(Alias = "logLevel", ApplyNamingConventions = false)]
         [DefaultValue("info")]
         public string LogLevel { get; set; } = "info";
+
+        /// <summary>
+        /// Optionally specifies that messages from the embedded GOLANG Cadence client 
+        /// will be included in tge log output.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogCadence", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logCadence", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool LogCadence { get; set; } = false;
+
+        /// <summary>
+        /// Optionally specifies that messages from the internal <b>cadence-proxy</b>
+        /// code that bridges between .NET and the embedded GOLANG Cadence client
+        /// will be included in the log output.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogCadenceProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logCadenceProxy", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool LogCadenceProxy { get; set; } = false;
+
+        /// <summary>
+        /// Optionally enable workflow logging while the workflow is being
+        /// replayed from history.  This should generally be enabled only
+        /// while debugging.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogDuringReplay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "logDuringReplay", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool LogDuringReplay { get; set; } = false;
 
         /// <summary>
         /// Optionally specifies that the connection should run in DEBUG mode.  This currently

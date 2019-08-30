@@ -374,7 +374,7 @@ namespace Neon.Kube
 
                     // Process the request in its own task.
                     
-                    var task = Task.Factory.StartNew(
+                    _ = Task.Factory.StartNew(
                         async (object arg) =>
                         {
                             var context  = (RequestContext)arg;
