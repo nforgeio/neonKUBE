@@ -34,7 +34,7 @@ import (
 // -------------------------------------------------------------------------
 // Workflow message types
 
-func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operation) error {
+func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages.Operation) error {
 	defer func() {
 		_ = WorkflowContexts.Remove(op.GetContextID())
 	}()
@@ -122,7 +122,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 	return nil
 }
 
-func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *Operation) error {
+func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	internal.Logger.Debug("Settling Signal",
@@ -145,7 +145,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 	return nil
 }
 
-func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *Operation) error {
+func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	internal.Logger.Debug("Settling Query",
@@ -168,7 +168,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 	return nil
 }
 
-func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *Operation) error {
+func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	internal.Logger.Debug("Settling Future ACK",
@@ -189,7 +189,7 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op
 // -------------------------------------------------------------------------
 // Activity message types
 
-func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operation) error {
+func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages.Operation) error {
 	defer func() {
 		_ = ActivityContexts.Remove(op.GetContextID())
 	}()
@@ -225,7 +225,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operatio
 	return nil
 }
 
-func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Operation) error {
+func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	internal.Logger.Debug("Settling Activity Stopping",
@@ -243,7 +243,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Oper
 	return nil
 }
 
-func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *Operation) error {
+func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *messages.Operation) error {
 	defer func() {
 		_ = ActivityContexts.Remove(op.GetContextID())
 	}()

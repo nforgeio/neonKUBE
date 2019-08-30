@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		message.go
+// FILE:		entrypoint.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -99,7 +99,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 		// to the instance's ShutdownChannel
 		terminateMu.Lock()
 		if terminate {
-			internal.Instance.ShutdownChannel <- true
+			Instance.ShutdownChannel <- true
 			terminate = false
 		}
 		terminateMu.Unlock()

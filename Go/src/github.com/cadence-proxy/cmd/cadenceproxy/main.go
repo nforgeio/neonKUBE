@@ -24,6 +24,7 @@ import (
 
 	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/endpoints"
+	messageendpoint "github.com/cadence-proxy/internal/endpoints/message"
 	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/server"
 )
@@ -59,7 +60,7 @@ func main() {
 
 	// set server instance and
 	// logger for endpoints
-	internal.Instance = instance
+	messageendpoint.Instance = instance
 	internal.Logger = instance.Logger
 
 	// setup the routes

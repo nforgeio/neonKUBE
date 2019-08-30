@@ -195,18 +195,18 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 
 	// set the reply address
 	if internal.DebugPrelaunched {
-		internal.ReplyAddress = "http://127.0.0.2:5001/"
+		replyAddress = "http://127.0.0.2:5001/"
 	} else {
 		address := *request.GetLibraryAddress()
 		port := request.GetLibraryPort()
-		internal.ReplyAddress = fmt.Sprintf("http://%s:%d/",
+		replyAddress = fmt.Sprintf("http://%s:%d/",
 			address,
 			port,
 		)
 	}
 	internal.Logger = logger.SetLogger(request.GetLogLevel(), internal.Debug)
 
-	internal.Logger.Debug("InitializeRequest info", zap.String("Reply Address", internal.ReplyAddress))
+	internal.Logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
 	buildReply(reply, nil)
 
 	return reply
@@ -455,7 +455,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		setReplayStatus(ctx, workflowInvokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, workflowInvokeRequest)
+		op := messages.NewOperation(requestID, workflowInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
@@ -863,7 +863,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		setReplayStatus(ctx, workflowSignalInvokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, workflowSignalInvokeRequest)
+		op := messages.NewOperation(requestID, workflowSignalInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
@@ -1340,7 +1340,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		setReplayStatus(ctx, workflowQueryInvokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, workflowQueryInvokeRequest)
+		op := messages.NewOperation(requestID, workflowQueryInvokeRequest)
 		op.SetContextID(contextID)
 		op.SetChannel(make(chan interface{}))
 		Operations.Add(requestID, op)
@@ -1512,7 +1512,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		activityInvokeRequest.SetClientID(request.GetClientID())
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, activityInvokeRequest)
+		op := messages.NewOperation(requestID, activityInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
@@ -1537,7 +1537,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 			// create the Operation for this request and add it to the operations map
 			stoppingReplyChan := make(chan interface{})
-			op := NewOperation(requestID, activityStoppingRequest)
+			op := messages.NewOperation(requestID, activityStoppingRequest)
 			op.SetChannel(stoppingReplyChan)
 			op.SetContextID(contextID)
 			Operations.Add(requestID, op)
@@ -1846,7 +1846,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		activityInvokeLocalRequest.SetClientID(request.GetClientID())
 
 		// create the Operation for this request and add it to the operations map
-		op := NewOperation(requestID, activityInvokeLocalRequest)
+		op := messages.NewOperation(requestID, activityInvokeLocalRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(activityContextID)
 		Operations.Add(requestID, op)
