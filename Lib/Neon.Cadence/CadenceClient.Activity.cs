@@ -71,10 +71,10 @@ namespace Neon.Cadence
 
             if (string.IsNullOrEmpty(activityTypeName))
             {
-                activityTypeName = activityTypeName ?? CadenceHelper.GetActivityTypeName(activityType);
+                activityTypeName = CadenceHelper.GetActivityTypeName(activityType, activityType.GetCustomAttribute<ActivityAttribute>());
             }
 
-            await ActivityBase.RegisterAsync(this, typeof(TActivity), activityTypeName, ResolveDomain(domain));
+            await ActivityBase.RegisterAsync(this, activityType, activityTypeName, ResolveDomain(domain));
         }
 
         /// <summary>

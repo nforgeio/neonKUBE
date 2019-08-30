@@ -38,23 +38,22 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="typeName">
-        /// Optionally specifies the activity type name to override the
-        /// tagged type's fully qualified name as the activity type
-        /// name used to register the type with Cadence.
+        /// <param name="name">
+        /// Optionally specifies the activity type name used to
+        /// register an activity implementation with Cadence.
         /// </param>
-        public ActivityAttribute(string typeName = null)
+        public ActivityAttribute(string name = null)
         {
-            CadenceHelper.ValidateActivityTypeName(typeName);
+            CadenceHelper.ValidateActivityTypeName(name);
 
-            this.TypeName = typeName;
+            this.Name = name;
         }
 
         /// <summary>
         /// The activity type name.  This defaults to the fully qualified name
-        /// of the tagged activity type.
+        /// of the implemented activity interface (without an leading "I").
         /// </summary>
-        public string TypeName { get; set; } = null;
+        public string Name { get; set; } = null;
 
         /// <summary>
         /// Indicates that <see cref="CadenceClient.RegisterAssemblyActivitiesAsync(Assembly, string)"/> will

@@ -361,6 +361,56 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IActivityDifferentNamesInterface : IActivity
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityDifferentNamesClass : ActivityBase, IActivityDifferentNamesInterface
+        {
+            [ActivityMethod]
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
+        public interface IWorkflowActivityDifferentNames : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowActivityDifferentNames : WorkflowBase, IWorkflowActivityDifferentNames
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                var stub = Workflow.NewActivityStub<IActivityDifferentNamesInterface>();
+
+                return await stub.HelloAsync(name);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_DifferentNames()
+        {
+            // Verify that an activity whose class and interface names
+            // don't match works.  This ensures that the Cadence client
+            // doesn't make any assumptions about naming conventions.
+            //
+            // ...which was happening in earlier times.
+
+            var stub = client.NewWorkflowStub<IWorkflowActivityDifferentNames>();
+
+            Assert.Equal($"Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
+
+        //---------------------------------------------------------------------
+
         public interface IActivityFailure : IActivity
         {
             [ActivityMethod]

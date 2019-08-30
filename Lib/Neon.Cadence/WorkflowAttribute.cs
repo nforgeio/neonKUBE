@@ -39,9 +39,8 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="name">
-        /// Optionally specifies the workflow type name to override the
-        /// tagged type's fully qualified name as the workflow type
-        /// name used to register the type with Cadence.
+        /// Optionally specifies the workflow type name to be used 
+        /// when registering the workflow implementation with Cadence.
         /// </param>
         public WorkflowAttribute(string name = null)
         {
@@ -52,7 +51,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// The workflow type name.  This defaults to the fully qualified name
-        /// of the tagged workflow type.
+        /// of the implemented workflow interface (without any leading "T").
         /// </summary>
         public string Name { get; set; } = null;
 
