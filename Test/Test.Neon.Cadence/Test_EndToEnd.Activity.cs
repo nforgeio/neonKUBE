@@ -411,6 +411,175 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public enum HeartbeatMode
+        {
+            SendHeartbeat,
+            HeartbeatWithDefaults,
+            HeartbeatWithDetails,
+            HeartbeatWithInterval
+        }
+
+        public interface IActivityHeartbeat : IActivity
+        {
+            [ActivityMethod]
+            Task<bool> RunAsync(HeartbeatMode mode);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityHeartbeat : ActivityBase, IActivityHeartbeat
+        {
+            [ActivityMethod]
+            public async Task<bool> RunAsync(HeartbeatMode mode)
+            {
+                switch (mode)
+                {
+                    case HeartbeatMode.SendHeartbeat:
+
+                        await Activity.SendHeartbeatAsync(new byte[] { 0, 1, 2, 3, 4 });
+                        break;
+
+                    case HeartbeatMode.HeartbeatWithDefaults:
+
+                        // The first heartbeat should always be recorded.
+
+                        if (!await Activity.HeartbeatAsync())
+                        {
+                            return false;
+                        }
+
+                        // The next (immediate) heartbeat should not be recorded.
+
+                        if (await Activity.HeartbeatAsync())
+                        {
+                            return false;
+                        }
+
+                        // Sleep for 1/2 the heartbeat timeout and verify that the
+                        // next heartbeat is recorded afterwards.
+
+                        await Task.Delay(TimeSpan.FromTicks(Activity.Task.HeartbeatTimeout.Ticks / 2));
+
+                        if (!await Activity.HeartbeatAsync())
+                        {
+                            return false;
+                        }
+                        break;
+
+                    case HeartbeatMode.HeartbeatWithDetails:
+
+                        var detailsRetrieved = false;
+
+                        if (!await Activity.HeartbeatAsync(
+                            () =>
+                            {
+                                detailsRetrieved = true;
+                                return new byte[] { 0, 1, 2, 3, 4 };
+                            }))
+                        {
+                            return false;
+                        }
+
+                        if (!detailsRetrieved)
+                        {
+                            return false;
+                        }
+                        break;
+
+                    case HeartbeatMode.HeartbeatWithInterval:
+
+                        // The first heartbeat should always be recorded.
+
+                        if (!await Activity.HeartbeatAsync(interval: TimeSpan.FromSeconds(1)))
+                        {
+                            return false;
+                        }
+
+                        // The next (immediate) heartbeat should not be recorded.
+
+                        if (await Activity.HeartbeatAsync())
+                        {
+                            return false;
+                        }
+
+                        // Sleep for 1 second which is less than the 5 second heartbeat timeout
+                        // specified by the workflow and verify that next heartbeat is recorded.
+
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+
+                        if (!await Activity.HeartbeatAsync())
+                        {
+                            return false;
+                        }
+                        break;
+                }
+
+                return true;
+            }
+        }
+
+        public interface IWorkflowActivityHeartbeat : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<bool> RunAsync(HeartbeatMode mode);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowActivityHeartbeat : WorkflowBase, IWorkflowActivityHeartbeat
+        {
+            public async Task<bool> RunAsync(HeartbeatMode mode)
+            {
+                var stub = Workflow.NewActivityStub<IActivityHeartbeat>(new ActivityOptions() { HeartbeatTimeout = TimeSpan.FromSeconds(5) });
+
+                return await stub.RunAsync(mode);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_SendHeartbeat()
+        {
+            // Verify that recording heartbeats the standard way works.
+
+            var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
+
+            Assert.True(await stub.RunAsync(HeartbeatMode.SendHeartbeat));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Heartbeat_WithDefaults()
+        {
+            // Verify that recording heartbeats the using the convinence method works.
+
+            var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
+
+            Assert.True(await stub.RunAsync(HeartbeatMode.HeartbeatWithDefaults));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Heartbeat_WithDetails()
+        {
+            // Verify that recording heartbeats the using the convinence method works.
+
+            var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
+
+            Assert.True(await stub.RunAsync(HeartbeatMode.HeartbeatWithDetails));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Heartbeat_WithInterval()
+        {
+            // Verify that recording heartbeats the using the convinence method works.
+
+            var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
+
+            Assert.True(await stub.RunAsync(HeartbeatMode.HeartbeatWithInterval));
+        }
+
+        //---------------------------------------------------------------------
+
         public interface IActivityFailure : IActivity
         {
             [ActivityMethod]
