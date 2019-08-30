@@ -37,7 +37,7 @@ import (
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
 	proxyMessage := message.GetProxyMessage()
 	internal.Logger.Debug("Sending message to .net client",
-		zap.String("Address", replyAddress),
+		zap.String("Address", internal.ReplyAddress),
 		zap.String("MessageType", proxyMessage.Type.String()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -52,7 +52,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// create a buffer with the serialized bytes to reply with
 	// and create the PUT request
 	buf := bytes.NewBuffer(content)
-	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
+	req, err := http.NewRequest(http.MethodPut, internal.ReplyAddress, buf)
 	if err != nil {
 		internal.Logger.Error("Error creating .net client request", zap.Error(err))
 		return nil, err

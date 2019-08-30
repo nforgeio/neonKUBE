@@ -38,10 +38,6 @@ var (
 	// to the Neon.Cadence client
 	httpClient = http.Client{}
 
-	// replyAddress specifies the address that the Neon.Cadence library
-	// will be listening on for replies from the cadence proxy
-	replyAddress string
-
 	// terminate is a boolean that will be set after handling an incoming
 	// TerminateRequest.  A true value will indicate that the server instance
 	// needs to gracefully shut down after handling the request, and a false value

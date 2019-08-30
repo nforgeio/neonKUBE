@@ -40,12 +40,20 @@ var (
 	// cadence-proxy is listening on.  This gets set in main.go
 	Instance *server.Instance
 
+	// ReplyAddress specifies the address that the Neon.Cadence library
+	// will be listening on for replies from the cadence proxy
+	ReplyAddress string
+
 	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the
 	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
 	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
 	DebugPrelaunched = false
+
+	// Debug indicates that the proxy is running in Debug mode.  This
+	// is used to configure specified settings.
+	Debug = false
 
 	// ErrConnection is the custom error that is thrown when the cadence-proxy
 	// is not able to establish a connection with the cadence server

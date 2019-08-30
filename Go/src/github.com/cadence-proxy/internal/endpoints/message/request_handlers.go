@@ -25,8 +25,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/cadence-proxy/internal/logger"
-
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
@@ -41,6 +39,7 @@ import (
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
+	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/messages"
 )
 
@@ -196,20 +195,18 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 
 	// set the reply address
 	if internal.DebugPrelaunched {
-		replyAddress = "http://127.0.0.2:5001/"
+		internal.ReplyAddress = "http://127.0.0.2:5001/"
 	} else {
 		address := *request.GetLibraryAddress()
 		port := request.GetLibraryPort()
-		replyAddress = fmt.Sprintf("http://%s:%d/",
+		internal.ReplyAddress = fmt.Sprintf("http://%s:%d/",
 			address,
 			port,
 		)
 	}
+	internal.Logger = logger.SetLogger(request.GetLogLevel(), internal.Debug)
 
-	// set the global LogLevel
-	internal.Logger = logger.SetLogger(request.GetLogLevel(), false)
-
-	internal.Logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
+	internal.Logger.Debug("InitializeRequest info", zap.String("Reply Address", internal.ReplyAddress))
 	buildReply(reply, nil)
 
 	return reply

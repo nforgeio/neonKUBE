@@ -20,6 +20,8 @@ package main
 import (
 	"flag"
 
+	"go.uber.org/zap/zapcore"
+
 	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/endpoints"
 	"github.com/cadence-proxy/internal/logger"
@@ -42,10 +44,14 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", true, "Set to debug mode")
 	flag.Parse()
 
+	// set debug
+	internal.Debug = debugMode
+
+	// DebugPrelaunched
 	if debugPrelaunched {
 		internal.DebugPrelaunched = true
 	}
-	l := logger.SetLogger(logger.Info, debugMode)
+	l := logger.SetLogger(zapcore.InfoLevel, debugMode)
 
 	// create the instance, set the routes,
 	// and start the server
