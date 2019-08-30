@@ -19,24 +19,27 @@ package message
 
 import (
 	"net/http"
-	"sync"
 
 	proxyactivity "github.com/cadence-proxy/internal/cadence/activity"
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
+	"github.com/cadence-proxy/internal/messages"
+	"github.com/cadence-proxy/internal/server"
 )
 
 var (
-	mu sync.RWMutex
-
-	// requestID is incremented (protected by a mutex) every time
-	// a new request message is sent
-	requestID int64
+	// Instance is a pointer to the server instance of the current server that the
+	// cadence-proxy is listening on.  This gets set in main.go
+	Instance *server.Instance
 
 	// httpClient is the HTTP client used to send requests
 	// to the Neon.Cadence client
 	httpClient = http.Client{}
+
+	// ReplyAddress specifies the address that the Neon.Cadence library
+	// will be listening on for replies from the cadence proxy
+	replyAddress string
 
 	// terminate is a boolean that will be set after handling an incoming
 	// TerminateRequest.  A true value will indicate that the server instance
@@ -64,29 +67,9 @@ var (
 
 	// Operations is a map of operations used to track pending
 	// cadence-client operations
-	Operations = new(operationsMap)
+	Operations = new(messages.OperationsMap)
 
 	// Clients is a map of ClientHelpers to ClientID used to
 	// store ClientHelpers to support multiple clients
 	Clients = new(proxyclient.ClientsMap)
 )
-
-//----------------------------------------------------------------------------
-// RequestID thread-safe methods
-
-// NextRequestID increments the package variable
-// requestID by 1 and is protected by a mutex lock
-func NextRequestID() int64 {
-	mu.Lock()
-	requestID = requestID + 1
-	defer mu.Unlock()
-	return requestID
-}
-
-// GetRequestID gets the value of the global variable
-// requestID and is protected by a mutex Read lock
-func GetRequestID() int64 {
-	mu.RLock()
-	defer mu.RUnlock()
-	return requestID
-}

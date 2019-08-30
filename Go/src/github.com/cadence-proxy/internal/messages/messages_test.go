@@ -44,6 +44,7 @@ import (
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	"github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/endpoints"
+	messageendpoint"github.com/cadence-proxy/internal/endpoints/message"
 	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
@@ -94,8 +95,9 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 	// set the routes, and start the server listening
 	// on host:port 127.0.0.1:5000
 	s.instance = server.NewInstance(_listenAddress, l)
-	internal.Instance = s.instance
+	messageendpoint.Instance = s.instance
 	internal.Logger = s.instance.Logger
+	
 	endpoints.SetupRoutes(s.instance.Router)
 }
 

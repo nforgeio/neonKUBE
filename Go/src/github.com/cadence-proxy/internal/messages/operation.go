@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package message
+package messages
 
 import (
 	"errors"
@@ -23,11 +23,21 @@ import (
 
 	"github.com/cadence-proxy/internal"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
-	"github.com/cadence-proxy/internal/messages"
+)
+
+var (
+	mu sync.RWMutex
+
+	// requestID is incremented (protected by a mutex) every time
+	// a new request message is sent
+	requestID int64
 )
 
 type (
-	operationsMap struct {
+
+	// OperationsMap maps an Operation to an int64
+	// Id.
+	OperationsMap struct {
 		safeMap sync.Map
 	}
 
@@ -35,19 +45,39 @@ type (
 	Operation struct {
 		requestID   int64
 		contextID   int64
-		request     messages.IProxyRequest
+		request     IProxyRequest
 		isCancelled bool
 		channel     chan interface{}
 	}
 )
 
 // NewOperation is the default constructor for an Operation
-func NewOperation(requestID int64, request messages.IProxyRequest) *Operation {
+func NewOperation(requestID int64, request IProxyRequest) *Operation {
 	op := new(Operation)
 	op.isCancelled = false
 	op.request = request
 	op.requestID = requestID
 	return op
+}
+
+//----------------------------------------------------------------------------
+// RequestID thread-safe methods
+
+// NextRequestID increments the package variable
+// requestID by 1 and is protected by a mutex lock
+func NextRequestID() int64 {
+	mu.Lock()
+	requestID = requestID + 1
+	defer mu.Unlock()
+	return requestID
+}
+
+// GetRequestID gets the value of the global variable
+// requestID and is protected by a mutex Read lock
+func GetRequestID() int64 {
+	mu.RLock()
+	defer mu.RUnlock()
+	return requestID
 }
 
 //----------------------------------------------------------------------------
@@ -84,12 +114,12 @@ func (op *Operation) SetContextID(value int64) {
 }
 
 // GetRequest gets the request
-func (op *Operation) GetRequest() messages.IProxyRequest {
+func (op *Operation) GetRequest() IProxyRequest {
 	return op.request
 }
 
 // SetRequest sets the request
-func (op *Operation) SetRequest(value messages.IProxyRequest) {
+func (op *Operation) SetRequest(value IProxyRequest) {
 	op.request = value
 }
 
@@ -127,10 +157,10 @@ func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.Ca
 }
 
 //----------------------------------------------------------------------------
-// operationsMap instance methods
+// OperationsMap instance methods
 
 // Add adds a new Operation and its corresponding requestID into
-// the operationsMap.  This method is thread-safe.
+// the OperationsMap.  This method is thread-safe.
 //
 // param requestID int64 -> the requestID of the request sent to
 // the Neon.Cadence lib client.  This will be the mapped key
@@ -140,12 +170,12 @@ func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.Ca
 //
 // returns int64 -> requestID of the request being added
 // in the Operation at the specified requestID
-func (opMap *operationsMap) Add(requestID int64, value *Operation) int64 {
+func (opMap *OperationsMap) Add(requestID int64, value *Operation) int64 {
 	opMap.safeMap.Store(requestID, value)
 	return requestID
 }
 
-// Remove removes key/value entry from the operationsMap at the specified
+// Remove removes key/value entry from the OperationsMap at the specified
 // requestID.  This is a thread-safe method.
 //
 // param requestID int64 -> the requestID of the request sent to
@@ -153,12 +183,12 @@ func (opMap *operationsMap) Add(requestID int64, value *Operation) int64 {
 //
 // returns int64 -> requestID of the request being removed in the
 // Operation at the specified requestID
-func (opMap *operationsMap) Remove(requestID int64) int64 {
+func (opMap *OperationsMap) Remove(requestID int64) int64 {
 	opMap.safeMap.Delete(requestID)
 	return requestID
 }
 
-// Get gets a Operation from the operationsMap at the specified
+// Get gets a Operation from the OperationsMap at the specified
 // requestID.  This method is thread-safe.
 //
 // param requestID int64 -> the requestID of the request sent to
@@ -166,7 +196,7 @@ func (opMap *operationsMap) Remove(requestID int64) int64 {
 //
 // returns *Operation -> pointer to Operation at the specified requestID
 // in the map.
-func (opMap *operationsMap) Get(requestID int64) *Operation {
+func (opMap *OperationsMap) Get(requestID int64) *Operation {
 	if v, ok := opMap.safeMap.Load(requestID); ok {
 		if _v, _ok := v.(*Operation); _ok {
 			return _v

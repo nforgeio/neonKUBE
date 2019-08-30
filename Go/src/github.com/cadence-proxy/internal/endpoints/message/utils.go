@@ -37,7 +37,7 @@ import (
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
 	proxyMessage := message.GetProxyMessage()
 	internal.Logger.Debug("Sending message to .net client",
-		zap.String("Address", internal.ReplyAddress),
+		zap.String("Address", replyAddress),
 		zap.String("MessageType", proxyMessage.Type.String()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -52,7 +52,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	// create a buffer with the serialized bytes to reply with
 	// and create the PUT request
 	buf := bytes.NewBuffer(content)
-	req, err := http.NewRequest(http.MethodPut, internal.ReplyAddress, buf)
+	req, err := http.NewRequest(http.MethodPut, replyAddress, buf)
 	if err != nil {
 		internal.Logger.Error("Error creating .net client request", zap.Error(err))
 		return nil, err
@@ -71,6 +71,10 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	}
 
 	return resp, nil
+}
+
+func NextRequestID() int64 {
+	return messages.NextRequestID()
 }
 
 func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
@@ -116,7 +120,7 @@ func sendMessage(message messages.IProxyMessage) {
 	}()
 }
 
-func sendFutureACK(contextID, operationID, clientID int64) *Operation {
+func sendFutureACK(contextID, operationID, clientID int64) *messages.Operation {
 
 	// create the WorkflowFutureReadyRequest
 	requestID := NextRequestID()
@@ -127,7 +131,7 @@ func sendFutureACK(contextID, operationID, clientID int64) *Operation {
 	workflowFutureReadyRequest.SetClientID(clientID)
 
 	// create the Operation for this request and add it to the operations map
-	op := NewOperation(requestID, workflowFutureReadyRequest)
+	op := messages.NewOperation(requestID, workflowFutureReadyRequest)
 	op.SetChannel(make(chan interface{}))
 	op.SetContextID(contextID)
 	Operations.Add(requestID, op)
