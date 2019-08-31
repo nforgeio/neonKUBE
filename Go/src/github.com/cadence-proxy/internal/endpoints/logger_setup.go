@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		setup.go
+// FILE:		logger_setup.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logger
+package endpoints
 
 import (
 	"os"
@@ -33,9 +33,12 @@ import (
 //
 // param debug bool -> run in debug mode or not
 //
+// param debugPrelaunched bool -> indicates that the logger should be configured for
+// the proxy to run in debugPrelaunched mode.
+//
 // returns *zap.Logger -> the configured global zap logger.
 // Can also be accessed via zap.L().
-func SetLogger(enab zapcore.LevelEnabler, debug bool) (logger *zap.Logger) {
+func SetLogger(enab zapcore.LevelEnabler, debug, debugPrelaunched bool) (logger *zap.Logger) {
 	cfg := zapcore.EncoderConfig{
 		TimeKey:      "time",
 		MessageKey:   "msg",
@@ -61,6 +64,7 @@ func SetLogger(enab zapcore.LevelEnabler, debug bool) (logger *zap.Logger) {
 		enc,
 		zapcore.Lock(os.Stdout),
 		enab,
+		debugPrelaunched,
 	)
 
 	// create the logger

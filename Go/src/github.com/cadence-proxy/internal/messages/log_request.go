@@ -18,9 +18,10 @@
 package messages
 
 import (
+	
 	"time"
 
-	"github.com/cadence-proxy/internal/logger"
+	"github.com/cadence-proxy/internal/messages/dotnet-logger"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
@@ -73,21 +74,21 @@ func (request *LogRequest) SetTimeUtc(value time.Time) {
 // GetLogLevel gets the LogLevel property from an LogRequest
 // in its properties map.  Identifies the log level.
 //
-// returns logger.LogLevel -> LogRequest's LogLevel
-func (request *LogRequest) GetLogLevel() logger.LogLevel {
+// returns dotnetlogger.LogLevel -> LogRequest's LogLevel
+func (request *LogRequest) GetLogLevel() dotnetlogger.LogLevel {
 	str := request.GetStringProperty("LogLevel")
 	if str == nil {
-		return logger.None
+		return dotnetlogger.None
 	}
 
-	return logger.ParseLogLevel(*str)
+	return dotnetlogger.ParseLogLevel(*str)
 }
 
 // SetLogLevel sets the LogLevel property in an INitializeRequest's
 // properties map.  Identifies the log level.
 //
-// param value logger.LogLevel -> LogRequest's LogLevel
-func (request *LogRequest) SetLogLevel(value logger.LogLevel) {
+// param value dotnetlogger.LogLevel -> LogRequest's LogLevel
+func (request *LogRequest) SetLogLevel(value dotnetlogger.LogLevel) {
 	str := value.String()
 	request.SetStringProperty("LogLevel", &str)
 }

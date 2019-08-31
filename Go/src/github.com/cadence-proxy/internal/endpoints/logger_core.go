@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		core.go
+// FILE:		logger_core.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -15,23 +15,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logger
+package endpoints
 
-import "go.uber.org/zap/zapcore"
+import (
+	"go.uber.org/zap/zapcore"
+
+	"github.com/cadence-proxy/internal/messages"
+	dotnetlogger "github.com/cadence-proxy/internal/messages/dotnet-logger"
+)
 
 type (
 	Core struct {
 		zapcore.LevelEnabler
 		enc zapcore.Encoder
 		out zapcore.WriteSyncer
+		dp  bool
 	}
 )
 
-func NewCore(enc zapcore.Encoder, ws zapcore.WriteSyncer, enab zapcore.LevelEnabler) zapcore.Core {
+func NewCore(enc zapcore.Encoder, ws zapcore.WriteSyncer, enab zapcore.LevelEnabler, debugPrelaunched bool) zapcore.Core {
 	return &Core{
 		LevelEnabler: enab,
 		enc:          enc,
 		out:          ws,
+		dp:           debugPrelaunched,
 	}
 }
 
@@ -51,6 +58,36 @@ func (c Core) Check(entry zapcore.Entry, checkedEntry *zapcore.CheckedEntry) *za
 }
 
 func (c Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
+	if c.dp {
+		requestID := messages.NextRequestID()
+		logRequest := messages.NewLogRequest()
+		logMessage := entry.Message
+		logLevel, err := dotnetlogger.ZapLevelToLogLevel(entry.Level)
+		if err != nil {
+			return err
+		}
+
+		logRequest.SetRequestID(requestID)
+		logRequest.SetTimeUtc(entry.Time)
+		logRequest.SetLogLevel(logLevel)
+		logRequest.SetFromCadence(false)
+		logRequest.SetLogMessage(&logMessage)
+
+		op := messages.NewOperation(requestID, logRequest)
+		op.SetChannel(make(chan interface{}))
+		Operations.Add(requestID, op)
+
+		go sendMessage(logRequest)
+
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+		case error:
+			return s
+		default:
+			return nil
+		}
+	}
+
 	buf, err := c.enc.EncodeEntry(entry, fields)
 	if err != nil {
 		return err

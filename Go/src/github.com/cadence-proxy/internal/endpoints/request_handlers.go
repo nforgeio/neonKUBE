@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package message
+package endpoints
 
 import (
 	"bytes"
@@ -39,7 +39,6 @@ import (
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
-	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/messages"
 )
 
@@ -75,11 +74,11 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 }
 
 func handleConnectRequest(requestCtx context.Context, request *messages.ConnectRequest) messages.IProxyReply {
-	internal.Logger.Debug("ConnectRequest Received",
-		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int64("ClientId", request.GetClientID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+	// internal.Logger.Debug("ConnectRequest Received",
+	// 	zap.Int64("RequestId", request.GetRequestID()),
+	// 	zap.Int64("ClientId", request.GetClientID()),
+	// 	zap.Int("ProcessId", os.Getpid()),
+	// )
 
 	// new ConnectReply
 	reply := createReplyMessage(request)
@@ -204,9 +203,9 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 			port,
 		)
 	}
-	internal.Logger = logger.SetLogger(request.GetLogLevel(), internal.Debug)
+	internal.Logger = SetLogger(request.GetLogLevel(), internal.Debug, internal.DebugPrelaunched)
 
-	internal.Logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
+	//internal.Logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
 	buildReply(reply, nil)
 
 	return reply

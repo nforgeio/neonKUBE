@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package message
+package endpoints
 
 import (
 	"errors"
@@ -30,6 +30,18 @@ import (
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
 )
+
+// -------------------------------------------------------------------------
+// client message types
+
+func handleLogReply(reply *messages.LogReply, op *messages.Operation) error {
+	err := op.SendChannel(true, reply.GetError())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 // -------------------------------------------------------------------------
 // Workflow message types

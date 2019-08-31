@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		entrypoint.go
+// FILE:		echo.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package echo
+package endpoints
 
 import (
 	"fmt"
@@ -24,7 +24,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/cadence-proxy/internal"
-	common "github.com/cadence-proxy/internal/endpoints/common"
 	"github.com/cadence-proxy/internal/messages"
 )
 
@@ -40,14 +39,14 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	// check if the request has the correct content type,
 	// has a body that is not nil,
 	// and is an http.PUT request
-	statusCode, err := common.CheckRequestValidity(w, r)
+	statusCode, err := CheckRequestValidity(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		panic(err)
 	}
 
 	// read the body and deserialize it
-	message, err := common.ReadAndDeserialize(r.Body)
+	message, err := ReadAndDeserialize(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)

@@ -24,8 +24,6 @@ import (
 
 	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/endpoints"
-	messageendpoint "github.com/cadence-proxy/internal/endpoints/message"
-	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/server"
 )
 
@@ -52,7 +50,7 @@ func main() {
 	if debugPrelaunched {
 		internal.DebugPrelaunched = true
 	}
-	l := logger.SetLogger(zapcore.InfoLevel, debugMode)
+	l := endpoints.SetLogger(zapcore.DebugLevel, debugMode, false)
 
 	// create the instance, set the routes,
 	// and start the server
@@ -60,7 +58,7 @@ func main() {
 
 	// set server instance and
 	// logger for endpoints
-	messageendpoint.Instance = instance
+	endpoints.Instance = instance
 	internal.Logger = instance.Logger
 
 	// setup the routes

@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cadence-proxy/internal/cadence/error"
+	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
@@ -228,7 +228,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	// build the domain client
 	domainClient, err := helper.Builder.BuildCadenceDomainClient()
 	if err != nil {
-		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
+		//helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
 		return err
 	}
 	helper.DomainClient = domainClient
@@ -249,7 +249,7 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	// build the workflow client
 	workflowClient, err := helper.Builder.BuildCadenceClient()
 	if err != nil {
-		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
+		//helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
 		return nil
 	}
 	_ = helper.WorkflowClients.Add(helper.Builder.domain, workflowClient)
@@ -367,7 +367,7 @@ func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (
 		return nil, err
 	}
 
-	helper.Logger.Debug("Domain Describe Response", zap.Any("Domain Info", *resp.DomainInfo))
+	//helper.Logger.Debug("Domain Describe Response", zap.Any("Domain Info", *resp.DomainInfo))
 	return resp, nil
 }
 
@@ -384,17 +384,17 @@ func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (
 func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRequest *cadenceshared.RegisterDomainRequest) error {
 
 	// domain Register call to cadence
-	domain := registerDomainRequest.GetName()
+	//domain := registerDomainRequest.GetName()
 	err := helper.DomainClient.Register(ctx, registerDomainRequest)
 	if err != nil {
-		helper.Logger.Error("failed to register domain",
-			zap.String("Domain Name", domain),
-			zap.Error(err),
-		)
+		// helper.Logger.Error("failed to register domain",
+		// 	zap.String("Domain Name", domain),
+		// 	zap.Error(err),
+		// )
 
 		return err
 	}
-	helper.Logger.Debug("domain successfully registered", zap.String("Domain Name", domain))
+	//helper.Logger.Debug("domain successfully registered", zap.String("Domain Name", domain))
 
 	return nil
 }

@@ -18,6 +18,7 @@
 package messages_test
 
 import (
+	"go.uber.org/zap"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -44,11 +45,10 @@ import (
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	"github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/endpoints"
-	messageendpoint"github.com/cadence-proxy/internal/endpoints/message"
-	"github.com/cadence-proxy/internal/logger"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 	"github.com/cadence-proxy/internal/server"
+	"github.com/cadence-proxy/internal/messages/dotnet-logger"
 )
 
 type (
@@ -89,13 +89,16 @@ func TestUnitTestSuite(t *testing.T) {
 func (s *UnitTestSuite) setupTestSuiteServer() {
 
 	// set the logger
-	l := logger.SetLogger(logger.Debug, true)
+	l, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
 
 	// create the new server instance,
 	// set the routes, and start the server listening
 	// on host:port 127.0.0.1:5000
 	s.instance = server.NewInstance(_listenAddress, l)
-	messageendpoint.Instance = s.instance
+	endpoints.Instance = s.instance
 	internal.Logger = s.instance.Logger
 	
 	endpoints.SetupRoutes(s.instance.Router)
@@ -158,7 +161,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetLibraryAddress())
 		s.Equal(int32(0), v.GetLibraryPort())
-		s.Equal(logger.None, v.GetLogLevel())
+		s.Equal(dotnetlogger.None, v.GetLogLevel())
 
 		// Round-trip
 
@@ -172,8 +175,8 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		v.SetLibraryPort(int32(666))
 		s.Equal(int32(666), v.GetLibraryPort())
 
-		v.SetLogLevel(logger.Panic)
-		s.Equal(logger.Panic, v.GetLogLevel())
+		v.SetLogLevel(dotnetlogger.Panic)
+		s.Equal(dotnetlogger.Panic, v.GetLogLevel())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -188,7 +191,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
-		s.Equal(logger.Panic, v.GetLogLevel())
+		s.Equal(dotnetlogger.Panic, v.GetLogLevel())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -199,7 +202,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
-		s.Equal(logger.Panic, v.GetLogLevel())
+		s.Equal(dotnetlogger.Panic, v.GetLogLevel())
 	}
 }
 
@@ -1505,7 +1508,7 @@ func (s *UnitTestSuite) TestLogRequest() {
 
 	if v, ok := message.(*messages.LogRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(logger.None, v.GetLogLevel())
+		s.Equal(dotnetlogger.None, v.GetLogLevel())
 		s.Equal(time.Time{}, v.GetTimeUtc())
 		s.False(v.GetFromCadence())
 		s.Nil(v.GetLogMessage())
@@ -1515,8 +1518,8 @@ func (s *UnitTestSuite) TestLogRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		v.SetLogLevel(logger.Error)
-		s.Equal(logger.Error, v.GetLogLevel())
+		v.SetLogLevel(dotnetlogger.Error)
+		s.Equal(dotnetlogger.Error, v.GetLogLevel())
 
 		v.SetTimeUtc(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC))
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
@@ -1539,7 +1542,7 @@ func (s *UnitTestSuite) TestLogRequest() {
 
 	if v, ok := message.(*messages.LogRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(logger.Error, v.GetLogLevel())
+		s.Equal(dotnetlogger.Error, v.GetLogLevel())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
 		s.True(v.GetFromCadence())
 		s.Equal("test-msg", *v.GetLogMessage())
@@ -1551,7 +1554,7 @@ func (s *UnitTestSuite) TestLogRequest() {
 
 	if v, ok := message.(*messages.LogRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(logger.Error, v.GetLogLevel())
+		s.Equal(dotnetlogger.Error, v.GetLogLevel())
 		s.Equal(time.Date(2019, time.May, 27, 0, 0, 0, 0, time.UTC), v.GetTimeUtc())
 		s.True(v.GetFromCadence())
 		s.Equal("test-msg", *v.GetLogMessage())

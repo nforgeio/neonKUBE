@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		entrypoint.go
+// FILE:		message.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package message
+package endpoints
 
 import (
 	"context"
@@ -28,7 +28,6 @@ import (
 
 	"github.com/cadence-proxy/internal"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
-	common "github.com/cadence-proxy/internal/endpoints/common"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
@@ -51,14 +50,14 @@ var (
 func MessageHandler(w http.ResponseWriter, r *http.Request) {
 	// check if the request has the correct content type
 	// and is an http.PUT request
-	statusCode, err := common.CheckRequestValidity(w, r)
+	statusCode, err := CheckRequestValidity(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), statusCode)
 		return
 	}
 
 	// read and deserialize the body
-	message, err := common.ReadAndDeserialize(r.Body)
+	message, err := ReadAndDeserialize(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -507,6 +506,15 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 
 		// handle the messages individually based on their message type
 		switch reply.GetType() {
+
+		// -------------------------------------------------------------------------
+		// client message types
+
+		// LogReply
+		case messagetypes.LogReply:
+			if v, ok := reply.(*messages.LogReply); ok {
+				err = handleLogReply(v, op)
+			}
 
 		// -------------------------------------------------------------------------
 		// Workflow message types
