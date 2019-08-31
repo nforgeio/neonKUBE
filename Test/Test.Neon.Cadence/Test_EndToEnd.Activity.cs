@@ -528,7 +528,7 @@ namespace TestCadence
         {
             public async Task<bool> RunAsync(HeartbeatMode mode)
             {
-                var stub = Workflow.NewActivityStub<IActivityHeartbeat>(new ActivityOptions() { HeartbeatTimeout = TimeSpan.FromSeconds(5) });
+                var stub = Workflow.NewActivityStub<IActivityHeartbeat>(new ActivityOptions() { HeartbeatTimeout = TimeSpan.FromSeconds(10) });
 
                 return await stub.RunAsync(mode);
             }

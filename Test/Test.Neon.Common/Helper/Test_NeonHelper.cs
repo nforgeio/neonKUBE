@@ -37,27 +37,23 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Framework()
         {
-            switch (RuntimeInformation.FrameworkDescription)
+            var framework = RuntimeInformation.FrameworkDescription;
+
+            if (framework.StartsWith(".NET Core"))
             {
-                case ".NET Core":
-
-                    Assert.Equal(NetFramework.Core, NeonHelper.Framework);
-                    break;
-
-                case ".NET Framework":
-
-                    Assert.Equal(NetFramework.Framework, NeonHelper.Framework);
-                    break;
-
-                case ".NET Native":
-
-                    Assert.Equal(NetFramework.Native, NeonHelper.Framework);
-                    break;
-
-                default:
-
-                    Assert.Equal(NetFramework.Unknown, NeonHelper.Framework);
-                    break;
+                Assert.Equal(NetFramework.Core, NeonHelper.Framework);
+            }
+            else if (framework.StartsWith(".NET Framework"))
+            {
+                Assert.Equal(NetFramework.Framework, NeonHelper.Framework);
+            }
+            else if (framework.StartsWith(".NET Native"))
+            {
+                Assert.Equal(NetFramework.Native, NeonHelper.Framework);
+            }
+            else
+            {
+                Assert.Equal(NetFramework.Unknown, NeonHelper.Framework);
             }
         }
 
