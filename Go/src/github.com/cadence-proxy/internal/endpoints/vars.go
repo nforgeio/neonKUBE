@@ -20,6 +20,8 @@ package endpoints
 import (
 	"net/http"
 
+	"go.uber.org/zap"
+
 	proxyactivity "github.com/cadence-proxy/internal/cadence/activity"
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
@@ -29,6 +31,9 @@ import (
 )
 
 var (
+	// Logger for use in endpoints use in project
+	Logger *zap.Logger
+
 	// Instance is a pointer to the server instance of the current server that the
 	// cadence-proxy is listening on.  This gets set in main.go
 	Instance *server.Instance

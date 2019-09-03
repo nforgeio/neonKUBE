@@ -18,6 +18,7 @@
 package endpoints
 
 import (
+	"github.com/cadence-proxy/internal"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/cadence-proxy/internal/messages"
@@ -58,7 +59,7 @@ func (c Core) Check(entry zapcore.Entry, checkedEntry *zapcore.CheckedEntry) *za
 }
 
 func (c Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
-	if c.dp {
+	if !c.dp {
 		requestID := messages.NextRequestID()
 		logRequest := messages.NewLogRequest()
 		logMessage := entry.Message
@@ -70,8 +71,10 @@ func (c Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 		logRequest.SetRequestID(requestID)
 		logRequest.SetTimeUtc(entry.Time)
 		logRequest.SetLogLevel(logLevel)
-		logRequest.SetFromCadence(false)
 		logRequest.SetLogMessage(&logMessage)
+		if entry.LoggerName == internal.CadenceLoggerName {
+			logRequest.SetFromCadence(true)
+		}
 
 		op := messages.NewOperation(requestID, logRequest)
 		op.SetChannel(make(chan interface{}))
@@ -112,5 +115,6 @@ func (c Core) clone() *Core {
 		LevelEnabler: c.LevelEnabler,
 		enc:          c.enc,
 		out:          c.out,
+		dp:           c.dp,
 	}
 }

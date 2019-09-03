@@ -46,7 +46,7 @@ import (
 // IProxyRequest client message type handler methods
 
 func handlePingRequest(requestCtx context.Context, request *messages.PingRequest) messages.IProxyReply {
-	internal.Logger.Debug("PingRequest Received",
+	Logger.Debug("PingRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -60,7 +60,7 @@ func handlePingRequest(requestCtx context.Context, request *messages.PingRequest
 
 func handleCancelRequest(requestCtx context.Context, request *messages.CancelRequest) messages.IProxyReply {
 	targetID := request.GetTargetRequestID()
-	internal.Logger.Debug("CancelRequest Received",
+	Logger.Debug("CancelRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("TargetId", targetID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -74,7 +74,7 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 }
 
 func handleConnectRequest(requestCtx context.Context, request *messages.ConnectRequest) messages.IProxyReply {
-	// internal.Logger.Debug("ConnectRequest Received",
+	// Logger.Debug("ConnectRequest Received",
 	// 	zap.Int64("RequestId", request.GetRequestID()),
 	// 	zap.Int64("ClientId", request.GetClientID()),
 	// 	zap.Int("ProcessId", os.Getpid()),
@@ -138,7 +138,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 func handleDisconnectRequest(requestCtx context.Context, request *messages.DisconnectRequest) messages.IProxyReply {
 	clientID := request.GetClientID()
-	internal.Logger.Debug("DisconnectRequest Received",
+	Logger.Debug("DisconnectRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ClientId", clientID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -149,7 +149,7 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 
 	// destroy the client
 	if err := Clients.Get(clientID).DestroyClient(); err != nil {
-		internal.Logger.Error("Could not disconnect cadence client.",
+		Logger.Error("Could not disconnect cadence client.",
 			zap.Int64("ClientID", clientID),
 			zap.Error(err),
 		)
@@ -163,7 +163,7 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 	_ = Clients.Remove(clientID)
 	buildReply(reply, nil)
 
-	internal.Logger.Debug("Successfully removed client.",
+	Logger.Debug("Successfully removed client.",
 		zap.Int64("ClientID", clientID),
 	)
 
@@ -171,7 +171,7 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 }
 
 func handleHeartbeatRequest(requestCtx context.Context, request *messages.HeartbeatRequest) messages.IProxyReply {
-	internal.Logger.Debug("HeartbeatRequest Received",
+	Logger.Debug("HeartbeatRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -184,7 +184,7 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 }
 
 func handleInitializeRequest(requestCtx context.Context, request *messages.InitializeRequest) messages.IProxyReply {
-	internal.Logger.Debug("InitializeRequest Received",
+	Logger.Debug("InitializeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -203,16 +203,21 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 			port,
 		)
 	}
-	internal.Logger = SetLogger(request.GetLogLevel(), internal.Debug, internal.DebugPrelaunched)
 
-	//internal.Logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
+	logger := SetLogger(
+		request.GetLogLevel(),
+		internal.Debug,
+		internal.DebugPrelaunched)
+	Logger = logger.Named(internal.ProxyLoggerName)
+
+	//Logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
 	buildReply(reply, nil)
 
 	return reply
 }
 
 func handleTerminateRequest(requestCtx context.Context, request *messages.TerminateRequest) messages.IProxyReply {
-	internal.Logger.Debug("TerminateRequest Received",
+	Logger.Debug("TerminateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -231,7 +236,7 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWorkerRequest) messages.IProxyReply {
 	domain := *request.GetDomain()
 	taskList := *request.GetTaskList()
-	internal.Logger.Debug("NewWorkerRequest Received",
+	Logger.Debug("NewWorkerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
 		zap.String("TaskList", taskList),
@@ -261,7 +266,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopWorkerRequest) messages.IProxyReply {
 	workerID := request.GetWorkerID()
-	internal.Logger.Debug("StopWorkerRequest Received",
+	Logger.Debug("StopWorkerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("WorkerId", workerID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -283,7 +288,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 	Clients.Get(request.GetClientID()).StopWorker(worker)
 	workerID = Workers.Remove(workerID)
 
-	internal.Logger.Debug("Worker has been removed from Workers", zap.Int64("WorkerID", workerID))
+	Logger.Debug("Worker has been removed from Workers", zap.Int64("WorkerID", workerID))
 	buildReply(reply, nil)
 
 	return reply
@@ -291,7 +296,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 
 func handleDomainDescribeRequest(requestCtx context.Context, request *messages.DomainDescribeRequest) messages.IProxyReply {
 	domain := *request.GetName()
-	internal.Logger.Debug("DomainDescribeRequest Received",
+	Logger.Debug("DomainDescribeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
 		zap.Int("ProcessId", os.Getpid()),
@@ -317,7 +322,7 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 }
 
 func handleDomainRegisterRequest(requestCtx context.Context, request *messages.DomainRegisterRequest) messages.IProxyReply {
-	internal.Logger.Debug("DomainRegisterRequest Received",
+	Logger.Debug("DomainRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -355,7 +360,7 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 
 func handleDomainUpdateRequest(requestCtx context.Context, request *messages.DomainUpdateRequest) messages.IProxyReply {
 	domain := *request.GetName()
-	internal.Logger.Debug("DomainUpdateRequest Received",
+	Logger.Debug("DomainUpdateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
 		zap.Int("ProcessId", os.Getpid()),
@@ -406,7 +411,7 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 
 func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages.WorkflowRegisterRequest) messages.IProxyReply {
 	workflowName := request.GetName()
-	internal.Logger.Debug("WorkflowRegisterRequest Received",
+	Logger.Debug("WorkflowRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Workflow", *workflowName),
 		zap.Int("ProcessId", os.Getpid()),
@@ -419,7 +424,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
 		contextID := proxyworkflow.NextContextID()
 		requestID := NextRequestID()
-		internal.Logger.Debug("Executing Workflow",
+		Logger.Debug("Executing Workflow",
 			zap.String("Workflow", *workflowName),
 			zap.Int64("RequestId", requestID),
 			zap.Int64("ContextId", contextID),
@@ -472,7 +477,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 				panic("force-replay")
 			}
 
-			internal.Logger.Error("Workflow Failed With Error",
+			Logger.Error("Workflow Failed With Error",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -484,7 +489,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 		// workflow succeeded
 		case []byte:
-			internal.Logger.Debug("Workflow Completed Successfully",
+			Logger.Debug("Workflow Completed Successfully",
 				zap.String("Workflow", *workflowName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -502,7 +507,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 	// register the workflow
 	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *workflowName})
-	internal.Logger.Debug("workflow successfully registered", zap.String("WorkflowName", *workflowName))
+	Logger.Debug("workflow successfully registered", zap.String("WorkflowName", *workflowName))
 	buildReply(reply, nil)
 
 	return reply
@@ -511,7 +516,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.WorkflowExecuteRequest) messages.IProxyReply {
 	workflowName := *request.GetWorkflow()
 	domain := *request.GetDomain()
-	internal.Logger.Debug("WorkflowExecuteRequest Received",
+	Logger.Debug("WorkflowExecuteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowName", workflowName),
 		zap.String("Domain", domain),
@@ -557,7 +562,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.WorkflowCancelRequest) messages.IProxyReply {
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
-	internal.Logger.Debug("WorkflowCancelRequest Received",
+	Logger.Debug("WorkflowCancelRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
@@ -590,7 +595,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 func handleWorkflowTerminateRequest(requestCtx context.Context, request *messages.WorkflowTerminateRequest) messages.IProxyReply {
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
-	internal.Logger.Debug("WorkflowTerminateRequest Received",
+	Logger.Debug("WorkflowTerminateRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
@@ -625,7 +630,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *messages.WorkflowSignalWithStartRequest) messages.IProxyReply {
 	workflow := *request.GetWorkflow()
 	workflowID := *request.GetWorkflowID()
-	internal.Logger.Debug("WorkflowSignalWithStartRequest Received",
+	Logger.Debug("WorkflowSignalWithStartRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Workflow", workflow),
 		zap.String("WorkflowId", workflowID),
@@ -661,7 +666,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 }
 
 func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *messages.WorkflowSetCacheSizeRequest) messages.IProxyReply {
-	internal.Logger.Debug("WorkflowSetCacheSizeRequest Received",
+	Logger.Debug("WorkflowSetCacheSizeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -677,7 +682,7 @@ func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *mess
 }
 
 func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.WorkflowMutableRequest) messages.IProxyReply {
-	internal.Logger.Debug("WorkflowMutableRequest Received",
+	Logger.Debug("WorkflowMutableRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -750,7 +755,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request *messages.WorkflowDescribeExecutionRequest) messages.IProxyReply {
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
-	internal.Logger.Debug("WorkflowDescribeExecutionRequest Received",
+	Logger.Debug("WorkflowDescribeExecutionRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
@@ -781,7 +786,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 }
 
 func handleWorkflowGetResultRequest(requestCtx context.Context, request *messages.WorkflowGetResultRequest) messages.IProxyReply {
-	internal.Logger.Debug("WorkflowGetResultRequest Received",
+	Logger.Debug("WorkflowGetResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -819,7 +824,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 
 func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowSignalSubscribeRequest Received",
+	Logger.Debug("WorkflowSignalSubscribeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", request.GetContextID()),
 		zap.Int("ProcessId", os.Getpid()),
@@ -846,7 +851,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 	selector := workflow.NewSelector(ctx)
 	selector = selector.AddReceive(workflow.GetSignalChannel(ctx, *signalName), func(channel workflow.Channel, more bool) {
 		channel.Receive(ctx, &signalArgs)
-		internal.Logger.Debug("Received signal!", zap.String("signal", *signalName),
+		Logger.Debug("Received signal!", zap.String("signal", *signalName),
 			zap.ByteString("args", signalArgs))
 
 		// create the WorkflowSignalInvokeRequest
@@ -874,7 +879,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:
-			internal.Logger.Error("signal failed with error",
+			Logger.Error("signal failed with error",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
@@ -882,7 +887,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			)
 
 		case bool:
-			internal.Logger.Info("signal completed successfully",
+			Logger.Info("signal completed successfully",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
@@ -890,7 +895,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 			)
 
 		default:
-			internal.Logger.Info("signal result unexpected",
+			Logger.Info("signal result unexpected",
 				zap.String("Signal", *signalName),
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
@@ -913,7 +918,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		for {
 			selector.Select(ctx)
 			if err != nil {
-				internal.Logger.Error("Error In Workflow Context", zap.Error(err))
+				Logger.Error("Error In Workflow Context", zap.Error(err))
 			}
 			if done {
 				return
@@ -927,7 +932,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.WorkflowSignalRequest) messages.IProxyReply {
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
-	internal.Logger.Debug("WorkflowSignalRequest Received",
+	Logger.Debug("WorkflowSignalRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
@@ -962,7 +967,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 
 func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *messages.WorkflowHasLastResultRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowHasLastResultRequest Received",
+	Logger.Debug("WorkflowHasLastResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -988,7 +993,7 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 
 func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *messages.WorkflowGetLastResultRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowGetLastResultRequest Received",
+	Logger.Debug("WorkflowGetLastResultRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1022,7 +1027,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 
 func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request *messages.WorkflowDisconnectContextRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowDisconnectContextRequest Received",
+	Logger.Debug("WorkflowDisconnectContextRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1050,7 +1055,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 
 func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.WorkflowGetTimeRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowGetTimeRequest Received",
+	Logger.Debug("WorkflowGetTimeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1076,7 +1081,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 
 func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.WorkflowSleepRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowSleepRequest Received",
+	Logger.Debug("WorkflowSleepRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1117,7 +1122,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 
 func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *messages.WorkflowExecuteChildRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowExecuteChildRequest Received",
+	Logger.Debug("WorkflowExecuteChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1178,7 +1183,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *messages.WorkflowWaitForChildRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	childID := request.GetChildID()
-	internal.Logger.Debug("WorkflowWaitForChildRequest Received",
+	Logger.Debug("WorkflowWaitForChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
@@ -1226,7 +1231,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messages.WorkflowSignalChildRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	childID := request.GetChildID()
-	internal.Logger.Debug("WorkflowSignalChildRequest Received",
+	Logger.Debug("WorkflowSignalChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
@@ -1272,7 +1277,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messages.WorkflowCancelChildRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	childID := request.GetChildID()
-	internal.Logger.Debug("WorkflowCancelChildRequest Received",
+	Logger.Debug("WorkflowCancelChildRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ChildId", childID),
@@ -1305,7 +1310,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 
 func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *messages.WorkflowSetQueryHandlerRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowSetQueryHandlerRequest Received",
+	Logger.Debug("WorkflowSetQueryHandlerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1353,7 +1358,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 
 		// failure
 		case error:
-			internal.Logger.Error("Query Failed With Error",
+			Logger.Error("Query Failed With Error",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -1365,7 +1370,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 
 		// success
 		case []byte:
-			internal.Logger.Debug("Query Completed Successfully",
+			Logger.Debug("Query Completed Successfully",
 				zap.String("Query", *queryName),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -1396,7 +1401,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.WorkflowQueryRequest) messages.IProxyReply {
 	workflowID := *request.GetWorkflowID()
 	runID := *request.GetRunID()
-	internal.Logger.Debug("WorkflowQueryRequest Received",
+	Logger.Debug("WorkflowQueryRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
@@ -1440,7 +1445,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 
 func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messages.WorkflowGetVersionRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("WorkflowGetVersionRequest Received",
+	Logger.Debug("WorkflowGetVersionRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1477,7 +1482,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 func handleActivityRegisterRequest(requestCtx context.Context, request *messages.ActivityRegisterRequest) messages.IProxyReply {
 	requestID := NextRequestID()
 	activityName := request.GetName()
-	internal.Logger.Debug("ActivityRegisterRequest Received",
+	Logger.Debug("ActivityRegisterRequest Received",
 		zap.Int64("RequestId", requestID),
 		zap.String("Activity", *activityName),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1489,7 +1494,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 	// define the activity function
 	activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 		contextID := proxyactivity.NextContextID()
-		internal.Logger.Debug("Executing Activity",
+		Logger.Debug("Executing Activity",
 			zap.String("Activity", *activityName),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
@@ -1556,7 +1561,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 		// failure
 		case error:
-			internal.Logger.Error("Activity Failed With Error",
+			Logger.Error("Activity Failed With Error",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -1568,7 +1573,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 		// success
 		case []byte:
-			internal.Logger.Debug("Activity Completed Successfully",
+			Logger.Debug("Activity Completed Successfully",
 				zap.String("Activity", *activityName),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
@@ -1586,7 +1591,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 	// register the activity
 	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *activityName})
-	internal.Logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *activityName))
+	Logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *activityName))
 	buildReply(reply, nil)
 
 	return reply
@@ -1594,7 +1599,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 func handleActivityExecuteRequest(requestCtx context.Context, request *messages.ActivityExecuteRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("ActivityExecuteRequest Received",
+	Logger.Debug("ActivityExecuteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.String("ActivityName", *request.GetActivity()),
@@ -1635,7 +1640,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 }
 
 func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, request *messages.ActivityHasHeartbeatDetailsRequest) messages.IProxyReply {
-	internal.Logger.Debug("ActivityHasHeartbeatDetailsRequest Received",
+	Logger.Debug("ActivityHasHeartbeatDetailsRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -1654,7 +1659,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 }
 
 func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, request *messages.ActivityGetHeartbeatDetailsRequest) messages.IProxyReply {
-	internal.Logger.Debug("ActivityGetHeartbeatDetailsRequest Received",
+	Logger.Debug("ActivityGetHeartbeatDetailsRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -1682,7 +1687,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 }
 
 func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *messages.ActivityRecordHeartbeatRequest) messages.IProxyReply {
-	internal.Logger.Debug("ActivityRecordHeartbeatRequest Received",
+	Logger.Debug("ActivityRecordHeartbeatRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -1735,7 +1740,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 
 func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.ActivityGetInfoRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
-	internal.Logger.Debug("ActivityGetInfoRequest Received",
+	Logger.Debug("ActivityGetInfoRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1761,7 +1766,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 }
 
 func handleActivityCompleteRequest(requestCtx context.Context, request *messages.ActivityCompleteRequest) messages.IProxyReply {
-	internal.Logger.Debug("ActivityCompleteRequest Received",
+	Logger.Debug("ActivityCompleteRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -1808,7 +1813,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 func handleActivityExecuteLocalRequest(requestCtx context.Context, request *messages.ActivityExecuteLocalRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	activityTypeID := request.GetActivityTypeID()
-	internal.Logger.Debug("ActivityExecuteLocalRequest Received",
+	Logger.Debug("ActivityExecuteLocalRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ActivityTypeId", activityTypeID),
@@ -1859,7 +1864,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 		// failure
 		case error:
-			internal.Logger.Error("Activity Failed With Error",
+			Logger.Error("Activity Failed With Error",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),
@@ -1872,7 +1877,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 		// success
 		case []byte:
-			internal.Logger.Debug("Activity Successful",
+			Logger.Debug("Activity Successful",
 				zap.Int64("RequestId", requestID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("ActivityContextId", activityContextID),

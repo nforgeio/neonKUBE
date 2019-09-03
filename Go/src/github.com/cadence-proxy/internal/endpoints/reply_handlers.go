@@ -53,7 +53,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	internal.Logger.Debug("Settling Workflow",
+	Logger.Debug("Settling Workflow",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -137,7 +137,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	internal.Logger.Debug("Settling Signal",
+	Logger.Debug("Settling Signal",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -160,7 +160,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	internal.Logger.Debug("Settling Query",
+	Logger.Debug("Settling Query",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -183,7 +183,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	internal.Logger.Debug("Settling Future ACK",
+	Logger.Debug("Settling Future ACK",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -208,7 +208,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	internal.Logger.Debug("Settling Activity",
+	Logger.Debug("Settling Activity",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -240,7 +240,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages
 func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *messages.Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	internal.Logger.Debug("Settling Activity Stopping",
+	Logger.Debug("Settling Activity Stopping",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -262,7 +262,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
-	internal.Logger.Debug("Settling Local Activity",
+	Logger.Debug("Settling Local Activity",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),

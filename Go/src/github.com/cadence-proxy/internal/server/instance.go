@@ -57,7 +57,7 @@ func NewInstance(addr string, logger *zap.Logger) *Instance {
 		Router:          router,
 		httpServer:      &http.Server{Addr: addr, Handler: router},
 		ShutdownChannel: make(chan bool),
-		Logger:          logger,
+		Logger:          logger.Named("server"),
 	}
 
 	return s

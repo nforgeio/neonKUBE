@@ -71,9 +71,12 @@ func SetLogger(enab zapcore.LevelEnabler, debug, debugPrelaunched bool) (logger 
 	logger = zap.New(core, zap.AddCaller())
 	defer logger.Sync()
 
+	// make global logger
+	_ = zap.ReplaceGlobals(logger)
+
 	return
 }
 
 func syslogTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(t.Format("Jan  2 15:04:05"))
+	enc.AppendString(t.Format("Jan 2 15:04:05"))
 }

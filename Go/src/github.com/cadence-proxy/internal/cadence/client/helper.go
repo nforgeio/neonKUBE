@@ -24,9 +24,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	proxyerror "github.com/cadence-proxy/internal/cadence/error"
-
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
@@ -34,6 +31,9 @@ import (
 	"go.uber.org/cadence/worker"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
+
+	"github.com/cadence-proxy/internal"
+	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 )
 
 const (
@@ -193,14 +193,13 @@ func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
 // returns error -> error if there were any problems configuring
 // or building the service client
 func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int32, retryDelay time.Duration) error {
-
-	// exit if the service has already been setup
 	if helper.Service != nil {
 		return nil
 	}
 
 	// Configure the ClientHelper.Builder
-	helper.Logger = zap.L()
+	logger := zap.L()
+	helper.Logger = logger.Named(internal.ProxyLoggerName)
 	helper.Builder = NewBuilder(helper.Logger).
 		SetHostPort(helper.Config.hostPort).
 		SetClientOptions(helper.Config.clientOptions).
@@ -320,10 +319,9 @@ func (helper *ClientHelper) DestroyClient() error {
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
 func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.Options) (worker.Worker, error) {
+	logger := zap.L()
+	options.Logger = logger.Named(internal.CadenceLoggerName)
 
-	// set the worker logger
-	// create and start the worker
-	options.Logger = zap.L()
 	worker := worker.New(helper.Service, domain, taskList, options)
 	err := worker.Start()
 	if err != nil {
@@ -360,8 +358,6 @@ func (helper *ClientHelper) StopWorker(worker worker.Worker) {
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
 func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (*cadenceshared.DescribeDomainResponse, error) {
-
-	// domain describe call to cadence
 	resp, err := helper.DomainClient.Describe(ctx, domain)
 	if err != nil {
 		return nil, err

@@ -109,7 +109,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	switch s := message.(type) {
 	case nil:
 		err = fmt.Errorf("nil type for incoming ProxyMessage of type %v", message.GetType())
-		internal.Logger.Debug("Error processing incoming message", zap.Error(err))
+		Logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 
 	// IProxyRequest
@@ -125,7 +125,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	// Unrecognized type
 	default:
 		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %v", message.GetType())
-		internal.Logger.Debug("Error processing incoming message", zap.Error(err))
+		Logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 	}
 
@@ -133,7 +133,7 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	// if there are, then something is wrong with the server
 	// and most likely needs to be terminated
 	if err != nil {
-		internal.Logger.Error("Error Handling ProxyMessage", zap.Error(err))
+		Logger.Error("Error Handling ProxyMessage", zap.Error(err))
 	}
 }
 
@@ -154,13 +154,13 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				string(debug.Stack()),
 			)
 			buildReply(reply, proxyerror.NewCadenceError(err))
-			internal.Logger.Error("Panic", zap.Error(err))
+			Logger.Error("Panic", zap.Error(err))
 
 			// send the reply
 			var resp *http.Response
 			resp, err = putToNeonCadenceClient(reply)
 			if err != nil {
-				internal.Logger.Fatal(err.Error())
+				Logger.Fatal(err.Error())
 			}
 			err = resp.Body.Close()
 			if err != nil {
@@ -453,7 +453,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// Undefined message type
 		default:
 			e := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
-			internal.Logger.Error("Unhandled message type. Could not complete type assertion.", zap.Error(e))
+			Logger.Error("Unhandled message type. Could not complete type assertion.", zap.Error(e))
 
 			// set the reply
 			reply = messages.NewProxyReply()
@@ -466,7 +466,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	var resp *http.Response
 	resp, err = putToNeonCadenceClient(reply)
 	if err != nil {
-		internal.Logger.Fatal(err.Error())
+		Logger.Fatal(err.Error())
 	}
 	err = resp.Body.Close()
 	if err != nil {
@@ -491,7 +491,7 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 				reply.GetRequestID(),
 				string(debug.Stack()),
 			)
-			internal.Logger.Error("Panic", zap.Error(err))
+			Logger.Error("Panic", zap.Error(err))
 		}
 
 		// remove the operation
@@ -567,7 +567,7 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 		// Undefined message type
 		default:
 			err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
-			internal.Logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
+			Logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
 		}
 	}
 

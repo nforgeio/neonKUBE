@@ -14,9 +14,10 @@ import (
 )
 
 func startWorkers(h *common.SampleHelper) worker.Worker {
+	logger := h.Logger.Named("cadence")
 	workerOptions := worker.Options{
 		MetricsScope: h.Scope,
-		Logger:       h.Logger,
+		Logger:       logger,
 	}
 	return h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
 }

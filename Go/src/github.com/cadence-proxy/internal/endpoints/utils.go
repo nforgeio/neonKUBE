@@ -43,7 +43,7 @@ import (
 // CheckRequestValidity checks to make sure that the request is in
 // the correct format to be handled
 func CheckRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
-	internal.Logger.Debug("Request Received",
+	Logger.Debug("Request Received",
 		zap.String("Address", fmt.Sprintf("http://%s%s", r.Host, r.URL.String())),
 		zap.String("Method", r.Method),
 		zap.Int("ProcessId", os.Getpid()),
@@ -56,7 +56,7 @@ func CheckRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 			internal.ContentType,
 		)
 
-		internal.Logger.Error("Incorrect Content-Type",
+		Logger.Error("Incorrect Content-Type",
 			zap.String("Content Type", r.Header.Get("Content-Type")),
 			zap.String("Expected Content Type", internal.ContentType),
 			zap.Error(err),
@@ -71,7 +71,7 @@ func CheckRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 			http.MethodPut,
 		)
 
-		internal.Logger.Error("Invalid HTTP Method",
+		Logger.Error("Invalid HTTP Method",
 			zap.String("Method", r.Method),
 			zap.String("Expected", http.MethodPut),
 			zap.Error(err),
@@ -88,7 +88,7 @@ func CheckRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 func ReadAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	payload, err := ioutil.ReadAll(body)
 	if err != nil {
-		internal.Logger.Error("Null request body", zap.Error(err))
+		Logger.Error("Null request body", zap.Error(err))
 		return nil, err
 	}
 
@@ -96,7 +96,7 @@ func ReadAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	buf := bytes.NewBuffer(payload)
 	message, err := messages.Deserialize(buf, false)
 	if err != nil {
-		internal.Logger.Error("Error deserializing input", zap.Error(err))
+		Logger.Error("Error deserializing input", zap.Error(err))
 		return nil, err
 	}
 
@@ -105,7 +105,7 @@ func ReadAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
 	proxyMessage := message.GetProxyMessage()
-	// internal.Logger.Debug("Sending message to .net client",
+	// Logger.Debug("Sending message to .net client",
 	// 	zap.String("Address", replyAddress),
 	// 	zap.String("MessageType", proxyMessage.Type.String()),
 	// 	zap.Int("ProcessId", os.Getpid()),

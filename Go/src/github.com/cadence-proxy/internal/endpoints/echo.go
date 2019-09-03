@@ -23,7 +23,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/messages"
 )
 
@@ -53,7 +52,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// serialize the message
-	internal.Logger.Debug(fmt.Sprintf("Echo message type %s", message.GetProxyMessage().Type.String()))
+	Logger.Debug(fmt.Sprintf("Echo message type %s", message.GetProxyMessage().Type.String()))
 	serializedMessageCopy, err := cloneForEcho(message)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -70,7 +69,7 @@ func EchoHandler(w http.ResponseWriter, r *http.Request) {
 func cloneForEcho(message messages.IProxyMessage) (b []byte, e error) {
 	defer func() {
 		if r := recover(); r != nil {
-			internal.Logger.Debug("Recovered in cloneForEcho")
+			Logger.Debug("Recovered in cloneForEcho")
 			e = fmt.Errorf("panic %v", r)
 			b = nil
 		}
@@ -80,7 +79,7 @@ func cloneForEcho(message messages.IProxyMessage) (b []byte, e error) {
 	proxyMessage := messageCopy.GetProxyMessage()
 	serializedMessageCopy, err := proxyMessage.Serialize(false)
 	if err != nil {
-		internal.Logger.Debug("Error serializing proxy message", zap.Error(err))
+		Logger.Debug("Error serializing proxy message", zap.Error(err))
 		return nil, err
 	}
 
