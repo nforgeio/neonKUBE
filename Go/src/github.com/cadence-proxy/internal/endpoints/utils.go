@@ -26,6 +26,7 @@ import (
 	"os"
 	"strings"
 
+	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
@@ -243,4 +244,32 @@ func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.Clie
 	}
 
 	return nil
+}
+
+func workflowRegisterWithOptions(workflowFunc interface{}, opts workflow.RegisterOptions) {
+	defer func() {
+		if r := recover(); r != nil {
+			if v, ok := r.(error); ok {
+				if strings.Contains(v.Error(), "already registered") {
+					return
+				}
+			}
+			panic(r)
+		}
+	}()
+	workflow.RegisterWithOptions(workflowFunc, opts)
+}
+
+func activityRegisterWithOptions(activityFunc interface{}, opts activity.RegisterOptions) {
+	defer func() {
+		if r := recover(); r != nil {
+			if v, ok := r.(error); ok {
+				if strings.Contains(v.Error(), "already registered") {
+					return
+				}
+			}
+			panic(r)
+		}
+	}()
+	activity.RegisterWithOptions(activityFunc, opts)
 }

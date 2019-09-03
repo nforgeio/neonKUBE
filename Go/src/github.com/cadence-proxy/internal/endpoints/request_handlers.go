@@ -506,7 +506,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 	}
 
 	// register the workflow
-	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *workflowName})
+	workflowRegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: *workflowName})
 	Logger.Debug("workflow successfully registered", zap.String("WorkflowName", *workflowName))
 	buildReply(reply, nil)
 
@@ -1590,7 +1590,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 	}
 
 	// register the activity
-	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *activityName})
+	activityRegisterWithOptions(activityFunc, activity.RegisterOptions{Name: *activityName})
 	Logger.Debug("Activity Successfully Registered", zap.String("ActivityName", *activityName))
 	buildReply(reply, nil)
 
