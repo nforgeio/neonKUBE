@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
+	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
 	"go.uber.org/cadence/worker"
 	"go.uber.org/zap"
@@ -14,9 +17,10 @@ import (
 )
 
 func startWorkers(h *common.SampleHelper) worker.Worker {
+	logger := h.Logger.Named("cadence")
 	workerOptions := worker.Options{
 		MetricsScope: h.Scope,
-		Logger:       h.Logger,
+		Logger:       logger,
 	}
 	return h.StartWorkers(h.Config.DomainName, ApplicationName, workerOptions)
 }
@@ -31,7 +35,29 @@ func startWorkflow(h *common.SampleHelper) client.WorkflowRun {
 	return h.StartWorkflow(workflowOptions, SampleWorkflow)
 }
 
+func registerWorkflow(workflowFunc interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			if v, ok := r.(error); ok {
+				if strings.Contains(v.Error(), "alreadyz registered") {
+					fmt.Println("Recovered in f because already registered", r)
+					return
+				}
+			}
+			panic(r)
+		}
+	}()
+
+	activity.Register(workflowFunc)
+
+}
+
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("THIS IS MY LAST PANIIIIICCC")
+		}
+	}()
 
 	// setup the SampleHelper
 	var h common.SampleHelper
@@ -40,6 +66,7 @@ func main() {
 	// start the worker
 	// execute the workflow
 	workflowWorker := startWorkers(&h)
+	registerWorkflow(getNameActivity)
 	workflowRun := startWorkflow(&h)
 
 	// build the workflow client

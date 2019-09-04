@@ -33,6 +33,11 @@ var (
 	address   string
 	debugMode bool
 
+	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
+	// already be running for debugging purposes.  When this is true, the
+	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
+	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
+	// This defaults to false.
 	debugPrelaunched = false
 )
 
@@ -50,7 +55,7 @@ func main() {
 	if debugPrelaunched {
 		internal.DebugPrelaunched = true
 	}
-	l := endpoints.SetLogger(zapcore.DebugLevel, debugMode, false)
+	l := endpoints.SetLogger(zapcore.DebugLevel, debugMode, true)
 
 	// create the instance, set the routes,
 	// and start the server
@@ -58,8 +63,8 @@ func main() {
 
 	// set server instance and
 	// logger for endpoints
+	endpoints.Logger = l.Named("initialize")
 	endpoints.Instance = instance
-	internal.Logger = instance.Logger
 
 	// setup the routes
 	endpoints.SetupRoutes(instance.Router)

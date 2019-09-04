@@ -19,8 +19,6 @@ package internal
 
 import (
 	"errors"
-
-	"go.uber.org/zap"
 )
 
 const (
@@ -28,11 +26,17 @@ const (
 	// ContentType is the content type to be used for HTTP requests
 	// encapsulationg a ProxyMessage
 	ContentType = "application/x-neon-cadence-proxy"
+
+	// CadenceLoggerName is the name of the zap.Logger that will
+	// log internal cadence messages.
+	CadenceLoggerName = "cadence-internal"
+
+	// ProxyLoggerName is the name of the zap.Logger that will
+	// log internal cadence-proxy messages.
+	ProxyLoggerName = "cadence-proxy"
 )
 
 var (
-	// Global logger
-	Logger *zap.Logger
 
 	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the

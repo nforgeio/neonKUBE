@@ -99,7 +99,7 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 	// on host:port 127.0.0.1:5000
 	s.instance = server.NewInstance(_listenAddress, l)
 	endpoints.Instance = s.instance
-	internal.Logger = s.instance.Logger
+	endpoints.Logger = l.Named(internal.ProxyLoggerName)
 	
 	endpoints.SetupRoutes(s.instance.Router)
 }
