@@ -421,9 +421,10 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 
 func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages.WorkflowRegisterRequest) messages.IProxyReply {
 	workflowName := request.GetName()
+	clientID := request.GetClientID()
 	Logger.Debug("WorkflowRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int64("ClienttId", request.GetClientID()),
+		zap.Int64("ClienttId", clientID),
 		zap.String("Workflow", *workflowName),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -438,7 +439,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		Logger.Debug("Executing Workflow",
 			zap.String("Workflow", *workflowName),
 			zap.Int64("RequestId", requestID),
-			zap.Int64("ClienttId", request.GetClientID()),
+			zap.Int64("ClienttId", clientID),
 			zap.Int64("ContextId", contextID),
 			zap.Int("ProcessId", os.Getpid()),
 		)
@@ -454,7 +455,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetRequestID(requestID)
 		workflowInvokeRequest.SetContextID(contextID)
 		workflowInvokeRequest.SetArgs(input)
-		workflowInvokeRequest.SetClientID(request.GetClientID())
+		workflowInvokeRequest.SetClientID(clientID)
 
 		// get the WorkflowInfo (Domain, WorkflowID, RunID, WorkflowType,
 		// TaskList, ExecutionStartToCloseTimeout)
@@ -844,9 +845,10 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 
 func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *messages.WorkflowSignalSubscribeRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
+	clientID := request.GetClientID()
 	Logger.Debug("WorkflowSignalSubscribeRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int64("ClienttId", request.GetClientID()),
+		zap.Int64("ClienttId", clientID),
 		zap.Int64("ContextId", request.GetContextID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -882,7 +884,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		workflowSignalInvokeRequest.SetContextID(contextID)
 		workflowSignalInvokeRequest.SetSignalArgs(signalArgs)
 		workflowSignalInvokeRequest.SetSignalName(signalName)
-		workflowSignalInvokeRequest.SetClientID(request.GetClientID())
+		workflowSignalInvokeRequest.SetClientID(clientID)
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowSignalInvokeRequest)
@@ -1341,9 +1343,10 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 
 func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *messages.WorkflowSetQueryHandlerRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
+	clientID := request.GetClientID()
 	Logger.Debug("WorkflowSetQueryHandlerRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int64("ClienttId", request.GetClientID()),
+		zap.Int64("ClienttId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -1370,7 +1373,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		workflowQueryInvokeRequest.SetContextID(contextID)
 		workflowQueryInvokeRequest.SetQueryArgs(queryArgs)
 		workflowQueryInvokeRequest.SetQueryName(queryName)
-		workflowQueryInvokeRequest.SetClientID(request.GetClientID())
+		workflowQueryInvokeRequest.SetClientID(clientID)
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowQueryInvokeRequest)
@@ -1515,9 +1518,10 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 
 func handleActivityRegisterRequest(requestCtx context.Context, request *messages.ActivityRegisterRequest) messages.IProxyReply {
 	activityName := request.GetName()
+	clientID := request.GetClientID()
 	Logger.Debug("ActivityRegisterRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int64("ClienttId", request.GetClientID()),
+		zap.Int64("ClienttId", clientID),
 		zap.String("Activity", *activityName),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -1533,6 +1537,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			zap.String("Activity", *activityName),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
+			zap.Int64("ClienttId", clientID),
 			zap.Int("ProcessId", os.Getpid()),
 		)
 
@@ -1547,8 +1552,8 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		activityInvokeRequest.SetRequestID(requestID)
 		activityInvokeRequest.SetArgs(input)
 		activityInvokeRequest.SetContextID(contextID)
-		activityInvokeRequest.SetActivity(request.GetName())
-		activityInvokeRequest.SetClientID(request.GetClientID())
+		activityInvokeRequest.SetActivity(activityName)
+		activityInvokeRequest.SetClientID(clientID)
 
 		// create the Operation for this request and add it to the operations map
 		op := messages.NewOperation(requestID, activityInvokeRequest)
@@ -1570,9 +1575,9 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			requestID := NextRequestID()
 			activityStoppingRequest := messages.NewActivityStoppingRequest()
 			activityStoppingRequest.SetRequestID(requestID)
-			activityStoppingRequest.SetActivityID(request.GetName())
+			activityStoppingRequest.SetActivityID(activityName)
 			activityStoppingRequest.SetContextID(contextID)
-			activityStoppingRequest.SetClientID(request.GetClientID())
+			activityStoppingRequest.SetClientID(clientID)
 
 			// create the Operation for this request and add it to the operations map
 			stoppingReplyChan := make(chan interface{})
@@ -1854,9 +1859,10 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 func handleActivityExecuteLocalRequest(requestCtx context.Context, request *messages.ActivityExecuteLocalRequest) messages.IProxyReply {
 	contextID := request.GetContextID()
 	activityTypeID := request.GetActivityTypeID()
+	clientID := request.GetClientID()
 	Logger.Debug("ActivityExecuteLocalRequest Received",
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int64("ClienttId", request.GetClientID()),
+		zap.Int64("ClienttId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("ActivityTypeId", activityTypeID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -1889,7 +1895,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		activityInvokeLocalRequest.SetArgs(input)
 		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
 		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
-		activityInvokeLocalRequest.SetClientID(request.GetClientID())
+		activityInvokeLocalRequest.SetClientID(clientID)
 
 		// create the Operation for this request and add it to the operations map
 		op := messages.NewOperation(requestID, activityInvokeLocalRequest)
