@@ -55,6 +55,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Workflow",
 		zap.Int64("ContextId", contextID),
+		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
@@ -140,6 +141,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 	Logger.Debug("Settling Signal",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
+		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -163,6 +165,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 	Logger.Debug("Settling Query",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
+		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -186,6 +189,7 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op
 	Logger.Debug("Settling Future ACK",
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
+		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -211,6 +215,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages
 	Logger.Debug("Settling Activity",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
+		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -243,6 +248,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *mess
 	Logger.Debug("Settling Activity Stopping",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
+		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -265,6 +271,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op
 	Logger.Debug("Settling Local Activity",
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
+		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 

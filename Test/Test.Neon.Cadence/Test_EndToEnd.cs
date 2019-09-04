@@ -57,7 +57,7 @@ namespace TestCadence
                 DefaultDomain   = CadenceFixture.DefaultDomain,
                 DefaultTaskList = CadenceFixture.DefaultTaskList,
                 CreateDomain    = true,
-                Debug           = false,
+                Debug           = true,
 
                 //--------------------------------
                 // $debug(jeff.lill): DELETE THIS!
