@@ -31,7 +31,8 @@ import (
 //
 // param zapcore.LevelEnabler -> a zapcore.LevelEnabler interface
 //
-// param debug bool -> run in debug mode or not
+// param debug bool -> indicates whether the cadence-proxy is running as its
+// own process in debug mode.
 //
 // param debugPrelaunched bool -> indicates that the logger should be configured for
 // the proxy to run in debugPrelaunched mode.
@@ -51,7 +52,7 @@ func SetLogger(enab zapcore.LevelEnabler, debug, debugPrelaunched bool) (logger 
 
 	// set config
 	var enc zapcore.Encoder
-	if debug {
+	if debugPrelaunched {
 		cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 		enc = zapcore.NewConsoleEncoder(cfg)
 	} else {
@@ -64,7 +65,7 @@ func SetLogger(enab zapcore.LevelEnabler, debug, debugPrelaunched bool) (logger 
 		enc,
 		zapcore.Lock(os.Stdout),
 		enab,
-		debugPrelaunched,
+		debug,
 	)
 
 	// create the logger

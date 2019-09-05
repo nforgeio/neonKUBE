@@ -18,9 +18,12 @@
 package endpoints
 
 import (
-	"github.com/cadence-proxy/internal"
+	"context"
+	"time"
+
 	"go.uber.org/zap/zapcore"
 
+	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/messages"
 	dotnetlogger "github.com/cadence-proxy/internal/messages/dotnet-logger"
 )
@@ -30,16 +33,20 @@ type (
 		zapcore.LevelEnabler
 		enc zapcore.Encoder
 		out zapcore.WriteSyncer
-		dp  bool
+		d   bool
 	}
 )
 
-func NewCore(enc zapcore.Encoder, ws zapcore.WriteSyncer, enab zapcore.LevelEnabler, debugPrelaunched bool) zapcore.Core {
+func NewCore(
+	enc zapcore.Encoder,
+	ws zapcore.WriteSyncer,
+	enab zapcore.LevelEnabler,
+	debug bool) zapcore.Core {
 	return &Core{
 		LevelEnabler: enab,
 		enc:          enc,
 		out:          ws,
-		dp:           debugPrelaunched,
+		d:            debug,
 	}
 }
 
@@ -59,38 +66,12 @@ func (c Core) Check(entry zapcore.Entry, checkedEntry *zapcore.CheckedEntry) *za
 }
 
 func (c Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
-	if !c.dp {
-		requestID := messages.NextRequestID()
-		logRequest := messages.NewLogRequest()
-		logMessage := entry.Message
-		logLevel, err := dotnetlogger.ZapLevelToLogLevel(entry.Level)
-		if err != nil {
-			return err
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
-		logRequest.SetRequestID(requestID)
-		logRequest.SetTimeUtc(entry.Time)
-		logRequest.SetLogLevel(logLevel)
-		logRequest.SetLogMessage(&logMessage)
-		if entry.LoggerName == internal.CadenceLoggerName {
-			logRequest.SetFromCadence(true)
-		}
-
-		op := messages.NewOperation(requestID, logRequest)
-		op.SetChannel(make(chan interface{}))
-		Operations.Add(requestID, op)
-
-		go sendMessage(logRequest)
-
-		result := <-op.GetChannel()
-		switch s := result.(type) {
-		case error:
-			return s
-		default:
-			return nil
-		}
+	if !c.d {
+		return sendLogRequest(ctx, entry)
 	}
-
 	buf, err := c.enc.EncodeEntry(entry, fields)
 	if err != nil {
 		return err
@@ -103,7 +84,8 @@ func (c Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 	if entry.Level > zapcore.ErrorLevel {
 		c.Sync()
 	}
-	return nil
+
+	return sendLogRequest(ctx, entry)
 }
 
 func (c Core) Sync() error {
@@ -115,6 +97,38 @@ func (c Core) clone() *Core {
 		LevelEnabler: c.LevelEnabler,
 		enc:          c.enc,
 		out:          c.out,
-		dp:           c.dp,
+		d:            c.d,
+	}
+}
+
+func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
+	requestID := NextRequestID()
+	logRequest := messages.NewLogRequest()
+	logMessage := entry.Message
+	logLevel, err := dotnetlogger.ZapLevelToLogLevel(entry.Level)
+	if err != nil {
+		return err
+	}
+
+	logRequest.SetRequestID(requestID)
+	logRequest.SetTimeUtc(entry.Time)
+	logRequest.SetLogLevel(logLevel)
+	logRequest.SetLogMessage(&logMessage)
+	if entry.LoggerName == internal.CadenceLoggerName {
+		logRequest.SetFromCadence(true)
+	}
+
+	op := messages.NewOperation(requestID, logRequest)
+	op.SetChannel(make(chan interface{}))
+	Operations.Add(requestID, op)
+
+	go sendMessage(logRequest)
+
+	result := <-op.GetChannel()
+	switch s := result.(type) {
+	case error:
+		return s
+	default:
+		return nil
 	}
 }
