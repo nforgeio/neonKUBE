@@ -16,8 +16,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
+using Neon.Diagnostics;
 using Neon.Retry;
 using Neon.Net;
 
@@ -78,7 +80,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, bool, bool, string, bool, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, string, LogLevel, bool, bool, string, bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -88,6 +90,7 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="defaultTaskList">Optionally specifies the default task list for the fixture's client.  This defaults to <b>test-tasks</b>.</param>
+        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.Info"/>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
@@ -140,6 +143,7 @@ namespace Neon.Xunit.Cadence
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,
             string              defaultTaskList = DefaultTaskList,
+            LogLevel            logLevel        = LogLevel.Info,
             bool                keepConnection  = false,
             bool                keepOpen        = false,
             string              hostInterface   = null,
@@ -159,6 +163,7 @@ namespace Neon.Xunit.Cadence
                         env:             env, 
                         defaultDomain:   defaultDomain, 
                         defaultTaskList: defaultTaskList, 
+                        logLevel:        logLevel,
                         keepConnection:  keepConnection,
                         keepOpen:        keepOpen, 
                         noClient:        noClient, 
@@ -176,6 +181,7 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="defaultTaskList">Optionally specifies the default task list for the fixture's client.  This defaults to <b>test-tasks</b>.</param>
+        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.Info"/>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
@@ -217,6 +223,7 @@ namespace Neon.Xunit.Cadence
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,
             string              defaultTaskList = DefaultTaskList,
+            LogLevel            logLevel        = LogLevel.Info,
             bool                keepConnection  = false,
             bool                keepOpen        = false,
             string              hostInterface   = null,
@@ -268,7 +275,8 @@ namespace Neon.Xunit.Cadence
                 {
                     CreateDomain    = true,
                     DefaultDomain   = defaultDomain,
-                    DefaultTaskList = defaultTaskList
+                    DefaultTaskList = defaultTaskList,
+                    LogLevel        = logLevel
                 };
 
                 settings.Servers.Clear();

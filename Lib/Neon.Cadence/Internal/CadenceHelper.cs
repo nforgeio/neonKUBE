@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence.Internal
 {
@@ -826,6 +827,45 @@ namespace Neon.Cadence.Internal
             finally
             {
                 stream.Position = orgPos;
+            }
+        }
+
+        /// <summary>
+        /// Converts a Neon <see cref="LogLevel"/> value into a <b>cadence-proxy</b> compatible
+        /// log level string.
+        /// </summary>
+        /// <param name="logLevel">The input log level.</param>
+        /// <returns>The <b>cadence-proxy</b> compatable level string.</returns>
+        internal static string ToCadenceLogLevel(LogLevel logLevel)
+        {
+            switch (logLevel)
+            {
+                case LogLevel.Critical: 
+                    
+                    return "fatal";
+
+                case LogLevel.Debug:    
+                    
+                    return "debug";
+
+                case LogLevel.Error:    
+                case LogLevel.SError:   
+                    
+                    return "error";
+
+                case LogLevel.Info:
+                case LogLevel.SInfo:
+                default:
+
+                    return "info";
+
+                case LogLevel.None:     
+                    
+                    return "none";
+
+                case LogLevel.Warn:
+
+                    return "warn";
             }
         }
     }

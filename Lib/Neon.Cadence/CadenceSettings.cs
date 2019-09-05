@@ -27,6 +27,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Diagnostics;
 
 namespace Neon.Cadence
 {
@@ -307,17 +308,16 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies the logging level for the associated <b>cadence-proxy</b>.
-        /// The supported values are <b>panic</b>, <b>fatal</b>, <b>error</b>, <b>warn</b>, 
-        /// and <b>debug</b>.  This defaults to <b>info</b>.
+        /// This defaults to <see cref="LogLevel.Info"/>.
         /// </summary>
         [JsonProperty(PropertyName = "LogLevel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "logLevel", ApplyNamingConventions = false)]
         [DefaultValue("info")]
-        public string LogLevel { get; set; } = "info";
+        public LogLevel LogLevel { get; set; } = LogLevel.Info;
 
         /// <summary>
         /// Optionally specifies that messages from the embedded GOLANG Cadence client 
-        /// will be included in tge log output.  This defaults to <c>false</c>.
+        /// will be included in the log output.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "LogCadence", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "logCadence", ApplyNamingConventions = false)]

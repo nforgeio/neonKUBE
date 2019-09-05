@@ -230,6 +230,11 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="name">The case sensitive logger name.</param>
         /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
+        /// <param name="contextId">
+        /// Optionally specifies additional information that can be used to identify
+        /// context for logged events.  For example, the Neon.Cadence client uses this 
+        ///  to record the ID of the workflow recording events.
+        /// </param>
         /// <param name="isLogEnabledFunc">
         /// Optionally specifies a function that will be called at runtime to
         /// determine whether to actually log an event.  This defaults to <c>null</c>
