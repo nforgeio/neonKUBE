@@ -29,6 +29,7 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
+using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
@@ -64,5 +65,11 @@ namespace TestCadence
         /// are executed or not.
         /// </summary>
         public static bool RunSlowTests { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the log level to use for Cadence related unit tests.
+        /// The defaults to <see cref="LogLevel.Debug"/>.
+        /// </summary>
+        public static LogLevel LogLevel = LogLevel.Debug;
     }
 }

@@ -1839,7 +1839,14 @@ namespace Neon.Cadence.WorkflowStub
             }
             catch (Exception e)
             {
-                // We should never see an exception under normal circumstances.
+                // We're going to ignore exceptions for [LogReply] messages.
+
+                if (reply.Type == InternalMessageTypes.LogReply)
+                {
+                    return;
+                }
+
+                // Otherwise, should never see an exception under normal circumstances.
                 // Either a requestID somehow got reused (which should never 
                 // happen) the HTTP request to the [cadence-proxy] failed
                 // to be transmitted, timed out, or the proxy returned an

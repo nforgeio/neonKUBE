@@ -81,6 +81,7 @@ namespace TestCadence
             {
                 DefaultDomain   = CadenceFixture.DefaultDomain,
                 DefaultTaskList = CadenceFixture.DefaultTaskList,
+                LogLevel        = CadenceTestHelper.LogLevel,
                 Debug           = true,
             };
 

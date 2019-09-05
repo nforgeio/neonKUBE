@@ -378,15 +378,6 @@ namespace Neon.Cadence
         internal bool DebugDisableHandshakes { get; set; } = false;
 
         /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
-        /// useful while debugging the client but should never be set for production.
-        /// This defaults to <c>false</c>.
-        /// </summary>
-        [JsonIgnore]
-        [YamlIgnore]
-        internal bool DebugDisableHeartbeats { get; set; } = false;
-
-        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
         /// useful while debugging the client but should never be set for production.
         /// This defaults to <c>false</c>.

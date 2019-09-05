@@ -49,14 +49,13 @@ namespace TestCadence
             {
                 DefaultDomain   = CadenceFixture.DefaultDomain,
                 DefaultTaskList = CadenceFixture.DefaultTaskList,
+                LogLevel        = CadenceTestHelper.LogLevel,
                 CreateDomain    = true,
                 Debug           = true,
 
                 //--------------------------------
                 // $debug(jeff.lill): DELETE THIS!
                 DebugPrelaunched       = false,
-                DebugDisableHandshakes = false,
-                DebugDisableHeartbeats = true,
                 //--------------------------------
             };
 
