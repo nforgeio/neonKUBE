@@ -61,15 +61,21 @@ namespace TestCadence
         public const bool KeepCadenceServerOpen = true;     // $debug(jeff.lill): Set this back to FALSE.
 
         /// <summary>
-        /// Used by <see cref="SlowFactAttribute"/> to control whether slow tests
-        /// are executed or not.
-        /// </summary>
-        public static bool RunSlowTests { get; set; } = false;
-
-        /// <summary>
         /// Specifies the log level to use for Cadence related unit tests.
         /// The defaults to <see cref="LogLevel.Debug"/>.
         /// </summary>
-        public static LogLevel LogLevel = LogLevel.Debug;
+        public static readonly LogLevel LogLevel = LogLevel.None;
+
+        /// <summary>
+        /// <para>
+        /// Optionally runns Cadence in debug mode by assuming that <b>cadence-proxy</b> is already
+        /// running as a seperate process.
+        /// </para>
+        /// <note>
+        /// This must always be reset to <c>false</c> after any manually debugging so
+        /// that unit tests will work properly.
+        /// </note>
+        /// </summary>
+        public const bool DebugPrelaunched = false; 
     }
 }

@@ -55,7 +55,7 @@ namespace TestCadence
                 DefaultTaskList  = CadenceFixture.DefaultTaskList,
                 LogLevel         = CadenceTestHelper.LogLevel,
                 Debug            = true,
-                DebugPrelaunched = false,
+                DebugPrelaunched = CadenceTestHelper.DebugPrelaunched
             };
 
             fixture.Start(settings, keepConnection: true);

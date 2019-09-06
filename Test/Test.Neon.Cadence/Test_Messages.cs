@@ -63,15 +63,11 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DefaultDomain   = CadenceFixture.DefaultDomain,
-                DefaultTaskList = CadenceFixture.DefaultTaskList,
-                LogLevel        = CadenceTestHelper.LogLevel,
-                Debug           = true,
-
-                //--------------------------------
-                // $debug(jeff.lill): DELETE THIS!
-                DebugPrelaunched       = false,
-                //--------------------------------
+                DefaultDomain    = CadenceFixture.DefaultDomain,
+                DefaultTaskList  = CadenceFixture.DefaultTaskList,
+                LogLevel         = CadenceTestHelper.LogLevel,
+                Debug            = true,
+                DebugPrelaunched = CadenceTestHelper.DebugPrelaunched
             };
 
             fixture.Start(settings, keepConnection: true);
