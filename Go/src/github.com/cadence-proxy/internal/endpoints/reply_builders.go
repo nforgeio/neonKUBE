@@ -25,7 +25,6 @@ import (
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
-	"go.uber.org/zap"
 
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
@@ -315,7 +314,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	// This should never happen.
 	default:
 		err := fmt.Errorf("Error building reply for message type %s", reply.GetType())
-		Logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
 		panic(err)
 	}
 }

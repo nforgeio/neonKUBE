@@ -18,13 +18,13 @@
 package messages_test
 
 import (
-	"go.uber.org/zap"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"net/http"
 	"testing"
 	"time"
@@ -35,6 +35,8 @@ import (
 	"go.uber.org/cadence/worker"
 	"go.uber.org/cadence/workflow"
 	goleak "go.uber.org/goleak"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
 
@@ -88,11 +90,14 @@ func TestUnitTestSuite(t *testing.T) {
 
 func (s *UnitTestSuite) setupTestSuiteServer() {
 
-	// set the logger
-	l, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
+	// set the initialization logger
+	l := zap.New(
+		zapcore.NewCore(
+			endpoints.NewEncoder(true),
+			zapcore.Lock(os.Stdout),
+			zapcore.DebugLevel,
+		), zap.AddCaller())
+	defer l.Sync()
 
 	// create the new server instance,
 	// set the routes, and start the server listening

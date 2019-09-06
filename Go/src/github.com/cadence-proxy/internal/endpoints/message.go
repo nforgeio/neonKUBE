@@ -109,7 +109,6 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	switch s := message.(type) {
 	case nil:
 		err = fmt.Errorf("nil type for incoming ProxyMessage of type %v", message.GetType())
-		Logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 
 	// IProxyRequest
@@ -125,7 +124,6 @@ func processIncomingMessage(message messages.IProxyMessage, responseChan chan er
 	// Unrecognized type
 	default:
 		err = fmt.Errorf("unhandled message type. could not complete type assertion for type %v", message.GetType())
-		Logger.Debug("Error processing incoming message", zap.Error(err))
 		responseChan <- err
 	}
 
@@ -147,10 +145,11 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			reply = createReplyMessage(request)
-			err = fmt.Errorf("Panic: %v\nMessageType: %s, RequestId: %d.\n%s",
+			err = fmt.Errorf("Panic: %s, MessageType: %s, RequestId: %d, ClientId: %d. %s",
 				r,
 				request.GetType().String(),
 				request.GetRequestID(),
+				request.GetClientID(),
 				string(debug.Stack()),
 			)
 			buildReply(reply, proxyerror.NewCadenceError(err))
@@ -453,7 +452,6 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// Undefined message type
 		default:
 			e := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
-			Logger.Error("Unhandled message type. Could not complete type assertion.", zap.Error(e))
 
 			// set the reply
 			reply = messages.NewProxyReply()
@@ -567,7 +565,6 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 		// Undefined message type
 		default:
 			err = fmt.Errorf("unhandled message type. could not complete type assertion for type %d", reply.GetType())
-			Logger.Error("Unhandled message type. Could not complete type assertion", zap.Error(err))
 		}
 	}
 

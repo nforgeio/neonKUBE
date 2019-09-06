@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		logger_core.go
+// FILE:		logger.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,8 +19,10 @@ package endpoints
 
 import (
 	"context"
+	"os"
 	"time"
 
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/cadence-proxy/internal"
@@ -131,4 +133,69 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 	default:
 		return nil
 	}
+}
+
+// SetLogger takes a log level and bool and sets
+// the global zap.Logger to a custom configured logger where the properties
+// are specified in the parameters
+//
+// param zapcore.LevelEnabler -> a zapcore.LevelEnabler interface
+//
+// param debug bool -> indicates whether the cadence-proxy is running as its
+// own process in debug mode.
+//
+// param debugPrelaunched bool -> indicates that the logger should be configured for
+// the proxy to run in debugPrelaunched mode.
+//
+// returns *zap.Logger -> the configured global zap logger.
+// Can also be accessed via zap.L().
+func SetLogger(enab zapcore.LevelEnabler, debug, debugPrelaunched bool) (logger *zap.Logger) {
+
+	// create the core
+	core := NewCore(
+		NewEncoder(debugPrelaunched),
+		zapcore.Lock(os.Stdout),
+		enab,
+		debug,
+	)
+
+	// create the logger
+	logger = zap.New(core, zap.AddCaller())
+	defer logger.Sync()
+
+	// make global logger
+	_ = zap.ReplaceGlobals(logger)
+
+	return
+}
+
+// NewEncoder creates a new zapcore.Encoder interface with custom
+// formatting.
+func NewEncoder(debugPrelaunched bool) (enc zapcore.Encoder) {
+	cfg := zapcore.EncoderConfig{
+		TimeKey:        "time",
+		MessageKey:     "msg",
+		NameKey:        "name",
+		LevelKey:       "lvl",
+		CallerKey:      "caller",
+		EncodeName:     zapcore.FullNameEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+		EncodeTime:     syslogTimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+	}
+
+	// set config
+	if debugPrelaunched {
+		cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		enc = zapcore.NewConsoleEncoder(cfg)
+	} else {
+		cfg.EncodeLevel = zapcore.CapitalLevelEncoder
+		enc = zapcore.NewJSONEncoder(cfg)
+	}
+
+	return
+}
+
+func syslogTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format("Jan 2 15:04:05"))
 }

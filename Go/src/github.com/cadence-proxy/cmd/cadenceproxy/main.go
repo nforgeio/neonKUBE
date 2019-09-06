@@ -19,6 +19,9 @@ package main
 
 import (
 	"flag"
+	"os"
+
+	"go.uber.org/zap/zapcore"
 
 	"go.uber.org/zap"
 
@@ -49,17 +52,21 @@ func main() {
 	flag.Parse()
 
 	// set debug
-	internal.Debug = debugMode
+	logLevel := zapcore.InfoLevel
+	if debugMode {
+		internal.Debug = debugMode
+		logLevel = zapcore.DebugLevel
+	}
+	internal.DebugPrelaunched = debugPrelaunched
 
-	// DebugPrelaunched
-	if debugPrelaunched {
-		internal.DebugPrelaunched = true
-	}
-	l, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	l.Info("Debug", zap.Bool("DebugMode", debugMode))
+	// set the initialization logger
+	l := zap.New(
+		zapcore.NewCore(
+			endpoints.NewEncoder(debugPrelaunched),
+			zapcore.Lock(os.Stdout),
+			logLevel,
+		), zap.AddCaller())
+	defer l.Sync()
 
 	// create the instance, set the routes,
 	// and start the server
@@ -67,7 +74,7 @@ func main() {
 
 	// set server instance and
 	// logger for endpoints
-	endpoints.Logger = l.Named("initialize")
+	endpoints.Logger = l.Named("init")
 	endpoints.Instance = instance
 
 	// setup the routes

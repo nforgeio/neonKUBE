@@ -76,11 +76,11 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 }
 
 func handleConnectRequest(requestCtx context.Context, request *messages.ConnectRequest) messages.IProxyReply {
-	// Logger.Debug("ConnectRequest Received",
-	// 	zap.Int64("RequestId", request.GetRequestID()),
-	// 	zap.Int64("ClientId", request.GetClientID()),
-	// 	zap.Int("ProcessId", os.Getpid()),
-	// )
+	Logger.Debug("ConnectRequest Received",
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int64("ClientId", request.GetClientID()),
+		zap.Int("ProcessId", os.Getpid()),
+	)
 
 	// new ConnectReply
 	reply := createReplyMessage(request)
@@ -208,13 +208,17 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 		)
 	}
 
+	logLevel := request.GetLogLevel()
 	logger := SetLogger(
-		request.GetLogLevel(),
+		logLevel,
 		internal.Debug,
 		internal.DebugPrelaunched)
 	Logger = logger.Named(internal.ProxyLoggerName)
 
-	//Logger.Debug("InitializeRequest info", zap.String("Reply Address", replyAddress))
+	Logger.Debug("Initialization info",
+		zap.String("Reply Address", replyAddress),
+		zap.String("LogLevel", logLevel.String()),
+	)
 	buildReply(reply, nil)
 
 	return reply
@@ -683,11 +687,11 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 }
 
 func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *messages.WorkflowSetCacheSizeRequest) messages.IProxyReply {
-	Logger.Debug("WorkflowSetCacheSizeRequest Received",
-		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int64("ClienttId", request.GetClientID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+	// Logger.Debug("WorkflowSetCacheSizeRequest Received",
+	// 	zap.Int64("RequestId", request.GetRequestID()),
+	// 	zap.Int64("ClienttId", request.GetClientID()),
+	// 	zap.Int("ProcessId", os.Getpid()),
+	// )
 
 	// new WorkflowSetCacheSizeReply
 	reply := createReplyMessage(request)
