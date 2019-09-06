@@ -54,16 +54,12 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DefaultDomain   = CadenceFixture.DefaultDomain,
-                DefaultTaskList = CadenceFixture.DefaultTaskList,
-                LogLevel        = CadenceTestHelper.LogLevel,
-                CreateDomain    = true,
-                Debug           = true,
-
-                //--------------------------------
-                // $debug(jeff.lill): DELETE THIS!
-                DebugPrelaunched       = false,
-                //--------------------------------
+                DefaultDomain    = CadenceFixture.DefaultDomain,
+                DefaultTaskList  = CadenceFixture.DefaultTaskList,
+                LogLevel         = CadenceTestHelper.LogLevel,
+                CreateDomain     = true,
+                Debug            = true,
+                DebugPrelaunched = CadenceTestHelper.DebugPrelaunched
             };
 
             if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true) == TestFixtureStatus.Started)

@@ -427,12 +427,6 @@
     <Compile Include="..\Test.Neon.Common\Tasks\Test_AsyncReaderWriterLock.cs">
       <Link>Tasks\Test_AsyncReaderWriterLock.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Common\Tasks\Test_WarmTask.cs">
-      <Link>Tasks\Test_WarmTask.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Common\Tasks\Test_WarmTaskT.cs">
-      <Link>Tasks\Test_WarmTaskT.cs</Link>
-    </Compile>
     <Compile Include="..\Test.Neon.Common\Time\Test_GatedTimer.cs">
       <Link>Time\Test_GatedTimer.cs</Link>
     </Compile>

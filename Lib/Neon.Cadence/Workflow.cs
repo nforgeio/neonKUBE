@@ -254,11 +254,11 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ContinueAsNewAsync(params object[] args)
         {
-            Client.EnsureNotDisposed();
-
             // This method doesn't currently do any async operations but I'd
             // like to keep the method signature async just in case this changes
             // in the future.
+
+            Client.EnsureNotDisposed();
 
             await Task.CompletedTask;
 
@@ -283,11 +283,11 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ContinueAsNewAsync(ContinueAsNewOptions options, params object[] args)
         {
-            Client.EnsureNotDisposed();
-
             // This method doesn't currently do any async operations but I'd
             // like to keep the method signature async just in case this changes
             // in the future.
+
+            Client.EnsureNotDisposed();
 
             await Task.CompletedTask;
 
