@@ -1802,14 +1802,14 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IWorkflowFailure : IWorkflow
+        public interface IWorkflowFail : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowFailure : WorkflowBase, IWorkflowFailure
+        public class WorkflowFail : WorkflowBase, IWorkflowFail
         {
             //-------------------------------------------------------
             // Instance members
@@ -1820,18 +1820,29 @@ namespace TestCadence
             }
         }
 
-        [Fact(Skip = "Test Hangs")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_Failure()
+        public async Task Workflow_Fail()
         {
+            // Verify that we see an exception thrown by a workflow.
+
             var options = new WorkflowOptions()
             {
-                TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
+                TaskStartToCloseTimeout = TimeSpan.FromSeconds(5)
             };
 
-            var stub = client.NewWorkflowStub<IWorkflowFailure>(options);
+            var stub = client.NewWorkflowStub<IWorkflowFail>(options);
 
-            await Assert.ThrowsAsync<CadenceGenericException>(async () => await stub.RunAsync());
+            try
+            {
+                await stub.RunAsync();
+            }
+            catch (Exception e)
+            {
+                Assert.IsType<CadenceGenericException>(e);
+                Assert.Contains("ArgumentException", e.Message);
+                Assert.Contains("forced-failure", e.Message);
+            }
         }
 
         //---------------------------------------------------------------------
@@ -1842,33 +1853,13 @@ namespace TestCadence
             Task<string> HelloAsync(string name);
         }
 
-        public class WorkflowUnregistered : WorkflowBase, IWorkflowUnregistered
-        {
-            //-------------------------------------------------------
-            // Static members
-
-            public static bool WorkflowWithNoResultCalled = false;
-
-            public new static void Reset()
-            {
-                WorkflowWithNoResultCalled = false;
-            }
-
-            //-------------------------------------------------------
-            // Instance members
-
-            public async Task<string> HelloAsync(string name)
-            {
-                return await Task.FromResult($"Hello {name}!");
-            }
-        }
-
-        [Fact(Skip = "Test hangs")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Unregistered()
         {
-            // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // Verify that we see an error when attempting to execute an
+            // unregistered workflow.  In this case, there is no class
+            // defined that implements the workflow.
 
             var options = new WorkflowOptions()
             {

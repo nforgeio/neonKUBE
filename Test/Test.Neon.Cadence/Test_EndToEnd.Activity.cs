@@ -580,59 +580,69 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        public interface IActivityFailure : IActivity
+        public interface IActivityFail : IActivity
         {
             [ActivityMethod]
-            Task<string> HelloAsync(string name);
+            Task RunAsync();
         }
 
         [Activity(AutoRegister = true)]
-        public class ActivityFailure : ActivityBase, IActivityFailure
+        public class ActivityFail : ActivityBase, IActivityFail
         {
-            public async Task<string> HelloAsync(string name)
+            public async Task RunAsync()
             {
-                throw new ArgumentException("forced failure");
+                throw new ArgumentException("forced-failure");
             }
         }
 
-        public interface IWorkflowActivityFailure : IWorkflow
+        public interface IWorkflowActivityFail : IWorkflow
         {
             [WorkflowMethod]
-            Task<string> HelloAsync(string name);
+            Task<string> RunAsync();
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowActivityFailure : WorkflowBase, IWorkflowActivityFailure
+        public class WorkflowActivityFail : WorkflowBase, IWorkflowActivityFail
         {
-            public async Task<string> HelloAsync(string name)
+            public async Task<string> RunAsync()
             {
-                var ao = new ActivityOptions()
+                var options = new ActivityOptions()
                 {
-                    StartToCloseTimeout = TimeSpan.FromSeconds(360)
+                    StartToCloseTimeout = TimeSpan.FromSeconds(5)
                 };
 
-                var stub = Workflow.NewActivityStub<IActivityFailure>(ao);
+                var stub = Workflow.NewActivityStub<IActivityFail>(options);
 
-                return await stub.HelloAsync(name);
+                try
+                {
+                    await stub.RunAsync();
+                    return null;
+                }
+                catch (Exception e)
+                {
+                    return e.Message;
+                }
             }
         }
 
-        [Fact(Skip = "Test Hangs")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_Failure()
+        public async Task Activity_Fail()
         {
-            // Verify that we can call a simple workflow that accepts a
-            // parameter, calls a similarly simple activity that returns
-            // a result.
+            // Verify that we can call a workflow that calls an activity
+            // which throws an exception and that we see the error.
 
-            var wo = new WorkflowOptions()
+            var options = new WorkflowOptions()
             {
                 TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
             };
 
-            var stub = client.NewWorkflowStub<IWorkflowActivityFailure>(wo);
+            var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);
+            var error = await stub.RunAsync();
 
-            await Assert.ThrowsAsync<CadenceGenericException>(async () => await stub.HelloAsync("Jack"));
+            Assert.NotNull(error);
+            Assert.Contains("ArgumentException", error);
+            Assert.Contains("forced-failure", error);
         }
     }
 }

@@ -699,21 +699,9 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine($"            byte[] ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine($"            byte[] ___resultBytes = null;");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            Func<Task> hotAction =");
-                    sbSource.AppendLine($"                async () =>");
-                    sbSource.AppendLine($"                {{");
-                    sbSource.AppendLine($"                    this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
-                    sbSource.AppendLine($"                }};");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            Func<Task> coldAction =");
-                    sbSource.AppendLine($"                async () =>");
-                    sbSource.AppendLine($"                {{");
-                    sbSource.AppendLine($"                    ___resultBytes = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
-                    sbSource.AppendLine($"                }};");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            this.hasStarted = true;");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            await new WarmTask(hotAction, coldAction);");
+                    sbSource.AppendLine($"            this.hasStarted     = true;");
+                    sbSource.AppendLine($"            this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            ___resultBytes      = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");                    sbSource.AppendLine();
 
                     if (!details.IsVoid)
                     {
@@ -794,21 +782,9 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine($"            byte[] ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine($"            byte[] ___resultBytes = null;");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            Func<Task> hotAction =");
-                    sbSource.AppendLine($"                async () =>");
-                    sbSource.AppendLine($"                {{");
-                    sbSource.AppendLine($"                    this.execution = await ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
-                    sbSource.AppendLine($"                }};");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            Func<Task> coldAction =");
-                    sbSource.AppendLine($"                async () =>");
-                    sbSource.AppendLine($"                {{");
-                    sbSource.AppendLine($"                    ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
-                    sbSource.AppendLine($"                }};");
-                    sbSource.AppendLine();
                     sbSource.AppendLine($"            this.hasStarted = true;");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            await new WarmTask(hotAction, coldAction);");
+                    sbSource.AppendLine($"            this.execution  = await ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            ___resultBytes  = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
 
                     if (!details.IsVoid)
                     {
