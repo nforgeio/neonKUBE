@@ -64,7 +64,7 @@ namespace TestCadence
         /// Specifies the log level to use for Cadence related unit tests.
         /// The defaults to <see cref="LogLevel.Debug"/>.
         /// </summary>
-        public static readonly LogLevel LogLevel = LogLevel.None;
+        public static readonly LogLevel LogLevel = LogLevel.Info;
 
         /// <summary>
         /// <para>
