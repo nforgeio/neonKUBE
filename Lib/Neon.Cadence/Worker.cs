@@ -52,7 +52,7 @@ namespace Neon.Cadence
             this.WorkerId = workerId;
             this.Domain   = domain;
             this.Tasklist = taskList;
-            this.RefCount = 1;
+            this.RefCount = 0;
         }
 
         /// <inheritdoc/>
@@ -63,8 +63,10 @@ namespace Neon.Cadence
                 return;
             }
 
-            if (Interlocked.Decrement(ref RefCount) == 0)
+            if (Interlocked.Decrement(ref RefCount) <= 0)
             {
+                IsDisposed = true;
+
                 Client.StopWorkerAsync(this).Wait();
                 Client = null;
 
@@ -80,7 +82,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Indicates whether the worker has been fully disposed.
         /// </summary>
-        internal bool IsDisposed => RefCount == 0;
+        internal bool IsDisposed { get; private set; } = false;
 
         /// <summary>
         /// Identifies whether the worker will process activities, workflows, or both.

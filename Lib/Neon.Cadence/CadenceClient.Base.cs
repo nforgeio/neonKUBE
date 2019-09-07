@@ -160,7 +160,7 @@ namespace Neon.Cadence
 
                     if (worker != null)
                     {
-                        if (worker.RefCount == 0)
+                        if (worker.RefCount < 0)
                         {
                             throw new InvalidOperationException("A worker with these same parameters has already been started and stopped on this Cadence client.  Cadence does not support recreating workers for a given client instance.");
                         }
