@@ -33,7 +33,7 @@ const (
 
 	// ProxyLoggerName is the name of the zap.Logger that will
 	// log internal cadence-proxy messages.
-	ProxyLoggerName = "proxy"
+	ProxyLoggerName = "cadence-proxy"
 )
 
 var (
