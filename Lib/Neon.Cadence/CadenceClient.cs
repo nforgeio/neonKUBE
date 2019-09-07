@@ -604,20 +604,9 @@ namespace Neon.Cadence
             lock (syncLock)
             {
                 stickyCacheSizeSet = false;
-                nextClientId       = 0;
-                nextRequestId      = 0;
 
                 idToClient.Clear();
                 operations.Clear();
-
-                if (proxyProcess != null)
-                {
-                    proxyProcess.Kill();
-                    proxyProcess = null;
-                }
-
-                proxyInitialized = false;
-                proxyPort        = 0;
 
                 if (httpServer != null)
                 {

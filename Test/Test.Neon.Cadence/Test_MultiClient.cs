@@ -135,7 +135,7 @@ namespace TestCadence
                 {
                     var stub1 = client.NewWorkflowStub<IWorkflowWithResult1>();
 
-                    Assert.Equal("WF1 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
+                    Assert.Equal("WF1 says: Hello Jack!", await stub1.HelloAsync("Jack"));
                 }
             }
 
@@ -147,7 +147,7 @@ namespace TestCadence
                 {
                     var stub1 = client.NewWorkflowStub<IWorkflowWithResult2>();
 
-                    Assert.Equal("WF2 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
+                    Assert.Equal("WF2 says: Hello Jack!", await stub1.HelloAsync("Jack"));
                 }
             }
         }
