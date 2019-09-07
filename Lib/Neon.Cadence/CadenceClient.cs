@@ -400,7 +400,7 @@ namespace Neon.Cadence
         /// as well as .NET Framework, using Kestrel for .NET Core and WebListener
         /// for .NET Framework.
         /// </summary>
-        private class HttpServer : IDisposable
+        private class HttpServer
         {
             private IWebHost    kestrel;    // Used for .NET Core
             private WebListener listener;   // Used for .NET Framework
@@ -515,51 +515,6 @@ namespace Neon.Cadence
                     });
             }
 
-            /// <inheritdoc/>
-            public void Dispose()
-            {
-                switch (NeonHelper.Framework)
-                {
-                    case NetFramework.Core:
-
-                        DisposeCoreFramework();
-                        break;
-
-                    case NetFramework.Framework:
-
-                        DisposeNetFramewwork();
-                        break;
-
-                    default:
-
-                        throw new NotSupportedException($"Unsupported framework: {NeonHelper.Framework}");
-                }
-            }
-
-            /// <summary>
-            /// Handles dispose when running as .NET Core.
-            /// </summary>
-            private void DisposeCoreFramework()
-            {
-                if (kestrel != null)
-                {
-                    kestrel.Dispose();
-                    kestrel = null;
-                }
-            }
-
-            /// <summary>
-            /// Handles dispose when running .NET Framework.
-            /// </summary>
-            private void DisposeNetFramewwork()
-            {                
-                if (listener != null)
-                {
-                    listener.Dispose();
-                    listener = null;
-                }
-            }
-
             /// <summary>
             /// Returns the URI where the server is listening.
             /// </summary>
@@ -607,12 +562,6 @@ namespace Neon.Cadence
 
                 idToClient.Clear();
                 operations.Clear();
-
-                if (httpServer != null)
-                {
-                    httpServer.Dispose();
-                    httpServer = null;
-                }
             }
         }
 
