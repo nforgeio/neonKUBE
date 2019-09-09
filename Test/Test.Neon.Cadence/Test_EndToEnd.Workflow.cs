@@ -1816,6 +1816,7 @@ namespace TestCadence
 
             public async Task RunAsync()
             {
+                await Task.CompletedTask;
                 throw new ArgumentException("forced-failure");
             }
         }
@@ -1869,6 +1870,131 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
 
             await Assert.ThrowsAsync<CadenceTimeoutException>(async () => await stub.HelloAsync("Jack"));
+        }
+
+        //---------------------------------------------------------------------
+
+        public class ComplexData
+        {
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
+
+        public interface IWorkflowComplexData : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<ComplexData> RunAsync(ComplexData data);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowComplexDataClass : WorkflowBase, IWorkflowComplexData
+        {
+            public async Task<ComplexData> RunAsync(ComplexData data)
+            {
+                return await Task.FromResult(data);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ComplexData()
+        {
+            // Verify that we can pass and return a complex object to/from
+            // a workflow.
+
+            var data = new ComplexData
+            {
+                Name = "Jeff",
+                Age  = 58
+            };
+
+            var stub   = client.NewWorkflowStub<IWorkflowComplexData>();
+            var result = await stub.RunAsync(data);
+
+            Assert.Equal(data.Name, result.Name);
+            Assert.Equal(data.Age, result.Age);
+        }
+
+        //---------------------------------------------------------------------
+
+        /// <summary>
+        /// We need to convert the <see cref="WorkflowInfo"/> to this type
+        /// because the <see cref="WorkflowInfo"/> properties have <c>internal</c>
+        /// setters which will cause deserialization to fail.
+        /// </summary>
+        public class WorkflowInfoTest
+        {
+            /// <summary>
+            /// Default constructor.
+            /// </summary>
+            public WorkflowInfoTest()
+            {
+            }
+
+            /// <summary>
+            /// Constructs and instance from a <see cref="WorkflowInfo"/>.
+            /// </summary>
+            /// <param name="info"></param>
+            public WorkflowInfoTest(WorkflowInfo info)
+            {
+                this.Domain       = info.Domain;
+                this.WorkflowId   = info.WorkflowId;
+                this.RunId        = info.RunId;
+                this.WorkflowType = info.WorkflowType;
+                this.TaskList     = info.TaskList;
+            }
+
+            public string Domain { get; set; }
+            public string WorkflowId { get; set; }
+            public string RunId { get; set; }
+            public string WorkflowType { get; set; }
+            public string TaskList { get; set; }
+        }
+
+        public interface IWorkflowInfo : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<WorkflowInfoTest> GetWorkflowInfoAsync();
+        }
+
+        [Workflow(AutoRegister = true, Name = "my-workflow-info-type")]
+        public class WorkflowInfoClass : WorkflowBase, IWorkflowInfo
+        {
+            public async Task<WorkflowInfoTest> GetWorkflowInfoAsync()
+            {
+                return await Task.FromResult(new WorkflowInfoTest(Workflow.WorkflowInfo));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Info()
+        {
+            // Verify that the [Workflow.WorkflowInfo] properties are
+            // set correctly for a workflow.
+
+            var options = new WorkflowOptions()
+            {
+                Domain     = client.Settings.DefaultDomain,
+                TaskList   = client.Settings.DefaultTaskList,
+                WorkflowId = "my-workflow-id"
+            };
+
+            var stub = client.NewWorkflowStub<IWorkflowInfo>(options: options, workflowTypeName: "my-workflow-info-type");
+            var info = await stub.GetWorkflowInfoAsync();
+
+            Assert.Equal(options.Domain, info.Domain);
+            Assert.NotEmpty(info.RunId);
+            Assert.Equal(options.TaskList, info.TaskList);
+            Assert.Equal(options.WorkflowId, info.WorkflowId);
+            Assert.Equal("my-workflow-info-type", info.WorkflowType);
+
+            // $todo(jeff.lill):
+            //
+            // These properties are not supported yet:
+            //
+            //      ExecutionStartToCloseTimeout
+            //      ChildPolicy
         }
     }
 }

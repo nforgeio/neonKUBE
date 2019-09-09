@@ -41,17 +41,21 @@ namespace Neon.Diagnostics
         None = 0,
 
         /// <summary>
-        /// A critical or fatal error has been detected.
+        /// A critical or fatal error has been detected.  These errors indicate that
+        /// a very serious failure has occurred that may have crashed the program or
+        /// at least seriousoly impacts its functioning.
         /// </summary>
         Critical = 100,
 
         /// <summary>
-        /// A security related error has occurred.
+        /// A security related error has occurred.  Errors indicate a problem that may be
+        /// transient, be recovered from, or are perhaps more serious.
         /// </summary>
         SError = 200,
 
         /// <summary>
-        /// An error has been detected. 
+        /// An error has been detected.  Errors indicate a problem that may be
+        /// transient, be recovered from, or are perhaps more serious.
         /// </summary>
         Error = 300,
 
@@ -67,7 +71,7 @@ namespace Neon.Diagnostics
 
         /// <summary>
         /// Describes a non-error security operation or condition, such as a 
-        /// a login or authentication.
+        /// a successful login or authentication.
         /// </summary>
         SInfo = 600,
 
