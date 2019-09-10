@@ -110,7 +110,7 @@ Follow the steps below to configure a development or test workstation:
 
 15. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
-  * Create an individual Github account [here](https://github.com/join?source=header-home) if you don't already have one
+  * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
   * Have one of the neonKUBE repository administrators **grant you access** to the repository
   * Go to [GitHub](http://github.com) and log into your account
   * Go to the neonKUBE [repository](https://github.com/nforgeio/neonKUBE).
