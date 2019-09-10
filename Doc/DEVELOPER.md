@@ -90,13 +90,12 @@ Follow the steps below to configure a development or test workstation:
 13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
   * You'll need to create a DockerHub account if you don't already have one.
-  * Use the **Stable** channel because it seems more stable.
   * **Right-click** the Docker icon in the system tray and select **Settings...**
 
     ![System Tray](Images/DEVELOPER/DockerSysTray.png?raw=true)
 
   * Select the **Resources/ADVANCED/FILE SHARINGS** tab click the check box to **share** the drive where you'll clone the project source code (typically drive C:)
-  * Click **Apply & Restart (You'll need to enter your workstation **credentials**).
+  * Click **Apply & Restart (You may need to enter your workstation **credentials**).
   * Select the **Resources/NETWORK** tab and enable **Manual DNS Configuration** and set the DNS to **8.8.8.8**.
   * Click **Apply & Restart.
   * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
