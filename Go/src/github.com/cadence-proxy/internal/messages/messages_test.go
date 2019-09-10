@@ -93,7 +93,7 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 	// set the initialization logger
 	l := zap.New(
 		zapcore.NewCore(
-			endpoints.NewEncoder(true),
+			endpoints.NewEncoder(),
 			zapcore.Lock(os.Stdout),
 			zapcore.DebugLevel,
 		), zap.AddCaller())

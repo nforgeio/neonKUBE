@@ -19,6 +19,9 @@ package internal
 
 import (
 	"errors"
+	"os"
+
+	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -29,7 +32,7 @@ const (
 
 	// CadenceLoggerName is the name of the zap.Logger that will
 	// log internal cadence messages.
-	CadenceLoggerName = "cadence"
+	CadenceLoggerName = "cadence      "
 
 	// ProxyLoggerName is the name of the zap.Logger that will
 	// log internal cadence-proxy messages.
@@ -48,6 +51,16 @@ var (
 	// Debug indicates that the proxy is running in Debug mode.  This
 	// is used to configure specified settings.
 	Debug = false
+
+	// LogLevel specifies the global LogLevel for the cadence-proxy.
+	LogLevel zapcore.LevelEnabler
+
+	// LogToFile specifies that all logs should be written
+	// to a specified file location
+	LogToFile = false
+
+	// LogFile is the file opened for logging output to
+	LogFile *os.File
 
 	// ErrConnection is the custom error that is thrown when the cadence-proxy
 	// is not able to establish a connection with the cadence server

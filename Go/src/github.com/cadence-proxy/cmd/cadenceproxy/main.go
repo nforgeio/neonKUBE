@@ -36,12 +36,16 @@ var (
 	address   string
 	debugMode bool
 
-	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
+	// debugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the
 	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
 	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
 	debugPrelaunched = false
+
+	// logToFile specifies that all logs should be written
+	// to a specified file location
+	logToFile = false
 )
 
 func main() {
@@ -58,11 +62,12 @@ func main() {
 		logLevel = zapcore.DebugLevel
 	}
 	internal.DebugPrelaunched = debugPrelaunched
+	internal.LogToFile = logToFile
 
 	// set the initialization logger
 	l := zap.New(
 		zapcore.NewCore(
-			endpoints.NewEncoder(debugPrelaunched),
+			endpoints.NewEncoder(),
 			zapcore.Lock(os.Stdout),
 			logLevel,
 		), zap.AddCaller())
@@ -74,7 +79,7 @@ func main() {
 
 	// set server instance and
 	// logger for endpoints
-	endpoints.Logger = l.Named("init")
+	endpoints.Logger = l.Named("init         ")
 	endpoints.Instance = instance
 
 	// setup the routes
@@ -82,4 +87,12 @@ func main() {
 
 	// start the server
 	instance.Start()
+
+	// close the log file if it is open
+	defer func() {
+		if internal.LogFile != nil {
+			l.Info("Releasing log file")
+			internal.LogFile.Close()
+		}
+	}()
 }

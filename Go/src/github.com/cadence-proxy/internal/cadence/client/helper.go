@@ -33,7 +33,6 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
 
-	"github.com/cadence-proxy/internal"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 )
 
@@ -199,8 +198,6 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 	}
 
 	// Configure the ClientHelper.Builder
-	logger := zap.L()
-	helper.Logger = logger.Named(internal.ProxyLoggerName)
 	helper.Builder = NewBuilder(helper.Logger).
 		SetHostPort(helper.Config.hostPort).
 		SetClientOptions(helper.Config.clientOptions).
@@ -320,9 +317,6 @@ func (helper *ClientHelper) DestroyClient() error {
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
 func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.Options) (worker.Worker, error) {
-	logger := zap.L()
-	options.Logger = logger.Named(internal.CadenceLoggerName)
-
 	worker := worker.New(helper.Service, domain, taskList, options)
 	err := worker.Start()
 	if err != nil {
@@ -384,11 +378,6 @@ func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRe
 	domain := registerDomainRequest.GetName()
 	err := helper.DomainClient.Register(ctx, registerDomainRequest)
 	if err != nil {
-		helper.Logger.Error("failed to register domain",
-			zap.String("Domain Name", domain),
-			zap.Error(err),
-		)
-
 		return err
 	}
 	helper.Logger.Debug("domain successfully registered", zap.String("Domain Name", domain))

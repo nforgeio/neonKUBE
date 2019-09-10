@@ -19,6 +19,7 @@ package endpoints
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -144,54 +145,54 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 // param debug bool -> indicates whether the cadence-proxy is running as its
 // own process in debug mode.
 //
-// param debugPrelaunched bool -> indicates that the logger should be configured for
-// the proxy to run in debugPrelaunched mode.
+// param writeToFile bool -> indicates that the logger should be configured to
+// write its output to a specified file.
 //
-// returns *zap.Logger -> the configured global zap logger.
-// Can also be accessed via zap.L().
-func SetLogger(enab zapcore.LevelEnabler, debug, debugPrelaunched bool) (logger *zap.Logger) {
+// returns *zap.Logger -> the configured zap logger.
+func SetLogger(enab zapcore.LevelEnabler, debug, writeToFile bool) (logger *zap.Logger) {
+	var ws zapcore.WriteSyncer = os.Stdout
+	if writeToFile {
+		logPath := fmt.Sprintf("%s/Go/src/github.com/cadence-proxy/logs/info.logs", os.Getenv("NF_ROOT"))
+		f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+		internal.LogFile = f
+		ws = zapcore.NewMultiWriteSyncer(ws, f)
+	}
 
 	// create the core
 	core := NewCore(
-		NewEncoder(debugPrelaunched),
-		zapcore.Lock(os.Stdout),
+		NewEncoder(),
+		zapcore.Lock(ws),
 		enab,
 		debug,
 	)
 
 	// create the logger
-	logger = zap.New(core, zap.AddCaller())
+	logger = zap.New(core)
 	defer logger.Sync()
-
-	// make global logger
-	_ = zap.ReplaceGlobals(logger)
 
 	return
 }
 
 // NewEncoder creates a new zapcore.Encoder interface with custom
 // formatting.
-func NewEncoder(debugPrelaunched bool) (enc zapcore.Encoder) {
+func NewEncoder() (enc zapcore.Encoder) {
 	cfg := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		MessageKey:     "msg",
 		NameKey:        "name",
 		LevelKey:       "lvl",
 		CallerKey:      "caller",
+		LineEnding:     "\n",
 		EncodeName:     zapcore.FullNameEncoder,
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 		EncodeTime:     syslogTimeEncoder,
 		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
 	}
-
-	// set config
-	if debugPrelaunched {
-		cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		enc = zapcore.NewConsoleEncoder(cfg)
-	} else {
-		cfg.EncodeLevel = zapcore.CapitalLevelEncoder
-		enc = zapcore.NewJSONEncoder(cfg)
-	}
+	enc = zapcore.NewConsoleEncoder(cfg)
 
 	return
 }
