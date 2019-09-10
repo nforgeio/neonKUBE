@@ -76,7 +76,7 @@ Follow the steps below to configure a development or test workstation:
 10. Install **Git source control tools**:
 
   * Install **Git 64-bit** command line tools from: [here](https://git-scm.com/download/win)
-  * Install **GitHib Extension for Visual Studio** from: [here](https://visualstudio.github.com/)
+  * Install **GitHub Extension for Visual Studio** from the **Extensions** menu.
 
 11. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
 
