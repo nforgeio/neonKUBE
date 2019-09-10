@@ -129,11 +129,7 @@ Follow the steps below to configure a development or test workstation:
 
 19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
-  * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
-  * Run **WinSCP* and enable **hidden file display**
-
-    ![WinSCP Hidden Files](/README/WinSCPHiddenFile.png)
-
+  * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface
   * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
   * *Optional*: The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
   * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **Tools/Preferences...", and then click **Panels** on the left and check **Show hidden files**:
