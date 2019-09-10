@@ -87,9 +87,9 @@ Follow the steps below to configure a development or test workstation:
 
     `go get -u github.com/golang/dep/cmd/dep`
 
-13. Install **Docker for Windows (Edge)** from [here]https://docs.docker.com/docker-for-windows/edge-release-notes/)
+13. Install **Docker for Windows (Stable)** from [here]https://docs.docker.com/docker-for-windows/edge-release-notes/)
 
-  * Use the **Edge** channel because it seems more stable.
+  * Use the **Stable** channel because it seems more stable.
   * **Right-click** the Docker icon in the system tray and select **Settings...**
 
     ![System Tray](Images/DEVELOPER/DockerSysTray.png?raw=true)
