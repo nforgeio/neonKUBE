@@ -142,18 +142,20 @@ Follow the steps below to configure a development or test workstation:
   * Navigate to the directory holding the cloned repository
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the CMD window when the script is finished
+  
+21. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
-21. Restart Visual Studio (to pick up the environment changes).
+22. Restart Visual Studio (to pick up the environment changes).
 
-22. Confirm that the solution builds:
+23. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
   * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-23. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
+24. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
 
-24. *Optional*: Install **OpenVPN**
+25. *Optional*: Install **OpenVPN**
 
    * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
    * Run this command as administrator in a CMD window to install a second TAP interface:
@@ -162,11 +164,11 @@ Follow the steps below to configure a development or test workstation:
 
    * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-25. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+26. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+27. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-27. *Optional*: Install **Cmdr/Mini** command shell:
+28. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT:** Don't install the **Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/):
@@ -175,13 +177,13 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+29. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-29. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
+30. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
 
-30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
 ## Git Branches
 
