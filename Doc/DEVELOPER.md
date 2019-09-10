@@ -125,11 +125,11 @@ Follow the steps below to configure a development or test workstation:
 
 17. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
-18. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/)
+18. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
 19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
-  * Install **WinSCP** from [here](https://www.cygwin.com/setup-x86_64.exe) (I typically use the "Explorer" interface)
+  * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
   * Run **WinSCP* and enable **hidden file display**
 
     ![WinSCP Hidden Files](/README/WinSCPHiddenFile.png)
