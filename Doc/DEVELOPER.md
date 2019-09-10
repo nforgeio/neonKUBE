@@ -64,6 +64,7 @@ Follow the steps below to configure a development or test workstation:
 7. Install **Visual Studio 2019 Community Preview** from [here](https://visualstudio.microsoft.com/vs/preview/)
 
   * Select **all workloads** on the first panel
+  * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
   * Click **Install** (and take a coffee break)
   * Install **.NET Core SDK 3.0.100-preview8-013656 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
   * Apply any pending **Visual Studio updates**
@@ -76,7 +77,6 @@ Follow the steps below to configure a development or test workstation:
 10. Install **Git source control tools**:
 
   * Install **Git 64-bit** command line tools from: [here](https://git-scm.com/download/win)
-  * Install **GitHub Extension for Visual Studio** from the **Extensions** menu.
 
 11. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
 
