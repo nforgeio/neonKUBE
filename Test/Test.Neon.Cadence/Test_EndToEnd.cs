@@ -59,7 +59,7 @@ namespace TestCadence
                 LogLevel         = CadenceTestHelper.LogLevel,
                 CreateDomain     = true,
                 Debug            = true,
-                DebugPrelaunched = false,
+                DebugPrelaunched = CadenceTestHelper.DebugPrelaunched,
             };
 
             if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)

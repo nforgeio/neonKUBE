@@ -152,7 +152,7 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 func SetLogger(enab zapcore.LevelEnabler, debug, writeToFile bool) (logger *zap.Logger) {
 	var ws zapcore.WriteSyncer = os.Stdout
 	if writeToFile {
-		logPath := fmt.Sprintf("%s/Go/src/github.com/cadence-proxy/logs/info.logs", os.Getenv("NF_ROOT"))
+		logPath := fmt.Sprintf("%s/Go/src/github.com/cadence-proxy/logs/info.log", os.Getenv("NF_ROOT"))
 		f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			panic(err)

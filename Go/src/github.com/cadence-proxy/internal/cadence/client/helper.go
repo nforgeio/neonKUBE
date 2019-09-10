@@ -20,7 +20,6 @@ package proxyclient
 import (
 	"context"
 	"errors"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -323,12 +322,6 @@ func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.
 		helper.Logger.Error("failed to start workers.", zap.Error(err))
 		return nil, err
 	}
-
-	helper.Logger.Debug("New Worker Created",
-		zap.String("Domain", domain),
-		zap.String("TaskList", taskList),
-		zap.Int("ProcessId", os.Getpid()),
-	)
 
 	return worker, nil
 }

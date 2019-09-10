@@ -19,6 +19,7 @@ package main
 
 import (
 	"flag"
+	"net/http"
 	"os"
 
 	"go.uber.org/zap/zapcore"
@@ -71,7 +72,14 @@ func main() {
 			zapcore.Lock(os.Stdout),
 			logLevel,
 		), zap.AddCaller())
-	defer l.Sync()
+
+	// create the HTTP client used to
+	// send messages back to the Neon.Cadence
+	// client
+	client := http.Client{
+		Transport: http.DefaultTransport,
+	}
+	client.Transport.(*http.Transport).MaxIdleConnsPerHost = 10
 
 	// create the instance, set the routes,
 	// and start the server
@@ -79,10 +87,11 @@ func main() {
 
 	// set server instance and
 	// logger for endpoints
+	// set HTTPClient
+	// setup the routes
 	endpoints.Logger = l.Named("init         ")
 	endpoints.Instance = instance
-
-	// setup the routes
+	endpoints.HttpClient = client
 	endpoints.SetupRoutes(instance.Router)
 
 	// start the server
@@ -94,5 +103,6 @@ func main() {
 			l.Info("Releasing log file")
 			internal.LogFile.Close()
 		}
+		l.Sync()
 	}()
 }
