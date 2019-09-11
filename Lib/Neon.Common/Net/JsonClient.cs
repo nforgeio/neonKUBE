@@ -98,9 +98,10 @@ namespace Neon.Net
         private object          syncLock          = new object();
         private IRetryPolicy    safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
         private IRetryPolicy    unsafeRetryPolicy = new NoRetryPolicy();
+        private bool            disposeClient;
 
         /// <summary>
-        /// Constructor.
+        /// Used to construct a client for most situations, optionally specifying a custom <see cref="HttpMessageHandler"/>.
         /// </summary>
         /// <param name="handler">The optional message handler.</param>
         /// <param name="disposeHandler">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>
@@ -116,7 +117,23 @@ namespace Neon.Net
                 disposeHandler = true;  // Always dispose handlers created by the constructor.
             }
 
-            HttpClient = new HttpClient(handler, disposeHandler);
+            HttpClient    = new HttpClient(handler, disposeHandler);
+            disposeClient = true;
+
+            HttpClient.DefaultRequestHeaders.Add("Accept", DocumentType);
+        }
+
+        /// <summary>
+        /// Used in special situations (like ASP.NET Blazor) where a special <see cref="HttpClient"/> needs
+        /// to be created and provided.
+        /// </summary>
+        /// <param name="httpClient">The special <see cref="HttpClient"/> instance to be wrapped.</param>
+        public JsonClient(HttpClient httpClient)
+        {
+            Covenant.Requires<ArgumentNullException>(httpClient != null);
+
+            HttpClient    = httpClient;
+            disposeClient = false;
 
             HttpClient.DefaultRequestHeaders.Add("Accept", DocumentType);
         }
@@ -147,7 +164,7 @@ namespace Neon.Net
             {
                 lock (syncLock)
                 {
-                    if (HttpClient != null)
+                    if (HttpClient != null && disposeClient)
                     {
                         HttpClient.Dispose();
                         HttpClient = null;
