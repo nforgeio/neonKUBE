@@ -179,9 +179,11 @@ Follow the steps below to configure a development or test workstation:
 
 29. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-30. *Optional*: Developers who will be publishing **nuget packages* will need to obtain a nuget API key from a senior developer and install the key on their workstation via:
+30. *Optional*: Developers who will be publishing **nuget packages** will need to:
+  * Download the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
+  * Obtain a nuget API key from a senior developer and install the key on their workstation via:
 
-&nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
+  &nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
 
 31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
