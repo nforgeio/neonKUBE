@@ -97,14 +97,7 @@ Follow the steps below to configure a development or test workstation:
   * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
   * Click **Apply**
 
-13. Update Docker's network settings:
-
-  * **Right-click** the Docker again in the system tray and select **Settings...*
-  * Click **Network** on the left, select Fixed DNS Server and then **Apply**
-
-    ![Docker Network Settings](Images/DEVELOPER/DockerNetwork.png?raw=true)
-
-14. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
   * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
   * Have one of the neonKUBE repository administrators **grant you access** to the repository
@@ -117,13 +110,13 @@ Follow the steps below to configure a development or test workstation:
     ![Video Studio Clone](Images/DEVELOPER/VisualStudioClone.png?raw=true)
   * Click **Clone**
 
-15. **Close** any running instances of **Visual Studio**
+14. **Close** any running instances of **Visual Studio**
 
-16. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
+15. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
-17. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+16. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
-18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+17. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
   * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -132,26 +125,26 @@ Follow the steps below to configure a development or test workstation:
   
     ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-19. Configure the build **environment variables**:
+18. Configure the build **environment variables**:
 
   * Open **File Explorer**
   * Navigate to the directory holding the cloned repository
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the CMD window when the script is finished
   
-20. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
+19 Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
-22. Restart Visual Studio (to pick up the environment changes).
+20. Restart Visual Studio (to pick up the environment changes).
 
-23. Confirm that the solution builds:
+21. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
   * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-24. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
+22. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
 
-25. *Optional*: Install **OpenVPN**
+23. *Optional*: Install **OpenVPN**
 
    * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
    * Run this command as administrator in a CMD window to install a second TAP interface:
@@ -160,11 +153,11 @@ Follow the steps below to configure a development or test workstation:
 
    * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-25. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+24. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+25. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-27. *Optional*: Install **Cmdr/Mini** command shell:
+26. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/):
@@ -173,15 +166,15 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+27. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-29. *Optional*: Developers who will be publishing **nuget packages** will need to:
+28. *Optional*: Developers who will be publishing **nuget packages** will need to:
   * Download the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
   * Obtain a nuget API key from a senior developer and install the key on their workstation via:
 
   &nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
 
-30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+29. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
 ## Git Branches
 
