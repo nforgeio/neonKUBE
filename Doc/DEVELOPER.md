@@ -74,20 +74,16 @@ Follow the steps below to configure a development or test workstation:
 
 9. Install **.NET Framework 4.8 Developer Pack** from: [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
-10. Install **Git source control tools**:
+10. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
 
-  * Install **Git 64-bit** command line tools from: [here](https://git-scm.com/download/win)
-
-11. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
-
-12. Configure the GOLANG development environment:
+11. Configure the GOLANG development environment:
 
   * Install **go1.12.7.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
   * Install the GOLANG [dependency tool](https://github.com/golang/dep) via (in a new CMD window):
 
     `go get -u github.com/golang/dep/cmd/dep`
 
-13. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
+12. Install **Docker for Windows (Stable)** from [here](http://hub.docker.com)
 
   * You'll need to create a DockerHub account if you don't already have one.
   * **Right-click** the Docker icon in the system tray and select **Settings...**
@@ -101,14 +97,14 @@ Follow the steps below to configure a development or test workstation:
   * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
   * Click **Apply**
 
-14. Update Docker's network settings:
+13. Update Docker's network settings:
 
   * **Right-click** the Docker again in the system tray and select **Settings...*
   * Click **Network** on the left, select Fixed DNS Server and then **Apply**
 
     ![Docker Network Settings](Images/DEVELOPER/DockerNetwork.png?raw=true)
 
-15. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
+14. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
   * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
   * Have one of the neonKUBE repository administrators **grant you access** to the repository
@@ -121,13 +117,13 @@ Follow the steps below to configure a development or test workstation:
     ![Video Studio Clone](Images/DEVELOPER/VisualStudioClone.png?raw=true)
   * Click **Clone**
 
-16. **Close** any running instances of **Visual Studio**
+15. **Close** any running instances of **Visual Studio**
 
-17. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
+16. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
-18. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+17. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
-19. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
   * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -136,14 +132,14 @@ Follow the steps below to configure a development or test workstation:
   
     ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-20. Configure the build **environment variables**:
+19. Configure the build **environment variables**:
 
   * Open **File Explorer**
   * Navigate to the directory holding the cloned repository
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the CMD window when the script is finished
   
-21. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
+20. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
 22. Restart Visual Studio (to pick up the environment changes).
 
@@ -164,11 +160,11 @@ Follow the steps below to configure a development or test workstation:
 
    * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-26. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+25. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-27. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-28. *Optional*: Install **Cmdr/Mini** command shell:
+27. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/):
@@ -177,15 +173,15 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-29. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-30. *Optional*: Developers who will be publishing **nuget packages** will need to:
+29. *Optional*: Developers who will be publishing **nuget packages** will need to:
   * Download the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
   * Obtain a nuget API key from a senior developer and install the key on their workstation via:
 
   &nbsp;&nbsp;&nbsp;&nbsp;`nuget SetApiKey APIKEY`
 
-31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
 ## Git Branches
 
