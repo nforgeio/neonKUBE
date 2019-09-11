@@ -38,14 +38,14 @@ Follow the steps below to configure a development or test workstation:
 4. Ensure that Hyper-V is installed and enabled:
 
   a. Run the following command in a **cmd** window to verify that your workstation is capable of virtualization and that it's enabled.
-    ```
-    systeminfo
-    ```
-    You're looking for output like:
+  ```
+  systeminfo
+  ```
+  You're looking for output like:
 
-   ![Virtualization Info](Images/DEVELOPER/virtualization.png?raw=true)
+  ![Virtualization Info](Images/DEVELOPER/virtualization.png?raw=true)
 
-    or a message saying that: **A hypervisor has been detected.**
+  or a message saying that: **A hypervisor has been detected.**
 
   b. Press the Windows key and enter: **windows features** and press ENTER.
 
