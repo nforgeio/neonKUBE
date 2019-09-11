@@ -90,9 +90,9 @@ Follow the steps below to configure a development or test workstation:
 
     ![System Tray](Images/DEVELOPER/DockerSysTray.png?raw=true)
 
-  * Select the **Resources/ADVANCED/FILE SHARINGS** tab click the check box to **share** the drive where you'll clone the project source code (typically drive C:)
+  * Select the **Shared Drives** tab click the check box to **share** the drive where you'll clone the project source code (typically drive C:)
   * Click **Apply** (You may need to enter your workstation **credentials**).
-  * Select the **Resources/NETWORK** tab and enable **Manual DNS Configuration** and set the DNS to **8.8.8.8**.
+  * Select the **Advanced** tab and enable **Manual DNS Configuration** and set the DNS to **8.8.8.8**.
   * Click **Apply**
   * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
   * Click **Apply**
