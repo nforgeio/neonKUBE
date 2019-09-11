@@ -78,7 +78,7 @@ Follow the steps below to configure a development or test workstation:
 
 11. Configure the GOLANG development environment:
 
-  * Install **go1.12.7.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
+  * Install **go1.12.9.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
   * Install the GOLANG [dependency tool](https://github.com/golang/dep) via (in a new CMD window):
 
     `go get -u github.com/golang/dep/cmd/dep`
