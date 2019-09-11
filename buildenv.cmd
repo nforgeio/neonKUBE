@@ -80,6 +80,7 @@ REM smart enough to only add directories that actually exist.
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\PuTTY"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles%\WinSCP"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%ProgramFiles(x86)%\WinSCP"
+%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Go"
 
 REM Configure the neonKUBE program folder and add it to the PATH.
 
