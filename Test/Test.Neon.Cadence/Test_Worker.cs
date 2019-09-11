@@ -86,51 +86,51 @@ namespace TestCadence
 
             var activityWorker1 = await client.StartWorkerAsync("tasks1", new WorkerOptions() { DisableWorkflowWorker = true });
 
-            Assert.Equal(1, activityWorker1.RefCount);
+            Assert.Equal(0, activityWorker1.RefCount);
 
             var activityWorker2 = await client.StartWorkerAsync("tasks1", new WorkerOptions() { DisableWorkflowWorker = true });
 
             Assert.Same(activityWorker1, activityWorker2);
-            Assert.Equal(2, activityWorker2.RefCount);
+            Assert.Equal(1, activityWorker2.RefCount);
 
             var workflowWorker1 = await client.StartWorkerAsync("tasks1", new WorkerOptions() { DisableActivityWorker = true });
 
-            Assert.Equal(1, workflowWorker1.RefCount);
+            Assert.Equal(0, workflowWorker1.RefCount);
 
             var workflowWorker2 = await client.StartWorkerAsync("tasks1", new WorkerOptions() { DisableActivityWorker = true });
 
             Assert.Same(workflowWorker1, workflowWorker2);
-            Assert.Equal(2, workflowWorker2.RefCount);
+            Assert.Equal(1, workflowWorker2.RefCount);
 
             Assert.Same(workflowWorker1, workflowWorker2);
-            Assert.Equal(2, workflowWorker2.RefCount);
+            Assert.Equal(1, workflowWorker2.RefCount);
 
             var worker1 = await client.StartWorkerAsync("tasks2");
 
-            Assert.Equal(1, worker1.RefCount);
+            Assert.Equal(0, worker1.RefCount);
 
             var worker2 = await client.StartWorkerAsync("tasks2");
 
             Assert.Same(worker1, worker2);
-            Assert.Equal(2, worker2.RefCount);
+            Assert.Equal(1, worker2.RefCount);
 
             // Verify the dispose/refcount behavior.
 
             activityWorker2.Dispose();
             Assert.False(activityWorker2.IsDisposed);
-            Assert.Equal(1, activityWorker2.RefCount);
+            Assert.Equal(0, activityWorker2.RefCount);
 
             activityWorker2.Dispose();
             Assert.True(activityWorker2.IsDisposed);
-            Assert.Equal(0, activityWorker2.RefCount);
+            Assert.Equal(-1, activityWorker2.RefCount);
 
             workflowWorker2.Dispose();
             Assert.False(workflowWorker2.IsDisposed);
-            Assert.Equal(1, workflowWorker2.RefCount);
+            Assert.Equal(0, workflowWorker2.RefCount);
 
             workflowWorker2.Dispose();
             Assert.True(workflowWorker2.IsDisposed);
-            Assert.Equal(0, workflowWorker2.RefCount);
+            Assert.Equal(-1, workflowWorker2.RefCount);
 
             // Verify that we're not allowed to restart workers.
 

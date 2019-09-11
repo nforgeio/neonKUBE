@@ -63,7 +63,7 @@ namespace Neon.Cadence
                 return;
             }
 
-            if (Interlocked.Decrement(ref RefCount) <= 0)
+            if (Interlocked.Decrement(ref RefCount) < 0)
             {
                 IsDisposed = true;
 
