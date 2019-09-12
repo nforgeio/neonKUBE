@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DateTimeJsonConverter.cs
+// FILE:	    DateTimeOffsetJsonConverter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,30 +32,24 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Data
 {
     /// <summary>
-    /// <para>
-    /// Implements a type converter for <see cref="DateTime"/> using the culture
-    /// invariant <b>yyyy-MM-ddTHH:mm:ss.fffZ</b> format.
-    /// </para>
-    /// <note>
-    /// This converter assumes that the <see cref="DateTime"/> being converted is
-    /// relative to UTC.
-    /// </note>
+    /// Implements a type converter for <see cref="DateTimeOffset"/> using the culture
+    /// invariant <b>yyyy-MM-ddTHH:mm:ss.fffzzz</b> format.
     /// </summary>
-    public class DateTimeJsonConverter : JsonConverter<DateTime>, IEnhancedJsonConverter
+    public class DateTimeOffsetJsonConverter : JsonConverter<DateTimeOffset>, IEnhancedJsonConverter
     {
-        private const string format = "yyyy-MM-ddTHH:mm:ss.fffZ";
+        private const string format = "yyyy-MM-ddTHH:mm:ss.fffzzz";
 
         /// <inheritdoc/>
-        public Type Type => typeof(DateTime);
+        public Type Type => typeof(DateTimeOffset);
 
         /// <inheritdoc/>
-        public override DateTime ReadJson(JsonReader reader, Type objectType, DateTime existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override DateTimeOffset ReadJson(JsonReader reader, Type objectType, DateTimeOffset existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return DateTime.ParseExact((string)reader.Value, format, null);
+            return DateTimeOffset.ParseExact((string)reader.Value, format, null);
         }
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, DateTime value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, DateTimeOffset value, JsonSerializer serializer)
         {
             writer.WriteValue(value.ToString(format));
         }
@@ -65,7 +59,7 @@ namespace Neon.Data
         {
             Covenant.Requires<ArgumentNullException>(instance != null);
 
-            return ((DateTime)instance).ToString(format);
+            return ((DateTimeOffset)instance).ToString(format);
         }
     }
 }

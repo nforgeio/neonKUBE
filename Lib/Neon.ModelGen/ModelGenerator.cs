@@ -3147,9 +3147,19 @@ namespace Neon.ModelGen
             {
                 return ResolveTypeReference(type) != null;
             }
-            else if (type.IsPrimitive || type == typeof(string) || type.IsEnum || convertableTypes.Contains(type))
+            else if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type.IsEnum || convertableTypes.Contains(type))
             {
+                // We allow all primitive types, decimal, strings, and any types that have a [IEnhancedJsonConverter].
+
                 return true;
+            }
+            else if (type.FullName.StartsWith("System.Nullable`"))
+            {
+                // We also allow all [Nullable<T>] where T is a primitive or any types that have a [IEnhancedJsonConverter].
+
+                type = type.GenericTypeArguments.First();
+
+                return type.IsPrimitive || type.IsEnum || type == typeof(decimal) || convertableTypes.Contains(type);
             }
 
             return false;
@@ -3320,30 +3330,41 @@ namespace Neon.ModelGen
             }
             else if (type.IsGenericType)
             {
-                var genericRef    = GetTypeName(type);
-                var genericParams = string.Empty;
-
-                foreach (var genericParamType in type.GetGenericArguments())
+                if (type.FullName.StartsWith("System.Nullable`"))
                 {
-                    if (genericParams.Length > 0)
+                    // Special-case Nullable<T> by appending a "?".
+
+                    var nullableType = type.GenericTypeArguments.First();
+
+                    return $"{GetTypeName(nullableType)}?";
+                }
+                else
+                {
+                    var genericRef    = GetTypeName(type);
+                    var genericParams = string.Empty;
+
+                    foreach (var genericParamType in type.GetGenericArguments())
                     {
-                        genericParams += ", ";
+                        if (genericParams.Length > 0)
+                        {
+                            genericParams += ", ";
+                        }
+
+                        genericParams += ResolveTypeReference(genericParamType);
                     }
 
-                    genericParams += ResolveTypeReference(genericParamType);
-                }
-
-                if (generateUx)
-                {
-                    // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
-
-                    if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                    if (generateUx)
                     {
-                        return $"ObservableCollection<{genericParams}>";
-                    }
-                }
+                        // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
 
-                return $"{genericRef}<{genericParams}>";
+                        if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                        {
+                            return $"ObservableCollection<{genericParams}>";
+                        }
+                    }
+
+                    return $"{genericRef}<{genericParams}>";
+                }
             }
 
             Covenant.Assert(false); // We should never get here.

@@ -135,6 +135,7 @@ namespace Neon.Common
             new List<JsonConverter>()
             {
                 new DateTimeJsonConverter(),
+                new DateTimeOffsetJsonConverter(),
                 new TimeSpanJsonConverter(),
                 new VersionJsonConverter()
             };

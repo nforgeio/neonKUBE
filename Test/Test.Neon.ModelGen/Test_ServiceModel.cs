@@ -145,6 +145,70 @@ namespace TestModelGen.ServiceModel
         [HttpGet]
         [Route("DateTime")]
         void DateTime([FromQuery] DateTime date);
+
+        [HttpGet]
+        [Route("NullableDateTime")]
+        void NullableDateTime([FromQuery] DateTime? date = null);
+
+        [HttpGet]
+        [Route("DateTimeOffset")]
+        void DateTimeOffset([FromQuery] DateTimeOffset date);
+
+        [HttpGet]
+        [Route("NullableDateTimeOffset")]
+        void NullableDateTimeOffset([FromQuery] DateTimeOffset? date = null);
+
+        [HttpGet]
+        [Route("NullableEnum")]
+        void NullableEnum([FromQuery] MyEnum? value = null);
+
+        [HttpGet]
+        [Route("NullableByte")]
+        void NullableByte([FromQuery] byte? value = null);
+
+        [HttpGet]
+        [Route("NullableSByte")]
+        void NullableSByte([FromQuery] sbyte? value = null);
+
+        [HttpGet]
+        [Route("NullableShort")]
+        void NullableShort([FromQuery] short? value = null);
+
+        [HttpGet]
+        [Route("NullableUShort")]
+        void NullableUShort([FromQuery] ushort? value = null);
+
+        [HttpGet]
+        [Route("NullableInt")]
+        void NullableInt([FromQuery] int? value = null);
+
+        [HttpGet]
+        [Route("NullableUInt")]
+        void NullableUInt([FromQuery] uint? value = null);
+
+        [HttpGet]
+        [Route("NullableLong")]
+        void NullableLong([FromQuery] long? value = null);
+
+        [HttpGet]
+        [Route("NullableULong")]
+        void NullableULong([FromQuery] ulong? value = null);
+
+        [HttpGet]
+        [Route("NullableFloat")]
+        void NullableFloat([FromQuery] float? value = null);
+
+        [HttpGet]
+        [Route("NullableDouble")]
+        void NullableDouble([FromQuery] double? value = null);
+
+        [HttpGet]
+        [Route("NullableDecimal")]
+        void NullableDecimal([FromQuery] decimal? value = null);
+
+        [HttpGet]
+        [Route("NullableBool")]
+        void NullableBool([FromQuery] bool? value = null);
     }
 
     [Target("Default")]
@@ -1132,7 +1196,6 @@ namespace TestModelGen.ServiceModel
             }
         }
 
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
         public async Task SpecialQuery()
@@ -1191,12 +1254,297 @@ namespace TestModelGen.ServiceModel
                 {
                     using (var client = context.CreateServiceWrapper<SpecialQueryController>(TestSettings.BaseAddress))
                     {
-                        // Call: DateTime()
+                        // DateTime
 
                         await client.CallAsync("DateTime", new DateTime(2019, 9, 11));
                         Assert.Equal("GET", requestMethod);
                         Assert.Equal("/SpecialQuery/DateTime", requestPath);
-                        Assert.Equal("?date=2019-09-11T00%3A00%3A00.000", requestQueryString);
+                        Assert.Equal("?date=2019-09-11T00%3A00%3A00.000Z", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // DateTime? with value
+
+                        await client.CallAsync("NullableDateTime", new DateTime(2019, 9, 11));
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDateTime", requestPath);
+                        Assert.Equal("?date=2019-09-11T00%3A00%3A00.000Z", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // DateTime? as NULL
+
+                        await client.CallAsync("NullableDateTime", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDateTime", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // DateTimeOffset
+
+                        await client.CallAsync("DateTimeOffset", new DateTimeOffset(2019, 9, 11, 1, 2, 3, 4, TimeSpan.FromHours(1)));
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/DateTimeOffset", requestPath);
+                        Assert.Equal("?date=2019-09-11T01%3A02%3A03.004%2B01%3A00", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // DateTimeOffset? with value
+
+                        await client.CallAsync("NullableDateTimeOffset", new DateTimeOffset(2019, 9, 11, 1, 2, 3, 4, TimeSpan.FromHours(1)));
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDateTimeOffset", requestPath);
+                        Assert.Equal("?date=2019-09-11T01%3A02%3A03.004%2B01%3A00", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // DateTimeOffset? as NULL
+
+                        await client.CallAsync("NullableDateTimeOffset", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDateTimeOffset", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // $todo(jeff.lill):
+                        //
+                        // This test doesn't work because I can't instantiate the generated enumeration
+                        // value.  I don't believe this is a big deal though, because we can test the
+                        // NULL case below and we test enums values elsewhere,
+#if TODO
+                        // enum? with value
+
+                        await client.CallAsync("NullableEnum", MyEnum.Two);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableEnum", requestPath);
+                        Assert.Equal("?value=Two", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+#endif
+                        // enum? as NULL
+
+                        await client.CallAsync("NullableEnum", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableEnum", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // byte? with value
+
+                        await client.CallAsync("NullableByte", (byte)10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableByte", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // byte? as NULL
+
+                        await client.CallAsync("NullableByte", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableByte", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // sbyte? with value
+
+                        await client.CallAsync("NullableSByte", (sbyte)10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableSByte", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // sbyte? as NULL
+
+                        await client.CallAsync("NullableSByte", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableSByte", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // short? with value
+
+                        await client.CallAsync("NullableShort", (short)10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableShort", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // short? as NULL
+
+                        await client.CallAsync("NullableSByte", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableSByte", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // ushort? with value
+
+                        await client.CallAsync("NullableUShort", (ushort)10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableUShort", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // ushort? as NULL
+
+                        await client.CallAsync("NullableUShort", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableUShort", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // int? with value
+
+                        await client.CallAsync("NullableInt", 10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableInt", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // int? as NULL
+
+                        await client.CallAsync("NullableInt", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableInt", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // uint? with value
+
+                        await client.CallAsync("NullableUInt", (uint)10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableUInt", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // uint? as NULL
+
+                        await client.CallAsync("NullableUInt", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableUInt", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // long? with value
+
+                        await client.CallAsync("NullableLong", (long)10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableLong", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // long? as NULL
+
+                        await client.CallAsync("NullableLong", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableLong", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // ulong? with value
+
+                        await client.CallAsync("NullableULong", (ulong)10);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableULong", requestPath);
+                        Assert.Equal("?value=10", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // ulong? as NULL
+
+                        await client.CallAsync("NullableULong", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableULong", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // float? with value
+
+                        await client.CallAsync("NullableFloat", (float)123.456);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableFloat", requestPath);
+                        Assert.Equal("?value=123.456", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // float? as NULL
+
+                        await client.CallAsync("NullableFloat", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableFloat", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // double? with value
+
+                        await client.CallAsync("NullableDouble", (double)123.456);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDouble", requestPath);
+                        Assert.Equal("?value=123.456", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // double? as NULL
+
+                        await client.CallAsync("NullableDouble", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDouble", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // decimal? with value
+
+                        await client.CallAsync("NullableDecimal", (decimal)123.456);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDecimal", requestPath);
+                        Assert.Equal("?value=123.456", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // decimal? as NULL
+
+                        await client.CallAsync("NullableDecimal", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableDecimal", requestPath);
+                        Assert.Equal("", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // bool? with value
+
+                        await client.CallAsync("NullableBool", true);
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableBool", requestPath);
+                        Assert.Equal("?value=true", requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+
+                        // bool? as NULL
+
+                        await client.CallAsync("NullableBool", new object[] { null });
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/NullableBool", requestPath);
+                        Assert.Equal("", requestQueryString);
                         Assert.Null(requestContentType);
                         Assert.Null(requestBody);
                     }
