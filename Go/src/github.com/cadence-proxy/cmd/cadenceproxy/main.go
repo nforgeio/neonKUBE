@@ -19,6 +19,7 @@ package main
 
 import (
 	"flag"
+	"net/http"
 	"os"
 
 	"go.uber.org/zap/zapcore"
@@ -36,12 +37,16 @@ var (
 	address   string
 	debugMode bool
 
-	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
+	// debugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the
 	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
 	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
 	debugPrelaunched = false
+
+	// logToFile specifies that all logs should be written
+	// to a specified file location
+	logToFile = false
 )
 
 func main() {
@@ -58,15 +63,23 @@ func main() {
 		logLevel = zapcore.DebugLevel
 	}
 	internal.DebugPrelaunched = debugPrelaunched
+	internal.LogToFile = logToFile
 
 	// set the initialization logger
 	l := zap.New(
 		zapcore.NewCore(
-			endpoints.NewEncoder(debugPrelaunched),
+			endpoints.NewEncoder(),
 			zapcore.Lock(os.Stdout),
 			logLevel,
 		), zap.AddCaller())
-	defer l.Sync()
+
+	// create the HTTP client used to
+	// send messages back to the Neon.Cadence
+	// client
+	client := http.Client{
+		Transport: http.DefaultTransport,
+	}
+	client.Transport.(*http.Transport).MaxIdleConnsPerHost = 10
 
 	// create the instance, set the routes,
 	// and start the server
@@ -74,12 +87,22 @@ func main() {
 
 	// set server instance and
 	// logger for endpoints
-	endpoints.Logger = l.Named("init")
-	endpoints.Instance = instance
-
+	// set HTTPClient
 	// setup the routes
+	endpoints.Logger = l.Named("init         ")
+	endpoints.Instance = instance
+	endpoints.HttpClient = client
 	endpoints.SetupRoutes(instance.Router)
 
 	// start the server
 	instance.Start()
+
+	// close the log file if it is open
+	defer func() {
+		if internal.LogFile != nil {
+			l.Info("Releasing log file")
+			internal.LogFile.Close()
+		}
+		l.Sync()
+	}()
 }

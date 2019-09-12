@@ -56,6 +56,9 @@ namespace Neon.Cadence
         /// </summary>
         public string TaskList { get; internal set; }
 
+#if TODO
+        // $toodo(jeff.lill): These properties aren't supported yet.
+
         /// <summary>
         /// Returns the maximum time the workflow is allowed to run from
         /// the time the workflow was started until it completed.
@@ -66,5 +69,6 @@ namespace Neon.Cadence
         /// Returns the workflow's child policy.
         /// </summary>
         public ChildPolicy ChildPolicy { get; internal set; }
+#endif
     }
 }

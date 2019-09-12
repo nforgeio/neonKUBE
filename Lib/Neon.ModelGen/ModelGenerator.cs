@@ -979,6 +979,7 @@ namespace Neon.ModelGen
 
             writer.WriteLine($"using System.ComponentModel;");
             writer.WriteLine($"using System.Diagnostics;");
+            writer.WriteLine($"using System.Diagnostics.Contracts;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
             writer.WriteLine($"using System.Linq;");
@@ -2461,8 +2462,11 @@ namespace Neon.ModelGen
             writer.WriteLine($"        private JsonClient   client;");
             writer.WriteLine($"        private bool         isDisposed = false;");
             writer.WriteLine();
+
+            // Generate the typical constructor.
+
             writer.WriteLine($"        /// <summary>");
-            writer.WriteLine($"        /// Constructor.");
+            writer.WriteLine($"        /// Used to construct a client for most situations, optionally specifying a custom <see cref=\"HttpMessageHandler\"/>.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"handler\">An optional message handler.  This defaults to a reasonable handler with compression enabled.</param>");
             writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
@@ -2475,6 +2479,39 @@ namespace Neon.ModelGen
             writer.WriteLine($"        public {clientTypeName}(HttpMessageHandler handler = null, bool disposeHandler = false)");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            this.client = new JsonClient(handler, disposeHandler);");
+
+            if (hasNonRootClientGroups)
+            {
+                // Initialize the non-root method group properties.
+
+                foreach (var nonRootGroup in nonRootClientGroups)
+                {
+                    writer.WriteLine($"            this.{nonRootGroup.Key} = new __{nonRootGroup.Key}(this.client);");
+                }
+            }
+
+            writer.WriteLine($"        }}");
+
+            // Generate the constructor used for special situations that require a specific HttpClient
+            // (like for ASP.NET Blazor apps).
+
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary>");
+            writer.WriteLine($"        /// Used in special situations (like ASP.NET Blazor) where a special <see cref=\"HttpClient\"/> needs");
+            writer.WriteLine($"        /// to be created and provided.");
+            writer.WriteLine($"        /// </summary>");
+            writer.WriteLine($"        /// <param name=\"httpClient\">The special <see cref=\"HttpClient\"/> instance to be wrapped.</param>");
+
+            if (!Settings.AllowDebuggerStepInto)
+            {
+                writer.WriteLine($"        [DebuggerStepThrough]");
+            }
+
+            writer.WriteLine($"        public {clientTypeName}(HttpClient httpClient)");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            Covenant.Requires<ArgumentNullException>(httpClient != null);");
+            writer.WriteLine();
+            writer.WriteLine($"            this.client = new JsonClient(httpClient);");
 
             if (hasNonRootClientGroups)
             {

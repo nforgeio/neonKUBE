@@ -591,6 +591,7 @@ namespace TestCadence
         {
             public async Task RunAsync()
             {
+                await Task.CompletedTask;
                 throw new ArgumentException("forced-failure");
             }
         }
@@ -643,6 +644,66 @@ namespace TestCadence
             Assert.NotNull(error);
             Assert.Contains("ArgumentException", error);
             Assert.Contains("forced-failure", error);
+        }
+
+        //---------------------------------------------------------------------
+
+        public class ComplexActivityData
+        {
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
+
+        public interface IActivityData : IActivity
+        {
+            [ActivityMethod]
+            Task<ComplexActivityData> RunAsync(ComplexActivityData data);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityData : ActivityBase, IActivityData
+        {
+            public async Task<ComplexActivityData> RunAsync(ComplexActivityData data)
+            {
+                return await Task.FromResult(data);
+            }
+        }
+
+        public interface IWorkflowActivityComplexData : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<ComplexActivityData> RunAsync(ComplexActivityData data);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowActivityComplexDataClass : WorkflowBase, IWorkflowActivityComplexData
+        {
+            public async Task<ComplexActivityData> RunAsync(ComplexActivityData data)
+            {
+                var stub = Workflow.NewActivityStub<IActivityData>();
+
+                return await stub.RunAsync(data);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_ComplexData()
+        {
+            // Verify that we can round-trip an object to a workflow and activity
+            // and then back.
+
+            var data = new ComplexActivityData
+            {
+                Name = "Jeff",
+                Age  = 58
+            };
+
+            var stub   = client.NewWorkflowStub<IWorkflowActivityComplexData>();
+            var result = await stub.RunAsync(data);
+
+            Assert.Equal(data.Name, result.Name);
+            Assert.Equal(data.Age, result.Age);
         }
     }
 }

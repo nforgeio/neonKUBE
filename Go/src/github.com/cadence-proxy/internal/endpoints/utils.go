@@ -104,7 +104,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	req.Header.Set("Accept-Encoding", "identity")
 
 	// initialize the http.Client and send the request
-	resp, err := httpClient.Do(req)
+	resp, err := HttpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

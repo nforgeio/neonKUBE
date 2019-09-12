@@ -80,6 +80,7 @@ test: bins
 	
 clean:
 	rm -Rf bin/*
+	rm -Rf logs/*
 	
 	rm -f test/messages.test
 	rm -f $(LOG_DIR)/test.log
