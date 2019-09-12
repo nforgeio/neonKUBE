@@ -160,7 +160,7 @@ Follow the steps below to configure a development or test workstation:
 26. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
-  * Download the ZIP archive from: [here](http://cmder.net/):
+  * Download the ZIP archive from: [here](http://cmder.net/)
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Create a desktop shortcut if you wish and configure it to run as administrator.
   * Run Cmdr and configure settings as desired.
