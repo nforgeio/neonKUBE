@@ -140,6 +140,15 @@ namespace TestModelGen.ServiceModel
 
     [Target("Default")]
     [ServiceModel]
+    public interface SpecialQueryController
+    {
+        [HttpGet]
+        [Route("DateTime")]
+        void DateTime([FromQuery] DateTime date);
+    }
+
+    [Target("Default")]
+    [ServiceModel]
     public interface RouteService1
     {
         /// <summary>
@@ -1116,6 +1125,78 @@ namespace TestModelGen.ServiceModel
                         Assert.Equal("GET", requestMethod);
                         Assert.Equal("/api/v1/service3/1/two/Three", requestPath);
                         Assert.Equal(string.Empty, requestQueryString);
+                        Assert.Null(requestContentType);
+                        Assert.Null(requestBody);
+                    }
+                }
+            }
+        }
+
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        public async Task SpecialQuery()
+        {
+            // Verify that we can pass some complex and nullable types as query parameters.
+
+            var settings = new ModelGeneratorSettings("Default")
+            {
+                SourceNamespace = typeof(Test_ServiceModel).Namespace,
+            };
+
+            var generator = new ModelGenerator(settings);
+            var output    = generator.Generate(Assembly.GetExecutingAssembly());
+
+            Assert.False(output.HasErrors);
+
+            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
+
+            // Spin up a mock service and a service client and then call the service
+            // via the client.  The mock service will record the HTTP method, URI, and
+            // JSON text received in the request body and then return so that the
+            // caller can verify that these were passed correctly.
+
+            var requestMethod      = string.Empty;
+            var requestPath        = string.Empty;
+            var requestQueryString = string.Empty;
+            var requestContentType = string.Empty;
+            var requestBody        = string.Empty;
+
+            using (new MockHttpServer(TestSettings.BaseAddress,
+                async context =>
+                {
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    requestMethod      = request.Method;
+                    requestPath        = request.Path;
+                    requestQueryString = request.QueryString;
+                    requestContentType = request.ContentType;
+
+                    if (request.HasEntityBody)
+                    {
+                        requestBody = request.GetBodyText();
+                    }
+                    else
+                    {
+                        requestBody = null;
+                    }
+
+                    response.ContentType = "application/json";
+
+                    await Task.CompletedTask;
+                }))
+            {
+                using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
+                {
+                    using (var client = context.CreateServiceWrapper<SpecialQueryController>(TestSettings.BaseAddress))
+                    {
+                        // Call: DateTime()
+
+                        await client.CallAsync("DateTime", new DateTime(2019, 9, 11));
+                        Assert.Equal("GET", requestMethod);
+                        Assert.Equal("/SpecialQuery/DateTime", requestPath);
+                        Assert.Equal("?date=2019-09-11T00%3A00%3A00.000", requestQueryString);
                         Assert.Null(requestContentType);
                         Assert.Null(requestBody);
                     }

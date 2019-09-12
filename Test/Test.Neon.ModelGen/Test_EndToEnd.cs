@@ -249,6 +249,13 @@ namespace TestModelGen.AspNet
         {
             return value;
         }
+
+        //[HttpGet]
+        //[Route("EchoDateTime")]
+        //DateTime EchoDateTime([FromQuery] DateTime date)
+        //{
+        //    return date;
+        //}
     }
 
     public class Startup
@@ -531,6 +538,15 @@ namespace TestModelGen.AspNet
 
             Assert.Equal(list, await client.GetPersonArrayAsync(list));
         }
+
+        //[Fact]
+        //[Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        //public async Task EchoDateTime()
+        //{
+        //    var date = new DateTime(2019, 9, 11);
+
+        //    Assert.Equal(date, await client.EchoDateTime(date));
+        //}
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]

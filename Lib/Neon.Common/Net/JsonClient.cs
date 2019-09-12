@@ -35,6 +35,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Collections;
+using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Retry;
 
@@ -95,10 +96,11 @@ namespace Neon.Net
         //---------------------------------------------------------------------
         // Instance members
 
-        private object          syncLock          = new object();
-        private IRetryPolicy    safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
-        private IRetryPolicy    unsafeRetryPolicy = new NoRetryPolicy();
-        private bool            disposeClient;
+        private object                                      syncLock          = new object();
+        private IRetryPolicy                                safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
+        private IRetryPolicy                                unsafeRetryPolicy = new NoRetryPolicy();
+        private Dictionary<Type, IEnhancedJsonConverter>    typeToConverter   = new Dictionary<Type, IEnhancedJsonConverter>();
+        private bool                                        disposeClient;
 
         /// <summary>
         /// Used to construct a client for most situations, optionally specifying a custom <see cref="HttpMessageHandler"/>.
@@ -121,6 +123,18 @@ namespace Neon.Net
             disposeClient = true;
 
             HttpClient.DefaultRequestHeaders.Add("Accept", DocumentType);
+
+            // Initialize the dictionary mapping types to enhanced data converters.
+
+            // $todo(jeff.lill):
+            //
+            // We're currently suppoting only converters implemented in the Neon.Common assembly.
+            // Eventually, we'll probably wish to support custom user converters.
+
+            foreach (var converter in NeonHelper.GetEnhancedJsonConverters())
+            {
+                typeToConverter.Add(converter.Type, converter);
+            }
         }
 
         /// <summary>
@@ -303,6 +317,10 @@ namespace Neon.Net
                 else if (arg.Value is bool)
                 {
                     value = NeonHelper.ToBoolString((bool)arg.Value);
+                }
+                else if (arg.Value != null && typeToConverter.TryGetValue(arg.Value.GetType(), out var converter))
+                {
+                    value = converter.ToSimpleString(arg.Value);
                 }
                 else
                 {

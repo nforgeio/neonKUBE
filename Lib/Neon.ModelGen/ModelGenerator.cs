@@ -170,9 +170,9 @@ namespace Neon.ModelGen
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
         private bool                                firstItemGenerated = true;
+        private bool                                generateUx         = false;
         private StringWriter                        writer;
         private HashSet<Type>                       convertableTypes;
-        private bool                                generateUx = false;
 
         /// <summary>
         /// Constructs a code generator.
@@ -209,20 +209,11 @@ namespace Neon.ModelGen
             // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
             // it might be nice if we could handle user provided converters as well.
 
-            var helperAssembly = typeof(NeonHelper).Assembly;
-
             convertableTypes = new HashSet<Type>();
 
-            var types = helperAssembly.GetTypes();
-
-            foreach (var type in helperAssembly.GetTypes())
+            foreach (var converter in NeonHelper.GetEnhancedJsonConverters())
             {
-                if (type.Implements<IEnhancedJsonConverter>())
-                {
-                    var converter = (IEnhancedJsonConverter)helperAssembly.CreateInstance(type.FullName);
-
-                    convertableTypes.Add(converter.Type);
-                }
+                convertableTypes.Add(converter.Type);
             }
         }
 
