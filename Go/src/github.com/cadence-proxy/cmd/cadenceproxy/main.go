@@ -22,9 +22,8 @@ import (
 	"net/http"
 	"os"
 
-	"go.uber.org/zap/zapcore"
-
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/endpoints"

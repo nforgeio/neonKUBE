@@ -38,8 +38,8 @@
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   pruneopts = "UT"
-  revision = "4b2b341e8d7715fae06375aa633dbb6e91b3fb46"
-  version = "v1.0.0"
+  revision = "37c8de3658fcb183f997c4e13e8337516ab753e6"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -77,7 +77,7 @@
   version = "v4.0.2"
 
 [[projects]]
-  digest = "1:1f7f64ca2895fc98e84c4d33369ee27f2250747de1eacefed3e85def52a737a1"
+  digest = "1:4aaaf9fcba45d2c523fb916313c9fbe0aacd93970e70f5a42807b306852e0f26"
   name = "github.com/gogo/protobuf"
   packages = [
     "gogoproto",
@@ -108,8 +108,8 @@
     "vanity/command",
   ]
   pruneopts = "UT"
-  revision = "ba06b47c162d49f2af050fb4c75bcbc86a159d5c"
-  version = "v1.2.1"
+  revision = "0ca988a254f991240804bf9821f3450d87ccbb1b"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:5e14df5b9539151b485eeb3ebea90a2823347516732978b0911ff17acea2842c"
@@ -124,12 +124,12 @@
   version = "1.3.1"
 
 [[projects]]
-  digest = "1:318f1c959a8a740366fce4b1e1eb2fd914036b4af58fbd0a003349b305f118ad"
+  digest = "1:573ca21d3669500ff845bdebee890eb7fc7f0f50c59f2132f2a0c6b03d85086a"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
-  version = "v1.3.1"
+  revision = "6c65a5562fc06764971b7c5d05c76c75e84bdbf7"
+  version = "v1.3.2"
 
 [[projects]]
   digest = "1:582b704bebaa06b48c29b0cec224a6058a09c86883aaddabde889cd1a5f73e1b"
@@ -203,8 +203,8 @@
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "4ab88e80c249ed361d3299e2930427d9ac43ef8d"
-  version = "v1.0.0"
+  revision = "170205fb58decfd011f1550d4cfb737230d7ae4f"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -212,10 +212,10 @@
   name = "github.com/prometheus/client_model"
   packages = ["go"]
   pruneopts = "UT"
-  revision = "fd36f4220a901265f90734c3183c5f0c91daa0b8"
+  revision = "14fe0d1b01d4d5fc031dd4bec1823bd3ebbe8016"
 
 [[projects]]
-  digest = "1:8dcedf2e8f06c7f94e48267dea0bc0be261fa97b377f3ae3e87843a92a549481"
+  digest = "1:f119e3205d3a1f0f19dbd7038eb37528e2c6f0933269dc344e305951fb87d632"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -223,19 +223,20 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "31bed53e4047fd6c510e43a941f90cb31be0972a"
-  version = "v0.6.0"
+  revision = "287d3e634a1e550c9e463dd7e5a75a422c614505"
+  version = "v0.7.0"
 
 [[projects]]
-  digest = "1:366f5aa02ff6c1e2eccce9ca03a22a6d983da89eecff8a89965401764534eb7c"
+  digest = "1:8232537905152d6a0b116b9af5a0868fcac0e84eb02ec5a150624c077bdedb0b"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
     "internal/fs",
+    "internal/util",
   ]
   pruneopts = "UT"
-  revision = "3f98efb27840a48a7a2898ec80be07674d19f9c8"
-  version = "v0.0.3"
+  revision = "00ec24a6a2d86e7074629c8384715dbb05adccd8"
+  version = "v0.0.4"
 
 [[projects]]
   digest = "1:ed615c5430ecabbb0fb7629a182da65ecee6523900ac1ac932520860878ffcad"
@@ -262,7 +263,7 @@
   version = "v0.1.1"
 
 [[projects]]
-  digest = "1:288e2ba4192b77ec619875ab54d82e2179ca8978e8baa690dcb4343a4a1f4da7"
+  digest = "1:d88ba57c4e8f5db6ce9ab6605a89f4542ee751b576884ba5271c2ba3d4b6f2d2"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
@@ -271,8 +272,8 @@
     "suite",
   ]
   pruneopts = "UT"
-  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
-  version = "v1.3.0"
+  revision = "221dbe5ed46703ee255b1da0dec05086f5035f62"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:f13b1cdb92e193b30d211ee8397d640711932344ecdb5c8daf21b1ceaafe540f"
@@ -286,20 +287,21 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:fdcd00d11e3c9d307f82e2cc8cd84fe8974ccc3053c2126be5553a38eb565760"
+  digest = "1:228597ec86f00b7270b9f9e230f38abb285765850d5b7dfbe38b38f6ea1c409a"
   name = "github.com/uber-go/tally"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f266f90e9c4d5894364039a324a05d061f2f34e2"
-  version = "v3.3.11"
+  revision = "3332297784e46cd346ab6d9894fd4ea027dc9368"
+  version = "v3.3.12"
 
 [[projects]]
-  digest = "1:33acce5f2008307fd7acaa3f77c8941058b097c4e2ffa51083d1f6c100ee87eb"
+  digest = "1:d32629c79e1115b477b026288ae53668b68ce35f7a3e33bfcdf28a1dc99298cb"
   name = "github.com/uber/tchannel-go"
   packages = [
     ".",
     "internal/argreader",
     "relay",
+    "thrift/arg2",
     "thrift/thrift-gen",
     "tnet",
     "tos",
@@ -307,8 +309,8 @@
     "typed",
   ]
   pruneopts = "UT"
-  revision = "58b01ae38cfff68102223e374c580a40c1d91dda"
-  version = "v1.14.0"
+  revision = "5ee9e351d45f66dc690528cbf014fe5b64b23bc9"
+  version = "v1.15.0"
 
 [[projects]]
   digest = "1:a5158647b553c61877aa9ae74f4015000294e47981e6b8b07525edcbb0747c81"
@@ -319,7 +321,7 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:54021cd2b45428c9076b20e145c5f960eec16ede6265d8f2f43f4b17ca82b703"
+  digest = "1:6d3c63775527cd1858b0beb412c922173dfe7c3763108eee08fca0bc2580fddc"
   name = "go.uber.org/cadence"
   packages = [
     ".",
@@ -340,8 +342,8 @@
     "workflow",
   ]
   pruneopts = "UT"
-  revision = "61fd87b39425af39bcb2d189921b0fce37a96ecf"
-  version = "v0.8.8"
+  revision = "2d5963a788be8e2814aefdf17a8d2fea505a83f2"
+  version = "v0.8.9"
 
 [[projects]]
   digest = "1:9a1bb99a85e2ccddbc593aa0af084cdf6ea18ed081469eb90e7f6d0d303af6cd"
@@ -376,7 +378,7 @@
   version = "v1.1.0"
 
 [[projects]]
-  digest = "1:b50f3a25ee80e6e3b8da82f6d30590bb07d94f0b460f81121f2fb7c325fb98a2"
+  digest = "1:ab3c0dc926c4e024bb73c16191695d9278ec0d036fd504d52500c3da3ee24b9e"
   name = "go.uber.org/thriftrw"
   packages = [
     ".",
@@ -407,8 +409,8 @@
     "wire",
   ]
   pruneopts = "UT"
-  revision = "23f23e7fc269002cb7e34f4e2dc079593cd6ad36"
-  version = "v1.20.0"
+  revision = "8cb9e79c2118f1eb873714e2d02747d6ecc62954"
+  version = "v1.20.1"
 
 [[projects]]
   branch = "master"
@@ -477,14 +479,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:134674d729e1afbae39eeaa6abcf8e5f3106338f83643394ab5205a020efbd9b"
+  digest = "1:8b680f1201926e744b91715dda339a799fcc9a37e3a9c6d742bf90b4a6e7e6de"
   name = "golang.org/x/lint"
   packages = [
     ".",
     "golint",
   ]
   pruneopts = "UT"
-  revision = "959b441ac422379a43da2230f62be024250818b0"
+  revision = "414d861bb4acf565ff8cb05f9906a2283b7dc75a"
 
 [[projects]]
   branch = "master"
@@ -499,18 +501,18 @@
     "ipv6",
   ]
   pruneopts = "UT"
-  revision = "3b0461eec859c4b73bb64fdc8285971fd33e3938"
+  revision = "24e19bdeb0f2d062d8e2640d50a7aaf2a7f80e7a"
 
 [[projects]]
   branch = "master"
-  digest = "1:afb5346f71acefc3da7ad800f952cb2bcdb762194b05304bbf54d7f9490e31c5"
+  digest = "1:b81809747cfe3b745ecbb83859f2ac3566170d5a67aa96c458aa0afeefd93200"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "04f50cda93cbb67f2afa353c52f342100e80e625"
+  revision = "c3b328c6e5a763a2bfc82a48b4bd855037210934"
 
 [[projects]]
   branch = "master"
@@ -522,7 +524,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dc08174979089ae587a64e15a87efb95b17b3039884231c10b21b7f7d8e72e96"
+  digest = "1:bc35642f1e04f776853eb1a0214758690e62ee6187c18b69bfa55ab8c7fe5fb6"
   name = "golang.org/x/tools"
   packages = [
     "cmd/stringer",
@@ -530,6 +532,7 @@
     "go/analysis/passes/inspect",
     "go/ast/astutil",
     "go/ast/inspector",
+    "go/buildutil",
     "go/gcexportdata",
     "go/internal/gcimporter",
     "go/internal/packagesdriver",
@@ -541,7 +544,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "6cfa55603c286bef3d2de051f6603e4140181f6d"
+  revision = "3720d1ec36787cbb1ba1d4b76e4b0049db3ea911"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -552,7 +555,7 @@
   version = "v2.2.2"
 
 [[projects]]
-  digest = "1:ee40aa4815184179259955b29767faf844f5e42a434b11507853fb248f3b9ff5"
+  digest = "1:131158a88aad1f94854d0aa21a64af2802d0a470fb0f01cb33c04fafd2047111"
   name = "honnef.co/go/tools"
   packages = [
     "arg",
@@ -582,8 +585,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "3aba101524286653237b74f4cb73eff8d5852a31"
-  version = "2019.2.1"
+  revision = "afd67930eec2a9ed3e9b19f684d17a062285f16a"
+  version = "2019.2.3"
 
 [solve-meta]
   analyzer-name = "dep"

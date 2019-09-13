@@ -127,8 +127,9 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="details">Optional heartbeart details.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ActivityHeartbeatByTokenAsync(string taskToken, object details = null)
+        public async Task ActivityHeartbeatByTokenAsync(string taskToken, object details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -136,6 +137,7 @@ namespace Neon.Cadence
             var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {
+                    Domain    = ResolveDomain(domain),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Details   = GetClient(ClientId).DataConverter.ToData(details)
                 });
@@ -174,10 +176,11 @@ namespace Neon.Cadence
         /// Used to externally complete an activity identified by task token.
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <param name="result">Passed as the activity result for activity success.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null)
+        public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -185,6 +188,7 @@ namespace Neon.Cadence
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
+                    Domain    = ResolveDomain(domain),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Result    = GetClient(ClientId).DataConverter.ToData(result)
                 });
@@ -224,9 +228,10 @@ namespace Neon.Cadence
         /// Used to externally cancel an activity identified by task token.
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCancelByTokenAsync(string taskToken)
+        public async Task ActivityCancelByTokenAsync(string taskToken, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -234,6 +239,7 @@ namespace Neon.Cadence
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
+                    Domain    = ResolveDomain(domain),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Error     = new CadenceError(new CadenceCancelledException("Cancelled"))
                 });
@@ -273,9 +279,10 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="error">Specifies the activity error.</param>
+        /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityErrorByTokenAsync(string taskToken, Exception error)
+        public async Task ActivityErrorByTokenAsync(string taskToken, Exception error, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             Covenant.Requires<ArgumentNullException>(error != null);
@@ -284,6 +291,7 @@ namespace Neon.Cadence
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
+                    Domain    = ResolveDomain(domain),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Error     = new CadenceError(error)
                 });
