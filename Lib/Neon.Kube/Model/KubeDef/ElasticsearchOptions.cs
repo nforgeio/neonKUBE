@@ -73,6 +73,14 @@ namespace Neon.Kube
         public V1ResourceRequirements Resources { get; set; } = null;
 
         /// <summary>
+        /// Log retention period. Logs beyond this number of days will be purged by the ClusterManager
+        /// </summary>
+        [JsonProperty(PropertyName = "LogRetentionDays", Required = Required.Default)]
+        [YamlMember(Alias = "logRetentionDays", ApplyNamingConventions = false)]
+        [DefaultValue(14)]
+        public int LogRetentionDays { get; set; } = 14;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
