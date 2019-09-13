@@ -191,7 +191,10 @@ func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
 //
 // returns error -> error if there were any problems configuring
 // or building the service client
-func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int32, retryDelay time.Duration) error {
+func (helper *ClientHelper) SetupServiceConfig(
+	ctx context.Context,
+	retries int32,
+	retryDelay time.Duration) error {
 	if helper.Service != nil {
 		return nil
 	}
@@ -275,7 +278,13 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context, retries int3
 //
 // returns error -> error if any errors are thrown while trying to establish a
 // connection, or nil upon success
-func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, domain string, retries int32, retryDelay time.Duration, opts *client.Options) error {
+func (helper *ClientHelper) SetupCadenceClients(
+	ctx context.Context,
+	endpoints string,
+	domain string,
+	retries int32,
+	retryDelay time.Duration,
+	opts *client.Options) error {
 
 	// setup service config
 	helper.SetHostPort(endpoints)
@@ -285,7 +294,6 @@ func (helper *ClientHelper) SetupCadenceClients(ctx context.Context, endpoints, 
 		defer func() {
 			helper = nil
 		}()
-
 		return err
 	}
 
@@ -315,7 +323,10 @@ func (helper *ClientHelper) DestroyClient() error {
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
-func (helper *ClientHelper) StartWorker(domain, taskList string, options worker.Options) (worker.Worker, error) {
+func (helper *ClientHelper) StartWorker(
+	domain string,
+	taskList string,
+	options worker.Options) (worker.Worker, error) {
 	worker := worker.New(helper.Service, domain, taskList, options)
 	err := worker.Start()
 	if err != nil {
@@ -350,8 +361,8 @@ func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (
 	if err != nil {
 		return nil, err
 	}
+	helper.Logger.Info("Domain Describe Response", zap.Any("Domain Info", *resp.DomainInfo))
 
-	helper.Logger.Debug("Domain Describe Response", zap.Any("Domain Info", *resp.DomainInfo))
 	return resp, nil
 }
 
@@ -366,14 +377,12 @@ func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
 func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRequest *cadenceshared.RegisterDomainRequest) error {
-
-	// domain Register call to cadence
 	domain := registerDomainRequest.GetName()
 	err := helper.DomainClient.Register(ctx, registerDomainRequest)
 	if err != nil {
 		return err
 	}
-	helper.Logger.Debug("domain successfully registered", zap.String("Domain Name", domain))
+	helper.Logger.Info("domain successfully registered", zap.String("Domain Name", domain))
 
 	return nil
 }
@@ -389,8 +398,6 @@ func (helper *ClientHelper) RegisterDomain(ctx context.Context, registerDomainRe
 //
 // returns error -> error if one is thrown, nil if the method executed with no errors
 func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainRequest *cadenceshared.UpdateDomainRequest) error {
-
-	// domain Update call to cadence
 	domain := updateDomainRequest.GetName()
 	err := helper.DomainClient.Update(ctx, updateDomainRequest)
 	if err != nil {
@@ -398,11 +405,10 @@ func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainReques
 			zap.String("Domain Name", domain),
 			zap.Error(err),
 		)
-
 		return err
 	}
+	helper.Logger.Info("domain successfully updated", zap.String("Domain Name", domain))
 
-	helper.Logger.Debug("domain successfully updated", zap.String("Domain Name", domain))
 	return nil
 }
 
@@ -423,7 +429,12 @@ func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainReques
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
-func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) (client.WorkflowRun, error) {
+func (helper *ClientHelper) ExecuteWorkflow(
+	ctx context.Context,
+	domain string,
+	options client.StartWorkflowOptions,
+	workflow interface{},
+	args ...interface{}) (client.WorkflowRun, error) {
 	n := 30
 	var err error
 	var workflowRun client.WorkflowRun
@@ -440,14 +451,12 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 				time.Sleep(time.Second)
 				continue
 			}
-
 			helper.Logger.Error("failed to create workflow", zap.Error(err))
 			return nil, err
 		}
 		break
 	}
-
-	helper.Logger.Debug("Started Workflow",
+	helper.Logger.Info("Started Workflow",
 		zap.String("WorkflowID", workflowRun.GetID()),
 		zap.String("RunID", workflowRun.GetRunID()),
 	)
@@ -471,12 +480,14 @@ func (helper *ClientHelper) ExecuteWorkflow(ctx context.Context, domain string, 
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was triggered successfully
-func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID, domain string) (client.WorkflowRun, error) {
-
-	// get the workflow execution
+func (helper *ClientHelper) GetWorkflow(
+	ctx context.Context,
+	workflowID string,
+	runID string,
+	domain string) (client.WorkflowRun, error) {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	workflowRun := workflowClient.GetWorkflow(ctx, workflowID, runID)
-	helper.Logger.Debug("Get Workflow",
+	helper.Logger.Info("Get Workflow",
 		zap.String("WorkflowID", workflowRun.GetID()),
 		zap.String("RunID", workflowRun.GetRunID()),
 	)
@@ -497,9 +508,11 @@ func (helper *ClientHelper) GetWorkflow(ctx context.Context, workflowID, runID, 
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was cancelled successfully
-func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runID, domain string) error {
-
-	// cancel the workflow
+func (helper *ClientHelper) CancelWorkflow(
+	ctx context.Context,
+	workflowID string,
+	runID string,
+	domain string) error {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.CancelWorkflow(ctx, workflowID, runID)
 	if err != nil {
@@ -508,11 +521,9 @@ func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runI
 			zap.String("RunID", runID),
 			zap.Error(err),
 		)
-
 		return err
 	}
-
-	helper.Logger.Debug("Workflow Cancelled",
+	helper.Logger.Info("Workflow Cancelled",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
 	)
@@ -537,9 +548,13 @@ func (helper *ClientHelper) CancelWorkflow(ctx context.Context, workflowID, runI
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was terminated successfully
-func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, runID, domain, reason string, details []byte) error {
-
-	// terminate the workflow
+func (helper *ClientHelper) TerminateWorkflow(
+	ctx context.Context,
+	workflowID string,
+	runID string,
+	domain string,
+	reason string,
+	details []byte) error {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.TerminateWorkflow(ctx,
 		workflowID,
@@ -547,18 +562,15 @@ func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, r
 		reason,
 		details,
 	)
-
 	if err != nil {
 		helper.Logger.Error("failed to terminate workflow",
 			zap.String("WorkflowID", workflowID),
 			zap.String("RunID", runID),
 			zap.Error(err),
 		)
-
 		return err
 	}
-
-	helper.Logger.Debug("Workflow Terminated",
+	helper.Logger.Info("Workflow Terminated",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
 	)
@@ -589,9 +601,15 @@ func (helper *ClientHelper) TerminateWorkflow(ctx context.Context, workflowID, r
 // starting the workflow
 //
 // returns error -> error upon failure and nil upon success
-func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflowID, domain, signalName string, signalArg []byte, opts client.StartWorkflowOptions, workflow string, args ...interface{}) (*workflow.Execution, error) {
-
-	// signal the workflow to start
+func (helper *ClientHelper) SignalWithStartWorkflow(
+	ctx context.Context,
+	workflowID string,
+	domain string,
+	signalName string,
+	signalArg []byte,
+	opts client.StartWorkflowOptions,
+	workflow string,
+	args ...interface{}) (*workflow.Execution, error) {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	workflowExecution, err := workflowClient.SignalWithStartWorkflow(ctx,
 		workflowID,
@@ -601,13 +619,11 @@ func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflo
 		workflow,
 		args...,
 	)
-
 	if err != nil {
 		helper.Logger.Error("failed to start workflow", zap.Error(err))
 		return nil, err
 	}
-
-	helper.Logger.Debug("Started Workflow",
+	helper.Logger.Info("Started Workflow",
 		zap.String("WorkflowID", workflowExecution.ID),
 		zap.String("RunID", workflowExecution.RunID),
 	)
@@ -631,9 +647,11 @@ func (helper *ClientHelper) SignalWithStartWorkflow(ctx context.Context, workflo
 //
 // returns error -> an error if the workflow could not be started, or nil if
 // the workflow was cancelled successfully
-func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workflowID, runID, domain string) (*cadenceshared.DescribeWorkflowExecutionResponse, error) {
-
-	// descibe the workflow execution
+func (helper *ClientHelper) DescribeWorkflowExecution(
+	ctx context.Context,
+	workflowID string,
+	runID string,
+	domain string) (*cadenceshared.DescribeWorkflowExecutionResponse, error) {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	response, err := workflowClient.DescribeWorkflowExecution(ctx, workflowID, runID)
 	if err != nil {
@@ -642,11 +660,9 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 			zap.String("RunID", runID),
 			zap.Error(err),
 		)
-
 		return nil, err
 	}
-
-	helper.Logger.Debug("Workflow Describe Execution Successful",
+	helper.Logger.Info("Workflow Describe Execution Successful",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
 		zap.Any("Execution Info", *response.WorkflowExecutionInfo),
@@ -670,25 +686,30 @@ func (helper *ClientHelper) DescribeWorkflowExecution(ctx context.Context, workf
 // param arg interface{} -> the signaling arguments
 //
 // returns error -> error upon failure and nil upon success
-func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runID, domain, signalName string, arg interface{}) error {
-
-	// signal the workflow
+func (helper *ClientHelper) SignalWorkflow(
+	ctx context.Context,
+	workflowID string,
+	runID string,
+	domain string,
+	signalName string,
+	arg interface{}) error {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
+
 	err := workflowClient.SignalWorkflow(ctx,
 		workflowID,
 		runID,
 		signalName,
 		arg,
 	)
-
 	if err != nil {
 		helper.Logger.Error("failed to signal workflow", zap.Error(err))
 		return err
 	}
-
-	helper.Logger.Debug("Successfully Signaled Workflow",
+	helper.Logger.Info("Successfully Signaled Workflow",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
+		zap.String("Domain", domain),
+		zap.String("SignalName", signalName),
 	)
 
 	return nil
@@ -711,19 +732,29 @@ func (helper *ClientHelper) SignalWorkflow(ctx context.Context, workflowID, runI
 // returns encoded.Value -> the encoded result value of querying a workflow
 //
 // returns error -> error upon failure and nil upon success
-func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID, domain, queryType string, args ...interface{}) (encoded.Value, error) {
-
-	// query the workflow
+func (helper *ClientHelper) QueryWorkflow(
+	ctx context.Context,
+	workflowID string,
+	runID string,
+	domain string,
+	queryType string,
+	args ...interface{}) (encoded.Value, error) {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
-	value, err := workflowClient.QueryWorkflow(ctx, workflowID, runID, queryType, args...)
+	value, err := workflowClient.QueryWorkflow(ctx,
+		workflowID,
+		runID,
+		queryType,
+		args...,
+	)
 	if err != nil {
 		helper.Logger.Error("failed to query workflow", zap.Error(err))
 		return nil, err
 	}
-
-	helper.Logger.Debug("Successfully Queried Workflow",
+	helper.Logger.Info("Successfully Queried Workflow",
 		zap.String("WorkflowID", workflowID),
 		zap.String("RunID", runID),
+		zap.String("Domain", domain),
+		zap.String("QueryType", queryType),
 	)
 
 	return value, nil
@@ -743,7 +774,12 @@ func (helper *ClientHelper) QueryWorkflow(ctx context.Context, workflowID, runID
 // pararm cadenceError *proxyerror.CadenceError -> error to complete the activity with
 //
 // returns error -> error upon failure to complete the activity, nil upon success
-func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []byte, domain string, result interface{}, cadenceError *proxyerror.CadenceError) error {
+func (helper *ClientHelper) CompleteActivity(
+	ctx context.Context,
+	taskToken []byte,
+	domain string,
+	result interface{},
+	cadenceError *proxyerror.CadenceError) error {
 	var e error
 	if cadenceError != nil {
 		e = errors.New(cadenceError.ToString())
@@ -756,10 +792,10 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 		helper.Logger.Error("failed to complete activity", zap.Error(err))
 		return err
 	}
-
-	helper.Logger.Debug("Successfully Completed Activity",
+	helper.Logger.Info("Successfully Completed Activity",
+		zap.String("Domain", domain),
 		zap.Any("Result", result),
-		zap.Any("Error", e),
+		zap.Error(e),
 	)
 
 	return nil
@@ -782,7 +818,14 @@ func (helper *ClientHelper) CompleteActivity(ctx context.Context, taskToken []by
 // pararm cadenceError *proxyerror.CadenceError -> error to complete the activity with
 //
 // returns error -> error upon failure to complete the activity, nil upon success
-func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, workflowID, runID, activityID string, result interface{}, cadenceError *proxyerror.CadenceError) error {
+func (helper *ClientHelper) CompleteActivityByID(
+	ctx context.Context,
+	domain string,
+	workflowID string,
+	runID string,
+	activityID string,
+	result interface{},
+	cadenceError *proxyerror.CadenceError) error {
 	var e error
 	if cadenceError != nil {
 		e = errors.New(cadenceError.ToString())
@@ -795,10 +838,11 @@ func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, wo
 		helper.Logger.Error("failed to complete activity", zap.Error(err))
 		return err
 	}
-
-	helper.Logger.Debug("Successfully Completed Activity",
+	helper.Logger.Info("Successfully Completed Activity",
+		zap.String("Domain", domain),
+		zap.String("ActivityId", activityID),
 		zap.Any("Result", result),
-		zap.Any("Error", e),
+		zap.Error(e),
 	)
 
 	return nil
@@ -816,15 +860,19 @@ func (helper *ClientHelper) CompleteActivityByID(ctx context.Context, domain, wo
 // param details ...interface{} -> optional activity heartbeat details
 //
 // returns error -> error upon failure to record activity heartbeat, nil upon success
-func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskToken []byte, domain string, details ...interface{}) error {
+func (helper *ClientHelper) RecordActivityHeartbeat(
+	ctx context.Context,
+	taskToken []byte,
+	domain string,
+	details ...interface{}) error {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.RecordActivityHeartbeat(ctx, taskToken, details)
 	if err != nil {
 		helper.Logger.Error("failed to record activity heartbeat", zap.Error(err))
 		return err
 	}
+	helper.Logger.Info("Successfully Recorded Activity Heartbeat", zap.String("Domain", domain))
 
-	helper.Logger.Debug("Successfully Recorded Activity Heartbeat")
 	return nil
 }
 
@@ -843,15 +891,26 @@ func (helper *ClientHelper) RecordActivityHeartbeat(ctx context.Context, taskTok
 // param details ...interface{} -> optional activity heartbeat details
 //
 // returns error -> error upon failure to record activity heartbeat, nil upon success
-func (helper *ClientHelper) RecordActivityHeartbeatByID(ctx context.Context, domain, workflowID, runID, activityID string, details ...interface{}) error {
+func (helper *ClientHelper) RecordActivityHeartbeatByID(
+	ctx context.Context,
+	domain string,
+	workflowID string,
+	runID string,
+	activityID string,
+	details ...interface{}) error {
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
 	err := workflowClient.RecordActivityHeartbeatByID(ctx, domain, workflowID, runID, activityID, details)
 	if err != nil {
 		helper.Logger.Error("failed to record activity heartbeat", zap.Error(err))
 		return err
 	}
+	helper.Logger.Info("Successfully Recorded Activity Heartbeat",
+		zap.String("WorkflowID", workflowID),
+		zap.String("RunID", runID),
+		zap.String("Domain", domain),
+		zap.String("ActivityId", activityID),
+	)
 
-	helper.Logger.Debug("Successfully Recorded Activity Heartbeat")
 	return nil
 }
 
@@ -865,7 +924,11 @@ func (helper *ClientHelper) RecordActivityHeartbeatByID(ctx context.Context, dom
 func (helper *ClientHelper) GetOrCreateWorkflowClient(domain string) client.Client {
 	wc := helper.WorkflowClients.Get(domain)
 	if wc == nil {
-		wc = client.NewClient(helper.Service, domain, helper.Builder.clientOptions)
+		wc = client.NewClient(
+			helper.Service,
+			domain,
+			helper.Builder.clientOptions,
+		)
 		_ = helper.WorkflowClients.Add(domain, wc)
 	}
 
@@ -884,20 +947,15 @@ func (helper *ClientHelper) GetOrCreateWorkflowClient(domain string) client.Clie
 //
 // returns error -> error if establishing a connection failed and nil
 // upon success
-func (helper *ClientHelper) pollDomain(ctx context.Context, channel chan error, domain string) error {
-
-	// check the connection
+func (helper *ClientHelper) pollDomain(
+	ctx context.Context,
+	channel chan error,
+	domain string) error {
 	go func() {
-
-		// defer sending error
-		// or nil over channel
 		var err error
 		defer func() {
 			channel <- err
 		}()
-
-		// make a domain describe request on the cadence system domain
-		// to check if it is ready to accept requests
 		_, err = helper.DescribeDomain(ctx, domain)
 	}()
 

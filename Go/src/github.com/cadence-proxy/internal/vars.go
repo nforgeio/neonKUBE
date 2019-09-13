@@ -19,7 +19,6 @@ package internal
 
 import (
 	"errors"
-	"os"
 
 	"go.uber.org/zap/zapcore"
 )
@@ -54,13 +53,6 @@ var (
 
 	// LogLevel specifies the global LogLevel for the cadence-proxy.
 	LogLevel zapcore.LevelEnabler
-
-	// LogToFile specifies that all logs should be written
-	// to a specified file location
-	LogToFile = false
-
-	// LogFile is the file opened for logging output to
-	LogFile *os.File
 
 	// ErrConnection is the custom error that is thrown when the cadence-proxy
 	// is not able to establish a connection with the cadence server

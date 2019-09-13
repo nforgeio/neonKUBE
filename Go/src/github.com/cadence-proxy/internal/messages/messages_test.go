@@ -180,8 +180,8 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		v.SetLibraryPort(int32(666))
 		s.Equal(int32(666), v.GetLibraryPort())
 
-		v.SetLogLevel(dotnetlogger.Panic)
-		s.Equal(dotnetlogger.Panic, v.GetLogLevel())
+		v.SetLogLevel(dotnetlogger.Critical)
+		s.Equal(dotnetlogger.Critical, v.GetLogLevel())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -196,7 +196,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
-		s.Equal(dotnetlogger.Panic, v.GetLogLevel())
+		s.Equal(dotnetlogger.Critical, v.GetLogLevel())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -207,7 +207,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("1.2.3.4", *v.GetLibraryAddress())
 		s.Equal(int32(666), v.GetLibraryPort())
-		s.Equal(dotnetlogger.Panic, v.GetLogLevel())
+		s.Equal(dotnetlogger.Critical, v.GetLogLevel())
 	}
 }
 

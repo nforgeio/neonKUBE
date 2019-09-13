@@ -21,9 +21,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/uber-go/tally"
-
 	"github.com/google/uuid"
+
+	"github.com/uber-go/tally"
 
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/client"
@@ -82,8 +82,8 @@ func (b *WorkflowClientBuilder) SetClientOptions(opts *client.Options) *Workflow
 		b.clientOptions.MetricsScope = tally.NoopScope
 		b.clientOptions.Identity = fmt.Sprintf("%s__%s", _cadenceFrontendService, uuid.New().String())
 	}
-
 	b.clientOptions = opts
+
 	return b
 }
 
@@ -112,7 +112,6 @@ func (b *WorkflowClientBuilder) BuildServiceClient() (workflowserviceclient.Inte
 	if err := b.build(); err != nil {
 		return nil, err
 	}
-
 	if b.dispatcher == nil {
 		err := errors.New("no RPC dispatcher provided to create a connection to Cadence Service")
 		b.Logger.Error("error building service client", zap.Error(err))
@@ -143,8 +142,7 @@ func (b *WorkflowClientBuilder) build() error {
 		b.Logger.Error("Failed to create transport channel", zap.Error(err))
 		return err
 	}
-
-	b.Logger.Debug("Creating RPC dispatcher outbound",
+	b.Logger.Info("Creating RPC dispatcher outbound",
 		zap.String("ServiceName", _cadenceFrontendService),
 		zap.String("HostPort", b.hostPort),
 	)
@@ -155,14 +153,12 @@ func (b *WorkflowClientBuilder) build() error {
 			_cadenceFrontendService: {Unary: ch.NewSingleOutbound(b.hostPort)},
 		},
 	})
-
 	if b.dispatcher != nil {
 		if err := b.dispatcher.Start(); err != nil {
 			b.Logger.Error("Failed to create outbound transport channel", zap.Error(err))
 			return err
 		}
-
-		b.Logger.Debug("Created outbound transport channel/RPC dispatcher outbound",
+		b.Logger.Info("Created outbound transport channel/RPC dispatcher outbound",
 			zap.String("ServiceName", _cadenceFrontendService),
 			zap.String("HostPort", b.hostPort),
 		)
@@ -175,8 +171,7 @@ func (b *WorkflowClientBuilder) destroy() error {
 	if b.dispatcher == nil {
 		return globals.ErrEntityNotExist
 	}
-
-	b.Logger.Debug("Removing outbound transport channel/RPC dispatcher outbound",
+	b.Logger.Info("Removing outbound transport channel/RPC dispatcher outbound",
 		zap.String("ServiceName", _cadenceFrontendService),
 		zap.String("HostPort", b.hostPort),
 	)
