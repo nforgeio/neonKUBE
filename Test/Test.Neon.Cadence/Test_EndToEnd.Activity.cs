@@ -774,7 +774,7 @@ namespace TestCadence
 
             await client.ActivityHeartbeatAsync(activity.Task.TaskToken);
             await client.ActivityHeartbeatAsync(activity.Task.TaskToken, "Heartbeat");
-            await client.ActivityCompletedAsync(activity.Task.TaskToken, "Hello World");
+            await client.ActivityCompletedAsync(activity.Task.TaskToken, "Hello World!");
 
             Assert.Equal("Hello World!", await task);
         }
