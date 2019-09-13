@@ -727,7 +727,7 @@ namespace TestCadence
 
             public static Activity WaitForActivity()
             {
-                NeonHelper.WaitFor(() => ActivityInstance != null, timeout: TimeSpan.FromSeconds(60));
+                NeonHelper.WaitFor(() => ActivityInstance != null, timeout: TimeSpan.FromSeconds(90));
                 Thread.Sleep(TimeSpan.FromSeconds(1));      // Give the activity method a chance to return.
 
                 return ActivityInstance;
@@ -773,7 +773,7 @@ namespace TestCadence
             var activity = ActivityExternalCompletion.WaitForActivity();
 
             await client.ActivityHeartbeatAsync(activity.Task.TaskToken);
-            await client.ActivityHeartbeatAsync(activity.Task.TaskToken, new byte[] { 0, 1, 2, 3, 4 });
+            await client.ActivityHeartbeatAsync(activity.Task.TaskToken, "Heartbeat");
             await client.ActivityCompletedAsync(activity.Task.TaskToken, "Hello World");
 
             Assert.Equal("Hello World!", await task);

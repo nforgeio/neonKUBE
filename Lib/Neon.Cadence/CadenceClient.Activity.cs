@@ -128,7 +128,7 @@ namespace Neon.Cadence
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="details">Optional heartbeart details.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ActivityHeartbeatAsync(string taskToken, byte[] details = null)
+        public async Task ActivityHeartbeatAsync(string taskToken, object details = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -137,7 +137,7 @@ namespace Neon.Cadence
                 new ActivityRecordHeartbeatRequest()
                 {
                     TaskToken = Convert.FromBase64String(taskToken),
-                    Details   = details
+                    Details   = GetClient(ClientId).DataConverter.ToData(details)
                 });
 
             reply.ThrowOnError();
@@ -152,7 +152,7 @@ namespace Neon.Cadence
         /// <param name="details">Optional heartbeart details.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ActivityHeartbeatByIdAsync(string workflowId, string runId, string activityId, byte[] details = null, string domain = null)
+        public async Task ActivityHeartbeatByIdAsync(string workflowId, string runId, string activityId, object details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
@@ -166,7 +166,7 @@ namespace Neon.Cadence
                     WorkflowId = workflowId,
                     RunId      = runId,
                     ActivityId = activityId,
-                    Details    = details
+                    Details    = GetClient(ClientId).DataConverter.ToData(details)
                 });
 
             reply.ThrowOnError();
