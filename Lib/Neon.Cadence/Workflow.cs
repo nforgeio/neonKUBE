@@ -305,7 +305,7 @@ namespace Neon.Cadence
                 scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
                 scheduleToStartTimeout:     options.ScheduleToStartTimeout,
                 taskStartToCloseTimeout:    options.TaskStartToCloseTimeout,
-                retryPolicy:                options.RetryOptions);
+                retryOptions:                options.RetryOptions);
         }
 
         /// <summary>
@@ -1154,7 +1154,7 @@ namespace Neon.Cadence
         /// Any signal or query methods defined by <typeparamref name="TWorkflowInterface"/> will 
         /// throw a <see cref="InvalidOperationException"/> when called.
         /// </remarks>
-        public Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
+        public TWorkflowInterface NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();

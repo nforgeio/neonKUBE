@@ -563,6 +563,8 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private bool                  hasStarted;");
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
             sbSource.AppendLine($"        private ChildExecution        childExecution;");
+            sbSource.AppendLine($"        private bool                  continueAsNew;");
+            sbSource.AppendLine($"        private ContinueAsNewOptions  continueAsNewOptions;");
 
             // Generate the constructor used to for normal external workflow stubs.
 
@@ -600,6 +602,17 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.domain        = ___StubHelper.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
+            // Generate the constructor used to create a continue-as-new stub.
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, ContinueAsNewOptions options)");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            this.client               = client;");
+            sbSource.AppendLine($"            this.dataConverter        = dataConverter;");
+            sbSource.AppendLine($"            this.continueAsNew        = true;");
+            sbSource.AppendLine($"            this.continueAsNewOptions = options;");
+            sbSource.AppendLine($"        }}");
+
             // Generate the method that converts the instance into a new untyped [WorkflowStub].
 
             sbSource.AppendLine();
@@ -625,6 +638,12 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
+
+                sbSource.AppendLine($"            if (this.continueAsNew)");
+                sbSource.AppendLine($"            {{");
+                sbSource.AppendLine($"                throw new ");
+                sbSource.AppendLine($"            }}");
+                sbSource.AppendLine();
 
                 if (isChild)
                 {

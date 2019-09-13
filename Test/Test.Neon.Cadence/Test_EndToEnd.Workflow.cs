@@ -1811,9 +1811,6 @@ namespace TestCadence
         [Workflow(AutoRegister = true)]
         public class WorkflowFail : WorkflowBase, IWorkflowFail
         {
-            //-------------------------------------------------------
-            // Instance members
-
             public async Task RunAsync()
             {
                 await Task.CompletedTask;
@@ -1995,6 +1992,160 @@ namespace TestCadence
             //
             //      ExecutionStartToCloseTimeout
             //      ChildPolicy
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowContinueAsNew0 : IWorkflow
+        {
+            [WorkflowMethod(Name = "Hello")]
+            Task<string> HelloAsync(string name, int callCount);
+
+            [WorkflowMethod(Name = "HelloWithOptions")]
+            Task<string> HelloNewOptionsAsync(string name, int callCount);
+
+            [WorkflowMethod(Name = "HelloStub")]
+            Task<string> HelloStubAsync(string name);
+
+            [WorkflowMethod(Name = "HelloStubOptions")]
+            Task<string> HelloStubOptionsAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowContinueAsNew0 : WorkflowBase, IWorkflowContinueAsNew0
+        {
+            public async Task<string> HelloAsync(string name, int callCount)
+            {
+                // The first time this is called, we're going to continue the workflow
+                // as new using the current options and passing the same name but
+                // incrementing the call count.
+                //
+                // Otherwise, we'll simply return the result string.
+
+                if (callCount == 1)
+                {
+                    await Workflow.ContinueAsNewAsync(name, callCount + 1);
+                    throw new Exception("We should never reach this.");
+                }
+
+                return await Task.FromResult($"WF0 says: Hello {name}!");
+            }
+
+            public async Task<string> HelloNewOptionsAsync(string name, int callCount)
+            {
+                var options = new ContinueAsNewOptions();
+
+                // The first time this is called, we're going to continue the workflow
+                // as new using new options and passing the same name but incrementing
+                // the call count.
+                //
+                // Otherwise, we'll simply return the result string.
+
+                if (callCount == 1)
+                {
+                    await Workflow.ContinueAsNewAsync(options, name, callCount + 1);
+                    throw new Exception("We should never reach this.");
+                }
+
+                return await Task.FromResult($"WF0 says: Hello {name}!");
+            }
+
+            public async Task<string> HelloStubAsync(string name)
+            {
+                // We're going to continue as IWorkflowContinueAsNew1 using a stub.
+
+                var stub = Workflow.NewContinueAsNewStub<IWorkflowContinueAsNew1>();
+
+                await stub.HelloAsync(name);
+                throw new Exception("We should never reach this.");
+            }
+
+            public async Task<string> HelloStubOptionsAsync(string name)
+            {
+                // We're going to continue as IWorkflowContinueAsNew1 using a stub
+                // and with new options.
+
+                var options = new ContinueAsNewOptions();
+                var stub    = Workflow.NewContinueAsNewStub<IWorkflowContinueAsNew1>(options);
+
+                await stub.HelloAsync(name);
+                throw new Exception("We should never reach this.");
+            }
+        }
+
+        public interface IWorkflowContinueAsNew1 : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowContinueAsNew1 : WorkflowBase, IWorkflowContinueAsNew1
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"WF1 says: Hello {name}!");
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew()
+        {
+            // Verify that we can continue a workflow as new without using a stub
+            // and with the same options.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloAsync("Jeff", 1));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew_Options()
+        {
+            // Verify that we can continue a workflow as new without using a stub
+            // and with new options.
+
+            // $todo(jeff.lill):
+            //
+            // This test could be improved.  We're not actually verifying that
+            // the new options actually had an effect.  For now, we're just
+            // ensuring that the client doesn't barf.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloNewOptionsAsync("Jeff", 1));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew_Stub()
+        {
+            // Verify that we can continue a workflow as new using a stub
+            // and with the same options.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubAsync("Jeff"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew_StubOptions()
+        {
+            // Verify that we can continue a workflow as new using a stub
+            // and with new options.
+
+            // $todo(jeff.lill):
+            //
+            // This test could be improved.  We're not actually verifying that
+            // the new options actually had an effect.  For now, we're just
+            // ensuring that the client doesn't barf.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubOptionsAsync("Jeff"));
         }
     }
 }
