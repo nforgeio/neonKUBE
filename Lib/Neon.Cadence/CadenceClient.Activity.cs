@@ -128,7 +128,7 @@ namespace Neon.Cadence
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="details">Optional heartbeart details.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ActivityHeartbeatAsync(string taskToken, object details = null)
+        public async Task ActivityHeartbeatByTokenAsync(string taskToken, object details = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -144,18 +144,16 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to send record activity heartbeat externally by activity ID.
+        /// Used to send record activity heartbeat externally by <see cref="WorkflowExecution"/> and activity ID.
         /// </summary>
-        /// <param name="workflowId">The workflow ID.</param>
-        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="execution">The workflow execution.</param>
         /// <param name="activityId">The activity ID.</param>
         /// <param name="details">Optional heartbeart details.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ActivityHeartbeatByIdAsync(string workflowId, string runId, string activityId, object details = null, string domain = null)
+        public async Task ActivityHeartbeatByIdAsync(WorkflowExecution execution, string activityId, object details = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             EnsureNotDisposed();
 
@@ -163,8 +161,8 @@ namespace Neon.Cadence
                 new ActivityRecordHeartbeatRequest()
                 {
                     Domain     = ResolveDomain(domain),
-                    WorkflowId = workflowId,
-                    RunId      = runId,
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
                     ActivityId = activityId,
                     Details    = GetClient(ClientId).DataConverter.ToData(details)
                 });
@@ -179,7 +177,7 @@ namespace Neon.Cadence
         /// <param name="result">Passed as the activity result for activity success.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCompletedAsync(string taskToken, object result = null)
+        public async Task ActivityCompletedByTokenAsync(string taskToken, object result = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -195,19 +193,17 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to externally complete an activity identified by activity ID.
+        /// Used to externally complete an activity identified by <see cref="WorkflowExecution"/> and activity ID.
         /// </summary>
-        /// <param name="workflowId">The workflow ID.</param>
-        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="execution">The workflow execution.</param>
         /// <param name="activityId">The activity ID.</param>
         /// <param name="result">Passed as the activity result for activity success.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCompletedByIdAsync(string workflowId, string runId, string activityId, object result = null, string domain = null)
+        public async Task ActivityCompletedByIdAsync(WorkflowExecution execution, string activityId, object result = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             EnsureNotDisposed();
 
@@ -215,8 +211,8 @@ namespace Neon.Cadence
                 new ActivityCompleteRequest()
                 {
                     Domain     = ResolveDomain(domain),
-                    WorkflowId = workflowId,
-                    RunId      = runId,
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
                     ActivityId = activityId,
                     Result     = GetClient(ClientId).DataConverter.ToData(result)
                 });
@@ -230,7 +226,7 @@ namespace Neon.Cadence
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCancelAsync(string taskToken)
+        public async Task ActivityCancelByTokenAsync(string taskToken)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -246,18 +242,16 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to externally cancel an activity identified by activity ID.
+        /// Used to externally cancel an activity identified by <see cref="WorkflowExecution"/> and activity ID.
         /// </summary>
-        /// <param name="workflowId">The workflow ID.</param>
-        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="execution">The workflow execution.</param>
         /// <param name="activityId">The activity ID.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCancelByIdAsync(string workflowId, string runId, string activityId, string domain = null)
+        public async Task ActivityCancelByIdAsync(WorkflowExecution execution, string activityId, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             EnsureNotDisposed();
 
@@ -265,8 +259,8 @@ namespace Neon.Cadence
                 new ActivityCompleteRequest()
                 {
                     Domain     = ResolveDomain(domain),
-                    WorkflowId = workflowId,
-                    RunId      = runId,
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
                     ActivityId = activityId,
                     Error      = new CadenceError(new CadenceCancelledException("Cancelled"))
                 });
@@ -281,7 +275,7 @@ namespace Neon.Cadence
         /// <param name="error">Specifies the activity error.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityFailAsync(string taskToken, Exception error)
+        public async Task ActivityFailByTokenAsync(string taskToken, Exception error)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             Covenant.Requires<ArgumentNullException>(error != null);
@@ -298,19 +292,17 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to externally fail an activity by task token.
+        /// Used to externally fail an activity by <see cref="WorkflowExecution"/> and activity ID.
         /// </summary>
-        /// <param name="workflowId">The workflow ID.</param>
-        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="execution">The workflowm execution.</param>
         /// <param name="activityId">The activity ID.</param>
         /// <param name="error">Specifies the activity error.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityFailByIdAsync(string workflowId, string runId, string activityId, Exception error, string domain = null)
+        public async Task ActivityFailByIdAsync(WorkflowExecution execution, string activityId, Exception error, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             Covenant.Requires<ArgumentNullException>(error != null);
             EnsureNotDisposed();
@@ -319,8 +311,8 @@ namespace Neon.Cadence
                 new ActivityCompleteRequest()
                 {
                     Domain     = ResolveDomain(domain),
-                    WorkflowId = workflowId,
-                    RunId      = runId,
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
                     ActivityId = activityId,
                     Error      = new CadenceError(error)
                 });
