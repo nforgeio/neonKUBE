@@ -285,7 +285,7 @@ namespace TestCadence
             public async Task RunAsync()
             {
                 var stub = Workflow.NewActivityStub<IActivityLogger>();
-                
+
                 await stub.RunAsync();
             }
         }
@@ -639,7 +639,7 @@ namespace TestCadence
                 TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
             };
 
-            var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);
+            var stub = client.NewWorkflowStub<IWorkflowActivityFail>(options);
             var error = await stub.RunAsync();
 
             Assert.NotNull(error);
@@ -697,10 +697,10 @@ namespace TestCadence
             var data = new ComplexActivityData
             {
                 Name = "Jeff",
-                Age  = 58
+                Age = 58
             };
 
-            var stub   = client.NewWorkflowStub<IWorkflowActivityComplexData>();
+            var stub = client.NewWorkflowStub<IWorkflowActivityComplexData>();
             var result = await stub.RunAsync(data);
 
             Assert.Equal(data.Name, result.Name);
@@ -761,7 +761,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalSuccessByToken()
+        public async Task Activity_ExternalCompleteByToken()
         {
             // Verify that we can externally heartbeat and complete an activity
             // using its task token.
@@ -774,14 +774,14 @@ namespace TestCadence
 
             await client.ActivityHeartbeatByTokenAsync(activity.Task.TaskToken);
             await client.ActivityHeartbeatByTokenAsync(activity.Task.TaskToken, "Heartbeat");
-            await client.ActivityCompletedByTokenAsync(activity.Task.TaskToken, "Hello World!");
+            await client.ActivityCompleteByTokenAsync(activity.Task.TaskToken, "Hello World!");
 
             Assert.Equal("Hello World!", await task);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalSuccessById()
+        public async Task Activity_ExternalCompleteById()
         {
             // Verify that we can externally heartbeat and complete an activity
             // using the workflow execution and the activity ID.
@@ -794,14 +794,14 @@ namespace TestCadence
 
             await client.ActivityHeartbeatByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
             await client.ActivityHeartbeatByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, "Heartbeat");
-            await client.ActivityCompletedByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, "Hello World!");
+            await client.ActivityCompleteByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, "Hello World!");
 
             Assert.Equal("Hello World!", await task);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalFailByToken()
+        public async Task Activity_ExternalErrorByToken()
         {
             // Verify that we can externally fail an activity
             // using its task token.
@@ -812,7 +812,7 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityFailByTokenAsync(activity.Task.TaskToken, new Exception("error"));
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("error"));
 
             try
             {
@@ -826,9 +826,9 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalFailById()
+        public async Task Activity_ExternalErrorById()
         {
-            // Verify that we can externally heartbeat and complete an activity
+            // Verify that we can externally fail an activity
             // using the workflow execution and the activity ID.
 
             ActivityExternalCompletion.Reset();
@@ -837,7 +837,7 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityFailByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("error"));
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("error"));
 
             try
             {
@@ -849,22 +849,44 @@ namespace TestCadence
             }
         }
 
-        [Fact(Skip = "Implement this")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task ActivityExternalCancelByToken()
         {
-            // $todo(jeff.lill): Implement this
+            // Verify that we can externally cancel an activity
+            // using the activity token.
 
-            await Task.CompletedTask;
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
+
+            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+
+            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }
 
-        [Fact(Skip = "Implement this")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task ActivityExternalCancelById()
         {
-            // $todo(jeff.lill): Implement this
+            // Verify that we can externally cancel an activity
+            // using the workflow execution and the activity ID.
 
-            await Task.CompletedTask;
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
+
+            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+
+            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }
     }
 }

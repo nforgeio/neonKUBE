@@ -177,7 +177,7 @@ namespace Neon.Cadence
         /// <param name="result">Passed as the activity result for activity success.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCompletedByTokenAsync(string taskToken, object result = null)
+        public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             EnsureNotDisposed();
@@ -201,7 +201,7 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCompletedByIdAsync(WorkflowExecution execution, string activityId, object result = null, string domain = null)
+        public async Task ActivityCompleteByIdAsync(WorkflowExecution execution, string activityId, object result = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
@@ -275,7 +275,7 @@ namespace Neon.Cadence
         /// <param name="error">Specifies the activity error.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityFailByTokenAsync(string taskToken, Exception error)
+        public async Task ActivityErrorByTokenAsync(string taskToken, Exception error)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken));
             Covenant.Requires<ArgumentNullException>(error != null);
@@ -300,7 +300,7 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityFailByIdAsync(WorkflowExecution execution, string activityId, Exception error, string domain = null)
+        public async Task ActivityErrorByIdAsync(WorkflowExecution execution, string activityId, Exception error, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
