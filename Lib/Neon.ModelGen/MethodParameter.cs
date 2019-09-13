@@ -88,7 +88,7 @@ namespace Neon.ModelGen
 
                 var type = ParameterInfo.ParameterType;
 
-                if (type.IsPrimitive || type == typeof(string) || type == typeof(Decimal) || type.IsEnum)
+                if (type.IsPrimitive || type == typeof(string) || type == typeof(Decimal) || type.IsEnum || type.FullName.StartsWith("System.Nullable`"))
                 {
                     if (type == typeof(string))
                     {
@@ -110,6 +110,10 @@ namespace Neon.ModelGen
                         else if (type == typeof(bool))
                         {
                             return NeonHelper.ToBoolString((bool)DefaultValue);
+                        }
+                        else if (DefaultValue == null)
+                        {
+                            return "null";
                         }
                         else
                         {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TimeSpanJsonConverter.cs
+// FILE:	    DateTimeOffsetJsonConverter.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,30 +32,24 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Data
 {
     /// <summary>
-    /// <para>
-    /// Implements a type converter for <see cref="TimeSpan"/> using the culture
-    /// invariant <b>"c"</b> format.  This serializes <see cref="TimeSpan"/> instances
-    /// as:
-    /// </para>
-    /// <code>
-    /// [-][d'.']hh':'mm':'ss['.'fffffff]
-    /// </code>
+    /// Implements a type converter for <see cref="DateTimeOffset"/> using the culture
+    /// invariant <b>yyyy-MM-ddTHH:mm:ss.fffzzz</b> format.
     /// </summary>
-    public class TimeSpanJsonConverter : JsonConverter<TimeSpan>, IEnhancedJsonConverter
+    public class DateTimeOffsetJsonConverter : JsonConverter<DateTimeOffset>, IEnhancedJsonConverter
     {
-        private string format = "c";
+        private const string format = "yyyy-MM-ddTHH:mm:ss.fffzzz";
 
         /// <inheritdoc/>
-        public Type Type => typeof(TimeSpan);
+        public Type Type => typeof(DateTimeOffset);
 
         /// <inheritdoc/>
-        public override TimeSpan ReadJson(JsonReader reader, Type objectType, TimeSpan existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override DateTimeOffset ReadJson(JsonReader reader, Type objectType, DateTimeOffset existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return TimeSpan.ParseExact((string)reader.Value, format, null);
+            return (DateTimeOffset)reader.Value;
         }
 
         /// <inheritdoc/>
-        public override void WriteJson(JsonWriter writer, TimeSpan value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, DateTimeOffset value, JsonSerializer serializer)
         {
             writer.WriteValue(value.ToString(format));
         }
@@ -65,7 +59,7 @@ namespace Neon.Data
         {
             Covenant.Requires<ArgumentNullException>(instance != null);
 
-            return ((TimeSpan)instance).ToString(format);
+            return ((DateTimeOffset)instance).ToString(format);
         }
     }
 }

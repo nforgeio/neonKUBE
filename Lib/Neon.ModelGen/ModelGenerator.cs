@@ -170,9 +170,9 @@ namespace Neon.ModelGen
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
         private bool                                firstItemGenerated = true;
+        private bool                                generateUx         = false;
         private StringWriter                        writer;
         private HashSet<Type>                       convertableTypes;
-        private bool                                generateUx = false;
 
         /// <summary>
         /// Constructs a code generator.
@@ -209,20 +209,11 @@ namespace Neon.ModelGen
             // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
             // it might be nice if we could handle user provided converters as well.
 
-            var helperAssembly = typeof(NeonHelper).Assembly;
-
             convertableTypes = new HashSet<Type>();
 
-            var types = helperAssembly.GetTypes();
-
-            foreach (var type in helperAssembly.GetTypes())
+            foreach (var converter in NeonHelper.GetEnhancedJsonConverters())
             {
-                if (type.Implements<IEnhancedJsonConverter>())
-                {
-                    var converter = (IEnhancedJsonConverter)helperAssembly.CreateInstance(type.FullName);
-
-                    convertableTypes.Add(converter.Type);
-                }
+                convertableTypes.Add(converter.Type);
             }
         }
 
@@ -3156,9 +3147,19 @@ namespace Neon.ModelGen
             {
                 return ResolveTypeReference(type) != null;
             }
-            else if (type.IsPrimitive || type == typeof(string) || type.IsEnum || convertableTypes.Contains(type))
+            else if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type.IsEnum || convertableTypes.Contains(type))
             {
+                // We allow all primitive types, decimal, strings, and any types that have a [IEnhancedJsonConverter].
+
                 return true;
+            }
+            else if (type.FullName.StartsWith("System.Nullable`"))
+            {
+                // We also allow all [Nullable<T>] where T is a primitive or any types that have a [IEnhancedJsonConverter].
+
+                type = type.GenericTypeArguments.First();
+
+                return type.IsPrimitive || type.IsEnum || type == typeof(decimal) || convertableTypes.Contains(type);
             }
 
             return false;
@@ -3329,30 +3330,41 @@ namespace Neon.ModelGen
             }
             else if (type.IsGenericType)
             {
-                var genericRef    = GetTypeName(type);
-                var genericParams = string.Empty;
-
-                foreach (var genericParamType in type.GetGenericArguments())
+                if (type.FullName.StartsWith("System.Nullable`"))
                 {
-                    if (genericParams.Length > 0)
+                    // Special-case Nullable<T> by appending a "?".
+
+                    var nullableType = type.GenericTypeArguments.First();
+
+                    return $"{GetTypeName(nullableType)}?";
+                }
+                else
+                {
+                    var genericRef    = GetTypeName(type);
+                    var genericParams = string.Empty;
+
+                    foreach (var genericParamType in type.GetGenericArguments())
                     {
-                        genericParams += ", ";
+                        if (genericParams.Length > 0)
+                        {
+                            genericParams += ", ";
+                        }
+
+                        genericParams += ResolveTypeReference(genericParamType);
                     }
 
-                    genericParams += ResolveTypeReference(genericParamType);
-                }
-
-                if (generateUx)
-                {
-                    // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
-
-                    if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                    if (generateUx)
                     {
-                        return $"ObservableCollection<{genericParams}>";
-                    }
-                }
+                        // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
 
-                return $"{genericRef}<{genericParams}>";
+                        if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                        {
+                            return $"ObservableCollection<{genericParams}>";
+                        }
+                    }
+
+                    return $"{genericRef}<{genericParams}>";
+                }
             }
 
             Covenant.Assert(false); // We should never get here.

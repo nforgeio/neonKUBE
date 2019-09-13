@@ -34,6 +34,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Data;
+
 namespace Neon.Common
 {
     public static partial class NeonHelper
@@ -1757,6 +1759,39 @@ namespace Neon.Common
             }
 
             return property.GetValue(task);
+        }
+
+        /// <summary>
+        /// Returns instances of the types that implement <see cref="IEnhancedJsonConverter"/> from the
+        /// <b>Neon.Common</b> assembly.
+        /// </summary>
+        /// <returns>The list of converters.</returns>
+        public static List<IEnhancedJsonConverter> GetEnhancedJsonConverters()
+        {
+            // Scan the [Neon.Common] assembly for JSON converters that implement [IEnhancedJsonConverter]
+            // and initialize the [convertableTypes] hashset with the convertable types.  We'll need
+            // this to be able pass "complex" types like [TimeSpan] to web services via route or the
+            // query string.
+
+            // $todo(jeff.lill):
+            //
+            // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
+            // it might be nice if we could handle user provided converters as well.
+
+            var helperAssembly = typeof(NeonHelper).Assembly;
+            var converters     = new List<IEnhancedJsonConverter>();
+
+            var types = helperAssembly.GetTypes();
+
+            foreach (var type in helperAssembly.GetTypes())
+            {
+                if (type.Implements<IEnhancedJsonConverter>())
+                {
+                    converters.Add((IEnhancedJsonConverter)helperAssembly.CreateInstance(type.FullName));
+                }
+            }
+
+            return converters;
         }
     }
 }

@@ -1207,7 +1207,7 @@ namespace TestCadence
                     ScheduledTimestamp = "2014-05-16T09:28:06.801064-04:00",
                     StartedTimestamp = "2014-05-16T10:28:06.801064-04:00",
                     TaskList = "my-tasklist",
-                    TaskToken = new byte[] { 0, 1, 2, 3, 4 },
+                    TaskToken = Convert.ToBase64String(new byte[] { 0, 1, 2, 3, 4 }),
                     WorkflowDomain = "my-domain",
                     WorkflowExecution = new InternalWorkflowExecution() { ID = "777", RunID = "888" },
                     WorkflowType = new InternalWorkflowType() { Name = "my-workflow" }

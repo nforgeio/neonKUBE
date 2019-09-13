@@ -190,25 +190,17 @@ namespace Neon.Cadence
         /// This method may be called within the activity entry point to indicate that the
         /// activity will be completed externally.
         /// </summary>
-        /// <returns>The tracking <see cref="System.Threading.Tasks.Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         /// <remarks>
-        /// <para>
-        /// This method works by throwing an <see cref="CadenceActivityExternalCompletionException"/> which
-        /// will be caught and handled by the base <see cref="ActivityBase"/> class.  You'll need to allow
-        /// this exception to exit your entry point method for this to work.
-        /// </para>
         /// <note>
         /// This method doesn't work for local activities.
         /// </note>
         /// </remarks>
-        public async Task CompleteExternallyAsync()
+        public void DoNotCompleteOnReturn()
         {
             Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
-            await global::System.Threading.Tasks.Task.CompletedTask;
-            throw new CadenceActivityExternalCompletionException();
+            parent.CompleteExternally = true;
         }
 
         /// <summary>

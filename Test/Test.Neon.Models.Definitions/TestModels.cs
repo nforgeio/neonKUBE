@@ -229,6 +229,10 @@ namespace Test.Neon.Models.Definitions
         [HttpPut]
         [Route("GetPersonArray")]
         Person[] GetPersonArray([FromBody] Person[] value);
+
+        //[HttpGet]
+        //[Route("EchoDateTime")]
+        //DateTime EchoDateTime([FromQuery] DateTime date);
     }
 
     [ServiceModel]
@@ -326,6 +330,10 @@ namespace Test.Neon.Models.Definitions
         [HttpPut]
         [Route("GetPersonArray")]
         Person[] GetPersonArray([FromBody] Person[] value);
+
+        //[HttpGet]
+        //[Route("EchoDateTime")]
+        //DateTime EchoDateTime([FromQuery] DateTime date);
     }
 
     [ServiceModel]

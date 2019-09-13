@@ -237,6 +237,13 @@ namespace TestModelGen.UxAspNet
         {
             return value;
         }
+
+        //[HttpGet]
+        //[Route("EchoDateTime")]
+        //DateTime EchoDateTime([FromQuery] DateTime date)
+        //{
+        //    return date;
+        //}
     }
 
     public class Startup
