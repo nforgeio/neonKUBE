@@ -72,34 +72,27 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 		if err != nil {
 			return err
 		}
-
 		return nil
 	}
 
 	// check for ContinueAsNew
 	if reply.GetContinueAsNew() {
 		continueContext := wectx.GetContext()
-
 		if reply.GetContinueAsNewDomain() != nil {
 			continueContext = workflow.WithWorkflowDomain(continueContext, *reply.GetContinueAsNewDomain())
 		}
-
 		if reply.GetContinueAsNewTaskList() != nil {
 			continueContext = workflow.WithTaskList(continueContext, *reply.GetContinueAsNewTaskList())
 		}
-
 		if reply.GetContinueAsNewExecutionStartToCloseTimeout() > 0 {
 			continueContext = workflow.WithExecutionStartToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewExecutionStartToCloseTimeout()))
 		}
-
 		if reply.GetContinueAsNewScheduleToCloseTimeout() > 0 {
 			continueContext = workflow.WithScheduleToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewScheduleToCloseTimeout()))
 		}
-
 		if reply.GetContinueAsNewScheduleToStartTimeout() > 0 {
 			continueContext = workflow.WithScheduleToStartTimeout(continueContext, time.Duration(reply.GetContinueAsNewScheduleToStartTimeout()))
 		}
-
 		if reply.GetContinueAsNewStartToCloseTimeout() > 0 {
 			continueContext = workflow.WithStartToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewStartToCloseTimeout()))
 		}
