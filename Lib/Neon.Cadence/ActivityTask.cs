@@ -32,9 +32,9 @@ namespace Neon.Cadence
     public class ActivityTask
     {
         /// <summary>
-        /// The activity task token.
+        /// The opaque base-64 encoded activity task token.
         /// </summary>
-        public byte[] TaskToken { get; internal set; }
+        public string TaskToken { get; internal set; }
 
         /// <summary>
         /// The parent workflow type name.
