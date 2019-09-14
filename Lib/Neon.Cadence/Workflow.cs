@@ -1155,11 +1155,12 @@ namespace Neon.Cadence
         /// throw a <see cref="InvalidOperationException"/> when called.
         /// </remarks>
         public TWorkflowInterface NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
+            where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewContinueAsNewStub<TWorkflowInterface>(Client, options);
         }
 
         /// <summary>

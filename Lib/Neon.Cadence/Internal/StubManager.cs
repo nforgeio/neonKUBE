@@ -1040,7 +1040,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
-        /// <param name="parentWorkflow">Thr parent workflow.</param>
+        /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="options">Optionally specifies the workflow options.</param>
         /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
         /// <returns>The stub instance.</returns>
@@ -1066,6 +1066,29 @@ namespace Neon.Cadence.Internal
             var stub = GetWorkflowStub<TWorkflowInterface>(isChild: true);
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowTypeName, options);
+        }
+
+        /// <summary>
+        /// Creates a dynamically generated stub that when called will continue the workflow as new.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="options">Optionally continuation options.</param>
+        /// <returns>The stub instance.</returns>
+        /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
+        public static TWorkflowInterface NewContinueAsNewStub<TWorkflowInterface>(CadenceClient client, ContinueAsNewOptions options = null)
+            where TWorkflowInterface : class
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+
+            var workflowInterface = typeof(TWorkflowInterface);
+            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
+
+            CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: false);
+
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, options);
         }
 
         /// <summary>
