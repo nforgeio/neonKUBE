@@ -24,6 +24,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -284,7 +285,7 @@ namespace TestCadence
             public async Task RunAsync()
             {
                 var stub = Workflow.NewActivityStub<IActivityLogger>();
-                
+
                 await stub.RunAsync();
             }
         }
@@ -638,7 +639,7 @@ namespace TestCadence
                 TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
             };
 
-            var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);
+            var stub = client.NewWorkflowStub<IWorkflowActivityFail>(options);
             var error = await stub.RunAsync();
 
             Assert.NotNull(error);
@@ -696,14 +697,196 @@ namespace TestCadence
             var data = new ComplexActivityData
             {
                 Name = "Jeff",
-                Age  = 58
+                Age = 58
             };
 
-            var stub   = client.NewWorkflowStub<IWorkflowActivityComplexData>();
+            var stub = client.NewWorkflowStub<IWorkflowActivityComplexData>();
             var result = await stub.RunAsync(data);
 
             Assert.Equal(data.Name, result.Name);
             Assert.Equal(data.Age, result.Age);
+        }
+
+        //---------------------------------------------------------------------
+
+        public interface IActivityExternalCompletion : IActivity
+        {
+            [ActivityMethod]
+            Task<string> RunAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityExternalCompletion : ActivityBase, IActivityExternalCompletion
+        {
+            public static Activity ActivityInstance = null;
+
+            public static new void Reset()
+            {
+                ActivityInstance = null;
+            }
+
+            public static Activity WaitForActivity()
+            {
+                NeonHelper.WaitFor(() => ActivityInstance != null, timeout: TimeSpan.FromSeconds(90));
+                Thread.Sleep(TimeSpan.FromSeconds(1));      // Give the activity method a chance to return.
+
+                return ActivityInstance;
+            }
+
+            public async Task<string> RunAsync()
+            {
+                ActivityInstance = this.Activity;
+                Activity.DoNotCompleteOnReturn();
+
+                return await Task.FromResult<string>(null);
+            }
+        }
+
+        public interface IWorkflowActivityExternalCompletion : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowActivityExternalCompletion : WorkflowBase, IWorkflowActivityExternalCompletion
+        {
+            public async Task<string> RunAsync()
+            {
+                var stub = Workflow.NewActivityStub<IActivityExternalCompletion>();
+
+                return await stub.RunAsync();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_ExternalCompleteByToken()
+        {
+            // Verify that we can externally heartbeat and complete an activity
+            // using its task token.
+
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityHeartbeatByTokenAsync(activity.Task.TaskToken);
+            await client.ActivityHeartbeatByTokenAsync(activity.Task.TaskToken, "Heartbeat");
+            await client.ActivityCompleteByTokenAsync(activity.Task.TaskToken, "Hello World!");
+
+            Assert.Equal("Hello World!", await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_ExternalCompleteById()
+        {
+            // Verify that we can externally heartbeat and complete an activity
+            // using the workflow execution and the activity ID.
+
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityHeartbeatByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
+            await client.ActivityHeartbeatByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, "Heartbeat");
+            await client.ActivityCompleteByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, "Hello World!");
+
+            Assert.Equal("Hello World!", await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_ExternalErrorByToken()
+        {
+            // Verify that we can externally fail an activity
+            // using its task token.
+
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("error"));
+
+            try
+            {
+                await task;
+            }
+            catch (Exception e)
+            {
+                // $todo(jeff.lill): Verify the exception
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_ExternalErrorById()
+        {
+            // Verify that we can externally fail an activity
+            // using the workflow execution and the activity ID.
+
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("error"));
+
+            try
+            {
+                await task;
+            }
+            catch (Exception e)
+            {
+                // $todo(jeff.lill): Verify the exception
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task ActivityExternalCancelByToken()
+        {
+            // Verify that we can externally cancel an activity
+            // using the activity token.
+
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
+
+            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+
+            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task ActivityExternalCancelById()
+        {
+            // Verify that we can externally cancel an activity
+            // using the workflow execution and the activity ID.
+
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.RunAsync();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
+
+            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+
+            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }
     }
 }

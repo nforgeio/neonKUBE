@@ -19,7 +19,6 @@ package endpoints
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -145,26 +144,11 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 // param debug bool -> indicates whether the cadence-proxy is running as its
 // own process in debug mode.
 //
-// param writeToFile bool -> indicates that the logger should be configured to
-// write its output to a specified file.
-//
 // returns *zap.Logger -> the configured zap logger.
-func SetLogger(enab zapcore.LevelEnabler, debug, writeToFile bool) (logger *zap.Logger) {
-	var ws zapcore.WriteSyncer = os.Stdout
-	if writeToFile {
-		logPath := fmt.Sprintf("%s/Go/src/github.com/cadence-proxy/logs/info.log", os.Getenv("NF_ROOT"))
-		f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			panic(err)
-		}
-		internal.LogFile = f
-		ws = zapcore.NewMultiWriteSyncer(ws, f)
-	}
-
-	// create the core
+func SetLogger(enab zapcore.LevelEnabler, debug bool) (logger *zap.Logger) {
 	core := NewCore(
 		NewEncoder(),
-		zapcore.Lock(ws),
+		zapcore.Lock(os.Stdout),
 		enab,
 		debug,
 	)

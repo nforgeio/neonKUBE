@@ -22,17 +22,17 @@ default: test
 export PATH := $(GOPATH)/bin:$(PATH)
 
 # Project, test, source, and build paths
-PROJECT_ROOT = github.com/cadence-proxy
-BUILD_DIR := $(NF_ROOT)/Build
-COMPRESSED_DIR := $(NF_ROOT)/Lib/Neon.Cadence/Resources
-APP_DIR=./cmd/cadenceproxy
-PLAYGROUND_DIR=./cmd/playground
-LOG_DIR=./test/logs
+BASE            = github.com/cadence-proxy
+BUILD_DIR       = $(NF_ROOT)/Build
+COMPRESSED_DIR  = $(NF_ROOT)/Lib/Neon.Cadence/Resources
+APP_DIR			= ./cmd/cadenceproxy
+PLAYGROUND_DIR	= ./cmd/playground
+TEST_LOGS		= ./test/logs
 
 # test dirs
-NEON_TEST_DIR := $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
-MESSAGES_TEST_DIR=./internal/messages
-TEST_DIRS := $(MESSAGES_TEST_DIR)
+NEON_TEST_DIR 	= $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
+TEST_DIRS 		= internal/messages  \
+	internal/messages/dotnet-logger
 
 # Gather source code		
 APP_SRC := $(APP_DIR)/main.go
@@ -42,9 +42,9 @@ PROGS = cadenceproxy \
 	playground \
 
 # executable names
-WIN := cadence-proxy.win.exe
-LINUX := cadence-proxy.linux
-OSX := cadence-proxy.osx
+WIN   = cadence-proxy.win.exe
+LINUX = cadence-proxy.linux
+OSX   = cadence-proxy.osx
 
 # Use dep to update and grab source
 # for dependencies
@@ -70,22 +70,17 @@ cadenceproxy: cadence-proxy-linux \
 bins: cadenceproxy \
 
 test: bins
-	rm -f test/messages.test
-	rm -f $(LOG_DIR)/test.log
-	echo $(TEST_DIRS)
-
-	# test messages package
-	go test -v -o test/messages.test -coverprofile $(LOG_DIR)/messages-cover.out $(MESSAGES_TEST_DIR) | tee -a $(LOG_DIR)/test.log
-	go tool cover -html=$(LOG_DIR)/messages-cover.out -o $(LOG_DIR)/messages-cover.html
+	@rm -Rf test/*
+	@echo $(TEST_DIRS)
+	@for dir in $(TEST_DIRS); do \
+		mkdir -p $(TEST_LOGS)/$$dir; \
+		go test -v -o test/$$dir/test.test -coverprofile=$(TEST_LOGS)/$$dir/cover.out ./$$dir | tee -a $(TEST_LOGS)/test.log; \
+		go tool cover -html=$(TEST_LOGS)/$$dir/cover.out -o $(TEST_LOGS)/$$dir/cover.html; \
+	done;
 	
 clean:
 	rm -Rf bin/*
-	rm -Rf logs/*
-	
-	rm -f test/messages.test
-	rm -f $(LOG_DIR)/test.log
-	rm -f $(LOG_DIR)/messages-cover.out
-	rm -f $(LOG_DIR)/messages-cover.html
+	rm -Rf test/*
 
 	rm -f $(BUILD_DIR)/$(WIN)
 	rm -f $(BUILD_DIR)/$(LINUX)

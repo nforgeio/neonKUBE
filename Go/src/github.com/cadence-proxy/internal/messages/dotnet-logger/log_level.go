@@ -38,20 +38,27 @@ const (
 	// Describes detailed debug or diagnostic information.
 	Debug LogLevel = 1
 
+	// Describes a non-error security operation or condition, such as a
+	// a successful login or authentication.
+	SInfo LogLevel = 2
+
 	// Describes a normal operation or condition.
-	Info LogLevel = 2
+	Info LogLevel = 3
 
 	// An unusual condition has been detected that may ultimately lead to an error.
-	Warn LogLevel = 3
+	Warn LogLevel = 4
 
 	// An error has been detected.
-	Error LogLevel = 4
+	Error LogLevel = 5
 
-	// A critical or fatal error has been detected.
-	Panic LogLevel = 5
+	// A security related error has occurred.  Errors indicate a problem that may be
+	// transient, be recovered from, or are perhaps more serious.
+	SError LogLevel = 6
 
-	// A critical or fatal error has been detected.
-	Fatal LogLevel = 6
+	// A critical or fatal error has been detected.  These errors indicate that
+	// a very serious failure has occurred that may have crashed the program or
+	// at least seriousoly impacts its functioning.
+	Critical LogLevel = 7
 )
 
 // Enabled checks a LogLevel against a zapcore.Level
@@ -84,16 +91,18 @@ func (l LogLevel) String() string {
 		return "None"
 	case Debug:
 		return "Debug"
+	case SInfo:
+		return "SInfo"
 	case Info:
 		return "Info"
 	case Warn:
 		return "Warn"
 	case Error:
 		return "Error"
-	case Panic:
+	case SError:
+		return "SError"
+	case Critical:
 		return "Critical"
-	case Fatal:
-		return "Fatal"
 	default:
 		return "None"
 	}
@@ -109,21 +118,17 @@ func ParseLogLevel(value string) LogLevel {
 	case "DEBUG":
 		return Debug
 	case "SINFO":
-		return Info
+		return SInfo
 	case "INFO":
 		return Info
 	case "WARN":
 		return Warn
 	case "SERROR":
-		return Error
+		return SError
 	case "ERROR":
 		return Error
-	case "PANIC":
-		return Panic
 	case "CRITICAL":
-		return Panic
-	case "FATAL":
-		return Fatal
+		return Critical
 	default:
 		return None
 	}
@@ -144,16 +149,18 @@ func LogLevelToZapLevel(value LogLevel) (zapcore.Level, error) {
 	switch value {
 	case Debug:
 		return zapcore.DebugLevel, nil
+	case SInfo:
+		return zapcore.InfoLevel, nil
 	case Info:
 		return zapcore.InfoLevel, nil
 	case Warn:
 		return zapcore.WarnLevel, nil
 	case Error:
 		return zapcore.ErrorLevel, nil
-	case Panic:
+	case SError:
+		return zapcore.ErrorLevel, nil
+	case Critical:
 		return zapcore.PanicLevel, nil
-	case Fatal:
-		return zapcore.FatalLevel, nil
 	default:
 		return zapcore.InfoLevel, fmt.Errorf("input LogLevel %s does not map to existing zapcore.level", value.String())
 	}
@@ -181,11 +188,11 @@ func ZapLevelToLogLevel(value zapcore.Level) (LogLevel, error) {
 	case zapcore.ErrorLevel:
 		return Error, nil
 	case zapcore.DPanicLevel:
-		return Panic, nil
+		return Critical, nil
 	case zapcore.PanicLevel:
-		return Panic, nil
+		return Critical, nil
 	case zapcore.FatalLevel:
-		return Fatal, nil
+		return Critical, nil
 	default:
 		return Info, fmt.Errorf("input zapcore.Level %s does not map to existing LogLevel", value.String())
 	}

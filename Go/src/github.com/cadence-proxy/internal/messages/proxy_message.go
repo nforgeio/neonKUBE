@@ -117,7 +117,7 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 	var message IProxyMessage
 
 	// get the message type
-	messageType := messagetypes.MessageType(readInt32(buf))
+	messageType := messagetypes.MessageType(ReadInt32(buf))
 
 	// check for allow unspecified
 	if !allowUnspecified {
@@ -135,18 +135,18 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 	// get property count
 	// set the properties
 	proxyMessage := message.GetProxyMessage()
-	propertyCount := int(readInt32(buf))
+	propertyCount := int(ReadInt32(buf))
 	for i := 0; i < propertyCount; i++ {
-		key := readString(buf)
-		value := readString(buf)
+		key := ReadString(buf)
+		value := ReadString(buf)
 		proxyMessage.Properties[*key] = value
 	}
 
 	// get attachment count
 	// set the attachments
-	attachmentCount := int(readInt32(buf))
+	attachmentCount := int(ReadInt32(buf))
 	for i := 0; i < attachmentCount; i++ {
-		length := int(readInt32(buf))
+		length := int(ReadInt32(buf))
 		if length == -1 {
 			proxyMessage.Attachments = append(proxyMessage.Attachments, nil)
 		} else if length == 0 {
@@ -182,14 +182,21 @@ func handleUnspecifiedMessageType(typeCode []string) IProxyMessage {
 	}
 }
 
-func writeInt32(w io.Writer, value int32) {
+func WriteInt32(w io.Writer, value int32) {
 	err := binary.Write(w, binary.LittleEndian, value)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func writeString(buf *bytes.Buffer, value *string) {
+func WriteInt64(w io.Writer, value int64) {
+	err := binary.Write(w, binary.LittleEndian, value)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func WriteString(buf *bytes.Buffer, value *string) {
 	if value == nil {
 		err := binary.Write(buf, binary.LittleEndian, int32(-1))
 		if err != nil {
@@ -208,9 +215,9 @@ func writeString(buf *bytes.Buffer, value *string) {
 	}
 }
 
-func readString(buf *bytes.Buffer) *string {
+func ReadString(buf *bytes.Buffer) *string {
 	var strPtr *string
-	length := int(readInt32(buf))
+	length := int(ReadInt32(buf))
 	if length == -1 {
 		strPtr = nil
 	} else if length == 0 {
@@ -225,9 +232,27 @@ func readString(buf *bytes.Buffer) *string {
 	return strPtr
 }
 
-func readInt32(buf *bytes.Buffer) int32 {
+func ReadInt32(buf *bytes.Buffer) int32 {
 	var num int32
 	intBytes := buf.Next(4)
+	reader := bytes.NewReader(intBytes)
+
+	// Read the []byte into the byte.Reader
+	// LittleEndian byte order
+	err := binary.Read(reader, binary.LittleEndian, &num)
+	if err != nil {
+		if err.Error() == "EOF" {
+			return 0
+		}
+		panic(err)
+	}
+
+	return num
+}
+
+func ReadInt64(buf *bytes.Buffer) int64 {
+	var num int64
+	intBytes := buf.Next(8)
 	reader := bytes.NewReader(intBytes)
 
 	// Read the []byte into the byte.Reader
@@ -268,27 +293,27 @@ func (proxyMessage *ProxyMessage) Serialize(allowUnspecified bool) ([]byte, erro
 	buf := new(bytes.Buffer)
 
 	// write message type to the buffer LittleEndian byte order
-	writeInt32(buf, int32(proxyMessage.Type))
+	WriteInt32(buf, int32(proxyMessage.Type))
 
 	// write num properties to the buffer LittleEndian byte order
-	writeInt32(buf, int32(len(proxyMessage.Properties)))
+	WriteInt32(buf, int32(len(proxyMessage.Properties)))
 
 	// write the properties to the buffer
 	for k, v := range proxyMessage.Properties {
-		writeString(buf, &k)
-		writeString(buf, v)
+		WriteString(buf, &k)
+		WriteString(buf, v)
 	}
 
 	// write num of attachments the buffer LittleEndian byte order
-	writeInt32(buf, int32(len(proxyMessage.Attachments)))
+	WriteInt32(buf, int32(len(proxyMessage.Attachments)))
 
 	for _, attachment := range proxyMessage.Attachments {
 		if attachment == nil {
 			// write to the buffer LittleEndian byte order
-			writeInt32(buf, int32(-1))
+			WriteInt32(buf, int32(-1))
 		} else {
 			// write to the buffer LittleEndian byte order
-			writeInt32(buf, int32(len(attachment)))
+			WriteInt32(buf, int32(len(attachment)))
 			_, err := buf.Write(attachment)
 			if err != nil {
 				return nil, err

@@ -22,9 +22,8 @@ import (
 	"net/http"
 	"os"
 
-	"go.uber.org/zap/zapcore"
-
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/cadence-proxy/internal"
 	"github.com/cadence-proxy/internal/endpoints"
@@ -43,10 +42,6 @@ var (
 	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
 	// This defaults to false.
 	debugPrelaunched = false
-
-	// logToFile specifies that all logs should be written
-	// to a specified file location
-	logToFile = false
 )
 
 func main() {
@@ -63,7 +58,6 @@ func main() {
 		logLevel = zapcore.DebugLevel
 	}
 	internal.DebugPrelaunched = debugPrelaunched
-	internal.LogToFile = logToFile
 
 	// set the initialization logger
 	l := zap.New(
@@ -72,6 +66,7 @@ func main() {
 			zapcore.Lock(os.Stdout),
 			logLevel,
 		), zap.AddCaller())
+	defer l.Sync()
 
 	// create the HTTP client used to
 	// send messages back to the Neon.Cadence
@@ -96,13 +91,4 @@ func main() {
 
 	// start the server
 	instance.Start()
-
-	// close the log file if it is open
-	defer func() {
-		if internal.LogFile != nil {
-			l.Info("Releasing log file")
-			internal.LogFile.Close()
-		}
-		l.Sync()
-	}()
 }
