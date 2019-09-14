@@ -81,7 +81,7 @@ namespace Neon.Cadence
             TimeSpan        scheduleToCloseTimeout  = default,
             TimeSpan        scheduleToStartTimeout  = default,
             TimeSpan        taskStartToCloseTimeout = default,
-            RetryOptions    retryOptions             = null)
+            RetryOptions    retryOptions            = null)
 
             : base()
         {
@@ -92,7 +92,7 @@ namespace Neon.Cadence
             this.ScheduleToStartTimeout       = scheduleToStartTimeout;
             this.ScheduleToCloseTimeout       = scheduleToCloseTimeout;
             this.TaskStartToCloseTimeout      = taskStartToCloseTimeout;
-            this.RetryOptions                  = retryOptions;
+            this.RetryOptions                 = retryOptions;
         }
 
         /// <summary>
