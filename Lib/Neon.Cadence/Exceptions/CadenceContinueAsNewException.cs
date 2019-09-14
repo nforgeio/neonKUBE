@@ -96,7 +96,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Constructs an instances using a <see cref="ContinueAsNewOptions"/>.
+        /// Constructs an instance using a <see cref="ContinueAsNewOptions"/>.
         /// </summary>
         /// <param name="args">Arguments for the new execution (this may be <c>null)</c>).</param>
         /// <param name="options">Options for the new execution  (this may be <c>null</c>).</param>
