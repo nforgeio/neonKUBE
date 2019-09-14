@@ -49,6 +49,7 @@ namespace Neon.Cadence.Internal
         private Type                stubType;
         private ConstructorInfo     startConstructor;
         private ConstructorInfo     childConstructor;
+        private ConstructorInfo     continueConstructor;
         private MethodInfo          toUntyped;
 
         /// <summary>
@@ -65,10 +66,11 @@ namespace Neon.Cadence.Internal
 
             // Fetch the stub type and reflect the required constructors and methods.
 
-            this.stubType         = assembly.GetType(className);
-            this.startConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions));
-            this.childConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildWorkflowOptions));
-            this.toUntyped        = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
+            this.stubType            = assembly.GetType(className);
+            this.startConstructor    = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions));
+            this.childConstructor    = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildWorkflowOptions));
+            this.continueConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(ContinueAsNewOptions));
+            this.toUntyped           = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
         }
 
         /// <summary>
@@ -96,6 +98,18 @@ namespace Neon.Cadence.Internal
         public object Create(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options)
         {
             return childConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowTypeName, options });
+        }
+
+        /// <summary>
+        /// Creates a workflow stub instance suitable for continuing a workflow as new.
+        /// </summary>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="dataConverter">The data converter.</param>
+        /// <param name="options">Specifies the continuation options.</param>
+        /// <returns>The workflow stub as an <see cref="object"/>.</returns>
+        public object Create(CadenceClient client, IDataConverter dataConverter, ContinueAsNewOptions options)
+        {
+            return continueConstructor.Invoke(new object[] { client, dataConverter, options });
         }
 
         /// <summary>
