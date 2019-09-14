@@ -626,9 +626,10 @@ namespace Neon.Cadence.Internal
             foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Workflow))
             {
                 var resultType = CadenceHelper.TypeToCSharp(details.ReturnType);
+                var parameters = details.Method.GetParameters();
                 var sbParams   = new StringBuilder();
 
-                foreach (var param in details.Method.GetParameters())
+                foreach (var param in parameters)
                 {
                     sbParams.AppendWithSeparator($"{CadenceHelper.TypeToCSharp(param.ParameterType)} {param.Name}", ", ");
                 }
@@ -641,7 +642,20 @@ namespace Neon.Cadence.Internal
 
                 sbSource.AppendLine($"            if (this.continueAsNew)");
                 sbSource.AppendLine($"            {{");
-                sbSource.AppendLine($"                throw new ");
+                sbSource.AppendLine($"                var ___args = new List<object>();");
+
+                if (parameters.Length > 0)
+                {
+                    sbSource.AppendLine();
+
+                    foreach (var param in parameters)
+                    {
+                        sbSource.AppendLine($"                ___args.Add({param.Name});");
+                    }
+                }
+
+                sbSource.AppendLine();
+                sbSource.AppendLine($"                throw new CadenceContinueAsNewException(this.dataConverter.ToData(___args), this.continueAsNewOptions);");
                 sbSource.AppendLine($"            }}");
                 sbSource.AppendLine();
 
