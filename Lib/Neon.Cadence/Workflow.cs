@@ -1260,6 +1260,9 @@ namespace Neon.Cadence
             return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
 
+#if TODO
+        // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
+
         /// <summary>
         /// Creates a new untyped activity client stub that can be used to launch activities.
         /// </summary>
@@ -1283,6 +1286,7 @@ namespace Neon.Cadence
 
             throw new NotImplementedException();
         }
+#endif
 
         /// <summary>
         /// Creates an untyped child workflow stub that can be used to start, signal, and query

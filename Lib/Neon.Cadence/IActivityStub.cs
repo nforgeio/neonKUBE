@@ -28,6 +28,9 @@ using Neon.Common;
 
 namespace Neon.Cadence
 {
+#if TODO
+    // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
+
     /// <summary>
     /// Used to execute activities when their type is not known an compile time.
     /// </summary>
@@ -89,4 +92,5 @@ namespace Neon.Cadence
         /// </remarks>
         Task<TResult> ExecuteAsync<TResult>(string activityTypeName, params object[] args);
     }
+#endif
 }

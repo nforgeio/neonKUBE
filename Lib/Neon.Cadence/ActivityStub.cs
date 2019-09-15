@@ -28,6 +28,9 @@ using Neon.Common;
 
 namespace Neon.Cadence
 {
+#if TODO
+    // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
+
     /// <inheritdoc/>
     public class ActivityStub : IActivityStub
     {
@@ -49,4 +52,5 @@ namespace Neon.Cadence
             throw new NotImplementedException();
         }
     }
+#endif
 }
