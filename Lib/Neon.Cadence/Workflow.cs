@@ -1163,37 +1163,46 @@ namespace Neon.Cadence
             return StubManager.NewContinueAsNewStub<TWorkflowInterface>(Client, options);
         }
 
+#if TODO
+        // $todo(jeff.lill):
+        //
+        // I'm not actually sure what the point of external child workflow stubs
+        // are and there are some implementation gaps.  We're going to leave these
+        // unimplemented for now and perhaps revisit later.
+
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
-        /// existing workflow identified by <see cref="WorkflowExecution"/>.
+        /// existing workflow identified by a <see cref="WorkflowExecution"/>.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <param name="execution">Identifies the workflow execution.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
+        /// <param name="execution">Identifies the workflow.</param>
         /// <returns>The workflow stub.</returns>
-        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
+        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
+            where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, execution);
         }
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
-        /// existing workflow identified by workflow ID.
+        /// existing workflow identified by a workflow ID and an optional domain.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="workflowId">Identifies the workflow.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
+        /// <param name="domain">Optionally overrides the parent workflow domain.</param>
         /// <returns>The workflow stub.</returns>
         public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null)
+            where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, workflowId, domain);
         }
+#endif
 
         /// <summary>
         /// Creates a client stub that can be used to launch one or more local activity 

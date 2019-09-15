@@ -764,7 +764,7 @@ namespace Neon.Cadence
         /// actually started on a worker.
         /// </note>
         /// </summary>
-        /// <param name="workflow">The parent workflow.</param>
+        /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="child">The child workflow execution.</param>
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
@@ -773,16 +773,16 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task SignalChildWorkflowAsync(Workflow workflow, ChildExecution child, string signalName, byte[] signalArgs)
+        internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution child, string signalName, byte[] signalArgs)
         {
-            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
             Covenant.Requires<ArgumentNullException>(child != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
             var reply = (WorkflowSignalChildReply)await CallProxyAsync(
                 new WorkflowSignalChildRequest()
                 {
-                    ContextId   = workflow.ContextId,
+                    ContextId   = parentWorkflow.ContextId,
                     ChildId     = child.ChildId,
                     SignalName  = signalName,
                     SignalArgs  = signalArgs

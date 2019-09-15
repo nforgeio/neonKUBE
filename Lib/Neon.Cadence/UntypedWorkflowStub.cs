@@ -33,7 +33,7 @@ namespace Neon.Cadence
     /// interface isn't available.  This can happen when the workflow was implemented
     /// in another language or within another inaccessible codebase.  This can provide
     /// a relatively easy way to interact with such workflows at the cost of needing
-    /// to care when mapping the method parameter and result types. 
+    /// to take care when handling the method parameter and result types. 
     /// </summary>
     public class UntypedWorkflowStub
     {
