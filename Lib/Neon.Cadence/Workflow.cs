@@ -497,6 +497,13 @@ namespace Neon.Cadence
             return reply.Version;
         }
 
+#if TODO
+        // $todo(jeff.lill):
+        //
+        // We're going to leave this unimplemented for now and revisit later.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/615
+
         /// <summary>
         /// Returns the <see cref="WorkflowExecution"/> for a child workflow created via
         /// <see cref="NewChildWorkflowStub{TWorkflowInterface}(ChildWorkflowOptions, string)"/>
@@ -518,6 +525,7 @@ namespace Neon.Cadence
             await Task.CompletedTask;
             throw new NotImplementedException();
         }
+#endif
 
         /// <summary>
         /// Calls the specified function and then searches the workflow history
@@ -1168,7 +1176,9 @@ namespace Neon.Cadence
         //
         // I'm not actually sure what the point of external child workflow stubs
         // are and there are some implementation gaps.  We're going to leave these
-        // unimplemented for now and perhaps revisit later.
+        // unimplemented for now and revisit later.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/615
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an

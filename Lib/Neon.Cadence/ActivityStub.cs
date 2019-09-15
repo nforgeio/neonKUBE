@@ -44,7 +44,7 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public Task<object> ExecuteAsync(Type activityType, string activityTypeName, params object[] args)
+        public Task<object> ExecuteAsync(Type activityType, params object[] args)
         {
             throw new NotImplementedException();
         }
