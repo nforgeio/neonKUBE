@@ -8,7 +8,7 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build`
 
-3. Build and publish all of the Docker images: `powershell -file publish.ps1 -all`
+3. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
 ## Release 
 
@@ -19,22 +19,24 @@
 
 3. Update the product version here too: `$/Lib/Neon.Common/Build.cs`
 
-4. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
+4. Run all unit tests.
+
+5. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
    required Kubernetes version as required.
 
-5. Rebuild the RELEASE version via:
+6. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-6. Verify that the new release installer works.
+7. Verify that the new release installer works.
 
-7. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
+8. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
-8. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
+9. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
+10. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
 
-10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+11. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
