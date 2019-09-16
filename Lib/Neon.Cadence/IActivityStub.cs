@@ -28,7 +28,6 @@ using Neon.Common;
 
 namespace Neon.Cadence
 {
-#if TODO
     // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
 
     /// <summary>
@@ -92,5 +91,4 @@ namespace Neon.Cadence
         /// </remarks>
         Task<TResult> ExecuteAsync<TResult>(string activityTypeName, params object[] args);
     }
-#endif
 }
