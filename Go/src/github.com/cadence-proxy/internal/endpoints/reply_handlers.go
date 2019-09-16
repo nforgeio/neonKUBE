@@ -53,8 +53,9 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
+	clientID := reply.GetClientID()
 	Logger.Debug("Settling Workflow",
-		zap.Int64("ClientId", reply.GetClientID()),
+		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", requestID),
 		zap.Int64("ContextId", contextID),
 		zap.Int("ProcessId", os.Getpid()),
@@ -100,7 +101,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 		// Start a continue as new instance of the workflow and get the error to send
 		// back to the Neon.Cadence Lib
 		// set ContinueAsNewError as the result
-		continueError := workflow.NewContinueAsNewError(continueContext, *wectx.GetWorkflowName(), reply.GetContinueAsNewArgs())
+		continueError := workflow.NewContinueAsNewError(continueContext, *wectx.GetWorkflowName(), clientID, reply.GetContinueAsNewArgs())
 		err := op.SendChannel(continueError, nil)
 		if err != nil {
 			return err
