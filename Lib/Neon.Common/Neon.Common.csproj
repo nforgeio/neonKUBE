@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Common</RootNamespace>
-    <Version>0.5.9-alpha</Version>
+    <Version>0.6.0-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE common library.</Description>

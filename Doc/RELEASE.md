@@ -4,35 +4,30 @@
 
 1. Merge all desired changes into the **MASTER** branch from the **JEFF** and/or other development branches.
 
-2. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build`
-
-3. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
-
 ## Release 
 
-1. Select the release branch.
+1. Select the release branch and merge from **MASTER**.
 
 2. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
 
 3. Update the product version here too: `$/Lib/Neon.Common/Build.cs`
 
-4. Run all unit tests.
-
-5. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
-   required Kubernetes version as required.
-
-6. Rebuild the RELEASE version via:
+4. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-7. Verify that the new release installer works.
+5. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-8. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
+6. Run all unit tests: **RELEASE** and **x64 mode**
 
-9. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
+7. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
+   required Kubernetes version as required.
+
+8. Verify that the new release installer works.
+
+9
+. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
 
 10. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
 
@@ -45,7 +40,7 @@
   f. Add the release setup binary named like: **neonKUBE-setup-0.1.0-alpha.exe**
   g. Edit the release notes including adding the SHA512 for the setup from:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"$NF_BUILD%\neonKUBE-setup.sha512.txt`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`$NF_BUILD%\neonKUBE-setup.sha512.txt`
 
   g. Publish the release
 
@@ -61,7 +56,13 @@
 
     * Be sure to set the branch to the new release branch.
 
-5. Archive the source code:
+5. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build`
+
+6. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
+
+7. Archive the source code:
 
   1. Close all Visual Studio windows.
   2. Run `neon-archive.cmd` in a command window.
