@@ -17,21 +17,17 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-5. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
+5. Run all unit tests: **RELEASE** and **x64 mode**
 
-6. Run all unit tests: **RELEASE** and **x64 mode**
+6. Verify that the new release installer works.
 
-7. Update `$/kube-version.txt` (or `GitHub/kube-version.txt` in the solution) with the 
-   required Kubernetes version as required.
+7. Publish the nuget packages: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1`
 
-8. Verify that the new release installer works.
+8. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-9
-. Execute **as ADMIN**: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **nuget.org**.
+9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
 
-10. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
-
-11. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version
