@@ -1157,7 +1157,7 @@ namespace Neon.ModelGen
                     {
                         if (persistedKeyProperty != null)
                         {
-                            Output.Error($"[{dataModel.SourceType.FullName}]: This data model has two properties [{persistedKeyProperty.Name}] and [{property.Name}] that are both tagged with [PersisabledKey].  This is allowed for only one property per class.");
+                            Output.Error($"[{dataModel.SourceType.FullName}]: This data model has two properties [{persistedKeyProperty.Name}] and [{property.Name}] that are both tagged with [PersisabledKey].  This is allowed for only one property per type.");
                             break;
                         }
 
@@ -2250,9 +2250,13 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
 
-                        if (persistedKeyProperty == null)
+                        if (!genPersistence)
                         {
-                            writer.WriteLine($"            return null; // ERROR: No source data model property was tagged by [PersistableKey].");
+                            writer.WriteLine($"            throw new NotSupportedException(\"Model persistence is not enabled.  Try specifying the [--persisted] option on the neon-cli command line.\");");
+                        }
+                        else if (persistedKeyProperty == null)
+                        {
+                            writer.WriteLine($"            throw new NotSupportedException(\"No source data model property was tagged by [PersistableKey].\");");
                         }
                         else if (persistedKeyProperty.PropertyType.IsValueType)
                         {
@@ -2262,7 +2266,7 @@ namespace Neon.ModelGen
                         {
                             writer.WriteLine($"            if ({persistedKeyProperty.Name} == null)");
                             writer.WriteLine($"            {{");
-                            writer.WriteLine($"                throw new InvalidOperationException(\"Persistence key property [{persistedKeyProperty.Name}] cannot be NULL.\");");
+                            writer.WriteLine($"                throw new NotSupportedException(\"Persistence key property [{persistedKeyProperty.Name}] cannot be NULL.\");");
                             writer.WriteLine($"            }}");
                             writer.WriteLine();
 

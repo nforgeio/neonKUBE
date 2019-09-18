@@ -106,8 +106,6 @@ Go/**/test/logs/**
 # into the [Neon.Cadence] assembly as resources.
 
 /Lib/Neon.Cadence/Resources/**
-/Lib/Neon.Cadence2/Resources/**
-/Lib/Neon.Cadence3/Resources/**
 /Test/Test.Neon.Models/GeneratedUxTypes.cs
 /Lib/Neon.Cadence2/Resources/cadence-proxy.win.exe.gz
 /Lib/Neon.Cadence2/Resources/cadence-proxy.osx.gz

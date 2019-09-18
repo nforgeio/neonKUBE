@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cryptography</RootNamespace>
-    <Version>0.5.9-alpha</Version>
+    <Version>0.6.1-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE cryptography library.</Description>
@@ -39,7 +39,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="System.Security.Cryptography.Cng" Version="4.6.0-preview8.19405.3" />
+    <PackageReference Include="System.Security.Cryptography.Cng" Version="4.6.0-rc1.19456.4" />
   </ItemGroup>
 
   <ItemGroup>
