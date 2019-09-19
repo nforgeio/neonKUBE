@@ -428,7 +428,7 @@ namespace TestCadence
             }
         }
 
-        [SlowFact(Skip = "Takes Long")]
+        [SlowFact(Skip = "Too Long")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Workflow_Cron()
         {
