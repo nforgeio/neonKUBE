@@ -2118,7 +2118,7 @@ namespace TestCadence
             Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloNewOptionsAsync("Jeff", 1));
         }
 
-        [Fact(Skip = "Not working")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ContinueAsNew_Stub()
         {
@@ -2130,7 +2130,7 @@ namespace TestCadence
             Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubAsync("Jeff"));
         }
 
-        [Fact(Skip = "Not working")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ContinueAsNew_StubOptions()
         {
