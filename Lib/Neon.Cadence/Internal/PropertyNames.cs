@@ -58,6 +58,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 ContinueAsNewScheduleToStartTimeout { get; private set; }       = new PropertyNameUtf8("ContinueAsNewScheduleToStartTimeout");
         public static PropertyNameUtf8 ContinueAsNewStartToCloseTimeout { get; private set; }          = new PropertyNameUtf8("ContinueAsNewStartToCloseTimeout");
         public static PropertyNameUtf8 ContinueAsNewTaskList { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewTaskList");
+        public static PropertyNameUtf8 ContinueAsNewWorkflow { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewWorkflow");
         public static PropertyNameUtf8 CreateDomain { get; private set; }                              = new PropertyNameUtf8("CreateDomain");
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");

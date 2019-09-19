@@ -35,12 +35,7 @@ import (
 // client message types
 
 func handleLogReply(reply *messages.LogReply, op *messages.Operation) error {
-	err := op.SendChannel(true, reply.GetError())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(true, reply.GetError())
 }
 
 // -------------------------------------------------------------------------
@@ -67,13 +62,12 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 		return internal.ErrEntityNotExist
 	}
 
+	workflowName := *wectx.GetWorkflowName()
+	Logger.Debug("WorkflowInfo", zap.String("Workflow", workflowName))
+
 	// check for ForceReplay
 	if reply.GetForceReplay() {
-		err := op.SendChannel(nil, proxyerror.NewCadenceError(errors.New("force-replay")))
-		if err != nil {
-			return err
-		}
-		return nil
+		return op.SendChannel(nil, proxyerror.NewCadenceError(errors.New("force-replay")))
 	}
 
 	// check for ContinueAsNew
@@ -97,17 +91,13 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 		if reply.GetContinueAsNewStartToCloseTimeout() > 0 {
 			continueContext = workflow.WithStartToCloseTimeout(continueContext, time.Duration(reply.GetContinueAsNewStartToCloseTimeout()))
 		}
-
-		// Start a continue as new instance of the workflow and get the error to send
-		// back to the Neon.Cadence Lib
-		// set ContinueAsNewError as the result
-		continueError := workflow.NewContinueAsNewError(continueContext, *wectx.GetWorkflowName(), reply.GetContinueAsNewArgs())
-		err := op.SendChannel(continueError, nil)
-		if err != nil {
-			return err
+		continueAsNewWorkflow := workflowName
+		if reply.GetContinueAsNewWorkflow() != nil {
+			continueAsNewWorkflow = *reply.GetContinueAsNewWorkflow()
 		}
+		continueError := workflow.NewContinueAsNewError(continueContext, continueAsNewWorkflow, reply.GetContinueAsNewArgs())
 
-		return nil
+		return op.SendChannel(continueError, nil)
 	}
 
 	// special errors
@@ -121,12 +111,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 	}
 
 	// set the reply
-	err := op.SendChannel(result, cadenceError)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(result, cadenceError)
 }
 
 func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *messages.Operation) error {
@@ -145,12 +130,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 	}
 
 	// set the reply
-	err := op.SendChannel(true, reply.GetError())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(true, reply.GetError())
 }
 
 func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *messages.Operation) error {
@@ -169,12 +149,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 	}
 
 	// set the reply
-	err := op.SendChannel(reply.GetResult(), reply.GetError())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(reply.GetResult(), reply.GetError())
 }
 
 func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *messages.Operation) error {
@@ -188,12 +163,7 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op
 	)
 
 	// set the reply
-	err := op.SendChannel(true, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(true, nil)
 }
 
 // -------------------------------------------------------------------------
@@ -228,12 +198,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages
 	}
 
 	// set the reply
-	err := op.SendChannel(result, reply.GetError())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(result, reply.GetError())
 }
 
 func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *messages.Operation) error {
@@ -247,12 +212,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *mess
 	)
 
 	// set the reply
-	err := op.SendChannel(true, reply.GetError())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(true, reply.GetError())
 }
 
 func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *messages.Operation) error {
@@ -275,10 +235,5 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op
 	}
 
 	// set the reply
-	err := op.SendChannel(reply.GetResult(), reply.GetError())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return op.SendChannel(reply.GetResult(), reply.GetError())
 }

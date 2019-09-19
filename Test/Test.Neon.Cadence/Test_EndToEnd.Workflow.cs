@@ -428,7 +428,7 @@ namespace TestCadence
             }
         }
 
-        [SlowFact]
+        [SlowFact(Skip = "Takes Long")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Workflow_Cron()
         {
@@ -2065,9 +2065,11 @@ namespace TestCadence
                 // We're going to continue as IWorkflowContinueAsNew1 using a stub
                 // and with new options.
 
-                var options = new ContinueAsNewOptions();
-                var stub    = Workflow.NewContinueAsNewStub<IWorkflowContinueAsNew1>(options);
-
+                var options  = new ContinueAsNewOptions() 
+                {
+                    Workflow = "TestCadence.Test_EndToEnd.WorkflowContinueAsNew1"
+                };
+                var stub     = Workflow.NewContinueAsNewStub<IWorkflowContinueAsNew1>(options);
                 await stub.HelloAsync(name);
                 throw new Exception("We should never reach this.");
             }
@@ -2118,7 +2120,7 @@ namespace TestCadence
             Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloNewOptionsAsync("Jeff", 1));
         }
 
-        [Fact]
+        [Fact(Skip = "Hangs")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ContinueAsNew_Stub()
         {

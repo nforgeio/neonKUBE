@@ -270,6 +270,7 @@ namespace Neon.Cadence
 
             throw new CadenceContinueAsNewException(
                 args:       Client.DataConverter.ToData(args),
+                workflow:   WorkflowInfo.WorkflowType,
                 domain:     WorkflowInfo.Domain,
                 taskList:   WorkflowInfo.TaskList);
         }
@@ -299,13 +300,14 @@ namespace Neon.Cadence
 
             throw new CadenceContinueAsNewException(
                 args:                       Client.DataConverter.ToData(args),
-                domain:                     WorkflowInfo.Domain,
-                taskList:                   WorkflowInfo.TaskList,
+                domain:                     options.Domain ?? WorkflowInfo.Domain,
+                taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
+                workflow:                   options.Workflow ?? WorkflowInfo.WorkflowType,
                 executionToStartTimeout:    options.ExecutionStartToCloseTimeout,
                 scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
                 scheduleToStartTimeout:     options.ScheduleToStartTimeout,
                 taskStartToCloseTimeout:    options.TaskStartToCloseTimeout,
-                retryOptions:                options.RetryOptions);
+                retryOptions:               options.RetryOptions);
         }
 
         /// <summary>

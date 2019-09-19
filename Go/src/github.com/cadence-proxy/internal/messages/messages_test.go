@@ -24,8 +24,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -44,13 +44,13 @@ import (
 
 	"github.com/cadence-proxy/internal"
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
-	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	"github.com/cadence-proxy/internal/cadence/error"
+	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	"github.com/cadence-proxy/internal/endpoints"
 	"github.com/cadence-proxy/internal/messages"
+	"github.com/cadence-proxy/internal/messages/dotnet-logger"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
 	"github.com/cadence-proxy/internal/server"
-	"github.com/cadence-proxy/internal/messages/dotnet-logger"
 )
 
 type (
@@ -105,7 +105,7 @@ func (s *UnitTestSuite) setupTestSuiteServer() {
 	s.instance = server.NewInstance(_listenAddress, l)
 	endpoints.Instance = s.instance
 	endpoints.Logger = l.Named(internal.ProxyLoggerName)
-	
+
 	endpoints.SetupRoutes(s.instance.Router)
 }
 
@@ -2149,6 +2149,16 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Nil(v.GetError())
 		s.Equal(int64(0), v.GetContextID())
 		s.False(v.GetForceReplay())
+		s.False(v.GetContinueAsNew())
+		s.Nil(v.GetResult())
+		s.Nil(v.GetContinueAsNewArgs())
+		s.Nil(v.GetContinueAsNewDomain())
+		s.Nil(v.GetContinueAsNewTaskList())
+		s.Nil(v.GetContinueAsNewWorkflow())
+		s.Equal(int64(0), v.GetContinueAsNewExecutionStartToCloseTimeout())
+		s.Equal(int64(0), v.GetContinueAsNewScheduleToCloseTimeout())
+		s.Equal(int64(0), v.GetContinueAsNewScheduleToStartTimeout())
+		s.Equal(int64(0), v.GetContinueAsNewStartToCloseTimeout())
 
 		// Round-trip
 
@@ -2167,6 +2177,37 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 
 		v.SetForceReplay(true)
 		s.True(v.GetForceReplay())
+
+		v.SetContinueAsNew(true)
+		s.True(v.GetContinueAsNew())
+
+		args := []byte{5, 6, 7, 8}
+		v.SetContinueAsNewArgs(args)
+		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
+
+		domain := "test-domain"
+		v.SetContinueAsNewDomain(&domain)
+		s.Equal("test-domain", *v.GetContinueAsNewDomain())
+
+		workflow := "test-workflow"
+		v.SetContinueAsNewWorkflow(&workflow)
+		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
+
+		taskList := "test-task"
+		v.SetContinueAsNewTaskList(&taskList)
+		s.Equal("test-task", *v.GetContinueAsNewTaskList())
+
+		v.SetContinueAsNewExecutionStartToCloseTimeout(int64(1))
+		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
+
+		v.SetContinueAsNewScheduleToCloseTimeout(int64(2))
+		s.Equal(int64(2), v.GetContinueAsNewScheduleToCloseTimeout())
+
+		v.SetContinueAsNewScheduleToStartTimeout(int64(3))
+		s.Equal(int64(3), v.GetContinueAsNewScheduleToStartTimeout())
+
+		v.SetContinueAsNewStartToCloseTimeout(int64(4))
+		s.Equal(int64(4), v.GetContinueAsNewStartToCloseTimeout())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2183,6 +2224,15 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 		s.True(v.GetForceReplay())
+		s.True(v.GetContinueAsNew())
+		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
+		s.Equal("test-domain", *v.GetContinueAsNewDomain())
+		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
+		s.Equal("test-task", *v.GetContinueAsNewTaskList())
+		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
+		s.Equal(int64(2), v.GetContinueAsNewScheduleToCloseTimeout())
+		s.Equal(int64(3), v.GetContinueAsNewScheduleToStartTimeout())
+		s.Equal(int64(4), v.GetContinueAsNewStartToCloseTimeout())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2195,6 +2245,15 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetResult())
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 		s.True(v.GetForceReplay())
+		s.True(v.GetContinueAsNew())
+		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
+		s.Equal("test-domain", *v.GetContinueAsNewDomain())
+		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
+		s.Equal("test-task", *v.GetContinueAsNewTaskList())
+		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
+		s.Equal(int64(2), v.GetContinueAsNewScheduleToCloseTimeout())
+		s.Equal(int64(3), v.GetContinueAsNewScheduleToStartTimeout())
+		s.Equal(int64(4), v.GetContinueAsNewStartToCloseTimeout())
 	}
 }
 

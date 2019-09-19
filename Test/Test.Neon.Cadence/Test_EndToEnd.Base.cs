@@ -68,7 +68,7 @@ namespace TestCadence
             Console.WriteLine($"Transactions/sec: {tps}");
         }
 
-        [SlowFact]
+        [SlowFact(Skip = "Too long")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void PingAttack()
         {
