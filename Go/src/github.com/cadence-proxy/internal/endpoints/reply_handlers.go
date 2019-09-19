@@ -56,8 +56,8 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 	clientID := reply.GetClientID()
 	Logger.Debug("Settling Workflow",
 		zap.Int64("ClientId", clientID),
-		zap.Int64("RequestId", requestID),
 		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -101,7 +101,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 		// Start a continue as new instance of the workflow and get the error to send
 		// back to the Neon.Cadence Lib
 		// set ContinueAsNewError as the result
-		continueError := workflow.NewContinueAsNewError(continueContext, *wectx.GetWorkflowName(), clientID, reply.GetContinueAsNewArgs())
+		continueError := workflow.NewContinueAsNewError(continueContext, *wectx.GetWorkflowName(), reply.GetContinueAsNewArgs())
 		err := op.SendChannel(continueError, nil)
 		if err != nil {
 			return err
@@ -134,8 +134,8 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Signal",
 		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("RequestId", requestID),
 		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -158,8 +158,8 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Query",
 		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("RequestId", requestID),
 		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -182,8 +182,8 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Future ACK",
 		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("RequestId", requestID),
 		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -208,8 +208,8 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Activity",
 		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("RequestId", requestID),
 		zap.Int64("ActivityContextId", contextID),
+		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -241,8 +241,8 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *mess
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Activity Stopping",
 		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("RequestId", requestID),
 		zap.Int64("ActivityContextId", contextID),
+		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
@@ -264,8 +264,8 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Local Activity",
 		zap.Int64("ClientId", reply.GetClientID()),
-		zap.Int64("RequestId", requestID),
 		zap.Int64("ActivityContextId", contextID),
+		zap.Int64("RequestId", requestID),
 		zap.Int("ProcessId", os.Getpid()),
 	)
 

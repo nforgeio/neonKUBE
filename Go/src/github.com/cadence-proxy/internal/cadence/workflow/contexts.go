@@ -36,7 +36,8 @@ type (
 	// WorkflowContextsMap holds a thread-safe map[interface{}]interface{} of
 	// cadence WorkflowContextsMap with their contextID's
 	WorkflowContextsMap struct {
-		safeMap sync.Map
+		sync.Mutex
+		contexts map[int64]*WorkflowContext
 	}
 
 	// WorkflowContext holds a Cadence workflow
@@ -82,7 +83,7 @@ func GetContextID() int64 {
 // workflow ExecutionContext in memory
 func NewWorkflowContext(ctx workflow.Context) *WorkflowContext {
 	wectx := new(WorkflowContext)
-	wectx.childContexts = new(ChildContextsMap)
+	wectx.childContexts = NewChildContextsMap()
 	wectx.SetContext(ctx)
 	return wectx
 }
@@ -185,46 +186,53 @@ func (wectx *WorkflowContext) GetChildContext(id int64) *ChildContext {
 //----------------------------------------------------------------------------
 // WorkflowContextsMap instance methods
 
+// NewWorkflowContextsMap is the constructor for an WorkflowContextsMap
+func NewWorkflowContextsMap() *WorkflowContextsMap {
+	o := new(WorkflowContextsMap)
+	o.contexts = make(map[int64]*WorkflowContext)
+	return o
+}
+
 // Add adds a new cadence context and its corresponding ContextId into
 // the WorkflowContextsMap map.  This method is thread-safe.
 //
-// param id int64 -> the long id passed to Cadence
-// workflow functions.  This will be the mapped key
+// param contextID int64 -> the long id contextID of a executing
+// cadence workflow.
 //
 // param wectx *WorkflowContext -> pointer to the new WorkflowContex used to
 // execute workflow functions. This will be the mapped value
 //
 // returns int64 -> long id of the new cadence WorkflowContext added to the map
-func (wectxs *WorkflowContextsMap) Add(id int64, wectx *WorkflowContext) int64 {
-	wectxs.safeMap.Store(id, wectx)
-	return id
+func (w *WorkflowContextsMap) Add(contextID int64, wectx *WorkflowContext) int64 {
+	w.Lock()
+	defer w.Unlock()
+	w.contexts[contextID] = wectx
+	return contextID
 }
 
 // Remove removes key/value entry from the WorkflowContextsMap map at the specified
 // ContextId.  This is a thread-safe method.
 //
-// param id int64 -> the long id passed to Cadence
-// workflow functions.  This will be the mapped key
+// param contextID int64 -> the long id contextID of a executing
+// cadence workflow.
 //
 // returns int64 -> long id of the WorkflowContext removed from the map
-func (wectxs *WorkflowContextsMap) Remove(id int64) int64 {
-	wectxs.safeMap.Delete(id)
-	return id
+func (w *WorkflowContextsMap) Remove(contextID int64) int64 {
+	w.Lock()
+	defer w.Unlock()
+	delete(w.contexts, contextID)
+	return contextID
 }
 
 // Get gets a WorkflowContext from the WorkflowContextsMap at the specified
 // ContextID.  This method is thread-safe.
 //
-// param id int64 -> the long id passed to Cadence
-// workflow functions.  This will be the mapped key
+// param contextID int64 -> the long id contextID of a executing
+// cadence workflow.
 //
 // returns *WorkflowContext -> pointer to WorkflowContext with the specified id
-func (wectxs *WorkflowContextsMap) Get(id int64) *WorkflowContext {
-	if v, ok := wectxs.safeMap.Load(id); ok {
-		if _v, _ok := v.(*WorkflowContext); _ok {
-			return _v
-		}
-	}
-
-	return nil
+func (w *WorkflowContextsMap) Get(contextID int64) *WorkflowContext {
+	w.Lock()
+	defer w.Unlock()
+	return w.contexts[contextID]
 }

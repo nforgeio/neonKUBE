@@ -23,15 +23,23 @@ import (
 
 type (
 
-	// ClientsMap holds a thread-safe map[interface{}]interface{} that stores
+	// ClientsMap holds a thread-safe map[int64]*ClientHelper that stores
 	// cadence workflow service clients with their clientID's
 	ClientsMap struct {
-		safeMap sync.Map
+		sync.Mutex
+		clients map[int64]*ClientHelper
 	}
 )
 
 //----------------------------------------------------------------------------
 // ClientsMap instance methods
+
+// NewClientsMap is the constructor for an ClientsMap
+func NewClientsMap() *ClientsMap {
+	o := new(ClientsMap)
+	o.clients = make(map[int64]*ClientHelper)
+	return o
+}
 
 // Add adds a new ClientHelper and its corresponding
 // ClientId into the Clients map.  This method is thread-safe.
@@ -44,8 +52,10 @@ type (
 //
 // returns int64 -> long clientID of the new ClientHelper
 // added to the map.
-func (clients *ClientsMap) Add(clientID int64, helper *ClientHelper) int64 {
-	clients.safeMap.Store(clientID, helper)
+func (c *ClientsMap) Add(clientID int64, helper *ClientHelper) int64 {
+	c.Lock()
+	defer c.Unlock()
+	c.clients[clientID] = helper
 	return clientID
 }
 
@@ -57,8 +67,10 @@ func (clients *ClientsMap) Add(clientID int64, helper *ClientHelper) int64 {
 //
 // returns int64 -> long clientID of the ClientHelper
 // to be removed from the map
-func (clients *ClientsMap) Remove(clientID int64) int64 {
-	clients.safeMap.Delete(clientID)
+func (c *ClientsMap) Remove(clientID int64) int64 {
+	c.Lock()
+	defer c.Unlock()
+	delete(c.clients, clientID)
 	return clientID
 }
 
@@ -69,12 +81,8 @@ func (clients *ClientsMap) Remove(clientID int64) int64 {
 // to be gotten from the ClientsMap.  This will be the mapped key
 //
 // returns *ClientHelper -> ClientHelper at the specified clientID
-func (clients *ClientsMap) Get(clientID int64) *ClientHelper {
-	if v, ok := clients.safeMap.Load(clientID); ok {
-		if _v, _ok := v.(*ClientHelper); _ok {
-			return _v
-		}
-	}
-
-	return nil
+func (c *ClientsMap) Get(clientID int64) *ClientHelper {
+	c.Lock()
+	defer c.Unlock()
+	return c.clients[clientID]
 }

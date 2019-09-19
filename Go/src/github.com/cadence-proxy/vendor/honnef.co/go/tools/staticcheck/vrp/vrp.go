@@ -722,22 +722,16 @@ func (g *Graph) widen(c Constraint, consts []Z) bool {
 		}
 		nlc := NInfinity
 		nuc := PInfinity
-
-		// Don't get stuck widening for an absurd amount of time due
-		// to an excess number of constants, as may be present in
-		// table-based scanners.
-		if len(consts) < 1000 {
-			for _, co := range consts {
-				if co.Cmp(ni.Lower) <= 0 {
-					nlc = co
-					break
-				}
+		for _, co := range consts {
+			if co.Cmp(ni.Lower) <= 0 {
+				nlc = co
+				break
 			}
-			for _, co := range consts {
-				if co.Cmp(ni.Upper) >= 0 {
-					nuc = co
-					break
-				}
+		}
+		for _, co := range consts {
+			if co.Cmp(ni.Upper) >= 0 {
+				nuc = co
+				break
 			}
 		}
 

@@ -25,12 +25,13 @@ import (
 	"net/http"
 	"strings"
 
-	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
 
 	"github.com/cadence-proxy/internal"
+	proxyactivity "github.com/cadence-proxy/internal/cadence/activity"
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
+	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	"github.com/cadence-proxy/internal/messages"
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
@@ -47,16 +48,13 @@ func CheckRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 			r.Header.Get("Content-Type"),
 			internal.ContentType,
 		)
-
 		return http.StatusBadRequest, err
 	}
-
 	if r.Method != http.MethodPut {
 		err := fmt.Errorf("invalid HTTP Method: %s, must be HTTP Metho: %s",
 			r.Method,
 			http.MethodPut,
 		)
-
 		return http.StatusMethodNotAllowed, err
 	}
 
@@ -110,10 +108,6 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	}
 
 	return resp, nil
-}
-
-func NextRequestID() int64 {
-	return messages.NextRequestID()
 }
 
 func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
@@ -186,7 +180,6 @@ func isCanceledErr(err interface{}) bool {
 	if v, ok := err.(*proxyerror.CadenceError); ok {
 		errStr = v.ToString()
 	}
-
 	if v, ok := err.(error); ok {
 		errStr = v.Error()
 	}
@@ -206,7 +199,6 @@ func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.Clie
 		messagetypes.TerminateRequest,
 		messagetypes.CancelRequest,
 		messagetypes.HeartbeatRequest:
-
 		return nil
 
 	default:
@@ -218,30 +210,18 @@ func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.Clie
 	return nil
 }
 
-func workflowRegisterWithOptions(workflowFunc interface{}, opts workflow.RegisterOptions) {
-	defer func() {
-		if r := recover(); r != nil {
-			if v, ok := r.(error); ok {
-				if strings.Contains(v.Error(), "already registered") {
-					return
-				}
-			}
-			panic(r)
-		}
-	}()
-	workflow.RegisterWithOptions(workflowFunc, opts)
+func NextRequestID() int64 {
+	return messages.NextRequestID()
 }
 
-func activityRegisterWithOptions(activityFunc interface{}, opts activity.RegisterOptions) {
-	defer func() {
-		if r := recover(); r != nil {
-			if v, ok := r.(error); ok {
-				if strings.Contains(v.Error(), "already registered") {
-					return
-				}
-			}
-			panic(r)
-		}
-	}()
-	activity.RegisterWithOptions(activityFunc, opts)
+func NextContextID() int64 {
+	return proxyworkflow.NextContextID()
+}
+
+func NextActivityContextID() int64 {
+	return proxyactivity.NextContextID()
+}
+
+func NextWorkerID() int64 {
+	return proxyworker.NextWorkerID()
 }

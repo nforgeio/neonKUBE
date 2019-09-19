@@ -65,7 +65,8 @@ func main() {
 			endpoints.NewEncoder(),
 			zapcore.Lock(os.Stdout),
 			logLevel,
-		), zap.AddCaller())
+		),
+	)
 	defer l.Sync()
 
 	// create the HTTP client used to

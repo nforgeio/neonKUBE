@@ -17,6 +17,10 @@
 
 package proxyclient
 
+import (
+	"strings"
+)
+
 // DomainStatus is an enumerated list of
 // all of the valid cadence domain statuses
 type DomainStatus int
@@ -57,6 +61,7 @@ func (t DomainStatus) String() string {
 // as a string and converts it into a domain status
 // if possible
 func StringToDomainStatus(value string) DomainStatus {
+	value = strings.ToUpper(value)
 	switch value {
 	case "REGISTERED":
 		return DomainStatusRegistered

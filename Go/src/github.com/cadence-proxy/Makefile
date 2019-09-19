@@ -34,9 +34,6 @@ NEON_TEST_DIR 	= $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
 TEST_DIRS 		= internal/messages  \
 	internal/messages/dotnet-logger
 
-# Gather source code		
-APP_SRC := $(APP_DIR)/main.go
-
 # programs in the /cmd dir to build
 PROGS = cadenceproxy \
 	playground \
@@ -46,21 +43,16 @@ WIN   = cadence-proxy.win.exe
 LINUX = cadence-proxy.linux
 OSX   = cadence-proxy.osx
 
-# Use dep to update and grab source
-# for dependencies
-dep-ensured:
-	dep ensure
-
-cadence-proxy-windows: dep-ensured $(ALL_SRC)
+cadence-proxy-windows:
 	env GOOS=windows GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(WIN) $(APP_DIR)/*.go
 
-cadence-proxy-linux: dep-ensured $(ALL_SRC)
+cadence-proxy-linux:
 	env GOOS=linux GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(LINUX) $(APP_DIR)/*.go
 
-cadence-proxy-osx: dep-ensured $(ALL_SRC)
+cadence-proxy-osx:
 	env GOOS=darwin GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(OSX) $(APP_DIR)/*.go
 
-simple: dep-ensured $(ALL_SRC)
+simple:
 	go build -i -o bin/simple $(PLAYGROUND_DIR)/simple/*.go
 
 cadenceproxy: cadence-proxy-linux \
@@ -85,8 +77,10 @@ clean:
 	rm -f $(BUILD_DIR)/$(WIN)
 	rm -f $(BUILD_DIR)/$(LINUX)
 	rm -f $(BUILD_DIR)/$(OSX)
+
 	rm -f $(COMPRESSED_DIR)/$(WIN).gz
 	rm -f $(COMPRESSED_DIR)/$(LINUX).gz
 	rm -f $(COMPRESSED_DIR)/$(OSX).gz
+
 	rm -f $(NEON_TEST_DIR)/cadence-proxy.exe
 

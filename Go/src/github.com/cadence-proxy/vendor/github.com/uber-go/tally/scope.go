@@ -202,9 +202,11 @@ func (s *scope) report(r StatsReporter) {
 		histogram.report(s.fullyQualifiedName(name), s.tags, r)
 	}
 	s.hm.RUnlock()
+
+	r.Flush()
 }
 
-func (s *scope) cachedReport() {
+func (s *scope) cachedReport(c CachedStatsReporter) {
 	s.cm.RLock()
 	for _, counter := range s.counters {
 		counter.cachedReport()
@@ -224,6 +226,8 @@ func (s *scope) cachedReport() {
 		histogram.cachedReport()
 	}
 	s.hm.RUnlock()
+
+	c.Flush()
 }
 
 // reportLoop is used by the root scope for periodic reporting
@@ -262,12 +266,10 @@ func (s *scope) reportRegistryWithLock() {
 		for _, ss := range s.registry.subscopes {
 			ss.report(s.reporter)
 		}
-		s.reporter.Flush()
 	} else if s.cachedReporter != nil {
 		for _, ss := range s.registry.subscopes {
-			ss.cachedReport()
+			ss.cachedReport(s.cachedReporter)
 		}
-		s.cachedReporter.Flush()
 	}
 	s.registry.RUnlock()
 }

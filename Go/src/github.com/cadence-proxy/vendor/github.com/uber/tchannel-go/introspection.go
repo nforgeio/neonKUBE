@@ -22,7 +22,6 @@ package tchannel
 
 import (
 	"encoding/json"
-	"fmt"
 	"runtime"
 	"sort"
 	"strconv"
@@ -447,25 +446,9 @@ func getStacks(all bool) []byte {
 	return buf
 }
 func (ch *Channel) handleIntrospection(arg3 []byte) interface{} {
-	var opts struct {
-		IntrospectionOptions
-
-		// (optional) ID of the channel to introspection. If unspecified, uses ch.
-		ChannelID *uint32 `json:"id"`
-	}
+	var opts IntrospectionOptions
 	json.Unmarshal(arg3, &opts)
-
-	if opts.ChannelID != nil {
-		id := *opts.ChannelID
-
-		var ok bool
-		ch, ok = findChannelByID(id)
-		if !ok {
-			return map[string]string{"error": fmt.Sprintf(`failed to find channel with "id": %v`, id)}
-		}
-	}
-
-	return ch.IntrospectState(&opts.IntrospectionOptions)
+	return ch.IntrospectState(&opts)
 }
 
 // IntrospectList returns the list of peers (hostport, score) in this peer list.
@@ -519,9 +502,7 @@ func introspectRuntimeVersion() RuntimeVersion {
 // registerInternal registers the following internal handlers which return runtime state:
 //  _gometa_introspect: TChannel internal state.
 //  _gometa_runtime: Golang runtime stats.
-func (ch *Channel) createInternalHandlers() *handlerMap {
-	internalHandlers := &handlerMap{}
-
+func (ch *Channel) registerInternal() {
 	endpoints := []struct {
 		name    string
 		handler func([]byte) interface{}
@@ -530,6 +511,7 @@ func (ch *Channel) createInternalHandlers() *handlerMap {
 		{"_gometa_runtime", handleInternalRuntime},
 	}
 
+	tchanSC := ch.GetSubChannel("tchannel")
 	for _, ep := range endpoints {
 		// We need ep in our closure.
 		ep := ep
@@ -546,13 +528,7 @@ func (ch *Channel) createInternalHandlers() *handlerMap {
 			}
 			NewArgWriter(call.Response().Arg3Writer()).WriteJSON(ep.handler(arg3))
 		}
-
-		h := HandlerFunc(handler)
-		internalHandlers.register(h, ep.name)
-
-		// Register under the service name of channel as well (for backwards compatibility).
-		ch.GetSubChannel(ch.PeerInfo().ServiceName).Register(h, ep.name)
+		ch.Register(HandlerFunc(handler), ep.name)
+		tchanSC.Register(HandlerFunc(handler), ep.name)
 	}
-
-	return internalHandlers
 }

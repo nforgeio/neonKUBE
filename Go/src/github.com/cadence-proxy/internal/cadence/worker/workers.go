@@ -36,7 +36,8 @@ type (
 	// WorkersMap holds a thread-safe map[interface{}]interface{} that stores
 	// cadence Workers with their workerID's
 	WorkersMap struct {
-		safeMap sync.Map
+		sync.Mutex
+		workers map[int64]worker.Worker
 	}
 )
 
@@ -63,6 +64,13 @@ func GetWorkerID() int64 {
 //----------------------------------------------------------------------------
 // WorkersMap instance methods
 
+// NewWorkersMap is the constructor for an WorkersMap
+func NewWorkersMap() *WorkersMap {
+	o := new(WorkersMap)
+	o.workers = make(map[int64]worker.Worker)
+	return o
+}
+
 // Add adds a new cadence worker and its corresponding WorkerId into
 // the Workers.workers map.  This method is thread-safe.
 //
@@ -73,8 +81,10 @@ func GetWorkerID() int64 {
 // by the Cadence NewWorker() function.  This will be the mapped value
 //
 // returns int64 -> long workerID of the new cadence Worker added to the map
-func (workers *WorkersMap) Add(workerID int64, worker worker.Worker) int64 {
-	workers.safeMap.Store(workerID, worker)
+func (w *WorkersMap) Add(workerID int64, worker worker.Worker) int64 {
+	w.Lock()
+	defer w.Unlock()
+	w.workers[workerID] = worker
 	return workerID
 }
 
@@ -85,8 +95,10 @@ func (workers *WorkersMap) Add(workerID int64, worker worker.Worker) int64 {
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
 // returns int64 -> long workerID of the cadence Worker removed from the map
-func (workers *WorkersMap) Remove(workerID int64) int64 {
-	workers.safeMap.Delete(workerID)
+func (w *WorkersMap) Remove(workerID int64) int64 {
+	w.Lock()
+	defer w.Unlock()
+	delete(w.workers, workerID)
 	return workerID
 }
 
@@ -97,12 +109,8 @@ func (workers *WorkersMap) Remove(workerID int64) int64 {
 // returned by the Cadence NewWorker() function.  This will be the mapped key
 //
 // returns worker.Worker -> cadence Worker with the specified workerID
-func (workers *WorkersMap) Get(workerID int64) worker.Worker {
-	if v, ok := workers.safeMap.Load(workerID); ok {
-		if _v, _ok := v.(worker.Worker); _ok {
-			return _v
-		}
-	}
-
-	return nil
+func (w *WorkersMap) Get(workerID int64) worker.Worker {
+	w.Lock()
+	defer w.Unlock()
+	return w.workers[workerID]
 }
