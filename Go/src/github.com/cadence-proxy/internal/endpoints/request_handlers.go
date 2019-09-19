@@ -34,10 +34,10 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/cadence-proxy/internal"
+	proxyactivity "github.com/cadence-proxy/internal/cadence/activity"
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
-	proxyactivity "github.com/cadence-proxy/internal/cadence/activity"
 	"github.com/cadence-proxy/internal/messages"
 )
 

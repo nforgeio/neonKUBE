@@ -109,6 +109,16 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        ///  Optionally overrides the current workflow scheduled for 
+        ///  execution upon restart when this value is not <c>null</c>.
+        /// </summary>
+        public string ContinueAsNewWorkflow
+        {
+            get => GetStringProperty(PropertyNames.ContinueAsNewWorkflow);
+            set => SetStringProperty(PropertyNames.ContinueAsNewWorkflow, value);
+        }
+
+        /// <summary>
         /// Optionally overrides the current workflow's task list for the restarted
         /// workflow when this value is not <c>null</c>.
         /// </summary>

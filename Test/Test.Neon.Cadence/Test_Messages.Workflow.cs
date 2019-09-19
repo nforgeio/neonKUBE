@@ -411,6 +411,7 @@ namespace TestCadence
                 Assert.Equal(0, message.ContinueAsNewScheduleToCloseTimeout);
                 Assert.Equal(0, message.ContinueAsNewScheduleToStartTimeout);
                 Assert.Equal(0, message.ContinueAsNewStartToCloseTimeout);
+                Assert.Null(message.ContinueAsNewWorkflow);
                 Assert.Null(message.ContinueAsNewTaskList);
                 Assert.Null(message.ContinueAsNewDomain);
                 Assert.False(message.ForceReplay);
@@ -427,6 +428,7 @@ namespace TestCadence
                 message.ContinueAsNewScheduleToCloseTimeout = 2000;
                 message.ContinueAsNewScheduleToStartTimeout = 3000;
                 message.ContinueAsNewStartToCloseTimeout = 4000;
+                message.ContinueAsNewWorkflow = "my-workflow";
                 message.ContinueAsNewTaskList = "my-tasklist";
                 message.ContinueAsNewDomain = "my-domain";
                 message.ForceReplay = true;
@@ -438,6 +440,7 @@ namespace TestCadence
                 Assert.True(message.ContinueAsNew);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.ContinueAsNewArgs);
                 Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
+                Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
                 Assert.True(message.ForceReplay);
@@ -458,6 +461,7 @@ namespace TestCadence
                 Assert.Equal(2000, message.ContinueAsNewScheduleToCloseTimeout);
                 Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
+                Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
                 Assert.True(message.ForceReplay);
@@ -476,6 +480,7 @@ namespace TestCadence
                 Assert.Equal(2000, message.ContinueAsNewScheduleToCloseTimeout);
                 Assert.Equal(3000, message.ContinueAsNewScheduleToStartTimeout);
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
+                Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
                 Assert.Equal("my-domain", message.ContinueAsNewDomain);
                 Assert.True(message.ForceReplay);

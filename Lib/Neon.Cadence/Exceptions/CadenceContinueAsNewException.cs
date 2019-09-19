@@ -66,6 +66,7 @@ namespace Neon.Cadence
         /// Constructs an instance using explicit arguments.
         /// </summary>
         /// <param name="args">Optional arguments for the new execution.</param>
+        /// <param name="workflow">Optional workflow for the new execution.</param>
         /// <param name="domain">Optional domain for the new execution.</param>
         /// <param name="taskList">Optional task list for the new execution.</param>
         /// <param name="executionToStartTimeout">Optional execution to start timeout for the new execution.</param>
@@ -75,6 +76,7 @@ namespace Neon.Cadence
         /// <param name="retryOptions">Optional retry options for the new execution.</param>
         public CadenceContinueAsNewException(
             byte[]          args                    = null,
+            string          workflow                = null,
             string          domain                  = null,
             string          taskList                = null,
             TimeSpan        executionToStartTimeout = default,
@@ -86,6 +88,7 @@ namespace Neon.Cadence
             : base()
         {
             this.Args                         = args;
+            this.Workflow                     = workflow;
             this.Domain                       = domain;
             this.TaskList                     = taskList;
             this.ExecutionStartToCloseTimeout = executionToStartTimeout;
@@ -106,6 +109,7 @@ namespace Neon.Cadence
 
             if (options != null)
             {
+                this.Workflow                     = options.Workflow;
                 this.Domain                       = options.Domain;
                 this.TaskList                     = options.TaskList;
                 this.ExecutionStartToCloseTimeout = options.ExecutionStartToCloseTimeout;
@@ -120,6 +124,11 @@ namespace Neon.Cadence
         /// Returns the arguments for the next workflow execution.
         /// </summary>
         public byte[] Args { get; private set; }
+
+        /// <summary>
+        /// Optionally overrides the name of the workflow to continue as new.
+        /// </summary>
+        public string Workflow { get; set; }
 
         /// <summary>
         /// Optionally specifies the new domain for the next workflow execution.
