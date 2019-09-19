@@ -6,7 +6,7 @@
 
 ## Release 
 
-1. Select the release branch and merge from **MASTER**.
+1. Select the new release branch and merge from **MASTER**.
 
 2. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
