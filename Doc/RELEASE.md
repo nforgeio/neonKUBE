@@ -17,9 +17,9 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-5. Run all unit tests: **RELEASE** and **x64 mode**
+5. Verify that the new release installer works.
 
-6. Verify that the new release installer works.
+6. Run all unit tests: **RELEASE** and in **x64 mode**
 
 7. Publish the nuget packages: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1`
 
