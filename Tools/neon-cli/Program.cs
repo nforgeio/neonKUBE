@@ -216,7 +216,7 @@ You can disable the use of this encrypted folder by specifying
 
                 if (!CommandLine.HasOption("--insecure"))
                 {
-                    // Ensure that temporary files are written to the users temporary folder because
+                    // Ensure that temporary files are written to the user's temporary folder because
                     // there's a decent chance that this folder will be encrypted at rest.
 
                     if (KubeTestManager.Current == null)
