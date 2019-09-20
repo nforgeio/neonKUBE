@@ -606,12 +606,14 @@ namespace Neon.Cadence.Internal
             // Generate the constructor used to create a continue-as-new stub.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, ContinueAsNewOptions options)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, ContinueAsNewOptions options)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client               = client;");
             sbSource.AppendLine($"            this.dataConverter        = dataConverter;");
             sbSource.AppendLine($"            this.continueAsNew        = true;");
-            sbSource.AppendLine($"            this.continueAsNewOptions = options;");
+            sbSource.AppendLine($"            this.continueAsNewOptions = options ?? new ContinueAsNewOptions();");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"            this.continueAsNewOptions.Workflow = workflowTypeName;");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to create an external child workflow stub by [WorkflowExecution].
@@ -1171,9 +1173,10 @@ namespace Neon.Cadence.Internal
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: false);
+            var stub             = GetWorkflowStub<TWorkflowInterface>(isChild: false);
+            var workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowInterface.GetCustomAttribute<WorkflowAttribute>());
 
-            return (TWorkflowInterface)stub.Create(client, client.DataConverter, options);
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options);
         }
 
         /// <summary>
