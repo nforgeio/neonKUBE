@@ -116,10 +116,10 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                           syncLock     = new object();
-        private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
-        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
-        private static byte[]                                           emptyBytes   = new byte[0];
+        private static object                                           syncLock          = new object();
+        private static INeonLogger                                      log               = LogManager.Default.GetLogger<WorkflowBase>();
+        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow      = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
+        private static byte[]                                           emptyBytes        = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -139,6 +139,16 @@ namespace Neon.Cadence
         //      1::my-workflow::my-entrypoint   -- clientId = 1, workflow type name = my-workflow, entrypoint = my-entrypoint
 
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
+
+        // This set holds all workflow type names that have been registered by the current
+        // process.  We need to track this because the GOLANG workers also track these
+        // on a process (rather than per-service client, like we expected).  We're going
+        // to use this to avoid re-registering the same workflow type name which would
+        // cause Cadence errors.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/668
+
+        private static HashSet<string> processWorkflowTypeNames = new HashSet<string>();
 
         /// <summary>
         /// Restores the class to its initial state.
@@ -273,6 +283,20 @@ namespace Neon.Cadence
                                 WorkflowMethodParameterTypes = method.GetParameterTypes(),
                                 MethodMap                    = methodMap
                             };
+                    }
+
+                    // Don't actually register the workflow type name with the GOLANG
+                    // client if it has ever been registered within the current process
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/668
+
+                    if (processWorkflowTypeNames.Contains(workflowTypeName))
+                    {
+                        alreadyRegistered = true;
+                    }
+                    else
+                    {
+                        processWorkflowTypeNames.Add(workflowTypeName);
                     }
                 }
 

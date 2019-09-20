@@ -131,8 +131,19 @@ namespace Neon.Cadence
         //      1::my-activity                  -- clientId = 1, activity type name = my-activity
         //      1::my-activity::my-entrypoint   -- clientId = 1, activity type name = my-activity, entrypoint = my-entrypoint
 
-        private static Dictionary<string, ActivityRegistration>   nameToRegistration = new Dictionary<string, ActivityRegistration>();
+        private static Dictionary<string, ActivityRegistration> nameToRegistration = new Dictionary<string, ActivityRegistration>();
 
+        // This set holds all activity type names that have been registered by the current
+        // process.  We need to track this because the GOLANG workers also track these
+        // on a process (rather than per-service client, like we expected).  We're going
+        // to use this to avoid re-registering the same activity type name which would
+        // cause Cadence errors.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/668
+
+        private static HashSet<string> processActivityTypeNames = new HashSet<string>();
+
+        /// <summary>
         /// <summary>
         /// Restores the class to its initial state.
         /// </summary>
@@ -271,6 +282,20 @@ namespace Neon.Cadence
                                 ActivityMethod               = method,
                                 ActivityMethodParamaterTypes = method.GetParameterTypes()
                             };
+                    }
+
+                    // Don't actually register the activity type name with the GOLANG
+                    // client if it has ever been registered within the current process
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/668
+
+                    if (processActivityTypeNames.Contains(activityTypeName))
+                    {
+                        alreadyRegistered = true;
+                    }
+                    else
+                    {
+                        processActivityTypeNames.Add(activityTypeName);
                     }
                 }
 
