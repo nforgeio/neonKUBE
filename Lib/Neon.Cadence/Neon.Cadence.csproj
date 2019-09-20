@@ -42,6 +42,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\cadence-proxy.linux.gz" />
+    <None Remove="Resources\cadence-proxy.osx.gz" />
+    <None Remove="Resources\cadence-proxy.win.exe.gz" />
+  </ItemGroup>
+   
+  <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
