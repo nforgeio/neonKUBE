@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -42,18 +42,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\cadence-proxy.linux.gz" />
-    <None Remove="Resources\cadence-proxy.osx.gz" />
-    <None Remove="Resources\cadence-proxy.win.exe.gz" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\cadence-proxy.linux.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.osx.gz" />
-    <EmbeddedResource Include="Resources\cadence-proxy.win.exe.gz" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -71,6 +59,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
 
 </Project>
