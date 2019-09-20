@@ -140,16 +140,6 @@ namespace Neon.Cadence
 
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
-        // This set holds all workflow type names that have been registered by the current
-        // process.  We need to track this because the GOLANG workers also track these
-        // on a process (rather than per-service client, like we expected).  We're going
-        // to use this to avoid re-registering the same workflow type name which would
-        // cause Cadence errors.
-        //
-        //      https://github.com/nforgeio/neonKUBE/issues/668
-
-        private static HashSet<string> processWorkflowTypeNames = new HashSet<string>();
-
         /// <summary>
         /// Restores the class to its initial state.
         /// </summary>
@@ -259,8 +249,7 @@ namespace Neon.Cadence
                     continue;
                 }
 
-                var workflowTypeKey   = GetWorkflowTypeKey(client, workflowTypeName, workflowMethodAttribute);
-                var alreadyRegistered = false;
+                var workflowTypeKey = GetWorkflowTypeKey(client, workflowTypeName, workflowMethodAttribute);
 
                 lock (syncLock)
                 {
@@ -270,8 +259,6 @@ namespace Neon.Cadence
                         {
                             throw new InvalidOperationException($"Conflicting workflow interface registration: Workflow interface [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
                         }
-
-                        alreadyRegistered = true;
                     }
                     else
                     {
@@ -284,33 +271,22 @@ namespace Neon.Cadence
                                 MethodMap                    = methodMap
                             };
                     }
-
-                    // Don't actually register the workflow type name with the GOLANG
-                    // client if it has ever been registered within the current process
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/668
-
-                    if (processWorkflowTypeNames.Contains(workflowTypeName))
-                    {
-                        alreadyRegistered = true;
-                    }
-                    else
-                    {
-                        processWorkflowTypeNames.Add(workflowTypeName);
-                    }
                 }
 
-                if (!alreadyRegistered)
-                {
-                    var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
-                        new WorkflowRegisterRequest()
-                        {
-                            Name   = GetWorkflowTypeNameFromKey(workflowTypeKey),
-                            Domain = client.ResolveDomain(domain)
-                        });
+                var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
+                    new WorkflowRegisterRequest()
+                    {
+                        Name   = GetWorkflowTypeNameFromKey(workflowTypeKey),
+                        Domain = client.ResolveDomain(domain)
+                    });
 
-                    reply.ThrowOnError();
-                }
+                // $hack(jeff.lill): 
+                //
+                // We're going to ignore any errors here to handle:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/668
+
+                // reply.ThrowOnError();
             }
         }
 
