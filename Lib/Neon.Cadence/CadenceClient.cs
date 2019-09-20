@@ -556,8 +556,6 @@ namespace Neon.Cadence
 
             lock (syncLock)
             {
-                stickyCacheSizeSet = false;
-
                 idToClient.Clear();
                 operations.Clear();
             }
