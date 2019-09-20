@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cadence</RootNamespace>
-    <Version>0.6.1-alpha</Version>
+    <Version>0.6.2-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill, John C Burns</Authors>
     <Description>.NET client for Uber Cadence.</Description>

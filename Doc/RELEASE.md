@@ -17,9 +17,9 @@
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
 
-5. Run all unit tests: **RELEASE** and **x64 mode**
+5. Verify that the new release installer works.
 
-6. Verify that the new release installer works.
+6. Run all unit tests: **RELEASE** and in **x64 mode**
 
 7. Publish the nuget packages: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1`
 
@@ -52,13 +52,7 @@
 
     * Be sure to set the branch to the new release branch.
 
-5. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build`
-
-6. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
-
-7. Archive the source code:
+5. Archive the source code:
 
   1. Close all Visual Studio windows.
   2. Run `neon-archive.cmd` in a command window.
