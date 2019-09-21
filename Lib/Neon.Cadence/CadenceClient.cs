@@ -976,36 +976,41 @@ namespace Neon.Cadence
 
             if (request != null)
             {
-                // [cadence-proxy] has sent us a request.
+                // [cadence-proxy] has sent us a request.  We're going to process this
+                // in a detached task so we'll can return the HTTP response immediately
+                // to the [cadence-proxy].
 
-                switch (request.Type)
+                _ = Task.Run(async () =>
                 {
-                    case InternalMessageTypes.LogRequest:
+                    switch (request.Type)
+                    {
+                        case InternalMessageTypes.LogRequest:
 
-                        await OnLogRequestAsync(client, request);
-                        break;
+                            await OnLogRequestAsync(client, request);
+                            break;
 
-                    case InternalMessageTypes.WorkflowInvokeRequest:
-                    case InternalMessageTypes.WorkflowSignalInvokeRequest:
-                    case InternalMessageTypes.WorkflowQueryInvokeRequest:
-                    case InternalMessageTypes.ActivityInvokeLocalRequest:
-                    case InternalMessageTypes.WorkflowFutureReadyRequest:
+                        case InternalMessageTypes.WorkflowInvokeRequest:
+                        case InternalMessageTypes.WorkflowSignalInvokeRequest:
+                        case InternalMessageTypes.WorkflowQueryInvokeRequest:
+                        case InternalMessageTypes.ActivityInvokeLocalRequest:
+                        case InternalMessageTypes.WorkflowFutureReadyRequest:
 
-                        await WorkflowBase.OnProxyRequestAsync(client, request);
-                        break;
+                            await WorkflowBase.OnProxyRequestAsync(client, request);
+                            break;
 
-                    case InternalMessageTypes.ActivityInvokeRequest:
-                    case InternalMessageTypes.ActivityStoppingRequest:
+                        case InternalMessageTypes.ActivityInvokeRequest:
+                        case InternalMessageTypes.ActivityStoppingRequest:
 
-                        await ActivityBase.OnProxyRequestAsync(client, request);
-                        break;
+                            await ActivityBase.OnProxyRequestAsync(client, request);
+                            break;
 
-                    default:
+                        default:
 
-                        httpReply.StatusCode = StatusCodes.Status400BadRequest;
-                        httpReply.Message    = $"[cadence-client] does not support [{request.Type}] messages from the [cadence-proxy].";
-                        break;
-                }
+                            httpReply.StatusCode = StatusCodes.Status400BadRequest;
+                            httpReply.Message = $"[cadence-client] does not support [{request.Type}] messages from the [cadence-proxy].";
+                            break;
+                    }
+                });
             }
             else if (reply != null)
             {
