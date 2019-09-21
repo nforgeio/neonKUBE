@@ -640,6 +640,26 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
+                    // Handle built-in queries.
+
+                    if (request.QueryName == "__stack_trace")
+                    {
+                        var trace = string.Empty;
+
+                        if (workflow.StackTrace != null)
+                        {
+                            trace = workflow.StackTrace.ToString();
+                        }
+
+                        return new WorkflowQueryInvokeReply()
+                        {
+                            RequestId = request.RequestId,
+                            Result    = NeonHelper.JsonSerializeToBytes(trace)
+                        };
+                    }
+
+                    // Handle user queries.
+
                     var method = workflow.Workflow.MethodMap.GetQueryMethod(request.QueryName);
 
                     if (method != null)
