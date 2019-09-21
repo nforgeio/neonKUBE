@@ -1257,9 +1257,9 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	var result interface{}
 	future := workflow.NewTimer(ctx, request.GetDuration())
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// wait for the future to be unblocked
 	err := future.Get(ctx, &result)
@@ -1312,9 +1312,9 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx, workflowName, request.GetArgs())
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// create the new ChildContext
 	// add the ChildWorkflowFuture and the cancel func to the
@@ -1417,9 +1417,9 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		request.GetSignalArgs(),
 	)
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// wait on the future
 	var result []byte
@@ -1844,9 +1844,9 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	future := workflow.ExecuteActivity(ctx, activityName, request.GetArgs())
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// execute the activity
 	var result []byte
@@ -2159,9 +2159,9 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
 	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args)
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// wait for the future to be unblocked
 	var result []byte
