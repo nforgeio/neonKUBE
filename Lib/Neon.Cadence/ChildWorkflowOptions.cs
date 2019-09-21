@@ -213,11 +213,6 @@ namespace Neon.Cadence
         public string CronSchedule { get; set; }
 
         /// <summary>
-        /// Optionally specifies workflow metadata as a dictionary of named byte array values.
-        /// </summary>
-        public Dictionary<string, byte[]> Memo { get; set; }
-
-        /// <summary>
         /// Converts this instance into the corresponding internal object.
         /// </summary>
         /// <returns>The equivalent <see cref="InternalChildWorkflowOptions"/>.</returns>
@@ -250,7 +245,6 @@ namespace Neon.Cadence
                 CronSchedule                 = this.CronSchedule,
                 ChildPolicy                  = this.ChildPolicy,
                 ScheduleToCloseTimeout       = this.ScheduleToCloseTimeout,
-                Memo                         = this.Memo,
                 RetryOptions                 = this.RetryOptions,
                 ScheduleToStartTimeout       = this.ScheduleToStartTimeout,
                 TaskList                     = this.TaskList,

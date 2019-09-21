@@ -119,6 +119,27 @@ namespace TestCadence
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
 
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_WithMemos()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter and results a result.
+
+            var options = new WorkflowOptions()
+            {
+                Memo = new Dictionary<string, object>()
+                {
+                    { "int", 10 },
+                    { "bool", true }
+                }
+            };
+
+            var stub = client.NewWorkflowStub<IWorkflowWithResult>(options);
+
+            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
+
         //---------------------------------------------------------------------
 
         public interface IWorkflowLogger : IWorkflow
