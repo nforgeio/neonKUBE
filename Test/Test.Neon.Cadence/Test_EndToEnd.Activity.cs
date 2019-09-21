@@ -550,7 +550,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
-            // Verify that recording heartbeats the using the convinence method works.
+            // Verify that recording heartbeats the using the convenience method works.
 
             var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
 
@@ -561,7 +561,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithDetails()
         {
-            // Verify that recording heartbeats the using the convinence method works.
+            // Verify that recording heartbeats the using the convenience method works.
 
             var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
 
@@ -572,7 +572,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithInterval()
         {
-            // Verify that recording heartbeats the using the convinence method works.
+            // Verify that recording heartbeats the using the convenience method works.
 
             var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
 

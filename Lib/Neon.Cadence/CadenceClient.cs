@@ -972,131 +972,7 @@ namespace Neon.Cadence
             var reply     = proxyMessage as ProxyReply;
             var client    = GetClient(proxyMessage.ClientId);
 
-            if (client == null)
-            {
-                // The message client ID doesn't map to a client so we'll
-                // ignore it unless the message is a [LogRequest] for which
-                // we'll log the event and then transmit a reply.
-
-                if (proxyMessage.Type == InternalMessageTypes.LogRequest)
-                {
-                    var logRequest = (LogRequest)request;
-
-                    if (logRequest.FromCadence)
-                    {
-                        switch (logRequest.LogLevel)
-                        {
-                            default:
-                            case Neon.Diagnostics.LogLevel.None:
-
-                                break;  // NOP
-
-                            case Neon.Diagnostics.LogLevel.Critical:
-
-                                cadenceLogger.LogCritical(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.SError:
-
-                                cadenceLogger.LogSError(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Error:
-
-                                cadenceLogger.LogError(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Warn:
-
-                                cadenceLogger.LogWarn(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Info:
-
-                                cadenceLogger.LogInfo(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.SInfo:
-
-                                cadenceLogger.LogSInfo(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Debug:
-
-                                cadenceLogger.LogDebug(logRequest.LogMessage);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        switch (logRequest.LogLevel)
-                        {
-                            default:
-                            case Neon.Diagnostics.LogLevel.None:
-
-                                break;  // NOP
-
-                            case Neon.Diagnostics.LogLevel.Critical:
-
-                                cadenceProxyLogger.LogCritical(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.SError:
-
-                                cadenceProxyLogger.LogSError(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Error:
-
-                                cadenceProxyLogger.LogError(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Warn:
-
-                                cadenceProxyLogger.LogWarn(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Info:
-
-                                cadenceProxyLogger.LogInfo(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.SInfo:
-
-                                cadenceProxyLogger.LogSInfo(logRequest.LogMessage);
-                                break;
-
-                            case Neon.Diagnostics.LogLevel.Debug:
-
-                                cadenceProxyLogger.LogDebug(logRequest.LogMessage);
-                                break;
-                        }
-                    }
-
-                    lock (syncLock)
-                    {
-                        if (!idToClient.TryGetValue(logRequest.ClientId, out client))
-                        {
-                            client = null;
-                        }
-                    }
-
-                    if (client != null)
-                    {
-                        await client.ProxyReplyAsync(request, new LogReply());
-                    }
-                    else
-                    {
-                        log.LogWarn(() => $"[{request.GetType().Name}] message received without any client instances.");
-                    }
-                }
-                else
-                {
-                    log.LogWarn(() => $"[{request.GetType().Name}] message received with [clientId={request.ClientId}] does not map to a client.");
-                }
-                   
-                return httpReply;
-            }
+            Covenant.Assert(client != null);
 
             if (request != null)
             {
@@ -1104,6 +980,11 @@ namespace Neon.Cadence
 
                 switch (request.Type)
                 {
+                    case InternalMessageTypes.LogRequest:
+
+                        await OnLogRequestAsync(client, request);
+                        break;
+
                     case InternalMessageTypes.WorkflowInvokeRequest:
                     case InternalMessageTypes.WorkflowSignalInvokeRequest:
                     case InternalMessageTypes.WorkflowQueryInvokeRequest:
@@ -1165,6 +1046,104 @@ namespace Neon.Cadence
             }
 
             return httpReply;
+        }
+
+        private static async Task OnLogRequestAsync(CadenceClient client, ProxyRequest request)
+        {
+            var logRequest = (LogRequest)request;
+
+            if (logRequest.FromCadence)
+            {
+                switch (logRequest.LogLevel)
+                {
+                    default:
+                    case Neon.Diagnostics.LogLevel.None:
+
+                        break;  // NOP
+
+                    case Neon.Diagnostics.LogLevel.Critical:
+
+                        cadenceLogger.LogCritical(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.SError:
+
+                        cadenceLogger.LogSError(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Error:
+
+                        cadenceLogger.LogError(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Warn:
+
+                        cadenceLogger.LogWarn(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Info:
+
+                        cadenceLogger.LogInfo(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.SInfo:
+
+                        cadenceLogger.LogSInfo(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Debug:
+
+                        cadenceLogger.LogDebug(logRequest.LogMessage);
+                        break;
+                }
+            }
+            else
+            {
+                switch (logRequest.LogLevel)
+                {
+                    default:
+                    case Neon.Diagnostics.LogLevel.None:
+
+                        break;  // NOP
+
+                    case Neon.Diagnostics.LogLevel.Critical:
+
+                        cadenceProxyLogger.LogCritical(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.SError:
+
+                        cadenceProxyLogger.LogSError(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Error:
+
+                        cadenceProxyLogger.LogError(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Warn:
+
+                        cadenceProxyLogger.LogWarn(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Info:
+
+                        cadenceProxyLogger.LogInfo(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.SInfo:
+
+                        cadenceProxyLogger.LogSInfo(logRequest.LogMessage);
+                        break;
+
+                    case Neon.Diagnostics.LogLevel.Debug:
+
+                        cadenceProxyLogger.LogDebug(logRequest.LogMessage);
+                        break;
+                }
+            }
+
+            await client.ProxyReplyAsync(request, new LogReply());
         }
 
         /// <summary>

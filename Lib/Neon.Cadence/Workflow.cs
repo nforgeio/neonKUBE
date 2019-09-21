@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
@@ -169,6 +170,20 @@ namespace Neon.Cadence
         /// Returns the execution information for the current workflow.
         /// </summary>
         public WorkflowExecution Execution { get; internal set; }
+
+        /// <summary>
+        /// Handles saving the current stack trace to the parent <see cref="WorkflowBase.StackTrace"/>
+        /// property so this will be available for the internal stack trace query.
+        /// </summary>
+        /// <param name="skipFrames">
+        /// The number of frames to skip.  This defaults to 2 such that this method's
+        /// stack frame will be skipped along with the caller (presumably one the public
+        /// methods in this class.
+        /// </param>
+        private void SetStackTrace(int skipFrames = 2)
+        {
+
+        }
 
         /// <summary>
         /// Executes a workflow Cadence related operation, attempting to detect

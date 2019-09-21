@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -751,6 +752,17 @@ namespace Neon.Cadence
 
         //---------------------------------------------------------------------
         // Instance members
+
+        // This field holds the stack trace for the most recent decision related 
+        // [Workflow] method call.  This will be returned for internal workflow
+        // "__stack_trace" queries.
+
+        /// <summary>
+        /// This field holds the stack trace for the most recent decision related 
+        /// <see cref="Workflow"/> method calls.  This will be returned for internal
+        /// workflow <b>"__stack_trace"</b> queries.
+        /// </summary>
+        internal StackTrace StackTrace { get; set; } = null;
 
         /// <inheritdoc/>
         public Workflow Workflow { get; set; }
