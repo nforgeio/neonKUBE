@@ -1050,7 +1050,7 @@ namespace Neon.Cadence
                 Covenant.Assert(false);
             }
 
-            return httpReply;
+            return await Task.FromResult(httpReply);
         }
 
         private static async Task OnLogRequestAsync(CadenceClient client, ProxyRequest request)
