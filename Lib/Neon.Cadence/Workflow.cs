@@ -1136,7 +1136,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="options">Optionally specifies the activity options.</param>
-        /// <returns>The new <see cref="IActivityStub"/>.</returns>
+        /// <returns>The new <see cref="ActivityStub"/>.</returns>
         /// <remarks>
         /// <note>
         /// Unlike workflow stubs, a single activity stub instance can be used to
@@ -1261,7 +1261,7 @@ namespace Neon.Cadence
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <typeparam name="TActivityImplementation">The activity implementation.</typeparam>
         /// <param name="options">Optionally specifies activity options.</param>
-        /// <returns>The new <see cref="IActivityStub"/>.</returns>
+        /// <returns>The new <see cref="ActivityStub"/>.</returns>
         /// <remarks>
         /// <note>
         /// Unlike workflow stubs, a single activity stub instance can be used to
@@ -1376,8 +1376,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="execution">The target <see cref="WorkflowExecution"/>.</param>
         /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
-        /// <returns>The <see cref="IExternalWorkflowStub"/>.</returns>
-        public IExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
+        /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
+        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
         {
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -1391,8 +1391,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The target workflow ID.</param>
         /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
-        /// <returns>The <see cref="IExternalWorkflowStub"/>.</returns>
-        public IExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
+        /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
+        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
         {
             Client.EnsureNotDisposed();
             SetStackTrace();
