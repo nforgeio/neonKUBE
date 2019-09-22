@@ -29,6 +29,7 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -1154,7 +1155,6 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             return StubManager.NewActivityStub<TActivityInterface>(Client, this, options);
         }
@@ -1182,7 +1182,6 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             return StubManager.NewChildWorkflowStub<TWorkflowInterface>(Client, this, options, workflowTypeName);
         }
@@ -1204,7 +1203,6 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             return StubManager.NewContinueAsNewStub<TWorkflowInterface>(Client, options);
         }
@@ -1230,7 +1228,6 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, execution);
         }
@@ -1248,7 +1245,6 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, workflowId, domain);
         }
@@ -1296,7 +1292,6 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             CadenceHelper.ValidateActivityImplementation(typeof(TActivityImplementation));
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
@@ -1324,7 +1319,6 @@ namespace Neon.Cadence
         public IActivityStub NewUntypedActivityStub(ActivityOptions options = null)
         {
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             throw new NotImplementedException();
         }
@@ -1365,7 +1359,6 @@ namespace Neon.Cadence
         public IChildWorkflowStub NewUntypedChildWorkflowStub(string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             throw new NotImplementedException();
         }
@@ -1380,7 +1373,6 @@ namespace Neon.Cadence
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
         {
             Client.EnsureNotDisposed();
-            SetStackTrace();
 
             throw new NotImplementedException();
         }
@@ -1395,7 +1387,113 @@ namespace Neon.Cadence
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
         {
             Client.EnsureNotDisposed();
-            SetStackTrace();
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates an untyped stub suitable for starting and running a child workflow in parallel
+        /// with workflow operations such as other child workflows or activities.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The target workflow interface.</typeparam>
+        /// <param name="methodName">Optionally identifies the target method.</param>
+        /// <param name="options">Optionally specifies custom <see cref="ChildWorkflowOptions"/>.</param>
+        /// <returns>A <see cref="StartChildWorkflowStub"/> instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// Sometimes workflows need to run child workflows in parallel with other child workflows or
+        /// activities.  Although the typed workflow stubs return a <see cref="Task"/> or <see cref="Task{T}"/>,
+        /// workflow developers are required to immediatele <c>await</c> every call to these stubs to 
+        /// ensure that the workflow will execute consistently when replayed from history.  This 
+        /// means that you may not do something like this:
+        /// </para>
+        /// <code language="C#">
+        /// public class MyWorkflow : WorkflowBase, IMyWorkflow
+        /// {
+        ///     [WorkflowMethod]
+        ///     public Task MainAsync()
+        ///     {
+        ///         var stub1      = Workflow.NewChildWorkflowStub&lt;IMyWorkflow&gt;();
+        ///         var child1Task = stub1.ChildAsync(1);
+        ///         var stub2      = Workflow.NewChildWorkflowStub&lt;IMyWorkflow&gt;();
+        ///         int value;
+        ///         
+        ///         await stub2.ChildAsync(2);
+        ///         
+        ///         value = await child1Task;
+        ///     }
+        ///     
+        ///     [WorkflowMethod(Name = "child")]
+        ///     public Task&lt;int&gt; ChildAsync(int arg)
+        ///     {
+        ///         return arg;
+        ///     }
+        /// }
+        /// </code>
+        /// <para>
+        /// The <c>MainAsync()</c> workflow method here is attempting to create and begin executing
+        /// a child workflow, but it doesn't <c>await</c> immediately it.  It then runs another child
+        /// workflow in parallel and then once the second child completes, the method awaits the
+        /// first child.  This pattern is not supported by <b>Neon.Cadence</b> because all workflow
+        /// related operations need to be immediately awaited to ensure that operations will complete
+        /// in a consistent order when workflows are replayed.
+        /// </para>
+        /// <note>
+        /// The reason for this restriction is related to how the current <b>Neon.Cadence</b> implementation
+        /// uses an embedded GOLANG Cadence client to actually communicate with a Cadence cluster.  This
+        /// may be relaxed in the future if/when we implement native support for the Cadence protocol.
+        /// </note>
+        /// <para>
+        /// A correct implementation would look something like this:
+        /// </para>
+        /// <code language="C#">
+        /// public class MyWorkflow : WorkflowBase, IMyWorkflow
+        /// {
+        ///     [WorkflowMethod]
+        ///     public Task MainAsync()
+        ///     {
+        ///         var stub1  = Workflow.NewStartChildWorkflowStub&lt;IMyWorkflow&gt;("child");
+        ///         var future = await stub1.StartAsync(1);
+        ///         var stub2  = Workflow.NewChildWorkflowStub&lt;IMyWorkflow&gt;();
+        ///         int value;
+        ///         
+        ///         await stub2.ChildAsync(2);
+        ///         
+        ///         value = (int)await future.GetAsync();
+        ///     }
+        ///     
+        ///     [WorkflowMethod(Name = "child")]
+        ///     public Task&lt;int&gt; ChildAsync(int arg)
+        ///     {
+        ///         return arg;
+        ///     }
+        /// }
+        /// </code>
+        /// <para>
+        /// Here we call <see cref="NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
+        /// <b>"child"</b> as the workflow method name.  This matches the <c>[WorkflowMethod(Name = "child")]</c> decorating
+        /// the <c>ChildAsync()</c> workflow method.  Then we start the child workflow by awaiting <see cref="StartChildWorkflowStub.StartAsync(object[])"/>.
+        /// This returns a <see cref="IAsyncFuture{T}"/> whose <see cref="IAsyncFuture.GetAsync"/> method returns the 
+        /// workflow result.  The code above call this to retrieve the result from the first child after executing
+        /// the second child in parallel.  This same technique can be used to execute activities in parallel with workflows
+        /// and other activities.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// You must take care to pass parameters that match the target method.  <b>Neon.Cadence</b> does check these at
+        /// runtime, but there is no compile-time checking for this scheme.
+        /// </para>
+        /// <para>
+        /// You'll also need to cast the <see cref="IAsyncFuture.GetAsync"/> result to the actual type (if required).
+        /// This method always returns the <c>object</c> type even if referenced workflow and activity methods return
+        /// <c>void</c>.  <see cref="IAsyncFuture.GetAsync"/> will return <c>null</c> in these cases.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public StartChildWorkflowStub NewStartChildWorkflowStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
+            where TWorkflowInterface : class
+        {
+            Client.EnsureNotDisposed();
 
             throw new NotImplementedException();
         }
@@ -1422,7 +1520,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
             Client.EnsureNotDisposed();
-            SetStackTrace();
+            SetStackTrace(skipFrames: 3);
 
             options = options ?? new ActivityOptions();
             options = options.Clone();
@@ -1496,7 +1594,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
             Covenant.Requires<ArgumentNullException>(activityMethod != null);
             Client.EnsureNotDisposed();
-            SetStackTrace();
+            SetStackTrace(skipFrames: 3);
 
             options = options ?? new LocalActivityOptions();
             options = options.Clone();
