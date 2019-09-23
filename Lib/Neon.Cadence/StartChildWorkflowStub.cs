@@ -76,6 +76,7 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Implementation
 
+        private Workflow                parentWorkflow;
         private MethodInfo              targetMethod;
         private ChildWorkflowOptions    options;
         private string                  workflowTypeName;
@@ -84,21 +85,24 @@ namespace Neon.Cadence
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="client">The associated Cadence client.</param>
+        /// <param name="parentWorkflow">The associated parent workflow.</param>
         /// <param name="workflowInterface">The target workflow interface.</param>
-        /// <param name="methodName">Identifies the target workflow method.</param>
+        /// <param name="methodName">Identifies the target workflow method or <c>null</c> or empty.</param>
         /// <param name="options">The child workflow options or <c>null</c>.</param>
-        internal StartChildWorkflowStub(CadenceClient client, Type workflowInterface, string methodName, ChildWorkflowOptions options)
+        internal StartChildWorkflowStub(Workflow parentWorkflow, Type workflowInterface, string methodName, ChildWorkflowOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
             Covenant.Requires<ArgumentNullException>(workflowInterface != null);
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+            options = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
 
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
             var methodAttribute   = (WorkflowMethodAttribute)null;
 
-            this.options    = options;
-            this.hasStarted = false;
+            this.parentWorkflow = parentWorkflow;
+            this.options        = options;
+            this.hasStarted     = false;
 
             if (string.IsNullOrEmpty(methodName))
             {
@@ -157,9 +161,8 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts the target workflow, passing the arguments.
+        /// Starts the target workflow, passing any specified arguments.
         /// </summary>
-        /// <param name="parentWorkflow">The parent workflow context.</param>
         /// <param name="args">The arguments to be passed to the workflow.</param>
         /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
@@ -174,7 +177,7 @@ namespace Neon.Cadence
         /// Any given <see cref="StartChildWorkflowStub"/> may only be executed once.
         /// </note>
         /// </remarks>
-        internal async Task<IAsyncFuture<object>> StartAsync(Workflow parentWorkflow, params object[] args)
+        public async Task<IAsyncFuture<object>> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
 

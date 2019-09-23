@@ -229,7 +229,7 @@ namespace Neon.Cadence
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout.Value),
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowID                   = this.WorkflowId,
-                WorkflowIdReusePolicy        = (int)this.WorkflowIdReusePolicy
+                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy ?? Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly)
             };
         }
 

@@ -246,6 +246,7 @@ namespace Neon.Cadence
         public async Task<DateTime> UtcNowAsync()
         {
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             var reply = await ExecuteNonParallel(
                 async () =>
@@ -1155,6 +1156,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             return StubManager.NewActivityStub<TActivityInterface>(Client, this, options);
         }
@@ -1182,6 +1184,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             return StubManager.NewChildWorkflowStub<TWorkflowInterface>(Client, this, options, workflowTypeName);
         }
@@ -1203,6 +1206,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             return StubManager.NewContinueAsNewStub<TWorkflowInterface>(Client, options);
         }
@@ -1228,6 +1232,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, execution);
         }
@@ -1245,6 +1250,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, workflowId, domain);
         }
@@ -1292,6 +1298,7 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             CadenceHelper.ValidateActivityImplementation(typeof(TActivityImplementation));
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
@@ -1319,6 +1326,7 @@ namespace Neon.Cadence
         public IActivityStub NewUntypedActivityStub(ActivityOptions options = null)
         {
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             throw new NotImplementedException();
         }
@@ -1359,6 +1367,7 @@ namespace Neon.Cadence
         public IChildWorkflowStub NewUntypedChildWorkflowStub(string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             throw new NotImplementedException();
         }
@@ -1373,6 +1382,7 @@ namespace Neon.Cadence
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
         {
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             throw new NotImplementedException();
         }
@@ -1387,6 +1397,7 @@ namespace Neon.Cadence
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
         {
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
             throw new NotImplementedException();
         }
@@ -1402,10 +1413,59 @@ namespace Neon.Cadence
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run child workflows in parallel with other child workflows or
-        /// activities.  Although the typed workflow stubs return a <see cref="Task"/> or <see cref="Task{T}"/>,
-        /// workflow developers are required to immediatele <c>await</c> every call to these stubs to 
-        /// ensure that the workflow will execute consistently when replayed from history.  This 
-        /// means that you may not do something like this:
+        /// activities.  A correct implementation would look something like this:
+        /// </para>
+        /// <code language="C#">
+        /// public class MyWorkflow : WorkflowBase, IMyWorkflow
+        /// {
+        ///     [WorkflowMethod]
+        ///     public Task MainAsync()
+        ///     {
+        ///         var stub1  = Workflow.NewStartChildWorkflowStub&lt;IMyWorkflow&gt;("child");
+        ///         var future = await stub1.StartAsync(1);
+        ///         var stub2  = Workflow.NewChildWorkflowStub&lt;IMyWorkflow&gt;();
+        ///         int value;
+        ///         
+        ///         await stub2.ChildAsync(2);
+        ///         
+        ///         value = (int)await future.GetAsync();
+        ///     }
+        ///     
+        ///     [WorkflowMethod(Name = "child")]
+        ///     public Task&lt;int&gt; ChildAsync(int arg)
+        ///     {
+        ///         return arg;
+        ///     }
+        /// }
+        /// </code>
+        /// <para>
+        /// Here we call <see cref="NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
+        /// <b>"child"</b> as the workflow method name.  This matches the <c>[WorkflowMethod(Name = "child")]</c> decorating
+        /// the <c>ChildAsync()</c> workflow method.  Then we start the child workflow by awaiting 
+        /// <see cref="StartChildWorkflowStub.StartAsync(Workflow, object[])"/>.  This returns a <see cref="IAsyncFuture{T}"/>
+        /// whose <see cref="IAsyncFuture.GetAsync"/> method returns the  workflow result.  The code above call this to retrieve
+        /// the result from the first child after executing the second child in parallel.  This same technique can be used to 
+        /// execute activities in parallel with workflows and other activities.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// You must take care to pass parameters that match the target method.  <b>Neon.Cadence</b> does check these at
+        /// runtime, but there is no compile-time checking for this scheme.
+        /// </para>
+        /// <para>
+        /// You'll also need to cast the <see cref="IAsyncFuture.GetAsync"/> result to the actual type (if required).
+        /// This method always returns the <c>object</c> type even if referenced workflow and activity methods return
+        /// <c>void</c>.  <see cref="IAsyncFuture.GetAsync"/> will return <c>null</c> in these cases.
+        /// </para>
+        /// </note>
+        /// <para>
+        /// You might think that since the typed workflow stubs return a <see cref="Task"/> or<see cref= "Task{T}" />,
+        /// it would be possible to perform parallel operations by starting but not immediatelly awaiting the 
+        /// tasks that will run in parallel.  This is not supported because Cadence requires that all workflow
+        /// operations be immediately awaited to ensure workflows will execute consistently during replay.
+        /// </para>
+        /// <para>
+        /// This example <b>WILL NOT WORK</b>:
         /// </para>
         /// <code language="C#">
         /// public class MyWorkflow : WorkflowBase, IMyWorkflow
@@ -1443,59 +1503,14 @@ namespace Neon.Cadence
         /// uses an embedded GOLANG Cadence client to actually communicate with a Cadence cluster.  This
         /// may be relaxed in the future if/when we implement native support for the Cadence protocol.
         /// </note>
-        /// <para>
-        /// A correct implementation would look something like this:
-        /// </para>
-        /// <code language="C#">
-        /// public class MyWorkflow : WorkflowBase, IMyWorkflow
-        /// {
-        ///     [WorkflowMethod]
-        ///     public Task MainAsync()
-        ///     {
-        ///         var stub1  = Workflow.NewStartChildWorkflowStub&lt;IMyWorkflow&gt;("child");
-        ///         var future = await stub1.StartAsync(1);
-        ///         var stub2  = Workflow.NewChildWorkflowStub&lt;IMyWorkflow&gt;();
-        ///         int value;
-        ///         
-        ///         await stub2.ChildAsync(2);
-        ///         
-        ///         value = (int)await future.GetAsync();
-        ///     }
-        ///     
-        ///     [WorkflowMethod(Name = "child")]
-        ///     public Task&lt;int&gt; ChildAsync(int arg)
-        ///     {
-        ///         return arg;
-        ///     }
-        /// }
-        /// </code>
-        /// <para>
-        /// Here we call <see cref="NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
-        /// <b>"child"</b> as the workflow method name.  This matches the <c>[WorkflowMethod(Name = "child")]</c> decorating
-        /// the <c>ChildAsync()</c> workflow method.  Then we start the child workflow by awaiting <see cref="StartChildWorkflowStub.StartAsync(object[])"/>.
-        /// This returns a <see cref="IAsyncFuture{T}"/> whose <see cref="IAsyncFuture.GetAsync"/> method returns the 
-        /// workflow result.  The code above call this to retrieve the result from the first child after executing
-        /// the second child in parallel.  This same technique can be used to execute activities in parallel with workflows
-        /// and other activities.
-        /// </para>
-        /// <note>
-        /// <para>
-        /// You must take care to pass parameters that match the target method.  <b>Neon.Cadence</b> does check these at
-        /// runtime, but there is no compile-time checking for this scheme.
-        /// </para>
-        /// <para>
-        /// You'll also need to cast the <see cref="IAsyncFuture.GetAsync"/> result to the actual type (if required).
-        /// This method always returns the <c>object</c> type even if referenced workflow and activity methods return
-        /// <c>void</c>.  <see cref="IAsyncFuture.GetAsync"/> will return <c>null</c> in these cases.
-        /// </para>
-        /// </note>
         /// </remarks>
         public StartChildWorkflowStub NewStartChildWorkflowStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
             where TWorkflowInterface : class
         {
             Client.EnsureNotDisposed();
+            SetStackTrace();
 
-            throw new NotImplementedException();
+            return new StartChildWorkflowStub(this, typeof(TWorkflowInterface), methodName, options);
         }
 
         //---------------------------------------------------------------------

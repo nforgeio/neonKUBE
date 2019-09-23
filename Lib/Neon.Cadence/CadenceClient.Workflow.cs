@@ -514,7 +514,14 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
-            options = options.Clone();
+            if (options == null)
+            {
+                options = new ChildWorkflowOptions();
+            }
+            else
+            {
+                options = options.Clone();
+            }
 
             if (!options.ScheduleToCloseTimeout.HasValue)
             {
