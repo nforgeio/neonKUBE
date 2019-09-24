@@ -154,6 +154,14 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.True(message.IsCancellable);
+
+                // Clone()
+
+                message = (ProxyRequest)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.True(message.IsCancellable);
             }
         }
 
@@ -200,6 +208,14 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+
+                // Clone()
+
+                message = (ProxyReply)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
             }
         }
 
@@ -242,6 +258,14 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<ActivityRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+
+                // Clone()
+
+                message = (ActivityRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -295,6 +319,15 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ActivityContextId);
+
+                // Clone()
+
+                message = (ActivityReply)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(666, message.ActivityContextId);
             }
         }
 
@@ -337,6 +370,14 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowRequest>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ContextId);
+
+                // Clone()
+
+                message = (WorkflowRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -388,6 +429,16 @@ namespace TestCadence
                 stream.Seek(0, SeekOrigin.Begin);
 
                 message = ProxyMessage.Deserialize<WorkflowReply>(stream, ignoreTypeCode: true);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(666, message.ContextId);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
+
+                // Clone()
+
+                message = (WorkflowReply)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
