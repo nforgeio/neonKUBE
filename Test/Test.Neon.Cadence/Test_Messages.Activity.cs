@@ -175,6 +175,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Activity);
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
                 Assert.Null(message.Domain);
@@ -184,6 +185,7 @@ namespace TestCadence
 
                 message.ClientId = 444;
                 message.RequestId = 555;
+                message.Activity = "my-activity";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalActivityOptions()
                 {
@@ -200,6 +202,7 @@ namespace TestCadence
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -221,6 +224,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -240,6 +244,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -1363,6 +1368,531 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityStartRequest()
+        {
+            ActivityStartRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityStartRequest();
+
+                Assert.Equal(InternalMessageTypes.ActivityStartReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ActivityId);
+                Assert.Null(message.Activity);
+                Assert.Null(message.Args);
+                Assert.Null(message.Options);
+                Assert.Null(message.Domain);
+                Assert.Equal(TimeSpan.Zero, message.ScheduleToStartTimeout);
+
+                // Round-trip
+
+                message.ClientId   = 444;
+                message.RequestId  = 555;
+                message.ActivityId = 666;
+                message.Activity   = "my-activity";
+                message.Args       = new byte[] { 0, 1, 2, 3, 4 };
+                message.Options    = new InternalActivityOptions()
+                {
+                    TaskList               = "my-tasklist",
+                    ScheduleToCloseTimeout = 1000,
+                    ScheduleToStartTimeout = 2000,
+                    StartToCloseTimeout    = 3000,
+                    HeartbeatTimeout       = 4000,
+                    WaitForCancellation    = true,
+                    RetryPolicy            = new InternalRetryPolicy() { MaximumInterval = 5 }
+                };
+                message.Domain = "my-domain";
+                message.ScheduleToStartTimeout = TimeSpan.FromSeconds(120);
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                Assert.NotNull(message.Options);
+                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
+                Assert.Equal(2000, message.Options.ScheduleToStartTimeout);
+                Assert.Equal(3000, message.Options.StartToCloseTimeout);
+                Assert.Equal(4000, message.Options.HeartbeatTimeout);
+                Assert.True(message.Options.WaitForCancellation);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                Assert.NotNull(message.Options);
+                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
+                Assert.Equal(2000, message.Options.ScheduleToStartTimeout);
+                Assert.Equal(3000, message.Options.StartToCloseTimeout);
+                Assert.Equal(4000, message.Options.HeartbeatTimeout);
+                Assert.True(message.Options.WaitForCancellation);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal(666, message.ActivityId);
+                //Assert.Equal("my-activity", message.Activity);
+                //Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                //Assert.NotNull(message.Options);
+                //Assert.Equal("my-tasklist", message.Options.TaskList);
+                //Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
+                //Assert.Equal(2000, message.Options.ScheduleToStartTimeout);
+                //Assert.Equal(3000, message.Options.StartToCloseTimeout);
+                //Assert.Equal(4000, message.Options.HeartbeatTimeout);
+                //Assert.True(message.Options.WaitForCancellation);
+                //Assert.NotNull(message.Options.RetryPolicy);
+                //Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                //Assert.Equal("my-domain", message.Domain);
+                //Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityStartReply()
+        {
+            ActivityStartReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityStartReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal("MyError", message.Error.String);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityGetResultRequest()
+        {
+            ActivityGetResultRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityGetResultRequest();
+
+                Assert.Equal(InternalMessageTypes.ActivityGetResultReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetResultRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ActivityId);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.ActivityId = 666;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetResultRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal(666, message.ActivityId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityGetResultReply()
+        {
+            ActivityGetResultReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityGetResultReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetResultReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Result);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.Result = new byte[] { 0, 1, 2, 3, 4 };
+                message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.Equal("MyError", message.Error.String);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetResultReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                //Assert.Equal("MyError", message.Error.String);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityStartLocalRequest()
+        {
+            ActivityStartLocalRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityStartLocalRequest();
+
+                Assert.Equal(InternalMessageTypes.ActivityStartLocalReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartLocalRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ActivityId);
+                Assert.Null(message.Activity);
+                Assert.Null(message.Args);
+                Assert.Null(message.Options);
+                Assert.Null(message.Domain);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.ActivityId = 666;
+                message.Activity = "my-activity";
+                message.Args = new byte[] { 0, 1, 2, 3, 4 };
+                message.Options = new InternalLocalActivityOptions()
+                {
+                    ScheduleToCloseTimeout = 1000,
+                    RetryPolicy = new InternalRetryPolicy() { MaximumInterval = 5 }
+                };
+                message.Domain = "my-domain";
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                Assert.NotNull(message.Options);
+                Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartLocalRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                Assert.NotNull(message.Options);
+                Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
+                Assert.NotNull(message.Options.RetryPolicy);
+                Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                Assert.Equal("my-domain", message.Domain);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal(666, message.ActivityId);
+                //Assert.Equal("my-activity", message.Activity);
+                //Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
+                //Assert.NotNull(message.Options);
+                //Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
+                //Assert.NotNull(message.Options.RetryPolicy);
+                //Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
+                //Assert.Equal("my-domain", message.Domain);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityGetLocalResultReply()
+        {
+            ActivityGetLocalResultReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityGetLocalResultReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetLocalResultReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Result);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.Result = new byte[] { 0, 1, 2, 3, 4 };
+                message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.Equal("MyError", message.Error.String);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetLocalResultReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
+                //Assert.Equal("MyError", message.Error.String);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityGetLocalResultRequest()
+        {
+            ActivityGetLocalResultRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityGetLocalResultRequest();
+
+                Assert.Equal(InternalMessageTypes.ActivityGetLocalResultReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetLocalResultRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.ActivityId);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.ActivityId = 666;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityGetLocalResultRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.ActivityId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal(666, message.ActivityId);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_ActivityStartLocalReply()
+        {
+            ActivityStartLocalReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new ActivityStartLocalReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartLocalReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.Error = new CadenceError("MyError");
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<ActivityStartLocalReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("MyError", message.Error.String);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                //message = EchoToProxy(message);
+                //Assert.NotNull(message);
+                //Assert.Equal(444, message.ClientId);
+                //Assert.Equal(555, message.RequestId);
+                //Assert.Equal("MyError", message.Error.String);
             }
         }
     }
