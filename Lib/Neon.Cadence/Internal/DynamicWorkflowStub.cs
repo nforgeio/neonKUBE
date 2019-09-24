@@ -49,8 +49,9 @@ namespace Neon.Cadence.Internal
         private Type                stubType;
         private ConstructorInfo     startConstructor;
         private ConstructorInfo     childConstructor;
+        private ConstructorInfo     childExecutedConstructor;
         private ConstructorInfo     continueConstructor;
-        private ConstructorInfo     childExecutionConstructor;
+        private ConstructorInfo     childExternalConstructor;
         private ConstructorInfo     childWorkflowIdConstructor;
         private MethodInfo          toUntyped;
 
@@ -71,9 +72,10 @@ namespace Neon.Cadence.Internal
             this.stubType                   = assembly.GetType(className);
             this.startConstructor           = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions));
             this.childConstructor           = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildWorkflowOptions));
-            this.continueConstructor        = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(ContinueAsNewOptions));
-            this.childExecutionConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(WorkflowExecution));
+            this.childExecutedConstructor   = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildExecution));
+            this.childExternalConstructor   = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(WorkflowExecution));
             this.childWorkflowIdConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(string));
+            this.continueConstructor        = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(ContinueAsNewOptions));
             this.toUntyped                  = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
         }
 
@@ -116,20 +118,23 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Creates a workflow stub instance suitable for continuing a workflow as new.
+        /// Creates a workflow stub instance mapping to an already started child workflow.
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="dataConverter">The data converter.</param>
+        /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="options">Optionally specifies the continuation options.</param>
+        /// <param name="execution">The child execution information.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, ContinueAsNewOptions options = null)
+        public object Create(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildExecution execution)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(dataConverter != null);
-            Covenant.Requires<ArgumentNullException>(workflowTypeName != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(execution != null);
 
-            return continueConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options });
+            return childExecutedConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowTypeName, execution });
         }
 
         /// <summary>
@@ -147,7 +152,7 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
             Covenant.Requires<ArgumentNullException>(execution != null);
 
-            return childExecutionConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, execution });
+            return childExternalConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, execution });
         }
 
         /// <summary>
@@ -167,6 +172,23 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
 
             return childWorkflowIdConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowId, domain });
+        }
+
+        /// <summary>
+        /// Creates a workflow stub instance suitable for continuing a workflow as new.
+        /// </summary>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="dataConverter">The data converter.</param>
+        /// <param name="workflowTypeName">Specifies the workflow type name.</param>
+        /// <param name="options">Optionally specifies the continuation options.</param>
+        /// <returns>The workflow stub as an <see cref="object"/>.</returns>
+        public object Create(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, ContinueAsNewOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(dataConverter != null);
+            Covenant.Requires<ArgumentNullException>(workflowTypeName != null);
+
+            return continueConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options });
         }
 
         /// <summary>

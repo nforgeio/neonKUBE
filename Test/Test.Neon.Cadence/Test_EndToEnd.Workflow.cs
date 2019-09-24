@@ -1653,13 +1653,19 @@ namespace TestCadence
 
             public async Task SignalChildAsync(string signal)
             {
-                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>();
-                var future    = await childStub.StartAsync();
+                WorkflowChild.Reset();
 
-                // $todo(jeff.lill): This needs to work!
+                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>("wait-for-signal");
 
-                //await childStub.SignalAsync(signal);
+                Assert.Null(childStub.Stub);        // This will be NULL until we start the child.
 
+                var future = await childStub.StartAsync();
+
+                NeonHelper.WaitFor(() => WorkflowChild.WasExecuted, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                Assert.NotNull(childStub.Stub);     // This should be set after the workflow starts.
+
+                await childStub.Stub.SignalAsync(signal);
                 await future.GetAsync();
             }
 

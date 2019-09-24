@@ -34,7 +34,9 @@ namespace Neon.Cadence
     /// Used to execute a child workflow in parallel with other child workflows or activities.
     /// Instances can be created via <see cref="Workflow.NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/>.
     /// </summary>
-    public class StartChildWorkflowStub
+    /// <typeparam name="TWorkflowInterface">Specifies the workflow interface.</typeparam>
+    public class StartChildWorkflowStub<TWorkflowInterface>
+        where TWorkflowInterface : class
     {
         //---------------------------------------------------------------------
         // Private types
@@ -86,13 +88,14 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="parentWorkflow">The associated parent workflow.</param>
-        /// <param name="workflowInterface">The target workflow interface.</param>
         /// <param name="methodName">Identifies the target workflow method or <c>null</c> or empty.</param>
         /// <param name="options">The child workflow options or <c>null</c>.</param>
-        internal StartChildWorkflowStub(Workflow parentWorkflow, Type workflowInterface, string methodName, ChildWorkflowOptions options)
+        internal StartChildWorkflowStub(Workflow parentWorkflow, string methodName, ChildWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(workflowInterface != null);
+
+            var workflowInterface = typeof(TWorkflowInterface);
+
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
             options = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
@@ -106,7 +109,7 @@ namespace Neon.Cadence
 
             if (string.IsNullOrEmpty(methodName))
             {
-                // Look for the method with a null or empty method name.
+                // Look for the entrypoint method with a null or empty method name.
 
                 foreach (var method in workflowInterface.GetMethods())
                 {
@@ -124,7 +127,7 @@ namespace Neon.Cadence
             }
             else
             {
-                // Look for the method with the matching method name.
+                // Look for the entrypoint method with the matching method name.
 
                 foreach (var method in workflowInterface.GetMethods())
                 {
@@ -174,7 +177,7 @@ namespace Neon.Cadence
         /// workflow method.  You'll also need to cast the result to the required type when necessary.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartChildWorkflowStub"/> may only be executed once.
+        /// Any given <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture<object>> StartAsync(params object[] args)
@@ -208,7 +211,24 @@ namespace Neon.Cadence
             var client    = parentWorkflow.Client;
             var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, client.DataConverter.ToData(args), options);
 
+            // Initialize the type-safe stub property such that developers can call
+            // any query or signal methods.
+
+            Stub = StubManager.NewChildWorkflowStub<TWorkflowInterface>(client, parentWorkflow, workflowTypeName, execution);
+
             return new AsyncFuture(parentWorkflow, execution);
         }
+
+        /// <summary>
+        /// <para>
+        /// Returns the underlying <typeparamref name="TWorkflowInterface"/> stub for the child workflow.
+        /// This includes all the workflow entrypoint, query and signal methods.
+        /// </para>
+        /// <note>
+        /// The entrypoint methods won't work because the workflow will already be running but you can
+        /// interact with the child workflow using any query and signal methods.       
+        /// </note>
+        /// </summary>
+        public TWorkflowInterface Stub { get; private set; }
     }
 }

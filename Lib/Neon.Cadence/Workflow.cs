@@ -1409,7 +1409,7 @@ namespace Neon.Cadence
         /// <typeparam name="TWorkflowInterface">The target workflow interface.</typeparam>
         /// <param name="methodName">Optionally identifies the target method.</param>
         /// <param name="options">Optionally specifies custom <see cref="ChildWorkflowOptions"/>.</param>
-        /// <returns>A <see cref="StartChildWorkflowStub"/> instance.</returns>
+        /// <returns>A <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run child workflows in parallel with other child workflows or
@@ -1442,7 +1442,7 @@ namespace Neon.Cadence
         /// Here we call <see cref="NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
         /// <b>"child"</b> as the workflow method name.  This matches the <c>[WorkflowMethod(Name = "child")]</c> decorating
         /// the <c>ChildAsync()</c> workflow method.  Then we start the child workflow by awaiting 
-        /// <see cref="StartChildWorkflowStub.StartAsync(Workflow, object[])"/>.  This returns a <see cref="IAsyncFuture{T}"/>
+        /// <see cref="StartChildWorkflowStub{TWorkflowInterface}.StartAsync(object[])"/>.  This returns an <see cref="IAsyncFuture{T}"/>
         /// whose <see cref="IAsyncFuture.GetAsync"/> method returns the  workflow result.  The code above call this to retrieve
         /// the result from the first child after executing the second child in parallel.  This same technique can be used to 
         /// execute activities in parallel with workflows and other activities.
@@ -1504,13 +1504,13 @@ namespace Neon.Cadence
         /// may be relaxed in the future if/when we implement native support for the Cadence protocol.
         /// </note>
         /// </remarks>
-        public StartChildWorkflowStub NewStartChildWorkflowStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
+        public StartChildWorkflowStub<TWorkflowInterface> NewStartChildWorkflowStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
             where TWorkflowInterface : class
         {
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return new StartChildWorkflowStub(this, typeof(TWorkflowInterface), methodName, options);
+            return new StartChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
         }
 
         //---------------------------------------------------------------------
