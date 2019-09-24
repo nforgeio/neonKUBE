@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartChildWorkflowStub.cs
+// FILE:	    StartActivityStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -31,18 +31,18 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to execute a child workflow in parallel with other child workflows or activities.
-    /// Instances are created via <see cref="Workflow.NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/>.
+    /// Used to execute a activtites in parallel with other activities or child
+    /// workflows.  Instances are created via <see cref="Workflow.NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/>.
     /// </summary>
-    /// <typeparam name="TWorkflowInterface">Specifies the workflow interface.</typeparam>
-    public class StartChildWorkflowStub<TWorkflowInterface>
-        where TWorkflowInterface : class
+    /// <typeparam name="TActivityInterface">Specifies the workflow interface.</typeparam>
+    public class StartActivityStub<TActivityInterface>
+        where TActivityInterface : class
     {
         //---------------------------------------------------------------------
         // Private types
 
         /// <summary>
-        /// Implements the child workflow future.
+        /// Implements the activity future.
         /// </summary>
         private class AsyncFuture : IAsyncFuture<object>
         {
@@ -90,11 +90,11 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The associated parent workflow.</param>
         /// <param name="methodName">Identifies the target workflow method or <c>null</c> or empty.</param>
         /// <param name="options">The child workflow options or <c>null</c>.</param>
-        internal StartChildWorkflowStub(Workflow parentWorkflow, string methodName, ChildWorkflowOptions options)
+        internal StartActivityStub(Workflow parentWorkflow, string methodName, ChildWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
 
-            var workflowInterface = typeof(TWorkflowInterface);
+            var workflowInterface = typeof(TActivityInterface);
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
@@ -214,14 +214,14 @@ namespace Neon.Cadence
             // Initialize the type-safe stub property such that developers can call
             // any query or signal methods.
 
-            Stub = StubManager.NewChildWorkflowStub<TWorkflowInterface>(client, parentWorkflow, workflowTypeName, execution);
+            Stub = StubManager.NewChildWorkflowStub<TActivityInterface>(client, parentWorkflow, workflowTypeName, execution);
 
             return new AsyncFuture(parentWorkflow, execution);
         }
 
         /// <summary>
         /// <para>
-        /// Returns the underlying <typeparamref name="TWorkflowInterface"/> stub for the child workflow.
+        /// Returns the underlying <typeparamref name="TActivityInterface"/> stub for the child workflow.
         /// This includes all the workflow entrypoint, query and signal methods.
         /// </para>
         /// <note>
@@ -229,6 +229,6 @@ namespace Neon.Cadence
         /// interact with the child workflow using any query and signal methods.       
         /// </note>
         /// </summary>
-        public TWorkflowInterface Stub { get; private set; }
+        public TActivityInterface Stub { get; private set; }
     }
 }
