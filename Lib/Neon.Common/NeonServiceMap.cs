@@ -108,9 +108,9 @@ namespace Neon.Common
         private static void BuildProduction()
         {
             serviceMaps["production"] = new NeonServiceMap();
-            serviceMaps["production"].AddServiceDescription(NeonServices.ClusterManager, new ServiceEndpoint() {  });
-            serviceMaps["production"].AddServiceDescription(NeonServices.Elasticsearch, new ServiceEndpoint() { Port = 9200 });
-            serviceMaps["production"].AddServiceDescription(NeonServices.Kibana, new ServiceEndpoint() { Port = 5601 });
+            serviceMaps["production"].AddServiceDescription(NeonServices.ClusterManager, new ServiceEndpoint());
+            serviceMaps["production"].AddServiceDescription(NeonServices.Elasticsearch, new ServiceEndpoint() { Port = 9200 }, "monitoring");
+            serviceMaps["production"].AddServiceDescription(NeonServices.Kibana, new ServiceEndpoint() { Port = 5601 }, "monitoring");
 
             VerifyInit(Production);
         }
@@ -149,6 +149,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="serviceName">The service name.</param>
         /// <param name="endpoint">Optionally specifies a single service endpoint.</param>
+        /// <param name="namespace">The K8s namespace where the service is deployed.</param>
         /// <returns>
         /// The <see cref="ServiceDescription"/> so that it can be customized further if necessary.
         /// </returns>
@@ -157,11 +158,12 @@ namespace Neon.Common
         /// properties to the service description being created and initializes blank or <c>null</c> endpoint
         /// names to <see cref="DefaultEndpointName"/>.
         /// </remarks>
-        private ServiceDescription AddServiceDescription(string serviceName, ServiceEndpoint endpoint = null)
+        private ServiceDescription AddServiceDescription(string serviceName, ServiceEndpoint endpoint = null, string @namespace = "default")
         {
             var serviceDescription = new ServiceDescription()
             {
-                Name = serviceName
+                Name = serviceName,
+                Namespace = @namespace
             };
 
             if (endpoint != null)

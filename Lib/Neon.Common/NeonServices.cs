@@ -35,6 +35,6 @@ namespace Neon.Common
         /// <summary>
         /// Kibana.
         /// </summary>
-        public const string Kibana = "kibana";
+        public const string Kibana = "kibana-kibana";
     }
 }
