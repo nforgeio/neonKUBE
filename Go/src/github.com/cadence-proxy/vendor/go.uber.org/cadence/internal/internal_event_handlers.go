@@ -288,6 +288,46 @@ func (wc *workflowEnvironmentImpl) SignalExternalWorkflow(domainName, workflowID
 	decision.setData(&scheduledSignal{callback: callback})
 }
 
+func (wc *workflowEnvironmentImpl) UpsertSearchAttributes(attributes map[string]interface{}) error {
+	// This has to be used in workflowEnvironment implementations instead of in Workflow for testsuite mock purpose.
+	attr, err := validateAndSerializeSearchAttributes(attributes)
+	if err != nil {
+		return err
+	}
+
+	upsertID := wc.GenerateSequenceID()
+	wc.decisionsHelper.upsertSearchAttributes(upsertID, attr)
+	wc.updateWorkflowInfoWithSearchAttributes(attr) // this is for getInfo correctness
+	return nil
+}
+
+func (wc *workflowEnvironmentImpl) updateWorkflowInfoWithSearchAttributes(attributes *shared.SearchAttributes) {
+	wc.workflowInfo.SearchAttributes = mergeSearchAttributes(wc.workflowInfo.SearchAttributes, attributes)
+}
+
+func mergeSearchAttributes(current, upsert *shared.SearchAttributes) *shared.SearchAttributes {
+	if current == nil || len(current.IndexedFields) == 0 {
+		return upsert
+	}
+
+	fields := current.IndexedFields
+	for k, v := range upsert.IndexedFields {
+		fields[k] = v
+	}
+	return current
+}
+
+func validateAndSerializeSearchAttributes(attributes map[string]interface{}) (*shared.SearchAttributes, error) {
+	if len(attributes) == 0 {
+		return nil, errSearchAttributesNotSet
+	}
+	attr, err := serializeSearchAttributes(attributes)
+	if err != nil {
+		return nil, err
+	}
+	return attr, nil
+}
+
 func (wc *workflowEnvironmentImpl) RegisterCancelHandler(handler func()) {
 	wc.cancelHandler = handler
 }
@@ -798,6 +838,9 @@ func (weh *workflowExecutionEventHandlerImpl) ProcessEvent(
 	case m.EventTypeChildWorkflowExecutionTerminated:
 		err = weh.handleChildWorkflowExecutionTerminated(event)
 
+	case m.EventTypeUpsertWorkflowSearchAttributes:
+		weh.handleUpsertWorkflowSearchAttributes(event)
+
 	default:
 		weh.logger.Error("unknown event type",
 			zap.Int64(tagEventID, event.GetEventId()),
@@ -1141,6 +1184,10 @@ func (weh *workflowExecutionEventHandlerImpl) handleChildWorkflowExecutionTermin
 	childWorkflow.handle(nil, err)
 
 	return nil
+}
+
+func (weh *workflowExecutionEventHandlerImpl) handleUpsertWorkflowSearchAttributes(event *m.HistoryEvent) {
+	weh.updateWorkflowInfoWithSearchAttributes(event.UpsertWorkflowSearchAttributesEventAttributes.SearchAttributes)
 }
 
 func (weh *workflowExecutionEventHandlerImpl) handleRequestCancelExternalWorkflowExecutionInitiated(event *m.HistoryEvent) error {

@@ -59,6 +59,11 @@ namespace Neon.Cadence
         public TimeSpan TaskStartToCloseTimeout { get; set; }
 
         /// <summary>
+        /// Optionally overrides the name of the workflow to continue as new.
+        /// </summary>
+        public string Workflow { get; set; }
+
+        /// <summary>
         /// Optionally overrides the current workflow's task list when restarting.
         /// </summary>
         public string TaskList { get; set; }

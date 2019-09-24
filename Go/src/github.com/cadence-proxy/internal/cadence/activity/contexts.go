@@ -35,7 +35,8 @@ type (
 	// ActivityContextsMap holds a thread-safe map[interface{}]interface{} of
 	// cadence ActivityContextsMap with their contextID's
 	ActivityContextsMap struct {
-		safeMap sync.Map
+		sync.Mutex
+		contexts map[int64]*ActivityContext
 	}
 
 	// ActivityContext holds a Cadence activity
@@ -80,7 +81,6 @@ func GetContextID() int64 {
 func NewActivityContext(ctx context.Context) *ActivityContext {
 	actx := new(ActivityContext)
 	actx.SetContext(ctx)
-
 	return actx
 }
 
@@ -130,46 +130,53 @@ func (actx *ActivityContext) SetCancelFunction(value context.CancelFunc) {
 //----------------------------------------------------------------------------
 // ActivityContextsMap instance methods
 
+// NewActivityContextsMap is the constructor for an ActivityContextsMap
+func NewActivityContextsMap() *ActivityContextsMap {
+	o := new(ActivityContextsMap)
+	o.contexts = make(map[int64]*ActivityContext)
+	return o
+}
+
 // Add adds a new cadence context and its corresponding ContextId into
 // the ActivityContextsMap map.  This method is thread-safe.
 //
-// param id int64 -> the long id passed to Cadence
-// activity functions.  This will be the mapped key
+// param contextID int64 -> the long contextID of activity.
+// This will be the mapped key.
 //
 // param actx *ActivityContext -> pointer to the new ActivityContex used to
 // execute activity functions. This will be the mapped value
 //
-// returns int64 -> long id of the new cadence ActivityContext added to the map
-func (actxs *ActivityContextsMap) Add(id int64, actx *ActivityContext) int64 {
-	actxs.safeMap.Store(id, actx)
-	return id
+// returns int64 -> long contextID of the new cadence ActivityContext added to the map
+func (a *ActivityContextsMap) Add(contextID int64, actx *ActivityContext) int64 {
+	a.Lock()
+	defer a.Unlock()
+	a.contexts[contextID] = actx
+	return contextID
 }
 
 // Remove removes key/value entry from the ActivityContextsMap map at the specified
 // ContextId.  This is a thread-safe method.
 //
-// param id int64 -> the long id passed to Cadence
-// activity functions.  This will be the mapped key
+// param contextID int64 -> the long contextID of activity.
+// This will be the mapped key.
 //
-// returns int64 -> long id of the ActivityContext removed from the map
-func (actxs *ActivityContextsMap) Remove(id int64) int64 {
-	actxs.safeMap.Delete(id)
-	return id
+// returns int64 -> long contextID of the ActivityContext removed from the map
+func (a *ActivityContextsMap) Remove(contextID int64) int64 {
+	a.Lock()
+	defer a.Unlock()
+	delete(a.contexts, contextID)
+	return contextID
 }
 
 // Get gets a ActivityContext from the ActivityContextsMap at the specified
 // ContextID.  This method is thread-safe.
 //
-// param id int64 -> the long id passed to Cadence
-// activity functions.  This will be the mapped key
+// param contextID int64 -> the long contextID of activity.
+// This will be the mapped key.
 //
 // returns *ActivityContext -> pointer to ActivityContext with the specified id
-func (actxs *ActivityContextsMap) Get(id int64) *ActivityContext {
-	if v, ok := actxs.safeMap.Load(id); ok {
-		if _v, _ok := v.(*ActivityContext); _ok {
-			return _v
-		}
-	}
-
-	return nil
+func (a *ActivityContextsMap) Get(contextID int64) *ActivityContext {
+	a.Lock()
+	defer a.Unlock()
+	return a.contexts[contextID]
 }

@@ -35,6 +35,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Collections;
+using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Retry;
 
@@ -95,12 +96,14 @@ namespace Neon.Net
         //---------------------------------------------------------------------
         // Instance members
 
-        private object          syncLock          = new object();
-        private IRetryPolicy    safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
-        private IRetryPolicy    unsafeRetryPolicy = new NoRetryPolicy();
+        private object                                      syncLock          = new object();
+        private IRetryPolicy                                safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
+        private IRetryPolicy                                unsafeRetryPolicy = new NoRetryPolicy();
+        private Dictionary<Type, IEnhancedJsonConverter>    typeToConverter   = new Dictionary<Type, IEnhancedJsonConverter>();
+        private bool                                        disposeClient;
 
         /// <summary>
-        /// Constructor.
+        /// Used to construct a client for most situations, optionally specifying a custom <see cref="HttpMessageHandler"/>.
         /// </summary>
         /// <param name="handler">The optional message handler.</param>
         /// <param name="disposeHandler">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>
@@ -116,7 +119,35 @@ namespace Neon.Net
                 disposeHandler = true;  // Always dispose handlers created by the constructor.
             }
 
-            HttpClient = new HttpClient(handler, disposeHandler);
+            HttpClient    = new HttpClient(handler, disposeHandler);
+            disposeClient = true;
+
+            HttpClient.DefaultRequestHeaders.Add("Accept", DocumentType);
+
+            // Initialize the dictionary mapping types to enhanced data converters.
+
+            // $todo(jeff.lill):
+            //
+            // We're currently suppoting only converters implemented in the Neon.Common assembly.
+            // Eventually, we'll probably wish to support custom user converters.
+
+            foreach (var converter in NeonHelper.GetEnhancedJsonConverters())
+            {
+                typeToConverter.Add(converter.Type, converter);
+            }
+        }
+
+        /// <summary>
+        /// Used in special situations (like ASP.NET Blazor) where a special <see cref="HttpClient"/> needs
+        /// to be created and provided.
+        /// </summary>
+        /// <param name="httpClient">The special <see cref="HttpClient"/> instance to be wrapped.</param>
+        public JsonClient(HttpClient httpClient)
+        {
+            Covenant.Requires<ArgumentNullException>(httpClient != null);
+
+            HttpClient    = httpClient;
+            disposeClient = false;
 
             HttpClient.DefaultRequestHeaders.Add("Accept", DocumentType);
         }
@@ -147,7 +178,7 @@ namespace Neon.Net
             {
                 lock (syncLock)
                 {
-                    if (HttpClient != null)
+                    if (HttpClient != null && disposeClient)
                     {
                         HttpClient.Dispose();
                         HttpClient = null;
@@ -286,6 +317,10 @@ namespace Neon.Net
                 else if (arg.Value is bool)
                 {
                     value = NeonHelper.ToBoolString((bool)arg.Value);
+                }
+                else if (arg.Value != null && typeToConverter.TryGetValue(arg.Value.GetType(), out var converter))
+                {
+                    value = converter.ToSimpleString(arg.Value);
                 }
                 else
                 {

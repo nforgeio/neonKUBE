@@ -9,8 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/tools/go/analysis"
-	"honnef.co/go/tools/config"
+	"honnef.co/go/tools/lint"
 	. "honnef.co/go/tools/lint/lintdsl"
 )
 
@@ -22,7 +21,7 @@ var knownNameExceptions = map[string]bool{
 	"kWh":          true,
 }
 
-func CheckNames(pass *analysis.Pass) (interface{}, error) {
+func (c *Checker) CheckNames(j *lint.Job) {
 	// A large part of this function is copied from
 	// github.com/golang/lint, Copyright (c) 2013 The Go Authors,
 	// licensed under the BSD 3-clause license.
@@ -46,7 +45,7 @@ func CheckNames(pass *analysis.Pass) (interface{}, error) {
 
 		// Handle two common styles from other languages that don't belong in Go.
 		if len(id.Name) >= 5 && allCaps(id.Name) && strings.Contains(id.Name, "_") {
-			ReportfFG(pass, id.Pos(), "should not use ALL_CAPS in Go names; use CamelCase instead")
+			j.Errorf(id, "should not use ALL_CAPS in Go names; use CamelCase instead")
 			return
 		}
 
@@ -56,10 +55,10 @@ func CheckNames(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		if len(id.Name) > 2 && strings.Contains(id.Name[1:len(id.Name)-1], "_") {
-			ReportfFG(pass, id.Pos(), "should not use underscores in Go names; %s %s should be %s", thing, id.Name, should)
+			j.Errorf(id, "should not use underscores in Go names; %s %s should be %s", thing, id.Name, should)
 			return
 		}
-		ReportfFG(pass, id.Pos(), "%s %s should be %s", thing, id.Name, should)
+		j.Errorf(id, "%s %s should be %s", thing, id.Name, should)
 	}
 	checkList := func(fl *ast.FieldList, thing string, initialisms map[string]bool) {
 		if fl == nil {
@@ -72,18 +71,17 @@ func CheckNames(pass *analysis.Pass) (interface{}, error) {
 		}
 	}
 
-	il := config.For(pass).Initialisms
-	initialisms := make(map[string]bool, len(il))
-	for _, word := range il {
+	initialisms := make(map[string]bool, len(j.Pkg.Config.Initialisms))
+	for _, word := range j.Pkg.Config.Initialisms {
 		initialisms[word] = true
 	}
-	for _, f := range pass.Files {
+	for _, f := range j.Pkg.Syntax {
 		// Package names need slightly different handling than other names.
 		if !strings.HasSuffix(f.Name.Name, "_test") && strings.Contains(f.Name.Name, "_") {
-			ReportfFG(pass, f.Pos(), "should not use underscores in package names")
+			j.Errorf(f, "should not use underscores in package names")
 		}
 		if strings.IndexFunc(f.Name.Name, unicode.IsUpper) != -1 {
-			ReportfFG(pass, f.Pos(), "should not use MixedCaps in package name; %s should be %s", f.Name.Name, strings.ToLower(f.Name.Name))
+			j.Errorf(f, "should not use MixedCaps in package name; %s should be %s", f.Name.Name, strings.ToLower(f.Name.Name))
 		}
 
 		ast.Inspect(f, func(node ast.Node) bool {
@@ -106,7 +104,7 @@ func CheckNames(pass *analysis.Pass) (interface{}, error) {
 					return true
 				}
 
-				if IsInTest(pass, v) && (strings.HasPrefix(v.Name.Name, "Example") || strings.HasPrefix(v.Name.Name, "Test") || strings.HasPrefix(v.Name.Name, "Benchmark")) {
+				if IsInTest(j, v) && (strings.HasPrefix(v.Name.Name, "Example") || strings.HasPrefix(v.Name.Name, "Test") || strings.HasPrefix(v.Name.Name, "Benchmark")) {
 					return true
 				}
 
@@ -175,7 +173,6 @@ func CheckNames(pass *analysis.Pass) (interface{}, error) {
 			return true
 		})
 	}
-	return nil, nil
 }
 
 // lintName returns a different name if it should be different.

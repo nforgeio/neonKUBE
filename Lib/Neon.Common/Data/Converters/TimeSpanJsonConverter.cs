@@ -43,19 +43,29 @@ namespace Neon.Data
     /// </summary>
     public class TimeSpanJsonConverter : JsonConverter<TimeSpan>, IEnhancedJsonConverter
     {
+        private string format = "c";
+
         /// <inheritdoc/>
         public Type Type => typeof(TimeSpan);
 
         /// <inheritdoc/>
         public override TimeSpan ReadJson(JsonReader reader, Type objectType, TimeSpan existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            return TimeSpan.ParseExact((string)reader.Value, "c", null);
+            return TimeSpan.ParseExact((string)reader.Value, format, null);
         }
 
         /// <inheritdoc/>
         public override void WriteJson(JsonWriter writer, TimeSpan value, JsonSerializer serializer)
         {
-            writer.WriteValue(value.ToString("c"));
+            writer.WriteValue(value.ToString(format));
+        }
+
+        /// <inheritdoc/>
+        public string ToSimpleString(object instance)
+        {
+            Covenant.Requires<ArgumentNullException>(instance != null);
+
+            return ((TimeSpan)instance).ToString(format);
         }
     }
 }

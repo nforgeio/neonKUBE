@@ -170,9 +170,9 @@ namespace Neon.ModelGen
         private Dictionary<string, DataModel>       nameToDataModel    = new Dictionary<string, DataModel>();
         private Dictionary<string, ServiceModel>    nameToServiceModel = new Dictionary<string, ServiceModel>();
         private bool                                firstItemGenerated = true;
+        private bool                                generateUx         = false;
         private StringWriter                        writer;
         private HashSet<Type>                       convertableTypes;
-        private bool                                generateUx = false;
 
         /// <summary>
         /// Constructs a code generator.
@@ -209,20 +209,11 @@ namespace Neon.ModelGen
             // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
             // it might be nice if we could handle user provided converters as well.
 
-            var helperAssembly = typeof(NeonHelper).Assembly;
-
             convertableTypes = new HashSet<Type>();
 
-            var types = helperAssembly.GetTypes();
-
-            foreach (var type in helperAssembly.GetTypes())
+            foreach (var converter in NeonHelper.GetEnhancedJsonConverters())
             {
-                if (type.Implements<IEnhancedJsonConverter>())
-                {
-                    var converter = (IEnhancedJsonConverter)helperAssembly.CreateInstance(type.FullName);
-
-                    convertableTypes.Add(converter.Type);
-                }
+                convertableTypes.Add(converter.Type);
             }
         }
 
@@ -979,6 +970,7 @@ namespace Neon.ModelGen
 
             writer.WriteLine($"using System.ComponentModel;");
             writer.WriteLine($"using System.Diagnostics;");
+            writer.WriteLine($"using System.Diagnostics.Contracts;");
             writer.WriteLine($"using System.Dynamic;");
             writer.WriteLine($"using System.IO;");
             writer.WriteLine($"using System.Linq;");
@@ -1165,7 +1157,7 @@ namespace Neon.ModelGen
                     {
                         if (persistedKeyProperty != null)
                         {
-                            Output.Error($"[{dataModel.SourceType.FullName}]: This data model has two properties [{persistedKeyProperty.Name}] and [{property.Name}] that are both tagged with [PersisabledKey].  This is allowed for only one property per class.");
+                            Output.Error($"[{dataModel.SourceType.FullName}]: This data model has two properties [{persistedKeyProperty.Name}] and [{property.Name}] that are both tagged with [PersisabledKey].  This is allowed for only one property per type.");
                             break;
                         }
 
@@ -2258,9 +2250,13 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        public string GetKey()");
                         writer.WriteLine($"        {{");
 
-                        if (persistedKeyProperty == null)
+                        if (!genPersistence)
                         {
-                            writer.WriteLine($"            return null; // ERROR: No source data model property was tagged by [PersistableKey].");
+                            writer.WriteLine($"            throw new NotSupportedException(\"Model persistence is not enabled.  Try specifying the [--persisted] option on the neon-cli command line.\");");
+                        }
+                        else if (persistedKeyProperty == null)
+                        {
+                            writer.WriteLine($"            throw new NotSupportedException(\"No source data model property was tagged by [PersistableKey].\");");
                         }
                         else if (persistedKeyProperty.PropertyType.IsValueType)
                         {
@@ -2270,7 +2266,7 @@ namespace Neon.ModelGen
                         {
                             writer.WriteLine($"            if ({persistedKeyProperty.Name} == null)");
                             writer.WriteLine($"            {{");
-                            writer.WriteLine($"                throw new InvalidOperationException(\"Persistence key property [{persistedKeyProperty.Name}] cannot be NULL.\");");
+                            writer.WriteLine($"                throw new NotSupportedException(\"Persistence key property [{persistedKeyProperty.Name}] cannot be NULL.\");");
                             writer.WriteLine($"            }}");
                             writer.WriteLine();
 
@@ -2461,8 +2457,11 @@ namespace Neon.ModelGen
             writer.WriteLine($"        private JsonClient   client;");
             writer.WriteLine($"        private bool         isDisposed = false;");
             writer.WriteLine();
+
+            // Generate the typical constructor.
+
             writer.WriteLine($"        /// <summary>");
-            writer.WriteLine($"        /// Constructor.");
+            writer.WriteLine($"        /// Used to construct a client for most situations, optionally specifying a custom <see cref=\"HttpMessageHandler\"/>.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"handler\">An optional message handler.  This defaults to a reasonable handler with compression enabled.</param>");
             writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
@@ -2475,6 +2474,39 @@ namespace Neon.ModelGen
             writer.WriteLine($"        public {clientTypeName}(HttpMessageHandler handler = null, bool disposeHandler = false)");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            this.client = new JsonClient(handler, disposeHandler);");
+
+            if (hasNonRootClientGroups)
+            {
+                // Initialize the non-root method group properties.
+
+                foreach (var nonRootGroup in nonRootClientGroups)
+                {
+                    writer.WriteLine($"            this.{nonRootGroup.Key} = new __{nonRootGroup.Key}(this.client);");
+                }
+            }
+
+            writer.WriteLine($"        }}");
+
+            // Generate the constructor used for special situations that require a specific HttpClient
+            // (like for ASP.NET Blazor apps).
+
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary>");
+            writer.WriteLine($"        /// Used in special situations (like ASP.NET Blazor) where a special <see cref=\"HttpClient\"/> needs");
+            writer.WriteLine($"        /// to be created and provided.");
+            writer.WriteLine($"        /// </summary>");
+            writer.WriteLine($"        /// <param name=\"httpClient\">The special <see cref=\"HttpClient\"/> instance to be wrapped.</param>");
+
+            if (!Settings.AllowDebuggerStepInto)
+            {
+                writer.WriteLine($"        [DebuggerStepThrough]");
+            }
+
+            writer.WriteLine($"        public {clientTypeName}(HttpClient httpClient)");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            Covenant.Requires<ArgumentNullException>(httpClient != null);");
+            writer.WriteLine();
+            writer.WriteLine($"            this.client = new JsonClient(httpClient);");
 
             if (hasNonRootClientGroups)
             {
@@ -3119,9 +3151,19 @@ namespace Neon.ModelGen
             {
                 return ResolveTypeReference(type) != null;
             }
-            else if (type.IsPrimitive || type == typeof(string) || type.IsEnum || convertableTypes.Contains(type))
+            else if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type.IsEnum || convertableTypes.Contains(type))
             {
+                // We allow all primitive types, decimal, strings, and any types that have a [IEnhancedJsonConverter].
+
                 return true;
+            }
+            else if (type.FullName.StartsWith("System.Nullable`"))
+            {
+                // We also allow all [Nullable<T>] where T is a primitive or any types that have a [IEnhancedJsonConverter].
+
+                type = type.GenericTypeArguments.First();
+
+                return type.IsPrimitive || type.IsEnum || type == typeof(decimal) || convertableTypes.Contains(type);
             }
 
             return false;
@@ -3292,30 +3334,41 @@ namespace Neon.ModelGen
             }
             else if (type.IsGenericType)
             {
-                var genericRef    = GetTypeName(type);
-                var genericParams = string.Empty;
-
-                foreach (var genericParamType in type.GetGenericArguments())
+                if (type.FullName.StartsWith("System.Nullable`"))
                 {
-                    if (genericParams.Length > 0)
+                    // Special-case Nullable<T> by appending a "?".
+
+                    var nullableType = type.GenericTypeArguments.First();
+
+                    return $"{GetTypeName(nullableType)}?";
+                }
+                else
+                {
+                    var genericRef    = GetTypeName(type);
+                    var genericParams = string.Empty;
+
+                    foreach (var genericParamType in type.GetGenericArguments())
                     {
-                        genericParams += ", ";
+                        if (genericParams.Length > 0)
+                        {
+                            genericParams += ", ";
+                        }
+
+                        genericParams += ResolveTypeReference(genericParamType);
                     }
 
-                    genericParams += ResolveTypeReference(genericParamType);
-                }
-
-                if (generateUx)
-                {
-                    // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
-
-                    if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                    if (generateUx)
                     {
-                        return $"ObservableCollection<{genericParams}>";
-                    }
-                }
+                        // Special case List<T> for UX data models by converting them to ObservableCollection<T>.
 
-                return $"{genericRef}<{genericParams}>";
+                        if (type.FullName.StartsWith("System.Collections.Generic.List`"))
+                        {
+                            return $"ObservableCollection<{genericParams}>";
+                        }
+                    }
+
+                    return $"{genericRef}<{genericParams}>";
+                }
             }
 
             Covenant.Assert(false); // We should never get here.

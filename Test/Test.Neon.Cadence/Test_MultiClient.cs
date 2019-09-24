@@ -94,6 +94,34 @@ namespace TestCadence
             }
         }
 
+        public interface IWorkflowWithResult3 : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        public class WorkflowWithResult3 : WorkflowBase, IWorkflowWithResult3
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"WF3 says: Hello {name}!");
+            }
+        }
+
+        public interface IWorkflowWithResult4 : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        public class WorkflowWithResult4 : WorkflowBase, IWorkflowWithResult4
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"WF4 says: Hello {name}!");
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Simultaneous()
@@ -129,25 +157,25 @@ namespace TestCadence
 
             using (var client = await CadenceClient.ConnectAsync(fixture.Settings))
             {
-                await client.RegisterWorkflowAsync<WorkflowWithResult1>();
+                await client.RegisterWorkflowAsync<WorkflowWithResult3>();
                 
                 using (await client.StartWorkerAsync())
                 {
-                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult1>();
+                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult3>();
 
-                    Assert.Equal("WF1 says: Hello Jack!", await stub1.HelloAsync("Jack"));
+                    Assert.Equal("WF3 says: Hello Jack!", await stub1.HelloAsync("Jack"));
                 }
             }
 
             using (var client = await CadenceClient.ConnectAsync(fixture.Settings))
             {
-                await client.RegisterWorkflowAsync<WorkflowWithResult2>();
+                await client.RegisterWorkflowAsync<WorkflowWithResult4>();
 
                 using (await client.StartWorkerAsync())
                 {
-                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult2>();
+                    var stub1 = client.NewWorkflowStub<IWorkflowWithResult4>();
 
-                    Assert.Equal("WF2 says: Hello Jack!", await stub1.HelloAsync("Jack"));
+                    Assert.Equal("WF4 says: Hello Jack!", await stub1.HelloAsync("Jack"));
                 }
             }
         }

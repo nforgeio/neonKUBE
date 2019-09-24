@@ -270,6 +270,7 @@ namespace Neon.Cadence
 
             throw new CadenceContinueAsNewException(
                 args:       Client.DataConverter.ToData(args),
+                workflow:   WorkflowInfo.WorkflowType,
                 domain:     WorkflowInfo.Domain,
                 taskList:   WorkflowInfo.TaskList);
         }
@@ -299,13 +300,14 @@ namespace Neon.Cadence
 
             throw new CadenceContinueAsNewException(
                 args:                       Client.DataConverter.ToData(args),
-                domain:                     WorkflowInfo.Domain,
-                taskList:                   WorkflowInfo.TaskList,
+                domain:                     options.Domain ?? WorkflowInfo.Domain,
+                taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
+                workflow:                   options.Workflow ?? WorkflowInfo.WorkflowType,
                 executionToStartTimeout:    options.ExecutionStartToCloseTimeout,
                 scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
                 scheduleToStartTimeout:     options.ScheduleToStartTimeout,
                 taskStartToCloseTimeout:    options.TaskStartToCloseTimeout,
-                retryPolicy:                options.RetryOptions);
+                retryOptions:               options.RetryOptions);
         }
 
         /// <summary>
@@ -497,6 +499,13 @@ namespace Neon.Cadence
             return reply.Version;
         }
 
+#if TODO
+        // $todo(jeff.lill):
+        //
+        // We're going to leave this unimplemented for now and revisit later.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/615
+
         /// <summary>
         /// Returns the <see cref="WorkflowExecution"/> for a child workflow created via
         /// <see cref="NewChildWorkflowStub{TWorkflowInterface}(ChildWorkflowOptions, string)"/>
@@ -518,6 +527,7 @@ namespace Neon.Cadence
             await Task.CompletedTask;
             throw new NotImplementedException();
         }
+#endif
 
         /// <summary>
         /// Calls the specified function and then searches the workflow history
@@ -1154,45 +1164,57 @@ namespace Neon.Cadence
         /// Any signal or query methods defined by <typeparamref name="TWorkflowInterface"/> will 
         /// throw a <see cref="InvalidOperationException"/> when called.
         /// </remarks>
-        public Task<TWorkflowInterface> NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
+        public TWorkflowInterface NewContinueAsNewStub<TWorkflowInterface>(ContinueAsNewOptions options = null) 
+            where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewContinueAsNewStub<TWorkflowInterface>(Client, options);
         }
+
+#if TODO
+        // $todo(jeff.lill):
+        //
+        // I'm not actually sure what the point of external child workflow stubs
+        // are and there are some implementation gaps.  We're going to leave these
+        // unimplemented for now and revisit later.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/615
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
-        /// existing workflow identified by <see cref="WorkflowExecution"/>.
+        /// existing workflow identified by a <see cref="WorkflowExecution"/>.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <param name="execution">Identifies the workflow execution.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
+        /// <param name="execution">Identifies the workflow.</param>
         /// <returns>The workflow stub.</returns>
-        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
+        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
+            where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, execution);
         }
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
-        /// existing workflow identified by workflow ID.
+        /// existing workflow identified by a workflow ID and an optional domain.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="workflowId">Identifies the workflow.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the domain of the parent workflow.</param>
+        /// <param name="domain">Optionally overrides the parent workflow domain.</param>
         /// <returns>The workflow stub.</returns>
         public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null)
+            where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, workflowId, domain);
         }
+#endif
 
         /// <summary>
         /// Creates a client stub that can be used to launch one or more local activity 
@@ -1240,6 +1262,9 @@ namespace Neon.Cadence
             return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
 
+#if TODO
+        // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
+
         /// <summary>
         /// Creates a new untyped activity client stub that can be used to launch activities.
         /// </summary>
@@ -1263,6 +1288,7 @@ namespace Neon.Cadence
 
             throw new NotImplementedException();
         }
+#endif
 
         /// <summary>
         /// Creates an untyped child workflow stub that can be used to start, signal, and query

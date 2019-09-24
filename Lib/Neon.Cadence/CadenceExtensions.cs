@@ -115,7 +115,7 @@ namespace Neon.Cadence
                     Content = content
                 };
 
-                return await client.SendAsync(httpRequest);
+                return await client?.SendAsync(httpRequest);
             }
             finally
             {

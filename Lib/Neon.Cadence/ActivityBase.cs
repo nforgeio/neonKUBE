@@ -474,10 +474,20 @@ namespace Neon.Cadence
             {
                 var result = await activity.OnInvokeAsync(client, request.Args);
 
-                return new ActivityInvokeReply()
+                if (activity.CompleteExternally)
                 {
-                    Result = result
-                };
+                    return new ActivityInvokeReply()
+                    {
+                        Pending = true
+                    };
+                }
+                else
+                {
+                    return new ActivityInvokeReply()
+                    {
+                        Result = result,
+                    };
+                }
             }
             catch (CadenceException e)
             {
@@ -491,13 +501,6 @@ namespace Neon.Cadence
                 return new ActivityInvokeReply()
                 {
                     Error = new CadenceCancelledException(e.Message).ToCadenceError()
-                };
-            }
-            catch (CadenceActivityExternalCompletionException)
-            {
-                return new ActivityInvokeReply()
-                {
-                    Pending = true
                 };
             }
             catch (Exception e)
@@ -607,6 +610,11 @@ namespace Neon.Cadence
         /// Returns additional information about the activity and the workflow that executed it.
         /// </summary>
         internal ActivityTask ActivityTask { get; private set; }
+
+        /// <summary>
+        /// Indicates that the activity will be completed externally.
+        /// </summary>
+        internal bool CompleteExternally { get; set; } = false;
 
         /// <summary>
         /// Executes the target activity method.

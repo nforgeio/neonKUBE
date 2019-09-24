@@ -58,25 +58,25 @@ var (
 	// Activity Context passed to the cadence Activity functions.
 	// The cadence-client will use contextIds to refer to specific
 	// activity contexts when perfoming activity actions
-	ActivityContexts = new(proxyactivity.ActivityContextsMap)
+	ActivityContexts = proxyactivity.NewActivityContextsMap()
 
 	// Workers maps a int64 WorkerId to the cadence
 	// Worker returned by the Cadence NewWorker() function.
 	// This will be used to stop a worker via the
 	// StopWorkerRequest.
-	Workers = new(proxyworker.WorkersMap)
+	Workers = proxyworker.NewWorkersMap()
 
 	// WorkflowContexts maps a int64 ContextId to the cadence
 	// Workflow Context passed to the cadence Workflow functions.
 	// The cadence-client will use contextIds to refer to specific
 	// workflow ocntexts when perfoming workflow actions
-	WorkflowContexts = new(proxyworkflow.WorkflowContextsMap)
+	WorkflowContexts = proxyworkflow.NewWorkflowContextsMap()
 
 	// Operations is a map of operations used to track pending
 	// cadence-client operations
-	Operations = new(messages.OperationsMap)
+	Operations = messages.NewOperationsMap()
 
 	// Clients is a map of ClientHelpers to ClientID used to
 	// store ClientHelpers to support multiple clients
-	Clients = new(proxyclient.ClientsMap)
+	Clients = proxyclient.NewClientsMap()
 )

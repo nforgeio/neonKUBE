@@ -1753,6 +1753,23 @@ func getMockMethodForGetVersion(changeID string) string {
 	return fmt.Sprintf("%v_%v", mockMethodForGetVersion, changeID)
 }
 
+func (env *testWorkflowEnvironmentImpl) UpsertSearchAttributes(attributes map[string]interface{}) error {
+	attr, err := validateAndSerializeSearchAttributes(attributes)
+
+	env.workflowInfo.SearchAttributes = mergeSearchAttributes(env.workflowInfo.SearchAttributes, attr)
+
+	mockMethod := mockMethodForUpsertSearchAttributes
+	if _, ok := env.expectedMockCalls[mockMethod]; !ok {
+		// mock not found
+		return err
+	}
+
+	args := []interface{}{attributes}
+	env.mock.MethodCalled(mockMethod, args...)
+
+	return err
+}
+
 func (env *testWorkflowEnvironmentImpl) MutableSideEffect(id string, f func() interface{}, equals func(a, b interface{}) bool) encoded.Value {
 	return newEncodedValue(env.encodeValue(f()), env.GetDataConverter())
 }

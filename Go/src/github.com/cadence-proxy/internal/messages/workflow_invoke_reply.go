@@ -186,6 +186,25 @@ func (reply *WorkflowInvokeReply) SetContinueAsNewStartToCloseTimeout(value int6
 	reply.SetLongProperty("ContinueAsNewStartToCloseTimeout", value)
 }
 
+// GetContinueAsNewWorkflow gets ContinueAsNewWorkflow
+// arguments from a WorkflowInvokeReply's properties map. Optionally overrides the current
+// workflow scheduled for execution upon restart when this value is not nil.
+//
+// returns *string -> pointer to a string in memory representing the ContinueAsNewWorkflow
+func (reply *WorkflowInvokeReply) GetContinueAsNewWorkflow() *string {
+	return reply.GetStringProperty("ContinueAsNewWorkflow")
+}
+
+// SetContinueAsNewWorkflow sets the ContinueAsNewWorkflow
+// in a WorkflowInvokeReply's properties map. Optionally overrides the current
+// workflow scheduled for execution upon restart when this value is not nil.
+//
+// param value *string -> pointer to a string in memory representing the
+// ContinueAsNewWorkflow to be set in the WorkflowInvokeReply's properties map
+func (reply *WorkflowInvokeReply) SetContinueAsNewWorkflow(value *string) {
+	reply.SetStringProperty("ContinueAsNewWorkflow", value)
+}
+
 // GetContinueAsNewTaskList gets ContinueAsNewTaskList
 // arguments from a WorkflowInvokeReply's properties map. Optionally overrides the current
 // workflow's tasklist for the restarted workflow when this value is not nil
@@ -261,6 +280,7 @@ func (reply *WorkflowInvokeReply) CopyTo(target IProxyMessage) {
 		v.SetContinueAsNewScheduleToCloseTimeout(reply.GetContinueAsNewScheduleToCloseTimeout())
 		v.SetContinueAsNewScheduleToStartTimeout(reply.GetContinueAsNewScheduleToStartTimeout())
 		v.SetContinueAsNewStartToCloseTimeout(reply.GetContinueAsNewStartToCloseTimeout())
+		v.SetContinueAsNewWorkflow(reply.GetContinueAsNewWorkflow())
 		v.SetContinueAsNewTaskList(reply.GetContinueAsNewTaskList())
 		v.SetContinueAsNewDomain(reply.GetContinueAsNewDomain())
 		v.SetForceReplay(reply.GetForceReplay())

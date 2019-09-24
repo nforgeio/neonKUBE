@@ -359,7 +359,6 @@ func buildDisconnectReply(reply *messages.DisconnectReply, cadenceError *proxyer
 
 func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError *proxyerror.CadenceError, describeDomainResponse ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(describeDomainResponse) > 0 {
 		if v, ok := describeDomainResponse[0].(*cadenceshared.DescribeDomainResponse); ok {
 			reply.SetDomainInfoName(v.DomainInfo.Name)
@@ -394,7 +393,6 @@ func buildTerminateReply(reply *messages.TerminateReply, cadenceError *proxyerro
 
 func buildNewWorkerReply(reply *messages.NewWorkerReply, cadenceError *proxyerror.CadenceError, workerID ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(workerID) > 0 {
 		if v, ok := workerID[0].(int64); ok {
 			reply.SetWorkerID(v)
@@ -419,7 +417,6 @@ func buildWorkflowRegisterReply(reply *messages.WorkflowRegisterReply, cadenceEr
 
 func buildWorkflowExecuteReply(reply *messages.WorkflowExecuteReply, cadenceError *proxyerror.CadenceError, execution ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(execution) > 0 {
 		if v, ok := execution[0].(*workflow.Execution); ok {
 			reply.SetExecution(v)
@@ -445,7 +442,6 @@ func buildWorkflowSignalReply(reply *messages.WorkflowSignalReply, cadenceError 
 
 func buildWorkflowSignalWithStartReply(reply *messages.WorkflowSignalWithStartReply, cadenceError *proxyerror.CadenceError, execution ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(execution) > 0 {
 		if v, ok := execution[0].(*workflow.Execution); ok {
 			reply.SetExecution(v)
@@ -459,7 +455,6 @@ func buildWorkflowSetCacheSizeReply(reply *messages.WorkflowSetCacheSizeReply, c
 
 func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
@@ -469,7 +464,6 @@ func buildWorkflowQueryReply(reply *messages.WorkflowQueryReply, cadenceError *p
 
 func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
@@ -479,7 +473,6 @@ func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, cadenceErro
 
 func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecutionReply, cadenceError *proxyerror.CadenceError, description ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(description) > 0 {
 		if v, ok := description[0].(*cadenceshared.DescribeWorkflowExecutionResponse); ok {
 			reply.SetDetails(v)
@@ -489,7 +482,6 @@ func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecuti
 
 func buildWorkflowGetResultReply(reply *messages.WorkflowGetResultReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
@@ -499,7 +491,6 @@ func buildWorkflowGetResultReply(reply *messages.WorkflowGetResultReply, cadence
 
 func buildWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply, cadenceError *proxyerror.CadenceError, hasResult ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(hasResult) > 0 {
 		if v, ok := hasResult[0].(bool); ok {
 			reply.SetHasResult(v)
@@ -509,7 +500,6 @@ func buildWorkflowHasLastResultReply(reply *messages.WorkflowHasLastResultReply,
 
 func buildWorkflowGetLastResultReply(reply *messages.WorkflowGetLastResultReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
@@ -523,7 +513,6 @@ func buildWorkflowDisconnectContextReply(reply *messages.WorkflowDisconnectConte
 
 func buildWorkflowGetTimeReply(reply *messages.WorkflowGetTimeReply, cadenceError *proxyerror.CadenceError, t ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(t) > 0 {
 		if v, ok := t[0].(time.Time); ok {
 			reply.SetTime(v)
@@ -537,13 +526,11 @@ func buildWorkflowSleepReply(reply *messages.WorkflowSleepReply, cadenceError *p
 
 func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, cadenceError *proxyerror.CadenceError, childInfo ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(childInfo) > 0 {
 		if v, ok := childInfo[0].([]interface{}); ok {
 			if _v, _ok := v[0].(int64); _ok {
 				reply.SetChildID(_v)
 			}
-
 			if _v, _ok := v[1].(*workflow.Execution); _ok {
 				reply.SetExecution(_v)
 			}
@@ -553,7 +540,6 @@ func buildWorkflowExecuteChildReply(reply *messages.WorkflowExecuteChildReply, c
 
 func buildWorkflowWaitForChildReply(reply *messages.WorkflowWaitForChildReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
@@ -563,7 +549,6 @@ func buildWorkflowWaitForChildReply(reply *messages.WorkflowWaitForChildReply, c
 
 func buildWorkflowSignalChildReply(reply *messages.WorkflowSignalChildReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
@@ -577,7 +562,6 @@ func buildWorkflowCancelChildReply(reply *messages.WorkflowCancelChildReply, cad
 
 func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].(workflow.Version); ok {
 			reply.SetVersion(int32(v))
@@ -598,7 +582,6 @@ func buildActivityRegisterReply(reply *messages.ActivityRegisterReply, cadenceEr
 
 func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)
@@ -608,7 +591,6 @@ func buildActivityExecuteReply(reply *messages.ActivityExecuteReply, cadenceErro
 
 func buildActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeatDetailsReply, cadenceError *proxyerror.CadenceError, hasDetails ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(hasDetails) > 0 {
 		if v, ok := hasDetails[0].(bool); ok {
 			reply.SetHasDetails(v)
@@ -618,7 +600,6 @@ func buildActivityHasHeartbeatDetailsReply(reply *messages.ActivityHasHeartbeatD
 
 func buildActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeatDetailsReply, cadenceError *proxyerror.CadenceError, details ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(details) > 0 {
 		if v, ok := details[0].([]byte); ok {
 			reply.SetDetails(v)
@@ -628,7 +609,6 @@ func buildActivityGetHeartbeatDetailsReply(reply *messages.ActivityGetHeartbeatD
 
 func buildActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatReply, cadenceError *proxyerror.CadenceError, details ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(details) > 0 {
 		if v, ok := details[0].([]byte); ok {
 			reply.SetDetails(v)
@@ -638,7 +618,6 @@ func buildActivityRecordHeartbeatReply(reply *messages.ActivityRecordHeartbeatRe
 
 func buildActivityGetInfoReply(reply *messages.ActivityGetInfoReply, cadenceError *proxyerror.CadenceError, info ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(info) > 0 {
 		if v, ok := info[0].(*activity.Info); ok {
 			reply.SetInfo(v)
@@ -652,7 +631,6 @@ func buildActivityCompleteReply(reply *messages.ActivityCompleteReply, cadenceEr
 
 func buildActivityExecuteLocalReply(reply *messages.ActivityExecuteLocalReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
-
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {
 			reply.SetResult(v)

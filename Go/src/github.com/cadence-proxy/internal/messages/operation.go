@@ -38,7 +38,8 @@ type (
 	// OperationsMap maps an Operation to an int64
 	// Id.
 	OperationsMap struct {
-		safeMap sync.Map
+		sync.Mutex
+		ops map[int64]*Operation
 	}
 
 	// Operation is used to track pending Neon.Cadence library calls
@@ -50,15 +51,6 @@ type (
 		channel     chan interface{}
 	}
 )
-
-// NewOperation is the default constructor for an Operation
-func NewOperation(requestID int64, request IProxyRequest) *Operation {
-	op := new(Operation)
-	op.isCancelled = false
-	op.request = request
-	op.requestID = requestID
-	return op
-}
 
 //----------------------------------------------------------------------------
 // RequestID thread-safe methods
@@ -82,6 +74,15 @@ func GetRequestID() int64 {
 
 //----------------------------------------------------------------------------
 // Operation instance methods
+
+// NewOperation is the default constructor for an Operation
+func NewOperation(requestID int64, request IProxyRequest) *Operation {
+	op := new(Operation)
+	op.isCancelled = false
+	op.request = request
+	op.requestID = requestID
+	return op
+}
 
 // GetIsCancelled gets isCancelled
 func (op *Operation) GetIsCancelled() bool {
@@ -159,6 +160,13 @@ func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.Ca
 //----------------------------------------------------------------------------
 // OperationsMap instance methods
 
+// NewOperationsMap is the constructor for an OperationsMap
+func NewOperationsMap() *OperationsMap {
+	o := new(OperationsMap)
+	o.ops = make(map[int64]*Operation)
+	return o
+}
+
 // Add adds a new Operation and its corresponding requestID into
 // the OperationsMap.  This method is thread-safe.
 //
@@ -170,8 +178,10 @@ func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.Ca
 //
 // returns int64 -> requestID of the request being added
 // in the Operation at the specified requestID
-func (opMap *OperationsMap) Add(requestID int64, value *Operation) int64 {
-	opMap.safeMap.Store(requestID, value)
+func (o *OperationsMap) Add(requestID int64, value *Operation) int64 {
+	o.Lock()
+	defer o.Unlock()
+	o.ops[requestID] = value
 	return requestID
 }
 
@@ -183,8 +193,10 @@ func (opMap *OperationsMap) Add(requestID int64, value *Operation) int64 {
 //
 // returns int64 -> requestID of the request being removed in the
 // Operation at the specified requestID
-func (opMap *OperationsMap) Remove(requestID int64) int64 {
-	opMap.safeMap.Delete(requestID)
+func (o *OperationsMap) Remove(requestID int64) int64 {
+	o.Lock()
+	defer o.Unlock()
+	delete(o.ops, requestID)
 	return requestID
 }
 
@@ -196,12 +208,8 @@ func (opMap *OperationsMap) Remove(requestID int64) int64 {
 //
 // returns *Operation -> pointer to Operation at the specified requestID
 // in the map.
-func (opMap *OperationsMap) Get(requestID int64) *Operation {
-	if v, ok := opMap.safeMap.Load(requestID); ok {
-		if _v, _ok := v.(*Operation); _ok {
-			return _v
-		}
-	}
-
-	return nil
+func (o *OperationsMap) Get(requestID int64) *Operation {
+	o.Lock()
+	defer o.Unlock()
+	return o.ops[requestID]
 }

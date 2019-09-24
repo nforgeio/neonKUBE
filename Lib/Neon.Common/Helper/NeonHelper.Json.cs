@@ -121,7 +121,7 @@ namespace Neon.Common
         /// <para>
         /// Returns the list of <see cref="JsonConverter"/> instances that will be automatically
         /// recognized by the JSON deserializers.  This is initialized with converters for some
-        /// common types like <see cref="SemanticVersion"/>, <see cref="TimeSpan"/>, and 
+        /// common types like <see cref="DateTime"/>, <see cref="TimeSpan"/>, and 
         /// <see cref="Version"/>.
         /// </para>
         /// <note>
@@ -134,6 +134,8 @@ namespace Neon.Common
         public static List<JsonConverter> JsonConverters { get; private set; } =
             new List<JsonConverter>()
             {
+                new DateTimeJsonConverter(),
+                new DateTimeOffsetJsonConverter(),
                 new TimeSpanJsonConverter(),
                 new VersionJsonConverter()
             };

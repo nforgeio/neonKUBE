@@ -50,5 +50,13 @@ namespace Neon.Data
         {
             writer.WriteValue(value.ToString());
         }
+
+        /// <inheritdoc/>
+        public string ToSimpleString(object instance)
+        {
+            Covenant.Requires<ArgumentNullException>(instance != null);
+
+            return ((Version)instance).ToString();
+        }
     }
 }

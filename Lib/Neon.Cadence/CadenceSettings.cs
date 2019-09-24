@@ -108,7 +108,7 @@ namespace Neon.Cadence
         /// <para>
         /// The default task list can be overridden for individual method calls by passing a value as the optional <b>taskList</b>
         /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
-        /// the <b>TASKlIST</b> parameters.
+        /// the <b>tasklist</b> parameters.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "DefaultTaskList", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -308,12 +308,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies the logging level for the associated <b>cadence-proxy</b>.
-        /// This defaults to <see cref="LogLevel.Info"/>.
+        /// This defaults to <see cref="LogLevel.None"/> which will be appropriate for most
+        /// proiduction situations.  You may wish to set this to <see cref="LogLevel.Info"/>
+        /// or <see cref="LogLevel.Debug"/> while debugging.
         /// </summary>
         [JsonProperty(PropertyName = "LogLevel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "logLevel", ApplyNamingConventions = false)]
-        [DefaultValue("info")]
-        public LogLevel LogLevel { get; set; } = LogLevel.Info;
+        [DefaultValue(LogLevel.None)]
+        public LogLevel LogLevel { get; set; } = LogLevel.None;
 
         /// <summary>
         /// Optionally specifies that messages from the embedded GOLANG Cadence client 

@@ -543,6 +543,7 @@ namespace Neon.Cadence
                 {
                     ContinueAsNew                             = true,
                     ContinueAsNewArgs                         = e.Args,
+                    ContinueAsNewWorkflow                     = e.Workflow,
                     ContinueAsNewDomain                       = e.Domain,
                     ContinueAsNewTaskList                     = e.TaskList,
                     ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.ExecutionStartToCloseTimeout),

@@ -428,7 +428,7 @@ namespace TestCadence
             }
         }
 
-        [SlowFact]
+        [SlowFact(Skip = "Takes Long")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Workflow_Cron()
         {
@@ -1811,9 +1811,6 @@ namespace TestCadence
         [Workflow(AutoRegister = true)]
         public class WorkflowFail : WorkflowBase, IWorkflowFail
         {
-            //-------------------------------------------------------
-            // Instance members
-
             public async Task RunAsync()
             {
                 await Task.CompletedTask;
@@ -1996,5 +1993,331 @@ namespace TestCadence
             //      ExecutionStartToCloseTimeout
             //      ChildPolicy
         }
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowContinueAsNew0 : IWorkflow
+        {
+            [WorkflowMethod(Name = "Hello")]
+            Task<string> HelloAsync(string name, int callCount);
+
+            [WorkflowMethod(Name = "HelloWithOptions")]
+            Task<string> HelloNewOptionsAsync(string name, int callCount);
+
+            [WorkflowMethod(Name = "HelloStub")]
+            Task<string> HelloStubAsync(string name);
+
+            [WorkflowMethod(Name = "HelloStubOptions")]
+            Task<string> HelloStubOptionsAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowContinueAsNew0 : WorkflowBase, IWorkflowContinueAsNew0
+        {
+            public async Task<string> HelloAsync(string name, int callCount)
+            {
+                // The first time this is called, we're going to continue the workflow
+                // as new using the current options and passing the same name but
+                // incrementing the call count.
+                //
+                // Otherwise, we'll simply return the result string.
+
+                if (callCount == 1)
+                {
+                    await Workflow.ContinueAsNewAsync(name, callCount + 1);
+                    throw new Exception("We should never reach this.");
+                }
+
+                return await Task.FromResult($"WF0 says: Hello {name}!");
+            }
+
+            public async Task<string> HelloNewOptionsAsync(string name, int callCount)
+            {
+                var options = new ContinueAsNewOptions();
+
+                // The first time this is called, we're going to continue the workflow
+                // as new using new options and passing the same name but incrementing
+                // the call count.
+                //
+                // Otherwise, we'll simply return the result string.
+
+                if (callCount == 1)
+                {
+                    await Workflow.ContinueAsNewAsync(options, name, callCount + 1);
+                    throw new Exception("We should never reach this.");
+                }
+
+                return await Task.FromResult($"WF0 says: Hello {name}!");
+            }
+
+            public async Task<string> HelloStubAsync(string name)
+            {
+                // We're going to continue as IWorkflowContinueAsNew1 using a stub.
+
+                var stub = Workflow.NewContinueAsNewStub<IWorkflowContinueAsNew1>();
+
+                await stub.HelloAsync(name);
+                throw new Exception("We should never reach this.");
+            }
+
+            public async Task<string> HelloStubOptionsAsync(string name)
+            {
+                // We're going to continue as IWorkflowContinueAsNew1 using a stub
+                // and with new options.
+
+                var options  = new ContinueAsNewOptions() 
+                {
+                    Workflow = "TestCadence.Test_EndToEnd.WorkflowContinueAsNew1"
+                };
+                var stub     = Workflow.NewContinueAsNewStub<IWorkflowContinueAsNew1>(options);
+                await stub.HelloAsync(name);
+                throw new Exception("We should never reach this.");
+            }
+        }
+
+        public interface IWorkflowContinueAsNew1 : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowContinueAsNew1 : WorkflowBase, IWorkflowContinueAsNew1
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"WF1 says: Hello {name}!");
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew()
+        {
+            // Verify that we can continue a workflow as new without using a stub
+            // and with the same options.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloAsync("Jeff", 1));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew_Options()
+        {
+            // Verify that we can continue a workflow as new without using a stub
+            // and with new options.
+
+            // $todo(jeff.lill):
+            //
+            // This test could be improved.  We're not actually verifying that
+            // the new options actually had an effect.  For now, we're just
+            // ensuring that the client doesn't barf.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF0 says: Hello Jeff!", await stub.HelloNewOptionsAsync("Jeff", 1));
+        }
+
+        [Fact(Skip = "Hangs")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew_Stub()
+        {
+            // Verify that we can continue a workflow as new using a stub
+            // and with the same options.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubAsync("Jeff"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ContinueAsNew_StubOptions()
+        {
+            // Verify that we can continue a workflow as new using a stub
+            // and with new options.
+
+            // $todo(jeff.lill):
+            //
+            // This test could be improved.  We're not actually verifying that
+            // the new options actually had an effect.  For now, we're just
+            // ensuring that the client doesn't barf.
+
+            var stub = client.NewWorkflowStub<IWorkflowContinueAsNew0>();
+
+            Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubOptionsAsync("Jeff"));
+        }
+
+#if TODO
+        // $todo(jeff.lill):
+        //
+        // I'm not actually sure what the point of external child workflow stubs
+        // are and there are some implementation gaps.  We're going to leave these
+        // unimplemented for now and revisit later.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/615
+        //
+        // Note that the one test by workflow ID below is coded and that we'd need
+        // to implement another test to do the same by workflow execution.
+
+        //---------------------------------------------------------------------
+
+        public interface IWorkflowExternalChildStubById : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> RunAsync();
+
+            [QueryMethod("query")]
+            Task<string> QueryAsync(string name);
+
+            [SignalMethod("signal")]
+            Task SignalExit(string value);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowExternalChildStubById : WorkflowBase, IWorkflowExternalChildStubById
+        {
+            private string  signalValue;
+            private bool    signaled;
+
+            public async Task<string> RunAsync()
+            {
+                // Spin for up to 20 seconds, waiting for SignalExit() to be called
+                // and then throw an exception if there was no signal or else return
+                // the signal value passed.
+
+                for (int i = 0; i < 20; i++)
+                {
+                    if (signaled)
+                    {
+                        break;
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                if (!signaled)
+                {
+                    throw new Exception("Signal not received in time.");
+                }
+
+                return await Task.FromResult(signalValue);
+            }
+
+            public async Task<string> QueryAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task SignalExit(string value)
+            {
+                signalValue = value;
+                signaled    = true;
+
+                await Task.CompletedTask;
+            }
+        }
+
+        public interface IWorkflowExternalParentStubById : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowExternalParentStubById : WorkflowBase, IWorkflowExternalParentStubById
+        {
+            public async Task<string> RunAsync()
+            {
+                // Start a child workflow normally and then create an external stub for it.
+                // We'll use this stub to verify that:
+                //
+                //      1. We cannot use the stub to re-execute the workflow.
+                //      2. We can query the workflow.
+                //      3. We can signal the workflow, causing it to complete.
+                //
+                // NOTE: This code is a a somewhat fragile due to the general situation
+                //       decribed by:
+                //
+                //       https://github.com/nforgeio/neonKUBE/issues/627
+                //
+                // We're going to temporarily introduce delays to mitigate this. 
+
+                const string workflowId = "my-child-workflow-external-1";
+                const string signalArg  = "Hello World!";
+
+                var delay = TimeSpan.FromSeconds(0.5);
+
+                var options      = new ChildWorkflowOptions() { WorkflowId = workflowId };
+                var stub         = Workflow.NewChildWorkflowStub<IWorkflowExternalChildStubById>(options);
+                var task         = stub.RunAsync();
+                var externalStub = Workflow.NewExternalWorkflowStub<IWorkflowExternalChildStubById>(workflowId);
+
+                await Task.Delay(delay);
+
+                // Verify that we're not allowed to re-execute the workflow via the external stub.
+
+                var executed = false;
+
+                try
+                {
+                    await externalStub.RunAsync();
+                    executed = true;
+                }
+                catch (InvalidOperationException)
+                {
+                }
+                catch (Exception e)
+                {
+                    return $"Unexpected [{e.GetType().FullName}] exeception.";
+                }
+
+                if (executed)
+                {
+                    return "External stub allowed re-execution.";
+                }
+
+                // Ensure that the child exits after receiving a signal via the external stub.
+
+                await externalStub.SignalExit(signalArg);
+
+                try
+                {
+                    var result = await task;
+
+                    if (result != signalArg)
+                    {
+                        return $"Invalid signal result: [{result}] instead of [{signalArg}]";
+                    }
+                    else
+                    {
+                        return result;
+                    }
+                }
+                catch (Exception e)
+                {
+                    return NeonHelper.ExceptionError(e);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalChildStubById()
+        {
+            // Verifies that stubs returned by Workflow.NewExternalWorkflowStub(workflowId)
+            // work correctly.
+
+            var stub   = client.NewWorkflowStub<IWorkflowExternalParentStubById>();
+            var result = await stub.RunAsync();
+
+            if (result != null)
+            {
+                Assert.True(false, $"Test Error: {result}");
+            }
+        }
+#endif
     }
 }

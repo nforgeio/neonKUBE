@@ -33,9 +33,9 @@ namespace Neon.Cadence.Internal
     internal class InternalActivityInfo
     {
         /// <summary>
-        /// The activity task token.
+        /// The opaque activity base-64 encoded task token.
         /// </summary>
-        public byte[] TaskToken { get; set; }
+        public string TaskToken { get; set; }
 
         /// <summary>
         /// The parent workflow type.

@@ -90,7 +90,7 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="defaultTaskList">Optionally specifies the default task list for the fixture's client.  This defaults to <b>test-tasks</b>.</param>
-        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.Info"/>.</param>
+        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
@@ -143,7 +143,7 @@ namespace Neon.Xunit.Cadence
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,
             string              defaultTaskList = DefaultTaskList,
-            LogLevel            logLevel        = LogLevel.Info,
+            LogLevel            logLevel        = LogLevel.None,
             bool                keepConnection  = false,
             bool                keepOpen        = false,
             string              hostInterface   = null,
@@ -181,7 +181,7 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="defaultTaskList">Optionally specifies the default task list for the fixture's client.  This defaults to <b>test-tasks</b>.</param>
-        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.Info"/>.</param>
+        /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
         /// unit test case.  The same connection will be reused which will save about a second per test.
@@ -223,7 +223,7 @@ namespace Neon.Xunit.Cadence
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,
             string              defaultTaskList = DefaultTaskList,
-            LogLevel            logLevel        = LogLevel.Info,
+            LogLevel            logLevel        = LogLevel.None,
             bool                keepConnection  = false,
             bool                keepOpen        = false,
             string              hostInterface   = null,

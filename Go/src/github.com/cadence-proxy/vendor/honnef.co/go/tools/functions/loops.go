@@ -2,9 +2,9 @@ package functions
 
 import "honnef.co/go/tools/ssa"
 
-type Loop struct{ ssa.BlockSet }
+type Loop map[*ssa.BasicBlock]bool
 
-func FindLoops(fn *ssa.Function) []Loop {
+func findLoops(fn *ssa.Function) []Loop {
 	if fn.Blocks == nil {
 		return nil
 	}
@@ -18,16 +18,12 @@ func FindLoops(fn *ssa.Function) []Loop {
 			// n is a back-edge to h
 			// h is the loop header
 			if n == h {
-				set := Loop{}
-				set.Add(n)
-				sets = append(sets, set)
+				sets = append(sets, Loop{n: true})
 				continue
 			}
-			set := Loop{}
-			set.Add(h)
-			set.Add(n)
+			set := Loop{h: true, n: true}
 			for _, b := range allPredsBut(n, h, nil) {
-				set.Add(b)
+				set[b] = true
 			}
 			sets = append(sets, set)
 		}

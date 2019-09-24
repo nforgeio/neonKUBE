@@ -47,5 +47,12 @@ namespace Neon.Data
         /// Returns the type handled by the converter.
         /// </summary>
         Type Type { get; }
+
+        /// <summary>
+        /// Converts an object instance to a simple (non-JSON) string.
+        /// </summary>
+        /// <param name="instance">The object instance.</param>
+        /// <returns>The rendered string.</returns>
+        string ToSimpleString(object instance);
     }
 }
