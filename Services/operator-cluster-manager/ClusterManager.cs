@@ -63,11 +63,15 @@ namespace ClusterManager
         protected async override Task<int> OnRunAsync()
         {
             await SetupClusterAsync();
-            
-            logPurgerInterval = TimeSpan.FromSeconds(3600);
+
+            logPurgerInterval = TimeSpan.FromSeconds(int.Parse(GetEnvironmentVariable("LOG_PURGE_INTERVAL") ?? "3600"));
 
             Log.LogInfo(() => $"Using setting [logPurgeInterval={logPurgerInterval.TotalSeconds}]");
-            
+
+            var retentionDays = int.Parse(Environment.GetEnvironmentVariable("RETENTION_DAYS") ?? "14");
+
+            Log.LogInfo(() => $"Using setting [retentionDays={retentionDays}]");
+
             // Launch the sub-tasks.  These will run until the service is terminated.
 
             var tasks = new List<Task>();
@@ -75,7 +79,7 @@ namespace ClusterManager
             // Start a task that checks for Elasticsearch [logstash] and [metricbeat] indexes
             // that are older than the number of retention days.
 
-            tasks.Add(LogPurgerAsync(logPurgerInterval));
+            tasks.Add(LogPurgerAsync(logPurgerInterval, retentionDays));
             
             // Wait for all tasks to exit cleanly for a normal shutdown.
 

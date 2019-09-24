@@ -38,10 +38,13 @@ namespace ClusterManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public void KibanaSetup()
         {
+            Log.LogInfo("Setting up Kibana index patterns.");
             using (var jsonClient = new JsonClient())
             {
                 jsonClient.BaseAddress = KubernetesClientConfiguration.IsInCluster() ?
                     this.ServiceMap[NeonServices.Kibana].Endpoints.Default.Uri : new Uri($"http://localhost:{this.ServiceMap[NeonServices.Kibana].Endpoints.Default.Port}");
+
+                Log.LogInfo(jsonClient.BaseAddress.ToString());
 
                 var timeout = TimeSpan.FromMinutes(5);
                 var retry = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(2));
@@ -59,6 +62,7 @@ namespace ClusterManager
 
                         if (response.status.overall.state != "green")
                         {
+                            Log.LogInfo("Kibana is not ready.");
                             throw new TransientException($"Kibana [state={response.status.overall.state}]");
                         }
 
@@ -101,6 +105,7 @@ namespace ClusterManager
 
                     }).Wait();
             }
+            Log.LogInfo("Kibana index patterns configured.");
         }
     }
 }

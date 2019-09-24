@@ -34,7 +34,7 @@ namespace ClusterManager
         /// Handles purging of old <b>logstash</b> and <b>metricbeat</b> Elasticsearch indexes.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task LogPurgerAsync(TimeSpan logPurgerInterval)
+        public async Task LogPurgerAsync(TimeSpan logPurgerInterval, int retentionDays)
         {
             using (var jsonClient = new JsonClient())
             {
@@ -53,8 +53,6 @@ namespace ClusterManager
                                 //      metricbeat-6.1.1-2018.06.06
                                 //
                                 // The date is simply encodes the day covered by the index.
-
-                                var retentionDays = int.Parse(Environment.GetEnvironmentVariable("RETENTION_DAYS") ?? "14");
 
                                 var utcNow = DateTime.UtcNow;
                                 var deleteBeforeDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day) - TimeSpan.FromDays(retentionDays);
@@ -75,7 +73,7 @@ namespace ClusterManager
 
                                     // Extract the date from the index name.
 
-                                    var pos = indexName.LastIndexOf('-', indexName.LastIndexOf('-') - 1) + 1;
+                                    var pos = indexName.LastIndexOf('-');
 
                                     if (pos == -1)
                                     {
@@ -83,8 +81,8 @@ namespace ClusterManager
                                         continue;
                                     }
 
-                                    var date = indexName.Substring(pos);
-                                    var fields = date.Split('-')[0].Split('.');
+                                    var date = indexName.Substring(pos + 1);
+                                    var fields = date.Split('.');
                                     var indexDate = default(DateTime);
 
                                     try
