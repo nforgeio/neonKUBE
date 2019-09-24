@@ -1483,7 +1483,7 @@ namespace Neon.Cadence.Internal
                 if (details.ActivityMethodAttribute.StartToCloseTimeoutSeconds > 0)
                 {
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"                if (___localOptions.if (details.ActivityMethodAttribute.StartToCloseTimeoutSeconds > 0) <= TimeSpan.Zero)");
+                    sbSource.AppendLine($"                if (___localOptions.ScheduleToCloseTimeout <= TimeSpan.Zero && details.ActivityMethodAttribute.StartToCloseTimeoutSeconds > 0 <= TimeSpan.Zero)");
                     sbSource.AppendLine($"                {{");
                     sbSource.AppendLine($"                    ___localOptions.ScheduleToCloseTimeout = TimeSpan.FromSeconds({details.ActivityMethodAttribute.ScheduleToCloseTimeoutSeconds});");
                     sbSource.AppendLine($"                }}");
