@@ -17,12 +17,12 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: rook-ceph-operator
+      app.kubernetes.io/name: rook-ceph-operator
   replicas: 1
   template:
     metadata:
       labels:
-        app: rook-ceph-operator
+        app.kubernetes.io/name: rook-ceph-operator
     spec:
       serviceAccountName: rook-ceph-system
       containers:

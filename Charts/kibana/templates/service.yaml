@@ -4,7 +4,7 @@ kind: Service
 metadata:
   name: {{ template "fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
+    app.kubernetes.io/name: {{ .Chart.Name }}
     release: {{ .Release.Name | quote }}
     heritage: {{ .Release.Service }}
 {{- with .Values.service.annotations }}
@@ -22,5 +22,5 @@ spec:
       name: http
       targetPort: {{ .Values.httpPort }}
   selector:
-    app: {{ .Chart.Name }}
+    app.kubernetes.io/name: {{ .Chart.Name }}
     release: {{ .Release.Name | quote }}

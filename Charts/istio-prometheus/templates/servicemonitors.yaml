@@ -307,4 +307,4 @@ spec:
     - kube-system
   selector:
     matchLabels:
-      k8s-app: kubelet
+      k8s-app.kubernetes.io/name: kubelet

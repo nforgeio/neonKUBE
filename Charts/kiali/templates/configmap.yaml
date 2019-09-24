@@ -4,7 +4,7 @@ metadata:
   name: kiali
   namespace: {{ .Release.Namespace }}
   labels:
-    app: kiali
+    app.kubernetes.io/name: kiali
     release: {{ .Release.Name }}
 data:
   config.yaml: |

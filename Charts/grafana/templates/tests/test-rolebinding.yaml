@@ -4,7 +4,7 @@ kind: RoleBinding
 metadata:
   name: {{ template "grafana.fullname" . }}-test
   labels:
-    app: {{ template "grafana.name" . }}
+    app.kubernetes.io/name: {{ template "grafana.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}

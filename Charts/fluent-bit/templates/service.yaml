@@ -8,7 +8,7 @@ metadata:
 {{- end }}
   name: {{ template "fluent-bit.fullname" . }}-metrics
   labels:
-    app: {{ template "fluent-bit.name" . }}
+    app.kubernetes.io/name: {{ template "fluent-bit.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -25,6 +25,6 @@ spec:
     targetPort: metrics
     name: metrics
   selector:
-    app: {{ template "fluent-bit.name" . }}
+    app.kubernetes.io/name: {{ template "fluent-bit.name" . }}
     release: {{ .Release.Name }}
 {{- end }}

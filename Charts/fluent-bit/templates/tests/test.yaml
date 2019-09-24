@@ -4,7 +4,7 @@ kind: Pod
 metadata:
   name: {{ template "fluent-bit.fullname" . }}-test
   labels:
-    app: {{ template "fluent-bit.fullname" . }}
+    app.kubernetes.io/name: {{ template "fluent-bit.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"

@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "fluentd.fullname" . }}
   labels:
-    app: {{ template "fluentd.name" . }}
+    app.kubernetes.io/name: {{ template "fluentd.name" . }}
     chart: {{ template "fluentd.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}

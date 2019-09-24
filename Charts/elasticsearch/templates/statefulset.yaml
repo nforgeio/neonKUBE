@@ -7,12 +7,12 @@ metadata:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app: "{{ template "uname" . }}"
+    app.kubernetes.io/name: "{{ template "uname" . }}"
 spec:
   serviceName: {{ template "uname" . }}-headless
   selector:
     matchLabels:
-      app: "{{ template "uname" . }}"
+      app.kubernetes.io/name: "{{ template "uname" . }}"
   replicas: {{ default .Values.replicas }}
   podManagementPolicy: {{ .Values.podManagementPolicy }}
   updateStrategy:
@@ -35,7 +35,7 @@ spec:
         heritage: {{ .Release.Service | quote }}
         release: {{ .Release.Name | quote }}
         chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-        app: "{{ template "uname" . }}"
+        app.kubernetes.io/name: "{{ template "uname" . }}"
       annotations:
         {{- range $key, $value := .Values.podAnnotations }}
         {{ $key }}: {{ $value | quote }}

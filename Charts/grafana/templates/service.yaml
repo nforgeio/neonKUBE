@@ -4,7 +4,7 @@ metadata:
   name: {{ template "grafana.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "grafana.name" . }}
+    app.kubernetes.io/name: {{ template "grafana.name" . }}
     chart: {{ template "grafana.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
@@ -46,5 +46,5 @@ spec:
       nodePort: {{.Values.service.nodePort}}
 {{ end }}
   selector:
-    app: {{ template "grafana.name" . }}
+    app.kubernetes.io/name: {{ template "grafana.name" . }}
     release: {{ .Release.Name }}

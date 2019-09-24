@@ -4,18 +4,18 @@ metadata:
   name: kiali
   namespace: {{ .Release.Namespace }}
   labels:
-    app: kiali
+    app.kubernetes.io/name: kiali
     release: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.kiali.replicaCount }}
   selector:
     matchLabels:
-      app: kiali
+      app.kubernetes.io/name: kiali
   template:
     metadata:
       name: kiali
       labels:
-        app: kiali
+        app.kubernetes.io/name: kiali
         release: {{ .Release.Name }}
       annotations:
         sidecar.istio.io/inject: "false"

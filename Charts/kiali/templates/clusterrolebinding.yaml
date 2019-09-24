@@ -4,7 +4,7 @@ kind: ClusterRoleBinding
 metadata:
   name: istio-kiali-admin-role-binding-{{ .Release.Namespace }}
   labels:
-    app: kiali
+    app.kubernetes.io/name: kiali
     release: {{ .Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -20,7 +20,7 @@ kind: ClusterRoleBinding
 metadata:
   name: istio-kiali-viewer-role-binding-{{ .Release.Namespace }}
   labels:
-    app: kiali
+    app.kubernetes.io/name: kiali
     release: {{ .Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io

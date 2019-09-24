@@ -30,7 +30,7 @@ spec:
 {{- end }}
   podMetadata:
     labels:
-      app: prometheus
+      app.kubernetes.io/name: prometheus
       release: {{ .Release.Name }}
     annotations:
       sidecar.istio.io/inject: "false"
@@ -43,7 +43,7 @@ kind: ClusterRole
 metadata:
   name: prometheus-{{ .Release.Namespace }}
   labels:
-    app: prometheus
+    app.kubernetes.io/name: prometheus
     release: {{ .Release.Name }}
 rules:
 - apiGroups: [""]
@@ -66,7 +66,7 @@ kind: ClusterRoleBinding
 metadata:
   name: prometheus-{{ .Release.Namespace }}
   labels:
-    app: prometheus
+    app.kubernetes.io/name: prometheus
     release: {{ .Release.Name }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -113,11 +113,11 @@ metadata:
     {{- end }}
     {{- end }}
   labels:
-    app: prometheus
+    app.kubernetes.io/name: prometheus
     release: {{ .Release.Name }}
 spec:
   selector:
-    app: prometheus
+    app.kubernetes.io/name: prometheus
   ports:
   - name: http-prometheus
     protocol: TCP
@@ -130,7 +130,7 @@ metadata:
   name: prometheus-nodeport
   namespace: {{ .Release.Namespace }}
   labels:
-    app: prometheus
+    app.kubernetes.io/name: prometheus
     release: {{ .Release.Name }}
 spec:
   type: NodePort
@@ -139,7 +139,7 @@ spec:
     nodePort: {{ .Values.prometheus.service.nodePort.port }}
     name: http-prometheus
   selector:
-    app: prometheus
+    app.kubernetes.io/name: prometheus
 {{- end }}
 ---
 apiVersion: v1
@@ -154,6 +154,6 @@ metadata:
   name: prometheus
   namespace: {{ .Release.Namespace }}
   labels:
-    app: prometheus
+    app.kubernetes.io/name: prometheus
     release: {{ .Release.Name }}
 {{- end }}

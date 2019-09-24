@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ template "fluentd.fullname" . }}
   labels:
-    app: {{ template "fluentd.name" . }}
+    app.kubernetes.io/name: {{ template "fluentd.name" . }}
     chart: {{ template "fluentd.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
@@ -26,5 +26,5 @@ spec:
       protocol: TCP
   {{- end }}
   selector:
-    app: {{ template "fluentd.name" . }}
+    app.kubernetes.io/name: {{ template "fluentd.name" . }}
     release: {{ .Release.Name }}

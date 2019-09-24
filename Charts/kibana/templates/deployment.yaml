@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ template "fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
+    app.kubernetes.io/name: {{ .Chart.Name }}
     release: {{ .Release.Name | quote }}
 spec:
   replicas: {{ .Values.replicas }}
@@ -11,12 +11,12 @@ spec:
 {{ toYaml .Values.updateStrategy | indent 4 }}
   selector:
     matchLabels:
-      app: kibana
+      app.kubernetes.io/name: kibana
       release: {{ .Release.Name | quote }}
   template:
     metadata:
       labels:
-        app: kibana
+        app.kubernetes.io/name: kibana
         release: {{ .Release.Name | quote }}
       annotations:
         {{/* This forces a restart if the configmap has changed */}}

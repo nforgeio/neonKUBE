@@ -3,7 +3,7 @@ apiVersion: {{ template "rbac.apiVersion" . }}
 kind: ClusterRoleBinding
 metadata:
   labels:
-    app: {{ template "fluent-bit.name" . }}
+    app.kubernetes.io/name: {{ template "fluent-bit.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}

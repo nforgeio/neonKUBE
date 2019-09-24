@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ template "fluentd.fullname" . }}
   labels:
-    app: {{ template "fluentd.name" . }}
+    app.kubernetes.io/name: {{ template "fluentd.name" . }}
     chart: {{ template "fluentd.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
@@ -11,7 +11,7 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "fluentd.name" . }}
+      app.kubernetes.io/name: {{ template "fluentd.name" . }}
       release: {{ .Release.Name }}
   {{- if .Values.persistence.enabled }}
   strategy:
@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       labels:
-        app: {{ template "fluentd.name" . }}
+        app.kubernetes.io/name: {{ template "fluentd.name" . }}
         release: {{ .Release.Name }}
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
@@ -49,8 +49,6 @@ spec:
             value: {{ .Values.output.sslVersion | quote }}
           - name: OUTPUT_BUFFER_CHUNK_LIMIT
             value: {{ .Values.output.buffer_chunk_limit | quote }}
-          - name: OUTPUT_BUFFER_QUEUE_LIMIT
-            value: {{ .Values.output.buffer_queue_limit | quote }}
           {{- range $key, $value := .Values.env }}
           - name: {{ $key | quote }}
             value: {{ $value | quote }}
