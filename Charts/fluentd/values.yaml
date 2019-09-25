@@ -24,6 +24,7 @@ plugins:
   pluginsList:
     - fluent-plugin-dedot_filter
     - fluent-plugin-kubernetes_metadata_filter
+    - fluent-plugin-elasticsearch
 
 # Extra Environment Values - allows yaml definitions
 extraEnvVars:
@@ -124,7 +125,7 @@ configMaps:
     <match **>
       @id elasticsearch
       @type elasticsearch
-      @log_level debug
+      @log_level info
       include_tag_key true
       # Replace with the host/port to your Elasticsearch cluster.
       host "#{ENV['OUTPUT_HOST']}"
