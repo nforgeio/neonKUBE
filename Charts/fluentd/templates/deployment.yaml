@@ -34,6 +34,8 @@ spec:
         - name: {{ $pullSecret }}
       {{- end }}
 {{- end }}
+      serviceAccountName: fluentd
+      serviceAccount: fluentd
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
