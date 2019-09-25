@@ -45,7 +45,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
     <PackageReference Include="NATS.Client" Version="0.9.0" />
-    <PackageReference Include="STAN.Client" Version="0.1.6" />
+    <PackageReference Include="STAN.Client" Version="0.1.7" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="YamlDotNet" Version="6.1.2" />
   </ItemGroup>
