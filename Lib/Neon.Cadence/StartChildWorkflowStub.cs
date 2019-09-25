@@ -43,14 +43,48 @@ namespace Neon.Cadence
         // Private types
 
         /// <summary>
-        /// Implements the child workflow future.
+        /// Implements a child workflow future that returns <c>void</c>.
         /// </summary>
-        private class AsyncFuture : IAsyncFuture<object>
+        private class AsyncFuture : IAsyncFuture
         {
-            private bool            valueReturned = false;
+            private bool            completed = false;
             private Workflow        parentWorkflow;
             private ChildExecution  execution;
-            private Type            resultType;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
+            /// <param name="execution">The child execution.</param>
+            public AsyncFuture(Workflow parentWorkflow, ChildExecution execution)
+            {
+                this.parentWorkflow = parentWorkflow;
+                this.execution      = execution;
+            }
+
+            /// <inheritdoc/>
+            public async Task GetAsync()
+            {
+                if (completed)
+                {
+                    throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
+                }
+
+                completed = true;
+
+                await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
+            }
+        }
+
+        /// <summary>
+        /// Implements a child workflow future that returns a value.
+        /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        private class AsyncFuture<TResult> : IAsyncFuture<TResult>
+        {
+            private bool            completed = false;
+            private Workflow        parentWorkflow;
+            private ChildExecution  execution;
 
             /// <summary>
             /// Constructor.
@@ -62,29 +96,21 @@ namespace Neon.Cadence
             {
                 this.parentWorkflow = parentWorkflow;
                 this.execution      = execution;
-                this.resultType     = resultType;
             }
 
             /// <inheritdoc/>
-            public async Task<object> GetAsync()
+            public async Task<TResult> GetAsync()
             {
-                if (valueReturned)
+                if (completed)
                 {
-                    throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.{nameof(IAsyncFuture<object>.GetAsync)}] may only be called once per stub instance.");
+                    throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
                 }
 
-                valueReturned = true;
+                completed = true;
 
                 var resultBytes = await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
 
-                if (resultType != null && resultBytes != null)
-                {
-                    return parentWorkflow.Client.DataConverter.FromData(resultType, resultBytes);
-                }
-                else
-                {
-                    return null;
-                }
+                return parentWorkflow.Client.DataConverter.FromData<TResult>(resultBytes);
             }
         }
 
@@ -177,23 +203,22 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts the target workflow, passing any specified arguments.
+        /// Starts the target workflow that returns <typeparamref name="TResult"/>, passing any specified arguments.
         /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
         /// <param name="args">The arguments to be passed to the workflow.</param>
         /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
         /// You must take care to pass parameters that are compatible with the target workflow parameters.
-        /// These are checked at runtime but not while compiling.  The <see cref="IAsyncFuture{T}.GetAsync"/>
-        /// returns always returns an <c>object</c> regardless of the actual type returned by the target
-        /// workflow method.  You'll also need to cast the result to the required type when necessary.
+        /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
         /// Any given <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
-        public async Task<IAsyncFuture<object>> StartAsync(params object[] args)
+        public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
 
@@ -235,14 +260,73 @@ namespace Neon.Cadence
 
             if (resultType == typeof(Task))
             {
-                resultType = null;
+                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] does not return [void].");
             }
-            else
+            
+            resultType = resultType.GenericTypeArguments.First();
+            
+            if (!resultType.IsAssignableFrom(typeof(TResult)))
             {
-                resultType = resultType.GenericTypeArguments.First();
+                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
             }
 
-            return new AsyncFuture(parentWorkflow, execution, resultType);
+            return new AsyncFuture<TResult>(parentWorkflow, execution, resultType);
+        }
+
+        /// <summary>
+        /// Starts the target workflow that returns <c>void</c>, passing any specified arguments.
+        /// </summary>
+        /// <param name="args">The arguments to be passed to the workflow.</param>
+        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
+        /// <remarks>
+        /// <para>
+        /// You must take care to pass parameters that are compatible with the target workflow parameters.
+        /// These are checked at runtime but not while compiling.
+        /// </para>
+        /// <note>
+        /// Any given <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
+        /// </note>
+        /// </remarks>
+        public async Task<IAsyncFuture> StartAsync(params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+
+            if (hasStarted)
+            {
+                throw new InvalidOperationException("Cannot start a stub more than once.");
+            }
+
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.");
+            }
+
+            hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things like integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+            }
+
+            // Start the child workflow and then construct the future.
+
+            var client    = parentWorkflow.Client;
+            var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, client.DataConverter.ToData(args), options);
+
+            // Initialize the type-safe stub property such that developers can call
+            // any query or signal methods.
+
+            Stub = StubManager.NewChildWorkflowStub<TWorkflowInterface>(client, parentWorkflow, workflowTypeName, execution);
+
+            // Create and return the future.
+
+            return new AsyncFuture(parentWorkflow, execution);
         }
 
         /// <summary>

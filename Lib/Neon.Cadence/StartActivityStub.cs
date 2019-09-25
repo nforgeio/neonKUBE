@@ -43,39 +43,80 @@ namespace Neon.Cadence
         // Private types
 
         /// <summary>
-        /// Implements the activity future.
+        /// Implements an activity future that returns <c>void</c>.
         /// </summary>
-        private class AsyncFuture : IAsyncFuture<object>
+        private class AsyncFuture : IAsyncFuture
         {
-            private bool            valueReturned = false;
+            private bool            completed = false;
             private Workflow        parentWorkflow;
             private long            activityId;
-            private Type            resultType;
 
             /// <summary>
             /// Constructor.
             /// </summary>
             /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
             /// <param name="activityId">The workflow local activity ID.</param>
-            /// <param name="resultType">The workflow result type or <c>null</c> for <c>void</c>.</param>
-            public AsyncFuture(Workflow parentWorkflow, long activityId, Type resultType)
+            public AsyncFuture(Workflow parentWorkflow, long activityId)
             {
                 this.parentWorkflow = parentWorkflow;
                 this.activityId     = activityId;
-                this.resultType     = resultType;
             }
 
             /// <inheritdoc/>
-            public async Task<object> GetAsync()
+            public async Task GetAsync()
             {
                 var client = parentWorkflow.Client;
 
-                if (valueReturned)
+                if (completed)
+                {
+                    throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
+                }
+
+                completed = true;
+
+                var reply = (ActivityGetResultReply)await client.CallProxyAsync(
+                    new ActivityGetResultRequest()
+                    {
+                        ContextId  = parentWorkflow.ContextId,
+                        ActivityId = activityId,
+                    });
+
+                reply.ThrowOnError();
+            }
+        }
+
+        /// <summary>
+        /// Implements an activity future that returns a value.
+        /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        private class AsyncFuture<TResult> : IAsyncFuture<TResult>
+        {
+            private bool            completed = false;
+            private Workflow        parentWorkflow;
+            private long            activityId;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
+            /// <param name="activityId">The workflow local activity ID.</param>
+            public AsyncFuture(Workflow parentWorkflow, long activityId)
+            {
+                this.parentWorkflow = parentWorkflow;
+                this.activityId     = activityId;
+            }
+
+            /// <inheritdoc/>
+            public async Task<TResult> GetAsync()
+            {
+                var client = parentWorkflow.Client;
+
+                if (completed)
                 {
                     throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.{nameof(IAsyncFuture<object>.GetAsync)}] may only be called once per stub instance.");
                 }
 
-                valueReturned = true;
+                completed = true;
 
                 var reply = (ActivityGetResultReply)await client.CallProxyAsync(
                     new ActivityGetResultRequest()
@@ -86,14 +127,7 @@ namespace Neon.Cadence
 
                 reply.ThrowOnError();
 
-                if (resultType != null && reply.Result != null)
-                {
-                    return client.DataConverter.FromData(resultType, reply.Result);
-                }
-                else
-                {
-                    return null;
-                }
+                return client.DataConverter.FromData<TResult>(reply.Result);
             }
         }
 
@@ -221,23 +255,22 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts the target activity, passing the specified arguments.
+        /// Starts the target activity that returns <typeparamref name="TActivityInterface"/>, passing the specified arguments.
         /// </summary>
+        /// <typeparam name="TResult">The activity result type.</typeparam>
         /// <param name="args">The arguments to be passed to the activity.</param>
         /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
         /// You must take care to pass parameters that are compatible with the target activity parameters.
-        /// These are checked at runtime but not while compiling.  The <see cref="IAsyncFuture{T}.GetAsync"/>
-        /// returns always returns an <c>object</c> regardless of the actual type returned by the target
-        /// activity method.  You'll also need to cast the result to the required type as necessary.
+        /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
         /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
-        public async Task<IAsyncFuture<object>> StartAsync(params object[] args)
+        public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
 
@@ -287,14 +320,81 @@ namespace Neon.Cadence
 
             if (resultType == typeof(Task))
             {
-                resultType = null;
-            }
-            else
-            {
-                resultType = resultType.GenericTypeArguments.First();
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].");
             }
 
-            return new AsyncFuture(parentWorkflow, activityId, resultType);
+            resultType = resultType.GenericTypeArguments.First();
+
+            if (!resultType.IsAssignableFrom(typeof(TResult)))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
+            }
+
+            return new AsyncFuture<TResult>(parentWorkflow, activityId);
+        }
+
+        /// <summary>
+        /// Starts the target activity that <c>void</c>, passing the specified arguments.
+        /// </summary>
+        /// <param name="args">The arguments to be passed to the activity.</param>
+        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
+        /// <remarks>
+        /// <para>
+        /// You must take care to pass parameters that are compatible with the target activity parameters.
+        /// These are checked at runtime but not while compiling.
+        /// </para>
+        /// <note>
+        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// </note>
+        /// </remarks>
+        public async Task<IAsyncFuture> StartAsync(params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+
+            if (hasStarted)
+            {
+                throw new InvalidOperationException("Cannot start a stub more than once.");
+            }
+
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.");
+            }
+
+            hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things likes integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+            }
+
+            // Start the activity.
+
+            var client        = parentWorkflow.Client;
+            var dataConverter = client.DataConverter;
+            var activityId    = parentWorkflow.GetNextActivityId();
+
+            var reply = (ActivityStartReply)await client.CallProxyAsync(
+                new ActivityStartRequest()
+                {
+                    ContextId              = parentWorkflow.ContextId,
+                    Activity               = activityTypeName,
+                    Args                   = dataConverter.ToData(args),
+                    Options                = options.ToInternal(),
+                    ScheduleToStartTimeout = options.ScheduleToStartTimeout,
+                });
+
+            reply.ThrowOnError();
+
+            // Create and return the future.
+
+            return new AsyncFuture(parentWorkflow, activityId);
         }
     }
 }

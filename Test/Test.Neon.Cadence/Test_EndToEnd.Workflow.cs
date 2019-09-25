@@ -1605,7 +1605,7 @@ namespace TestCadence
             Task RunChildAsync();
 
             [WorkflowMethod(Name = "start-child")]
-            Task<bool> StartChildAsync();
+            Task StartChildAsync();
 
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloChildAsync(string name);
@@ -1636,7 +1636,7 @@ namespace TestCadence
                 await childStub.RunAsync();
             }
 
-            public async Task<bool> StartChildAsync()
+            public async Task StartChildAsync()
             {
                 // We're not specifying a method name when we create the child stub below
                 // which means we'll be calling the [RunAsync()] method which also has
@@ -1644,9 +1644,8 @@ namespace TestCadence
 
                 var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>();
                 var future    = await childStub.StartAsync();
-                var result    = await future.GetAsync();
-
-                return result == null;
+                
+                await future.GetAsync();
             }
 
             public async Task<string> HelloChildAsync(string name)
@@ -1659,9 +1658,9 @@ namespace TestCadence
             public async Task<string> StartHelloChildAsync(string name)
             {
                 var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>("hello");
-                var future    = await childStub.StartAsync(name);
+                var future    = await childStub.StartAsync<string>(name);
                 
-                return (string)await future.GetAsync();
+                return await future.GetAsync();
             }
 
             public async Task<string> HelloChildActivityAsync(string name)
@@ -1780,7 +1779,8 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowParent>();
 
-            Assert.True(await stub.StartChildAsync());
+            await stub.StartChildAsync();
+
             Assert.True(WorkflowChild.WasExecuted);
         }
 
