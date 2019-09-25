@@ -72,6 +72,11 @@ data:
         K8S-Logging.Exclude On
 {{- end }}
 {{ .Values.extraEntries.filter | indent 8 }}
+    [FILTER]
+        Name    lua
+        Match   kube.*
+        script  /fluent-bit/etc/functions.lua
+        call    dedot
 
   fluent-bit-output.conf: |-
 {{ if eq .Values.backend.type "test" }}
@@ -157,6 +162,29 @@ data:
 
   fluent-bit.conf: |-
 {{ .Values.rawConfig | indent 4 }}
+
+  functions.lua: |-
+    function dedot(tag, timestamp, record)
+        if record["kubernetes"] == nil then
+            return 0, 0, 0
+        end
+        dedot_keys(record["kubernetes"]["annotations"])
+        dedot_keys(record["kubernetes"]["labels"])
+        return 1, timestamp, record
+    end
+
+    function dedot_keys(map)
+        if map == nil then
+            return
+        end
+        for k, v in pairs(map) do
+            dedotted = string.gsub(k, "%.", "_")
+            if k ~= dedotted then
+                map[dedotted] = v
+                map[k] = nil
+            end
+        end
+    end
 
   parsers.conf: |-
 {{- if .Values.parsers.regex }}
