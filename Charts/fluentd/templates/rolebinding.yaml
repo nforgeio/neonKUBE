@@ -1,6 +1,6 @@
-{{- if .Values.rbac.create -}}
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
 metadata:
   name: {{ template "fluentd.fullname" . }}
   labels:
@@ -8,12 +8,12 @@ metadata:
     chart: {{ template "fluentd.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+roleRef:
+  kind: Role
+  name: {{ template "fluentd.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
 subjects:
 - kind: ServiceAccount
   name: {{ template "fluentd.fullname" . }}
   namespace: {{ .Release.Namespace }}
-roleRef:
-  kind: ClusterRole
-  name: {{ template "fluentd.fullname" . }}
-  apiGroup: rbac.authorization.k8s.io
-{{- end -}}
+{{- end }}

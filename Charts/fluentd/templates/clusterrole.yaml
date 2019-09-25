@@ -1,15 +1,21 @@
-apiVersion: rbac.authorization.k8s.io/v1beta1
+{{- if .Values.rbac.create -}}
 kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: fluentd
-  namespace: monitoring
+  name: {{ include "fluentd.fullname" . }}
+  labels:
+    app: {{ template "fluentd.name" . }}
+    chart: {{ template "fluentd.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 rules:
 - apiGroups:
   - ""
   resources:
-  - pods
-  - namespaces
+  - "namespaces"
+  - "pods"
   verbs:
-  - get
-  - list
-  - watch
+  - "get"
+  - "watch"
+  - "list"
+{{- end -}}

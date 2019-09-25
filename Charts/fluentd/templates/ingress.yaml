@@ -5,7 +5,7 @@ kind: Ingress
 metadata:
   name: {{ template "fluentd.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ template "fluentd.name" . }}
+    app: {{ template "fluentd.name" . }}
     chart: {{ template "fluentd.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}

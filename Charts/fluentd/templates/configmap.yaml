@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "fluentd.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ template "fluentd.name" . }}
+    app: {{ template "fluentd.name" . }}
     chart: {{ template "fluentd.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
@@ -26,4 +26,12 @@ data:
     <source>
       @type prometheus_output_monitor
     </source>
+{{- end }}
+{{- if and (.Values.plugins.enabled) (gt (len .Values.plugins.pluginsList) 0) }}
+  install-plugins.sh: |-
+    #!/bin/sh
+  {{- range $plugin := .Values.plugins.pluginsList }}
+    fluent-gem install {{ $plugin }}
+  {{- end }}
+    exec /run.sh
 {{- end }}

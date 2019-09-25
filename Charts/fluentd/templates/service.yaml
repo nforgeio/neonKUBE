@@ -3,15 +3,17 @@ kind: Service
 metadata:
   name: {{ template "fluentd.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ template "fluentd.name" . }}
+    app: {{ template "fluentd.name" . }}
     chart: {{ template "fluentd.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+  annotations:
+{{ toYaml .Values.service.annotations | indent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
   {{- range $port := .Values.service.ports }}
-    - name: {{ $port.protocol | lower }}-{{ $port.name }}
+    - name: {{ $port.name }}
       port: {{ $port.containerPort }}
       targetPort: {{ $port.containerPort }}
       protocol: {{ $port.protocol }}
@@ -20,11 +22,11 @@ spec:
       nodePort: {{ .Values.service.nodePort }}
   {{ end }}
   {{- if .Values.metrics.enabled }}
-    - name: tcp-metrics
+    - name: metrics
       port: {{ .Values.metrics.service.port }}
       targetPort: metrics
       protocol: TCP
   {{- end }}
   selector:
-    app.kubernetes.io/name: {{ template "fluentd.name" . }}
+    app: {{ template "fluentd.name" . }}
     release: {{ .Release.Name }}
