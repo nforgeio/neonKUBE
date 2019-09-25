@@ -21,12 +21,11 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net;
 
 using Neon.Common;
 using Neon.Service;
 
-using Neon.Common;
-using System.Net;
 using Newtonsoft.Json;
 
 namespace Neon.Common
