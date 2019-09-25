@@ -211,6 +211,11 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *mess
 		zap.Int("ProcessId", os.Getpid()),
 	)
 
+	// ActivityContext at the specified WorflowContextID
+	if actx := ActivityContexts.Get(contextID); actx == nil {
+		return internal.ErrEntityNotExist
+	}
+
 	// set the reply
 	return op.SendChannel(true, reply.GetError())
 }
