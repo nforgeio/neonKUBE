@@ -1920,7 +1920,6 @@ namespace TestCadence
                 Assert.Null(message.Activity);
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
-                Assert.Null(message.Domain);
 
                 // Round-trip
 
@@ -1934,7 +1933,6 @@ namespace TestCadence
                     ScheduleToCloseTimeout = 1000,
                     RetryPolicy = new InternalRetryPolicy() { MaximumInterval = 5 }
                 };
-                message.Domain = "my-domain";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1945,7 +1943,6 @@ namespace TestCadence
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal("my-domain", message.Domain);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1962,7 +1959,6 @@ namespace TestCadence
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal("my-domain", message.Domain);
 
                 // Verify Clone()
 
@@ -1977,7 +1973,6 @@ namespace TestCadence
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal("my-domain", message.Domain);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1992,7 +1987,6 @@ namespace TestCadence
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
-                Assert.Equal("my-domain", message.Domain);
             }
         }
 

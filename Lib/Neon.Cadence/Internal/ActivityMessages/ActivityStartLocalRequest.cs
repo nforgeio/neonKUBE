@@ -78,15 +78,6 @@ namespace Neon.Cadence.Internal
             set => SetJsonProperty<InternalLocalActivityOptions>(PropertyNames.Options, value);
         }
 
-        /// <summary>
-        /// Optionally overrides the parent workflow's domain.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -108,7 +99,6 @@ namespace Neon.Cadence.Internal
             typedTarget.ActivityId = this.ActivityId;
             typedTarget.Args       = this.Args;
             typedTarget.Options    = this.Options;
-            typedTarget.Domain     = this.Domain;
         }
     }
 }

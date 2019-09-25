@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -49,16 +50,19 @@ namespace Neon.Cadence
             private bool            valueReturned = false;
             private Workflow        parentWorkflow;
             private ChildExecution  execution;
+            private Type            resultType;
 
             /// <summary>
             /// Constructor.
             /// </summary>
             /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
             /// <param name="execution">The child execution.</param>
-            public AsyncFuture(Workflow parentWorkflow, ChildExecution execution)
+            /// <param name="resultType">Specifies the workflow result type or <c>null</c> for <c>void</c> workflow methods.</param>
+            public AsyncFuture(Workflow parentWorkflow, ChildExecution execution, Type resultType)
             {
                 this.parentWorkflow = parentWorkflow;
                 this.execution      = execution;
+                this.resultType     = resultType;
             }
 
             /// <inheritdoc/>
@@ -71,7 +75,16 @@ namespace Neon.Cadence
 
                 valueReturned = true;
 
-                return await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
+                var resultBytes = await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
+
+                if (resultType != null && resultBytes != null)
+                {
+                    return parentWorkflow.Client.DataConverter.FromData(resultType, resultBytes);
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -199,7 +212,7 @@ namespace Neon.Cadence
             hasStarted = true;
 
             // Cast the input parameters to the target types so that developers won't need to expicitly
-            // cast things types integers into longs, floats into doubles, etc.
+            // cast things like integers into longs, floats into doubles, etc.
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -216,7 +229,20 @@ namespace Neon.Cadence
 
             Stub = StubManager.NewChildWorkflowStub<TWorkflowInterface>(client, parentWorkflow, workflowTypeName, execution);
 
-            return new AsyncFuture(parentWorkflow, execution);
+            // Create and return the future.
+
+            var resultType = targetMethod.ReturnType;
+
+            if (resultType == typeof(Task))
+            {
+                resultType = null;
+            }
+            else
+            {
+                resultType = resultType.GenericTypeArguments.First();
+            }
+
+            return new AsyncFuture(parentWorkflow, execution, resultType);
         }
 
         /// <summary>

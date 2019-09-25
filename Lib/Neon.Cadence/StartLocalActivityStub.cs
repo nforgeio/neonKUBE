@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartActivityStub.cs
+// FILE:	    StartLocalActivityStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,12 +32,14 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to execute an activity in parallel with other activities or child
-    /// workflows.  Instances are created via <see cref="Workflow.NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/>.
+    /// Used to execute a local activity in parallel with other activities or child workflows.
+    /// Instances are created via <see cref="Workflow.NewLocalActivityStub{TActivityInterface, TActivityImplementation}(LocalActivityOptions)"/>.
     /// </summary>
     /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
-    public class StartActivityStub<TActivityInterface>
+    /// <typeparam name="TActivityImplementation">Specifies the local activity implementation class.</typeparam> 
+    public class StartLocalActivityStub<TActivityInterface, TActivityImplementation>
         where TActivityInterface : class
+        where TActivityImplementation : TActivityInterface
     {
         //---------------------------------------------------------------------
         // Private types
@@ -77,8 +79,8 @@ namespace Neon.Cadence
 
                 valueReturned = true;
 
-                var reply = (ActivityGetResultReply)await client.CallProxyAsync(
-                    new ActivityGetResultRequest()
+                var reply = (ActivityGetLocalResultReply)await client.CallProxyAsync(
+                    new ActivityGetLocalResultRequest()
                     {
                         ContextId  = parentWorkflow.ContextId,
                         ActivityId = activityId,
@@ -100,11 +102,11 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Implementation
 
-        private Workflow            parentWorkflow;
-        private MethodInfo          targetMethod;
-        private ActivityOptions     options;
-        private string              activityTypeName;
-        private bool                hasStarted;
+        private Workflow                parentWorkflow;
+        private MethodInfo              targetMethod;
+        private LocalActivityOptions    options;
+        private string                  activityTypeName;
+        private bool                    hasStarted;
 
         /// <summary>
         /// Internal constructor.
@@ -112,7 +114,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The associated parent workflow.</param>
         /// <param name="methodName">Identifies the target activity method or <c>null</c> or empty.</param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal StartActivityStub(Workflow parentWorkflow, string methodName, ActivityOptions options = null)
+        internal StartLocalActivityStub(Workflow parentWorkflow, string methodName, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
 
@@ -185,36 +187,16 @@ namespace Neon.Cadence
 
             if (options == null)
             {
-                options = new ActivityOptions();
+                options = new LocalActivityOptions();
             }
             else
             {
                 options = options.Clone();
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                options.TaskList = methodAttribute.TaskList;
-            }
-
-            if (options.HeartbeatTimeout <= TimeSpan.Zero)
-            {
-                options.HeartbeatTimeout = TimeSpan.FromSeconds(methodAttribute.HeartbeatTimeoutSeconds);
-            }
-
             if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
             {
                 options.ScheduleToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToCloseTimeoutSeconds);
-            }
-
-            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
-            }
-
-            if (options.StartToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
             }
 
             this.options = options;
@@ -269,14 +251,13 @@ namespace Neon.Cadence
             var dataConverter = client.DataConverter;
             var activityId    = parentWorkflow.GetNextActivityId();
 
-            var reply = (ActivityStartReply)await client.CallProxyAsync(
-                new ActivityStartRequest()
+            var reply = (ActivityStartLocalReply)await client.CallProxyAsync(
+                new ActivityStartLocalRequest()
                 {
-                    ContextId              = parentWorkflow.ContextId,
-                    Activity               = activityTypeName,
-                    Args                   = dataConverter.ToData(args),
-                    Options                = options.ToInternal(),
-                    ScheduleToStartTimeout = options.ScheduleToStartTimeout,
+                    ContextId = parentWorkflow.ContextId,
+                    Activity  = activityTypeName,
+                    Args      = dataConverter.ToData(args),
+                    Options   = options.ToInternal()
                 });
 
             reply.ThrowOnError();
