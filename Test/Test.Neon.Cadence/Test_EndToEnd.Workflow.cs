@@ -1604,8 +1604,14 @@ namespace TestCadence
             [WorkflowMethod]
             Task RunChildAsync();
 
+            [WorkflowMethod(Name = "start-child")]
+            Task<bool> StartChildAsync();
+
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloChildAsync(string name);
+
+            [WorkflowMethod(Name = "start-hello")]
+            Task<string> StartHelloChildAsync(string name);
 
             [WorkflowMethod(Name = "hello-activity")]
             Task<string> HelloChildActivityAsync(string name);
@@ -1630,11 +1636,32 @@ namespace TestCadence
                 await childStub.RunAsync();
             }
 
+            public async Task<bool> StartChildAsync()
+            {
+                // We're not specifying a method name when we create the child stub below
+                // which means we'll be calling the [RunAsync()] method which also has
+                // no defined workflow method name.
+
+                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>();
+                var future    = await childStub.StartAsync();
+                var result    = await future.GetAsync();
+
+                return result == null;
+            }
+
             public async Task<string> HelloChildAsync(string name)
             {
                 var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
 
                 return await childStub.HelloAsync(name);
+            }
+
+            public async Task<string> StartHelloChildAsync(string name)
+            {
+                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>("hello");
+                var future    = await childStub.StartAsync(name);
+                
+                return (string)await future.GetAsync();
             }
 
             public async Task<string> HelloChildActivityAsync(string name)
@@ -1738,6 +1765,37 @@ namespace TestCadence
 
             Assert.Equal("Hello Jeff!", await stub.HelloChildAsync("Jeff"));
             Assert.True(WorkflowChild.WasExecuted);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildStart_NoArgsOrResult ()
+        {
+            // Verify that we can run a child workflow via a future that 
+            // accepts no args and doesn't return a result.  This also tests
+            // calling the the workflow entrypoint with the default entrypoint
+            // method name (null).
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.True(await stub.StartChildAsync());
+            Assert.True(WorkflowChild.WasExecuted);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildStart_ArgsAndResult()
+        {
+            // Verify that we can run a child workflow via a future that 
+            // accepts a parameter and returns a result.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.Equal("Hello Jeff!", await stub.StartHelloChildAsync("Jeff"));
         }
 
         [Fact]
