@@ -14,8 +14,8 @@ output:
   port: 9200
   scheme: http
   sslVersion: TLSv1
-  buffer_chunk_limit: 256M
-  buffer_queue_limit: 64
+  buffer_chunk_limit: 8M
+  buffer_queue_limit: 32
 
 env: {}
 
@@ -133,7 +133,7 @@ configMaps:
       scheme "#{ENV['OUTPUT_SCHEME']}"
       ssl_version "#{ENV['OUTPUT_SSL_VERSION']}"
       logstash_format true
-      <buffer>
+     <buffer>
         @type file
         path /var/log/fluentd-buffers/kubernetes.system.buffer
         flush_mode interval
