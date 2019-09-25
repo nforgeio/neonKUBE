@@ -3,7 +3,7 @@ kind: DaemonSet
 metadata:
   name: {{ template "fluent-bit.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ template "fluent-bit.name" . }}
+    app: {{ template "fluent-bit.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ template "fluent-bit.name" . }}
+        app: {{ template "fluent-bit.name" . }}
         release: {{ .Release.Name }}
 {{- if .Values.podLabels }}
 {{ toYaml .Values.podLabels | indent 8 }}

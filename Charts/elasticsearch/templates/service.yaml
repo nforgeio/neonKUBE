@@ -7,7 +7,7 @@ metadata:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ template "uname" . }}"
+    app: "{{ template "uname" . }}"
   annotations:
 {{ toYaml .Values.service.annotations | indent 4 }}
 spec:
@@ -16,7 +16,7 @@ spec:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ template "uname" . }}"
+    app: "{{ template "uname" . }}"
   ports:
   - name: http
     protocol: TCP
@@ -36,13 +36,13 @@ metadata:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ template "uname" . }}"
+    app: "{{ template "uname" . }}"
 spec:
   clusterIP: None # This is needed for statefulset hostnames like elasticsearch-0 to resolve
   # Create endpoints also if the related pod isn't ready
   publishNotReadyAddresses: true
   selector:
-    app.kubernetes.io/name: "{{ template "uname" . }}"
+    app: "{{ template "uname" . }}"
   ports:
   - name: http
     port: {{ .Values.httpPort }}

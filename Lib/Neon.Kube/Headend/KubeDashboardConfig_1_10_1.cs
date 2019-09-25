@@ -64,7 +64,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   labels:
-    app.kubernetes.io/name: kubernetes-dashboard
+    app: kubernetes-dashboard
   name: kubernetes-dashboard-certs
   namespace: kube-system
 type: Opaque
@@ -79,7 +79,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/name: kubernetes-dashboard
+    app: kubernetes-dashboard
   name: kubernetes-dashboard
   namespace: kube-system
 
@@ -142,7 +142,7 @@ kind: Deployment
 apiVersion: apps/v1beta2
 metadata:
   labels:
-    app.kubernetes.io/name: kubernetes-dashboard
+    app: kubernetes-dashboard
   name: kubernetes-dashboard
   namespace: kube-system
 spec:
@@ -150,11 +150,11 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: kubernetes-dashboard
+      app: kubernetes-dashboard
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: kubernetes-dashboard
+        app: kubernetes-dashboard
     spec:
       containers:
       - name: kubernetes-dashboard
@@ -199,7 +199,7 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    app.kubernetes.io/name: kubernetes-dashboard
+    app: kubernetes-dashboard
   name: kubernetes-dashboard
   namespace: kube-system
 spec:
@@ -209,7 +209,7 @@ spec:
     targetPort: 8443
     nodePort: {KubeHostPorts.KubeDashboard}
   selector:
-    app.kubernetes.io/name: kubernetes-dashboard
+    app: kubernetes-dashboard
 ";
     }
 }

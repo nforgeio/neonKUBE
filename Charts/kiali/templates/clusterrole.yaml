@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   name: kiali
   labels:
-    app.kubernetes.io/name: kiali
+    app: kiali
     release: {{ .Release.Name }}
 rules:
   - apiGroups: [""]
@@ -127,7 +127,7 @@ kind: ClusterRole
 metadata:
   name: kiali-viewer
   labels:
-    app.kubernetes.io/name: kiali
+    app: kiali
     release: {{ .Release.Name }}
 rules:
   - apiGroups: [""]

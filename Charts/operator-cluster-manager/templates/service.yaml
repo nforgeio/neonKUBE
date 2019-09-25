@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ include "operator-cluster-manager.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "operator-cluster-manager.name" . }}
+    app: {{ include "operator-cluster-manager.name" . }}
     helm.sh/chart: {{ include "operator-cluster-manager.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app.kubernetes.io/name: {{ include "operator-cluster-manager.name" . }}
+    app: {{ include "operator-cluster-manager.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

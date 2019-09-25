@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: "{{ include "operator-cluster-manager.fullname" . }}-test-connection"
   labels:
-    app.kubernetes.io/name: {{ include "operator-cluster-manager.name" . }}
+    app: {{ include "operator-cluster-manager.name" . }}
     helm.sh/chart: {{ include "operator-cluster-manager.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}

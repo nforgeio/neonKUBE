@@ -4,7 +4,7 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ template "metricbeat.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ template "metricbeat.name" . }}
+    app: {{ template "metricbeat.name" . }}
     chart: {{ template "metricbeat.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}

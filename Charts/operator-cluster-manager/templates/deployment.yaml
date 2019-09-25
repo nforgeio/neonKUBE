@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ include "operator-cluster-manager.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "operator-cluster-manager.name" . }}
+    app: {{ include "operator-cluster-manager.name" . }}
     helm.sh/chart: {{ include "operator-cluster-manager.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
@@ -11,12 +11,12 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "operator-cluster-manager.name" . }}
+      app: {{ include "operator-cluster-manager.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "operator-cluster-manager.name" . }}
+        app: {{ include "operator-cluster-manager.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
         readiness.status.sidecar.istio.io/applicationPorts: ""

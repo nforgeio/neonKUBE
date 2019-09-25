@@ -4,14 +4,14 @@ kind: DaemonSet
 metadata:
   name: {{ template "metricbeat.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ template "metricbeat.name" . }}
+    app: {{ template "metricbeat.name" . }}
     chart: {{ template "metricbeat.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ template "metricbeat.name" . }}
+      app: {{ template "metricbeat.name" . }}
       release: {{ .Release.Name }}
   minReadySeconds: 10
   updateStrategy:
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ template "metricbeat.name" . }}
+        app: {{ template "metricbeat.name" . }}
         release: {{ .Release.Name }}
       annotations:
         checksum/config: {{ toYaml (default .Values.daemonset.config .Values.daemonset.overrideConfig) | sha256sum }}

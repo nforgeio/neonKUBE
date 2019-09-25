@@ -8,7 +8,7 @@ metadata:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    app.kubernetes.io/name: "{{ template "uname" . }}"
+    app: "{{ template "uname" . }}"
 data:
 {{- range $path, $config := .Values.esConfig }}
   {{ $path }}: |

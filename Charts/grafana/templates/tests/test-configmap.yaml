@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ template "grafana.fullname" . }}-test
   labels:
-    app.kubernetes.io/name: {{ template "grafana.fullname" . }}
+    app: {{ template "grafana.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     heritage: "{{ .Release.Service }}"
     release: "{{ .Release.Name }}"

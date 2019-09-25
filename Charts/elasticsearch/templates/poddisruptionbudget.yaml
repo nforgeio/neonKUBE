@@ -8,5 +8,5 @@ spec:
   maxUnavailable: {{ .Values.maxUnavailable }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: "{{ template "uname" . }}"
+      app: "{{ template "uname" . }}"
 {{- end }}
