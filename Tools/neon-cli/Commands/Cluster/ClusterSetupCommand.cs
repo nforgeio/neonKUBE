@@ -438,7 +438,7 @@ OPTIONS:
                     k8sClient = new Kubernetes(KubernetesClientConfiguration.BuildConfigFromConfigFile(configFile, currentContext: cluster.KubeContext.Name));
                 } catch (k8s.Exceptions.KubeConfigException e)
                 {
-                    throw e;
+                    // k8s is not initialized, this is okay.
                 }
             }
         }
