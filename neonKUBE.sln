@@ -197,6 +197,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.ModelGen", "Test\Test.Neon.ModelGen\Test.Neon.ModelGen.csproj", "{40496FF2-3343-476D-9BE6-29D4CDBC86C5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models", "Test\Test.Neon.Models\Test.Neon.Models.csproj", "{DF8A6F39-7A8D-477F-8A19-8B467671B542}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7EC9D996-B464-4493-BF68-8A4A95AA3C83} = {7EC9D996-B464-4493-BF68-8A4A95AA3C83}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Couchbase", "Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj", "{12283401-E727-4771-A24E-E9B873AD44BB}"
 EndProject
