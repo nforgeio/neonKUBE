@@ -253,7 +253,7 @@ namespace Neon.Cadence
                 options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
             }
 
-            this.options = options;
+            this.options = ActivityOptions.Normalize(parentWorkflow.Client, options);
         }
 
         /// <summary>

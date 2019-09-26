@@ -220,23 +220,7 @@ namespace Neon.Cadence
                 activityTypeName += $"::{methodAttribute.Name}";
             }
 
-            // Normalize the options.
-
-            if (options == null)
-            {
-                options = new LocalActivityOptions();
-            }
-            else
-            {
-                options = options.Clone();
-            }
-
-            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToCloseTimeoutSeconds);
-            }
-
-            this.options = options;
+            this.options = LocalActivityOptions.Normalize(parentWorkflow.Client, options);
         }
 
 
