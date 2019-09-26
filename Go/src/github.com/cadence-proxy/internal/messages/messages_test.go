@@ -5159,7 +5159,6 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
 		s.Nil(v.GetDomain())
-		s.Equal(time.Duration(0), v.GetScheduleToStartTimeout())
 
 		// Round-trip
 
@@ -5180,9 +5179,6 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		domain := "my-domain"
 		v.SetDomain(&domain)
 		s.Equal("my-domain", *v.GetDomain())
-
-		v.SetScheduleToStartTimeout(time.Second * 30)
-		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5198,7 +5194,6 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 		s.Equal("my-domain", *v.GetDomain())
-		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5210,7 +5205,6 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 		s.Equal("my-domain", *v.GetDomain())
-		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 }
 
@@ -6066,7 +6060,6 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
 		s.Nil(v.GetDomain())
-		s.Equal(time.Duration(0), v.GetScheduleToStartTimeout())
 		s.Equal(int64(0), v.GetActivityID())
 
 		// Round-trip
@@ -6092,9 +6085,6 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		v.SetDomain(&domain)
 		s.Equal("my-domain", *v.GetDomain())
 
-		v.SetScheduleToStartTimeout(time.Second * 30)
-		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
-
 		v.SetActivityID(int64(666))
 		s.Equal(int64(666), v.GetActivityID())
 	}
@@ -6112,7 +6102,6 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 		s.Equal("my-domain", *v.GetDomain())
-		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
 	}
@@ -6126,7 +6115,6 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 		s.Equal("my-domain", *v.GetDomain())
-		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
 	}
@@ -6314,6 +6302,7 @@ func (s *UnitTestSuite) TestActivityStartLocalRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetClientID())
 		s.Equal(int64(0), v.GetActivityID())
+		s.Equal(int64(0), v.GetActivityTypeID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
 
@@ -6334,6 +6323,9 @@ func (s *UnitTestSuite) TestActivityStartLocalRequest() {
 
 		v.SetActivityID(int64(666))
 		s.Equal(int64(666), v.GetActivityID())
+
+		v.SetActivityTypeID(int64(777))
+		s.Equal(int64(777), v.GetActivityTypeID())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6350,6 +6342,7 @@ func (s *UnitTestSuite) TestActivityStartLocalRequest() {
 		s.Equal(workflow.LocalActivityOptions{ScheduleToCloseTimeout: time.Second * 30}, *v.GetOptions())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
+		s.Equal(int64(777), v.GetActivityTypeID())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6362,6 +6355,7 @@ func (s *UnitTestSuite) TestActivityStartLocalRequest() {
 		s.Equal(workflow.LocalActivityOptions{ScheduleToCloseTimeout: time.Second * 30}, *v.GetOptions())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
+		s.Equal(int64(777), v.GetActivityTypeID())
 	}
 }
 

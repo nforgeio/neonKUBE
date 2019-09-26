@@ -18,8 +18,6 @@
 package messages
 
 import (
-	"time"
-
 	"go.uber.org/cadence/workflow"
 
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
@@ -129,28 +127,6 @@ func (request *ActivityStartRequest) SetDomain(value *string) {
 	request.SetStringProperty("Domain", value)
 }
 
-// GetScheduleToStartTimeout gets the ScheduleToStartTimeout property
-// from the ActivityStartRequest's properties map.
-// Specifies the maximum time the activity will wait after being scheduled
-// until it is executed to a worker.
-//
-// returns time.Duration -> the value of the ScheduleToStartTimeout property from
-// the ActivityStartRequest's properties map.
-func (request *ActivityStartRequest) GetScheduleToStartTimeout() time.Duration {
-	return request.GetTimeSpanProperty("ScheduleToStartTimeout")
-}
-
-// SetScheduleToStartTimeout sets the ScheduleToStartTimeout
-// property in the ActivityStartRequest's properties map.
-// Specifies the maximum time the activity will wait after being scheduled
-// until it is executed to a worker.
-//
-// param value time.Duration -> the time.Duration to be set in the
-// ActivityStartRequest's properties map.
-func (request *ActivityStartRequest) SetScheduleToStartTimeout(value time.Duration) {
-	request.SetTimeSpanProperty("ScheduleToStartTimeout", value)
-}
-
 // GetActivityID gets the unique Id used to identify the activity.
 //
 // returns int64 -> the long ActivityID
@@ -182,7 +158,6 @@ func (request *ActivityStartRequest) CopyTo(target IProxyMessage) {
 		v.SetOptions(request.GetOptions())
 		v.SetActivity(request.GetActivity())
 		v.SetDomain(request.GetDomain())
-		v.SetScheduleToStartTimeout(request.GetScheduleToStartTimeout())
 		v.SetActivityID(request.GetActivityID())
 	}
 }
