@@ -84,6 +84,7 @@ namespace Neon.Cadence
                     });
 
                 reply.ThrowOnError();
+                parentWorkflow.UpdateReplay(reply);
             }
         }
 
@@ -129,6 +130,7 @@ namespace Neon.Cadence
                     });
 
                 reply.ThrowOnError();
+                parentWorkflow.UpdateReplay(reply);
 
                 return client.DataConverter.FromData<TResult>(reply.Result);
             }
@@ -257,6 +259,7 @@ namespace Neon.Cadence
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            parentWorkflow.SetStackTrace();
 
             if (hasStarted)
             {
@@ -273,7 +276,7 @@ namespace Neon.Cadence
             hasStarted = true;
 
             // Cast the input parameters to the target types so that developers won't need to expicitly
-            // cast things likes integers into longs, floats into doubles, etc.
+            // cast things like integers into longs, floats into doubles, etc.
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -286,16 +289,21 @@ namespace Neon.Cadence
             var dataConverter = client.DataConverter;
             var activityId    = parentWorkflow.GetNextActivityId();
 
-            var reply = (ActivityStartLocalReply)await client.CallProxyAsync(
-                new ActivityStartLocalRequest()
+            var reply = await parentWorkflow.ExecuteNonParallel(
+                async () =>
                 {
-                    ContextId = parentWorkflow.ContextId,
-                    Activity  = activityTypeName,
-                    Args      = dataConverter.ToData(args),
-                    Options   = options.ToInternal()
+                    return (ActivityStartLocalReply)await client.CallProxyAsync(
+                        new ActivityStartLocalRequest()
+                        {
+                            ContextId = parentWorkflow.ContextId,
+                            Activity  = activityTypeName,
+                            Args      = dataConverter.ToData(args),
+                            Options   = options.ToInternal()
+                        });
                 });
 
             reply.ThrowOnError();
+            parentWorkflow.UpdateReplay(reply);
 
             // Create and return the future.
 
@@ -334,6 +342,7 @@ namespace Neon.Cadence
         public async Task<IAsyncFuture> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            parentWorkflow.SetStackTrace();
 
             if (hasStarted)
             {
@@ -350,7 +359,7 @@ namespace Neon.Cadence
             hasStarted = true;
 
             // Cast the input parameters to the target types so that developers won't need to expicitly
-            // cast things likes integers into longs, floats into doubles, etc.
+            // cast things like integers into longs, floats into doubles, etc.
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -363,16 +372,21 @@ namespace Neon.Cadence
             var dataConverter = client.DataConverter;
             var activityId    = parentWorkflow.GetNextActivityId();
 
-            var reply = (ActivityStartLocalReply)await client.CallProxyAsync(
-                new ActivityStartLocalRequest()
+            var reply = await parentWorkflow.ExecuteNonParallel(
+                async () =>
                 {
-                    ContextId = parentWorkflow.ContextId,
-                    Activity  = activityTypeName,
-                    Args      = dataConverter.ToData(args),
-                    Options   = options.ToInternal()
+                    return (ActivityStartLocalReply)await client.CallProxyAsync(
+                        new ActivityStartLocalRequest()
+                        {
+                            ContextId = parentWorkflow.ContextId,
+                            Activity  = activityTypeName,
+                            Args      = dataConverter.ToData(args),
+                            Options   = options.ToInternal()
+                        });
                 });
 
             reply.ThrowOnError();
+            parentWorkflow.UpdateReplay(reply);
 
             // Create and return the future.
 

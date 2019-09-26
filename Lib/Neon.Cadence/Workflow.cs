@@ -192,7 +192,7 @@ namespace Neon.Cadence
         /// stack frame will be skipped along with the caller (presumably one the public
         /// methods in this class.
         /// </param>
-        private void SetStackTrace(int skipFrames = 2)
+        internal void SetStackTrace(int skipFrames = 2)
         {
             Parent.StackTrace = new StackTrace(skipFrames, fNeedFileInfo: true);
         }
@@ -205,7 +205,7 @@ namespace Neon.Cadence
         /// <typeparam name="TResult">The operation result type.</typeparam>
         /// <param name="actionAsync">The workflow action function.</param>
         /// <returns>The action result.</returns>
-        private async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
+        internal async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
             try
             {
@@ -228,7 +228,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TReply">The reply message type.</typeparam>
         /// <param name="reply">The reply message.</param>
-        private void UpdateReplay<TReply>(TReply reply)
+        internal void UpdateReplay<TReply>(TReply reply)
             where TReply : WorkflowReply
         {
             switch (reply.ReplayStatus)

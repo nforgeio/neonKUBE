@@ -221,6 +221,7 @@ namespace Neon.Cadence
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            parentWorkflow.SetStackTrace();
 
             if (hasStarted)
             {
@@ -291,6 +292,7 @@ namespace Neon.Cadence
         public async Task<IAsyncFuture> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            parentWorkflow.SetStackTrace();
 
             if (hasStarted)
             {
