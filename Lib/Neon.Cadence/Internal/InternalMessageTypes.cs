@@ -650,5 +650,47 @@ namespace Neon.Cadence.Internal
         /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityCompleteRequest"/> message.
         /// </summary>
         ActivityCompleteReply = 223,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Starts an activity but doesn't wait for it to complete.
+        /// </summary>
+        ActivityStartRequest = 224,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityStartRequest"/> message.
+        /// </summary>
+        ActivityStartReply = 225,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Waits for an activity started via <see cref="ActivityStartRequest"/>
+        /// to complete and returns the result.
+        /// </summary>
+        ActivityGetResultRequest = 226,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityGetResultRequest"/> message.
+        /// </summary>
+        ActivityGetResultReply = 227,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Starts a local activity but doesn't wait for it to complete.
+        /// </summary>
+        ActivityStartLocalRequest = 228,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityStartLocalRequest"/> message.
+        /// </summary>
+        ActivityStartLocalReply = 229,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Waits for an activity started via <see cref="ActivityStartLocalRequest"/>
+        /// to complete and returns the result.
+        /// </summary>
+        ActivityGetLocalResultRequest = 230,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityGetLocalResultRequest"/> message.
+        /// </summary>
+        ActivityGetLocalResultReply = 231,
     }
 }

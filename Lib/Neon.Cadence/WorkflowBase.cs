@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -116,10 +117,10 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                           syncLock     = new object();
-        private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
-        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
-        private static byte[]                                           emptyBytes   = new byte[0];
+        private static object                                           syncLock          = new object();
+        private static INeonLogger                                      log               = LogManager.Default.GetLogger<WorkflowBase>();
+        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow      = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
+        private static byte[]                                           emptyBytes        = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -249,8 +250,7 @@ namespace Neon.Cadence
                     continue;
                 }
 
-                var workflowTypeKey   = GetWorkflowTypeKey(client, workflowTypeName, workflowMethodAttribute);
-                var alreadyRegistered = false;
+                var workflowTypeKey = GetWorkflowTypeKey(client, workflowTypeName, workflowMethodAttribute);
 
                 lock (syncLock)
                 {
@@ -260,8 +260,6 @@ namespace Neon.Cadence
                         {
                             throw new InvalidOperationException($"Conflicting workflow interface registration: Workflow interface [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
                         }
-
-                        alreadyRegistered = true;
                     }
                     else
                     {
@@ -276,17 +274,20 @@ namespace Neon.Cadence
                     }
                 }
 
-                if (!alreadyRegistered)
-                {
-                    var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
-                        new WorkflowRegisterRequest()
-                        {
-                            Name   = GetWorkflowTypeNameFromKey(workflowTypeKey),
-                            Domain = client.ResolveDomain(domain)
-                        });
+                var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
+                    new WorkflowRegisterRequest()
+                    {
+                        Name   = GetWorkflowTypeNameFromKey(workflowTypeKey),
+                        Domain = client.ResolveDomain(domain)
+                    });
 
-                    reply.ThrowOnError();
-                }
+                // $hack(jeff.lill): 
+                //
+                // We're going to ignore any errors here to handle:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/668
+
+                // reply.ThrowOnError();
             }
         }
 
@@ -639,6 +640,26 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
+                    // Handle built-in queries.
+
+                    if (request.QueryName == "__stack_trace")
+                    {
+                        var trace = string.Empty;
+
+                        if (workflow.StackTrace != null)
+                        {
+                            trace = workflow.StackTrace.ToString();
+                        }
+
+                        return new WorkflowQueryInvokeReply()
+                        {
+                            RequestId = request.RequestId,
+                            Result    = NeonHelper.JsonSerializeToBytes(trace)
+                        };
+                    }
+
+                    // Handle user queries.
+
                     var method = workflow.Workflow.MethodMap.GetQueryMethod(request.QueryName);
 
                     if (method != null)
@@ -751,6 +772,17 @@ namespace Neon.Cadence
 
         //---------------------------------------------------------------------
         // Instance members
+
+        // This field holds the stack trace for the most recent decision related 
+        // [Workflow] method call.  This will be returned for internal workflow
+        // "__stack_trace" queries.
+
+        /// <summary>
+        /// This field holds the stack trace for the most recent decision related 
+        /// <see cref="Workflow"/> method calls.  This will be returned for internal
+        /// workflow <b>"__stack_trace"</b> queries.
+        /// </summary>
+        internal StackTrace StackTrace { get; set; } = null;
 
         /// <inheritdoc/>
         public Workflow Workflow { get; set; }

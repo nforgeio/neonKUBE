@@ -113,6 +113,7 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 	}
 
 	logRequest.SetRequestID(requestID)
+	logRequest.SetClientID(LoggerClientID)
 	logRequest.SetTimeUtc(entry.Time)
 	logRequest.SetLogLevel(logLevel)
 	logRequest.SetLogMessage(&logMessage)
