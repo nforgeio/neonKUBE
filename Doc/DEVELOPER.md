@@ -55,7 +55,7 @@ Follow the steps below to configure a development or test workstation:
 
   d. Reboot your machine as required.
 
-5. Install the latest **32-bit** production release of PowerShell Core from: [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
+5. Install the latest **32-bit** production release of PowerShell Core from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
 
 6. Enable PowerShell script execution via (in a CMD window as administrator):
 
@@ -72,13 +72,13 @@ Follow the steps below to configure a development or test workstation:
   
 8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
-9. Install **.NET Framework 4.8 Developer Pack** from: [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
+9. Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
 10. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
 
 11. Configure the GOLANG development environment:
 
-  * Install **go1.12.9.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
+  * Install **go1.12.9.windows-amd64.msi** or later for Windows from [here](https://golang.org/dl/)
   * Install the GOLANG [dependency tool](https://github.com/golang/dep) via (in a new CMD window):
 
     `go get -u github.com/golang/dep/cmd/dep`
@@ -112,9 +112,9 @@ Follow the steps below to configure a development or test workstation:
 
 14. **Close** any running instances of **Visual Studio**
 
-15. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
+15. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-16. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+16. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from [here](https://www.cygwin.com/setup-x86_64.exe)
 
 17. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
@@ -153,14 +153,14 @@ Follow the steps below to configure a development or test workstation:
 
    * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-24. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+24. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-25. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+25. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
 26. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
-  * Download the ZIP archive from: [here](http://cmder.net/)
+  * Download the ZIP archive from [here](http://cmder.net/)
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Create a desktop shortcut if you wish and configure it to run as administrator.
   * Run Cmdr and configure settings as desired.
