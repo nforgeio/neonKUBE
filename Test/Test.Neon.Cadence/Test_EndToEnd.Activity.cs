@@ -420,17 +420,30 @@ namespace TestCadence
             HeartbeatWithInterval
         }
 
+        public enum HeartbeatResult
+        {
+            OK,
+            Error1,
+            Error2,
+            Error3,
+            Error4,
+            Error5,
+            Error6,
+            Error7,
+            Error8,
+        }
+
         public interface IActivityHeartbeat : IActivity
         {
             [ActivityMethod]
-            Task<bool> RunAsync(HeartbeatMode mode);
+            Task<HeartbeatResult> RunAsync(HeartbeatMode mode);
         }
 
         [Activity(AutoRegister = true)]
         public class ActivityHeartbeat : ActivityBase, IActivityHeartbeat
         {
             [ActivityMethod]
-            public async Task<bool> RunAsync(HeartbeatMode mode)
+            public async Task<HeartbeatResult> RunAsync(HeartbeatMode mode)
             {
                 switch (mode)
                 {
@@ -445,14 +458,14 @@ namespace TestCadence
 
                         if (!await Activity.HeartbeatAsync())
                         {
-                            return false;
+                            return HeartbeatResult.Error1;
                         }
 
                         // The next (immediate) heartbeat should not be recorded.
 
                         if (await Activity.HeartbeatAsync())
                         {
-                            return false;
+                            return HeartbeatResult.Error2;
                         }
 
                         // Sleep for 1/2 the heartbeat timeout and verify that the
@@ -462,7 +475,7 @@ namespace TestCadence
 
                         if (!await Activity.HeartbeatAsync())
                         {
-                            return false;
+                            return HeartbeatResult.Error3;
                         }
                         break;
 
@@ -477,12 +490,12 @@ namespace TestCadence
                                 return new byte[] { 0, 1, 2, 3, 4 };
                             }))
                         {
-                            return false;
+                            return HeartbeatResult.Error4;
                         }
 
                         if (!detailsRetrieved)
                         {
-                            return false;
+                            return HeartbeatResult.Error5;
                         }
                         break;
 
@@ -492,42 +505,42 @@ namespace TestCadence
 
                         if (!await Activity.HeartbeatAsync(interval: TimeSpan.FromSeconds(1)))
                         {
-                            return false;
+                            return HeartbeatResult.Error6;
                         }
 
                         // The next (immediate) heartbeat should not be recorded.
 
                         if (await Activity.HeartbeatAsync())
                         {
-                            return false;
+                            return HeartbeatResult.Error7;
                         }
 
-                        // Sleep for 1 second which is less than the 5 second heartbeat timeout
-                        // specified by the workflow and verify that next heartbeat is recorded.
+                        // Sleep long enough such that we'll definitely exceed the heart minimum
+                        // and verify that next heartbeat is recorded.
 
-                        await Task.Delay(TimeSpan.FromSeconds(1));
+                        await Task.Delay(TimeSpan.FromTicks(Activity.Task.HeartbeatTimeout.Ticks / 2));
 
                         if (!await Activity.HeartbeatAsync())
                         {
-                            return false;
+                            return HeartbeatResult.Error8;
                         }
                         break;
                 }
 
-                return true;
+                return HeartbeatResult.OK;
             }
         }
 
         public interface IWorkflowActivityHeartbeat : IWorkflow
         {
             [WorkflowMethod]
-            Task<bool> RunAsync(HeartbeatMode mode);
+            Task<HeartbeatResult> RunAsync(HeartbeatMode mode);
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowActivityHeartbeat : WorkflowBase, IWorkflowActivityHeartbeat
         {
-            public async Task<bool> RunAsync(HeartbeatMode mode)
+            public async Task<HeartbeatResult> RunAsync(HeartbeatMode mode)
             {
                 var stub = Workflow.NewActivityStub<IActivityHeartbeat>(new ActivityOptions() { HeartbeatTimeout = TimeSpan.FromSeconds(10) });
 
@@ -543,40 +556,40 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
 
-            Assert.True(await stub.RunAsync(HeartbeatMode.SendHeartbeat));
+            Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.SendHeartbeat));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
-            // Verify that recording heartbeats the using the convinence method works.
+            // Verify that recording heartbeats the using the convenience method works.
 
             var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
 
-            Assert.True(await stub.RunAsync(HeartbeatMode.HeartbeatWithDefaults));
+            Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.HeartbeatWithDefaults));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithDetails()
         {
-            // Verify that recording heartbeats the using the convinence method works.
+            // Verify that recording heartbeats the using the convenience method works.
 
             var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
 
-            Assert.True(await stub.RunAsync(HeartbeatMode.HeartbeatWithDetails));
+            Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.HeartbeatWithDetails));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithInterval()
         {
-            // Verify that recording heartbeats the using the convinence method works.
+            // Verify that recording heartbeats the using the convenience method works.
 
             var stub = client.NewWorkflowStub<IWorkflowActivityHeartbeat>();
 
-            Assert.True(await stub.RunAsync(HeartbeatMode.HeartbeatWithInterval));
+            Assert.Equal(HeartbeatResult.OK, await stub.RunAsync(HeartbeatMode.HeartbeatWithInterval));
         }
 
         //---------------------------------------------------------------------

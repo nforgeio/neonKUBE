@@ -35,6 +35,7 @@ var (
 	// variables to put command line args in
 	address   string
 	debugMode bool
+	clientID  int64
 
 	// debugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the
@@ -47,8 +48,9 @@ var (
 func main() {
 
 	// define the flags and parse them
-	flag.StringVar(&address, "listen", "127.0.0.2:5000", "Address for the Cadence Proxy Server to listen on")
-	flag.BoolVar(&debugMode, "debug", true, "Set to debug mode")
+	flag.StringVar(&address, "listen", "127.0.0.2:5000", "Address for the Cadence Proxy Server to listen on.")
+	flag.BoolVar(&debugMode, "debug", true, "Set to debug mode.")
+	flag.Int64Var(&clientID, "client-id", 1, "Set clientID used for the custom logger.")
 	flag.Parse()
 
 	// set debug
@@ -86,6 +88,7 @@ func main() {
 	// set HTTPClient
 	// setup the routes
 	endpoints.Logger = l.Named("init         ")
+	endpoints.LoggerClientID = clientID
 	endpoints.Instance = instance
 	endpoints.HttpClient = client
 	endpoints.SetupRoutes(instance.Router)
