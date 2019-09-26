@@ -6,7 +6,7 @@ This page describes how to get started with neonKUBE development.
 
 * Windows 10 Professional (64-bit) with at least 16GB RAM
 * Virtualization capable workstation
-* Visual Studio 2019 Community Edition (or better)
+* Visual Studio 2019 Edition (or better)
 * Visual Studio Code
 
 Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine.
@@ -53,25 +53,27 @@ Follow the steps below to configure a development or test workstation:
 
     d. Reboot your machine as required.
 
-5. Install the latest **32-bit** production release of PowerShell Core from: [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
+5. Install the latest **32-bit** production release of PowerShell Core from [here](https://github.com/PowerShell/PowerShell/releases) (`PowerShell-#.#.#-win.x86.msi`)
 
 6. Enable PowerShell script execution via (in a CMD window as administrator):
     ```
     powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
     ```
 
-7. Install **Visual Studio 2019 Community Preview** from [here](https://visualstudio.microsoft.com/vs/preview/)
+  `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-    * Select **all workloads** on the first panel
-    * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
-    * Click **Install** (and take a coffee break)
-    * Install **.NET Core SDK 3.0.100-preview9-014004 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
-    * Apply any pending **Visual Studio updates**
-    * **Close** Visual Studio and install any updates
+7. Install **Visual Studio 2019 Community 16.3+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
+
+  * Select **all workloads** on the first panel
+  * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
+  * Click **Install** (and take a coffee break)
+  * Install **.NET Core SDK 3.0.100 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
+  * Apply any pending **Visual Studio updates**
+  * **Close** Visual Studio and install any updates
   
 8. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonKUBE applications and services, **Visual Studio must be running with elevated privileges**.
 
-9. Install **.NET Framework 4.8 Developer Pack** from: [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
+9. Install **.NET Framework 4.8 Developer Pack** from [here](https://dotnet.microsoft.com/download/thank-you/net48-developer-pack)
 
 10. Install **Visual Studio Code** from [here](https://code.visualstudio.com/download)
 
@@ -108,13 +110,13 @@ Follow the steps below to configure a development or test workstation:
 
 14. **Close** any running instances of **Visual Studio**
 
-15. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
+15. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-16. Install a development for native Microsoft Windows Applications:
+16. Install **MinGW (Minimalist GNU for Windows):**
 
-    * On Windows we need a runtime environment for GCC to support binaries native to Windows 64/32-bit operating systems.  The recommended tool for this is [MinGW](http://www.mingw.org/ "MinGW").  MinGW (Minimalist GNU for Windows) is a minimalist development environment for native Microsoft Windows applications.  
-    * Install MinGW [here](https://sourceforge.net/projects/mingw-w64/ "MinGW for windows download"), and follow these [installation instructions](https://code.visualstudio.com/docs/cpp/config-mingw "MinGW installation instructions for Windows").  
-    * You only need to follow instruction through the "Prerequisites" section.  Make sure that when you install, you install for your specific architecture (i.e. x86_64 (AMD64)).  
+    * Install MinGW from [here](https://sourceforge.net/projects/mingw-w64/) and follow these [instructions](https://code.visualstudio.com/docs/cpp/config-mingw)
+    * You only need to follow instruction through the "Prerequisites" section.
+    * Make sure that when you install, you install for your specific architecture (i.e. x86_64).  
 
 17. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
@@ -153,18 +155,18 @@ Follow the steps below to configure a development or test workstation:
       ```
     * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-24. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+24. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-25. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+25. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
 26. *Optional*: Install **Cmdr/Mini** command shell:
 
-    * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
-    * Download the ZIP archive from: [here](http://cmder.net/)
-    * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
-    * Create a desktop shortcut if you wish and configure it to run as administrator.
-    * Run Cmdr and configure settings as desired.
-    * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
+  * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
+  * Download the ZIP archive from: [here](http://cmder.net/)
+  * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
+  * Create a desktop shortcut if you wish and configure it to run as administrator.
+  * Run Cmdr and configure settings as desired.
+  * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
 27. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 

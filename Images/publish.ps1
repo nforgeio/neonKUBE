@@ -28,8 +28,9 @@ param
 	[switch]$dotnetBase  = $false,        # Rebuild base .NET images
 	[switch]$dotnet      = $false,        # Rebuild .NET based images
 	[switch]$other       = $false,        # Rebuild all other images (usually script based)
-    [switch]$nopush      = $false,        # Don't push to the registry
-    [switch]$noprune     = $false,        # Don't prune the local Docker state
+	[switch]$services    = $false,        # Rebuild all service images
+  [switch]$nopush      = $false,        # Don't push to the registry
+  [switch]$noprune     = $false,        # Don't prune the local Docker state
 	[switch]$allVersions = $false         # Rebuild all image versions
 )
 
@@ -84,6 +85,7 @@ if ($all)
 	$dotnetBase = $true
 	$dotnet     = $true
 	$other      = $true
+	$services   = $true
 }
 elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 {
@@ -92,6 +94,7 @@ elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 
 	$dotnet = $true
 	$other  = $true
+	$services   = $true
 }
 
 # Purge any local Docker images as well as the image build cache.
@@ -133,9 +136,14 @@ if ($dotnetBase)
 if ($other)
 {
 	Publish "$image_root\\golang"
-    Publish "$image_root\\nats"
-    Publish "$image_root\\nats-streaming"
+  Publish "$image_root\\nats"
+  Publish "$image_root\\nats-streaming"
 	Publish "$image_root\\cadence-test"
 	Publish "$image_root\\couchbase-test"
 	Publish "$image_root\\test"
+}
+
+if ($services)
+{
+	Publish "$image_root\\operator-cluster-manager"
 }

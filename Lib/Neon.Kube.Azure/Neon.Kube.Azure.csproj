@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.6.2-alpha</Version>
+    <Version>0.6.3-alpha</Version>
     <Authors>Jeff LIll</Authors>
     <Company>neonFORGE, LLC</Company>
     <Product>neonHIVE</Product>
@@ -35,10 +35,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.25.0" />
+    <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.26.1" />
     <PackageReference Include="Microsoft.Azure.Management.Network" Version="5.0.0" />
     <PackageReference Include="Microsoft.Azure.Management.ResourceManager" Version="1.6.0-preview" />
-    <PackageReference Include="Microsoft.Azure.Management.ResourceManager.Fluent" Version="1.25.0" />
+    <PackageReference Include="Microsoft.Azure.Management.ResourceManager.Fluent" Version="1.26.1" />
   </ItemGroup>
 
   <ItemGroup>

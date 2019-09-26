@@ -77,11 +77,9 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-	Build 2.1.10-alpine3.7
-    Build 2.2.4-alpine3.9
-    Build 3.0.0-preview4-alpine3.9
-    Build 3.0.0-preview6-alpine3.9
-
+    Build 3.0.0-preview4-bionic
+    Build 3.0.0-preview6-bionic
+    Build 3.0.0-preview8-bionic
+    Build 3.0.0-preview9-bionic
 }
-
-Build 3.0.0-preview8-alpine3.9 -latest
+Build 3.0.0-preview9-bionic -latest

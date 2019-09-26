@@ -5,7 +5,7 @@ metadata:
     "helm.sh/hook": "post-install"
   labels:
     app.kubernetes.io/component: controller
-    app.kubernetes.io/name: prometheus-operator
+    app: prometheus-operator
     app.kubernetes.io/version: v0.31.1
   name: prometheus-operator
   namespace: monitoring
@@ -16,5 +16,5 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/component: controller
-      app.kubernetes.io/name: prometheus-operator
+      app: prometheus-operator
       app.kubernetes.io/version: v0.31.1

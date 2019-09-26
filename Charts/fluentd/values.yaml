@@ -14,10 +14,17 @@ output:
   port: 9200
   scheme: http
   sslVersion: TLSv1
-  buffer_chunk_limit: 2M
-  buffer_queue_limit: 8
+  buffer_chunk_limit: 8M
+  buffer_queue_limit: 32
 
 env: {}
+
+plugins:
+  enabled: true
+  pluginsList:
+    - fluent-plugin-dedot_filter
+    - fluent-plugin-kubernetes_metadata_filter
+    - fluent-plugin-elasticsearch
 
 # Extra Environment Values - allows yaml definitions
 extraEnvVars:
@@ -44,19 +51,19 @@ service:
       containerPort: 24284
 
 metrics:
-  enabled: false
+  enabled: true
   service:
     port: 24231
   serviceMonitor:
-    enabled: false
+    enabled: true
     additionalLabels: {}
     # namespace: monitoring
     # interval: 30s
     # scrapeTimeout: 10s
 
-annotations: {}
-#  prometheus.io/scrape: "true"
-#  prometheus.io/port: "24231"
+annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "24231"
 
 ingress:
   enabled: false
@@ -103,6 +110,7 @@ configMaps:
       port 24220
       tag fluentd.monitor.metrics
     </source>
+
   system.conf: |-
     <system>
       root_dir /tmp/fluentd-buffers/
@@ -117,7 +125,7 @@ configMaps:
     <match **>
       @id elasticsearch
       @type elasticsearch
-      @log_level debug
+      @log_level info
       include_tag_key true
       # Replace with the host/port to your Elasticsearch cluster.
       host "#{ENV['OUTPUT_HOST']}"
@@ -125,7 +133,7 @@ configMaps:
       scheme "#{ENV['OUTPUT_SCHEME']}"
       ssl_version "#{ENV['OUTPUT_SSL_VERSION']}"
       logstash_format true
-      <buffer>
+     <buffer>
         @type file
         path /var/log/fluentd-buffers/kubernetes.system.buffer
         flush_mode interval
@@ -166,6 +174,40 @@ persistence:
   # annotations: {}
   accessMode: ReadWriteOnce
   size: 10Gi
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+# Enable autoscaling using HorizontalPodAutoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 60
+          
+# Consider to set higher value when using in conjuction with autoscaling
+# Full description about this field: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#pod-v1-core
+terminationGracePeriodSeconds: 90
 
 nodeSelector: {}
 

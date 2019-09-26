@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit</RootNamespace>
-    <Version>0.6.2-alpha</Version>
+    <Version>0.6.3-alpha</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Description>neonKUBE Xunit related extensions.</Description>
@@ -42,10 +42,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0-rc1.19456.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.0.0" />
     <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
     <PackageReference Include="NATS.Client" Version="0.9.0" />
-    <PackageReference Include="STAN.Client" Version="0.1.6" />
+    <PackageReference Include="STAN.Client" Version="0.1.7" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="YamlDotNet" Version="6.1.2" />
   </ItemGroup>
