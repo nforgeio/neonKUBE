@@ -48,8 +48,13 @@ COPY _common/*.sh           /
 # Install the [tini] INIT manager, the CA certificates, and
 # [libcurl] so .NET Core apps can use the legacy HttpClientHandler.
 
-RUN apk add --no-cache tini ca-certificates libcurl \
-    && chmod 700 /*.sh
+ENV TINI_VERSION v0.18.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
+
+RUN apt-get update -y \
+    && apt-get install libcurl4 ca-certificates wget -y \
+    && chmod 700 /*.sh \
+    && chmod +x /sbin/tini
 
 # Set timezone to UTC
 ENV TZ=UTC

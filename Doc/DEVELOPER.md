@@ -6,7 +6,7 @@ This page describes how to get started with neonKUBE development.
 
 * Windows 10 Professional (64-bit) with at least 16GB RAM
 * Virtualization capable workstation
-* Visual Studio 2019 Community Edition (or better)
+* Visual Studio 2019 Edition (or better)
 * Visual Studio Code
 
 Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine.
@@ -61,12 +61,12 @@ Follow the steps below to configure a development or test workstation:
 
   `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-7. Install **Visual Studio 2019 Community Preview** from [here](https://visualstudio.microsoft.com/vs/preview/)
+7. Install **Visual Studio 2019 Community 16.3+** from [here](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&rel=16)
 
   * Select **all workloads** on the first panel
   * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK 3.0.100-preview9-014004 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
+  * Install **.NET Core SDK 3.0.100 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
@@ -78,7 +78,7 @@ Follow the steps below to configure a development or test workstation:
 
 11. Configure the GOLANG development environment:
 
-  * Install **go1.12.9.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
+  * Install **go1.1.13.windows-amd64.msi** or later for Windows from: [here](https://golang.org/dl/)
   * Install the GOLANG [dependency tool](https://github.com/golang/dep) via (in a new CMD window):
 
     `go get -u github.com/golang/dep/cmd/dep`

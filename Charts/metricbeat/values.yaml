@@ -18,7 +18,7 @@ daemonset:
   dnsPolicy: ClusterFirstWithHostNet
   config:
     monitoring:
-      level: debug
+      level: info
     metricbeat.config:
       modules:
         path: ${path.config}/modules.d/*.yml
