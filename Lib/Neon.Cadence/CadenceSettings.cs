@@ -280,6 +280,20 @@ namespace Neon.Cadence
         internal TimeSpan ActivityStartToCloseTimeout => TimeSpan.FromSeconds(Math.Max(ActivityStartToCloseTimeoutSeconds, 0));
 
         /// <summary>
+        /// Specifies the default maximum time an activity may wait to be started after being scheduled.
+        /// This defaults to <b>24</b> hours.
+        /// </summary>
+        [JsonProperty(PropertyName = "ActivityScheduleToStartTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "activityScheduleToStartTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(defaultTimeoutSeconds)]
+        public double ActivityScheduleToStartTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+
+        /// <summary>
+        /// Returns <see cref="ActivityScheduleToStartTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ActivityScheduleToStartTimeout => TimeSpan.FromSeconds(Math.Max(ActivityScheduleToStartTimeoutSeconds, 0));
+
+        /// <summary>
         /// Specifies the default maximum allowed between activity heartbeats.  Activities that
         /// don't submit heartbeats within the time will be considered to be unhealthy and will
         /// be terminated.  This defaults to <b>60 seconds</b>.

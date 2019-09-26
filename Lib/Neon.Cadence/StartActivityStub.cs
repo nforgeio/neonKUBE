@@ -217,8 +217,6 @@ namespace Neon.Cadence
                 activityTypeName += $"::{methodAttribute.Name}";
             }
 
-            // Normalize the options.
-
             if (options == null)
             {
                 options = new ActivityOptions();
@@ -316,6 +314,7 @@ namespace Neon.Cadence
                             Activity   = activityTypeName,
                             Args       = dataConverter.ToData(args),
                             Options    = options.ToInternal(),
+                            Domain     = options.Domain
                         });
                 });
 
