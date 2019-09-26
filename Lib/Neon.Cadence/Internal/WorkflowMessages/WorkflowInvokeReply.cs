@@ -173,6 +173,7 @@ namespace Neon.Cadence.Internal
             typedTarget.ContinueAsNewExecutionStartToCloseTimeout = this.ContinueAsNewExecutionStartToCloseTimeout;
             typedTarget.ContinueAsNewTaskList                     = this.ContinueAsNewTaskList;
             typedTarget.ContinueAsNewDomain                       = this.ContinueAsNewDomain;
+            typedTarget.ContinueAsNewWorkflow                     = this.ContinueAsNewWorkflow;
             typedTarget.ContinueAsNewScheduleToCloseTimeout       = this.ContinueAsNewScheduleToCloseTimeout;
             typedTarget.ContinueAsNewScheduleToStartTimeout       = this.ContinueAsNewScheduleToStartTimeout;
             typedTarget.ContinueAsNewStartToCloseTimeout          = this.ContinueAsNewStartToCloseTimeout;

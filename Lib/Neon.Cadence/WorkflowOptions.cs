@@ -224,9 +224,15 @@ namespace Neon.Cadence
         public string CronSchedule { get; set; }
 
         /// <summary>
-        /// Optionally specifies workflow metadata as a dictionary of named byte array values.
+        /// <para>
+        /// Optionally specifies workflow metadata as a dictionary of named object values.
+        /// </para>
+        /// <note>
+        /// The object values will be serialized into bytes using the the client's
+        /// <see cref="IDataConverter"/>.
+        /// </note>
         /// </summary>
-        public Dictionary<string, byte[]> Memo { get; set; }
+        public Dictionary<string, object> Memo { get; set; }
 
         /// <summary>
         /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
@@ -234,6 +240,18 @@ namespace Neon.Cadence
         /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
         internal InternalStartWorkflowOptions ToInternal()
         {
+            Dictionary<string, byte[]> encodedMemos = null;
+
+            if (Memo != null && Memo.Count > 0)
+            {
+                encodedMemos = new Dictionary<string, byte[]>();
+
+                foreach (var item in Memo)
+                {
+                    encodedMemos.Add(item.Key, NeonHelper.JsonSerializeToBytes(item.Value));
+                }
+            }
+
             return new InternalStartWorkflowOptions()
             {
                 ID                              = this.WorkflowId,
@@ -243,7 +261,7 @@ namespace Neon.Cadence
                 RetryPolicy                     = this.RetryOptions?.ToInternal(),
                 WorkflowIdReusePolicy           = (int)this.WorkflowIdReusePolicy,
                 CronSchedule                    = this.CronSchedule,
-                Memo                            = this.Memo
+                Memo                            = encodedMemos
             };
         }
 

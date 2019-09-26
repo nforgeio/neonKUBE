@@ -28,19 +28,32 @@ using Neon.Common;
 
 namespace Neon.Cadence
 {
-    /// <inheritdoc/>
-    public class ExternalWorkflowStub : IExternalWorkflowStub
+    /// <summary>
+    /// Supports signalling and cancelling any workflow.  This is useful when an
+    /// external workflow interface type is not known at compile time or to manage 
+    /// workflows written in another language.
+    /// </summary>
+    public class ExternalWorkflowStub
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns the workflow execution.
+        /// </summary>
         public WorkflowExecution Execution => throw new NotImplementedException();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Cancels the workflow.
+        /// </summary>
         public Task Cancel()
         {
             throw new NotImplementedException();
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Signals the workflow.
+        /// </summary>
+        /// <param name="signalName">Specifies the signal name.</param>
+        /// <param name="args">Specifies the signal arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public Task Signal(string signalName, params object[] args)
         {
             throw new NotImplementedException();

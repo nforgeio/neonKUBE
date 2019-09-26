@@ -52,13 +52,9 @@
 
     * Be sure to set the branch to the new release branch.
 
-5. Manually clean and rebuild the entire solution (**RELEASE** configuration**): 
+5. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build`
-
-6. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
-
-7. Archive the source code:
+6. Archive the source code:
 
   1. Close all Visual Studio windows.
   2. Run `neon-archive.cmd` in a command window.

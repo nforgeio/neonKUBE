@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Nats</RootNamespace>
-    <Version>0.6.2-alpha</Version>
+    <Version>0.6.3-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE NATS messaging extensions.</Description>
@@ -40,7 +40,7 @@
 
   <ItemGroup>
     <PackageReference Include="NATS.Client" Version="0.9.0" />
-    <PackageReference Include="STAN.Client" Version="0.1.6" />
+    <PackageReference Include="STAN.Client" Version="0.1.7" />
   </ItemGroup>
 
   <ItemGroup>

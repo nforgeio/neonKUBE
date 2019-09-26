@@ -33,7 +33,7 @@ var (
 type (
 
 	// ActivityContextsMap holds a thread-safe map[interface{}]interface{} of
-	// cadence ActivityContextsMap with their contextID's
+	// ActivityContexts with their contextID's
 	ActivityContextsMap struct {
 		sync.Mutex
 		contexts map[int64]*ActivityContext

@@ -87,33 +87,15 @@ namespace ClusterManager
             return 0;
         }
 
-
+        /// <summary>
+        /// Setus up the cluster.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SetupClusterAsync()
         {
             KibanaSetup();
-            await Task.FromResult(0);
+
+            await Task.CompletedTask;
         }
-        /// <summary>
-        /// Returns the program version as the Git branch and commit and an optional
-        /// indication of whether the program was build from a dirty branch.
-        /// </summary>
-        public static string GitVersion
-            {
-                get
-                {
-                    var version = $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}";
-
-#pragma warning disable 162 // Unreachable code
-
-                    //if (ThisAssembly.Git.IsDirty)
-                    //{
-                    //    version += "-DIRTY";
-                    //}
-
-#pragma warning restore 162 // Unreachable code
-
-                    return version;
-                }
-            }
     }
 }

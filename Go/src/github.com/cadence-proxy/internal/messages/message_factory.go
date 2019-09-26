@@ -351,6 +351,30 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	case messagetypes.ActivityCompleteRequest:
 		message = NewActivityCompleteRequest()
 
+	// ActivityStart
+	case messagetypes.ActivityStartReply:
+		message = NewActivityStartReply()
+	case messagetypes.ActivityStartRequest:
+		message = NewActivityStartRequest()
+
+	// ActivityGetResult
+	case messagetypes.ActivityGetResultReply:
+		message = NewActivityGetResultReply()
+	case messagetypes.ActivityGetResultRequest:
+		message = NewActivityGetResultRequest()
+
+		// ActivityStartLocal
+	case messagetypes.ActivityStartLocalReply:
+		message = NewActivityStartLocalReply()
+	case messagetypes.ActivityStartLocalRequest:
+		message = NewActivityStartLocalRequest()
+
+	// ActivityGetLocalResult
+	case messagetypes.ActivityGetLocalResultReply:
+		message = NewActivityGetLocalResultReply()
+	case messagetypes.ActivityGetLocalResultRequest:
+		message = NewActivityGetLocalResultRequest()
+
 	// default
 	default:
 		return nil
