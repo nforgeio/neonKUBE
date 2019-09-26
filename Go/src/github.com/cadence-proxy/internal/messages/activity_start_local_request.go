@@ -25,16 +25,16 @@ import (
 
 type (
 
-	// ActivityStartLocalRequest is an ActivityRequest of MessageType
+	// ActivityStartLocalRequest is an WorkflowRequest of MessageType
 	// ActivityStartLocalRequest.
 	//
 	// A ActivityStartLocalRequest contains a reference to a
-	// ActivityRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this ActivityRequest
+	// WorkflowRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this WorkflowRequest
 	//
 	// Starts a workflow activity.
 	ActivityStartLocalRequest struct {
-		*ActivityRequest
+		*WorkflowRequest
 	}
 )
 
@@ -44,7 +44,7 @@ type (
 // in memory
 func NewActivityStartLocalRequest() *ActivityStartLocalRequest {
 	request := new(ActivityStartLocalRequest)
-	request.ActivityRequest = NewActivityRequest()
+	request.WorkflowRequest = NewWorkflowRequest()
 	request.SetType(messagetypes.ActivityStartLocalRequest)
 	request.SetReplyType(messagetypes.ActivityStartLocalReply)
 
@@ -123,7 +123,7 @@ func (request *ActivityStartLocalRequest) SetActivityID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ActivityRequest.Clone()
+// Clone inherits docs from WorkflowRequest.Clone()
 func (request *ActivityStartLocalRequest) Clone() IProxyMessage {
 	activityStartLocalRequest := NewActivityStartLocalRequest()
 	var messageClone IProxyMessage = activityStartLocalRequest
@@ -132,9 +132,9 @@ func (request *ActivityStartLocalRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ActivityRequest.CopyTo()
+// CopyTo inherits docs from WorkflowRequest.CopyTo()
 func (request *ActivityStartLocalRequest) CopyTo(target IProxyMessage) {
-	request.ActivityRequest.CopyTo(target)
+	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*ActivityStartLocalRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())

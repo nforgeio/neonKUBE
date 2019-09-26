@@ -23,11 +23,11 @@ import (
 
 type (
 
-	// ActivityGetLocalResultReply is a ActivityReply of MessageType
-	// ActivityGetLocalResultReply.  It holds a reference to a ActivityReply in memory
+	// ActivityGetLocalResultReply is a WorkflowReply of MessageType
+	// ActivityGetLocalResultReply.  It holds a reference to a WorkflowReply in memory
 	// and is the reply type to a ActivityExecuteRequest
 	ActivityGetLocalResultReply struct {
-		*ActivityReply
+		*WorkflowReply
 	}
 )
 
@@ -38,7 +38,7 @@ type (
 // ActivityGetLocalResultReply in memory
 func NewActivityGetLocalResultReply() *ActivityGetLocalResultReply {
 	reply := new(ActivityGetLocalResultReply)
-	reply.ActivityReply = NewActivityReply()
+	reply.WorkflowReply = NewWorkflowReply()
 	reply.SetType(messagetypes.ActivityGetLocalResultReply)
 
 	return reply
@@ -74,7 +74,7 @@ func (reply *ActivityGetLocalResultReply) Clone() IProxyMessage {
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *ActivityGetLocalResultReply) CopyTo(target IProxyMessage) {
-	reply.ActivityReply.CopyTo(target)
+	reply.WorkflowReply.CopyTo(target)
 	if v, ok := target.(*ActivityGetLocalResultReply); ok {
 		v.SetResult(reply.GetResult())
 	}
