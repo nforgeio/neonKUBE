@@ -28,29 +28,74 @@ using Neon.Common;
 
 namespace Neon.Cadence
 {
-#if TODO
     // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
 
-    /// <inheritdoc/>
-    public class ActivityStub : IActivityStub
+    /// <summary>
+    /// Used to execute an activity whose .NET type information is not known
+    /// at runtime or activities written in different languages.
+    /// </summary>
+    public class ActivityStub
     {
-        /// <inheritdoc/>
+        /// <summary>
+        /// Executes an activity by activity type name that doesn't return a result (or when the caller doesn't
+        /// care about the result).
+        /// </summary>
+        /// <param name="activityTypeName">Identifies the activity to execute (see the remarks).</param>
+        /// <param name="args">The activity arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="activityTypeName"/> specifies the target activity implementation type name and optionally,
+        /// the specific activity method to be called for activity interfaces that have multiple methods.  For
+        /// activity methods tagged by <c>ActivityMethod]</c>[ with specifying a name, the activity type name will default
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.Name"/>.
+        /// </para>
+        /// <para>
+        /// For activity methods with <see cref="ActivityMethodAttribute.Name"/> specified, the activity type will
+        /// look like:
+        /// </para>
+        /// <code>
+        /// ACTIVITY-TYPE-NAME::METHOD-NAME
+        /// </code>
+        /// <para>
+        /// You'll need to use this format when calling activities using external untyped stubs or 
+        /// from other languages.  The Java Cadence client works the same way.
+        /// </para>
+        /// </remarks>
         public Task ExecuteAsync(string activityTypeName, params object[] args)
         {
             throw new NotImplementedException();
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Executes an activity by activity type name that returns the <typeparamref name="TResult"/>.
+        /// </summary>
+        /// <typeparam name="TResult">The activity result type. </typeparam>
+        /// <param name="activityTypeName">Identifies the activity to execute (see the remarks).</param>
+        /// <param name="args">The activity arguments.</param>
+        /// <returns>The activity result.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="activityTypeName"/> specifies the target activity implementation type name and optionally,
+        /// the specific activity method to be called for activity interfaces that have multiple methods.  For
+        /// activity methods tagged by <c>ActivityMethod]</c>[ with specifying a name, the activity type name will default
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.Name"/>.
+        /// </para>
+        /// <para>
+        /// For activity methods with <see cref="ActivityMethodAttribute.Name"/> specified, the activity type will
+        /// look like:
+        /// </para>
+        /// <code>
+        /// ACTIVITY-TYPE-NAME::METHOD-NAME
+        /// </code>
+        /// <para>
+        /// You'll need to use this format when calling activities using external untyped stubs or 
+        /// from other languages.  The Java Cadence client works the same way.
+        /// </para>
+        /// </remarks>
         public Task<TResult> ExecuteAsync<TResult>(string activityTypeName, params object[] args)
         {
             throw new NotImplementedException();
         }
-
-        /// <inheritdoc/>
-        public Task<object> ExecuteAsync(Type activityType, params object[] args)
-        {
-            throw new NotImplementedException();
-        }
     }
-#endif
 }

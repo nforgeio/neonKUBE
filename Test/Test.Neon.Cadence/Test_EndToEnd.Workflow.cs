@@ -119,6 +119,27 @@ namespace TestCadence
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
         }
 
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_WithMemos()
+        {
+            // Verify that we can call a simple workflow that accepts a
+            // parameter and results a result.
+
+            var options = new WorkflowOptions()
+            {
+                Memo = new Dictionary<string, object>()
+                {
+                    { "int", 10 },
+                    { "bool", true }
+                }
+            };
+
+            var stub = client.NewWorkflowStub<IWorkflowWithResult>(options);
+
+            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+        }
+
         //---------------------------------------------------------------------
 
         public interface IWorkflowLogger : IWorkflow
@@ -428,7 +449,7 @@ namespace TestCadence
             }
         }
 
-        [SlowFact(Skip = "Too Long")]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Workflow_Cron()
         {
@@ -1583,8 +1604,14 @@ namespace TestCadence
             [WorkflowMethod]
             Task RunChildAsync();
 
+            [WorkflowMethod(Name = "start-child")]
+            Task StartChildAsync();
+
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloChildAsync(string name);
+
+            [WorkflowMethod(Name = "start-hello")]
+            Task<string> StartHelloChildAsync(string name);
 
             [WorkflowMethod(Name = "hello-activity")]
             Task<string> HelloChildActivityAsync(string name);
@@ -1609,11 +1636,31 @@ namespace TestCadence
                 await childStub.RunAsync();
             }
 
+            public async Task StartChildAsync()
+            {
+                // We're not specifying a method name when we create the child stub below
+                // which means we'll be calling the [RunAsync()] method which also has
+                // no defined workflow method name.
+
+                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>();
+                var future    = await childStub.StartAsync();
+                
+                await future.GetAsync();
+            }
+
             public async Task<string> HelloChildAsync(string name)
             {
                 var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
 
                 return await childStub.HelloAsync(name);
+            }
+
+            public async Task<string> StartHelloChildAsync(string name)
+            {
+                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>("hello");
+                var future    = await childStub.StartAsync<string>(name);
+                
+                return await future.GetAsync();
             }
 
             public async Task<string> HelloChildActivityAsync(string name)
@@ -1632,11 +1679,20 @@ namespace TestCadence
 
             public async Task SignalChildAsync(string signal)
             {
-                var childStub = Workflow.NewChildWorkflowStub<IWorkflowChild>();
-                var childTask = childStub.WaitForSignalAsync();
+                WorkflowChild.Reset();
 
-                await childStub.SignalAsync(signal);
-                await childTask;
+                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>("wait-for-signal");
+
+                Assert.Null(childStub.Stub);        // This will be NULL until we start the child.
+
+                var future = await childStub.StartAsync();
+
+                NeonHelper.WaitFor(() => WorkflowChild.WasExecuted, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                Assert.NotNull(childStub.Stub);     // This should be set after the workflow starts.
+
+                await childStub.Stub.SignalAsync(signal);
+                await future.GetAsync();
             }
 
             public async Task<bool> QueryChildAsync()
@@ -1712,6 +1768,38 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildStart_NoArgsOrResult ()
+        {
+            // Verify that we can run a child workflow via a future that 
+            // accepts no args and doesn't return a result.  This also tests
+            // calling the the workflow entrypoint with the default entrypoint
+            // method name (null).
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            await stub.StartChildAsync();
+
+            Assert.True(WorkflowChild.WasExecuted);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildStart_ArgsAndResult()
+        {
+            // Verify that we can run a child workflow via a future that 
+            // accepts a parameter and returns a result.
+
+            WorkflowChild.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.Equal("Hello Jeff!", await stub.StartHelloChildAsync("Jeff"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildActivity()
         {
             // Verify that we can call a child workflow that calls an activity.
@@ -1724,11 +1812,11 @@ namespace TestCadence
             Assert.True(WorkflowChild.WasExecuted);
         }
 
-        [Fact(Skip = "Hangs right now")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildSignal()
         {
-            // Verify that signalling a child workflow.
+            // Verify that we can signal a child workflow.
             
             WorkflowChild.Reset();
 

@@ -1257,9 +1257,9 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	var result interface{}
 	future := workflow.NewTimer(ctx, request.GetDuration())
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// wait for the future to be unblocked
 	err := future.Get(ctx, &result)
@@ -1312,9 +1312,9 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx, workflowName, request.GetArgs())
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// create the new ChildContext
 	// add the ChildWorkflowFuture and the cancel func to the
@@ -1417,9 +1417,9 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		request.GetSignalArgs(),
 	)
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// wait on the future
 	var result []byte
@@ -1836,21 +1836,116 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 		return reply
 	}
 
+	// get the activity options
+	var opts workflow.ActivityOptions
+	if v := request.GetOptions(); v != nil {
+		opts = *v
+	}
+
 	// get the activity options, the context,
 	// and set the activity options on the context
-	opts := request.GetOptions()
-	ctx := workflow.WithActivityOptions(wectx.GetContext(), *opts)
+	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
 	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	future := workflow.ExecuteActivity(ctx, activityName, request.GetArgs())
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// execute the activity
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
+		buildReply(reply, proxyerror.NewCadenceError(err))
+		return reply
+	}
+	buildReply(reply, nil, result)
+
+	return reply
+}
+
+func handleActivityStartRequest(requestCtx context.Context, request *messages.ActivityStartRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	clientID := request.GetClientID()
+	requestID := request.GetRequestID()
+	activityID := request.GetActivityID()
+	activity := *request.GetActivity()
+	Logger.Debug("ActivityStartRequest Received",
+		zap.String("Activity", activity),
+		zap.Int64("ActivityId", activityID),
+		zap.Int64("ClientId", clientID),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProcessId", os.Getpid()),
+	)
+
+	// new ActivityStartReply
+	reply := createReplyMessage(request)
+
+	// get the contextID and the corresponding context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	// get the activity options
+	var opts workflow.ActivityOptions
+	if v := request.GetOptions(); v != nil {
+		opts = *v
+	}
+
+	// get the activity options, the context,
+	// and set the activity options on the context
+	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
+	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
+	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
+	future := workflow.ExecuteActivity(ctx, activity, request.GetArgs())
+
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
+
+	// add to workflow context map
+	_ = wectx.AddActivityFuture(activityID, future)
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleActivityGetResultRequest(requestCtx context.Context, request *messages.ActivityGetResultRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	clientID := request.GetClientID()
+	requestID := request.GetRequestID()
+	activityID := request.GetActivityID()
+	Logger.Debug("ActivityGetResultRequest Received",
+		zap.Int64("ActivityId", activityID),
+		zap.Int64("ClientId", clientID),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProcessId", os.Getpid()),
+	)
+
+	// new ActivityGetResultReply
+	reply := createReplyMessage(request)
+
+	// get the contextID and the corresponding context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	future := wectx.GetActivityFuture(activityID)
+	if future == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+	defer wectx.RemoveActivityFuture(activityID)
+
+	// execute the activity
+	var result []byte
+	if err := future.Get(wectx.GetContext(), &result); err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
@@ -2073,7 +2168,6 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	}
 
 	// the local activity function
-	args := request.GetArgs()
 	localActivityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 		actx := proxyactivity.NewActivityContext(ctx)
 		activityContextID := ActivityContexts.Add(NextActivityContextID(), actx)
@@ -2157,15 +2251,102 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	// set the activity options on the context
 	// execute local activity
 	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
-	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, args)
+	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, request.GetArgs())
 
-	// Send ACK
-	op := sendFutureACK(contextID, requestID, clientID)
-	<-op.GetChannel()
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
 
 	// wait for the future to be unblocked
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
+		buildReply(reply, proxyerror.NewCadenceError(err))
+		return reply
+	}
+	buildReply(reply, nil, result)
+
+	return reply
+}
+
+func handleActivityStartLocalRequest(requestCtx context.Context, request *messages.ActivityStartLocalRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	clientID := request.GetClientID()
+	requestID := request.GetRequestID()
+	activityID := request.GetActivityID()
+	activity := *request.GetActivity()
+	Logger.Debug("ActivityStartLocalRequest Received",
+		zap.String("Activity", activity),
+		zap.Int64("ActivityId", activityID),
+		zap.Int64("ClientId", clientID),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProcessId", os.Getpid()),
+	)
+
+	// new ActivityStartLocalReply
+	reply := createReplyMessage(request)
+
+	// get the contextID and the corresponding context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	/// get the activity options
+	var opts workflow.LocalActivityOptions
+	if v := request.GetOptions(); v != nil {
+		opts = *v
+	}
+
+	// set the activity options on the context
+	// execute local activity
+	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
+	future := workflow.ExecuteLocalActivity(ctx, activity, request.GetArgs())
+
+	// Send ACK: Commented out because its no longer needed.
+	// op := sendFutureACK(contextID, requestID, clientID)
+	// <-op.GetChannel()
+
+	// add to workflow context map
+	_ = wectx.AddActivityFuture(activityID, future)
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleActivityGetLocalResultRequest(requestCtx context.Context, request *messages.ActivityGetLocalResultRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	clientID := request.GetClientID()
+	requestID := request.GetRequestID()
+	activityID := request.GetActivityID()
+	Logger.Debug("ActivityGetLocalResultRequest Received",
+		zap.Int64("ActivityId", activityID),
+		zap.Int64("ClientId", clientID),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", requestID),
+		zap.Int("ProcessId", os.Getpid()),
+	)
+
+	// new ActivityGetLocalResultReply
+	reply := createReplyMessage(request)
+
+	// get the contextID and the corresponding context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	future := wectx.GetActivityFuture(activityID)
+	if future == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+	defer wectx.RemoveActivityFuture(activityID)
+
+	var result []byte
+	if err := future.Get(wectx.GetContext(), &result); err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}

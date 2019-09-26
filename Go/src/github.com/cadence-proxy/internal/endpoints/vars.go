@@ -38,11 +38,13 @@ var (
 	// cadence-proxy is listening on.  This gets set in main.go
 	Instance *server.Instance
 
-	//DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 100
-
 	// HttpClient is the HTTP client used to send requests
 	// to the Neon.Cadence client
 	HttpClient http.Client
+
+	// LoggerCLientID is the int64 id used to send LogRequests
+	// to the Neon.Cadence client
+	LoggerClientID int64
 
 	// ReplyAddress specifies the address that the Neon.Cadence library
 	// will be listening on for replies from the cadence proxy

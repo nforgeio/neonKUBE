@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Identifies a worker registered with Cadence.
+    /// Manages a Cadence activity/workflow worker.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -106,7 +106,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the current worker reference count.  This will be set to
-        /// <b>1</b> the first time the worker is registered.
+        /// <b>0</b> the first time the worker is registered.
         /// </summary>
         internal int RefCount;
     }

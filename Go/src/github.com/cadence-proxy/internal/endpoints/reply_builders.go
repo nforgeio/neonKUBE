@@ -310,6 +310,30 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 			buildActivityExecuteLocalReply(v, cadenceError, value)
 		}
 
+	// ActivityStartReply
+	case messagetypes.ActivityStartReply:
+		if v, ok := reply.(*messages.ActivityStartReply); ok {
+			buildActivityStartReply(v, cadenceError)
+		}
+
+	// ActivityGetResultReply
+	case messagetypes.ActivityGetResultReply:
+		if v, ok := reply.(*messages.ActivityGetResultReply); ok {
+			buildActivityGetResultReply(v, cadenceError, value)
+		}
+
+	// ActivityStartLocalReply
+	case messagetypes.ActivityStartLocalReply:
+		if v, ok := reply.(*messages.ActivityStartLocalReply); ok {
+			buildActivityStartLocalReply(v, cadenceError)
+		}
+
+	// ActivityGetLocalResultReply
+	case messagetypes.ActivityGetLocalResultReply:
+		if v, ok := reply.(*messages.ActivityGetLocalResultReply); ok {
+			buildActivityGetLocalResultReply(v, cadenceError, value)
+		}
+
 	// Undefined message type
 	// This should never happen.
 	default:
@@ -630,6 +654,32 @@ func buildActivityCompleteReply(reply *messages.ActivityCompleteReply, cadenceEr
 }
 
 func buildActivityExecuteLocalReply(reply *messages.ActivityExecuteLocalReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
+func buildActivityStartReply(reply *messages.ActivityStartReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildActivityGetResultReply(reply *messages.ActivityGetResultReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
+func buildActivityStartLocalReply(reply *messages.ActivityStartLocalReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildActivityGetLocalResultReply(reply *messages.ActivityGetLocalResultReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
 	reply.SetError(cadenceError)
 	if len(result) > 0 {
 		if v, ok := result[0].([]byte); ok {

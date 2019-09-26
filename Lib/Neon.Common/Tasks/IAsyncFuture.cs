@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IExternalWorkflowStub.cs
+// FILE:        IAsyncFuture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -14,43 +14,41 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+// Code based on a MSDN article by Stephen Toub (MSFT):
+// http://blogs.msdn.com/b/pfxteam/archive/2012/02/12/10267069.aspx
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Cadence;
-using Neon.Cadence.Internal;
-using Neon.Common;
-
-namespace Neon.Cadence
+namespace Neon.Tasks
 {
     /// <summary>
-    /// Supports signalling and cancelling any workflow.  This is useful when an
-    /// external workflow interface type is not known at compile time or to manage 
-    /// workflows written in another language.
+    /// Defines an interface that completes a future operation asynchronously.
     /// </summary>
-    public interface IExternalWorkflowStub
+    public interface IAsyncFuture
     {
         /// <summary>
-        /// Returns the workflow execution.
+        /// Returns when the asynchronous operation has completed.
         /// </summary>
-        WorkflowExecution Execution { get; }
-
-        /// <summary>
-        /// Signals the workflow.
-        /// </summary>
-        /// <param name="signalName">Specifies the signal name.</param>
-        /// <param name="args">Specifies the signal arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        Task Signal(string signalName, params object[] args);
+        Task GetAsync();
+    }
 
+    /// <summary>
+    /// Defines an interface that returns the value from the asynchronous operation.
+    /// </summary>
+    /// <typeparam name="T">The result type.</typeparam>
+    public interface IAsyncFuture<T>
+    {
         /// <summary>
-        /// Cancels the workflow.
+        /// Returns the value from the operation.
         /// </summary>
-        Task Cancel();
+        /// <returns></returns>
+        Task<T> GetAsync();
     }
 }

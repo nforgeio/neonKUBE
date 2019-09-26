@@ -642,6 +642,48 @@ const (
 	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityCompleteRequest"/> message.
 	/// </summary>
 	ActivityCompleteReply MessageType = 223
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Starts an activity but doesn't wait for it to complete.
+	/// </summary>
+	ActivityStartRequest MessageType = 224
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityStartRequest"/> message.
+	/// </summary>
+	ActivityStartReply MessageType = 225
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Waits for an activity started via <see cref="ActivityStartRequest"/>
+	/// to complete and returns the result.
+	/// </summary>
+	ActivityGetResultRequest MessageType = 226
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityGetResultRequest"/> message.
+	/// </summary>
+	ActivityGetResultReply MessageType = 227
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Starts a local activity but doesn't wait for it to complete.
+	/// </summary>
+	ActivityStartLocalRequest MessageType = 228
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityStartLocalRequest"/> message.
+	/// </summary>
+	ActivityStartLocalReply MessageType = 229
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Waits for an activity started via <see cref="ActivityStartLocalRequest"/>
+	/// to complete and returns the result.
+	/// </summary>
+	ActivityGetLocalResultRequest MessageType = 230
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to an <see cref="ActivityGetLocalResultRequest"/> message.
+	/// </summary>
+	ActivityGetLocalResultReply MessageType = 231
 )
 
 // String translates a message type enum into
@@ -878,6 +920,22 @@ func (m MessageType) String() string {
 		return "ActivityCompleteRequest"
 	case ActivityCompleteReply:
 		return "ActivityCompleteReply"
+	case ActivityStartRequest:
+		return "ActivityStartRequest"
+	case ActivityStartReply:
+		return "ActivityStartReply"
+	case ActivityGetResultRequest:
+		return "ActivityGetResultRequest"
+	case ActivityGetResultReply:
+		return "ActivityGetResultReply"
+	case ActivityStartLocalRequest:
+		return "ActivityStartLocalRequest"
+	case ActivityStartLocalReply:
+		return "ActivityStartLocalReply"
+	case ActivityGetLocalResultRequest:
+		return "ActivityGetLocalResultRequest"
+	case ActivityGetLocalResultReply:
+		return "ActivityGetLocalResultReply"
 	default:
 		return ""
 	}

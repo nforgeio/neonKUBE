@@ -449,6 +449,30 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handleActivityExecuteLocalRequest(ctx, v)
 			}
 
+		// ActivityStartRequest
+		case messagetypes.ActivityStartRequest:
+			if v, ok := request.(*messages.ActivityStartRequest); ok {
+				reply = handleActivityStartRequest(ctx, v)
+			}
+
+		// ActivityGetResultRequest
+		case messagetypes.ActivityGetResultRequest:
+			if v, ok := request.(*messages.ActivityGetResultRequest); ok {
+				reply = handleActivityGetResultRequest(ctx, v)
+			}
+
+		// ActivityStartLocalRequest
+		case messagetypes.ActivityStartLocalRequest:
+			if v, ok := request.(*messages.ActivityStartLocalRequest); ok {
+				reply = handleActivityStartLocalRequest(ctx, v)
+			}
+
+		// ActivityGetLocalResultRequest
+		case messagetypes.ActivityGetLocalResultRequest:
+			if v, ok := request.(*messages.ActivityGetLocalResultRequest); ok {
+				reply = handleActivityGetLocalResultRequest(ctx, v)
+			}
+
 		// Undefined message type
 		default:
 			e := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
@@ -491,8 +515,6 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 			)
 			Logger.Error("Panic", zap.Error(err))
 		}
-
-		// remove the operation
 		Operations.Remove(requestID)
 	}()
 
